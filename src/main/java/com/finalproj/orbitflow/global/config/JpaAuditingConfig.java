@@ -6,7 +6,8 @@ import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 /**
- * Please explain the class!!!
+ * JPA Auditing 활성화를 위한 설정 클래스.
+ * AuditorAware 구현체를 Bean으로 등록하여 엔티티의 생성자/수정자 정보가 자동으로 관리되도록 한다.
  *
  * @author : seunga03
  * @filename : JpaAuditingConfig
