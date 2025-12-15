@@ -9,7 +9,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Please explain the class!!!
+ * Spring Security 전반 설정을 담당하는 클래스.
+ * - 인증이 필요한 요청과 허용 요청을 구분한다.
+ * - 커스텀 UserDetailsService를 통해 사원 기반 로그인을 처리한다.
+ * - Form Login 방식을 사용하며, 추후 JWT 등으로 확장 가능하다.
  *
  * @author : seunga03
  * @filename : SecurityConfig
