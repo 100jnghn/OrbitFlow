@@ -10,7 +10,9 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Please explain the class!!!
+ * Spring Security 인증 객체로 사용되는 사용자 정보 클래스.
+ * Employee 엔티티를 기반으로 인증에 필요한 정보만 분리하여 보관하며,
+ * Auditing 연동을 위해 employeeId를 포함한다.
  *
  * @author : seunga03
  * @filename : SecurityUser

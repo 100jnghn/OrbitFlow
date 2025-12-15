@@ -9,7 +9,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 /**
- * Please explain the class!!!
+ * Spring Security에서 사용하는 사용자 인증 로직 구현체.
+ * 로그인 요청 시 전달된 ID(email)를 기반으로 사원 정보를 조회하여 SecurityUser로 변환한다.
  *
  * @author : seunga03
  * @filename : CustomUserDetailsService

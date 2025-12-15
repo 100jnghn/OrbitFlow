@@ -14,7 +14,10 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 
 /**
- * Please explain the class!!!
+ * 모든 엔티티의 공통 필드를 정의하는 추상 클래스.
+ * - 생성일시 / 수정일시를 Auditing 기반으로 자동 관리
+ * - 생성자 / 수정자 사원 ID를 Spring Security + AuditorAware를 통해 자동 주입
+ * 모든 JPA 엔티티는 해당 클래스를 상속하여 변경 이력 추적 및 감사 로그 기반을 공통으로 사용한다.
  *
  * @author : seunga03
  * @filename : BaseEntity
