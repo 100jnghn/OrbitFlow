@@ -32,6 +32,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login").permitAll()
                         .requestMatchers("/api/admin/rules/**").permitAll()
+                        .requestMatchers("/api/attendance/**").permitAll()  // 출퇴근 API 허용
+                        .requestMatchers("/admin/attendance-rules").permitAll()
+                        .requestMatchers("/attendance/commute").permitAll()  // 출퇴근 페이지 허용
+                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()  // 정적 리소스 허용
                         .anyRequest().authenticated()
                 )
                 .csrf(csrf -> csrf.disable())
