@@ -51,14 +51,38 @@ public class MeetingRoomController {
     }
 
     // 관리자 - 회의실 등록
-//    @PostMapping("/admin/meetingrooms")
-//    public ResponseEntity<ResponseDto> insertMeetingroom(
-//            @RequestBody MeetingroomReqDto meetingroomReq,
-//            @AuthenticationPrincipal SecurityUser user
-//    ) {
-//
-//        Long companyId = user.getCompanyId();
-//        meetingroomService.insertMeetingroom(companyId, meetingroomReq);
-//
-//    }
+    @PostMapping("/admin/meetingrooms")
+    public ResponseEntity<ResponseDto> insertMeetingroom(
+            @RequestBody MeetingroomReqDto dto,
+            @AuthenticationPrincipal SecurityUser user
+    ) {
+        Long companyId = user.getCompanyId();
+        meetingroomService.insertMeetingroom(companyId, dto);
+
+        return ResponseEntity.ok()
+                .body(new ResponseDto(HttpStatus.OK, "회의실 등록 성공", null));
+    }
+
+    // 관리자 - 회의실 수정
+    @PutMapping("/admin/meetingrooms/{meetingroomId}")
+    public ResponseEntity<ResponseDto> updateMeetingroom(
+            @PathVariable Long meetingroomId,
+            @RequestBody MeetingroomReqDto dto
+    ) {
+        meetingroomService.updateMeetingroom(meetingroomId, dto);
+
+        return ResponseEntity.ok()
+                .body(new ResponseDto(HttpStatus.OK, "회의실 수정 성공", null));
+    }
+
+    // 관리자 - 회의실 삭제
+    @PatchMapping("/admin/meetingrooms/{meetingroomId}/delete")
+    public ResponseEntity<ResponseDto> deleteMeetingroom(
+            @PathVariable Long meetingroomId
+    ) {
+        meetingroomService.deleteMeetingroom(meetingroomId);
+
+        return ResponseEntity.ok()
+                .body(new ResponseDto(HttpStatus.OK, "회의실 삭제 성공", null));
+    }
 }

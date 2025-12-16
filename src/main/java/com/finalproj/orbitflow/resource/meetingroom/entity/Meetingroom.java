@@ -45,4 +45,15 @@ public class Meetingroom extends BaseEntity {
     private ResourceStatus resourceStatus;
 
 
+    public void update(String name, String position, String description, ResourceStatus status) {
+
+        this.name = name;
+        this.position = position;
+        this.description = description;
+        this.resourceStatus = status;
+    }
+
+    public void delete(ResourceStatus status) {
+        this.resourceStatus = status;
+    }
 }
