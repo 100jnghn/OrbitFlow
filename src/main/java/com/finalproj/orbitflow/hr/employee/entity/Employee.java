@@ -38,8 +38,8 @@ public class Employee extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "employee_id", nullable = false)
-    private Long employeeId;   // 사원 ID (PK)
+    @Column(name = "id")
+    private Long id;   // 사원 ID (PK)
 
     /* ==============================
        소속 정보 // TODO: FK -> 추후 관계 매핑 설정 필요

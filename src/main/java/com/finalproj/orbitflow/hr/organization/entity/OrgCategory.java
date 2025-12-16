@@ -22,8 +22,8 @@ public class OrgCategory extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "category_id")
-    private Long categoryId;                            // 조직 카테고리 ID (PK)
+    @Column(name = "id")
+    private Long id;                            // 조직 카테고리 ID (PK)
 
     @Column(name = "company_id", nullable = false)
     private Long companyId;                             // 회사 ID (FK)
