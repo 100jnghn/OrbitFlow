@@ -13,6 +13,7 @@ import com.finalproj.orbitflow.approval.approvalLine.entity.ApprovalLine;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.logApprovalAction.enums.ApprovalAction;
 import com.finalproj.orbitflow.global.common.BaseEntity;
+import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import jakarta.persistence.*;
 import lombok.Getter;

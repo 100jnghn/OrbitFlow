@@ -11,6 +11,7 @@ package com.finalproj.orbitflow.approval.documentContent.entity;
 
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.global.common.BaseEntity;
+import com.finalproj.orbitflow.hr.company.entity.Company;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,6 +26,10 @@ public class DocumentContent extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "document_id", nullable = false, unique = true)

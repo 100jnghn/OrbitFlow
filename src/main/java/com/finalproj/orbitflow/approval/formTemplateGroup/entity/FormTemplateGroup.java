@@ -10,6 +10,7 @@ package com.finalproj.orbitflow.approval.formTemplateGroup.entity;
 
 
 import com.finalproj.orbitflow.global.common.BaseEntity;
+import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -34,12 +35,4 @@ public class FormTemplateGroup extends BaseEntity {
 
     @Column(columnDefinition = "TEXT")
     private String description;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "created_by",
-            insertable = false,
-            updatable = false
-    )//읽기 전용. 수정 불가. 삽입 불가.
-    private Employee creator;
 }

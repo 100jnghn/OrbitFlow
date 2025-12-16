@@ -13,6 +13,7 @@ import com.finalproj.orbitflow.approval.formTemplate.entity.FormTemplate;
 import com.finalproj.orbitflow.approval.formTemplateGroup.entity.FormTemplateGroup;
 import com.finalproj.orbitflow.approval.logFormTemplateAI.enums.AiStatus;
 import com.finalproj.orbitflow.global.common.BaseEntity;
+import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -29,6 +30,11 @@ public class LogFormTemplateAI extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "template_group_id")
@@ -54,12 +60,4 @@ public class LogFormTemplateAI extends BaseEntity {
 
     @Column(columnDefinition = "TEXT")
     private String errorMessage;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "created_by",
-            insertable = false,
-            updatable = false
-    )//읽기 전용. 수정 불가. 삽입 불가.
-    private Employee creator;
 }

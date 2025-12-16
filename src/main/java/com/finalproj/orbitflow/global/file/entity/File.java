@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @Table(name = "file")
 @Getter
 @NoArgsConstructor
-public class FileEntity {
+public class File {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
