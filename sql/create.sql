@@ -213,10 +213,16 @@ CREATE TABLE template_category
 CREATE TABLE form_template_group
 (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+
     company_id  BIGINT       NOT NULL,
     name        VARCHAR(255) NOT NULL,
     description TEXT,
+
+    active      BOOLEAN      NOT NULL DEFAULT TRUE,
+
     created_by  BIGINT       NULL,
+    modified_by BIGINT       NULL,
+
     created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
@@ -226,11 +232,17 @@ CREATE TABLE form_template_group
             REFERENCES company (id)
             ON DELETE RESTRICT,
 
-    CONSTRAINT fk_ftg_employee
+    CONSTRAINT fk_ftg_created_by
         FOREIGN KEY (created_by)
+            REFERENCES employee (id)
+            ON DELETE SET NULL,
+
+    CONSTRAINT fk_ftg_modified_by
+        FOREIGN KEY (modified_by)
             REFERENCES employee (id)
             ON DELETE SET NULL
 ) ENGINE = InnoDB;
+
 
 
 -- =========================================================
@@ -275,16 +287,30 @@ CREATE TABLE form_template
 CREATE TABLE log_form_template_ai
 (
     id                      BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    company_id              BIGINT                  NOT NULL,
     template_group_id       BIGINT                  NULL,
     created_template_id     BIGINT                  NULL,
+
     prompt                  TEXT                    NOT NULL,
     generated_template_json JSON,
     generated_rule_json     JSON,
+
     model                   VARCHAR(50),
     status                  ENUM ('SUCCESS','FAIL') NOT NULL,
     error_message           TEXT,
+
     created_by              BIGINT                  NULL,
     created_at              TIMESTAMP               NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    /* =========================
+       Foreign Keys
+       ========================= */
+
+    CONSTRAINT fk_log_ai_company
+        FOREIGN KEY (company_id)
+            REFERENCES company (id)
+            ON DELETE CASCADE,
 
     CONSTRAINT fk_log_ai_group
         FOREIGN KEY (template_group_id)
@@ -301,6 +327,7 @@ CREATE TABLE log_form_template_ai
             REFERENCES employee (id)
             ON DELETE SET NULL
 ) ENGINE = InnoDB;
+
 
 
 -- =========================================================

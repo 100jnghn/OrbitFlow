@@ -25,9 +25,9 @@ import lombok.*;
         }
 )
 @Getter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class FormTemplateGroup extends BaseEntity {
 
     @Id
@@ -43,4 +43,24 @@ public class FormTemplateGroup extends BaseEntity {
 
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @Column(nullable = false)
+    private Boolean active;
+
+
+    public void changeName(String name) {
+        this.name = name;
+    }
+
+    public void changeDescription(String description) {
+        this.description = description;
+    }
+
+    public void deactivate() {
+        this.active = false;
+    }
+
+    public void activate() {
+        this.active = true;
+    }
 }
