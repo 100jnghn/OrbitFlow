@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.controller;
+package com.finalproj.orbitflow.attendance.commute.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;

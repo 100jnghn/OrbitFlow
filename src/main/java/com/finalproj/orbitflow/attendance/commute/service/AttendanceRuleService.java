@@ -1,11 +1,11 @@
-package com.finalproj.orbitflow.attendance.service;
+package com.finalproj.orbitflow.attendance.commute.service;
 
-import com.finalproj.orbitflow.attendance.dto.AttendanceRuleDto;
-import com.finalproj.orbitflow.attendance.dto.EmployeeAttRuleDto;
-import com.finalproj.orbitflow.attendance.entity.AttendanceRule;
-import com.finalproj.orbitflow.attendance.entity.EmployeeAttRule;
-import com.finalproj.orbitflow.attendance.repository.AttendanceRuleRepository;
-import com.finalproj.orbitflow.attendance.repository.EmployeeAttRuleRepository;
+import com.finalproj.orbitflow.attendance.commute.dto.AttendanceRuleDto;
+import com.finalproj.orbitflow.attendance.commute.dto.EmployeeAttRuleDto;
+import com.finalproj.orbitflow.attendance.commute.entity.AttendanceRule;
+import com.finalproj.orbitflow.attendance.commute.entity.EmployeeAttRule;
+import com.finalproj.orbitflow.attendance.commute.repository.AttendanceRuleRepository;
+import com.finalproj.orbitflow.attendance.commute.repository.EmployeeAttRuleRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 

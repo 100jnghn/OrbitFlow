@@ -1,7 +1,7 @@
-package com.finalproj.orbitflow.attendance.controller;
+package com.finalproj.orbitflow.attendance.commute.controller;
 
-import com.finalproj.orbitflow.attendance.dto.AttendanceDto;
-import com.finalproj.orbitflow.attendance.service.AttendanceService;
+import com.finalproj.orbitflow.attendance.commute.dto.AttendanceDto;
+import com.finalproj.orbitflow.attendance.commute.service.AttendanceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

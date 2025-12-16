@@ -43,9 +43,9 @@ public class AttendanceRecord extends BaseEntity {
 
     private BigDecimal days;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "type_id", nullable = false)
-    private LeaveType leaveType;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "type_id", nullable = false)
+//    private LeaveType leaveType;
 
     private String reason;
 

@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.entity;
+package com.finalproj.orbitflow.attendance.commute.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -20,7 +20,7 @@ public class Attendance {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "attendance_id", nullable = false)
-    private Long attendanceId; // 아이디
+    private Long id; // 아이디
 
     @Column(name = "company_id", nullable = false)
     private Long companyId; // 회사 아이디 (FK: company)

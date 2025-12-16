@@ -1,6 +1,6 @@
-package com.finalproj.orbitflow.attendance.dto;
+package com.finalproj.orbitflow.attendance.commute.dto;
 
-import com.finalproj.orbitflow.attendance.entity.AttendanceRule;
+import com.finalproj.orbitflow.attendance.commute.entity.AttendanceRule;
 
 import java.time.LocalTime;
 

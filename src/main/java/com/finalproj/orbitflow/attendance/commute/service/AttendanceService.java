@@ -1,8 +1,8 @@
-package com.finalproj.orbitflow.attendance.service;
+package com.finalproj.orbitflow.attendance.commute.service;
 
-import com.finalproj.orbitflow.attendance.dto.AttendanceDto;
-import com.finalproj.orbitflow.attendance.entity.Attendance;
-import com.finalproj.orbitflow.attendance.repository.AttendanceRepository;
+import com.finalproj.orbitflow.attendance.commute.dto.AttendanceDto;
+import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
+import com.finalproj.orbitflow.attendance.commute.repository.AttendanceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

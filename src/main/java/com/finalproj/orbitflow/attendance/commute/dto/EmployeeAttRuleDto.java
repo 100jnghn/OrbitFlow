@@ -1,6 +1,6 @@
-package com.finalproj.orbitflow.attendance.dto;
+package com.finalproj.orbitflow.attendance.commute.dto;
 
-import com.finalproj.orbitflow.attendance.entity.EmployeeAttRule;
+import com.finalproj.orbitflow.attendance.commute.entity.EmployeeAttRule;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -46,7 +46,7 @@ public class EmployeeAttRuleDto {
     ) {
         public EmployeeAttRuleResponse(EmployeeAttRule rule,String employeeName) {
             this(
-                    rule.getOverrideId(),
+                    rule.getId(),
                     rule.getEmployeeId(),
                     employeeName,
                     rule.getStartTime(),

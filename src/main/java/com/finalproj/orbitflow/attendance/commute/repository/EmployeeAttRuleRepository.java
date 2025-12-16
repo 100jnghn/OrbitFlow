@@ -1,6 +1,6 @@
-package com.finalproj.orbitflow.attendance.repository;
+package com.finalproj.orbitflow.attendance.commute.repository;
 
-import com.finalproj.orbitflow.attendance.entity.EmployeeAttRule;
+import com.finalproj.orbitflow.attendance.commute.entity.EmployeeAttRule;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
