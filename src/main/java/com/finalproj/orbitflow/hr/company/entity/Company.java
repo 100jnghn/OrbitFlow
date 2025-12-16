@@ -30,8 +30,8 @@ public class Company extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "company_id")
-    private Long companyId; // 회사 ID (PK)
+    @Column(name = "id")
+    private Long id; // 회사 ID (PK)
 
     /* ==============================
        회사 기본 정보
