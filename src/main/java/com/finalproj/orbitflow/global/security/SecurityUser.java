@@ -29,7 +29,7 @@ public class SecurityUser implements UserDetails {
     private final EmployeeStatus status;
 
     public SecurityUser(Employee employee) {
-        this.employeeId = employee.getEmployeeId();
+        this.employeeId = employee.getId();
         this.companyId = employee.getCompanyId();
         this.email = employee.getEmail();
         this.password = employee.getPassword();

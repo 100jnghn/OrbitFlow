@@ -19,3 +19,7 @@ server:
 logging:
   level:
     root: info
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}

@@ -25,7 +25,7 @@ public class File {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long fileId;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Company company;
