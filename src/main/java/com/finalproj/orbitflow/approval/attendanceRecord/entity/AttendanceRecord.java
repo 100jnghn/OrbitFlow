@@ -11,6 +11,7 @@ package com.finalproj.orbitflow.approval.attendanceRecord.entity;
 
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
+import com.finalproj.orbitflow.attendance.leave.entity.LeaveType;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
@@ -43,9 +44,9 @@ public class AttendanceRecord extends BaseEntity {
 
     private BigDecimal days;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "type_id", nullable = false)
-//    private LeaveType leaveType;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "type_id", nullable = false)
+    private LeaveType leaveType;
 
     private String reason;
 
