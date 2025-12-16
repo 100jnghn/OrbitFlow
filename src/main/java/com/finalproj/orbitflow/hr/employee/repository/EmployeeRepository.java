@@ -3,6 +3,7 @@ package com.finalproj.orbitflow.hr.employee.repository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -27,5 +28,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
      * 사번을 기준으로 사원 조회
      */
     Optional<Employee> findByEmployeeNo(String employeeNo);
+
+    List<Employee> findAllByEmployeeIdIn(List<Long> employeeIds);
 
 }
