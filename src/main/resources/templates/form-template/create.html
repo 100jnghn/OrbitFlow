@@ -1,0 +1,54 @@
+<link rel="stylesheet" href="/css/form-template.css">
+<div class="form-editor-container">
+  <!-- 좌측 패널: 컴포넌트 목록 -->
+  <nav id="component-list-panel" class="panel">
+    <h3>컴포넌트 목록</h3>
+    <div class="component-btn-list" id="component-btn-list"></div>
+  </nav>
+  
+  <!-- 중앙 패널: 문서 편집 영역 -->
+  <main id="form-edit-area-wrapper">
+    <div id="form-edit-title">
+      <span id="form-title-preview">새 문서 양식</span>
+    </div>
+    <div id="form-edit-area" class="empty"></div>
+  </main>
+  
+  <!-- 우측 패널: 설정 -->
+  <aside id="right-panel">
+    <!-- 우측 상단: 선택된 컴포넌트 개별 설정 -->
+    <section id="component-setting-panel">
+      <h4>컴포넌트 설정</h4>
+      <div id="component-setting-content">
+        <span style="color:#9ab;">컴포넌트를 선택하세요.</span>
+      </div>
+    </section>
+    
+    <!-- 우측 하단: 문서 전체 설정 -->
+    <section id="form-setting-panel">
+      <h4>문서 설정</h4>
+      <div class="setting-row">
+        <label for="form-title-input">제목</label>
+        <input id="form-title-input" name="title" type="text" placeholder="문서의 제목" maxlength="100" required>
+      </div>
+      <div class="setting-row">
+        <label for="form-category-input">카테고리</label>
+        <select id="form-category-input" name="category" class="category-select">
+          <option value="">카테고리 선택</option>
+          <option value="인사">인사</option>
+          <option value="회계">회계</option>
+          <option value="일반">일반</option>
+        </select>
+      </div>
+      <button id="save-form-btn" type="button">양식 저장</button>
+    </section>
+  </aside>
+</div>
+
+<script th:src="@{/js/form-template-builder.js}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.bindDocumentSettingsPanel)
+      window.bindDocumentSettingsPanel();
+  });
+</script>

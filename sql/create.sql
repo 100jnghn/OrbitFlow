@@ -1,0 +1,1120 @@
+drop database if exists orbitflow;
+create database orbitflow;
+
+use orbitflow;
+
+CREATE TABLE company
+(
+    company_id             BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name                   VARCHAR(100) NOT NULL UNIQUE,
+    business_number        VARCHAR(20)  NOT NULL UNIQUE,
+    address                VARCHAR(255) NOT NULL,
+    representative_name    VARCHAR(50)  NOT NULL,
+    representative_contact VARCHAR(20)  NOT NULL,
+    created_at             TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at             TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP
+) ENGINE = InnoDB;
+
+CREATE TABLE org_category
+(
+    category_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id  BIGINT      NOT NULL,
+    name        VARCHAR(50) NOT NULL,
+    order_index INT         NOT NULL,
+    is_active   BOOLEAN     NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_org_category_company
+        FOREIGN KEY (company_id) REFERENCES company (company_id)
+) ENGINE = InnoDB;
+
+CREATE TABLE organization
+(
+    org_id        BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id    BIGINT       NOT NULL,
+    category_id   BIGINT       NOT NULL,
+    parent_org_id BIGINT       NULL,
+    name          VARCHAR(100) NOT NULL,
+    order_index   INT          NOT NULL,
+    is_active     BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_org_company
+        FOREIGN KEY (company_id) REFERENCES company (company_id),
+    CONSTRAINT fk_org_category
+        FOREIGN KEY (category_id) REFERENCES org_category (category_id),
+    CONSTRAINT fk_org_parent
+        FOREIGN KEY (parent_org_id) REFERENCES organization (org_id)
+) ENGINE = InnoDB;
+
+CREATE TABLE `rank`
+(
+    rank_id        BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id     BIGINT      NOT NULL,
+    parent_rank_id BIGINT      NULL,
+    name           VARCHAR(50) NOT NULL,
+    order_index    INT         NOT NULL,
+    is_active      BOOLEAN     NOT NULL DEFAULT TRUE,
+    created_at     TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at     TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_rank_company
+        FOREIGN KEY (company_id) REFERENCES company (company_id),
+    CONSTRAINT fk_rank_parent
+        FOREIGN KEY (parent_rank_id) REFERENCES `rank` (rank_id)
+) ENGINE = InnoDB;
+
+CREATE TABLE position_category
+(
+    category_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id  BIGINT      NOT NULL,
+    name        VARCHAR(50) NOT NULL,
+    order_index INT         NOT NULL,
+    is_active   BOOLEAN     NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_pos_cat_company
+        FOREIGN KEY (company_id) REFERENCES company (company_id)
+) ENGINE = InnoDB;
+
+CREATE TABLE position
+(
+    position_id        BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id         BIGINT      NOT NULL,
+    category_id        BIGINT      NOT NULL,
+    parent_position_id BIGINT      NULL,
+    name               VARCHAR(50) NOT NULL,
+    order_index        INT         NOT NULL,
+    is_active          BOOLEAN     NOT NULL DEFAULT TRUE,
+    created_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_position_company
+        FOREIGN KEY (company_id) REFERENCES company (company_id),
+    CONSTRAINT fk_position_category
+        FOREIGN KEY (category_id) REFERENCES position_category (category_id),
+    CONSTRAINT fk_position_parent
+        FOREIGN KEY (parent_position_id) REFERENCES position (position_id)
+) ENGINE = InnoDB;
+
+CREATE TABLE org_position_usage
+(
+    usage_id    BIGINT AUTO_INCREMENT PRIMARY KEY,
+    org_id      BIGINT    NOT NULL,
+    position_id BIGINT    NOT NULL,
+    is_enabled  BOOLEAN   NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_usage_org
+        FOREIGN KEY (org_id) REFERENCES organization (org_id),
+    CONSTRAINT fk_usage_position
+        FOREIGN KEY (position_id) REFERENCES position (position_id)
+) ENGINE = InnoDB;
+
+CREATE TABLE employee
+(
+    employee_id     BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id      BIGINT                                           NOT NULL,
+    employee_no     VARCHAR(20)                                      NOT NULL,
+    internal_phone  VARCHAR(20),
+    org_id          BIGINT                                           NOT NULL,
+    rank_id         BIGINT                                           NULL,
+    position_id     BIGINT                                           NULL,
+    name            VARCHAR(50)                                      NOT NULL,
+    email           VARCHAR(100)                                     NOT NULL,
+    password        VARCHAR(255)                                     NOT NULL,
+    gender          ENUM ('MALE', 'FEMALE')                          NOT NULL,
+    birth_date      DATE,
+    employment_type ENUM ('REGULAR', 'NON_REGULAR')                  NOT NULL,
+    status          ENUM ('TEMP', 'ACTIVE', 'SUSPENDED', 'RESIGNED') NOT NULL,
+    created_at      TIMESTAMP                                        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP                                        NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_employee_company_no (company_id, employee_no),
+    UNIQUE KEY uk_employee_company_email (company_id, email),
+    CONSTRAINT fk_emp_company
+        FOREIGN KEY (company_id) REFERENCES company (company_id),
+    CONSTRAINT fk_emp_org
+        FOREIGN KEY (org_id) REFERENCES organization (org_id),
+    CONSTRAINT fk_emp_rank
+        FOREIGN KEY (rank_id) REFERENCES `rank` (rank_id),
+    CONSTRAINT fk_emp_position
+        FOREIGN KEY (position_id) REFERENCES position (position_id)
+) ENGINE = InnoDB;
+
+CREATE TABLE log_audit
+(
+    audit_log_id      BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id        BIGINT      NOT NULL,
+    actor_employee_id BIGINT      NOT NULL,
+    entity_type       VARCHAR(30) NOT NULL,
+    entity_id         BIGINT      NOT NULL,
+    event_type        VARCHAR(30) NOT NULL,
+    before_data       JSON        NULL,
+    after_data        JSON        NULL,
+    created_at        TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_audit_company
+        FOREIGN KEY (company_id) REFERENCES company (company_id),
+    CONSTRAINT fk_audit_actor
+        FOREIGN KEY (actor_employee_id) REFERENCES employee (employee_id)
+) ENGINE = InnoDB;
+
+CREATE TABLE notification
+(
+    notification_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id      BIGINT       NOT NULL,
+    employee_id     BIGINT       NOT NULL,
+    type            VARCHAR(30)  NOT NULL,
+    content         VARCHAR(255) NOT NULL,
+    is_read         BOOLEAN      NOT NULL DEFAULT FALSE,
+    created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_notification_company
+        FOREIGN KEY (company_id) REFERENCES company (company_id),
+    CONSTRAINT fk_notification_employee
+        FOREIGN KEY (employee_id) REFERENCES employee (employee_id)
+) ENGINE = InnoDB;
+
+
+USE orbitflow;
+
+-- =========================================================
+-- 1. LEAVE TYPE
+-- =========================================================
+CREATE TABLE leave_type
+(
+    type_id      BIGINT AUTO_INCREMENT PRIMARY KEY,
+    type_name    VARCHAR(50) NOT NULL,
+    is_countable BOOLEAN     NOT NULL,
+    description  VARCHAR(255),
+    created_at   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP
+) ENGINE = InnoDB;
+
+
+-- =========================================================
+-- 2. TEMPLATE CATEGORY
+-- =========================================================
+CREATE TABLE template_category
+(
+    id   BIGINT AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(50)  NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL
+) ENGINE = InnoDB;
+
+
+-- =========================================================
+-- 3. FORM TEMPLATE GROUP
+-- =========================================================
+CREATE TABLE form_template_group
+(
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id  BIGINT       NOT NULL,
+    name        VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_by  BIGINT       NULL,
+    created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_ftg_company
+        FOREIGN KEY (company_id)
+            REFERENCES company (company_id)
+            ON DELETE RESTRICT,
+
+    CONSTRAINT fk_ftg_employee
+        FOREIGN KEY (created_by)
+            REFERENCES employee (employee_id)
+            ON DELETE SET NULL
+) ENGINE = InnoDB;
+
+
+-- =========================================================
+-- 4. FORM TEMPLATE
+-- =========================================================
+CREATE TABLE form_template
+(
+    id                   BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id           BIGINT    NOT NULL,
+    template_group_id    BIGINT    NOT NULL,
+    version              INT       NOT NULL,
+    template_category_id BIGINT    NOT NULL,
+    affect_tags          JSON,
+    template_json        JSON      NOT NULL,
+    approval_rule_json   JSON      NOT NULL,
+    is_active            BOOLEAN   NOT NULL,
+    created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uk_template_group_version
+        UNIQUE (template_group_id, version),
+
+    CONSTRAINT fk_ft_company
+        FOREIGN KEY (company_id)
+            REFERENCES company (company_id)
+            ON DELETE RESTRICT,
+
+    CONSTRAINT fk_ft_group
+        FOREIGN KEY (template_group_id)
+            REFERENCES form_template_group (id)
+            ON DELETE CASCADE,
+
+    CONSTRAINT fk_ft_category
+        FOREIGN KEY (template_category_id)
+            REFERENCES template_category (id)
+            ON DELETE RESTRICT
+) ENGINE = InnoDB;
+
+
+-- =========================================================
+-- 5. FORM TEMPLATE AI LOG
+-- =========================================================
+CREATE TABLE log_form_template_ai
+(
+    id                      BIGINT AUTO_INCREMENT PRIMARY KEY,
+    template_group_id       BIGINT                  NULL,
+    created_template_id     BIGINT                  NULL,
+    prompt                  TEXT                    NOT NULL,
+    generated_template_json JSON,
+    generated_rule_json     JSON,
+    model                   VARCHAR(50),
+    status                  ENUM ('SUCCESS','FAIL') NOT NULL,
+    error_message           TEXT,
+    created_by              BIGINT                  NULL,
+    created_at              TIMESTAMP               NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_log_ai_group
+        FOREIGN KEY (template_group_id)
+            REFERENCES form_template_group (id)
+            ON DELETE SET NULL,
+
+    CONSTRAINT fk_log_ai_template
+        FOREIGN KEY (created_template_id)
+            REFERENCES form_template (id)
+            ON DELETE SET NULL,
+
+    CONSTRAINT fk_log_ai_employee
+        FOREIGN KEY (created_by)
+            REFERENCES employee (employee_id)
+            ON DELETE SET NULL
+) ENGINE = InnoDB;
+
+
+-- =========================================================
+-- 6. DOCUMENT (Soft Delete)
+-- =========================================================
+CREATE TABLE document
+(
+    id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id         BIGINT                                                         NOT NULL,
+    template_group_id  BIGINT                                                         NOT NULL,
+    template_version   INT                                                            NOT NULL,
+    writer_id          BIGINT                                                         NULL,
+    title              VARCHAR(255)                                                   NOT NULL,
+    status             ENUM ('DRAFT','SUBMITTED','IN_PROGRESS','APPROVED','REJECTED') NOT NULL,
+    before_document_id BIGINT                                                         NULL,
+    is_deleted         BOOLEAN                                                        NOT NULL DEFAULT FALSE,
+    created_at         TIMESTAMP                                                      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP                                                      NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_doc_company
+        FOREIGN KEY (company_id)
+            REFERENCES company (company_id)
+            ON DELETE RESTRICT,
+
+    CONSTRAINT fk_doc_writer
+        FOREIGN KEY (writer_id)
+            REFERENCES employee (employee_id)
+            ON DELETE SET NULL,
+
+    CONSTRAINT fk_doc_before
+        FOREIGN KEY (before_document_id)
+            REFERENCES document (id)
+            ON DELETE SET NULL
+) ENGINE = InnoDB;
+
+
+-- =========================================================
+-- 7. DOCUMENT CONTENT
+-- =========================================================
+CREATE TABLE document_content
+(
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    document_id  BIGINT    NOT NULL UNIQUE,
+    content_json JSON      NOT NULL,
+    created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_doc_content
+        FOREIGN KEY (document_id)
+            REFERENCES document (id)
+            ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+
+-- =========================================================
+-- 8. APPROVAL LINE (결재선 + 이력 통합)
+-- =========================================================
+CREATE TABLE approval_line
+(
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    document_id BIGINT                                                         NOT NULL,
+    company_id  BIGINT                                                         NOT NULL,
+    approver_id BIGINT                                                         NULL,
+    order_no    INT                                                            NOT NULL,
+    status      ENUM ('DRAFT','SUBMITTED','IN_PROGRESS','APPROVED','REJECTED') NOT NULL,
+    comment     TEXT,
+    decided_at  TIMESTAMP,
+
+    CONSTRAINT fk_al_document
+        FOREIGN KEY (document_id)
+            REFERENCES document (id)
+            ON DELETE CASCADE,
+
+    CONSTRAINT fk_al_company
+        FOREIGN KEY (company_id)
+            REFERENCES company (company_id)
+            ON DELETE RESTRICT,
+
+    CONSTRAINT fk_al_approver
+        FOREIGN KEY (approver_id)
+            REFERENCES employee (employee_id)
+            ON DELETE SET NULL
+) ENGINE = InnoDB;
+
+
+-- =========================================================
+-- 9. DOCUMENT AI SUMMARY
+-- =========================================================
+CREATE TABLE document_ai_summary
+(
+    id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
+    document_id        BIGINT                  NOT NULL,
+    company_id         BIGINT                  NOT NULL,
+    summary_type       ENUM ('CONTENT','DIFF') NOT NULL,
+    content            TEXT                    NOT NULL,
+    model              VARCHAR(50),
+    before_document_id BIGINT                  NULL,
+    created_at         TIMESTAMP               NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_ai_doc
+        FOREIGN KEY (document_id)
+            REFERENCES document (id)
+            ON DELETE CASCADE,
+
+    CONSTRAINT fk_ai_company
+        FOREIGN KEY (company_id)
+            REFERENCES company (company_id)
+            ON DELETE RESTRICT,
+
+    CONSTRAINT fk_ai_before_doc
+        FOREIGN KEY (before_document_id)
+            REFERENCES document (id)
+            ON DELETE SET NULL
+) ENGINE = InnoDB;
+
+
+-- =========================================================
+-- 10. ATTENDANCE RECORD
+-- =========================================================
+CREATE TABLE attendance_record
+(
+    id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
+    employee_id        BIGINT                                                         NULL,
+    company_id         BIGINT                                                         NOT NULL,
+    start_date         DATE                                                           NOT NULL,
+    end_date           DATE                                                           NOT NULL,
+    days               DECIMAL(4, 1)                                                  NOT NULL,
+    type_id            BIGINT                                                         NOT NULL,
+    reason             VARCHAR(255),
+    source_document_id BIGINT                                                         NULL,
+    status             ENUM ('DRAFT','SUBMITTED','IN_PROGRESS','APPROVED','REJECTED') NOT NULL,
+    approved_at        TIMESTAMP,
+    created_at         TIMESTAMP                                                      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP                                                      NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_att_employee
+        FOREIGN KEY (employee_id)
+            REFERENCES employee (employee_id)
+            ON DELETE SET NULL,
+
+    CONSTRAINT fk_att_company
+        FOREIGN KEY (company_id)
+            REFERENCES company (company_id)
+            ON DELETE RESTRICT,
+
+    CONSTRAINT fk_att_document
+        FOREIGN KEY (source_document_id)
+            REFERENCES document (id)
+            ON DELETE SET NULL,
+
+    CONSTRAINT fk_att_leave_type
+        FOREIGN KEY (type_id)
+            REFERENCES leave_type (type_id)
+            ON DELETE RESTRICT
+            ON UPDATE CASCADE
+) ENGINE = InnoDB;
+
+
+-- =========================================================
+-- 11. FILE
+-- =========================================================
+CREATE TABLE file
+(
+    file_id      BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id   BIGINT       NOT NULL,
+    object_key   VARCHAR(255) NOT NULL UNIQUE,
+    origin_file  VARCHAR(255),
+    sys_file     VARCHAR(255),
+    content_type VARCHAR(50),
+    file_size    BIGINT,
+    created_by   BIGINT       NULL,
+    created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_file_company
+        FOREIGN KEY (company_id)
+            REFERENCES company (company_id)
+            ON DELETE RESTRICT,
+
+    CONSTRAINT fk_file_employee
+        FOREIGN KEY (created_by)
+            REFERENCES employee (employee_id)
+            ON DELETE SET NULL
+) ENGINE = InnoDB;
+
+
+-- =========================================================
+-- 12. DOCUMENT FILE
+-- =========================================================
+CREATE TABLE document_file
+(
+    document_file_id    BIGINT AUTO_INCREMENT PRIMARY KEY,
+    document_id         BIGINT                               NOT NULL,
+    file_id             BIGINT                               NULL,
+    reference_type      ENUM ('ATTACHMENT','DOCUMENT','URL') NOT NULL,
+    reference_target_id BIGINT                               NULL,
+    reference_url       VARCHAR(255),
+
+    CONSTRAINT fk_df_document
+        FOREIGN KEY (document_id)
+            REFERENCES document (id)
+            ON DELETE CASCADE,
+
+    CONSTRAINT fk_df_file
+        FOREIGN KEY (file_id)
+            REFERENCES file (file_id)
+            ON DELETE SET NULL
+) ENGINE = InnoDB;
+
+
+/* =========================================================
+   SIGNATURE (전자 서명)
+========================================================= */
+CREATE TABLE employee_signature
+(
+    signature_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    employee_id  BIGINT    NOT NULL,
+    company_id   BIGINT    NOT NULL,
+    file_id      BIGINT    NOT NULL, -- 서명 이미지 (S3)
+    is_active    BOOLEAN   NOT NULL DEFAULT TRUE,
+    created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_emp_sig_employee
+        FOREIGN KEY (employee_id) REFERENCES employee (employee_id),
+    CONSTRAINT fk_emp_sig_company
+        FOREIGN KEY (company_id) REFERENCES company (company_id),
+    CONSTRAINT fk_emp_sig_file
+        FOREIGN KEY (file_id) REFERENCES file (file_id)
+);
+
+
+CREATE TABLE document_signature
+(
+    document_signature_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    document_id           BIGINT    NOT NULL,
+    approval_line_id      BIGINT    NOT NULL,
+    company_id            BIGINT    NOT NULL,
+    signer_id             BIGINT    NOT NULL,
+
+    signature_file_id     BIGINT    NOT NULL, -- 당시 서명 스냅샷
+    signed_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_doc_sig_document
+        FOREIGN KEY (document_id) REFERENCES document (id),
+    CONSTRAINT fk_doc_sig_approval_line
+        FOREIGN KEY (approval_line_id) REFERENCES approval_line (id),
+    CONSTRAINT fk_doc_sig_company
+        FOREIGN KEY (company_id) REFERENCES company (company_id),
+    CONSTRAINT fk_doc_sig_signer
+        FOREIGN KEY (signer_id) REFERENCES employee (employee_id),
+    CONSTRAINT fk_doc_sig_file
+        FOREIGN KEY (signature_file_id) REFERENCES file (file_id),
+
+    UNIQUE KEY uk_doc_approval (document_id, approval_line_id)
+);
+
+
+/* =========================================================
+   BOARD / MESSAGE TABLES
+   (company_id 반영, 초기 DB 세팅 기준)
+========================================================= */
+
+CREATE TABLE board_category
+(
+    board_category_id BIGINT       NOT NULL AUTO_INCREMENT,
+    company_id        BIGINT       NOT NULL,
+    org_id            BIGINT       NOT NULL,
+    board_name        VARCHAR(100) NOT NULL,
+    board_type        VARCHAR(50)  NOT NULL,
+    is_activated      TINYINT(1)   NOT NULL DEFAULT 1,
+    comment_activated TINYINT(1)   NOT NULL DEFAULT 1,
+    created_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (board_category_id),
+    FOREIGN KEY (company_id) REFERENCES company (company_id),
+    FOREIGN KEY (org_id) REFERENCES organization (org_id)
+);
+
+CREATE TABLE board
+(
+    board_id          BIGINT       NOT NULL AUTO_INCREMENT,
+    company_id        BIGINT       NOT NULL,
+    board_category_id BIGINT       NOT NULL,
+    employee_id       BIGINT       NOT NULL,
+    board_title       VARCHAR(255) NOT NULL,
+    board_content     TEXT         NULL,
+    view_count        INT          NOT NULL DEFAULT 0,
+    file_id           BIGINT       NULL,
+    created_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at        TIMESTAMP    NULL,
+    PRIMARY KEY (board_id),
+    FOREIGN KEY (company_id) REFERENCES company (company_id),
+    FOREIGN KEY (board_category_id) REFERENCES board_category (board_category_id),
+    FOREIGN KEY (employee_id) REFERENCES employee (employee_id),
+    FOREIGN KEY (file_id) REFERENCES file (file_id)
+);
+
+CREATE TABLE board_permission
+(
+    board_permission_id BIGINT    NOT NULL AUTO_INCREMENT,
+    company_id          BIGINT    NOT NULL,
+    employee_id         BIGINT    NOT NULL,
+    board_category_id   BIGINT    NOT NULL,
+    created_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (board_permission_id),
+    UNIQUE KEY uk_employee_board (company_id, employee_id, board_category_id),
+    FOREIGN KEY (company_id) REFERENCES company (company_id),
+    FOREIGN KEY (employee_id) REFERENCES employee (employee_id),
+    FOREIGN KEY (board_category_id) REFERENCES board_category (board_category_id)
+);
+
+CREATE TABLE comment
+(
+    comment_id      BIGINT    NOT NULL AUTO_INCREMENT,
+    company_id      BIGINT    NOT NULL,
+    board_id        BIGINT    NOT NULL,
+    employee_id     BIGINT    NOT NULL,
+    comment_content TEXT      NOT NULL,
+    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at      TIMESTAMP NULL,
+    PRIMARY KEY (comment_id),
+    FOREIGN KEY (company_id) REFERENCES company (company_id),
+    FOREIGN KEY (board_id) REFERENCES board (board_id),
+    FOREIGN KEY (employee_id) REFERENCES employee (employee_id)
+);
+
+CREATE TABLE message
+(
+    message_id      BIGINT       NOT NULL AUTO_INCREMENT,
+    company_id      BIGINT       NOT NULL,
+    employee_id     BIGINT       NOT NULL,
+    message_title   VARCHAR(255) NOT NULL,
+    message_content TEXT         NOT NULL,
+    file_id         BIGINT       NULL,
+    created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (message_id),
+    FOREIGN KEY (company_id) REFERENCES company (company_id),
+    FOREIGN KEY (employee_id) REFERENCES employee (employee_id),
+    FOREIGN KEY (file_id) REFERENCES file (file_id)
+);
+
+CREATE TABLE message_recipient
+(
+    recipient_id BIGINT     NOT NULL AUTO_INCREMENT,
+    company_id   BIGINT     NOT NULL,
+    message_id   BIGINT     NOT NULL,
+    employee_id  BIGINT     NOT NULL,
+    is_read      TINYINT(1) NOT NULL DEFAULT 0,
+    read_at      TIMESTAMP  NULL,
+    created_at   TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (recipient_id),
+    UNIQUE KEY uk_message_recipient (company_id, message_id, employee_id),
+    FOREIGN KEY (company_id) REFERENCES company (company_id),
+    FOREIGN KEY (message_id) REFERENCES message (message_id),
+    FOREIGN KEY (employee_id) REFERENCES employee (employee_id)
+);
+
+
+-- 1. 자원 상태 (Charset 명시 추가)
+CREATE TABLE resource_status
+(
+    resource_status_code VARCHAR(50) NOT NULL,
+    status_name          VARCHAR(50),
+    PRIMARY KEY (resource_status_code)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+-- 2. 회의실
+CREATE TABLE meetingroom
+(
+    meetingroom_id       BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id           BIGINT      NOT NULL,
+    name                 VARCHAR(30) NOT NULL,
+    position             VARCHAR(50) NOT NULL,
+    description          VARCHAR(255),
+    resource_status_code VARCHAR(50) NOT NULL,
+    created_at           TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    modified_at          TIMESTAMP            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_meetingroom_company
+        FOREIGN KEY (company_id)
+            REFERENCES company (company_id)
+            ON DELETE CASCADE,
+    CONSTRAINT fk_meetingroom_resource_status
+        FOREIGN KEY (resource_status_code)
+            REFERENCES resource_status (resource_status_code)
+            ON DELETE NO ACTION
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+-- 3. 차량
+CREATE TABLE car
+(
+    car_id               BIGINT AUTO_INCREMENT,
+    company_id           BIGINT      NOT NULL,
+    number               VARCHAR(15) NOT NULL,
+    name                 VARCHAR(50) NOT NULL,
+    driver_age           INT         NOT NULL,
+    description          VARCHAR(255),
+    resource_status_code VARCHAR(50) NOT NULL,
+    file_id              BIGINT,
+    created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    modified_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (car_id),
+    CONSTRAINT fk_car_company
+        FOREIGN KEY (company_id) REFERENCES company (company_id)
+            ON DELETE CASCADE,
+    CONSTRAINT fk_car_resource_status
+        FOREIGN KEY (resource_status_code) REFERENCES resource_status (resource_status_code)
+            ON DELETE NO ACTION,
+    CONSTRAINT fk_car_file
+        FOREIGN KEY (file_id) REFERENCES file (file_id)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+-- 4. 아이템 카테고리
+CREATE TABLE item_category
+(
+    item_category_id BIGINT AUTO_INCREMENT,
+    company_id       BIGINT      NOT NULL,
+    name             VARCHAR(50) NOT NULL,
+    created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    modified_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (item_category_id),
+    CONSTRAINT fk_item_category_company
+        FOREIGN KEY (company_id) REFERENCES company (company_id)
+            ON DELETE CASCADE
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+-- 5. 아이템 (기타 자원)
+CREATE TABLE item
+(
+    item_id              BIGINT AUTO_INCREMENT,
+    company_id           BIGINT      NOT NULL,
+    item_category_id     BIGINT      NOT NULL,
+    name                 VARCHAR(50) NOT NULL,
+    description          VARCHAR(255),
+    resource_status_code VARCHAR(50) NOT NULL,
+    file_id              BIGINT,
+    created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    modified_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (item_id),
+    CONSTRAINT fk_item_company
+        FOREIGN KEY (company_id) REFERENCES company (company_id)
+            ON DELETE CASCADE,
+    CONSTRAINT fk_item_item_category
+        FOREIGN KEY (item_category_id) REFERENCES item_category (item_category_id),
+    CONSTRAINT fk_item_resource_status
+        FOREIGN KEY (resource_status_code) REFERENCES resource_status (resource_status_code)
+            ON DELETE NO ACTION,
+    CONSTRAINT fk_item_file
+        FOREIGN KEY (file_id) REFERENCES file (file_id)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+-- 6. 예약 상태
+CREATE TABLE reservation_status
+(
+    reservation_status_code VARCHAR(50) NOT NULL,
+    status_name             VARCHAR(50) NOT NULL,
+    PRIMARY KEY (reservation_status_code)
+
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+-- 7. 예약
+CREATE TABLE reservation
+(
+    reservation_id          BIGINT AUTO_INCREMENT,
+    company_id              BIGINT       NOT NULL,
+    employee_id             BIGINT       NOT NULL,
+    type_code               VARCHAR(20)  NOT NULL,
+    item_category_id        BIGINT,
+    resource_id             BIGINT       NOT NULL,
+    reservation_date        DATE         NOT NULL,
+    start_time              INT          NOT NULL,
+    end_time                INT          NOT NULL,
+    reservation_reason      VARCHAR(255) NOT NULL,
+    reject_reason           VARCHAR(255),
+    reservation_status_code VARCHAR(50)  NOT NULL,
+    created_at              TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    modified_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (reservation_id),
+    CONSTRAINT fk_reservation_company
+        FOREIGN KEY (company_id) REFERENCES company (company_id)
+            ON DELETE CASCADE,
+    CONSTRAINT fk_reservation_employee
+        FOREIGN KEY (employee_id) REFERENCES employee (employee_id)
+            ON DELETE CASCADE,
+    CONSTRAINT fk_reservation_item_category
+        FOREIGN KEY (item_category_id) REFERENCES item_category (item_category_id)
+            ON DELETE SET NULL,
+    CONSTRAINT fk_reservation_status
+        FOREIGN KEY (reservation_status_code) REFERENCES reservation_status (reservation_status_code)
+            ON DELETE NO ACTION
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+-- 8. 일정
+CREATE TABLE schedule
+(
+    schedule_id          BIGINT AUTO_INCREMENT,
+    company_id           BIGINT       NOT NULL,
+    category_id          BIGINT,
+    org_id               BIGINT,
+    type                 VARCHAR(20)  NOT NULL,
+    employee_id          BIGINT       NOT NULL,
+    schedule_title       VARCHAR(100) NOT NULL,
+    schedule_description VARCHAR(255),
+    start_date           DATE         NOT NULL,
+    end_date             DATE         NOT NULL,
+    start_time           INT          NOT NULL,
+    end_time             INT          NOT NULL,
+    schedule_status      VARCHAR(20)  NOT NULL,
+    created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    modified_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (schedule_id),
+    CONSTRAINT fk_schedule_company
+        FOREIGN KEY (company_id) REFERENCES company (company_id)
+            ON DELETE CASCADE,
+    CONSTRAINT fk_schedule_org_category
+        FOREIGN KEY (category_id) REFERENCES org_category (category_id)
+            ON DELETE CASCADE,
+    CONSTRAINT fk_schedule_organization
+        FOREIGN KEY (org_id) REFERENCES organization (org_id)
+            ON DELETE CASCADE,
+    CONSTRAINT fk_schedule_employee
+        FOREIGN KEY (employee_id) REFERENCES employee (employee_id)
+            ON DELETE CASCADE
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+-- 9. 일정 요약
+CREATE TABLE schedule_summary
+(
+    summary_id    BIGINT AUTO_INCREMENT,
+    company_id    BIGINT NOT NULL,
+    employee_id   BIGINT NOT NULL,
+    week_summary  TEXT,
+    month_summary TEXT,
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (summary_id),
+    CONSTRAINT fk_schedule_summary_company
+        FOREIGN KEY (company_id) REFERENCES company (company_id)
+            ON DELETE CASCADE,
+    CONSTRAINT fk_schedule_summary_employee
+        FOREIGN KEY (employee_id) REFERENCES employee (employee_id)
+            ON DELETE CASCADE
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+-- 10. AI 일정 요약 로그
+CREATE TABLE log_schedule_summary
+(
+    log_ai_schedule_id  BIGINT AUTO_INCREMENT,
+    company_id          BIGINT      NOT NULL,
+    employee_id         BIGINT,
+    summary_type        VARCHAR(10) NOT NULL,
+    schedule_start_date DATE        NOT NULL,
+    schedule_end_date   DATE        NOT NULL,
+    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    model               VARCHAR(50) NOT NULL,
+    PRIMARY KEY (log_ai_schedule_id),
+    CONSTRAINT fk_log_schedule_summary_company
+        FOREIGN KEY (company_id) REFERENCES company (company_id)
+            ON DELETE CASCADE,
+    CONSTRAINT fk_log_schedule_summary_employee
+        FOREIGN KEY (employee_id) REFERENCES employee (employee_id)
+            ON DELETE SET NULL
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+
+
+CREATE TABLE attendance_rule
+(
+
+    rule_id                   BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '규칙 아이디',
+
+    company_id                BIGINT    NOT NULL COMMENT '회사 아이디',
+
+    name                      VARCHAR(100) COMMENT '규칙 명칭',
+
+    default_start_time        TIME      NOT NULL COMMENT '기본 출근 기준 시간 (09:00)',
+
+    default_end_time          TIME      NOT NULL COMMENT '기본 퇴근 기준 시간 (18:00)',
+
+    default_break_minutes     INT                DEFAULT 60 COMMENT '기본 휴게 시간 (분 단위, 60분)',
+
+    late_threshold_min        INT                DEFAULT 10 COMMENT '지각 판정 허용 시간 (분)',
+
+    early_leave_threshold_min INT                DEFAULT 10 COMMENT '조퇴 판정 허용 시간 (분)',
+
+    is_default                BOOLEAN   NOT NULL DEFAULT TRUE COMMENT '회사의 기본 주 규칙 여부',
+
+    created_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    updated_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+
+    FOREIGN KEY (company_id) REFERENCES company (company_id)
+
+);
+
+
+
+CREATE TABLE employee_att_rule
+(
+
+    override_id   BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '아이디',
+
+    company_id    BIGINT  NOT NULL COMMENT '회사 아이디',
+
+    employee_id   BIGINT  NOT NULL COMMENT '직원 아이디',
+
+    start_time    TIME COMMENT '지정 출근 시간 (오버라이드)',
+
+    end_time      TIME COMMENT '지정 퇴근 시간 (오버라이드)',
+
+    break_minutes INT COMMENT '지정 휴게 시간 (분)',
+
+    reason        VARCHAR(255) COMMENT '예외규칙 적용 사유',
+
+    valid_from    DATE    NOT NULL COMMENT '규칙 적용 시작일',
+
+    valid_to      DATE    NOT NULL COMMENT '규칙 적용 종료일',
+
+    applied_by    BIGINT COMMENT '적용한 관리자 아이디',
+
+    applied_at    DATETIME COMMENT '적용된 시각',
+
+    is_active     BOOLEAN NOT NULL DEFAULT TRUE COMMENT '규칙 활성화 상태',
+
+
+    FOREIGN KEY (company_id) REFERENCES company (company_id),
+
+    FOREIGN KEY (employee_id) REFERENCES employee (employee_id),
+
+    FOREIGN KEY (applied_by) REFERENCES employee (employee_id)
+
+);
+
+
+
+CREATE TABLE attendance
+(
+
+    attendance_id     BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '아이디',
+
+    company_id        BIGINT  NOT NULL COMMENT '회사 아이디',
+
+    employee_id       BIGINT  NOT NULL COMMENT '기록한 사원 아이디',
+
+    work_date         DATE    NOT NULL COMMENT '근무 일자',
+
+    commute_at        DATETIME COMMENT '실제 출근 시간',
+
+    leave_at          DATETIME COMMENT '실제 퇴근 시간',
+
+    status            VARCHAR(50) COMMENT '최종 근태 상태 (지각/결근/비출근)',
+
+    applied_rule_id   BIGINT COMMENT '최종 적용된 규칙 아이디',
+
+    is_corrected      BOOLEAN NOT NULL DEFAULT FALSE COMMENT '정정 처리 여부',
+
+    correction_reason VARCHAR(255) COMMENT '정정 사유',
+
+
+    UNIQUE KEY uk_att_date (employee_id, work_date),
+
+    FOREIGN KEY (company_id) REFERENCES company (company_id),
+
+    FOREIGN KEY (employee_id) REFERENCES employee (employee_id),
+
+    FOREIGN KEY (applied_rule_id) REFERENCES attendance_rule (rule_id)
+
+);
+
+
+
+CREATE TABLE correction_history
+(
+
+    history_id           BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '근태 정정 이력 아이디',
+
+    attendance_id        BIGINT       NOT NULL COMMENT '근태 기록 아이디',
+
+    original_commute_at  DATETIME COMMENT '정정 전 출근 시각',
+
+    original_leave_at    DATETIME COMMENT '정정 전 퇴근 시각',
+
+    corrected_commute_at DATETIME     NOT NULL COMMENT '정정 요청 출근 시각',
+
+    corrected_leave_at   DATETIME     NOT NULL COMMENT '정정 요청 퇴근 시각',
+
+    correction_reason    VARCHAR(255) NOT NULL COMMENT '직원 입력 정정 사유',
+
+    correction_status    VARCHAR(50)  NOT NULL DEFAULT 'PENDING' COMMENT '정정 처리 상태 (PENDING, APPROVED, REJECTED)',
+
+    processed_by         BIGINT COMMENT '정정 처리 관리자 아이디',
+
+    processed_at         DATETIME COMMENT '정정 처리 시각',
+
+    rejection_reason     VARCHAR(255) COMMENT '관리자 입력 반려 사유',
+
+
+    FOREIGN KEY (attendance_id) REFERENCES attendance (attendance_id),
+
+    FOREIGN KEY (processed_by) REFERENCES employee (employee_id)
+
+);
+
+
+
+CREATE TABLE leave_balance
+(
+
+    balance_id      BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '아이디',
+
+    company_id      BIGINT    NOT NULL,
+
+    employee_id     BIGINT    NOT NULL COMMENT '직원 아이디',
+
+    year            INT       NOT NULL COMMENT '연차 기준 연도',
+
+    total_granted   DECIMAL(5, 2)      DEFAULT 0.0 COMMENT '총 부여 일수',
+
+    remaining_days  DECIMAL(5, 2)      DEFAULT 0.0 COMMENT '잔여 일수',
+
+    last_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '최종 업데이트 시각',
+
+
+    UNIQUE KEY uk_employee_year (employee_id, year),
+
+    FOREIGN KEY (company_id) REFERENCES company (company_id),
+
+    FOREIGN KEY (employee_id) REFERENCES employee (employee_id)
+
+);
+
+
+
+CREATE TABLE manual_category
+(
+
+    category_id   BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '카테고리 아이디',
+
+    company_id    BIGINT      NOT NULL,
+
+    category_name VARCHAR(50) NOT NULL COMMENT '카테고리 이름',
+
+    description   VARCHAR(255) COMMENT '카테고리 설명',
+
+    is_active     BOOLEAN     NOT NULL DEFAULT TRUE COMMENT '카테고리 사용 여부',
+
+    sort_order    INT COMMENT '정렬 순서',
+
+    created_at    TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+
+    FOREIGN KEY (company_id) REFERENCES company (company_id)
+
+);
+
+
+
+CREATE TABLE manual_link
+(
+
+    manual_link_id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '연결 고유 아이디',
+
+    file_id        BIGINT  NOT NULL COMMENT '파일 아이디 (첨부파일 테이블 참조)',
+
+    category_id    BIGINT  NOT NULL COMMENT '카테고리 아이디',
+
+    company_id     BIGINT  NOT NULL,
+
+    status         VARCHAR(50) COMMENT '파일 처리 상태 (UPLOADED, PROCESSING, READY, FAILED)',
+
+    is_active      BOOLEAN NOT NULL DEFAULT TRUE COMMENT '사용할지 여부',
+
+    vectorized_at  DATETIME COMMENT '벡터화 처리 시각',
+
+
+    FOREIGN KEY (file_id) REFERENCES file (file_id),
+
+    FOREIGN KEY (category_id) REFERENCES manual_category (category_id),
+
+    FOREIGN KEY (company_id) REFERENCES company (company_id)
+
+);
+
+
+
+CREATE TABLE grant_history
+(
+
+    id              BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '아이디',
+
+    employee_id     BIGINT        NOT NULL COMMENT '직원 아이디',
+
+    company_id      BIGINT        NOT NULL COMMENT '회사 아이디',
+
+    grant_date      DATE          NOT NULL COMMENT '부여 발생일',
+
+    granted_days    DECIMAL(4, 2) NOT NULL COMMENT '부여 일수',
+
+    grant_type      VARCHAR(50) COMMENT '부여 유형',
+
+    expiration_date DATE COMMENT '소멸 예정일',
+
+    is_expired      BOOLEAN       NOT NULL DEFAULT FALSE COMMENT '소멸 처리 여부',
+
+    created_at      DATETIME      NOT NULL COMMENT '기록 시각',
+
+
+    FOREIGN KEY (employee_id) REFERENCES employee (employee_id),
+
+    FOREIGN KEY (company_id) REFERENCES company (company_id)
+
+);
