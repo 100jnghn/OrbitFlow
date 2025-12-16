@@ -15,7 +15,7 @@ public class AttendanceDto {
     ) {
         public TodayAttendanceResponse(Attendance attendance) {
             this(
-                    attendance != null ? attendance.getAttendanceId() : null,
+                    attendance != null ? attendance.getId() : null,
                     attendance != null ? attendance.getCommuteAt() : null,
                     attendance != null ? attendance.getLeaveAt() : null,
                     attendance != null ? attendance.getStatus() : null
