@@ -55,4 +55,24 @@ public class Company extends BaseEntity {
 
     @Column(name = "representative_contact", nullable = false, length = 20)
     private String representativeContact; // 대표자 연락처
+
+    /**
+     * 회사 생성
+     **/
+    public static Company create(
+            String name,
+            String businessNumber,
+            String address,
+            String representativeName,
+            String representativeContact
+    ) {
+        Company company = new Company();
+        company.name = name;
+        company.businessNumber = businessNumber;
+        company.address = address;
+        company.representativeName = representativeName;
+        company.representativeContact = representativeContact;
+        return company;
+    }
+
 }

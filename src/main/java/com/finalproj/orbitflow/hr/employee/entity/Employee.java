@@ -111,5 +111,21 @@ public class Employee extends BaseEntity {
     @Column(nullable = false, length = 20)
     private EmployeeStatus status; // 재직 상태 : TEMP(임시 계정), ACTIVE(재직), SUSPENDED(정지), RESIGNED(퇴사)
 
-    // 생성은 정적 팩토리 메서드를 통해서만 수행
+    /**
+     * 대표 관리자 생성
+     **/
+    public static Employee createAdmin(
+            Company company,
+            String email,
+            String encodedPassword
+    ) {
+        Employee employee = new Employee();
+        employee.company = company;
+        employee.email = email;
+        employee.password = encodedPassword;
+        employee.status = EmployeeStatus.ACTIVE;
+        employee.employmentType = EmploymentType.REGULAR;
+        return employee;
+    }
+
 }
