@@ -16,22 +16,32 @@ import org.springframework.stereotype.Service;
  * @filename : CustomUserDetailsService
  * @since : 2025-12-15 월요일
  */
-
 @Service
 @RequiredArgsConstructor
-public class CustomUserDetailsService implements UserDetailsService {
+public class CustomUserDetailsService  {
 
     private final EmployeeRepository employeeRepository;
 
-    @Override
-    public UserDetails loadUserByUsername(String employeeNo)
-            throws UsernameNotFoundException {
-
-        Employee employee = employeeRepository
-                .findByEmail(employeeNo)
-                .orElseThrow(() ->
-                        new UsernameNotFoundException("사원 정보 없음"));
-
+    /**
+     * 로그인 시 사용 (email 기준)
+     */
+    public SecurityUser loadByCompanyIdAndEmail(Long companyId, String email) {
+        Employee employee = employeeRepository.findByCompanyIdAndEmail(companyId, email)
+                .orElseThrow(() -> new UsernameNotFoundException("사원 정보 없음"));
         return new SecurityUser(employee);
     }
+
+    /**
+     * JWT 인증 시 사용 (employeeId 기준)
+     */
+    public SecurityUser loadByEmployeeId(Long employeeId) {
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new UsernameNotFoundException("사원 정보 없음"));
+        return new SecurityUser(employee);
+    }
+
+
+
+
+
 }

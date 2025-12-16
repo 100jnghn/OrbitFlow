@@ -28,7 +28,8 @@ import java.time.LocalDate;
         name = "employee",
         uniqueConstraints = { // 엔티티의 무결성을 DB 레벨에서도 보장하기 위함
                 @UniqueConstraint(columnNames = {"company_id", "employee_no"}),
-                @UniqueConstraint(columnNames = {"company_id", "email"})
+                @UniqueConstraint(columnNames = {"email"}),
+                @UniqueConstraint(columnNames = {"company_id", "internalPhone"})
         }
 )
 public class Employee extends BaseEntity {
@@ -64,16 +65,19 @@ public class Employee extends BaseEntity {
     private String employeeNo; // 사번 (예: 20250001)
 
     @Column(length = 20)
-    private String internalPhone; // 사내 번호
+    private String internalPhone; // 사내 번호 --> 사원 퇴사 시 null
+
+    @Column(length = 20)
+    private String phone; // 연락처 --> 사원 퇴사 시 null
 
     @Column(nullable = false, length = 50)
     private String name;       // 이름
 
     @Column(nullable = false, length = 100)
-    private String email;      // 로그인 ID
+    private String email; // 퇴사 시 resigned_{employeeId}@orbitflow.local 로 치환
 
     @Column(nullable = false)
-    private String password;
+    private String password;   //  --> 사원 퇴사 시 랜덤값으로 치환
 
     /* ==============================
        인적 정보
@@ -99,5 +103,4 @@ public class Employee extends BaseEntity {
     private EmployeeStatus status; // 재직 상태 : TEMP(임시 계정), ACTIVE(재직), SUSPENDED(정지), RESIGNED(퇴사)
 
     // 생성은 정적 팩토리 메서드를 통해서만 수행
-
 }
