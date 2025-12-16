@@ -13,9 +13,9 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ResourceStatusCode {
-    AVAILABLE("사용 가능"),
-    INSPECTION("점검 중"),
-    UNAVAILABLE("사용 불가"),
+    AVAILABLE("사용가능"),
+    INSPECTION("점검중"),
+    UNAVAILABLE("사용불가"),
     DELETED("삭제됨"),
     ETC("기타");
 
