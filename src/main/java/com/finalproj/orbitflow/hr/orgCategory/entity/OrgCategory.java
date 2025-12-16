@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.hr.organization.entity;
+package com.finalproj.orbitflow.hr.orgCategory.entity;
 
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import jakarta.persistence.*;

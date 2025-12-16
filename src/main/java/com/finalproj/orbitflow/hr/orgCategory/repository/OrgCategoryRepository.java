@@ -1,6 +1,6 @@
-package com.finalproj.orbitflow.hr.organization.repository;
+package com.finalproj.orbitflow.hr.orgCategory.repository;
 
-import com.finalproj.orbitflow.hr.organization.entity.OrgCategory;
+import com.finalproj.orbitflow.hr.orgCategory.entity.OrgCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

@@ -105,8 +105,8 @@ public class AttendanceRuleService {
                 .collect(Collectors.toList());
 
         // 3. 한 번의 쿼리로 해당 ID의 모든 사원 정보를 가져와 Map<ID, Name>으로 변환합니다.
-        Map<Long, String> employeeMap = employeeRepository.findAllByEmployeeIdIn(employeeIds).stream()
-                .collect(Collectors.toMap(Employee::getEmployeeId, Employee::getName));
+        Map<Long, String> employeeMap = employeeRepository.findAllByIdIn(employeeIds).stream()
+                .collect(Collectors.toMap(Employee::getId, Employee::getName));
 
         // 4. 규칙 목록을 순회하며 DTO를 생성하고 이름을 매핑합니다.
         return rules.stream()
