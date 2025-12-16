@@ -1,6 +1,7 @@
 package com.finalproj.orbitflow.resource.car.entity;
 
 import com.finalproj.orbitflow.global.common.BaseEntity;
+import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.resource.meetingroom.entity.Meetingroom;
 import com.finalproj.orbitflow.resource.status.entity.ResourceStatus;
@@ -25,8 +26,8 @@ public class Car extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "car_id")
-    private Long carId;
+    @Column(name = "id")
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
@@ -48,7 +49,7 @@ public class Car extends BaseEntity {
     @JoinColumn(name = "resource_status_code", nullable = false)
     private ResourceStatus resourceStatus;
 
-//    @OneToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "file_id")
-//    private FileEntity file;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "file_id")
+    private File file;
 }
