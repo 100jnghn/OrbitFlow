@@ -25,8 +25,8 @@ public class CustomUserDetailsService  {
     /**
      * 로그인 시 사용 (email 기준)
      */
-    public SecurityUser loadByCompanyIdAndEmail(Long companyId, String email) {
-        Employee employee = employeeRepository.findByCompanyIdAndEmail(companyId, email)
+    public SecurityUser loadByEmail(String email) {
+        Employee employee = employeeRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("사원 정보 없음"));
         return new SecurityUser(employee);
     }
