@@ -240,7 +240,10 @@ CREATE TABLE form_template_group
     CONSTRAINT fk_ftg_modified_by
         FOREIGN KEY (modified_by)
             REFERENCES employee (id)
-            ON DELETE SET NULL
+            ON DELETE SET NULL,
+
+    CONSTRAINT uq_form_template_group_company_name
+        UNIQUE (company_id, name)
 ) ENGINE = InnoDB;
 
 
@@ -261,8 +264,8 @@ CREATE TABLE form_template
     is_active            BOOLEAN   NOT NULL,
     created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT uk_template_group_version
-        UNIQUE (template_group_id, version),
+    CONSTRAINT uk_template_group_company_version
+        UNIQUE (company_id, template_group_id, version),
 
     CONSTRAINT fk_ft_company
         FOREIGN KEY (company_id)
@@ -326,8 +329,17 @@ CREATE TABLE log_form_template_ai
         FOREIGN KEY (created_by)
             REFERENCES employee (id)
             ON DELETE SET NULL
+
 ) ENGINE = InnoDB;
 
+CREATE INDEX idx_log_ai_company_created_at
+    ON log_form_template_ai (company_id, created_at DESC);
+
+CREATE INDEX idx_log_ai_group
+    ON log_form_template_ai (template_group_id);
+
+CREATE INDEX idx_log_ai_status
+    ON log_form_template_ai (status);
 
 
 -- =========================================================
@@ -353,6 +365,11 @@ CREATE TABLE document
             REFERENCES company (id)
             ON DELETE RESTRICT,
 
+    CONSTRAINT fk_doc_template_group
+        FOREIGN KEY (template_group_id)
+            REFERENCES form_template_group (id)
+            ON DELETE RESTRICT,
+
     CONSTRAINT fk_doc_writer
         FOREIGN KEY (writer_id)
             REFERENCES employee (id)
@@ -363,6 +380,19 @@ CREATE TABLE document
             REFERENCES document (id)
             ON DELETE SET NULL
 ) ENGINE = InnoDB;
+
+
+CREATE INDEX idx_doc_company_created
+    ON document (company_id, created_at DESC);
+
+CREATE INDEX idx_doc_writer_status
+    ON document (writer_id, status);
+
+CREATE INDEX idx_doc_company_status
+    ON document (company_id, status);
+
+CREATE INDEX idx_doc_template
+    ON document (template_group_id, template_version);
 
 
 -- =========================================================
@@ -397,6 +427,8 @@ CREATE TABLE approval_line
     status      ENUM ('DRAFT','SUBMITTED','IN_PROGRESS','APPROVED','REJECTED') NOT NULL,
     comment     TEXT,
     decided_at  TIMESTAMP,
+    CONSTRAINT uk_al_document_order
+        UNIQUE (document_id, order_no),
 
     CONSTRAINT fk_al_document
         FOREIGN KEY (document_id)
@@ -414,6 +446,14 @@ CREATE TABLE approval_line
             ON DELETE SET NULL
 ) ENGINE = InnoDB;
 
+CREATE INDEX idx_al_document
+    ON approval_line (document_id);
+
+CREATE INDEX idx_al_approver_status
+    ON approval_line (approver_id, status);
+
+CREATE INDEX idx_al_company
+    ON approval_line (company_id);
 
 -- =========================================================
 -- 9. DOCUMENT AI SUMMARY
@@ -428,6 +468,9 @@ CREATE TABLE document_ai_summary
     model              VARCHAR(50),
     before_document_id BIGINT                  NULL,
     created_at         TIMESTAMP               NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uk_doc_ai_summary
+        UNIQUE (document_id, summary_type),
 
     CONSTRAINT fk_ai_doc
         FOREIGN KEY (document_id)
@@ -444,6 +487,15 @@ CREATE TABLE document_ai_summary
             REFERENCES document (id)
             ON DELETE SET NULL
 ) ENGINE = InnoDB;
+
+CREATE INDEX idx_ai_summary_document
+    ON document_ai_summary (document_id);
+
+CREATE INDEX idx_ai_summary_company
+    ON document_ai_summary (company_id);
+
+CREATE INDEX idx_ai_summary_type
+    ON document_ai_summary (summary_type);
 
 
 -- =========================================================
@@ -488,6 +540,18 @@ CREATE TABLE attendance_record
             ON UPDATE CASCADE
 ) ENGINE = InnoDB;
 
+CREATE INDEX idx_att_company_period
+    ON attendance_record (company_id, start_date, end_date);
+
+CREATE INDEX idx_att_employee_period
+    ON attendance_record (employee_id, start_date, end_date);
+
+CREATE INDEX idx_att_document
+    ON attendance_record (source_document_id);
+
+CREATE INDEX idx_att_status
+    ON attendance_record (status);
+
 
 -- =========================================================
 -- 11. FILE
@@ -515,6 +579,12 @@ CREATE TABLE file
             ON DELETE SET NULL
 ) ENGINE = InnoDB;
 
+CREATE INDEX idx_file_company_created
+    ON file (company_id, created_at DESC);
+
+CREATE INDEX idx_file_created_by
+    ON file (created_by);
+
 
 -- =========================================================
 -- 12. DOCUMENT FILE
@@ -522,11 +592,14 @@ CREATE TABLE file
 CREATE TABLE document_file
 (
     id                  BIGINT AUTO_INCREMENT PRIMARY KEY,
+
     document_id         BIGINT                               NOT NULL,
     file_id             BIGINT                               NULL,
+
     reference_type      ENUM ('ATTACHMENT','DOCUMENT','URL') NOT NULL,
     reference_target_id BIGINT                               NULL,
     reference_url       VARCHAR(255),
+
 
     CONSTRAINT fk_df_document
         FOREIGN KEY (document_id)
@@ -536,7 +609,14 @@ CREATE TABLE document_file
     CONSTRAINT fk_df_file
         FOREIGN KEY (file_id)
             REFERENCES file (id)
-            ON DELETE SET NULL
+            ON DELETE SET NULL,
+
+    CONSTRAINT uk_df_document_file
+        UNIQUE (document_id, file_id),
+
+    CONSTRAINT uk_df_document_reference
+        UNIQUE (document_id, reference_type, reference_target_id)
+
 ) ENGINE = InnoDB;
 
 
@@ -545,46 +625,95 @@ CREATE TABLE document_file
 ========================================================= */
 CREATE TABLE employee_signature
 (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    employee_id  BIGINT    NOT NULL,
-    company_id   BIGINT    NOT NULL,
-    file_id      BIGINT    NOT NULL, -- 서명 이미지 (S3)
-    is_active    BOOLEAN   NOT NULL DEFAULT TRUE,
-    created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    employee_id BIGINT    NOT NULL,
+    company_id  BIGINT    NOT NULL,
+    file_id     BIGINT    NOT NULL, -- 서명 이미지 (S3)
+
+    is_active   BOOLEAN   NOT NULL DEFAULT TRUE,
+
+    -- 활성 서명만 UNIQUE 제약을 걸기 위한 가상 컬럼
+    active_flag TINYINT
+        GENERATED ALWAYS AS (
+            CASE
+                WHEN is_active = TRUE THEN 1
+                ELSE NULL
+                END
+            ),
+
+    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
 
     CONSTRAINT fk_emp_sig_employee
-        FOREIGN KEY (employee_id) REFERENCES employee (id),
+        FOREIGN KEY (employee_id)
+            REFERENCES employee (id)
+            ON DELETE RESTRICT,
+
     CONSTRAINT fk_emp_sig_company
-        FOREIGN KEY (company_id) REFERENCES company (id),
+        FOREIGN KEY (company_id)
+            REFERENCES company (id)
+            ON DELETE RESTRICT,
+
     CONSTRAINT fk_emp_sig_file
-        FOREIGN KEY (file_id) REFERENCES file (id)
-);
+        FOREIGN KEY (file_id)
+            REFERENCES file (id)
+            ON DELETE RESTRICT,
+
+    -- 사원 + 회사 기준 활성 서명은 1개만 허용
+    CONSTRAINT uk_emp_sig_active
+        UNIQUE (employee_id, company_id, active_flag)
+
+) ENGINE = InnoDB;
+
 
 
 CREATE TABLE document_signature
 (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    document_id           BIGINT    NOT NULL,
-    approval_line_id      BIGINT    NOT NULL,
-    company_id            BIGINT    NOT NULL,
-    signer_id             BIGINT    NOT NULL,
+    id                BIGINT AUTO_INCREMENT PRIMARY KEY,
 
-    signature_file_id     BIGINT    NOT NULL, -- 당시 서명 스냅샷
-    signed_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    document_id       BIGINT    NOT NULL,
+    approval_line_id  BIGINT    NOT NULL,
+    company_id        BIGINT    NOT NULL,
+
+    signer_id         BIGINT    NULL,
+    signature_file_id BIGINT    NOT NULL, -- 당시 서명 스냅샷
+    signed_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    /* =========================
+       Foreign Keys
+       ========================= */
 
     CONSTRAINT fk_doc_sig_document
-        FOREIGN KEY (document_id) REFERENCES document (id),
-    CONSTRAINT fk_doc_sig_approval_line
-        FOREIGN KEY (approval_line_id) REFERENCES approval_line (id),
-    CONSTRAINT fk_doc_sig_company
-        FOREIGN KEY (company_id) REFERENCES company (id),
-    CONSTRAINT fk_doc_sig_signer
-        FOREIGN KEY (signer_id) REFERENCES employee (id),
-    CONSTRAINT fk_doc_sig_file
-        FOREIGN KEY (signature_file_id) REFERENCES file (id),
+        FOREIGN KEY (document_id)
+            REFERENCES document (id)
+            ON DELETE CASCADE,
 
-    UNIQUE KEY uk_doc_approval (document_id, approval_line_id)
-);
+    CONSTRAINT fk_doc_sig_approval_line
+        FOREIGN KEY (approval_line_id)
+            REFERENCES approval_line (id)
+            ON DELETE CASCADE,
+
+    CONSTRAINT fk_doc_sig_company
+        FOREIGN KEY (company_id)
+            REFERENCES company (id)
+            ON DELETE RESTRICT,
+
+    CONSTRAINT fk_doc_sig_signer
+        FOREIGN KEY (signer_id)
+            REFERENCES employee (id)
+            ON DELETE SET NULL,
+
+    CONSTRAINT fk_doc_sig_file
+        FOREIGN KEY (signature_file_id)
+            REFERENCES file (id)
+            ON DELETE RESTRICT,
+
+    -- 문서 내 결재 단계별 서명은 1개만 허용
+    CONSTRAINT uk_doc_approval
+        UNIQUE (document_id, approval_line_id)
+
+) ENGINE = InnoDB;
 
 
 /* =========================================================
