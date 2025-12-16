@@ -1,0 +1,319 @@
+/** 기본 레이아웃 */
+body, html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f7f9fb;
+}
+
+.form-editor-container {
+  display: flex;
+  height: 100vh;
+  min-width: 1100px;
+  width: 100%;
+}
+
+#component-list-panel,
+#right-panel,
+#form-edit-area-wrapper {
+  background: #fff;
+  border-radius: 8px;
+  margin: 16px 8px 16px 8px;
+  padding: 18px;
+  box-shadow: 0 2px 8px #e2e6ed35;
+  box-sizing: border-box;
+  min-height: calc(100vh - 32px);
+}
+
+#component-list-panel {
+  min-width: 190px;
+  max-width: 230px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+#form-edit-area-wrapper {
+  flex: 1 1 0%;
+  display: flex;
+  flex-direction: column;
+  min-width: 400px;
+  align-items: center;
+}
+
+#form-edit-title {
+  margin-bottom: 20px;
+  width: 90%;
+  text-align: left;
+  color: #253464;
+  font-weight: 600;
+  font-size: 1.1em;
+  letter-spacing: 0.01em;
+}
+
+#form-edit-area {
+  width: 90%;
+  min-height: 320px;
+  background: #f6f8fc;
+  border-radius: 4px;
+  padding: 26px 18px;
+  box-sizing: border-box;
+  box-shadow: 0 1px 4px #e8ecf360;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: background 0.12s;
+}
+
+#form-edit-area.empty {
+  text-align: center;
+  color: #a4b0c7;
+  font-size: 1.04em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+}
+
+#right-panel {
+  min-width: 260px;
+  max-width: 350px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+#component-list-panel h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 1.1em;
+  color: #253464;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: left;
+}
+
+/* 컴포넌트 추가 버튼 */
+.component-btn-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 5px;
+}
+.component-btn {
+  background: #f0f2f5;
+  border: 1px solid #bbc5d6;
+  border-radius: 6px;
+  color: #203157;
+  font-weight: 500;
+  font-size: 1em;
+  padding: 11px 8px;
+  cursor: pointer;
+  transition: background 0.14s, border 0.14s;
+  text-align: left;
+}
+.component-btn:hover, .component-btn:focus {
+  border-color: #7e9be2;
+  background: #eaefff;
+  color: #203157;
+  outline: none;
+}
+
+/* 중앙 영역 컴포넌트 프리뷰 */
+.form-component {
+  background: #fff;
+  border: 1.5px solid #e2e6ef;
+  border-radius: 7px;
+  padding: 17px 12px 15px 17px;
+  margin-bottom: 3px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: border 0.14s, background 0.13s;
+  box-shadow: 0 1px 3px #e5eaf960;
+  position: relative;
+}
+.form-component.selected {
+  border: 2px solid #79a2ff;
+  background: #f3f7ff;
+}
+.form-component-label {
+  min-width: 74px;
+  color: #263e72;
+  font-weight: 500;
+  font-size: 1.01em;
+}
+.form-component-req {
+  color: #eb5757;
+  margin-left: 4px;
+  font-weight: bold;
+}
+.form-component-controls {
+  flex: 1;
+}
+.form-component input[type="text"],
+.form-component input[type="date"],
+.form-component input[type="file"] {
+  width: 210px;
+  background: #f8fafc;
+  border: 1px solid #dde3ef;
+  border-radius: 4px;
+  padding: 7px 8px;
+  color: #333;
+  font-size: 1em;
+  outline: none;
+}
+.form-component input[disabled] {
+  background: #f6f8fc;
+  color: #a2adc2;
+}
+.form-component input[type="checkbox"] {
+  scale: 1.18;
+  accent-color: #7a96d5;
+  margin-top: 2px;
+}
+
+.comp-move-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: absolute;
+  right: 10px;
+  top: 14px;
+}
+
+.move-btn, .del-btn {
+  background: #f7f9fd;
+  border: 1px solid #cfd8e7;
+  color: #596a93;
+  border-radius: 4px;
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+  font-size: 1.11em;
+  transition: border 0.12s, background 0.12s;
+  margin-bottom: 2px;
+  padding: 0;
+}
+.move-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+  background: #f2f4fa;
+}
+.move-btn:not(:disabled):hover,
+.move-btn:not(:disabled):focus {
+  border-color: #89afe2;
+  background: #eef4ff;
+}
+.del-btn:hover, .del-btn:focus {
+  border-color: #f37373;
+  background: #ffeeee;
+  color: #e74c3c;
+}
+
+/* 우측 패널 설정 */
+#component-setting-panel,
+#form-setting-panel {
+  background: #f8fafc;
+  border-radius: 7px;
+  padding: 15px 14px 15px 15px;
+  margin-bottom: 16px;
+  box-shadow: 0 0.5px 2px #e8ebf2a3;
+}
+
+#component-setting-panel h4,
+#form-setting-panel h4 {
+  margin: 0 0 12px 0;
+  color: #1f2949;
+  font-size: 1em;
+  font-weight: bold;
+}
+
+#component-setting-content {
+  font-size: 1em;
+  color: #5c627a;
+}
+
+/* 우측 패널: 개별 및 전체 설정 */
+.setting-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  gap: 10px;
+}
+.setting-row label {
+  min-width: 44px;
+  color: #314066;
+  font-size: 0.97em;
+  font-weight: 500;
+  margin-right: 7px;
+}
+.setting-row input[type="text"],
+.setting-row select {
+  flex: 1;
+  background: #fff;
+  border: 1px solid #cfd8e7;
+  border-radius: 4px;
+  padding: 7px 8px;
+  color: #2e335c;
+  font-size: 1em;
+  outline: none;
+  transition: border 0.13s;
+}
+.setting-row input[type="text"]:focus,
+.setting-row select:focus {
+  border-color: #89afe2;
+}
+
+#save-form-btn {
+  display: block;
+  background: #5687ef;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-weight: 600;
+  font-size: 1em;
+  padding: 12px 0;
+  margin-top: 8px;
+  width: 100%;
+  cursor: pointer;
+  transition: background 0.15s;
+  letter-spacing: 0.01em;
+}
+#save-form-btn:hover, #save-form-btn:focus {
+  background: #386adc;
+}
+
+/* 미니멀 반응형 (수동 줄임 최소 지원) */
+@media (max-width: 1200px) {
+  .form-editor-container {
+    min-width: 870px;
+  }
+  #form-edit-area-wrapper, #component-list-panel, #right-panel {
+    margin: 12px 2px;
+  }
+  #right-panel {
+    min-width: 200px;
+    max-width: 230px;
+  }
+}
+@media (max-width: 900px) {
+  .form-editor-container {
+    flex-direction: column;
+    min-width: 320px;
+  }
+  #component-list-panel, #right-panel, #form-edit-area-wrapper {
+    width: 98% !important;
+    min-width: unset;
+    max-width: unset;
+    margin: 8px auto;
+    min-height: unset;
+  }
+  #form-edit-area {
+    width: 99%;
+    padding: 13px 3vw;
+  }
+}

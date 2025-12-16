@@ -51,4 +51,4 @@ logs/
 
 # Env
 .env
-application-prod.yml
+application-local.yml
