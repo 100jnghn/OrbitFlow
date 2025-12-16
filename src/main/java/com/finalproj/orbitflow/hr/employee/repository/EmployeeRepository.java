@@ -3,6 +3,7 @@ package com.finalproj.orbitflow.hr.employee.repository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -33,5 +34,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
      */
     Optional<Employee> findByCompanyIdAndEmail(Long companyId, String email);
 
+
+    List<Employee> findAllByEmployeeIdIn(List<Long> employeeIds);
 
 }
