@@ -3,6 +3,8 @@ package com.finalproj.orbitflow.schedule.entity;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
+import com.finalproj.orbitflow.hr.organization.entity.OrgCategory;
+import com.finalproj.orbitflow.hr.organization.entity.Organization;
 import com.finalproj.orbitflow.schedule.enums.ScheduleStatus;
 import com.finalproj.orbitflow.schedule.enums.ScheduleType;
 import jakarta.persistence.*;
@@ -27,22 +29,22 @@ public class Schedule extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "schedule_id")
-    private Long scheduleId;
+    @Column(name = "id")
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
     // 조직 일정일 경우 사용 (Nullable)
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "category_id")
-//    private OrgCategory orgCategory;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private OrgCategory orgCategory;
 
     // 조직 일정일 경우 사용 (Nullable)
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "org_id")
-//    private Organization organization;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "org_id")
+    private Organization organization;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 20)

@@ -1,0 +1,64 @@
+package com.finalproj.orbitflow.resource.meetingroom.controller;
+
+import com.finalproj.orbitflow.global.common.ResponseDto;
+import com.finalproj.orbitflow.global.security.SecurityUser;
+import com.finalproj.orbitflow.resource.meetingroom.dto.MeetingroomReqDto;
+import com.finalproj.orbitflow.resource.meetingroom.dto.MeetingroomResDto;
+import com.finalproj.orbitflow.resource.meetingroom.service.MeetingroomService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * Please explain the class!!!
+ *
+ * @author : 종훈
+ * @filename : MeetingRoomController
+ * @since : 2025-12-16 오후 1:48 화요일
+ */
+@Controller
+@RequestMapping("/api")
+@RequiredArgsConstructor
+public class MeetingRoomController {
+
+    private final MeetingroomService meetingroomService;
+
+    // 관리자 - 회의실 리스트 조회
+    @GetMapping("/admin/meetingrooms")
+    public ResponseEntity<ResponseDto> getMeetingrooms(@AuthenticationPrincipal SecurityUser user) {
+
+        Long companyId = user.getCompanyId();
+        List<MeetingroomResDto> meetingrooms = meetingroomService.getMeetingrooms(companyId);
+
+        return ResponseEntity.ok()
+                .body(new ResponseDto(HttpStatus.OK, "회의실 목록 조회 성공", meetingrooms));
+    }
+
+    // 관리자 - 회의실 상세 조회
+    @GetMapping("/admin/meetingrooms/{meetingroomId}")
+    public ResponseEntity<ResponseDto> getMeetingroom(@PathVariable Long meetingroomId) {
+
+        MeetingroomResDto meetingroom = meetingroomService.getMeetingroom(meetingroomId);
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, "회의실 상세 조회 성공", meetingroom)
+        );
+    }
+
+    // 관리자 - 회의실 등록
+//    @PostMapping("/admin/meetingrooms")
+//    public ResponseEntity<ResponseDto> insertMeetingroom(
+//            @RequestBody MeetingroomReqDto meetingroomReq,
+//            @AuthenticationPrincipal SecurityUser user
+//    ) {
+//
+//        Long companyId = user.getCompanyId();
+//        meetingroomService.insertMeetingroom(companyId, meetingroomReq);
+//
+//    }
+}
