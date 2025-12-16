@@ -11,15 +11,23 @@ package com.finalproj.orbitflow.approval.formTemplateGroup.entity;
 
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
-import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
-@Table(name = "form_template_group")
+@Table(
+        name = "form_template_group",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_form_template_group_company_name",
+                        columnNames = {"company_id", "name"}
+                )
+        }
+)
 @Getter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class FormTemplateGroup extends BaseEntity {
 
     @Id

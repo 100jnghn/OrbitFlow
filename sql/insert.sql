@@ -365,23 +365,26 @@ VALUES (1, 1, 1, 1, JSON_ARRAY('attendance'),
 
 
 /* =========================================================
- * FORM TEMPLATE AI LOG (10)
+ * FORM TEMPLATE AI LOG (company_id 포함)
  * ========================================================= */
 INSERT INTO log_form_template_ai
-(template_group_id, created_template_id, prompt,
+(company_id, template_group_id, created_template_id, prompt,
  generated_template_json, generated_rule_json,
  model, status, created_by)
-VALUES (1, 1, '연차 신청 양식 생성', JSON_OBJECT(), JSON_OBJECT(), 'gpt-4', 'SUCCESS', 1),
-       (2, 2, '출장 보고 양식 생성', JSON_OBJECT(), JSON_OBJECT(), 'gpt-4', 'SUCCESS', 1),
-       (3, 3, '야근 신청 양식 생성', JSON_OBJECT(), JSON_OBJECT(), 'gpt-4', 'SUCCESS', 1),
-       (4, 4, '비용 정산 양식 생성', JSON_OBJECT(), JSON_OBJECT(), 'gpt-4', 'SUCCESS', 1),
-       (5, 5, '장비 구매 양식 생성', JSON_OBJECT(), JSON_OBJECT(), 'gpt-4', 'SUCCESS', 1),
+VALUES
+-- company_id = 1
+(1, 1, 1, '연차 신청 양식 생성', JSON_OBJECT(), JSON_OBJECT(), 'gpt-4', 'SUCCESS', 1),
+(1, 2, 2, '출장 보고 양식 생성', JSON_OBJECT(), JSON_OBJECT(), 'gpt-4', 'SUCCESS', 1),
+(1, 3, 3, '야근 신청 양식 생성', JSON_OBJECT(), JSON_OBJECT(), 'gpt-4', 'SUCCESS', 1),
+(1, 4, 4, '비용 정산 양식 생성', JSON_OBJECT(), JSON_OBJECT(), 'gpt-4', 'SUCCESS', 1),
+(1, 5, 5, '장비 구매 양식 생성', JSON_OBJECT(), JSON_OBJECT(), 'gpt-4', 'SUCCESS', 1),
 
-       (6, 6, '연차 신청 양식 생성', JSON_OBJECT(), JSON_OBJECT(), 'gpt-4', 'SUCCESS', 4),
-       (7, 7, '출장 보고 양식 생성', JSON_OBJECT(), JSON_OBJECT(), 'gpt-4', 'SUCCESS', 4),
-       (8, 8, '야근 신청 양식 생성', JSON_OBJECT(), JSON_OBJECT(), 'gpt-4', 'SUCCESS', 4),
-       (9, 9, '비용 정산 양식 생성', JSON_OBJECT(), JSON_OBJECT(), 'gpt-4', 'SUCCESS', 4),
-       (10, 10, '장비 구매 양식 생성', JSON_OBJECT(), JSON_OBJECT(), 'gpt-4', 'SUCCESS', 4);
+-- company_id = 2
+(2, 6, 6, '연차 신청 양식 생성', JSON_OBJECT(), JSON_OBJECT(), 'gpt-4', 'SUCCESS', 4),
+(2, 7, 7, '출장 보고 양식 생성', JSON_OBJECT(), JSON_OBJECT(), 'gpt-4', 'SUCCESS', 4),
+(2, 8, 8, '야근 신청 양식 생성', JSON_OBJECT(), JSON_OBJECT(), 'gpt-4', 'SUCCESS', 4),
+(2, 9, 9, '비용 정산 양식 생성', JSON_OBJECT(), JSON_OBJECT(), 'gpt-4', 'SUCCESS', 4),
+(2, 10, 10, '장비 구매 양식 생성', JSON_OBJECT(), JSON_OBJECT(), 'gpt-4', 'SUCCESS', 4);
 
 
 /* =========================================================
