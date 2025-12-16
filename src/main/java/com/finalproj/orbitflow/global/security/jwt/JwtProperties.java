@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
  * @filename : JwtProperties
  * @since : 2025-12-16 화요일
  */
-@Configuration
+// @Configuration
 @ConfigurationProperties(prefix = "jwt")
 public class JwtProperties {
 

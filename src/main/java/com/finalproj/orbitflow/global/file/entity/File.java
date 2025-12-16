@@ -9,6 +9,7 @@ package com.finalproj.orbitflow.global.file.entity;
  */
 
 
+import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -24,7 +25,7 @@ public class File {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long fileId;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Company company;

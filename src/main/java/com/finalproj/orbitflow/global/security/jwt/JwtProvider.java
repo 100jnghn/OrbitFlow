@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.global.security.jwt;
 
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
@@ -24,9 +25,11 @@ public class JwtProvider {
     private final Key key;
 
     public JwtProvider(JwtProperties properties) {
+        System.out.println("JWT SECRET LENGTH = " + properties.getSecret().length());
+
         this.properties = properties;
         this.key = Keys.hmacShaKeyFor(
-                properties.getSecret().getBytes(StandardCharsets.UTF_8)
+                Decoders.BASE64URL.decode(properties.getSecret())
         );
     }
 

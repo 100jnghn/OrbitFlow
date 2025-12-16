@@ -32,7 +32,7 @@ public class CustomUserDetailsService  {
     }
 
     /**
-     * JWT 인증 시 사용 (employeeId 기준)
+     * JWT 인증 시 사용 (employee 테이블의 id 기준)
      */
     public SecurityUser loadByEmployeeId(Long employeeId) {
         Employee employee = employeeRepository.findById(employeeId)
