@@ -3,7 +3,7 @@ package com.finalproj.orbitflow.schedule.entity;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
-import com.finalproj.orbitflow.hr.organization.entity.OrgCategory;
+import com.finalproj.orbitflow.hr.orgCategory.entity.OrgCategory;
 import com.finalproj.orbitflow.hr.organization.entity.Organization;
 import com.finalproj.orbitflow.schedule.enums.ScheduleStatus;
 import com.finalproj.orbitflow.schedule.enums.ScheduleType;

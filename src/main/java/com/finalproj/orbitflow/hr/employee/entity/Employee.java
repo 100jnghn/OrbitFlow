@@ -1,9 +1,13 @@
 package com.finalproj.orbitflow.hr.employee.entity;
 
 import com.finalproj.orbitflow.global.common.BaseEntity;
+import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.enums.EmploymentType;
 import com.finalproj.orbitflow.hr.employee.enums.Gender;
+import com.finalproj.orbitflow.hr.organization.entity.Organization;
+import com.finalproj.orbitflow.hr.position.entity.Position;
+import com.finalproj.orbitflow.hr.rank.entity.Rank;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -42,20 +46,25 @@ public class Employee extends BaseEntity {
     private Long id;   // 사원 ID (PK)
 
     /* ==============================
-       소속 정보 // TODO: FK -> 추후 관계 매핑 설정 필요
+       소속 정보
        ============================== */
 
-    @Column(nullable = false)
-    private Long companyId;    // 회사 ID (FK)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
 
-    @Column(nullable = false)
-    private Long orgId;        // 조직 ID (FK)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "org_id", nullable = false)
+    private Organization organization;
 
-    @Column
-    private Long rankId;       // 직급 ID (FK)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rank_id")
+    private Rank rank;
 
-    @Column
-    private Long positionId;   // 직책 ID (FK)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "position_id")
+    private Position position;
+
 
     /* ==============================
        사원 기본 정보
