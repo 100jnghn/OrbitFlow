@@ -12,7 +12,6 @@ package com.finalproj.orbitflow.approval.documentFile.entity;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.documentFile.enums.ReferenceType;
 import com.finalproj.orbitflow.global.file.entity.File;
-import com.finalproj.orbitflow.hr.company.entity.Company;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,10 +28,6 @@ public class DocumentFile {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Document document;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", nullable = false)
-    private Company company;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private File file;
