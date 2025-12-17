@@ -9,7 +9,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "Board_permission")
+@Table(
+        name = "board_permission",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"employee_id", "board_category_id"})   // 한 직원은 한 게시판에 한 번만 권한 가짐
+        }
+)
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,7 +24,7 @@ public class BoardPermission extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long Id; // 게시판 권한 ID (PK)
+    private Long id; // 게시판 권한 ID (PK)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id", nullable = false)
