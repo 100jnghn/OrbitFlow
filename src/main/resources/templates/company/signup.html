@@ -1,151 +1,198 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>회사 가입 | Orbit Flow</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
-      background: #f7f9fb;
-    }
+    <meta charset="UTF-8">
+    <title>회사 가입 | Orbit Flow</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+            background: #f7f9fb;
+        }
 
-    .signup-container {
-      width: 860px;
-      margin: 80px auto;
-      background: #fff;
-      border-radius: 12px;
-      padding: 48px;
-      box-shadow: 0 6px 20px rgba(0,0,0,.08);
-    }
+        .signup-container {
+            width: 860px;
+            margin: 80px auto;
+            background: #fff;
+            border-radius: 12px;
+            padding: 48px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, .08);
+        }
 
-    h1 {
-      margin-bottom: 8px;
-      color: #253464;
-    }
+        h1 {
+            margin-bottom: 8px;
+            color: #253464;
+        }
 
-    .desc {
-      color: #6b7280;
-      margin-bottom: 36px;
-    }
+        .desc {
+            color: #6b7280;
+            margin-bottom: 36px;
+        }
 
-    .row {
-      display: flex;
-      gap: 24px;
-      margin-bottom: 24px;
-    }
+        .row {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
 
-    .field {
-      flex: 1;
-    }
+        .field {
+            flex: 1;
+        }
 
-    label {
-      display: block;
-      margin-bottom: 6px;
-      font-weight: 600;
-      color: #374151;
-    }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #374151;
+        }
 
-    input {
-      width: 100%;
-      padding: 12px;
-      border-radius: 6px;
-      border: 1px solid #d1d5db;
-      font-size: 15px;
-    }
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            font-size: 15px;
+        }
 
-    .hint {
-      font-size: 12px;
-      margin-top: 6px;
-    }
+        .hint {
+            font-size: 12px;
+            margin-top: 6px;
+        }
 
-    .error { color: #ef4444; }
-    .success { color: #10b981; }
+        .error {
+            color: #ef4444;
+        }
 
-    .business-row {
-      display: flex;
-      gap: 8px;
-    }
+        .success {
+            color: #10b981;
+        }
 
-    .btn {
-      background: #5687ef;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 14px;
-      width: 100%;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 32px;
-    }
+        .business-row {
+            display: flex;
+            gap: 8px;
+        }
 
-    .btn-check {
-      width: 120px;
-      background: #e5e7eb;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-  </style>
+        .btn {
+            background: #5687ef;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 14px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 32px;
+        }
+
+        .btn-check {
+            width: 120px;
+            background: #e5e7eb;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 <body>
 
 <div class="signup-container">
-  <h1>회사 가입</h1>
-  <p class="desc">서비스 이용을 위한 회사 정보와 대표 관리자 계정을 등록해주세요.</p>
+    <h1>회사 가입</h1>
+    <p class="desc">서비스 이용을 위한 회사 정보와 대표 관리자 계정을 등록해주세요.</p>
 
-  <div class="row">
-    <div class="field">
-      <label>회사명</label>
-      <input id="companyName">
+    <!-- 회사 정보 -->
+    <div class="row">
+        <div class="field">
+            <label>회사명</label>
+            <input id="companyName" maxlength="100">
+            <div id="companyNameMsg" class="hint"></div>
+        </div>
+        <div class="field">
+            <label>주소</label>
+            <input id="address" maxlength="255">
+            <div id="addressMsg" class="hint"></div>
+        </div>
     </div>
-    <div class="field">
-      <label>주소</label>
-      <input id="address">
-    </div>
-  </div>
 
-  <div class="row">
-    <div class="field">
-      <label>대표자명</label>
-      <input id="representativeName">
+    <!-- 대표자 -->
+    <div class="row">
+        <div class="field">
+            <label>대표자명</label>
+            <input id="representativeName" maxlength="50">
+            <div id="representativeNameMsg" class="hint"></div>
+        </div>
+        <div class="field">
+            <label>대표자 연락처</label>
+            <input
+                    id="representativeContact"
+                    maxlength="20"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
+                    placeholder="숫자만 입력"
+            />
+            <div id="contactMsg" class="hint"></div>
+        </div>
     </div>
-    <div class="field">
-      <label>대표자 연락처</label>
-      <input id="representativeContact">
-    </div>
-  </div>
 
-  <div class="row">
-    <div class="field">
-      <label>대표 관리자 이메일</label>
-      <input id="adminEmail">
+    <!-- 이메일 / 비밀번호 -->
+    <div class="row">
+        <div class="field">
+            <label>대표 관리자 이메일</label>
+            <input id="adminEmail" maxlength="100">
+            <div id="emailMsg" class="hint"></div>
+        </div>
+        <div class="field">
+            <label>비밀번호</label>
+            <input
+                    id="adminPassword"
+                    type="password"
+                    maxlength="15"
+                    placeholder="8~15자"
+            />
+            <div id="passwordLengthMsg" class="hint"></div>
+        </div>
     </div>
-    <div class="field">
-      <label>비밀번호</label>
-      <input id="adminPassword" type="password">
-    </div>
-  </div>
 
-  <div class="row">
-    <div class="field">
-      <label>비밀번호 확인</label>
-      <input id="adminPasswordConfirm" type="password">
-    </div>
-  </div>
+    <div class="row">
+        <div class="field">
+            <label>비밀번호 확인</label>
+            <input
+                    id="adminPasswordConfirm"
+                    type="password"
+                    maxlength="15"
+                    placeholder="비밀번호 재입력"
+            />
+            <div id="passwordMatchMsg" class="hint"></div>
+        </div>
 
-  <div class="row">
-    <div class="field">
-      <label>사업자번호</label>
-      <div class="business-row">
-        <input id="businessNumber">
-        <button class="btn-check" onclick="checkBusinessNumber()">확인</button>
-      </div>
-      <div id="businessMsg" class="hint"></div>
+        <div class="field">
+            <label>사업자번호</label>
+            <div class="business-row">
+                <input
+                id="businessNumber"
+                maxlength="20"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                        placeholder="숫자만 입력"
+                />
+                <button type="button" class="btn-check" onclick="checkBusinessNumber()">확인</button>
+            </div>
+            <div id="businessMsg" class="hint"></div>
+        </div>
     </div>
-  </div>
 
-  <button class="btn" onclick="submitSignup()">가입하기</button>
+    <button
+            id="signupBtn"
+            class="btn"
+            onclick="submitSignup()"
+            disabled
+    >
+        가입하기
+    </button>
 </div>
 
 <script src="/js/company-signup.js"></script>
