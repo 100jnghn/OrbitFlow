@@ -8,7 +8,7 @@ import com.finalproj.orbitflow.hr.employee.enums.Gender;
 import com.finalproj.orbitflow.hr.employee.enums.WorkStatus;
 import com.finalproj.orbitflow.hr.organization.entity.Organization;
 import com.finalproj.orbitflow.hr.position.entity.Position;
-import com.finalproj.orbitflow.hr.rank.entity.Rank;
+import com.finalproj.orbitflow.hr.rank.entity.HrRank;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -60,7 +60,7 @@ public class Employee extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "rank_id")
-    private Rank rank;
+    private HrRank rank;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "position_id")

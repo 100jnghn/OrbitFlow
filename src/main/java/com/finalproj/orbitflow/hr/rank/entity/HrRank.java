@@ -11,19 +11,19 @@ import lombok.NoArgsConstructor;
  * Please explain the class!!!
  *
  * @author : seunga03
- * @filename : Rank
+ * @filename : HrRank
  * @since : 2025-12-16 화요일
  */
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
-        name = "rank",
+        name = "hr_rank",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"company_id", "name"})
         }
 )
-public class Rank extends BaseEntity {
+public class HrRank extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,8 +34,8 @@ public class Rank extends BaseEntity {
     private Company company;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_rank_id")
-    private Rank parentRank;
+    @JoinColumn(name = "parent_hr_rank_id")
+    private HrRank parentHrRank;
 
     @Column(nullable = false, length = 50)
     private String name; // 대리 / 과장 등

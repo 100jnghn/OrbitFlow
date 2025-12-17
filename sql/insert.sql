@@ -50,9 +50,9 @@ VALUES (2, 5, NULL, 'NovaWorks', 1),
 
 
 /* =====================================================
-   RANK (직급)
+   HR_RANK (직급)
 ===================================================== */
-INSERT INTO `rank` (company_id, parent_rank_id, name, order_index)
+INSERT INTO hr_rank (company_id, parent_hr_rank_id, name, order_index)
 VALUES (1, NULL, '사원', 1),
        (1, 1, '대리', 2),
        (1, 2, '과장', 3),
@@ -109,32 +109,32 @@ VALUES
 /* =====================================================
    ORG_POSITION_USAGE (조직-직책 정책)
 ===================================================== */
-INSERT INTO org_position_usage (org_id, position_id, is_enabled)
+INSERT INTO org_position_usage
+(company_id, org_id, position_id, is_enabled)
 VALUES
--- OrbitFlow
-(2, 1, TRUE),   -- 플랫폼본부 → 플랫폼본부장
-(4, 2, TRUE),   -- 개발부 → 개발부장
-(5, 3, TRUE),   -- 인사부 → 인사부장
-(6, 4, TRUE),   -- 백엔드팀 → 백엔드팀장
-(6, 7, TRUE),   -- 백엔드팀 → 백엔드팀원
-(7, 5, TRUE),   -- 프론트엔드팀 → 프론트엔드팀장
-(7, 8, TRUE),   -- 프론트엔드팀 → 프론트엔드팀원
-(8, 6, TRUE),   -- 인사팀 → 인사팀장
-(8, 9, TRUE),   -- 인사팀 → 인사팀원
+-- OrbitFlow (company_id = 1)
+(1, 2, 1, TRUE),   -- 플랫폼본부 → 플랫폼본부장
+(1, 4, 2, TRUE),   -- 개발부 → 개발부장
+(1, 5, 3, TRUE),   -- 인사부 → 인사부장
+(1, 6, 4, TRUE),   -- 백엔드팀 → 백엔드팀장
+(1, 6, 7, TRUE),   -- 백엔드팀 → 백엔드팀원
+(1, 7, 5, TRUE),   -- 프론트엔드팀 → 프론트엔드팀장
+(1, 7, 8, TRUE),   -- 프론트엔드팀 → 프론트엔드팀원
+(1, 8, 6, TRUE),   -- 인사팀 → 인사팀장
+(1, 8, 9, TRUE),   -- 인사팀 → 인사팀원
 
--- NovaWorks
-(10, 10, TRUE), -- 기술본부 → 기술본부장
-(11, 11, TRUE), -- 플랫폼부 → 플랫폼부장
-(12, 12, TRUE), -- AI팀 → AI팀장
-(12, 13, TRUE);
--- AI팀 → AI팀원
+-- NovaWorks (company_id = 2)
+(2, 10, 10, TRUE), -- 기술본부 → 기술본부장
+(2, 11, 11, TRUE), -- 플랫폼부 → 플랫폼부장
+(2, 12, 12, TRUE), -- AI팀 → AI팀장
+(2, 12, 13, TRUE); -- AI팀 → AI팀원
 
 
 /* =====================================================
    EMPLOYEE (사원)
 ===================================================== */
 INSERT INTO employee
-(company_id, employee_no, internal_phone, phone, org_id, rank_id, position_id,
+(company_id, employee_no, internal_phone, phone, org_id, hr_rank_id, position_id,
  name, email, password, gender, birth_date, employment_type, status, work_status)
 VALUES
 -- OrbitFlow
