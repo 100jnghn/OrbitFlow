@@ -9,6 +9,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Entity
 @Table(name = "board_category")
 @Getter
@@ -20,14 +23,14 @@ public class BoardCategory extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long Id; // 게시판 고유 ID (PK)
+    private Long id; // 게시판 고유 ID (PK)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company; // 회사 ID (FK)
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "org_type", nullable = false)
+    @JoinColumn(name = "organization_id", nullable = true)
     private Organization organization; // 조직 ID (FK)
 
     @Column(name = "board_name", length = 100, nullable = false)
@@ -42,12 +45,29 @@ public class BoardCategory extends BaseEntity {
     @Column(name = "comment_activated", nullable = false)
     private boolean commentActivated; // 댓글 기능 활성화 여부
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt; // 삭제 일시 (소프트 삭제)
+
+    // *** JPQL 최적화를 위해 BoardPermission 엔티티와의 1:N 관계 추가 ***
+    @OneToMany(mappedBy = "boardCategory")
+    private List<BoardPermission> boardPermissions;
+
     // 게시판 수정 메서드
     public void update(String boardName, String boardType, boolean isActivated, boolean commentActivated) {
         this.boardName = boardName;
         this.boardType = boardType;
         this.isActivated = isActivated;
         this.commentActivated = commentActivated;
+    }
+
+    // 게시판 소프트 삭제 처리
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    // 게시판 활성화 여부 확인 (소프트 삭제 및 isActivated 상태 모두 고려)
+    public boolean isActive() {
+        return this.isActivated && this.deletedAt == null;
     }
 
 }
