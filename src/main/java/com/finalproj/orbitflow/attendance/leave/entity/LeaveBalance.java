@@ -21,8 +21,8 @@ public class LeaveBalance extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "balance_id", nullable = false)
-    private Long balanceId;         // 잔여 ID (PK)
+    @Column(name = "id", nullable = false)
+    private Long id;         // 잔여 ID (PK)
 
     @Column(name = "company_id", nullable = false)
     private Long companyId;         // 회사 ID (FK)
@@ -39,5 +39,4 @@ public class LeaveBalance extends BaseEntity {
     @Column(name = "remaining_days", precision = 5, scale = 2)
     private BigDecimal remainingDays; // 잔여 일수 (DECIMAL 5,2)
 
-    // last_updated_at 필드는 BaseEntity의 updatedAt으로 대체됩니다.
 }

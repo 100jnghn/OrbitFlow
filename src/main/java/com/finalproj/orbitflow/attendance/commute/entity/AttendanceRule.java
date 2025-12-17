@@ -17,7 +17,7 @@ public class AttendanceRule {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "rule_id", nullable = false)
+    @Column(name = "id", nullable = false)
     private Long id; // 규칙 아이디
 
     @Column(name = "company_id", nullable = false)

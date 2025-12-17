@@ -17,29 +17,69 @@ public class CorrectionHistory extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "correction_id", nullable = false)
-    private Long correctionId;
+    private Long id;
 
-    @Column(name = "history_id", nullable = false)
-    private Long historyId;         // 히스토리 ID (이전 테이블 정의서에 있었으나 4번 테이블에는 없음. 일단 포함)
-
+    /**
+     * 출퇴근 기록 ID (Foreign Key)
+     */
     @Column(name = "attendance_id", nullable = false)
-    private Long attendanceId;      // 근태 기록 ID (FK - attendance_record 테이블을 참조해야 함)
+    private Long attendanceId;
 
-    @Column(name = "original_come_at")
-    private LocalDateTime originalComeAt; // 정정 전 출근 시각
+    /**
+     * 원본 출근 시각
+     */
+    @Column(name = "original_commute_at")
+    private LocalDateTime originalCommuteAt;
 
+    /**
+     * 원본 퇴근 시각
+     */
     @Column(name = "original_leave_at")
-    private LocalDateTime originalLeaveAt; // 정정 전 퇴사 시간
+    private LocalDateTime originalLeaveAt;
 
-    @Column(name = "correction_date", nullable = false)
-    private LocalDateTime correctionDate; // 정정 처리 일시
+    /**
+     * 수정된 출근 시각
+     */
+    @Column(name = "corrected_commute_at")
+    private LocalDateTime correctedCommuteAt;
 
+    /**
+     * 수정된 퇴근 시각
+     */
+    @Column(name = "corrected_leave_at")
+    private LocalDateTime correctedLeaveAt;
+
+    /**
+     * 수정 요청 사유
+     */
     @Column(name = "correction_reason", length = 255)
-    private String correctionReason; // 정정 사유
+    private String correctionReason;
 
-    @Column(name = "source_ip", length = 50)
-    private String sourceIp;        // 수정 요청 IP
+    /**
+     * 수정 요청 상태 (예: 'PENDING')
+     */
+    @Column(name = "correction_status", length = 50, nullable = false)
+    private String correctionStatus;
 
+    /**
+     * 처리자 ID (Foreign Key)
+     */
+    @Column(name = "processed_by")
+    private Long processedBy;
+
+    /**
+     * 처리 시각
+     */
+    @Column(name = "processed_at")
+    private LocalDateTime processedAt;
+
+    /**
+     * 반려 사유
+     */
+    @Column(name = "rejection_reason", length = 255)
+    private String rejectionReason;
+
+    // 필요하다면, attendanceId나 processedBy에 대한
+    // 연관 관계 매핑(ex. @ManyToOne)을 추가할 수 있습니다.
     // (참고: history_id 필드는 4번 테이블 정의서에 없지만, 이전 테이블과 연관이 있다면 포함)
 }
