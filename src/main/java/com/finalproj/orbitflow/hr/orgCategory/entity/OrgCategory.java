@@ -50,4 +50,13 @@ public class OrgCategory extends BaseEntity {
         return category;
     }
 
+    public void update(String name, Integer orderIndex) {
+        this.name = name;
+        this.orderIndex = orderIndex;
+    }
+
+    public void deactivate() {
+        this.isActive = false;
+    }
+
 }
