@@ -570,68 +570,74 @@ VALUES
 ========================================================= */
 
 -- board_category
+-- board_category
 INSERT INTO board_category
-(company_id, org_id, board_name, board_type, is_activated, comment_activated)
-VALUES (1, 8, '인사팀 공지사항', 'NOTICE', 1, 1),
-       (1, 1, '전사 자유 게시판', 'FREE', 1, 1),
-       (1, 3, '경영지원본부 자료실', 'NOTICE', 1, 0),
-       (1, 8, '주간 업무 공유', 'FREE', 1, 1),
-       (1, 1, '경조사 게시판', 'NOTICE', 1, 1),
+(company_id, organization_id, board_name, board_type, is_activated, comment_activated)
+VALUES
+    (1, 8,  '인사팀 공지사항',        'NOTICE', 1, 1),
+    (1, 1,  '전사 자유 게시판',        'FREE',   1, 1),
+    (1, 3,  '경영지원본부 자료실',     'NOTICE', 1, 0),
+    (1, 8,  '주간 업무 공유',          'FREE',   1, 1),
+    (1, 1,  '경조사 게시판',          'NOTICE', 1, 1),
 
-       (2, 12, 'AI팀 공지', 'NOTICE', 1, 1),
-       (2, 9, '전사 건의 게시판', 'FREE', 1, 0),
-       (2, 10, '기술본부 Q&A', 'FREE', 1, 1),
-       (2, 9, '운영 매뉴얼', 'NOTICE', 1, 0),
-       (2, 12, 'AI 프로젝트 자료실', 'NOTICE', 1, 0);
+    (2, 12, 'AI팀 공지',              'NOTICE', 1, 1),
+    (2, 9,  '전사 건의 게시판',        'FREE',   1, 0),
+    (2, 10, '기술본부 Q&A',            'FREE',   1, 1),
+    (2, 9,  '운영 매뉴얼',             'NOTICE', 1, 0),
+    (2, 12, 'AI 프로젝트 자료실',      'NOTICE', 1, 0);
 
 -- board
 INSERT INTO board
-(company_id, board_category_id, employee_id, board_title, board_content, view_count, file_id)
-VALUES (1, 1, 1, '팀장 공지: 시스템 점검 안내', '내일 새벽 2시부터 4시까지 정기 점검이 있습니다.', 530, NULL),
-       (1, 2, 2, '주말 영화 추천 요청', '액션/SF 장르 추천 부탁드립니다.', 125, NULL),
-       (1, 5, 1, '[경조사] 백엔드팀 결혼 소식', '결혼을 축하해주세요.', 880, NULL),
-       (1, 4, 3, '이영희 주간 보고서', '주간 업무 보고서입니다.', 20, 4),
-       (1, 2, 2, '회사 근처 맛집 공유', '점심 맛집 추천합니다.', 450, NULL),
+(board_category_id, employee_id, board_title, board_content, view_count, file_id)
+VALUES
+    (1, 1, '팀장 공지: 시스템 점검 안내', '내일 새벽 2시부터 4시까지 정기 점검이 있습니다.', 530, NULL),
+    (2, 2, '주말 영화 추천 요청',        '액션/SF 장르 추천 부탁드립니다.',              125, NULL),
+    (5, 1, '[경조사] 백엔드팀 결혼 소식', '결혼을 축하해주세요.',                        880, NULL),
+    (4, 3, '이영희 주간 보고서',          '주간 업무 보고서입니다.',                     20,  4),
+    (2, 2, '회사 근처 맛집 공유',         '점심 맛집 추천합니다.',                       450, NULL),
 
-       (2, 6, 4, '[AI팀 공지] KPI 발표', '10월 KPI 공유', 150, 6),
-       (2, 7, 5, '경영진에게 바라는 점', '식대 지원 확대 요청', 300, NULL),
-       (2, 8, 4, 'API 성능 최적화 문의', 'API 지연 관련 질문', 80, NULL),
-       (2, 10, 5, '머신러닝 학습 가이드', 'Ver 1.0', 50, 8),
-       (2, 7, 4, '휴게 공간 개선 요청', '의자 교체 요청', 210, NULL);
+    (6, 4, '[AI팀 공지] KPI 발표',        '10월 KPI 공유',                               150, 6),
+    (7, 5, '경영진에게 바라는 점',        '식대 지원 확대 요청',                         300, NULL),
+    (8, 4, 'API 성능 최적화 문의',        'API 지연 관련 질문',                          80,  NULL),
+    (10,5, '머신러닝 학습 가이드',        'Ver 1.0',                                     50,  8),
+    (7, 4, '휴게 공간 개선 요청',         '의자 교체 요청',                              210, NULL);
 
 -- board_permission
 INSERT INTO board_permission
-    (company_id, employee_id, board_category_id)
-VALUES (1, 2, 1),
-       (1, 1, 3),
-       (1, 3, 2),
-       (1, 1, 4),
-       (1, 2, 5),
+(employee_id, board_category_id)
+VALUES
+    (2, 1),
+    (1, 3),
+    (3, 2),
+    (1, 4),
+    (2, 5),
 
-       (2, 4, 6),
-       (2, 5, 7),
-       (2, 4, 8),
-       (2, 5, 9),
-       (2, 4, 10);
+    (4, 6),
+    (5, 7),
+    (4, 8),
+    (5, 9),
+    (4, 10);
 
 -- comment
-INSERT INTO comment
-    (company_id, board_id, employee_id, comment_content)
-VALUES (1, 2, 3, '미션 임파서블 시리즈 추천합니다!'),
-       (1, 2, 1, '좋은 영화죠. 즐거운 주말 보내세요.'),
-       (1, 3, 2, '결혼을 진심으로 축하드립니다!'),
-       (1, 5, 3, '근처 베트남 쌀국수집 추천해요.'),
-       (1, 4, 1, '보고서 잘 정리되었습니다.'),
+INSERT INTO message
+(company_id, employee_id, message_title, message_content, file_id)
+VALUES
+    (1, 1, '회의 자료 요청',     '회의 자료를 오늘 오후 5시까지 보내주세요.', NULL),
+    (1, 2, '휴가 승인 요청',     '내일 오전 반차 승인 부탁드립니다.',          NULL),
+    (1, 3, '부서 이동 문의',     '인사팀 TO 여부 문의드립니다.',               NULL),
+    (1, 1, '회식 장소 추천',     '금요일 회식 장소 추천 부탁드립니다.',        NULL),
+    (1, 2, '커피 쿠폰 전달',     '팀원들에게 커피 쿠폰 전달드립니다.',         NULL),
 
-       (2, 6, 5, 'KPI 내용 확인했습니다.'),
-       (2, 8, 5, '서버 배포 문제로 보입니다.'),
-       (2, 7, 4, '식대 지원 확대에 동의합니다.'),
-       (2, 9, 4, '매뉴얼 감사합니다.'),
-       (2, 10, 4, '학습 가이드 바로 적용하겠습니다.');
+    (2, 4, '신규 프로젝트 안내', 'AI 프로젝트 착수 안내드립니다.',             6),
+    (2, 5, '사원증 재발급',      '사원증 재발급 요청드립니다.',                NULL),
+    (2, 4, '주간 보고 요청',     '월요일까지 주간 보고 제출 바랍니다.',         NULL),
+    (2, 5, '휴게실 문의',        '냉장고 사용 규정 문의드립니다.',              NULL),
+    (2, 4, '파일 암호 전달',     '첨부 파일 암호 전달드립니다.',               7);
+
 
 -- message
 INSERT INTO message
-    (company_id, employee_id, message_title, message_content, file_id)
+(company_id, employee_id, message_title, message_content, file_id)
 VALUES (1, 1, '회의 자료 요청', '회의 자료를 오늘 오후 5시까지 보내주세요.', NULL),
        (1, 2, '휴가 승인 요청', '내일 오전 반차 승인 부탁드립니다.', NULL),
        (1, 3, '부서 이동 문의', '인사팀 TO 여부 문의드립니다.', NULL),
@@ -646,7 +652,7 @@ VALUES (1, 1, '회의 자료 요청', '회의 자료를 오늘 오후 5시까지
 
 -- message_recipient
 INSERT INTO message_recipient
-    (company_id, message_id, employee_id, is_read, read_at)
+(company_id, message_id, employee_id, is_read, read_at)
 VALUES (1, 1, 2, 0, NULL),
        (1, 2, 1, 1, NOW()),
        (1, 3, 1, 0, NULL),
@@ -660,223 +666,248 @@ VALUES (1, 1, 2, 0, NULL),
        (2, 10, 5, 0, NULL);
 
 
-
 -- =========================================================
 -- RESOURCE STATUS
 -- =========================================================
-INSERT INTO resource_status (resource_status_code, status_name)
+-- =========================================================
+-- 1. RESOURCE STATUS (가장 먼저 실행)
+-- =========================================================
+-- ID 매핑: 1=AVAILABLE, 2=INSPECTION, 3=UNAVAILABLE, 4=DELETED, 5=ETC
+INSERT INTO resource_status (status_code, status_name)
 VALUES ('AVAILABLE', '사용 가능'),
        ('INSPECTION', '점검 중'),
        ('UNAVAILABLE', '사용 불가'),
        ('DELETED', '삭제됨'),
        ('ETC', '기타');
+
 -- =========================================================
--- RESERVATION STATUS
+-- 2. RESERVATION STATUS (가장 먼저 실행)
 -- =========================================================
-INSERT INTO reservation_status (reservation_status_code, status_name)
+-- ID 매핑: 1=PENDING, 2=CONFIRM, 3=REJECT, 4=CANCELED, 5=DELETED, 6=ETC
+INSERT INTO reservation_status (status_code, status_name)
 VALUES ('PENDING', '승인 대기'),
        ('CONFIRM', '예약 확정'),
        ('REJECT', '예약 반려'),
        ('CANCELED', '예약 취소'),
        ('DELETED', '삭제됨'),
        ('ETC', '기타');
+
 -- =========================================================
--- MEETING ROOM
--- =========================================================
-INSERT INTO meetingroom
-    (company_id, name, position, description, resource_status_code)
-VALUES (1, '대회의실 A', '본관 3층 301호', '최대 20인 수용 가능, 빔프로젝터 및 화상회의 시스템 완비', 'AVAILABLE'),
-       (1, '소회의실 1', '본관 3층 305호', '6인용 테이블, 화이트보드 있음', 'AVAILABLE'),
-       (1, '집중 회의실', '별관 2층 202호', '방음 시설 완비, 현재 마이크 장비 점검 중', 'INSPECTION'),
-       (1, '크리에이티브 룸', '본관 4층 로비 옆', '빈백 소파, 대형 모니터, 브레인스토밍 전용', 'AVAILABLE'),
-       (1, 'VIP 접견실', '본관 10층 CEO실 옆', '내부 인테리어 공사로 인해 당분간 사용 불가', 'UNAVAILABLE');
--- =========================================================
--- CAR
--- =========================================================
-INSERT INTO car
-(company_id, number, name, driver_age, description, resource_status_code, file_id)
-VALUES (1, '12가 3456', '그랜저 GN7', 26, '임원 및 외부 미팅용 법인 차량', 'AVAILABLE', NULL),
-       (1, '78나 9012', '카니발 하이리무진', 26, '팀 워크샵 및 다인원 이동용 (9인승)', 'AVAILABLE', NULL),
-       (1, '34다 5678', '아반떼 CN7', 21, '근거리 업무 및 영업용 차량', 'INSPECTION', NULL),
-       (1, '90라 1234', '제네시스 G80', 30, 'VIP 의전용, 사용 전 비서실 문의 필수', 'UNAVAILABLE', NULL),
-       (1, '56마 7890', '아이오닉 5', 21, '친환경 전기차, 충전 카드 차량 내 비치', 'AVAILABLE', NULL);
--- =========================================================
--- ITEM CATEGORY
+-- 3. ITEM CATEGORY (Company 1)
 -- =========================================================
 INSERT INTO item_category (company_id, name)
-VALUES (1, '카메라'), -- id = 1
-       (1, '모니터'), -- id = 2
-       (1, '노트북'), -- id = 3
-       (1, '카드 단말기');
--- id = 4
+VALUES (1, '카메라'),      -- id = 1
+       (1, '모니터'),      -- id = 2
+       (1, '노트북'),      -- id = 3
+       (1, '카드 단말기'); -- id = 4
+
 -- =========================================================
--- ITEM
+-- 4. MEETING ROOM (Company 1)
+-- =========================================================
+INSERT INTO meetingroom
+(company_id, name, position, description, resource_status_id)
+VALUES
+    (1, '대회의실 A', '본관 3층 301호', '최대 20인 수용 가능, 빔프로젝터 및 화상회의 시스템 완비', 1), -- AVAILABLE
+    (1, '소회의실 1', '본관 3층 305호', '6인용 테이블, 화이트보드 있음', 1), -- AVAILABLE
+    (1, '집중 회의실', '별관 2층 202호', '방음 시설 완비, 현재 마이크 장비 점검 중', 2), -- INSPECTION
+    (1, '크리에이티브 룸', '본관 4층 로비 옆', '빈백 소파, 대형 모니터, 브레인스토밍 전용', 1), -- AVAILABLE
+    (1, 'VIP 접견실', '본관 10층 CEO실 옆', '내부 인테리어 공사로 인해 당분간 사용 불가', 3); -- UNAVAILABLE
+
+-- =========================================================
+-- 5. CAR (Company 1)
+-- =========================================================
+INSERT INTO car
+(company_id, number, name, driver_age, description, resource_status_id, file_id)
+VALUES
+    (1, '12가 3456', '그랜저 GN7', 26, '임원 및 외부 미팅용 법인 차량', 1, NULL), -- AVAILABLE
+    (1, '78나 9012', '카니발 하이리무진', 26, '팀 워크샵 및 다인원 이동용 (9인승)', 1, NULL), -- AVAILABLE
+    (1, '34다 5678', '아반떼 CN7', 21, '근거리 업무 및 영업용 차량', 2, NULL), -- INSPECTION
+    (1, '90라 1234', '제네시스 G80', 30, 'VIP 의전용, 사용 전 비서실 문의 필수', 3, NULL), -- UNAVAILABLE
+    (1, '56마 7890', '아이오닉 5', 21, '친환경 전기차, 충전 카드 차량 내 비치', 1, NULL); -- AVAILABLE
+
+-- =========================================================
+-- 6. ITEM (Company 1)
 -- =========================================================
 INSERT INTO item
-(company_id, item_category_id, name, description, resource_status_code, file_id)
-VALUES (1, 3, 'MacBook Pro 16 (M3 Max)', '신규 입사자 지급용 고성능 랩탑 (개발팀)', 'AVAILABLE', NULL), -- item_id = 1
-       (1, 2, 'LG 울트라파인 5K 모니터', '디자인팀 공용 모니터, 색보정 작업용', 'AVAILABLE', NULL),            -- item_id = 2
-       (1, 4, 'LG 그램', '대여용 노트북', 'UNAVAILABLE', NULL),                                 -- item_id = 3
-       (1, 2, 'Dell XPS 15', '영업팀 외부 미팅 및 프리젠테이션용 공용 노트북', 'AVAILABLE', NULL);
--- item_id = 4
+(company_id, item_category_id, name, description, resource_status_id, file_id)
+VALUES
+    (1, 3, 'MacBook Pro 16 (M3 Max)', '신규 입사자 지급용 고성능 랩탑 (개발팀)', 1, NULL), -- AVAILABLE
+    (1, 2, 'LG 울트라파인 5K 모니터', '디자인팀 공용 모니터, 색보정 작업용', 1, NULL), -- AVAILABLE
+    (1, 4, 'LG 그램', '대여용 노트북', 3, NULL), -- UNAVAILABLE
+    (1, 2, 'Dell XPS 15', '영업팀 외부 미팅 및 프리젠테이션용 공용 노트북', 1, NULL); -- AVAILABLE
+
 -- =========================================================
--- RESERVATION
+-- 7. RESERVATION (Company 1)
 -- =========================================================
+-- reservation_status_id: 1=PENDING, 2=CONFIRM, 3=REJECT
 INSERT INTO reservation
 (company_id, employee_id, type_code, item_category_id, resource_id,
  reservation_date, start_time, end_time,
- reservation_reason, reject_reason, reservation_status_code)
+ reservation_reason, reject_reason, reservation_status_id)
 VALUES
--- 회의실 예약
+-- 회의실 예약 (resource_id=1, CONFIRM=2)
 (1, 1, 'MEETING', NULL, 1,
  CURDATE() + INTERVAL 1 DAY, 10, 12,
- '주간 개발 팀 정기 회의', NULL, 'CONFIRM'),
--- 차량 예약
+ '주간 개발 팀 정기 회의', NULL, 2),
+-- 차량 예약 (resource_id=2, PENDING=1)
 (1, 1, 'CAR', NULL, 2,
  CURDATE() + INTERVAL 2 DAY, 9, 18,
- '외부 파트너사 미팅 및 장비 운송', NULL, 'PENDING'),
--- 비품 예약 (노트북)
+ '외부 파트너사 미팅 및 장비 운송', NULL, 1),
+-- 비품 예약 (노트북, category_id=4, resource_id=3, CONFIRM=2)
 (1, 1, 'ITEM', 4, 3,
  CURDATE() + INTERVAL 3 DAY, 13, 17,
- '모바일 앱 신규 기능 QA 테스트', NULL, 'CONFIRM'),
--- 회의실 예약 반려
+ '모바일 앱 신규 기능 QA 테스트', NULL, 2),
+-- 회의실 예약 반려 (resource_id=4, REJECT=3)
 (1, 1, 'MEETING', NULL, 4,
  CURDATE() + INTERVAL 4 DAY, 14, 15,
- '신규 기획 브레인스토밍',
- '해당 시간대 시설 긴급 점검 예정',
- 'REJECT'),
--- 비품 예약 (모니터)
+ '신규 기획 브레인스토밍', '해당 시간대 시설 긴급 점검 예정', 3),
+-- 비품 예약 (모니터, category_id=2, resource_id=4, CONFIRM=2)
 (1, 1, 'ITEM', 2, 4,
  CURDATE() + INTERVAL 5 DAY, 9, 18,
- '사내 스터디 발제 준비를 위한 대여', NULL, 'CONFIRM');
+ '사내 스터디 발제 준비를 위한 대여', NULL, 2);
+
+-- =========================================================
+-- 8. SCHEDULE (Company 1)
+-- =========================================================
 INSERT INTO schedule
 (company_id, category_id, org_id, type, employee_id, schedule_title, schedule_description, start_date, end_date,
  start_time, end_time, schedule_status)
 VALUES
--- 1. [COMPANY] 전사 일정 (창립기념일) - 확정
+-- [COMPANY] 전사 일정 (창립기념일)
 (1, NULL, NULL, 'COMPANY', 1, '창립기념일 행사', '전사 휴무 및 오전 기념식 진행',
  CURDATE() + INTERVAL 10 DAY, CURDATE() + INTERVAL 10 DAY, 9, 12, 'RELEASE'),
--- 2. [COMPANY] 전사 일정 (타운홀 미팅) - 확정
+-- [COMPANY] 전사 일정 (타운홀 미팅)
 (1, NULL, NULL, 'COMPANY', 1, '4분기 전사 타운홀 미팅', '분기 실적 발표 및 Q&A 세션',
  CURDATE() + INTERVAL 5 DAY, CURDATE() + INTERVAL 5 DAY, 14, 16, 'RELEASE'),
--- 3. [PERSONAL] 개인 일정 (연차) - 확정
+-- [PERSONAL] 개인 일정 (연차)
 (1, NULL, NULL, 'PERSONAL', 1, '개인 연차 휴가', '가족 여행',
  CURDATE() + INTERVAL 3 DAY, CURDATE() + INTERVAL 4 DAY, 9, 18, 'RELEASE'),
--- 4. [PERSONAL] 개인 일정 (병원) - 확정
+-- [PERSONAL] 개인 일정 (병원)
 (1, NULL, NULL, 'PERSONAL', 2, '건강검진', '오전 반차 사용 예정',
  CURDATE() + INTERVAL 7 DAY, CURDATE() + INTERVAL 7 DAY, 8, 13, 'RELEASE'),
--- 5. [PERSONAL] 개인 일정 (미팅) - 삭제됨 (취소)
+-- [PERSONAL] 개인 일정 (미팅) - DELETED
 (1, NULL, NULL, 'PERSONAL', 3, '외부 멘토링 세션', '멘토님 사정으로 취소됨',
  CURDATE() + INTERVAL 1 DAY, CURDATE() + INTERVAL 1 DAY, 19, 21, 'DELETED');
+
 -- =========================================================
--- SCHEDULE SUMMARY
+-- 9. SCHEDULE SUMMARY (Company 1)
 -- =========================================================
 INSERT INTO schedule_summary
-    (company_id, employee_id, week_summary, month_summary)
+(company_id, employee_id, week_summary, month_summary)
 VALUES (1, 1,
         '12월 3주차 주간 요약: 이번 주는 전사 창립기념일 행사와 개발팀 주간 스프린트 회의가 주요 일정이었습니다.',
         '12월 월간 요약: 인증/인가 모듈(Spring Security) 개발 완료 및 주요 프로젝트 진행.');
+
+
+-- =========================================================
+-- [추가] ITEM CATEGORY (Company 2)
+-- =========================================================
+-- auto_increment로 인해 5, 6, 7, 8, 9번 ID 할당 가정
+INSERT INTO item_category (company_id, name)
+VALUES (2, '태블릿'),      -- id = 5
+       (2, '서버 장비'),    -- id = 6
+       (2, '촬영 장비'),    -- id = 7
+       (2, '사무 가구'),    -- id = 8
+       (2, '소프트웨어');   -- id = 9
+
 -- =========================================================
 -- [추가] MEETING ROOM (Company 2)
 -- =========================================================
 INSERT INTO meetingroom
-    (company_id, name, position, description, resource_status_code)
-VALUES (2, '전략 회의실', '글로벌 센터 501호', '임원 전용 회의실, 최고급 화상 장비', 'AVAILABLE'),
-       (2, '아이디어 랩', '글로벌 센터 3층 휴게공간', '전면 화이트보드 벽면, 자유로운 분위기', 'AVAILABLE'),
-       (2, '세미나실 B', '글로벌 센터 지하 1층', '50인 수용 가능, 강연대 및 마이크 설비', 'INSPECTION'),
-       (2, '화상 미팅룸 1', '글로벌 센터 505호', '1인용 포커스 룸, 방음 부스', 'AVAILABLE'),
-       (2, '프로젝트 룸 Alpha', '글로벌 센터 401호', 'TF팀 전용 장기 대관실', 'UNAVAILABLE');
+(company_id, name, position, description, resource_status_id)
+VALUES
+    (2, '전략 회의실', '글로벌 센터 501호', '임원 전용 회의실, 최고급 화상 장비', 1), -- AVAILABLE
+    (2, '아이디어 랩', '글로벌 센터 3층 휴게공간', '전면 화이트보드 벽면, 자유로운 분위기', 1), -- AVAILABLE
+    (2, '세미나실 B', '글로벌 센터 지하 1층', '50인 수용 가능, 강연대 및 마이크 설비', 2), -- INSPECTION
+    (2, '화상 미팅룸 1', '글로벌 센터 505호', '1인용 포커스 룸, 방음 부스', 1), -- AVAILABLE
+    (2, '프로젝트 룸 Alpha', '글로벌 센터 401호', 'TF팀 전용 장기 대관실', 3); -- UNAVAILABLE
+
 -- =========================================================
 -- [추가] CAR (Company 2)
 -- =========================================================
 INSERT INTO car
-(company_id, number, name, driver_age, description, resource_status_code, file_id)
-VALUES (2, '99호 1111', '벤츠 E-Class', 30, 'CEO 의전 차량', 'AVAILABLE', NULL),
-       (2, '88하 2222', '쏘렌토 MQ4', 26, '영업 1팀 공용 차량', 'AVAILABLE', NULL),
-       (2, '77호 3333', '레이 EV', 21, '근거리 문서 수발신 및 마트 장보기용', 'INSPECTION', NULL),
-       (2, '66하 4444', '스타리아 라운지', 26, '공항 픽업 및 바이어 접대용 (7인승)', 'AVAILABLE', NULL),
-       (2, '55호 5555', '테슬라 Model Y', 26, 'IT 사업부 테스트 및 업무용', 'UNAVAILABLE', NULL);
--- =========================================================
--- [추가] ITEM CATEGORY (Company 2)
--- =========================================================
--- 기존 카테고리(1~4) 뒤에 이어 5~9번 ID가 생성된다고 가정
-INSERT INTO item_category (company_id, name)
-VALUES (2, '태블릿'),
-       (2, '서버 장비'),
-       (2, '촬영 장비'),
-       (2, '사무 가구'),
-       (2, '소프트웨어');
+(company_id, number, name, driver_age, description, resource_status_id, file_id)
+VALUES
+    (2, '99호 1111', '벤츠 E-Class', 30, 'CEO 의전 차량', 1, NULL), -- AVAILABLE
+    (2, '88하 2222', '쏘렌토 MQ4', 26, '영업 1팀 공용 차량', 1, NULL), -- AVAILABLE
+    (2, '77호 3333', '레이 EV', 21, '근거리 문서 수발신 및 마트 장보기용', 2, NULL), -- INSPECTION
+    (2, '66하 4444', '스타리아 라운지', 26, '공항 픽업 및 바이어 접대용 (7인승)', 1, NULL), -- AVAILABLE
+    (2, '55호 5555', '테슬라 Model Y', 26, 'IT 사업부 테스트 및 업무용', 3, NULL); -- UNAVAILABLE
+
 -- =========================================================
 -- [추가] ITEM (Company 2)
 -- =========================================================
--- category_id는 위에서 생성된 순서(5,6,7,8,9)를 매핑했다고 가정
+-- category_id는 위에서 생성된 순서(5,6,7,8,9) 매핑
 INSERT INTO item
-(company_id, item_category_id, name, description, resource_status_code, file_id)
-VALUES (2, 5, 'iPad Pro 12.9 (6세대)', '디자인 시안 검토용 태블릿', 'AVAILABLE', NULL),
-       (2, 6, 'Dell PowerEdge R750', '사내 테스트 서버, 전산실 B구역 위치', 'AVAILABLE', NULL),
-       (2, 7, 'Sony Alpha 7 IV', '마케팅팀 유튜브 촬영용 카메라', 'INSPECTION', NULL),
-       (2, 8, '허먼밀러 에어론', '허리 디스크 환자 전용 의자 (신청 필요)', 'UNAVAILABLE', NULL),
-       (2, 9, 'JetBrains All Products', '개발팀 공용 라이선스 계정', 'AVAILABLE', NULL);
+(company_id, item_category_id, name, description, resource_status_id, file_id)
+VALUES
+    (2, 5, 'iPad Pro 12.9 (6세대)', '디자인 시안 검토용 태블릿', 1, NULL),
+    (2, 6, 'Dell PowerEdge R750', '사내 테스트 서버, 전산실 B구역 위치', 1, NULL),
+    (2, 7, 'Sony Alpha 7 IV', '마케팅팀 유튜브 촬영용 카메라', 2, NULL),
+    (2, 8, '허먼밀러 에어론', '허리 디스크 환자 전용 의자 (신청 필요)', 3, NULL),
+    (2, 9, 'JetBrains All Products', '개발팀 공용 라이선스 계정', 1, NULL);
+
 -- =========================================================
 -- [추가] RESERVATION (Company 2)
 -- =========================================================
--- Resource ID는 기존 1~5번 뒤인 6~10번(Meetingroom/Car), 5~9번(Item)을 사용한다고 가정
+-- Resource ID 가정: Meetingroom(6~10), Car(6~10), Item(5~9)
+-- Status ID: 1=PENDING, 2=CONFIRM, 3=REJECT
 INSERT INTO reservation
 (company_id, employee_id, type_code, item_category_id, resource_id,
  reservation_date, start_time, end_time,
- reservation_reason, reject_reason, reservation_status_code)
+ reservation_reason, reject_reason, reservation_status_id)
 VALUES
--- 1. 회의실 예약 (전략 회의실: resource_id 6 가정)
+-- 회의실 예약 (전략 회의실: resource_id=6, CONFIRM=2)
 (2, 4, 'MEETING', NULL, 6,
  CURDATE() + INTERVAL 2 DAY, 14, 16,
- '내년도 사업 계획 보고', NULL, 'CONFIRM'),
--- 2. 차량 예약 (쏘렌토: resource_id 7 가정)
+ '내년도 사업 계획 보고', NULL, 2),
+-- 차량 예약 (쏘렌토: resource_id=7, PENDING=1)
 (2, 5, 'CAR', NULL, 7,
  CURDATE() + INTERVAL 3 DAY, 9, 18,
- '지방 공장 실사 방문', NULL, 'PENDING'),
--- 3. 비품 예약 (iPad: resource_id 5 / category_id 5 가정)
+ '지방 공장 실사 방문', NULL, 1),
+-- 비품 예약 (iPad: resource_id=5, category_id=5, CONFIRM=2)
 (2, 4, 'ITEM', 5, 5,
  CURDATE() + INTERVAL 1 DAY, 10, 18,
- '외부 미팅 시안 프레젠테이션', NULL, 'CONFIRM'),
--- 4. 회의실 예약 (반려됨 / 아이디어 랩: resource_id 7 가정)
+ '외부 미팅 시안 프레젠테이션', NULL, 2),
+-- 회의실 예약 (반려됨, resource_id=7, REJECT=3)
 (2, 5, 'MEETING', NULL, 7,
  CURDATE() + INTERVAL 5 DAY, 13, 15,
- '점심 회식 후 티타임', '업무 외 목적 사용 불가', 'REJECT'),
--- 5. 비품 예약 (카메라: resource_id 7 / category_id 7 가정)
+ '점심 회식 후 티타임', '업무 외 목적 사용 불가', 3),
+-- 비품 예약 (카메라: resource_id=7, category_id=7, CONFIRM=2)
 (2, 5, 'ITEM', 7, 7,
  CURDATE() + INTERVAL 10 DAY, 9, 18,
- '사내 브이로그 촬영', NULL, 'CONFIRM');
+ '사내 브이로그 촬영', NULL, 2);
+
 -- =========================================================
 -- [추가] SCHEDULE (Company 2)
 -- =========================================================
--- COMPANY(전사), PERSONAL(개인) 일정만 포함
 INSERT INTO schedule
 (company_id, category_id, org_id, type, employee_id, schedule_title, schedule_description, start_date, end_date,
  start_time, end_time, schedule_status)
 VALUES
--- 1. [COMPANY] 전사 일정
+-- [COMPANY] 전사 일정
 (2, NULL, NULL, 'COMPANY', 4, '전사 체육대회', '잠실 보조경기장 집결',
  CURDATE() + INTERVAL 20 DAY, CURDATE() + INTERVAL 20 DAY, 9, 18, 'RELEASE'),
--- 2. [COMPANY] 전사 일정
+-- [COMPANY] 전사 일정
 (2, NULL, NULL, 'COMPANY', 4, '건강검진 기간 안내', '지정 병원 예약 필수',
  CURDATE(), CURDATE() + INTERVAL 30 DAY, 9, 18, 'RELEASE'),
--- 3. [PERSONAL] 개인 일정 (사원 4)
+-- [PERSONAL] 개인 일정 (사원 4)
 (2, NULL, NULL, 'PERSONAL', 4, '재택 근무', '집중 근무일 신청',
  CURDATE() + INTERVAL 2 DAY, CURDATE() + INTERVAL 2 DAY, 9, 18, 'RELEASE'),
--- 4. [PERSONAL] 개인 일정 (사원 5)
+-- [PERSONAL] 개인 일정 (사원 5)
 (2, NULL, NULL, 'PERSONAL', 5, '치과 예약', '오후 반차 사용',
  CURDATE() + INTERVAL 5 DAY, CURDATE() + INTERVAL 5 DAY, 14, 18, 'RELEASE'),
--- 5. [PERSONAL] 개인 일정 (사원 5 - 삭제됨)
+-- [PERSONAL] 개인 일정 (사원 5 - 삭제됨)
 (2, NULL, NULL, 'PERSONAL', 5, '저녁 약속', '친구 결혼식 뒤풀이 (취소됨)',
  CURDATE() + INTERVAL 7 DAY, CURDATE() + INTERVAL 7 DAY, 19, 22, 'DELETED');
+
 -- =========================================================
 -- [추가] SCHEDULE SUMMARY (Company 2)
 -- =========================================================
 INSERT INTO schedule_summary
-    (company_id, employee_id, week_summary, month_summary)
+(company_id, employee_id, week_summary, month_summary)
 VALUES (2, 4, '12월 2주차: 전사 체육대회 준비 위원회 참석 및 재택 근무 진행.', '12월 요약: 체육대회 기획 완료 및 개인 업무 목표 90% 달성.'),
        (2, 5, '12월 2주차: 지방 공장 실사 및 보고서 작성 완료.', '12월 요약: 현장 방문 일정 위주로 소화, 건강 문제로 인한 반차 사용 1회.');
-
 
 -- 1. attendance_rule (근태 규칙)
 INSERT INTO attendance_rule (company_id, name, default_start_time, default_end_time, default_break_minutes,
