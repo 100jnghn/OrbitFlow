@@ -18,8 +18,8 @@ public class GrantHistory extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "grant_id", nullable = false)
-    private Long grantId;           // 부여 ID (PK)
+    @Column(name = "id", nullable = false)
+    private Long id;           // 부여 ID (PK)
 
     @Column(name = "employee_id", nullable = false)
     private Long employeeId;        // 사원 ID (FK)
@@ -42,5 +42,4 @@ public class GrantHistory extends BaseEntity {
     @Column(name = "is_expired", nullable = false)
     private Boolean isExpired;      // 소멸 처리 여부
 
-    // created_at 필드는 BaseEntity의 createdAt으로 대체됩니다.
 }

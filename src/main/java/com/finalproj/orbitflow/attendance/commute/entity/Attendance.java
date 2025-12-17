@@ -19,7 +19,7 @@ public class Attendance {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "attendance_id", nullable = false)
+    @Column(name = "id", nullable = false)
     private Long id; // 아이디
 
     @Column(name = "company_id", nullable = false)
