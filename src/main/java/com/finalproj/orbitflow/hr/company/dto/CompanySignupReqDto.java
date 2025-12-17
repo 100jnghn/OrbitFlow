@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  */
 @Getter
 @NoArgsConstructor
-public class CompanySignupRequest {
+public class CompanySignupReqDto {
     private String companyName;
     private String address;
     private String representativeName;
