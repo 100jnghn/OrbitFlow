@@ -138,21 +138,21 @@ INSERT INTO employee
  name, email, password, gender, birth_date, employment_type, status, work_status)
 VALUES
 -- OrbitFlow
-(1, 'OF-001', '1001', '01012345678', 6, 5, 4, '홍길동', 'hong@orbitflow.com',
- '$2a$10$dummyhash', 'MALE', '1990-01-01', 'REGULAR', 'ACTIVE', 'WORKING'),
+(1, 'OF-001', '1001', '01012345678', 6, 5, 4, '홍길동', 'test1@test.com',
+ '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK', 'MALE', '1990-01-01', 'REGULAR', 'ACTIVE', 'WORKING'),
 
-(1, 'OF-002', '1002', '01074108529', 6, 2, 7, '김철수', 'kim@orbitflow.com',
- '$2a$10$dummyhash', 'MALE', '1996-03-03', 'REGULAR', 'ACTIVE', 'AWAY'),
+(1, 'OF-002', '1002', '01074108529', 6, 2, 7, '김철수', 'test2@test.com',
+ '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK', 'MALE', '1996-03-03', 'REGULAR', 'ACTIVE', 'AWAY'),
 
-(1, 'OF-003', '1003', '01098765432', 8, 3, 6, '이영희', 'lee@orbitflow.com',
- '$2a$10$dummyhash', 'FEMALE', '1994-06-06', 'REGULAR', 'ACTIVE', 'ON_LEAVE'),
+(1, 'OF-003', '1003', '01098765432', 8, 3, 6, '이영희', 'test3@test.com',
+ '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK', 'FEMALE', '1994-06-06', 'REGULAR', 'ACTIVE', 'ON_LEAVE'),
 
 -- NovaWorks
-(2, 'NW-001', '2001', '01055555555', 12, 7, 12, '박민수', 'park@novaworks.com',
- '$2a$10$dummyhash', 'MALE', '1992-02-02', 'REGULAR', 'ACTIVE', 'WORKING'),
+(2, 'NW-001', '2001', '01055555555', 12, 7, 12, '박민수', 'test4@test.com',
+ '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK', 'MALE', '1992-02-02', 'REGULAR', 'ACTIVE', 'WORKING'),
 
-(2, 'NW-002', '2002', '01099999999', 12, 6, 13, '정수빈', 'jung@novaworks.com',
- '$2a$10$dummyhash', 'FEMALE', '1999-09-09', 'NON_REGULAR', 'TEMP', 'OFF_WORK');
+(2, 'NW-002', '2002', '01099999999', 12, 6, 13, '정수빈', 'test5@test.com',
+ '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK', 'FEMALE', '1999-09-09', 'NON_REGULAR', 'TEMP', 'OFF_WORK');
 
 
 /* =====================================================
@@ -268,7 +268,7 @@ VALUES (1, '휴가 신청', '연차/반차/병가 신청', 1),
  * ========================================================= */
 INSERT INTO form_template
 (company_id, template_group_id, version, template_category_id,
- affect_tags, template_json, approval_rule_json, is_active)
+ affect_tags, template_json, approval_rule_json, status)
 VALUES (1, 1, 1, 1, JSON_ARRAY('attendance'),
         JSON_OBJECT('fields', JSON_ARRAY(
                 JSON_OBJECT('key', 'start_date'),
@@ -278,7 +278,7 @@ VALUES (1, 1, 1, 1, JSON_ARRAY('attendance'),
         JSON_OBJECT('lines', JSON_ARRAY(
                 JSON_OBJECT('order', 1, 'approverType', 'MANAGER'),
                 JSON_OBJECT('order', 2, 'approverType', 'ADMIN')
-                             )), TRUE),
+                             )), 'ACTIVE'),
 
        (1, 2, 1, 2, JSON_ARRAY('schedule'),
         JSON_OBJECT('fields', JSON_ARRAY(
@@ -287,7 +287,7 @@ VALUES (1, 1, 1, 1, JSON_ARRAY('attendance'),
                               )),
         JSON_OBJECT('lines', JSON_ARRAY(
                 JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
-                             )), TRUE),
+                             )), 'ACTIVE'),
 
        (1, 3, 1, 1, JSON_ARRAY('attendance'),
         JSON_OBJECT('fields', JSON_ARRAY(
@@ -296,7 +296,7 @@ VALUES (1, 1, 1, 1, JSON_ARRAY('attendance'),
                               )),
         JSON_OBJECT('lines', JSON_ARRAY(
                 JSON_OBJECT('order', 1, 'approverType', 'MANAGER')
-                             )), TRUE),
+                             )), 'ACTIVE'),
 
        (1, 4, 1, 3, NULL,
         JSON_OBJECT('fields', JSON_ARRAY(
@@ -305,7 +305,7 @@ VALUES (1, 1, 1, 1, JSON_ARRAY('attendance'),
                               )),
         JSON_OBJECT('lines', JSON_ARRAY(
                 JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
-                             )), TRUE),
+                             )), 'ACTIVE'),
 
        (1, 5, 1, 3, NULL,
         JSON_OBJECT('fields', JSON_ARRAY(
@@ -314,7 +314,7 @@ VALUES (1, 1, 1, 1, JSON_ARRAY('attendance'),
                               )),
         JSON_OBJECT('lines', JSON_ARRAY(
                 JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
-                             )), TRUE),
+                             )), 'ACTIVE'),
 
        (2, 6, 1, 1, JSON_ARRAY('attendance'),
         JSON_OBJECT('fields', JSON_ARRAY(
@@ -325,7 +325,7 @@ VALUES (1, 1, 1, 1, JSON_ARRAY('attendance'),
         JSON_OBJECT('lines', JSON_ARRAY(
                 JSON_OBJECT('order', 1, 'approverType', 'MANAGER'),
                 JSON_OBJECT('order', 2, 'approverType', 'ADMIN')
-                             )), TRUE),
+                             )), 'ACTIVE'),
 
        (2, 7, 1, 2, JSON_ARRAY('schedule'),
         JSON_OBJECT('fields', JSON_ARRAY(
@@ -334,7 +334,7 @@ VALUES (1, 1, 1, 1, JSON_ARRAY('attendance'),
                               )),
         JSON_OBJECT('lines', JSON_ARRAY(
                 JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
-                             )), TRUE),
+                             )), 'ACTIVE'),
 
        (2, 8, 1, 1, JSON_ARRAY('attendance'),
         JSON_OBJECT('fields', JSON_ARRAY(
@@ -343,7 +343,7 @@ VALUES (1, 1, 1, 1, JSON_ARRAY('attendance'),
                               )),
         JSON_OBJECT('lines', JSON_ARRAY(
                 JSON_OBJECT('order', 1, 'approverType', 'MANAGER')
-                             )), TRUE),
+                             )), 'ACTIVE'),
 
        (2, 9, 1, 3, NULL,
         JSON_OBJECT('fields', JSON_ARRAY(
@@ -352,7 +352,7 @@ VALUES (1, 1, 1, 1, JSON_ARRAY('attendance'),
                               )),
         JSON_OBJECT('lines', JSON_ARRAY(
                 JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
-                             )), TRUE),
+                             )), 'ACTIVE'),
 
        (2, 10, 1, 3, NULL,
         JSON_OBJECT('fields', JSON_ARRAY(
@@ -361,7 +361,7 @@ VALUES (1, 1, 1, 1, JSON_ARRAY('attendance'),
                               )),
         JSON_OBJECT('lines', JSON_ARRAY(
                 JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
-                             )), TRUE);
+                             )), 'ACTIVE');
 
 
 /* =========================================================
