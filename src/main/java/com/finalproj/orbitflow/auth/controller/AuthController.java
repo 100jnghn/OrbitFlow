@@ -1,7 +1,7 @@
 package com.finalproj.orbitflow.auth.controller;
 
-import com.finalproj.orbitflow.auth.dto.LoginRequest;
-import com.finalproj.orbitflow.auth.dto.LoginResponse;
+import com.finalproj.orbitflow.auth.dto.LoginReqDto;
+import com.finalproj.orbitflow.auth.dto.LoginResDto;
 import com.finalproj.orbitflow.global.security.CustomUserDetailsService;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import com.finalproj.orbitflow.global.security.jwt.JwtProvider;
@@ -34,7 +34,7 @@ public class AuthController {
     private final JwtProvider jwtProvider;
 
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest request) {
+    public LoginResDto login(@RequestBody LoginReqDto request) {
 
         SecurityUser user = userDetailsService.loadByEmail(request.getEmail());
 
@@ -48,6 +48,6 @@ public class AuthController {
         }
 
         String token = jwtProvider.createToken(user);
-        return new LoginResponse(token);
+        return new LoginResDto(token);
     }
 }
