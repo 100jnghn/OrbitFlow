@@ -1,7 +1,9 @@
 package com.finalproj.orbitflow.board.boardCategory.controller;
 
+import com.finalproj.orbitflow.board.boardCategory.dto.BoardCategoryReqDto;
 import com.finalproj.orbitflow.board.boardCategory.dto.BoardCategoryResDto;
 import com.finalproj.orbitflow.board.boardCategory.service.AdminBoardCategoryService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -41,5 +43,15 @@ public class AdminBoardCategoryController {
         return ResponseEntity.ok(
                 adminBoardCategoryService.getCategoryDetail(categoryId)
         );
+    }
+
+    /**
+     * 게시판 카테고리 생성
+     */
+    @PostMapping
+    public ResponseEntity<Long> createCategory(
+            @RequestBody @Valid BoardCategoryReqDto.Category dto
+    ) {
+        return ResponseEntity.ok(adminBoardCategoryService.createCategory(dto));
     }
 }

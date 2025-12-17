@@ -1,8 +1,11 @@
 package com.finalproj.orbitflow.board.boardCategory.service;
 
+import com.finalproj.orbitflow.board.boardCategory.dto.BoardCategoryReqDto;
 import com.finalproj.orbitflow.board.boardCategory.dto.BoardCategoryResDto;
 import com.finalproj.orbitflow.board.boardCategory.entity.BoardCategory;
 import com.finalproj.orbitflow.board.boardCategory.repository.BoardCategoryRepository;
+import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
+import com.finalproj.orbitflow.hr.organization.repository.OrganizationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,9 +15,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class AdminBoardCategoryService  {
+public class AdminBoardCategoryService {
 
     private final BoardCategoryRepository boardCategoryRepository;
+    private final CompanyRepository companyRepository;
+    private final OrganizationRepository organizationRepository;
 
     /**
      * 관리자 게시판(카테고리) 목록 조회
@@ -44,5 +49,27 @@ public class AdminBoardCategoryService  {
                 );
 
         return BoardCategoryResDto.Category.from(category);
+    }
+
+    /**
+     * 게시판 카테고리 생성
+     */
+    @Transactional
+    public Long createCategory(BoardCategoryReqDto.Category dto) {
+
+        BoardCategory category = BoardCategory.builder()
+                .company(companyRepository.getReferenceById(dto.getCompanyId()))
+                .organization(
+                        dto.getOrganizationId() != null
+                                ? organizationRepository.getReferenceById(dto.getOrganizationId())
+                                : null
+                )
+                .boardName(dto.getBoardName())
+                .boardType(dto.getBoardType())
+                .isActivated(true) // 일반 게시판은 항상 활성
+                .commentActivated(dto.getCommentActivated())
+                .build();
+
+        return boardCategoryRepository.save(category).getId();
     }
 }
