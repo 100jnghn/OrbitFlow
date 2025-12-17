@@ -1,5 +1,6 @@
-package com.finalproj.orbitflow.board.entity;
+package com.finalproj.orbitflow.board.comment.entity;
 
+import com.finalproj.orbitflow.board.boardPost.entity.Board;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import jakarta.persistence.*;

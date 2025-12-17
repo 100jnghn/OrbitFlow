@@ -1,15 +1,13 @@
-package com.finalproj.orbitflow.board.controller.admin;
+package com.finalproj.orbitflow.board.boardCategory.controller;
 
-import com.finalproj.orbitflow.board.dto.admin.AdminBoardResDto;
-import com.finalproj.orbitflow.board.service.admin.AdminBoardCategoryService;
+import com.finalproj.orbitflow.board.boardCategory.dto.BoardCategoryResDto;
+import com.finalproj.orbitflow.board.boardCategory.service.AdminBoardCategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin/board-categories")
@@ -25,10 +23,23 @@ public class AdminBoardCategoryController {
      * @param pageable  페이징 정보
      */
     @GetMapping
-    public Page<AdminBoardResDto.Category> getCategoryList(
+    public Page<BoardCategoryResDto.Category> getCategoryList(
             @RequestParam Long companyId,
             @PageableDefault(size = 5, sort = "createdAt") Pageable pageable
     ) {
         return adminBoardCategoryService.getCategoryList(companyId, pageable);
+    }
+
+    /**
+     * 관리자 게시판 카테고리 단건 조회
+     * - 수정 페이지 로딩용
+     */
+    @GetMapping("/{categoryId}")
+    public ResponseEntity<BoardCategoryResDto.Category> getCategoryDetail(
+            @PathVariable Long categoryId
+    ) {
+        return ResponseEntity.ok(
+                adminBoardCategoryService.getCategoryDetail(categoryId)
+        );
     }
 }

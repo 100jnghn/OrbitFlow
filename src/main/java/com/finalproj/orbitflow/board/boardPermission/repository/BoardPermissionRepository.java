@@ -1,6 +1,6 @@
-package com.finalproj.orbitflow.board.repository;
+package com.finalproj.orbitflow.board.boardPermission.repository;
 
-import com.finalproj.orbitflow.board.entity.BoardPermission;
+import com.finalproj.orbitflow.board.boardPermission.entity.BoardPermission;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

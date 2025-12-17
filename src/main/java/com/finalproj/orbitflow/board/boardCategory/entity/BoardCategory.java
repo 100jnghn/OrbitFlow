@@ -1,5 +1,6 @@
-package com.finalproj.orbitflow.board.entity;
+package com.finalproj.orbitflow.board.boardCategory.entity;
 
+import com.finalproj.orbitflow.board.boardPermission.entity.BoardPermission;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.organization.entity.Organization;

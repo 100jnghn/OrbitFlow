@@ -1,6 +1,6 @@
-package com.finalproj.orbitflow.board.repository;
+package com.finalproj.orbitflow.board.boardCategory.repository;
 
-import com.finalproj.orbitflow.board.entity.BoardCategory;
+import com.finalproj.orbitflow.board.boardCategory.entity.BoardCategory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,7 +24,7 @@ public interface BoardCategoryRepository extends JpaRepository<BoardCategory, Lo
      * @param id 게시판 카테고리 ID
      * @return 활성화된 게시판 카테고리 엔티티
      */
-    Optional<BoardCategory> findByIdAndDeletedAtIsNullAndIsActivatedIsTrue(Long id);
+    Optional<BoardCategory> findByIdAndDeletedAtIsNull(Long id);
 
     /**
      * [관리자용] 활성화된 일반 카테고리 목록 조회 (페이징, 수정/삭제 대상)
