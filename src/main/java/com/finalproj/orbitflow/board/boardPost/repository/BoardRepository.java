@@ -1,6 +1,6 @@
-package com.finalproj.orbitflow.board.repository;
+package com.finalproj.orbitflow.board.boardPost.repository;
 
-import com.finalproj.orbitflow.board.entity.Board;
+import com.finalproj.orbitflow.board.boardPost.entity.Board;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

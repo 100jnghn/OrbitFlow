@@ -1,6 +1,6 @@
-package com.finalproj.orbitflow.board.dto.user;
+package com.finalproj.orbitflow.board.boardPost.dto;
 
-import com.finalproj.orbitflow.board.entity.Board;
+import com.finalproj.orbitflow.board.boardPost.entity.Board;
 import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import lombok.AllArgsConstructor;

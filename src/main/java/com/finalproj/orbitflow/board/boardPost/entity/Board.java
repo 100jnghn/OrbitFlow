@@ -1,5 +1,6 @@
-package com.finalproj.orbitflow.board.entity;
+package com.finalproj.orbitflow.board.boardPost.entity;
 
+import com.finalproj.orbitflow.board.boardCategory.entity.BoardCategory;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
