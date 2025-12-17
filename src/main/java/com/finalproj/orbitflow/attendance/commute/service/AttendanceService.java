@@ -2,8 +2,12 @@ package com.finalproj.orbitflow.attendance.commute.service;
 
 import com.finalproj.orbitflow.attendance.commute.dto.AttendanceDto;
 import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
+import com.finalproj.orbitflow.attendance.commute.entity.AttendanceRule;
+import com.finalproj.orbitflow.attendance.commute.entity.EmployeeAttRule;
 import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
 import com.finalproj.orbitflow.attendance.commute.repository.AttendanceRepository;
+import com.finalproj.orbitflow.attendance.commute.repository.AttendanceRuleRepository;
+import com.finalproj.orbitflow.attendance.commute.repository.EmployeeAttRuleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,114 +23,88 @@ import java.util.Optional;
 public class AttendanceService {
 
     private final AttendanceRepository attendanceRepository;
-
-    // [TODO] 실제 구현 시 Spring Security 등을 통해 현재 로그인한 사원 ID와 회사 ID를 가져와야 함
-    // 임시 상수 대신, 실제로는 SecurityContext에서 가져와야 함.
-    // private final Long CURRENT_EMPLOYEE_ID = 1L;
-    // private final Long CURRENT_COMPANY_ID = 1L;
-
-    // [TODO] 회사의 표준 출근 시간 (규칙 테이블에서 가져와야 하지만, 임시로 9시로 가정)
-    private static final LocalTime STANDARD_START_TIME = LocalTime.of(9, 0);
-
+    private final AttendanceRuleRepository attendanceRuleRepository;
+    private final EmployeeAttRuleRepository employeeAttRuleRepository;
 
     /**
-     * 오늘의 출퇴근 기록 조회 (회사 ID를 기준으로 격리)
-     * @param companyId 현재 로그인한 사원이 속한 회사 ID (보안 필터)
-     * @param employeeId 기록을 조회할 사원 ID
+     * 오늘의 출퇴근 기록 조회
      */
     public AttendanceDto.TodayAttendanceResponse getTodayAttendance(Long companyId, Long employeeId) {
-        // [수정] findTodayByEmployeeId -> findTodayByCompanyIdAndEmployeeId 로 변경 필요 (Repository 수정 필요)
-        Optional<Attendance> attendance = attendanceRepository.findTodayByCompanyIdAndEmployeeId(companyId, employeeId);
+        Optional<Attendance> attendance = attendanceRepository.findByCompanyIdAndEmployeeIdAndWorkDate(companyId, employeeId, LocalDate.now());
 
-        if (attendance.isPresent()) {
-            return new AttendanceDto.TodayAttendanceResponse(attendance.get());
-        } else {
-            // 기록이 없으면 빈 응답 반환
-            return new AttendanceDto.TodayAttendanceResponse();
-        }
+        return attendance.map(AttendanceDto.TodayAttendanceResponse::new)
+                .orElseGet(AttendanceDto.TodayAttendanceResponse::new);
     }
 
     /**
-     * 출근 처리 (지각 여부 판단 로직 및 회사 ID 기반 격리 추가)
-     * @param companyId 현재 로그인한 사원이 속한 회사 ID (보안 필터)
-     * @param employeeId 기록을 조회할 사원 ID
+     * 출근 처리 (지각 판정 포함)
      */
     @Transactional
     public AttendanceDto.TodayAttendanceResponse checkIn(Long companyId, Long employeeId) {
         LocalDate today = LocalDate.now();
-        LocalDateTime actualCommuteAt = LocalDateTime.now();
-        LocalTime actualStartTime = actualCommuteAt.toLocalTime(); // 출근 시간만 추출
+        LocalDateTime now = LocalDateTime.now();
 
-        // 1. 오늘 이미 출근 기록이 있는지 회사 ID 기반으로 확인 (데이터 격리)
-        // [수정] findByEmployeeIdAndWorkDate -> findByCompanyIdAndEmployeeIdAndWorkDate 로 변경 필요
-        Optional<Attendance> existing = attendanceRepository.findByCompanyIdAndEmployeeIdAndWorkDate(companyId, employeeId, today);
+        // 1. 중복 출근 체크
+        attendanceRepository.findByCompanyIdAndEmployeeIdAndWorkDate(companyId, employeeId, today)
+                .ifPresent(a -> { throw new IllegalStateException("이미 출근 처리되었습니다."); });
 
-        if (existing.isPresent()) {
-            Attendance attendance = existing.get();
-            if (attendance.getCommuteAt() != null) {
-                throw new IllegalStateException("이미 출근 처리되었습니다.");
-            }
-            // 이 로직은 출근 버튼을 여러 번 눌렀을 경우를 대비하지만,
-            // 보통 출근 시점에만 레코드를 생성하므로, 실제로는 아래 else 로직으로 통합될 수 있음.
-            attendance.setCommuteAt(actualCommuteAt);
-            // [TODO] 상태 값 (지각/정상) 재판단 로직 필요
-            attendance = attendanceRepository.save(attendance);
-            return new AttendanceDto.TodayAttendanceResponse(attendance);
-        } else {
-            // 2. 새로운 출근 기록 생성
-            Attendance attendance = new Attendance();
-            attendance.setCompanyId(companyId);
-            attendance.setEmployeeId(employeeId);
-            attendance.setWorkDate(today);
-            attendance.setCommuteAt(actualCommuteAt);
-            attendance.setIsCorrected(false);
+        // 2. 기준 시간 결정 (예외 규칙 우선)
+        LocalTime startTimeThreshold = getApplicableStartTime(companyId, employeeId, today);
 
-            // 3. 지각/정상출근 상태 결정 및 설정
-            AttendanceStatus determinedStatus;
-            if (actualStartTime.isAfter(STANDARD_START_TIME)) {
-                determinedStatus = AttendanceStatus.LATE; // 지각 처리
-            } else {
-                determinedStatus = AttendanceStatus.ON_TIME; // 정상 출근
-            }
-            attendance.setStatus(determinedStatus); // 상태 값 할당
+        // 3. 기록 생성 및 저장
+        Attendance attendance = new Attendance();
+        attendance.setCompanyId(companyId);
+        attendance.setEmployeeId(employeeId);
+        attendance.setWorkDate(today);
+        attendance.setCommuteAt(now);
+        attendance.setIsCorrected(false);
 
-            attendance = attendanceRepository.save(attendance);
-            return new AttendanceDto.TodayAttendanceResponse(attendance);
-        }
+        // 지각 여부 판별
+        AttendanceStatus status = now.toLocalTime().isAfter(startTimeThreshold)
+                ? AttendanceStatus.LATE : AttendanceStatus.ON_TIME;
+        attendance.setStatus(status);
+
+        return new AttendanceDto.TodayAttendanceResponse(attendanceRepository.save(attendance));
     }
 
     /**
-     * 퇴근 처리 (회사 ID를 기준으로 격리)
-     * @param companyId 현재 로그인한 사원이 속한 회사 ID (보안 필터)
-     * @param employeeId 기록을 조회할 사원 ID
+     * 퇴근 처리 (조퇴 판정 포함)
      */
     @Transactional
     public AttendanceDto.TodayAttendanceResponse checkOut(Long companyId, Long employeeId) {
         LocalDate today = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
 
-        // [수정] findByEmployeeIdAndWorkDate -> findByCompanyIdAndEmployeeIdAndWorkDate 로 변경 필요
-        Optional<Attendance> attendanceOpt = attendanceRepository.findByCompanyIdAndEmployeeIdAndWorkDate(companyId, employeeId, today);
+        Attendance attendance = attendanceRepository.findByCompanyIdAndEmployeeIdAndWorkDate(companyId, employeeId, today)
+                .orElseThrow(() -> new IllegalStateException("출근 기록이 없습니다."));
 
-        if (attendanceOpt.isEmpty()) {
-            // [TODO] 만약 결근(ABSENT) 상태로 레코드가 존재하지 않는다면, 이 시점에 '결근' 레코드를 생성 후 퇴근 시간만 기록하지 않도록 처리해야 함.
-            throw new IllegalStateException("출근 기록이 없습니다. 먼저 출근해주세요.");
+        if (attendance.getLeaveAt() != null) throw new IllegalStateException("이미 퇴근 처리되었습니다.");
+
+        // 1. 기준 시간 결정
+        LocalTime endTimeThreshold = getApplicableEndTime(companyId, employeeId, today);
+
+        // 2. 퇴근 시각 기록 및 조퇴 판별
+        attendance.setLeaveAt(now);
+        if (now.toLocalTime().isBefore(endTimeThreshold)) {
+            attendance.setStatus(AttendanceStatus.EARLY_LEAVE);
         }
 
-        Attendance attendance = attendanceOpt.get();
+        return new AttendanceDto.TodayAttendanceResponse(attendanceRepository.save(attendance));
+    }
 
-        if (attendance.getCommuteAt() == null) {
-            throw new IllegalStateException("출근 기록이 없습니다.");
-        }
+    private LocalTime getApplicableStartTime(Long companyId, Long employeeId, LocalDate date) {
+        return employeeAttRuleRepository.findActiveRuleByEmployeeIdAndDate(employeeId, date)
+                .map(EmployeeAttRule::getStartTime)
+                .orElseGet(() -> attendanceRuleRepository.findByCompanyIdAndIsDefaultTrue(companyId)
+                        .map(AttendanceRule::getDefaultStartTime)
+                        .orElse(LocalTime.of(9, 0)));
+    }
 
-        if (attendance.getLeaveAt() != null) {
-            throw new IllegalStateException("이미 퇴근 처리되었습니다.");
-        }
-
-        attendance.setLeaveAt(LocalDateTime.now());
-
-        // [TODO] 조퇴 (Early Leave) 판단 로직 추가 필요
-
-        attendance = attendanceRepository.save(attendance);
-        return new AttendanceDto.TodayAttendanceResponse(attendance);
+    private LocalTime getApplicableEndTime(Long companyId, Long employeeId, LocalDate date) {
+        return employeeAttRuleRepository.findActiveRuleByEmployeeIdAndDate(employeeId, date)
+                .map(EmployeeAttRule::getEndTime)
+                .orElseGet(() -> attendanceRuleRepository.findByCompanyIdAndIsDefaultTrue(companyId)
+                        .map(AttendanceRule::getDefaultEndTime)
+                        .orElse(LocalTime.of(18, 0)));
     }
 }
