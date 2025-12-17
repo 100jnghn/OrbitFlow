@@ -133,8 +133,12 @@ CREATE TABLE employee
     birth_date      DATE,                                                                                -- 생년월일
     employment_type ENUM ('REGULAR', 'NON_REGULAR')                  NOT NULL,                           -- 고용 형태
     status          ENUM ('TEMP', 'ACTIVE', 'SUSPENDED', 'RESIGNED') NOT NULL,                           -- 재직 상태
+
+    work_status     ENUM ('WORKING', 'AWAY', 'ON_LEAVE', 'OFF_WORK')
+                                                                     NOT NULL DEFAULT 'OFF_WORK',                                                          -- 근무 상태 ⭐
+
     created_at      TIMESTAMP                                        NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 생성일시
-    updated_at      TIMESTAMP                                        NOT NULL DEFAULT CURRENT_TIMESTAMP  -- 수정일시
+    updated_at      TIMESTAMP                                        NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uk_employee_company_no (company_id, employee_no),
     UNIQUE KEY uk_employee_email (email),
