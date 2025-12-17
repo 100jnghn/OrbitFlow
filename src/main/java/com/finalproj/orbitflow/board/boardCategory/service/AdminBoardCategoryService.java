@@ -55,7 +55,7 @@ public class AdminBoardCategoryService {
      * 게시판 카테고리 생성
      */
     @Transactional
-    public Long createCategory(BoardCategoryReqDto.Category dto) {
+    public Long createCategory(BoardCategoryReqDto.Create dto) {
 
         BoardCategory category = BoardCategory.builder()
                 .company(companyRepository.getReferenceById(dto.getCompanyId()))
@@ -71,5 +71,42 @@ public class AdminBoardCategoryService {
                 .build();
 
         return boardCategoryRepository.save(category).getId();
+    }
+
+    /**
+     * 게시판 카테고리 수정
+     */
+    @Transactional
+    public void updateCategory(Long categoryId, BoardCategoryReqDto.Update dto) {
+
+        BoardCategory category = boardCategoryRepository
+                .findByIdAndDeletedAtIsNull(categoryId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시판"));
+
+        category.update(
+                dto.getBoardName(),
+                dto.getBoardType(),
+                // 일반 게시판이면 무시
+                category.getOrganization() == null ? true : dto.getIsActivated(),
+                dto.getCommentActivated()
+        );
+    }
+
+
+    /**
+     * 게시판 카테고리 삭제 (소프트 삭제)
+     */
+    @Transactional
+    public void deleteCategory(Long categoryId) {
+
+        BoardCategory category = boardCategoryRepository.findByIdAndDeletedAtIsNull(categoryId)
+                .orElseThrow(() -> new IllegalArgumentException("게시판이 존재하지 않습니다."));
+
+        // 공지사항은 삭제 불가
+        if ("NOTICE".equals(category.getBoardType())) {
+            throw new IllegalStateException("공지사항 게시판은 삭제할 수 없습니다.");
+        }
+
+        category.softDelete();
     }
 }
