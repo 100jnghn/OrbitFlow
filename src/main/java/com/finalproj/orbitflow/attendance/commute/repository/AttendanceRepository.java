@@ -7,17 +7,14 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
-    
-    /**
-     * 특정 사원의 특정 날짜 출퇴근 기록 조회
-     */
-    Optional<Attendance> findByEmployeeIdAndWorkDate(Long employeeId, LocalDate workDate);
-    
-    /**
-     * 특정 사원의 오늘 출퇴근 기록 조회
-     */
-    default Optional<Attendance> findTodayByEmployeeId(Long employeeId) {
-        return findByEmployeeIdAndWorkDate(employeeId, LocalDate.now());
+
+    // 특정 회사의 특정 사원 기록임을 명시적으로 확인
+    Optional<Attendance> findByCompanyIdAndEmployeeIdAndWorkDate(Long companyId, Long employeeId, LocalDate workDate);
+
+    default Optional<Attendance> findToday(Long companyId, Long employeeId) {
+        return findByCompanyIdAndEmployeeIdAndWorkDate(companyId, employeeId, LocalDate.now());
     }
+
+    Optional<Attendance> findTodayByCompanyIdAndEmployeeId(Long companyId, Long employeeId);
 }
 

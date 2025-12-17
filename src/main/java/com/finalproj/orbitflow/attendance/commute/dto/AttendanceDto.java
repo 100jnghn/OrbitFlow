@@ -1,6 +1,7 @@
 package com.finalproj.orbitflow.attendance.commute.dto;
 
 import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
+import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
 
 import java.time.LocalDateTime;
 
@@ -11,7 +12,7 @@ public class AttendanceDto {
             Long attendanceId,
             LocalDateTime commuteAt,
             LocalDateTime leaveAt,
-            String status
+            AttendanceStatus status
     ) {
         public TodayAttendanceResponse(Attendance attendance) {
             this(

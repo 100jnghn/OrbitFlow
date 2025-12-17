@@ -24,11 +24,11 @@ public class AttendanceController {
     /**
      * 오늘의 출퇴근 기록 조회 (GET /api/attendance/today)
      */
-    @GetMapping("/today")
-    public ResponseEntity<AttendanceDto.TodayAttendanceResponse> getTodayAttendance() {
-        AttendanceDto.TodayAttendanceResponse response = attendanceService.getTodayAttendance(CURRENT_EMPLOYEE_ID);
-        return ResponseEntity.ok(response);
-    }
+//    @GetMapping("/today")
+//    public ResponseEntity<AttendanceDto.TodayAttendanceResponse> getTodayAttendance() {
+//        AttendanceDto.TodayAttendanceResponse response = attendanceService.getTodayAttendance(CURRENT_EMPLOYEE_ID);
+//        return ResponseEntity.ok(response);
+//    }
 
     /**
      * 출근 처리 (POST /api/attendance/checkin)
@@ -42,10 +42,10 @@ public class AttendanceController {
     /**
      * 퇴근 처리 (POST /api/attendance/checkout)
      */
-    @PostMapping("/checkout")
-    public ResponseEntity<AttendanceDto.TodayAttendanceResponse> checkOut() {
-        AttendanceDto.TodayAttendanceResponse response = attendanceService.checkOut(CURRENT_EMPLOYEE_ID);
-        return ResponseEntity.ok(response);
-    }
+//    @PostMapping("/checkout")
+//    public ResponseEntity<AttendanceDto.TodayAttendanceResponse> checkOut() {
+//        AttendanceDto.TodayAttendanceResponse response = attendanceService.checkOut(CURRENT_EMPLOYEE_ID);
+//        return ResponseEntity.ok(response);
+//    }
 }
 
