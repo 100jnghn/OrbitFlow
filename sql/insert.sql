@@ -134,25 +134,25 @@ VALUES
    EMPLOYEE (사원)
 ===================================================== */
 INSERT INTO employee
-(company_id, employee_no, internal_phone,phone, org_id, rank_id, position_id,
- name, email, password, gender, birth_date, employment_type, status)
+(company_id, employee_no, internal_phone, phone, org_id, rank_id, position_id,
+ name, email, password, gender, birth_date, employment_type, status, work_status)
 VALUES
 -- OrbitFlow
 (1, 'OF-001', '1001', '01012345678', 6, 5, 4, '홍길동', 'hong@orbitflow.com',
- '$2a$10$dummyhash', 'MALE', '1990-01-01', 'REGULAR', 'ACTIVE'),
+ '$2a$10$dummyhash', 'MALE', '1990-01-01', 'REGULAR', 'ACTIVE', 'WORKING'),
 
 (1, 'OF-002', '1002', '01074108529', 6, 2, 7, '김철수', 'kim@orbitflow.com',
- '$2a$10$dummyhash', 'MALE', '1996-03-03', 'REGULAR', 'ACTIVE'),
+ '$2a$10$dummyhash', 'MALE', '1996-03-03', 'REGULAR', 'ACTIVE', 'AWAY'),
 
 (1, 'OF-003', '1003', '01098765432', 8, 3, 6, '이영희', 'lee@orbitflow.com',
- '$2a$10$dummyhash', 'FEMALE', '1994-06-06', 'REGULAR', 'ACTIVE'),
+ '$2a$10$dummyhash', 'FEMALE', '1994-06-06', 'REGULAR', 'ACTIVE', 'ON_LEAVE'),
 
 -- NovaWorks
 (2, 'NW-001', '2001', '01055555555', 12, 7, 12, '박민수', 'park@novaworks.com',
- '$2a$10$dummyhash', 'MALE', '1992-02-02', 'REGULAR', 'ACTIVE'),
+ '$2a$10$dummyhash', 'MALE', '1992-02-02', 'REGULAR', 'ACTIVE', 'WORKING'),
 
 (2, 'NW-002', '2002', '01099999999', 12, 6, 13, '정수빈', 'jung@novaworks.com',
- '$2a$10$dummyhash', 'FEMALE', '1999-09-09', 'NON_REGULAR', 'TEMP');
+ '$2a$10$dummyhash', 'FEMALE', '1999-09-09', 'NON_REGULAR', 'TEMP', 'OFF_WORK');
 
 
 /* =====================================================

@@ -5,6 +5,7 @@ import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.enums.EmploymentType;
 import com.finalproj.orbitflow.hr.employee.enums.Gender;
+import com.finalproj.orbitflow.hr.employee.enums.WorkStatus;
 import com.finalproj.orbitflow.hr.organization.entity.Organization;
 import com.finalproj.orbitflow.hr.position.entity.Position;
 import com.finalproj.orbitflow.hr.rank.entity.Rank;
@@ -110,6 +111,11 @@ public class Employee extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private EmployeeStatus status; // 재직 상태 : TEMP(임시 계정), ACTIVE(재직), SUSPENDED(정지), RESIGNED(퇴사)
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "work_status", nullable = false, length = 20)
+    private WorkStatus workStatus;
+
 
     /**
      * 대표 관리자 생성
