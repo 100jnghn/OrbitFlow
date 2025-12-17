@@ -122,16 +122,24 @@ public class Employee extends BaseEntity {
      **/
     public static Employee createAdmin(
             Company company,
+            Organization organization,
             String email,
             String encodedPassword
     ) {
         Employee employee = new Employee();
         employee.company = company;
+        employee.organization = organization;
         employee.email = email;
         employee.password = encodedPassword;
-        employee.status = EmployeeStatus.ACTIVE;
+
+        employee.employeeNo = "ADMIN-" + company.getId();
+
+        employee.name = "대표 관리자";
+        employee.gender = Gender.MALE;
         employee.employmentType = EmploymentType.REGULAR;
+        employee.status = EmployeeStatus.ACTIVE;
         employee.workStatus = WorkStatus.OFF_WORK;
+
         return employee;
     }
 

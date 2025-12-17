@@ -32,8 +32,22 @@ public class OrgCategory extends BaseEntity {
     private String name;                                // 조직 유형명 (회사/본부/부서/팀)
 
     @Column(name = "order_index", nullable = false)
-private Integer orderIndex;                             // 정렬 순서
+    private Integer orderIndex;                             // 정렬 순서
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;                           // 사용 여부 (소프트 삭제)
+
+    public static OrgCategory create(
+            Long companyId,
+            String name,
+            Integer orderIndex
+    ) {
+        OrgCategory category = new OrgCategory();
+        category.companyId = companyId;
+        category.name = name;
+        category.orderIndex = orderIndex;
+        category.isActive = true;
+        return category;
+    }
+
 }

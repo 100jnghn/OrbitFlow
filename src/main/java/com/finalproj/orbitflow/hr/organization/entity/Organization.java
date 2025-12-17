@@ -1,6 +1,7 @@
 package com.finalproj.orbitflow.hr.organization.entity;
 
 import com.finalproj.orbitflow.global.common.BaseEntity;
+import com.finalproj.orbitflow.hr.company.entity.Company;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -42,4 +43,37 @@ public class Organization extends BaseEntity {
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;  // 사용 여부 (소프트 삭제)
+
+    public static Organization createRoot(
+            Company company,
+            Long companyCategoryId   // ← "회사" 카테고리 ID
+    ) {
+        Organization org = new Organization();
+        org.companyId = company.getId();
+        org.categoryId = companyCategoryId;
+        org.parentOrgId = null;     // 루트
+        org.name = company.getName(); // 또는 "회사"
+        org.orderIndex = 0;
+        org.isActive = true;
+        return org;
+    }
+
+    public static Organization create(
+            Long companyId,
+            Long categoryId,
+            Long parentOrgId,
+            String name,
+            Integer orderIndex
+    ) {
+        Organization org = new Organization();
+        org.companyId = companyId;
+        org.categoryId = categoryId;
+        org.parentOrgId = parentOrgId;
+        org.name = name;
+        org.orderIndex = orderIndex;
+        org.isActive = true;
+        return org;
+    }
+
+
 }

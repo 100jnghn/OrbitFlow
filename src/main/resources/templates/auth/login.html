@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>로그인 | Orbit Flow</title>
+</head>
+<body>
+
+<h2>로그인</h2>
+
+<input id="email" placeholder="이메일">
+<input id="password" type="password" placeholder="비밀번호">
+
+<button onclick="login()">로그인</button>
+
+<script>
+  async function login() {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        email: email.value,
+        password: password.value
+      })
+    });
+
+    if (res.ok) {
+      location.href = '/';
+    } else {
+      alert('로그인 실패');
+    }
+  }
+</script>
+
+</body>
+</html>
