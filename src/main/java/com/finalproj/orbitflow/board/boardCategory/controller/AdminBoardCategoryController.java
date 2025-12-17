@@ -50,8 +50,31 @@ public class AdminBoardCategoryController {
      */
     @PostMapping
     public ResponseEntity<Long> createCategory(
-            @RequestBody @Valid BoardCategoryReqDto.Category dto
+            @RequestBody @Valid BoardCategoryReqDto.Create dto
     ) {
         return ResponseEntity.ok(adminBoardCategoryService.createCategory(dto));
+    }
+
+    /**
+     * 게시판 카테고리 수정
+     */
+    @PutMapping("/{categoryId}")
+    public ResponseEntity<Void> updateCategory(
+            @PathVariable Long categoryId,
+            @RequestBody @Valid BoardCategoryReqDto.Update dto
+    ) {
+        adminBoardCategoryService.updateCategory(categoryId, dto);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 게시판 카테고리 삭제 (소프트 삭제)
+     */
+    @DeleteMapping("/{categoryId}")
+    public ResponseEntity<Void> deleteCategory(
+            @PathVariable Long categoryId
+    ) {
+        adminBoardCategoryService.deleteCategory(categoryId);
+        return ResponseEntity.ok().build();
     }
 }

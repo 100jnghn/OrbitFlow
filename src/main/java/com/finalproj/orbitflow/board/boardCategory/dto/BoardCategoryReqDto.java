@@ -2,10 +2,7 @@ package com.finalproj.orbitflow.board.boardCategory.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 public class BoardCategoryReqDto {
     /**
@@ -15,7 +12,7 @@ public class BoardCategoryReqDto {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class Category {
+    public static class Create {
 
         // 게시판이 속할 회사 ID (필수)
         @NotNull(message = "회사 ID는 필수입니다.")
@@ -40,4 +37,22 @@ public class BoardCategoryReqDto {
         @NotNull(message = "댓글 활성화 여부는 필수입니다.")
         private Boolean commentActivated;
     }
+
+    @Getter
+    @NoArgsConstructor
+    public static class Update {
+
+        @NotBlank(message = "게시판 이름은 필수입니다.")
+        private String boardName;
+
+        @NotBlank(message = "게시판 유형은 필수입니다.")
+        private String boardType;
+
+        // 조직 게시판만 의미 있음
+        private Boolean isActivated;
+
+        @NotNull(message = "댓글 활성화 여부는 필수입니다.")
+        private Boolean commentActivated;
+    }
+
 }
