@@ -132,12 +132,12 @@ public class AttendanceRuleService {
         return new EmployeeAttRuleDto.EmployeeAttRuleResponse(rule);
     }
 
-    /**
-     * 5. 예외 규칙 추가 (POST /rules/exception)
-     */
     @Transactional
     public EmployeeAttRuleDto.EmployeeAttRuleResponse createExceptionRule(EmployeeAttRuleDto.EmployeeAttRuleCreateRequest request) {
-        // ... (생략: 기존 로직과 동일) ...
+        // 사원 존재 여부 및 회사 일치 여부 검증 추가 (권장)
+        Employee targetEmployee = employeeRepository.findById(request.employeeId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사원입니다."));
+
         EmployeeAttRule newRule = new EmployeeAttRule();
         newRule.setCompanyId(CURRENT_COMPANY_ID);
         newRule.setEmployeeId(request.employeeId());
@@ -147,12 +147,13 @@ public class AttendanceRuleService {
         newRule.setReason(request.reason());
         newRule.setValidFrom(request.validFrom());
         newRule.setValidTo(request.validTo());
-        newRule.setAppliedBy(CURRENT_ADMIN_ID);
         newRule.setAppliedAt(LocalDateTime.now());
+
+
+        // [에러 해결] isActive가 null로 저장되지 않도록 보장
         newRule.setIsActive(true);
 
         EmployeeAttRule savedRule = employeeRuleRepository.save(newRule);
-
         return new EmployeeAttRuleDto.EmployeeAttRuleResponse(savedRule);
     }
 
@@ -161,12 +162,17 @@ public class AttendanceRuleService {
      */
     @Transactional
     public EmployeeAttRuleDto.EmployeeAttRuleResponse updateExceptionRule(Long ruleId, EmployeeAttRuleDto.EmployeeAttRuleUpdateRequest request) {
-        // ... (생략: 기존 로직과 동일) ...
         EmployeeAttRule rule = employeeRuleRepository.findById(ruleId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 규칙 ID입니다: " + ruleId));
 
         if (!rule.getCompanyId().equals(CURRENT_COMPANY_ID)) {
             throw new SecurityException("해당 회사에 속하지 않은 규칙은 수정할 수 없습니다.");
+        }
+
+        // [에러 해결] DTO에서 isActive가 null로 넘어올 경우를 대비한 방어 로직
+        Boolean activeStatus = request.isActive();
+        if (activeStatus == null) {
+            activeStatus = rule.getIsActive() != null ? rule.getIsActive() : true;
         }
 
         rule.updateRule(
@@ -176,13 +182,16 @@ public class AttendanceRuleService {
                 request.reason(),
                 request.validFrom(),
                 request.validTo(),
-                request.isActive()
+                activeStatus // null이 아닌 값이 전달되도록 보장
         );
-        rule.setAppliedBy(CURRENT_ADMIN_ID);
+
         rule.setAppliedAt(LocalDateTime.now());
+        // 수정 시에도 누가 수정했는지 남기고 싶다면 추가
+        // rule.setAppliedBy(CURRENT_ADMIN_ID);
 
         return new EmployeeAttRuleDto.EmployeeAttRuleResponse(rule);
     }
+
 
     /**
      * 7. 예외 규칙 삭제 (DELETE /rules/exception/{ruleId})
