@@ -31,4 +31,10 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
      * 회사별 전체 조직 조회 (트리 구성용)
      */
     List<Organization> findByCompanyIdAndIsActiveTrueOrderByOrderIndexAsc(Long companyId);
+
+    /**
+     * 해당 카테고리를 사용하는 활성 조직 존재 여부
+     */
+    boolean existsByCompanyIdAndCategoryIdAndIsActiveTrue(Long companyId, Long categoryId);
+
 }

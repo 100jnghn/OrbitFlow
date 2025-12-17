@@ -24,4 +24,10 @@ public interface OrgCategoryRepository extends JpaRepository<OrgCategory, Long> 
      * 회사별 특정 조직 카테고리 조회
      */
     Optional<OrgCategory> findByCompanyIdAndId(Long companyId, Long categoryId);
+
+    /**
+     * 조직 카테고리 중복 체크
+     */
+    boolean existsByCompanyIdAndName(Long companyId, String name);
+
 }
