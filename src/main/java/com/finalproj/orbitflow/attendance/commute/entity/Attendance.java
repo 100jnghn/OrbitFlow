@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.attendance.commute.entity;
 
+import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,9 +38,13 @@ public class Attendance {
     @Column(name = "leave_at")
     private LocalDateTime leaveAt; // 실제 퇴근 시간 (DATETIME)
 
-
-    @Column(name = "status", length = 50)
-    private String status; // 최종 근태 상태 (지각/결근/정상근무 등)
+    /**
+     * 최종 근태 상태 (지각/결근/정상근무 등)
+     * 중복된 String status 필드를 제거하고 Enum 타입으로 통일
+     */
+    @Enumerated(EnumType.STRING) // Enum 이름을 DB에 VARCHAR(50) 등으로 저장
+    @Column(name = "status", length = 50, nullable = false) // length를 지정하여 DB 컬럼에 맞춤
+    private AttendanceStatus status;
 
     @Column(name = "applied_rule_id")
     private Long appliedRuleId; // 최종 적용된 규칙 아이디 (FK: attendance_rule)
@@ -49,8 +54,4 @@ public class Attendance {
 
     @Column(name = "correction_reason", length = 255)
     private String correctionReason; // 정정 사유 (관리자 최종 사유)
-
-    // FK 관계는 별도의 Service/Repository 계층에서 관리하거나,
-    // @ManyToOne 매핑을 통해 Employee와 AttendanceRule 엔티티에 연결할 수 있습니다.
-    // 예시에서는 단순화를 위해 ID 필드로만 남겨두었습니다.
 }
