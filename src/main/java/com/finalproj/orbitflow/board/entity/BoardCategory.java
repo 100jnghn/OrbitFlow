@@ -9,7 +9,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Entity
@@ -46,7 +46,7 @@ public class BoardCategory extends BaseEntity {
     private boolean commentActivated; // 댓글 기능 활성화 여부
 
     @Column(name = "deleted_at")
-    private LocalDateTime deletedAt; // 삭제 일시 (소프트 삭제)
+    private Instant deletedAt; // 삭제 일시 (소프트 삭제)
 
     // *** JPQL 최적화를 위해 BoardPermission 엔티티와의 1:N 관계 추가 ***
     @OneToMany(mappedBy = "boardCategory")
@@ -62,7 +62,7 @@ public class BoardCategory extends BaseEntity {
 
     // 게시판 소프트 삭제 처리
     public void softDelete() {
-        this.deletedAt = LocalDateTime.now();
+        this.deletedAt = Instant.now();
     }
 
     // 게시판 활성화 여부 확인 (소프트 삭제 및 isActivated 상태 모두 고려)
