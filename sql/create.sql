@@ -907,7 +907,8 @@ CREATE TABLE item
         FOREIGN KEY (company_id) REFERENCES company (id)
             ON DELETE CASCADE,
     CONSTRAINT fk_item_item_category
-        FOREIGN KEY (item_category_id) REFERENCES item_category (id),
+        FOREIGN KEY (item_category_id) REFERENCES item_category (id)
+            ON DELETE CASCADE,
     CONSTRAINT fk_item_resource_status
         FOREIGN KEY (resource_status_id) REFERENCES resource_status (id)
             ON DELETE SET NULL,
