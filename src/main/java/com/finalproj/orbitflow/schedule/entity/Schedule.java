@@ -36,16 +36,17 @@ public class Schedule extends BaseEntity {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    // 조직 일정일 경우 사용 (Nullable)
+    // 조직 카테고리 (부서 일정일 경우 사용, Nullable)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private OrgCategory orgCategory;
 
-    // 조직 일정일 경우 사용 (Nullable)
+    // 특정 부서 (부서 일정일 경우 사용, Nullable)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "org_id")
     private Organization organization;
 
+    // 일정 유형 (COMPANY: 전사, PERSONAL: 개인 등)
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 20)
     private ScheduleType type;
@@ -55,10 +56,10 @@ public class Schedule extends BaseEntity {
     private Employee employee;
 
     @Column(name = "schedule_title", nullable = false, length = 100)
-    private String scheduleTitle;
+    private String title;
 
-    @Column(name = "schedule_description")
-    private String scheduleDescription;
+    @Column(name = "schedule_description", length = 255)
+    private String description;
 
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
@@ -66,14 +67,27 @@ public class Schedule extends BaseEntity {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
-    // 시간은 정수형(예: 9, 18)
+    // 시간은 정수형(예: 900 -> 09:00, 1430 -> 14:30)으로 관리
     @Column(name = "start_time", nullable = false)
     private Integer startTime;
 
     @Column(name = "end_time", nullable = false)
     private Integer endTime;
 
+    // 일정 상태 (RELEASE: 공개, DELETED: 삭제됨, PRIVATE: 비공개 등)
     @Enumerated(EnumType.STRING)
     @Column(name = "schedule_status", nullable = false, length = 20)
-    private ScheduleStatus scheduleStatus;
+    private ScheduleStatus status;
+
+
+    public void update(String title, String description, LocalDate startDate, LocalDate endDate,
+                       Integer startTime, Integer endTime, ScheduleStatus status) {
+        this.title = title;
+        this.description = description;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.status = status;
+    }
 }

@@ -38,35 +38,38 @@ public class Reservation extends BaseEntity {
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
+    // 회의실(MEETING), 차량(CAR), 비품(ITEM) 등 예약 종류
     @Enumerated(EnumType.STRING)
     @Column(name = "type_code", nullable = false, length = 20)
     private ReservationTypeCode typeCode;
 
-    // Item 예약일 때만 값이 들어오므로 nullable
+    // 비품 예약일 경우에만 사용 (Nullable)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_category_id")
     private ItemCategory itemCategory;
 
+    // 다형성 ID: typeCode에 따라 회의실ID, 차량ID, 비품ID가 들어감
+    // 따라서 연관관계 매핑 없이 단순 Long 값으로 저장
     @Column(name = "resource_id", nullable = false)
     private Long resourceId;
 
     @Column(name = "reservation_date", nullable = false)
     private LocalDate reservationDate;
 
-    // 시간은 정수형 (8~20)
+    // 시간은 정수형(예: 1400)으로 관리
     @Column(name = "start_time", nullable = false)
     private Integer startTime;
 
     @Column(name = "end_time", nullable = false)
     private Integer endTime;
 
-    @Column(name = "reservation_reason", nullable = false)
+    @Column(name = "reservation_reason", nullable = false, length = 255)
     private String reservationReason;
 
-    @Column(name = "reject_reason")
+    @Column(name = "reject_reason", length = 255)
     private String rejectReason;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reservation_status_code", nullable = false)
+    @JoinColumn(name = "reservation_status_id")
     private ReservationStatus reservationStatus;
 }

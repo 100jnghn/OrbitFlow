@@ -33,53 +33,27 @@ public class MeetingroomService {
     private final MeetingroomRepository meetingroomRepository;
     private final CompanyRepository companyRepository;
     private final ResourceStatusRepository resourceStatusRepository;
-    private final View error;
 
+    @Transactional(readOnly = true) // 읽기 전용 트랜잭션 (성능 향상)
     public List<MeetingroomResDto> getMeetingrooms(Long companyId) {
 
-        List<Meetingroom> meetingrooms = meetingroomRepository.findAllByCompany_Id(companyId);
-
-        return meetingrooms.stream()
-                .map(meetingroom -> MeetingroomResDto.builder()
-                        .meetingroomId(meetingroom.getId())
-                        .name(meetingroom.getName())
-                        .position(meetingroom.getPosition())
-                        .description(meetingroom.getDescription())
-                        .statusCode(
-                                meetingroom.getResourceStatus().getResourceStatusCode().toString()
-                        )
-                        .statusName(
-                                meetingroom.getResourceStatus().getResourceStatusCode().getDescription()
-                        )
-                        .build()
-                )
+        // DELETED는 가져오지 않음
+        return meetingroomRepository.findAllByCompany_Id(companyId).stream()
+                .map(this::convertToResDto)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public MeetingroomResDto getMeetingroom(Long meetingroomId) {
-        Meetingroom meetingroom = meetingroomRepository.findById(meetingroomId)
-                .orElseThrow(() -> new IllegalArgumentException("회의실이 존재하지 않습니다"));
-
-        ResourceStatus status = meetingroom.getResourceStatus();
-
-        return MeetingroomResDto.builder()
-                .meetingroomId(meetingroom.getId())
-                .name(meetingroom.getName())
-                .position(meetingroom.getPosition())
-                .description(meetingroom.getDescription())
-                .statusCode(status.getResourceStatusCode().toString())
-                .statusName(status.getResourceStatusCode().getDescription())
-                .build();
+        Meetingroom meetingroom = findMeetingroomById(meetingroomId);
+        return convertToResDto(meetingroom);
     }
 
     @Transactional
     public void insertMeetingroom(Long companyId, MeetingroomReqDto dto) {
 
-        Company company = companyRepository.getReferenceById(companyId);
-
-        ResourceStatusCode statusCode = ResourceStatusCode.valueOf(dto.getStatusCode());
-        ResourceStatus status = resourceStatusRepository.findById(statusCode)
-                .orElseThrow(() -> new IllegalArgumentException("상태 코드 없음"));
+        Company company = companyRepository.getReferenceById(companyId); // Proxy 조회 (쿼리 절약)
+        ResourceStatus status = findResourceStatus(dto.getStatusCode());
 
         Meetingroom meetingroom = Meetingroom.builder()
                 .company(company)
@@ -95,12 +69,8 @@ public class MeetingroomService {
     @Transactional
     public void updateMeetingroom(Long meetingroomId, MeetingroomReqDto dto) {
 
-        Meetingroom meetingroom = meetingroomRepository.findById(meetingroomId)
-                .orElseThrow(() -> new IllegalArgumentException("회의실 조회 실패"));
-
-        ResourceStatusCode statusCode = ResourceStatusCode.valueOf(dto.getStatusCode());
-        ResourceStatus status = resourceStatusRepository.findById(statusCode)
-                .orElseThrow(() -> new IllegalArgumentException("상태 코드 없음"));
+        Meetingroom meetingroom = findMeetingroomById(meetingroomId);
+        ResourceStatus status = findResourceStatus(dto.getStatusCode());
 
         meetingroom.update(
                 dto.getName(),
@@ -113,12 +83,54 @@ public class MeetingroomService {
     @Transactional
     public void deleteMeetingroom(Long meetingroomId) {
 
-        Meetingroom meetingroom = meetingroomRepository.findById(meetingroomId)
-                .orElseThrow(() -> new IllegalArgumentException("회의실 조회 실패"));
+        Meetingroom meetingroom = findMeetingroomById(meetingroomId);
 
         ResourceStatus deleteStatus = resourceStatusRepository.findById(ResourceStatusCode.DELETED)
-                .orElseThrow(() -> new IllegalArgumentException("상태 코드 없음"));
+                .orElseThrow(() -> new IllegalStateException("삭제 상태 코드가 DB에 없습니다."));
 
         meetingroom.delete(deleteStatus);
     }
+
+
+    // result dto로 변환
+    private MeetingroomResDto convertToResDto(Meetingroom meetingroom) {
+        String code = "ETC";
+        String name = "기타";
+
+        if (meetingroom.getResourceStatus() != null) {
+            code = meetingroom.getResourceStatus().getResourceStatusCode().name();
+            name = meetingroom.getResourceStatus().getResourceStatusCode().getDescription();
+        }
+
+        return MeetingroomResDto.builder()
+                .meetingroomId(meetingroom.getId())
+                .name(meetingroom.getName())
+                .position(meetingroom.getPosition())
+                .description(meetingroom.getDescription())
+                .statusCode(code)
+                .statusName(name)
+                .build();
+    }
+
+    // 상태 코드 조회
+    private ResourceStatus findResourceStatus(String statusCodeStr) {
+        ResourceStatusCode statusCode;
+
+        try {
+            statusCode = ResourceStatusCode.valueOf(statusCodeStr);
+
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new IllegalArgumentException("유효하지 않은 상태 코드입니다: " + statusCodeStr);
+        }
+
+        return resourceStatusRepository.findById(statusCode)
+                .orElseThrow(() -> new IllegalArgumentException("지원하지 않는 자원 상태입니다."));
+    }
+
+    // Meetingroom 찾기
+    private Meetingroom findMeetingroomById(Long id) {
+        return meetingroomRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 회의실을 찾을 수 없습니다"));
+    }
+
 }

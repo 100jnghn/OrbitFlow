@@ -20,8 +20,14 @@ import lombok.*;
 public class ResourceStatus {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
+
+    // DB: status_code VARCHAR(50)
+    // Java: Enum 타입으로 매핑 (문자열 그대로 저장)
     @Enumerated(EnumType.STRING)
-    @Column(name = "resource_status_code", length = 50)
+    @Column(name = "status_code", nullable = false, unique = true, length = 50)
     private ResourceStatusCode resourceStatusCode;
 
     @Column(name = "status_name", length = 50)

@@ -13,10 +13,10 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ReservationStatusCode {
-    PENDING("승인대기"),
-    CONFIRM("예약완료"),
-    REJECT("반려됨"),
-    CANCELED("취소됨"),
+    PENDING("승인 대기"),
+    CONFIRM("예약 확정"),
+    REJECT("예약 반려"),
+    CANCELED("예약 취소"),
     DELETED("삭제됨"),
     ETC("기타");
 

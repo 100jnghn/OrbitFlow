@@ -15,7 +15,6 @@ import lombok.*;
  * @filename : Car
  * @since : 2025-12-16 오전 11:04 화요일
  */
-
 @Entity
 @Table(name = "car")
 @Getter
@@ -46,10 +45,25 @@ public class Car extends BaseEntity {
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "resource_status_code", nullable = false)
+    @JoinColumn(name = "resource_status_id")
     private ResourceStatus resourceStatus;
 
+    // 1 : 1 매핑
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "file_id")
     private File file;
+
+    public void update(String number, String name, Integer driverAge, String description,
+                       ResourceStatus resourceStatus, File file) {
+        this.number = number;
+        this.name = name;
+        this.driverAge = driverAge;
+        this.description = description;
+        this.resourceStatus = resourceStatus;
+        this.file = file;
+    }
+
+    public void delete(ResourceStatus deletedStatus) {
+        this.resourceStatus = deletedStatus;
+    }
 }
