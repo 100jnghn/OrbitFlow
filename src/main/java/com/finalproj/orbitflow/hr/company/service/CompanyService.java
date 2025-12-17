@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow.hr.company.service;
 
-import com.finalproj.orbitflow.hr.company.dto.CompanySignupRequest;
+import com.finalproj.orbitflow.hr.company.dto.CompanySignupReqDto;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
@@ -32,7 +32,7 @@ public class CompanyService {
     private final OrganizationRepository organizationRepository;
     private final OrgCategoryRepository orgCategoryRepository;
 
-    public Long signup(CompanySignupRequest request) {
+    public Long signup(CompanySignupReqDto request) {
 
         if (companyRepository.existsByBusinessNumber(request.getBusinessNumber())) {
             throw new IllegalArgumentException("이미 등록된 사업자번호입니다.");

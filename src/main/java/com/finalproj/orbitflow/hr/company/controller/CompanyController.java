@@ -1,7 +1,7 @@
 package com.finalproj.orbitflow.hr.company.controller;
 
 import com.finalproj.orbitflow.global.common.ResponseDto;
-import com.finalproj.orbitflow.hr.company.dto.CompanySignupRequest;
+import com.finalproj.orbitflow.hr.company.dto.CompanySignupReqDto;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.company.service.CompanyService;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ public class CompanyController {
 
     @PostMapping
     public ResponseEntity<ResponseDto> signup(
-            @RequestBody CompanySignupRequest request
+            @RequestBody CompanySignupReqDto request
     ) {
         Long companyId = companyService.signup(request);
 
