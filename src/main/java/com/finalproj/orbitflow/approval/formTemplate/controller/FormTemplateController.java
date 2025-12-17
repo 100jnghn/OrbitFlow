@@ -102,4 +102,18 @@ public class FormTemplateController {
         );
     }
 
+
+    @GetMapping("/form-templates/active")
+    public ResponseEntity<ResponseDto> activeFormTemplate(
+        @AuthenticationPrincipal SecurityUser user,
+        @RequestParam(required = false) String keyword
+        ) {
+
+        return ResponseEntity.ok(
+                new ResponseDto(
+                        HttpStatus.OK,
+                        "양식 그룹 목록 조회",
+                        formTemplateService.getActiveFormTemplates(user.getCompanyId(), keyword)));
+    }
+
 }

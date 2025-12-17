@@ -17,7 +17,6 @@ import java.util.List;
 
 public interface FormTemplateGroupRepository extends JpaRepository<FormTemplateGroup, Long> {
 
-    List<FormTemplateGroupListView> findTop20ByCompany_IdOrderByNameAsc(Long companyId);
 
     @Query("""
     select f
@@ -26,8 +25,10 @@ public interface FormTemplateGroupRepository extends JpaRepository<FormTemplateG
       and f.name like concat('%', :keyword, '%')
     order by f.name asc
     """)
-    List<FormTemplateGroupListView> searchByCompanyAndKeyword(
+    List<FormTemplateGroupListView> findByCompanyAndKeyword(
             Long companyId,
             String keyword
     );
+
+
 }

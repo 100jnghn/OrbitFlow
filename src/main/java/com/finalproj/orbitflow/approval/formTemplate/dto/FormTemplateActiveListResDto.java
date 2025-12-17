@@ -9,19 +9,15 @@ import lombok.NoArgsConstructor;
  * Please explain the class!!!
  *
  * @author : Choi MinHyeok
- * @filename : FormTemplateCreateReqDto
+ * @filename : FormTemplateActiveListResDto
  * @since : 25. 12. 17. 수요일
  **/
 
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
 @Data
-public class FormTemplateCreateReqDto {
-    private Long templateGroupId;
-    private String affectTags;
-    private String templateJson;
-    private String approvalRuleJson;
-
-
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class FormTemplateActiveListResDto {
+    private Long id;
+    private String name;
 }

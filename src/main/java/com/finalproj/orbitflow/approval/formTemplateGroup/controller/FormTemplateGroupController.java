@@ -29,10 +29,10 @@ public class FormTemplateGroupController {
     private final FormTemplateGroupService formTemplateGroupService;
 
     @GetMapping("form-template-groups")
-    public ResponseEntity<ResponseDto>  formTemplateGroups(
+    public ResponseEntity<ResponseDto> formTemplateGroups(
             @AuthenticationPrincipal SecurityUser user,
             @RequestParam(required = false) String keyword
-            ) {
+    ) {
 
         return ResponseEntity.ok(
                 new ResponseDto(
@@ -54,7 +54,7 @@ public class FormTemplateGroupController {
     }
 
     @GetMapping("form-template-groups/{id}")
-    public ResponseEntity<ResponseDto>  getDetailFormTemplateGroup(
+    public ResponseEntity<ResponseDto> getDetailFormTemplateGroup(
             @PathVariable Long id
     ) {
 
@@ -73,4 +73,5 @@ public class FormTemplateGroupController {
         formTemplateGroupService.updateFormTemplateGroup(dto, id);
         return ResponseEntity.ok(new ResponseDto(HttpStatus.OK, "양식 그룹 수정 완료", null));
     }
+    
 }
