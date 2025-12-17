@@ -19,7 +19,7 @@ public interface BoardCategoryRepository extends JpaRepository<BoardCategory, Lo
     // =========================================================================
 
     /**
-     * [관리자용 - 수정 페이지 로드용] 활성화된 일반 카테고리 단건 조회
+     * [관리자용 - 수정 페이지 로드용] 활성화된 일반 카테고리 단건 조회(상세조회)
      *
      * @param id 게시판 카테고리 ID
      * @return 활성화된 게시판 카테고리 엔티티
@@ -29,7 +29,10 @@ public interface BoardCategoryRepository extends JpaRepository<BoardCategory, Lo
     /**
      * [관리자용] 활성화된 일반 카테고리 목록 조회 (페이징, 수정/삭제 대상)
      */
-    Page<BoardCategory> findAllByDeletedAtIsNullAndIsActivatedIsTrue(Pageable pageable);
+    Page<BoardCategory> findAllByCompany_Id(
+            Long companyId,
+            Pageable pageable
+    );
 
     /**
      * [사용자용] 권한을 부여받은 일반 카테고리 목록 조회
