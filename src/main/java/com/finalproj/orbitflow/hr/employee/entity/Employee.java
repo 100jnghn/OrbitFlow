@@ -131,6 +131,7 @@ public class Employee extends BaseEntity {
         employee.password = encodedPassword;
         employee.status = EmployeeStatus.ACTIVE;
         employee.employmentType = EmploymentType.REGULAR;
+        employee.workStatus = WorkStatus.OFF_WORK;
         return employee;
     }
 
