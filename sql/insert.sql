@@ -918,12 +918,12 @@ VALUES (1, '표준 9-6 근무', '09:00:00', '18:00:00', 60, 10, 10, TRUE),
 
 -- 2. employee_att_rule (직원 예외 규칙)
 INSERT INTO employee_att_rule (company_id, employee_id, start_time, end_time, break_minutes, reason, valid_from,
-                               valid_to, applied_by, applied_at, is_active)
+                               valid_to, applied_at, is_active)
 VALUES (1, 2, '10:00:00', '19:00:00', 60, '개인 사유로 인한 유연 근무 신청', CURDATE() - INTERVAL 15 DAY,
-        CURDATE() + INTERVAL 15 DAY, 1, NOW(), TRUE),
-       (1, 3, '09:30:00', '18:30:00', 30, '단기 프로젝트 투입으로 인한 시간 조정', CURDATE(), CURDATE() + INTERVAL 30 DAY, 1, NOW(),
+        CURDATE() + INTERVAL 15 DAY, NOW(), TRUE),
+       (1, 3, '09:30:00', '18:30:00', 30, '단기 프로젝트 투입으로 인한 시간 조정', CURDATE(), CURDATE() + INTERVAL 30 DAY, NOW(),
         TRUE),
-       (1, 2, NULL, NULL, 90, '육아 시간 조정 (휴게 90분 적용)', CURDATE() + INTERVAL 10 DAY, CURDATE() + INTERVAL 40 DAY, 1,
+       (1, 2, NULL, NULL, 90, '육아 시간 조정 (휴게 90분 적용)', CURDATE() + INTERVAL 10 DAY, CURDATE() + INTERVAL 40 DAY,
         NOW(), TRUE);
 
 

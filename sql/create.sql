@@ -1059,14 +1059,12 @@ CREATE TABLE employee_att_rule
     reason        VARCHAR(255) COMMENT '예외규칙 적용 사유',
     valid_from    DATE    NOT NULL COMMENT '규칙 적용 시작일',
     valid_to      DATE    NOT NULL COMMENT '규칙 적용 종료일',
-    applied_by    BIGINT COMMENT '적용한 관리자 아이디',
     applied_at    DATETIME COMMENT '적용된 시각',
     is_active     BOOLEAN NOT NULL DEFAULT TRUE COMMENT '규칙 활성화 상태',
     -- [수정] 한 직원에 대해 특정 기간에 대한 규칙 중복 방지 (기간 겹침은 로직으로 처리 필요)
     UNIQUE KEY uk_emp_rule_period (employee_id, valid_from, valid_to),
     FOREIGN KEY (company_id) REFERENCES company (id),
-    FOREIGN KEY (employee_id) REFERENCES employee (id),
-    FOREIGN KEY (applied_by) REFERENCES employee (id)
+    FOREIGN KEY (employee_id) REFERENCES employee (id)
 );
 
 

@@ -45,9 +45,6 @@ public class EmployeeAttRule {
     @Column(name = "valid_to", nullable = false)
     private LocalDate validTo; // 규칙 적용 종료일 (DATE)
 
-    @Column(name = "applied_by")
-    private Long appliedBy; // 적용한 관리자 아이디 (FK: employee)
-
     @Column(name = "applied_at")
     private LocalDateTime appliedAt; // 적용된 시각 (DATETIME)
 
