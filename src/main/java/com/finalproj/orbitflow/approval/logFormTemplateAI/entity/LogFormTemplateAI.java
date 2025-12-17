@@ -14,13 +14,11 @@ import com.finalproj.orbitflow.approval.formTemplateGroup.entity.FormTemplateGro
 import com.finalproj.orbitflow.approval.logFormTemplateAI.enums.AiStatus;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
-import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "log_form_template_ai")

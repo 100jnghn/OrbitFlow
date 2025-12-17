@@ -9,7 +9,6 @@ import com.finalproj.orbitflow.approval.formTemplateGroup.repository.FormTemplat
 import com.finalproj.orbitflow.approval.templateCategory.entity.TemplateCategory;
 import com.finalproj.orbitflow.approval.templateCategory.enums.TemplateCategoryCode;
 import com.finalproj.orbitflow.approval.templateCategory.repository.TemplateCategoryRepository;
-import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

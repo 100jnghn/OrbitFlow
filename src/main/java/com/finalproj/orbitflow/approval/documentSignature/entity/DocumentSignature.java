@@ -2,7 +2,6 @@ package com.finalproj.orbitflow.approval.documentSignature.entity;
 
 import com.finalproj.orbitflow.approval.approvalLine.entity.ApprovalLine;
 import com.finalproj.orbitflow.approval.document.entity.Document;
-import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
@@ -11,7 +10,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 
 /**
