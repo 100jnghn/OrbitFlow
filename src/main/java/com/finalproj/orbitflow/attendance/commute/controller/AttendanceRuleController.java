@@ -63,9 +63,6 @@ public class AttendanceRuleController {
         return ResponseEntity.ok(rule);
     }
 
-
-
-
     /**
      * 5. 예외 규칙 추가 (POST /api/admin/rules/exception)
      */

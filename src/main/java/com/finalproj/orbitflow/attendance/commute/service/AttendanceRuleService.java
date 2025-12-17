@@ -198,14 +198,17 @@ public class AttendanceRuleService {
      */
     @Transactional
     public void deleteExceptionRule(Long ruleId) {
-        // ... (생략: 기존 로직과 동일) ...
+        // 1. 삭제하려는 규칙이 DB에 존재하는지 확인
         EmployeeAttRule rule = employeeRuleRepository.findById(ruleId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 규칙 ID입니다: " + ruleId));
 
+        // 2. [보안] 요청자가 속한 회사의 데이터인지 검증
+        // 멀티테넌시 환경에서는 다른 회사의 ruleId를 무작위로 입력하여 삭제하는 공격을 막아야 합니다.
         if (!rule.getCompanyId().equals(CURRENT_COMPANY_ID)) {
             throw new SecurityException("해당 회사에 속하지 않은 규칙은 삭제할 수 없습니다.");
         }
 
         employeeRuleRepository.delete(rule);
+
     }
 }
