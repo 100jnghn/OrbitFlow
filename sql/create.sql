@@ -723,35 +723,34 @@ CREATE TABLE document_signature
 
 CREATE TABLE board_category
 (
-    id BIGINT       NOT NULL AUTO_INCREMENT,
+    id                BIGINT       NOT NULL AUTO_INCREMENT,
     company_id        BIGINT       NOT NULL,
-    org_id            BIGINT       NOT NULL,
+    organization_id   BIGINT       NULL,
     board_name        VARCHAR(100) NOT NULL,
     board_type        VARCHAR(50)  NOT NULL,
     is_activated      TINYINT(1)   NOT NULL DEFAULT 1,
     comment_activated TINYINT(1)   NOT NULL DEFAULT 1,
     created_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at        TIMESTAMP    NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (company_id) REFERENCES company (id),
-    FOREIGN KEY (org_id) REFERENCES organization (id)
+    FOREIGN KEY (organization_id) REFERENCES organization (id)
 );
 
 CREATE TABLE board
 (
-    id          BIGINT       NOT NULL AUTO_INCREMENT,
-    company_id        BIGINT       NOT NULL,
+    id                BIGINT       NOT NULL AUTO_INCREMENT,
     board_category_id BIGINT       NOT NULL,
     employee_id       BIGINT       NOT NULL,
     board_title       VARCHAR(255) NOT NULL,
-    board_content     TEXT         NULL,
+    board_content     TEXT         NOT NULL,
     view_count        INT          NOT NULL DEFAULT 0,
     file_id           BIGINT       NULL,
     created_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at        TIMESTAMP    NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (company_id) REFERENCES company (id),
     FOREIGN KEY (board_category_id) REFERENCES board_category (id),
     FOREIGN KEY (employee_id) REFERENCES employee (id),
     FOREIGN KEY (file_id) REFERENCES file (id)
@@ -759,37 +758,33 @@ CREATE TABLE board
 
 CREATE TABLE board_permission
 (
-    id BIGINT    NOT NULL AUTO_INCREMENT,
-    company_id          BIGINT    NOT NULL,
-    employee_id         BIGINT    NOT NULL,
-    board_category_id   BIGINT    NOT NULL,
-    created_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id                BIGINT    NOT NULL AUTO_INCREMENT,
+    employee_id       BIGINT    NOT NULL,
+    board_category_id BIGINT    NOT NULL,
+    created_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    UNIQUE KEY uk_employee_board (company_id, employee_id, board_category_id),
-    FOREIGN KEY (company_id) REFERENCES company (id),
+    UNIQUE KEY uk_employee_board (employee_id, board_category_id),
     FOREIGN KEY (employee_id) REFERENCES employee (id),
     FOREIGN KEY (board_category_id) REFERENCES board_category (id)
 );
 
 CREATE TABLE comment
 (
-    id      BIGINT    NOT NULL AUTO_INCREMENT,
-    company_id      BIGINT    NOT NULL,
-    board_id        BIGINT    NOT NULL,
-    employee_id     BIGINT    NOT NULL,
-    comment_content TEXT      NOT NULL,
-    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at      TIMESTAMP NULL,
+    id              BIGINT       NOT NULL AUTO_INCREMENT,
+    board_id        BIGINT       NOT NULL,
+    employee_id     BIGINT       NOT NULL,
+    comment_content VARCHAR(500) NOT NULL,
+    created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at      TIMESTAMP    NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (company_id) REFERENCES company (id),
     FOREIGN KEY (board_id) REFERENCES board (id),
     FOREIGN KEY (employee_id) REFERENCES employee (id)
 );
 
 CREATE TABLE message
 (
-    id      BIGINT       NOT NULL AUTO_INCREMENT,
+    id              BIGINT       NOT NULL AUTO_INCREMENT,
     company_id      BIGINT       NOT NULL,
     employee_id     BIGINT       NOT NULL,
     message_title   VARCHAR(255) NOT NULL,
@@ -804,13 +799,13 @@ CREATE TABLE message
 
 CREATE TABLE message_recipient
 (
-    id BIGINT     NOT NULL AUTO_INCREMENT,
-    company_id   BIGINT     NOT NULL,
-    message_id   BIGINT     NOT NULL,
-    employee_id  BIGINT     NOT NULL,
-    is_read      TINYINT(1) NOT NULL DEFAULT 0,
-    read_at      TIMESTAMP  NULL,
-    created_at   TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id          BIGINT     NOT NULL AUTO_INCREMENT,
+    company_id  BIGINT     NOT NULL,
+    message_id  BIGINT     NOT NULL,
+    employee_id BIGINT     NOT NULL,
+    is_read     TINYINT(1) NOT NULL DEFAULT 0,
+    read_at     TIMESTAMP  NULL,
+    created_at  TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uk_message_recipient (company_id, message_id, employee_id),
     FOREIGN KEY (company_id) REFERENCES company (id),
@@ -818,68 +813,70 @@ CREATE TABLE message_recipient
     FOREIGN KEY (employee_id) REFERENCES employee (id)
 );
 
-
+-- /////////////////////////////////// 종훈 /////////////////////////////////// --
 -- 1. 자원 상태 (Charset 명시 추가)
 CREATE TABLE resource_status
 (
-    resource_status_code VARCHAR(50) NOT NULL,
-    status_name          VARCHAR(50),
-    PRIMARY KEY (resource_status_code)
+    id          BIGINT AUTO_INCREMENT,
+    status_code VARCHAR(50) NOT NULL UNIQUE,
+    status_name VARCHAR(50),
+    PRIMARY KEY (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 -- 2. 회의실
 CREATE TABLE meetingroom
 (
-    id       BIGINT AUTO_INCREMENT PRIMARY KEY,
-    company_id           BIGINT      NOT NULL,
-    name                 VARCHAR(30) NOT NULL,
-    position             VARCHAR(50) NOT NULL,
-    description          VARCHAR(255),
-    resource_status_code VARCHAR(50) NOT NULL,
-    created_at           TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    modified_at          TIMESTAMP            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id         BIGINT      NOT NULL,
+    name               VARCHAR(30) NOT NULL,
+    position           VARCHAR(50) NOT NULL,
+    description        VARCHAR(255),
+    resource_status_id BIGINT,
+    created_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_meetingroom_company
         FOREIGN KEY (company_id)
             REFERENCES company (id)
             ON DELETE CASCADE,
     CONSTRAINT fk_meetingroom_resource_status
-        FOREIGN KEY (resource_status_code)
-            REFERENCES resource_status (resource_status_code)
-            ON DELETE NO ACTION
+        FOREIGN KEY (resource_status_id)
+            REFERENCES resource_status (id)
+            ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 -- 3. 차량
 CREATE TABLE car
 (
-    id               BIGINT AUTO_INCREMENT,
-    company_id           BIGINT      NOT NULL,
-    number               VARCHAR(15) NOT NULL,
-    name                 VARCHAR(50) NOT NULL,
-    driver_age           INT         NOT NULL,
-    description          VARCHAR(255),
-    resource_status_code VARCHAR(50) NOT NULL,
-    file_id              BIGINT,
-    created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    modified_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    id                 BIGINT AUTO_INCREMENT,
+    company_id         BIGINT      NOT NULL,
+    number             VARCHAR(15) NOT NULL,
+    name               VARCHAR(50) NOT NULL,
+    driver_age         INT         NOT NULL,
+    description        VARCHAR(255),
+    resource_status_id BIGINT,
+    file_id            BIGINT,
+    created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     CONSTRAINT fk_car_company
         FOREIGN KEY (company_id) REFERENCES company (id)
             ON DELETE CASCADE,
     CONSTRAINT fk_car_resource_status
-        FOREIGN KEY (resource_status_code) REFERENCES resource_status (resource_status_code)
-            ON DELETE NO ACTION,
+        FOREIGN KEY (resource_status_id) REFERENCES resource_status (id)
+            ON DELETE SET NULL,
     CONSTRAINT fk_car_file
         FOREIGN KEY (file_id) REFERENCES file (id)
+            ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 -- 4. 아이템 카테고리
 CREATE TABLE item_category
 (
-    id BIGINT AUTO_INCREMENT,
-    company_id       BIGINT      NOT NULL,
-    name             VARCHAR(50) NOT NULL,
-    created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    modified_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    id         BIGINT AUTO_INCREMENT,
+    company_id BIGINT      NOT NULL,
+    name       VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     CONSTRAINT fk_item_category_company
         FOREIGN KEY (company_id) REFERENCES company (id)
@@ -889,15 +886,15 @@ CREATE TABLE item_category
 -- 5. 아이템 (기타 자원)
 CREATE TABLE item
 (
-    id              BIGINT AUTO_INCREMENT,
-    company_id           BIGINT      NOT NULL,
-    item_category_id     BIGINT      NOT NULL,
-    name                 VARCHAR(50) NOT NULL,
-    description          VARCHAR(255),
-    resource_status_code VARCHAR(50) NOT NULL,
-    file_id              BIGINT,
-    created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    modified_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    id                 BIGINT AUTO_INCREMENT,
+    company_id         BIGINT      NOT NULL,
+    item_category_id   BIGINT      NOT NULL,
+    name               VARCHAR(50) NOT NULL,
+    description        VARCHAR(255),
+    resource_status_id BIGINT,
+    file_id            BIGINT,
+    created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     CONSTRAINT fk_item_company
         FOREIGN KEY (company_id) REFERENCES company (id)
@@ -905,38 +902,40 @@ CREATE TABLE item
     CONSTRAINT fk_item_item_category
         FOREIGN KEY (item_category_id) REFERENCES item_category (id),
     CONSTRAINT fk_item_resource_status
-        FOREIGN KEY (resource_status_code) REFERENCES resource_status (resource_status_code)
-            ON DELETE NO ACTION,
+        FOREIGN KEY (resource_status_id) REFERENCES resource_status (id)
+            ON DELETE SET NULL,
     CONSTRAINT fk_item_file
         FOREIGN KEY (file_id) REFERENCES file (id)
+            ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 -- 6. 예약 상태
 CREATE TABLE reservation_status
 (
-    reservation_status_code VARCHAR(50) NOT NULL,
-    status_name             VARCHAR(50) NOT NULL,
-    PRIMARY KEY (reservation_status_code)
+    id          BIGINT AUTO_INCREMENT,
+    status_code VARCHAR(50) NOT NULL UNIQUE,
+    status_name VARCHAR(50) NOT NULL,
+    PRIMARY KEY (id)
 
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 -- 7. 예약
 CREATE TABLE reservation
 (
-    id          BIGINT AUTO_INCREMENT,
-    company_id              BIGINT       NOT NULL,
-    employee_id             BIGINT       NOT NULL,
-    type_code               VARCHAR(20)  NOT NULL,
-    item_category_id        BIGINT,
-    resource_id             BIGINT       NOT NULL,
-    reservation_date        DATE         NOT NULL,
-    start_time              INT          NOT NULL,
-    end_time                INT          NOT NULL,
-    reservation_reason      VARCHAR(255) NOT NULL,
-    reject_reason           VARCHAR(255),
-    reservation_status_code VARCHAR(50)  NOT NULL,
-    created_at              TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    modified_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    id                    BIGINT AUTO_INCREMENT,
+    company_id            BIGINT       NOT NULL,
+    employee_id           BIGINT       NOT NULL,
+    type_code             VARCHAR(20)  NOT NULL,
+    item_category_id      BIGINT,
+    resource_id           BIGINT       NOT NULL,
+    reservation_date      DATE         NOT NULL,
+    start_time            INT          NOT NULL,
+    end_time              INT          NOT NULL,
+    reservation_reason    VARCHAR(255) NOT NULL,
+    reject_reason         VARCHAR(255),
+    reservation_status_id BIGINT,
+    created_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     CONSTRAINT fk_reservation_company
         FOREIGN KEY (company_id) REFERENCES company (id)
@@ -948,14 +947,14 @@ CREATE TABLE reservation
         FOREIGN KEY (item_category_id) REFERENCES item_category (id)
             ON DELETE SET NULL,
     CONSTRAINT fk_reservation_status
-        FOREIGN KEY (reservation_status_code) REFERENCES reservation_status (reservation_status_code)
-            ON DELETE NO ACTION
+        FOREIGN KEY (reservation_status_id) REFERENCES reservation_status (id)
+            ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 -- 8. 일정
 CREATE TABLE schedule
 (
-    id          BIGINT AUTO_INCREMENT,
+    id                   BIGINT AUTO_INCREMENT,
     company_id           BIGINT       NOT NULL,
     category_id          BIGINT,
     org_id               BIGINT,
@@ -969,7 +968,7 @@ CREATE TABLE schedule
     end_time             INT          NOT NULL,
     schedule_status      VARCHAR(20)  NOT NULL,
     created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    modified_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     CONSTRAINT fk_schedule_company
         FOREIGN KEY (company_id) REFERENCES company (id)
@@ -988,7 +987,7 @@ CREATE TABLE schedule
 -- 9. 일정 요약
 CREATE TABLE schedule_summary
 (
-    id    BIGINT AUTO_INCREMENT,
+    id            BIGINT AUTO_INCREMENT,
     company_id    BIGINT NOT NULL,
     employee_id   BIGINT NOT NULL,
     week_summary  TEXT,
@@ -1006,7 +1005,7 @@ CREATE TABLE schedule_summary
 -- 10. AI 일정 요약 로그
 CREATE TABLE log_schedule_summary
 (
-    id  BIGINT AUTO_INCREMENT,
+    id                  BIGINT AUTO_INCREMENT,
     company_id          BIGINT      NOT NULL,
     employee_id         BIGINT,
     summary_type        VARCHAR(10) NOT NULL,
@@ -1028,248 +1027,137 @@ CREATE TABLE log_schedule_summary
 
 CREATE TABLE attendance_rule
 (
-
-    id                   BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '규칙 아이디',
-
+    id                        BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '규칙 아이디',
     company_id                BIGINT    NOT NULL COMMENT '회사 아이디',
-
     name                      VARCHAR(100) COMMENT '규칙 명칭',
-
     default_start_time        TIME      NOT NULL COMMENT '기본 출근 기준 시간 (09:00)',
-
     default_end_time          TIME      NOT NULL COMMENT '기본 퇴근 기준 시간 (18:00)',
-
     default_break_minutes     INT                DEFAULT 60 COMMENT '기본 휴게 시간 (분 단위, 60분)',
-
     late_threshold_min        INT                DEFAULT 10 COMMENT '지각 판정 허용 시간 (분)',
-
     early_leave_threshold_min INT                DEFAULT 10 COMMENT '조퇴 판정 허용 시간 (분)',
-
     is_default                BOOLEAN   NOT NULL DEFAULT TRUE COMMENT '회사의 기본 주 규칙 여부',
-
     created_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
     updated_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-
+    UNIQUE KEY uk_att_rule_name (company_id, name),
     FOREIGN KEY (company_id) REFERENCES company (id)
-
 );
 
 
 
 CREATE TABLE employee_att_rule
 (
-
-    id   BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '아이디',
-
+    id            BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '아이디',
     company_id    BIGINT  NOT NULL COMMENT '회사 아이디',
-
     employee_id   BIGINT  NOT NULL COMMENT '직원 아이디',
-
     start_time    TIME COMMENT '지정 출근 시간 (오버라이드)',
-
     end_time      TIME COMMENT '지정 퇴근 시간 (오버라이드)',
-
     break_minutes INT COMMENT '지정 휴게 시간 (분)',
-
     reason        VARCHAR(255) COMMENT '예외규칙 적용 사유',
-
     valid_from    DATE    NOT NULL COMMENT '규칙 적용 시작일',
-
     valid_to      DATE    NOT NULL COMMENT '규칙 적용 종료일',
-
     applied_by    BIGINT COMMENT '적용한 관리자 아이디',
-
     applied_at    DATETIME COMMENT '적용된 시각',
-
     is_active     BOOLEAN NOT NULL DEFAULT TRUE COMMENT '규칙 활성화 상태',
-
-
+    -- [수정] 한 직원에 대해 특정 기간에 대한 규칙 중복 방지 (기간 겹침은 로직으로 처리 필요)
+    UNIQUE KEY uk_emp_rule_period (employee_id, valid_from, valid_to),
     FOREIGN KEY (company_id) REFERENCES company (id),
-
     FOREIGN KEY (employee_id) REFERENCES employee (id),
-
     FOREIGN KEY (applied_by) REFERENCES employee (id)
-
 );
 
 
 
 CREATE TABLE attendance
 (
-
-    id     BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '아이디',
-
+    id                BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '아이디',
     company_id        BIGINT  NOT NULL COMMENT '회사 아이디',
-
     employee_id       BIGINT  NOT NULL COMMENT '기록한 사원 아이디',
-
     work_date         DATE    NOT NULL COMMENT '근무 일자',
-
     commute_at        DATETIME COMMENT '실제 출근 시간',
-
     leave_at          DATETIME COMMENT '실제 퇴근 시간',
-
     status            VARCHAR(50) COMMENT '최종 근태 상태 (지각/결근/비출근)',
-
     applied_rule_id   BIGINT COMMENT '최종 적용된 규칙 아이디',
-
     is_corrected      BOOLEAN NOT NULL DEFAULT FALSE COMMENT '정정 처리 여부',
-
     correction_reason VARCHAR(255) COMMENT '정정 사유',
-
-
-    UNIQUE KEY uk_att_date (employee_id, work_date),
-
+    -- [수정] 회사/직원/근무 일자 조합이 유일하도록 변경
+    UNIQUE KEY uk_att_date (company_id, employee_id, work_date),
     FOREIGN KEY (company_id) REFERENCES company (id),
-
     FOREIGN KEY (employee_id) REFERENCES employee (id),
-
     FOREIGN KEY (applied_rule_id) REFERENCES attendance_rule (id)
-
 );
 
 
 
 CREATE TABLE correction_history
 (
-
-    id           BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '근태 정정 이력 아이디',
-
+    id                   BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '근태 정정 이력 아이디',
     attendance_id        BIGINT       NOT NULL COMMENT '근태 기록 아이디',
-
     original_commute_at  DATETIME COMMENT '정정 전 출근 시각',
-
     original_leave_at    DATETIME COMMENT '정정 전 퇴근 시각',
-
     corrected_commute_at DATETIME     NOT NULL COMMENT '정정 요청 출근 시각',
-
     corrected_leave_at   DATETIME     NOT NULL COMMENT '정정 요청 퇴근 시각',
-
     correction_reason    VARCHAR(255) NOT NULL COMMENT '직원 입력 정정 사유',
-
     correction_status    VARCHAR(50)  NOT NULL DEFAULT 'PENDING' COMMENT '정정 처리 상태 (PENDING, APPROVED, REJECTED)',
-
     processed_by         BIGINT COMMENT '정정 처리 관리자 아이디',
-
     processed_at         DATETIME COMMENT '정정 처리 시각',
-
     rejection_reason     VARCHAR(255) COMMENT '관리자 입력 반려 사유',
-
-
     FOREIGN KEY (attendance_id) REFERENCES attendance (id),
-
     FOREIGN KEY (processed_by) REFERENCES employee (id)
-
 );
 
 
 
 CREATE TABLE leave_balance
 (
-
-    id      BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '아이디',
-
+    id              BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '아이디',
     company_id      BIGINT    NOT NULL,
-
     employee_id     BIGINT    NOT NULL COMMENT '직원 아이디',
-
     year            INT       NOT NULL COMMENT '연차 기준 연도',
-
     total_granted   DECIMAL(5, 2)      DEFAULT 0.0 COMMENT '총 부여 일수',
-
     remaining_days  DECIMAL(5, 2)      DEFAULT 0.0 COMMENT '잔여 일수',
-
     last_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '최종 업데이트 시각',
-
-
-    UNIQUE KEY uk_employee_year (employee_id, year),
-
+    UNIQUE KEY uk_employee_year (company_id, employee_id, year),
     FOREIGN KEY (company_id) REFERENCES company (id),
-
     FOREIGN KEY (employee_id) REFERENCES employee (id)
-
 );
 
 
 
 CREATE TABLE manual_category
 (
-
-    id   BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '카테고리 아이디',
-
+    id            BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '카테고리 아이디',
     company_id    BIGINT      NOT NULL,
-
     category_name VARCHAR(50) NOT NULL COMMENT '카테고리 이름',
-
     description   VARCHAR(255) COMMENT '카테고리 설명',
-
     is_active     BOOLEAN     NOT NULL DEFAULT TRUE COMMENT '카테고리 사용 여부',
-
     sort_order    INT COMMENT '정렬 순서',
-
     created_at    TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-
     FOREIGN KEY (company_id) REFERENCES company (id)
-
 );
-
-
-
 CREATE TABLE manual_link
 (
-
-    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '연결 고유 아이디',
-
-    file_id        BIGINT  NOT NULL COMMENT '파일 아이디 (첨부파일 테이블 참조)',
-
-    category_id    BIGINT  NOT NULL COMMENT '카테고리 아이디',
-
-    company_id     BIGINT  NOT NULL,
-
-    status         VARCHAR(50) COMMENT '파일 처리 상태 (UPLOADED, PROCESSING, READY, FAILED)',
-
-    is_active      BOOLEAN NOT NULL DEFAULT TRUE COMMENT '사용할지 여부',
-
-    vectorized_at  DATETIME COMMENT '벡터화 처리 시각',
-
-
+    id            BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '연결 고유 아이디',
+    file_id       BIGINT  NOT NULL COMMENT '파일 아이디 (첨부파일 테이블 참조)',
+    category_id   BIGINT  NOT NULL COMMENT '카테고리 아이디',
+    company_id    BIGINT  NOT NULL,
+    status        VARCHAR(50) COMMENT '파일 처리 상태 (UPLOADED, PROCESSING, READY, FAILED)',
+    is_active     BOOLEAN NOT NULL DEFAULT TRUE COMMENT '사용할지 여부',
+    vectorized_at DATETIME COMMENT '벡터화 처리 시각',
     FOREIGN KEY (file_id) REFERENCES file (id),
-
     FOREIGN KEY (category_id) REFERENCES manual_category (id),
-
     FOREIGN KEY (company_id) REFERENCES company (id)
-
 );
-
-
-
 CREATE TABLE grant_history
 (
-
     id              BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '아이디',
-
     employee_id     BIGINT        NOT NULL COMMENT '직원 아이디',
-
     company_id      BIGINT        NOT NULL COMMENT '회사 아이디',
-
     grant_date      DATE          NOT NULL COMMENT '부여 발생일',
-
     granted_days    DECIMAL(4, 2) NOT NULL COMMENT '부여 일수',
-
     grant_type      VARCHAR(50) COMMENT '부여 유형',
-
     expiration_date DATE COMMENT '소멸 예정일',
-
     is_expired      BOOLEAN       NOT NULL DEFAULT FALSE COMMENT '소멸 처리 여부',
-
     created_at      DATETIME      NOT NULL COMMENT '기록 시각',
-
-
     FOREIGN KEY (employee_id) REFERENCES employee (id),
-
     FOREIGN KEY (company_id) REFERENCES company (id)
-
 );
