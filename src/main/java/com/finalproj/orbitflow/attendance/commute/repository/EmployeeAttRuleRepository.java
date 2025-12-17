@@ -2,6 +2,8 @@ package com.finalproj.orbitflow.attendance.commute.repository;
 
 import com.finalproj.orbitflow.attendance.commute.entity.EmployeeAttRule;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -9,16 +11,14 @@ import java.util.Optional;
 
 public interface EmployeeAttRuleRepository extends JpaRepository<EmployeeAttRule, Long> {
 
-    // 특정 회사에 속한 모든 예외 규칙을 조회 (규칙 목록 조회)
     List<EmployeeAttRule> findAllByCompanyId(Long companyId);
 
-    <T> Optional<T> findActiveRuleByEmployeeIdAndDate(Long employeeId, LocalDate date);
+    // [수정] 쿼리 메서드 명칭 분석 에러 방지를 위해 명시적 쿼리 사용
+    @Query("SELECT r FROM EmployeeAttRule r WHERE r.employeeId = :employeeId " +
+            "AND r.isActive = true AND :date BETWEEN r.validFrom AND r.validTo")
+    Optional<EmployeeAttRule> findActiveRuleByEmployeeIdAndDate(
+            @Param("employeeId") Long employeeId,
+            @Param("date") LocalDate date);
 
-    // [직원 본인용] 특정 직원의 현재 유효한 예외 규칙 조회
-    // 1. 해당 사원에 속하고
-    // 2. 오늘 날짜(CURRENT_DATE)가 validFrom과 validTo 사이에 있는 규칙 조회
-//    List<EmployeeAttRule> findByEmployeeIdAndValidFromLessThanEqualAndValidToGreaterThanEqual(
-//            Long employeeId, LocalDate currentDate, LocalDate currentDate
-//    );
 
 }
