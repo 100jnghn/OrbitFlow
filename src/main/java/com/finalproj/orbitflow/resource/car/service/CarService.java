@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.resource.car.service;
 
+import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.resource.car.dto.CarReqDto;
@@ -12,6 +13,7 @@ import com.finalproj.orbitflow.resource.status.repository.ResourceStatusReposito
 import jakarta.persistence.Table;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.boot.model.naming.IllegalIdentifierException;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,6 +74,11 @@ public class CarService {
     }
 
 
+
+
+
+
+
     // dto로 변환
     private CarResDto convertToResDto(Car car) {
         String code = "ETC";
@@ -103,6 +110,36 @@ public class CarService {
                 .build();
     }
 
+    @Transactional
+    public void updateCar(Long carId, CarReqDto dto) {
+
+        Car car = findCarById(carId);
+        ResourceStatus status = findResourceStatus(dto.getResourceStatusCode());
+
+        // todo - 이미지 수정 로직 추가
+        File imgFile = car.getFile();
+
+        car.update(
+                dto.getNumber(),
+                dto.getName(),
+                dto.getDriverAge(),
+                dto.getDescription(),
+                status,
+                imgFile // todo - 이미지 수정 로직 추가
+        );
+    }
+
+    @Transactional
+    public void deleteCar(Long carId) {
+
+        Car car = findCarById(carId);
+
+        ResourceStatus deleteStatus = resourceStatusRepository.findById(ResourceStatusCode.DELETED)
+                .orElseThrow(() -> new IllegalStateException("삭제 코드가 없음"));
+
+        car.delete(deleteStatus);
+    }
+
     // 상태 코드 조회
     private ResourceStatus findResourceStatus(String statusCodeStr) {
         ResourceStatusCode statusCode;
@@ -122,4 +159,5 @@ public class CarService {
         return carRepository.findById(carId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 차량을 찾을 수 없습니다"));
     }
+
 }

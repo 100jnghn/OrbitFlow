@@ -67,6 +67,27 @@ public class CarController {
     }
 
     // 관리자 - 차량 수정
+    @PutMapping("/admin/cars/{carId}")
+    public ResponseEntity<ResponseDto> updateCar(
+            @PathVariable Long carId,
+            @RequestBody CarReqDto dto
+    ) {
+        carService.updateCar(carId, dto);
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, "차량 수정 성공", null)
+        );
+    }
 
     // 관리자 - 차량 삭제
+    @PatchMapping("/admin/cars/{carId}/delete")
+    public ResponseEntity<ResponseDto> deleteCar(
+            @PathVariable Long carId
+    ) {
+        carService.deleteCar(carId);
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, "차량 삭제 성공", null)
+        );
+    }
 }
