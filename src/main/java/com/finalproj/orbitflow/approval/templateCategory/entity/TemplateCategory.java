@@ -9,6 +9,7 @@ package com.finalproj.orbitflow.approval.templateCategory.entity;
  */
 
 
+import com.finalproj.orbitflow.approval.templateCategory.enums.TemplateCategoryCode;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,8 +24,9 @@ public class TemplateCategory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 50, nullable = false, unique = true)
-    private String code;
+    private TemplateCategoryCode code;
 
     @Column(length = 100, nullable = false)
     private String name;

@@ -18,7 +18,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "document")
@@ -30,27 +29,32 @@ public class Document extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "template_group_id", nullable = false)
     private FormTemplateGroup templateGroup;
 
-    @Column(nullable = false)
+    @Column(name = "template_version", nullable = false)
     private int templateVersion;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "writer_id", nullable = false)
+    @JoinColumn(name = "writer_id")
     private Employee writer;
 
+    @Column(nullable = false, length = 255)
     private String title;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private DocumentStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "before_document_id")
     private Document beforeDocument;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
 }

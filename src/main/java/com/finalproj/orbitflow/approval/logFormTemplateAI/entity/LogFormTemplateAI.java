@@ -14,27 +14,26 @@ import com.finalproj.orbitflow.approval.formTemplateGroup.entity.FormTemplateGro
 import com.finalproj.orbitflow.approval.logFormTemplateAI.enums.AiStatus;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
-import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "log_form_template_ai")
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class LogFormTemplateAI extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
-
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "template_group_id")
@@ -44,20 +43,22 @@ public class LogFormTemplateAI extends BaseEntity {
     @JoinColumn(name = "created_template_id")
     private FormTemplate createdTemplate;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(nullable = false, columnDefinition = "text")
     private String prompt;
 
-    @Column(columnDefinition = "JSON")
+    @Column(name = "generated_template_json", columnDefinition = "json")
     private String generatedTemplateJson;
 
-    @Column(columnDefinition = "JSON")
+    @Column(name = "generated_rule_json", columnDefinition = "json")
     private String generatedRuleJson;
 
+    @Column(length = 50)
     private String model;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
     private AiStatus status;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "error_message", columnDefinition = "text")
     private String errorMessage;
 }

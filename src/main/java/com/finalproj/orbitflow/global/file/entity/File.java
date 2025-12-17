@@ -27,19 +27,29 @@ public class File {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "object_key", nullable = false, unique = true, length = 512)
     private String objectKey;
 
+    @Column(name = "origin_file", length = 255)
     private String originFile;
+
+    @Column(name = "sys_file", length = 255)
     private String sysFile;
+
+    @Column(name = "content_type", length = 50)
     private String contentType;
+
+    @Column(name = "file_size")
     private Long fileSize;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by")
     private Employee createdBy;
 
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 }

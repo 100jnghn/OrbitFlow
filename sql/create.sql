@@ -138,7 +138,7 @@ CREATE TABLE employee
     status          ENUM ('TEMP', 'ACTIVE', 'SUSPENDED', 'RESIGNED') NOT NULL,                           -- 재직 상태
 
     work_status     ENUM ('WORKING', 'AWAY', 'ON_LEAVE', 'OFF_WORK')
-                                                                     NOT NULL DEFAULT 'OFF_WORK',                                                          -- 근무 상태 ⭐
+                                                                     NOT NULL DEFAULT 'OFF_WORK',        -- 근무 상태 ⭐
 
     created_at      TIMESTAMP                                        NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 생성일시
     updated_at      TIMESTAMP                                        NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -261,15 +261,18 @@ CREATE TABLE form_template_group
 CREATE TABLE form_template
 (
     id                   BIGINT AUTO_INCREMENT PRIMARY KEY,
-    company_id           BIGINT    NOT NULL,
-    template_group_id    BIGINT    NOT NULL,
-    version              INT       NOT NULL,
-    template_category_id BIGINT    NOT NULL,
+    company_id           BIGINT                             NOT NULL,
+    template_group_id    BIGINT                             NOT NULL,
+    version              INT                                NOT NULL,
+    template_category_id BIGINT                             NOT NULL,
+
+    status               ENUM ('DRAFT','ACTIVE','INACTIVE') NOT NULL,
+
     affect_tags          JSON,
-    template_json        JSON      NOT NULL,
-    approval_rule_json   JSON      NOT NULL,
-    is_active            BOOLEAN   NOT NULL,
-    created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    template_json        JSON                               NOT NULL,
+    approval_rule_json   JSON                               NULL,
+
+    created_at           TIMESTAMP                          NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT uk_template_group_company_version
         UNIQUE (company_id, template_group_id, version),
@@ -289,6 +292,12 @@ CREATE TABLE form_template
             REFERENCES template_category (id)
             ON DELETE RESTRICT
 ) ENGINE = InnoDB;
+
+CREATE INDEX idx_ft_company_status
+    ON form_template (company_id, status);
+
+CREATE INDEX idx_ft_group_status_version
+    ON form_template (template_group_id, status, version);
 
 
 -- =========================================================
@@ -567,7 +576,7 @@ CREATE TABLE file
 (
     id           BIGINT AUTO_INCREMENT PRIMARY KEY,
     company_id   BIGINT       NOT NULL,
-    object_key   VARCHAR(255) NOT NULL UNIQUE,
+    object_key   VARCHAR(512) NOT NULL UNIQUE,
     origin_file  VARCHAR(255),
     sys_file     VARCHAR(255),
     content_type VARCHAR(50),
@@ -721,6 +730,12 @@ CREATE TABLE document_signature
         UNIQUE (document_id, approval_line_id)
 
 ) ENGINE = InnoDB;
+
+CREATE INDEX idx_doc_sig_document
+    ON document_signature (document_id);
+
+CREATE INDEX idx_doc_sig_signer
+    ON document_signature (signer_id);
 
 
 /* =========================================================
