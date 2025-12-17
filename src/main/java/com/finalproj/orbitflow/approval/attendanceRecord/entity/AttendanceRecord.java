@@ -34,28 +34,37 @@ public class AttendanceRecord extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id")
     private Employee employee;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
+    @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
+
+    @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
+    @Column(nullable = false, precision = 4, scale = 1)
     private BigDecimal days;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "type_id", nullable = false)
     private LeaveType leaveType;
 
+    @Column(length = 255)
     private String reason;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "source_document_id", nullable = false)
+    @JoinColumn(name = "source_document_id")
     private Document sourceDocument;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private DocumentStatus status;
 
+    @Column(name = "approved_at")
     private LocalDateTime approvedAt;
 }
