@@ -1,19 +1,24 @@
 package com.finalproj.orbitflow.approval.formTemplate.service;
 
+import com.finalproj.orbitflow.approval.formTemplate.dto.FormTemplateActiveListResDto;
 import com.finalproj.orbitflow.approval.formTemplate.dto.FormTemplateUpdateReqDto;
 import com.finalproj.orbitflow.approval.formTemplate.entity.FormTemplate;
 import com.finalproj.orbitflow.approval.formTemplate.enums.FormTemplateStatus;
+import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateListView;
 import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateRepository;
 import com.finalproj.orbitflow.approval.formTemplateGroup.entity.FormTemplateGroup;
 import com.finalproj.orbitflow.approval.formTemplateGroup.repository.FormTemplateGroupRepository;
 import com.finalproj.orbitflow.approval.templateCategory.entity.TemplateCategory;
 import com.finalproj.orbitflow.approval.templateCategory.enums.TemplateCategoryCode;
 import com.finalproj.orbitflow.approval.templateCategory.repository.TemplateCategoryRepository;
+import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 /**
  * 결재 양식(FormTemplate)의 생명주기 전반을 관리하는 서비스 클래스.
@@ -47,6 +52,7 @@ public class FormTemplateService {
     private final FormTemplateRepository formTemplateRepository;
     private final FormTemplateGroupRepository formTemplateGroupRepository;
     private final TemplateCategoryRepository templateCategoryRepository;
+    private final CompanyRepository companyRepository;
 
     @Transactional
     public Long saveFormTemplate(
@@ -240,5 +246,15 @@ public class FormTemplateService {
         if (!formTemplate.getCompany().getId().equals(companyId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "사용자의 소속(회사) 와 문서 양식의 주인(회사)가 일치하지 않습니다.");
         }
+    }
+
+    public List<FormTemplateActiveListResDto> getActiveFormTemplates(Long companyId, String keyword) {
+        String searchKeyword = (keyword == null) ? "" : keyword;
+
+
+        List<FormTemplateListView> views = formTemplateRepository.findWithActiveTemplateAndCompanyAndKeyword(companyId, searchKeyword);
+        return views.stream()
+                .map(v -> new FormTemplateActiveListResDto(v.getId(), v.getName()))
+                .toList();
     }
 }
