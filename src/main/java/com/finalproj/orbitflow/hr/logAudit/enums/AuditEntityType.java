@@ -11,7 +11,7 @@ public enum AuditEntityType {
     COMPANY,            // 회사
     ORGANIZATION,       // 조직
     EMPLOYEE,           // 사원
-    RANK,               // 직급
+    HR_RANK,               // 직급
     POSITION,           // 직책
     ORG_POSITION_USAGE  // 조직-직책 정책
 }

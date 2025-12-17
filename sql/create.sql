@@ -50,21 +50,21 @@ CREATE TABLE organization
         FOREIGN KEY (parent_org_id) REFERENCES organization (id)
 ) ENGINE = InnoDB;
 
-CREATE TABLE `rank`
+CREATE TABLE hr_rank
 (
     id             BIGINT AUTO_INCREMENT PRIMARY KEY,
     company_id     BIGINT      NOT NULL,
-    parent_rank_id BIGINT      NULL,
+    parent_hr_rank_id BIGINT      NULL,
     name           VARCHAR(50) NOT NULL,
     order_index    INT         NOT NULL,
     is_active      BOOLEAN     NOT NULL DEFAULT TRUE,
     created_at     TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at     TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_rank_company
+    CONSTRAINT fk_hr_rank_company
         FOREIGN KEY (company_id) REFERENCES company (id),
-    CONSTRAINT fk_rank_parent
-        FOREIGN KEY (parent_rank_id) REFERENCES `rank` (id)
+    CONSTRAINT fk_hr_rank_parent
+        FOREIGN KEY (parent_hr_rank_id) REFERENCES hr_rank (id)
 ) ENGINE = InnoDB;
 
 CREATE TABLE position_category
@@ -104,12 +104,15 @@ CREATE TABLE position
 CREATE TABLE org_position_usage
 (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id  BIGINT    NOT NULL,
     org_id      BIGINT    NOT NULL,
     position_id BIGINT    NOT NULL,
     is_enabled  BOOLEAN   NOT NULL DEFAULT TRUE,
     created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_usage_company
+        FOREIGN KEY (company_id) REFERENCES company (id),
     CONSTRAINT fk_usage_org
         FOREIGN KEY (org_id) REFERENCES organization (id),
     CONSTRAINT fk_usage_position
@@ -124,7 +127,7 @@ CREATE TABLE employee
     internal_phone  VARCHAR(20),                                                                         -- 내선번호
     phone           VARCHAR(20),                                                                         -- 전화번호
     org_id          BIGINT                                           NOT NULL,                           -- 조직 아이디 (fk)
-    rank_id         BIGINT                                           NULL,                               -- 직급 아이디 (fk)
+    hr_rank_id         BIGINT                                           NULL,                               -- 직급 아이디 (fk)
     position_id     BIGINT                                           NULL,                               -- 직책 아이디 (fk)
     name            VARCHAR(50)                                      NOT NULL,                           -- 이름
     email           VARCHAR(100)                                     NOT NULL,                           -- 이메일 (로그인 id)
@@ -146,8 +149,8 @@ CREATE TABLE employee
         FOREIGN KEY (company_id) REFERENCES company (id),
     CONSTRAINT fk_emp_org
         FOREIGN KEY (org_id) REFERENCES organization (id),
-    CONSTRAINT fk_emp_rank
-        FOREIGN KEY (rank_id) REFERENCES `rank` (id),
+    CONSTRAINT fk_emp_hr_rank
+        FOREIGN KEY (hr_rank_id) REFERENCES hr_rank (id),
     CONSTRAINT fk_emp_position
         FOREIGN KEY (position_id) REFERENCES position (id)
 ) ENGINE = InnoDB;
