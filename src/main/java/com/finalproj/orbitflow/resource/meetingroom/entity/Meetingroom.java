@@ -13,12 +13,11 @@ import lombok.*;
  * @filename : Meetingroom
  * @since : 2025-12-16 오전 10:48 화요일
  */
-
 @Entity
 @Table(name = "meetingroom")
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 @Builder
 public class Meetingroom extends BaseEntity {
 
@@ -28,32 +27,32 @@ public class Meetingroom extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="company_id", nullable = false)
+    @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @Column(nullable = false, length=30)
+    @Column(nullable = false, length = 30)
     private String name;
 
-    @Column(nullable = false, length=50)
+    @Column(nullable = false, length = 50)
     private String position;
 
-    @Column
+    @Column(length = 255)
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="resource_status_code", nullable = false)
+    @JoinColumn(name = "resource_status_id")
     private ResourceStatus resourceStatus;
 
 
-    public void update(String name, String position, String description, ResourceStatus status) {
 
+    public void update(String name, String position, String description, ResourceStatus resourceStatus) {
         this.name = name;
         this.position = position;
         this.description = description;
-        this.resourceStatus = status;
+        this.resourceStatus = resourceStatus;
     }
 
-    public void delete(ResourceStatus status) {
-        this.resourceStatus = status;
+    public void delete(ResourceStatus deletedStatus) {
+        this.resourceStatus = deletedStatus;
     }
 }

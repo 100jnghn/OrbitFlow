@@ -21,9 +21,13 @@ import lombok.*;
 public class ReservationStatus {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "reservation_status_code", length = 50)
-    private ReservationStatusCode reservationStatusCode;
+    @Column(name = "status_code", nullable = false, unique = true, length = 50)
+    private ReservationStatusCode statusCode;
 
     @Column(name = "status_name", nullable = false, length = 50)
     private String statusName;
