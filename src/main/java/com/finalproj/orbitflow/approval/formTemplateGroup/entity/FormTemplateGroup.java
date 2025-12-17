@@ -38,7 +38,7 @@ public class FormTemplateGroup extends BaseEntity {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String name;
 
     @Column(columnDefinition = "TEXT")

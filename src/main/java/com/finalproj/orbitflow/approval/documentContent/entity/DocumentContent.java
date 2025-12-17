@@ -26,11 +26,10 @@ public class DocumentContent extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "document_id", nullable = false, unique = true)
     private Document document;
 
-    @Column(columnDefinition = "JSON", nullable = false)
+    @Column(name = "content_json", nullable = false, columnDefinition = "json")
     private String contentJson;
 }
