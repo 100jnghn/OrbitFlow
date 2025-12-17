@@ -17,7 +17,6 @@ import java.util.List;
 
 public interface FormTemplateGroupRepository extends JpaRepository<FormTemplateGroup, Long> {
 
-    List<FormTemplateGroupListView> findTop20ByCompany_IdOrderByNameAsc(Long companyId);
 
     @Query("""
     select f
