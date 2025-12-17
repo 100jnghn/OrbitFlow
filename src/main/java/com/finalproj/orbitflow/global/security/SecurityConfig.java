@@ -38,8 +38,9 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login").permitAll()
-                        .anyRequest().authenticated()
+//                        .requestMatchers("/api/auth/login").permitAll()
+//                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
                 // HttpSession + JSESSIONID 기반이라 주석처리함
 //                .formLogin(login -> login
