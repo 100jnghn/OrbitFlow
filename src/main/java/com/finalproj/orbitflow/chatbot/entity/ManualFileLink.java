@@ -12,13 +12,13 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "manual_file_link")
+@Table(name = "manual_link")
 public class ManualFileLink extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "manual_link_id", nullable = false)
-    private Long manualLinkId;      // 연결 고유 ID (PK)
+    @Column(name = "id", nullable = false)
+    private Long id;      // 연결 고유 ID (PK)
 
     @Column(name = "file_id", nullable = false)
     private Long fileId;            // 파일 ID (FK)

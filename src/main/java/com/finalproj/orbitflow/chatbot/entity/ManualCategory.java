@@ -19,8 +19,8 @@ public class ManualCategory extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "category_id", nullable = false)
-    private Long categoryId;        // 카테고리 ID (PK)
+    @Column(name = "id", nullable = false)
+    private Long id;        // 카테고리 ID (PK)
 
     @Column(name = "company_id", nullable = false)
     private Long companyId;         // 회사 ID (FK)
