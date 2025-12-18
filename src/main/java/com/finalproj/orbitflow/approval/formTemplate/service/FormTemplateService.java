@@ -277,24 +277,12 @@ public class FormTemplateService {
         return FormTemplateDetailResDto.from(formTemplate, objectMapper);
     }
 
-    public Page<FormTemplateAllListResDto> allFormTemplate(
-            Long companyId,
-            int size,
-            int offset,
-            String keyword
-    ) {
-        Pageable pageable = PageRequest.of(
-                offset,
-                size,
-                Sort.by(Sort.Direction.DESC, "updatedAt")
-        );
+    public Page<FormTemplateAllListResDto> allFormTemplate(Long companyId, int size, int offset, String keyword, FormTemplateStatus status) {
+        Pageable pageable = PageRequest.of(offset, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
 
-        Page<FormTemplateAllListView> page =
-                formTemplateRepository.findAllWithDocumentCount(
-                        companyId,
-                        keyword,
-                        pageable
-                );
+
+        Page<FormTemplateAllListView> page = formTemplateRepository.findAllWithDocumentCount(companyId, keyword, status, pageable);
+
 
         return page.map(FormTemplateAllListResDto::from);
     }

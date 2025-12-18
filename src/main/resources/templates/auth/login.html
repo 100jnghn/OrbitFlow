@@ -25,6 +25,16 @@
     });
 
     if (res.ok) {
+      // 응답에서 accessToken을 받아 세션 스토리지에 저장
+      try {
+        const body = await res.json();
+
+          if (body && body.accessToken) {
+          sessionStorage.setItem('accessToken', body.accessToken);
+        }
+      } catch (e) {
+        // 응답 파싱에 실패해도 리다이렉트는 시도
+      }
       location.href = '/';
     } else {
       alert('로그인 실패');
