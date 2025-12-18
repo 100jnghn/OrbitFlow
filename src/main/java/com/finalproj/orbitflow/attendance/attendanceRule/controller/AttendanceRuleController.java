@@ -7,12 +7,14 @@ import com.finalproj.orbitflow.attendance.employeeAttRule.dto.EmpAttRuleResDto;
 import com.finalproj.orbitflow.attendance.employeeAttRule.dto.EmpAttRuleUpdateReqDto;
 import com.finalproj.orbitflow.attendance.attendanceRule.service.AttendanceRuleService;
 import com.finalproj.orbitflow.global.security.SecurityUser;
+import com.finalproj.orbitflow.global.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Security;
 import java.util.List;
 
 @RestController
@@ -101,12 +103,12 @@ public class AttendanceRuleController {
      */
     @PutMapping("/exception/{ruleId}")
     public ResponseEntity<EmpAttRuleResDto> updateExceptionRule(
-            @AuthenticationPrincipal SecurityUser admin,
+            //@AuthenticationPrincipal SecurityUser admin,
             @PathVariable Long ruleId,
             @RequestBody EmpAttRuleUpdateReqDto request) {
 
         // 서비스 호출 시 관리자의 정보(admin)를 함께 넘겨주어 본인 회사의 데이터인지 확인하게 합니다.
-        EmpAttRuleResDto updatedRule = attendanceRuleService.updateExceptionRule(admin, ruleId, request);
+        EmpAttRuleResDto updatedRule = attendanceRuleService.updateExceptionRule(SecurityUtils.getCompanyId(), ruleId, request);
 
         return ResponseEntity.ok(updatedRule);
     }
