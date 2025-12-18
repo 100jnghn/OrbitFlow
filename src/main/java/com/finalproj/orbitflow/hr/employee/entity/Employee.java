@@ -143,4 +143,9 @@ public class Employee extends BaseEntity {
         return employee;
     }
 
+
+    public void updateWorkStatus(WorkStatus workStatus) {
+        this.workStatus = workStatus;
+    }
+
 }
