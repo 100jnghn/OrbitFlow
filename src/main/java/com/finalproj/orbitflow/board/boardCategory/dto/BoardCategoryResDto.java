@@ -11,7 +11,7 @@ import java.time.Instant;
 public class BoardCategoryResDto {
 
     /**
-     * 게시판(카테고리) 목록 및 단건 조회 응답 DTO
+     * 게시판 목록 조회 DTO (일반 / 조직 공용)
      */
     @Data
     @NoArgsConstructor
@@ -24,27 +24,54 @@ public class BoardCategoryResDto {
         private Long organizationId; // 조직 ID (null이면 일반 게시판)
         private String boardName; // 게시판 이름
         private String boardType; // 게시판 유형
-        private boolean isActivated; // 사용 여부
-        private boolean commentActivated; // 댓글 기능 활성화 여부
+        private boolean isActivated; // 활성화 여부
         private Instant createdAt;
+
+
         private Instant updatedAt;
         private Instant deletedAt; // 삭제 일시
 
         public static Category from(BoardCategory category) {
             return Category.builder()
                     .id(category.getId())
-                    // Company ID 추출
                     .companyId(category.getCompany().getId())
-                    // Organization ID 추출 (null 체크)
-                    .organizationId(category.getOrganization() != null ? category.getOrganization().getId() : null)
+                    .organizationId(
+                            category.getOrganization() != null
+                                    ? category.getOrganization().getId()
+                                    : null
+                    )
+                    .boardName(category.getBoardName())
+                    .boardType(category.getBoardType())
+                    .isActivated(category.isActivated())
+                    .createdAt(category.getCreatedAt())
+                    .build();
+        }
+    }
+
+    /**
+     * 게시판 상세 조회 DTO (관리자 - 수정 페이지)
+     */
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class Detail {
+
+        private Long id;
+        private Long companyId;
+        private String boardName;
+        private String boardType;
+        private boolean isActivated;
+        private boolean commentActivated;
+
+        public static Detail from(BoardCategory category) {
+            return Detail.builder()
+                    .id(category.getId())
+                    .companyId(category.getCompany().getId())
                     .boardName(category.getBoardName())
                     .boardType(category.getBoardType())
                     .isActivated(category.isActivated())
                     .commentActivated(category.isCommentActivated())
-                    // BaseEntity에서 LocalDateTime을 사용한다고 가정
-                    .createdAt(category.getCreatedAt())
-                    .updatedAt(category.getUpdatedAt())
-                    .deletedAt(category.getDeletedAt())
                     .build();
         }
     }

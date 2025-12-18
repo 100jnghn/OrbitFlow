@@ -4,6 +4,10 @@ import com.finalproj.orbitflow.board.boardCategory.dto.BoardCategoryReqDto;
 import com.finalproj.orbitflow.board.boardCategory.dto.BoardCategoryResDto;
 import com.finalproj.orbitflow.board.boardCategory.entity.BoardCategory;
 import com.finalproj.orbitflow.board.boardCategory.repository.BoardCategoryRepository;
+import com.finalproj.orbitflow.global.exception.BusinessException;
+import com.finalproj.orbitflow.global.exception.ForbiddenException;
+import com.finalproj.orbitflow.global.exception.NotFoundException;
+import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.organization.repository.OrganizationRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +15,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -21,92 +27,155 @@ public class AdminBoardCategoryService {
     private final CompanyRepository companyRepository;
     private final OrganizationRepository organizationRepository;
 
-    /**
-     * 관리자 게시판(카테고리) 목록 조회
-     * - 삭제되지 않은 카테고리만 조회
-     * - 활성/비활성 여부 상관없이 조회
-     */
-    public Page<BoardCategoryResDto.Category> getCategoryList(Long companyId, Pageable pageable) {
 
-        Page<BoardCategory> categoryPage =
-                boardCategoryRepository.findAllByCompany_Id(companyId, pageable);
+    // =========================================================================
+    // 1. 일반 카테고리 관리
+    // =========================================================================
 
-        return categoryPage.map(BoardCategoryResDto.Category::from);
+    /** [관리자용] 게시판 카테고리 목록 조회 (일반 / 조직) */
+    public Page<BoardCategoryResDto.Category> getBoardCategoryList(
+            Long companyId,
+            boolean organizationOnly,
+            Pageable pageable
+    ) {
+        Page<BoardCategory> page = organizationOnly
+                ? boardCategoryRepository
+                .findByCompany_IdAndOrganizationIsNotNullAndDeletedAtIsNull(companyId, pageable)
+                : boardCategoryRepository
+                .findAllByCompany_IdAndOrganizationIsNullAndDeletedAtIsNull(companyId, pageable);
+
+        return page.map(BoardCategoryResDto.Category::from);
     }
 
 
-    /**
-     * 관리자 게시판 카테고리 단건 조회
-     * - 수정 페이지 로딩용
-     * - 비활성화된 조직 게시판도 조회 가능
-     */
-    public BoardCategoryResDto.Category getCategoryDetail(Long categoryId) {
+    /** [관리자용] 일반 카테고리 단건 조회 (수정 페이지 로딩용) */
+    public BoardCategoryResDto.Detail getCategoryDetail(
+            Long companyId,
+            Long categoryId
+    ) {
+        BoardCategory category = getVerifiedCategory(companyId, categoryId);
+        return BoardCategoryResDto.Detail.from(category);
+    }
 
-        BoardCategory category = boardCategoryRepository
-                .findByIdAndDeletedAtIsNull(categoryId)
+    /** [관리자용] 게시판 카테고리 생성 */
+    @Transactional
+    public Long createCategory(Long companyId, BoardCategoryReqDto.Create dto) {
+
+        Company company = companyRepository.findById(companyId)
                 .orElseThrow(() ->
-                        new IllegalArgumentException("존재하지 않는 게시판 카테고리입니다. id=" + categoryId)
+                        new NotFoundException("존재하지 않는 회사입니다.")
                 );
 
-        return BoardCategoryResDto.Category.from(category);
-    }
-
-    /**
-     * 게시판 카테고리 생성
-     */
-    @Transactional
-    public Long createCategory(BoardCategoryReqDto.Create dto) {
-
         BoardCategory category = BoardCategory.builder()
-                .company(companyRepository.getReferenceById(dto.getCompanyId()))
+                .company(company)
                 .organization(
-                        dto.getOrganizationId() != null
-                                ? organizationRepository.getReferenceById(dto.getOrganizationId())
-                                : null
+                        dto.getOrganizationId() == null
+                                ? null
+                                : organizationRepository.findById(dto.getOrganizationId())
+                                .orElseThrow(() ->
+                                        new NotFoundException("존재하지 않는 조직입니다.")
+                                )
                 )
                 .boardName(dto.getBoardName())
                 .boardType(dto.getBoardType())
-                .isActivated(true) // 일반 게시판은 항상 활성
+                .isActivated(dto.getIsActivated())
                 .commentActivated(dto.getCommentActivated())
                 .build();
 
         return boardCategoryRepository.save(category).getId();
     }
 
-    /**
-     * 게시판 카테고리 수정
-     */
+    /** [관리자용] 게시판 카테고리 수정 */
     @Transactional
-    public void updateCategory(Long categoryId, BoardCategoryReqDto.Update dto) {
+    public void updateCategory(
+            Long companyId,
+            Long categoryId,
+            BoardCategoryReqDto.Update dto
+    ) {
+        BoardCategory category = getVerifiedCategory(companyId, categoryId);
 
-        BoardCategory category = boardCategoryRepository
-                .findByIdAndDeletedAtIsNull(categoryId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시판"));
+        if ("NOTICE".equals(category.getBoardType())) {
+            throw new BusinessException("공지사항 게시판은 수정할 수 없습니다.");
+        }
 
         category.update(
                 dto.getBoardName(),
                 dto.getBoardType(),
-                // 일반 게시판이면 무시
-                category.getOrganization() == null ? true : dto.getIsActivated(),
+                dto.getIsActivated() != null
+                        ? dto.getIsActivated()
+                        : category.isActivated(),
                 dto.getCommentActivated()
         );
     }
 
 
-    /**
-     * 게시판 카테고리 삭제 (소프트 삭제)
-     */
+    /** [관리자용] 게시판 카테고리 삭제 (소프트 삭제, 공지사항은 제외) */
     @Transactional
-    public void deleteCategory(Long categoryId) {
+    public void deleteCategory(Long companyId, Long categoryId) {
 
-        BoardCategory category = boardCategoryRepository.findByIdAndDeletedAtIsNull(categoryId)
-                .orElseThrow(() -> new IllegalArgumentException("게시판이 존재하지 않습니다."));
+        BoardCategory category = getVerifiedCategory(companyId, categoryId);
 
-        // 공지사항은 삭제 불가
         if ("NOTICE".equals(category.getBoardType())) {
-            throw new IllegalStateException("공지사항 게시판은 삭제할 수 없습니다.");
+            throw new BusinessException("공지사항 게시판은 삭제할 수 없습니다.");
+        }
+
+        if (category.isDeleted()) {
+            throw new BusinessException("이미 삭제된 게시판입니다.");
         }
 
         category.softDelete();
+    }
+
+    // =========================================================================
+    // 2. 조직 게시판 관리
+    // =========================================================================
+
+    /** [관리자용] 조직 게시판 활성/비활성 토글 */
+    @Transactional
+    public void changeOrganizationBoardActivation(
+            Long companyId,
+            Long categoryId,
+            boolean isActivated
+    ) {
+        BoardCategory category = getVerifiedCategory(companyId, categoryId);
+
+        if (category.getOrganization() == null) {
+            throw new BusinessException("조직 게시판만 활성화 변경이 가능합니다.");
+        }
+
+        category.update(
+                category.getBoardName(),
+                category.getBoardType(),
+                isActivated,
+                category.isCommentActivated()
+        );
+    }
+
+    /** [사용자용] 본인 조직 게시판 조회 (활성화된 게시판만) */
+    public List<BoardCategoryResDto.Category> getActiveOrganizationBoards(Long orgId) {
+        return boardCategoryRepository
+                .findByOrganization_IdAndIsActivatedTrueAndDeletedAtIsNull(orgId)
+                .stream()
+                .map(BoardCategoryResDto.Category::from)
+                .toList();
+    }
+
+    // =========================================================================
+    // 공통 검증 메서드
+    // =========================================================================
+
+    private BoardCategory getVerifiedCategory(Long companyId, Long categoryId) {
+
+        BoardCategory category = boardCategoryRepository
+                .findByIdAndDeletedAtIsNull(categoryId)
+                .orElseThrow(() ->
+                        new NotFoundException("게시판이 존재하지 않습니다.")
+                );
+
+        if (!category.getCompany().getId().equals(companyId)) {
+            throw new ForbiddenException("해당 게시판에 대한 권한이 없습니다.");
+        }
+
+        return category;
     }
 }
