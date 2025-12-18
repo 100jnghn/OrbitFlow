@@ -24,10 +24,14 @@
       })
     });
 
+    const result = await res.json();
+
     if (res.ok) {
+      localStorage.setItem('accessToken', result.accessToken);
+      localStorage.setItem('refreshToken', result.refreshToken);
       location.href = '/';
     } else {
-      alert('로그인 실패');
+      alert(result.message);
     }
   }
 </script>
