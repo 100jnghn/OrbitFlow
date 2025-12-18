@@ -192,6 +192,21 @@ CREATE TABLE notification
         FOREIGN KEY (employee_id) REFERENCES employee (id)
 ) ENGINE = InnoDB;
 
+CREATE TABLE refresh_token
+(
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id  BIGINT       NOT NULL,
+    employee_id BIGINT       NOT NULL,
+    token       VARCHAR(500) NOT NULL UNIQUE ,
+    expires_at  TIMESTAMP    NOT NULL,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_refresh_employee
+        FOREIGN KEY (employee_id) REFERENCES employee (id),
+    CONSTRAINT fk_refresh_company
+        FOREIGN KEY (company_id) REFERENCES company (id)
+
+);
+
 
 -- =========================================================
 -- 1. LEAVE TYPE
