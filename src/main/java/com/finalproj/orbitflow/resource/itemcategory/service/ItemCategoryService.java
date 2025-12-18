@@ -4,7 +4,7 @@ import com.finalproj.orbitflow.resource.item.repository.ItemRepository;
 import com.finalproj.orbitflow.resource.itemcategory.dto.ItemCategoryDto;
 import com.finalproj.orbitflow.resource.itemcategory.entity.ItemCategory;
 import com.finalproj.orbitflow.resource.itemcategory.repository.ItemCategoryRepository;
-import com.finalproj.orbitflow.resource.itemcategory.tempexception.ConfirmRequiredException;
+import com.finalproj.orbitflow.global.exception.ConfirmRequiredException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

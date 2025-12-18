@@ -71,6 +71,34 @@ public class CarService {
         carRepository.save(car);
     }
 
+    @Transactional
+    public void updateCar(Long carId, CarReqDto dto) {
+
+        Car car = findCarById(carId);
+        ResourceStatus status = findResourceStatus(dto.getStatusId());
+
+        // todo - 이미지 수정 로직 추가
+        File imgFile = car.getFile();
+
+        car.update(
+                dto.getNumber(),
+                dto.getName(),
+                dto.getDriverAge(),
+                dto.getDescription(),
+                status,
+                imgFile // todo - 이미지 수정 로직 추가
+        );
+    }
+
+    @Transactional
+    public void deleteCar(Long carId) {
+
+        Car car = findCarById(carId);
+
+        ResourceStatus deleteStatus = resourceStatusRepository.findByResourceStatusCode(ResourceStatusCode.DELETED);
+        car.delete(deleteStatus);
+    }
+
 
     // dto로 변환
     private CarResDto convertToResDto(Car car) {
@@ -104,34 +132,6 @@ public class CarService {
                 .objectKey(objectKey)
                 .originFile(fileName)
                 .build();
-    }
-
-    @Transactional
-    public void updateCar(Long carId, CarReqDto dto) {
-
-        Car car = findCarById(carId);
-        ResourceStatus status = findResourceStatus(dto.getStatusId());
-
-        // todo - 이미지 수정 로직 추가
-        File imgFile = car.getFile();
-
-        car.update(
-                dto.getNumber(),
-                dto.getName(),
-                dto.getDriverAge(),
-                dto.getDescription(),
-                status,
-                imgFile // todo - 이미지 수정 로직 추가
-        );
-    }
-
-    @Transactional
-    public void deleteCar(Long carId) {
-
-        Car car = findCarById(carId);
-
-        ResourceStatus deleteStatus = resourceStatusRepository.findByResourceStatusCode(ResourceStatusCode.DELETED);
-        car.delete(deleteStatus);
     }
 
     // 상태 코드 조회
