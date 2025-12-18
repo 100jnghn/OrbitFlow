@@ -26,5 +26,13 @@ public class AttendanceRuleViewController {
     public String commutePage() {
         return "form-template/commute";
     }
+
+    /**
+     * 월별 근태 조회 페이지
+     */
+    @GetMapping("/attendance/monthly")
+    public String monthlyAttendancePage() {
+        return "form-template/monthly-attendance";
+    }
 }
 

@@ -294,6 +294,40 @@
             opacity: 0.6;
         }
 
+        .btn-away {
+            flex: 1;
+            padding: 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-away:hover:not(:disabled) {
+            background: #e0a800;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+        }
+
+        .btn-away:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .btn-away.active {
+            background: #ff9800;
+            color: #fff;
+        }
+
+        .btn-away.active:hover {
+            background: #f57c00;
+        }
+
         /* 오늘의 기록 섹션 */
         .record-section {
             background: #fff;
@@ -348,6 +382,11 @@
             color: #fff;
         }
 
+        .away-badge {
+            background: #ffc107 !important;
+            color: #333 !important;
+        }
+
         /* 푸터 */
         .footer {
             text-align: center;
@@ -364,9 +403,9 @@
         <div class="sidebar-section-title">MY 근태</div>
         <nav class="sidebar-nav">
             <ul>
-                <li><a href="#" class="active">출퇴근</a></li>
-                <li><a href="#">일별 근태 조회</a></li>
-                <li><a href="#">출퇴근 조회</a></li>
+                <li><a href="/api/attendance/commute" class="active">출퇴근</a></li>
+                <li><a href="/api/attendance/monthly">월별 근태 조회</a></li>
+                <li><a href="#">내 연차 조회</a></li>
             </ul>
         </nav>
         
@@ -432,6 +471,7 @@
                 </div>
                 <div class="button-group">
                     <button type="button" id="checkInBtn" class="btn-checkin">출근</button>
+                    <button type="button" id="awayBtn" class="btn-away">자리비움</button>
                     <button type="button" id="checkOutBtn" class="btn-checkout">퇴근</button>
                 </div>
             </div>
@@ -451,8 +491,13 @@
                     <span class="record-label">근무 상태:</span>
                     <span id="workStatusContainer">
                         <span class="status-badge" id="workStatus" style="display: none;">근무 중</span>
+                        <span class="status-badge away-badge" id="awayStatus" style="display: none; background: #ffc107; color: #333;">자리비움</span>
                         <span class="record-value" id="workStatusText">-</span>
                     </span>
+                </div>
+                <div class="record-item" id="awayTimeItem" style="display: none;">
+                    <span class="record-label">자리비움 시작:</span>
+                    <span class="record-value" id="awayStartTime">-</span>
                 </div>
             </div>
         </main>
@@ -471,6 +516,8 @@
         // 전역 변수
         let currentAttendance = null;
         let workHours = { start: '09:00', end: '18:00' };
+        let isAway = false;
+        let awayStartTime = null;
 
         // 페이지 로드 시 초기화
         document.addEventListener('DOMContentLoaded', function() {
@@ -516,6 +563,12 @@
                 const data = await response.json();
                 currentAttendance = data;
 
+                // 자리비움 상태 동기화
+                isAway = data.isAway || false;
+                if (isAway && !awayStartTime) {
+                    awayStartTime = new Date().toISOString();
+                }
+
                 // 출근 시각 업데이트
                 const commuteTimeEl = document.getElementById('commuteTime');
                 if (data.commuteAt) {
@@ -542,21 +595,42 @@
 
                 // 근무 상태 업데이트
                 const workStatusBadge = document.getElementById('workStatus');
+                const awayStatusBadge = document.getElementById('awayStatus');
                 const workStatusText = document.getElementById('workStatusText');
+                const awayTimeItem = document.getElementById('awayTimeItem');
+                const awayStartTimeEl = document.getElementById('awayStartTime');
                 
                 if (data.commuteAt && !data.leaveAt) {
-                    workStatusBadge.style.display = 'inline-block';
-                    workStatusText.style.display = 'none';
+                    if (isAway) {
+                        workStatusBadge.style.display = 'none';
+                        awayStatusBadge.style.display = 'inline-block';
+                        workStatusText.style.display = 'none';
+                        awayTimeItem.style.display = 'flex';
+                        if (awayStartTime) {
+                            const awayTime = new Date(awayStartTime);
+                            awayStartTimeEl.textContent = 
+                                `${String(awayTime.getHours()).padStart(2, '0')}:${String(awayTime.getMinutes()).padStart(2, '0')}`;
+                        }
+                    } else {
+                        workStatusBadge.style.display = 'inline-block';
+                        awayStatusBadge.style.display = 'none';
+                        workStatusText.style.display = 'none';
+                        awayTimeItem.style.display = 'none';
+                    }
                 } else if (data.commuteAt && data.leaveAt) {
                     workStatusBadge.style.display = 'none';
+                    awayStatusBadge.style.display = 'none';
                     workStatusText.textContent = '퇴근 완료';
                     workStatusText.className = 'record-value';
                     workStatusText.style.display = 'inline';
+                    awayTimeItem.style.display = 'none';
                 } else {
                     workStatusBadge.style.display = 'none';
+                    awayStatusBadge.style.display = 'none';
                     workStatusText.textContent = '미출근';
                     workStatusText.className = 'record-value empty';
                     workStatusText.style.display = 'inline';
+                    awayTimeItem.style.display = 'none';
                 }
 
                 // 버튼 상태 업데이트
@@ -572,17 +646,30 @@
         function updateButtonStates() {
             const checkInBtn = document.getElementById('checkInBtn');
             const checkOutBtn = document.getElementById('checkOutBtn');
+            const awayBtn = document.getElementById('awayBtn');
 
             if (currentAttendance && currentAttendance.commuteAt) {
                 checkInBtn.disabled = true;
                 checkOutBtn.disabled = false;
+                awayBtn.disabled = false;
             } else {
                 checkInBtn.disabled = false;
                 checkOutBtn.disabled = true;
+                awayBtn.disabled = true;
             }
 
             if (currentAttendance && currentAttendance.leaveAt) {
                 checkOutBtn.disabled = true;
+                awayBtn.disabled = true;
+            }
+
+            // 자리비움 상태에 따른 버튼 스타일 업데이트
+            if (isAway) {
+                awayBtn.classList.add('active');
+                awayBtn.textContent = '자리비움 해제';
+            } else {
+                awayBtn.classList.remove('active');
+                awayBtn.textContent = '자리비움';
             }
         }
 
@@ -590,6 +677,7 @@
         function setupEventListeners() {
             document.getElementById('checkInBtn').addEventListener('click', handleCheckIn);
             document.getElementById('checkOutBtn').addEventListener('click', handleCheckOut);
+            document.getElementById('awayBtn').addEventListener('click', handleAway);
         }
 
         // 출근 처리
@@ -634,11 +722,89 @@
                     throw new Error(error.message || '퇴근 처리에 실패했습니다.');
                 }
 
+                // 자리비움 상태 초기화
+                isAway = false;
+                awayStartTime = null;
+
                 alert('퇴근이 완료되었습니다.');
                 loadTodayAttendance();
             } catch (error) {
                 console.error('Error checking out:', error);
                 alert(error.message || '퇴근 처리에 실패했습니다.');
+            }
+        }
+
+        // 자리비움 처리
+        async function handleAway() {
+            if (!currentAttendance || !currentAttendance.commuteAt || currentAttendance.leaveAt) {
+                alert('출근 후에만 자리비움을 설정할 수 있습니다.');
+                return;
+            }
+
+            if (isAway) {
+                // 자리비움 해제
+                if (!confirm('자리비움을 해제하시겠습니까?')) return;
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/away/end`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.message || '자리비움 해제에 실패했습니다.');
+                    }
+
+                    isAway = false;
+                    awayStartTime = null;
+                    alert('자리비움이 해제되었습니다.');
+                    loadTodayAttendance();
+                } catch (error) {
+                    console.error('Error ending away:', error);
+                    // 백엔드 API가 없을 경우 프론트엔드에서만 처리
+                    if (error.message.includes('Failed to fetch') || error.message.includes('404')) {
+                        isAway = false;
+                        awayStartTime = null;
+                        loadTodayAttendance();
+                    } else {
+                        alert(error.message || '자리비움 해제에 실패했습니다.');
+                    }
+                }
+            } else {
+                // 자리비움 시작
+                if (!confirm('자리비움을 시작하시겠습니까?')) return;
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/away/start`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.message || '자리비움 시작에 실패했습니다.');
+                    }
+
+                    isAway = true;
+                    awayStartTime = new Date().toISOString();
+                    alert('자리비움이 시작되었습니다.');
+                    loadTodayAttendance();
+                } catch (error) {
+                    console.error('Error starting away:', error);
+                    // 백엔드 API가 없을 경우 프론트엔드에서만 처리
+                    if (error.message.includes('Failed to fetch') || error.message.includes('404')) {
+                        isAway = true;
+                        awayStartTime = new Date().toISOString();
+                        loadTodayAttendance();
+                    } else {
+                        alert(error.message || '자리비움 시작에 실패했습니다.');
+                    }
+                }
             }
         }
     </script>
