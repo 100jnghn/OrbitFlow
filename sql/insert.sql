@@ -269,99 +269,102 @@ VALUES (1, '휴가 신청', '연차/반차/병가 신청', 1),
 INSERT INTO form_template
 (company_id, template_group_id, version, template_category_id,
  affect_tags, template_json, approval_rule_json, status)
-VALUES (1, 1, 1, 1, JSON_ARRAY('attendance'),
-        JSON_OBJECT('fields', JSON_ARRAY(
-                JSON_OBJECT('key', 'start_date'),
-                JSON_OBJECT('key', 'end_date'),
-                JSON_OBJECT('key', 'leave_type')
-                              )),
-        JSON_OBJECT('lines', JSON_ARRAY(
-                JSON_OBJECT('order', 1, 'approverType', 'MANAGER'),
-                JSON_OBJECT('order', 2, 'approverType', 'ADMIN')
-                             )), 'ACTIVE'),
+VALUES
+-- 회사 1
+(1, 1, 1, 1, JSON_ARRAY('ATTENDANCE'),
+ JSON_OBJECT('fields', JSON_ARRAY(
+         JSON_OBJECT('key', 'start_date'),
+         JSON_OBJECT('key', 'end_date'),
+         JSON_OBJECT('key', 'leave_type')
+                       )),
+ JSON_OBJECT('lines', JSON_ARRAY(
+         JSON_OBJECT('order', 1, 'approverType', 'MANAGER'),
+         JSON_OBJECT('order', 2, 'approverType', 'ADMIN')
+                      )), 'ACTIVE'),
 
-       (1, 2, 1, 2, JSON_ARRAY('schedule'),
-        JSON_OBJECT('fields', JSON_ARRAY(
-                JSON_OBJECT('key', 'destination'),
-                JSON_OBJECT('key', 'period')
-                              )),
-        JSON_OBJECT('lines', JSON_ARRAY(
-                JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
-                             )), 'ACTIVE'),
+(1, 2, 1, 2, JSON_ARRAY('SCHEDULE'),
+ JSON_OBJECT('fields', JSON_ARRAY(
+         JSON_OBJECT('key', 'destination'),
+         JSON_OBJECT('key', 'period')
+                       )),
+ JSON_OBJECT('lines', JSON_ARRAY(
+         JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
+                      )), 'ACTIVE'),
 
-       (1, 3, 1, 1, JSON_ARRAY('attendance'),
-        JSON_OBJECT('fields', JSON_ARRAY(
-                JSON_OBJECT('key', 'date'),
-                JSON_OBJECT('key', 'hours')
-                              )),
-        JSON_OBJECT('lines', JSON_ARRAY(
-                JSON_OBJECT('order', 1, 'approverType', 'MANAGER')
-                             )), 'ACTIVE'),
+(1, 3, 1, 1, JSON_ARRAY('ATTENDANCE'),
+ JSON_OBJECT('fields', JSON_ARRAY(
+         JSON_OBJECT('key', 'date'),
+         JSON_OBJECT('key', 'hours')
+                       )),
+ JSON_OBJECT('lines', JSON_ARRAY(
+         JSON_OBJECT('order', 1, 'approverType', 'MANAGER')
+                      )), 'ACTIVE'),
 
-       (1, 4, 1, 3, NULL,
-        JSON_OBJECT('fields', JSON_ARRAY(
-                JSON_OBJECT('key', 'amount'),
-                JSON_OBJECT('key', 'reason')
-                              )),
-        JSON_OBJECT('lines', JSON_ARRAY(
-                JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
-                             )), 'ACTIVE'),
+(1, 4, 1, 3, NULL,
+ JSON_OBJECT('fields', JSON_ARRAY(
+         JSON_OBJECT('key', 'amount'),
+         JSON_OBJECT('key', 'reason')
+                       )),
+ JSON_OBJECT('lines', JSON_ARRAY(
+         JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
+                      )), 'ACTIVE'),
 
-       (1, 5, 1, 3, NULL,
-        JSON_OBJECT('fields', JSON_ARRAY(
-                JSON_OBJECT('key', 'item'),
-                JSON_OBJECT('key', 'price')
-                              )),
-        JSON_OBJECT('lines', JSON_ARRAY(
-                JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
-                             )), 'ACTIVE'),
+(1, 5, 1, 3, NULL,
+ JSON_OBJECT('fields', JSON_ARRAY(
+         JSON_OBJECT('key', 'item'),
+         JSON_OBJECT('key', 'price')
+                       )),
+ JSON_OBJECT('lines', JSON_ARRAY(
+         JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
+                      )), 'ACTIVE'),
 
-       (2, 6, 1, 1, JSON_ARRAY('attendance'),
-        JSON_OBJECT('fields', JSON_ARRAY(
-                JSON_OBJECT('key', 'start_date'),
-                JSON_OBJECT('key', 'end_date'),
-                JSON_OBJECT('key', 'leave_type')
-                              )),
-        JSON_OBJECT('lines', JSON_ARRAY(
-                JSON_OBJECT('order', 1, 'approverType', 'MANAGER'),
-                JSON_OBJECT('order', 2, 'approverType', 'ADMIN')
-                             )), 'ACTIVE'),
+-- 회사 2
+(2, 6, 1, 1, JSON_ARRAY('ATTENDANCE'),
+ JSON_OBJECT('fields', JSON_ARRAY(
+         JSON_OBJECT('key', 'start_date'),
+         JSON_OBJECT('key', 'end_date'),
+         JSON_OBJECT('key', 'leave_type')
+                       )),
+ JSON_OBJECT('lines', JSON_ARRAY(
+         JSON_OBJECT('order', 1, 'approverType', 'MANAGER'),
+         JSON_OBJECT('order', 2, 'approverType', 'ADMIN')
+                      )), 'ACTIVE'),
 
-       (2, 7, 1, 2, JSON_ARRAY('schedule'),
-        JSON_OBJECT('fields', JSON_ARRAY(
-                JSON_OBJECT('key', 'destination'),
-                JSON_OBJECT('key', 'period')
-                              )),
-        JSON_OBJECT('lines', JSON_ARRAY(
-                JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
-                             )), 'ACTIVE'),
+(2, 7, 1, 2, JSON_ARRAY('SCHEDULE'),
+ JSON_OBJECT('fields', JSON_ARRAY(
+         JSON_OBJECT('key', 'destination'),
+         JSON_OBJECT('key', 'period')
+                       )),
+ JSON_OBJECT('lines', JSON_ARRAY(
+         JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
+                      )), 'ACTIVE'),
 
-       (2, 8, 1, 1, JSON_ARRAY('attendance'),
-        JSON_OBJECT('fields', JSON_ARRAY(
-                JSON_OBJECT('key', 'date'),
-                JSON_OBJECT('key', 'hours')
-                              )),
-        JSON_OBJECT('lines', JSON_ARRAY(
-                JSON_OBJECT('order', 1, 'approverType', 'MANAGER')
-                             )), 'ACTIVE'),
+(2, 8, 1, 1, JSON_ARRAY('ATTENDANCE'),
+ JSON_OBJECT('fields', JSON_ARRAY(
+         JSON_OBJECT('key', 'date'),
+         JSON_OBJECT('key', 'hours')
+                       )),
+ JSON_OBJECT('lines', JSON_ARRAY(
+         JSON_OBJECT('order', 1, 'approverType', 'MANAGER')
+                      )), 'ACTIVE'),
 
-       (2, 9, 1, 3, NULL,
-        JSON_OBJECT('fields', JSON_ARRAY(
-                JSON_OBJECT('key', 'amount'),
-                JSON_OBJECT('key', 'reason')
-                              )),
-        JSON_OBJECT('lines', JSON_ARRAY(
-                JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
-                             )), 'ACTIVE'),
+(2, 9, 1, 3, NULL,
+ JSON_OBJECT('fields', JSON_ARRAY(
+         JSON_OBJECT('key', 'amount'),
+         JSON_OBJECT('key', 'reason')
+                       )),
+ JSON_OBJECT('lines', JSON_ARRAY(
+         JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
+                      )), 'ACTIVE'),
 
-       (2, 10, 1, 3, NULL,
-        JSON_OBJECT('fields', JSON_ARRAY(
-                JSON_OBJECT('key', 'item'),
-                JSON_OBJECT('key', 'price')
-                              )),
-        JSON_OBJECT('lines', JSON_ARRAY(
-                JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
-                             )), 'ACTIVE');
+(2, 10, 1, 3, NULL,
+ JSON_OBJECT('fields', JSON_ARRAY(
+         JSON_OBJECT('key', 'item'),
+         JSON_OBJECT('key', 'price')
+                       )),
+ JSON_OBJECT('lines', JSON_ARRAY(
+         JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
+                      )), 'ACTIVE');
 
 
 /* =========================================================
