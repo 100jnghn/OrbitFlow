@@ -11,5 +11,6 @@ package com.finalproj.orbitflow.approval.formTemplate.repository;
 
 public interface FormTemplateListView {
     Long getId();
+    int getVersion();
     String getName();
 }

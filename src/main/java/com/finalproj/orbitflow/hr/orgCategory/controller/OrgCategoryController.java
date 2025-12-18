@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,9 +21,10 @@ import java.util.List;
  * @filename : OrgCategoryController
  * @since : 2025-12-17 수요일
  */
+@PreAuthorize("hasAnyRole('COMPANY_ADMIN', 'ADMIN')")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/org-categories")
+@RequestMapping("/api/admin/org-categories")
 public class OrgCategoryController {
 
     private final OrgCategoryService orgCategoryService;
