@@ -61,7 +61,6 @@ public class FormTemplateService {
     private final FormTemplateRepository formTemplateRepository;
     private final FormTemplateGroupRepository formTemplateGroupRepository;
     private final TemplateCategoryRepository templateCategoryRepository;
-    private final CompanyRepository companyRepository;
     private final ObjectMapper objectMapper;
 
 
