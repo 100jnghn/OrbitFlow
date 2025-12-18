@@ -5,10 +5,7 @@ import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.organization.entity.Organization;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.Instant;
 import java.util.List;
@@ -16,6 +13,7 @@ import java.util.List;
 @Entity
 @Table(name = "board_category")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -64,6 +62,10 @@ public class BoardCategory extends BaseEntity {
     // 게시판 소프트 삭제 처리
     public void softDelete() {
         this.deletedAt = Instant.now();
+    }
+
+    public boolean isDeleted() {
+        return this.deletedAt != null;
     }
 
     // 게시판 활성화 여부 확인 (소프트 삭제 및 isActivated 상태 모두 고려)

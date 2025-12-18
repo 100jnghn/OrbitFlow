@@ -23,7 +23,10 @@ public class ItemResDto {
     private String itemCategoryName;
     private String name;
 
+    private Long statusId;
+    private String statusCode;
+    private String statusName;
+
     // 이미지 파일 정보 (없으면 null)
     private String objectKey;
-    private String originFile;
 }

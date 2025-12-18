@@ -18,8 +18,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
 
-
-    /** throw new UnauthorizedException("로그인이 필요합니다."); **/
+    /**
+     * throw new UnauthorizedException("로그인이 필요합니다.");
+     **/
     @ExceptionHandler(UnauthorizedException.class) // → 401
     public ResponseEntity<ResponseDto> handleUnauthorized(UnauthorizedException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -27,7 +28,9 @@ public class GlobalExceptionHandler {
     }
 
 
-    /** throw new ForbiddenException("접근 권한이 없습니다."); **/
+    /**
+     * throw new ForbiddenException("접근 권한이 없습니다.");
+     **/
     @ExceptionHandler(ForbiddenException.class) // → 403
     public ResponseEntity<ResponseDto> handleForbidden(ForbiddenException e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -35,7 +38,9 @@ public class GlobalExceptionHandler {
     }
 
 
-    /** throw new NotFoundException("존재하지 않는 리소스입니다."); **/
+    /**
+     * throw new NotFoundException("존재하지 않는 리소스입니다.");
+     **/
     @ExceptionHandler(NotFoundException.class) // → 404
     public ResponseEntity<ResponseDto> handleNotFound(NotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -43,11 +48,21 @@ public class GlobalExceptionHandler {
     }
 
 
-    /** throw new BusinessException("이미 처리된 상태입니다."); **/
+    /**
+     * throw new BusinessException("이미 처리된 상태입니다.");
+     **/
     @ExceptionHandler(BusinessException.class) // → 409
     public ResponseEntity<ResponseDto> handleBusiness(BusinessException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ResponseDto(HttpStatus.CONFLICT, e.getMessage(), null));
     }
 
+    /**
+     * throw new ConfirmRequiredException("확인이 필요합니다");
+     **/
+    @ExceptionHandler(ConfirmRequiredException.class) // → 409
+    public ResponseEntity<ResponseDto> handleConfirm(ConfirmRequiredException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ResponseDto(HttpStatus.CONFLICT, e.getMessage(), null));
+    }
 }
