@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout :: layout(
+          ~{::content},
+          ~{fragments/header :: header},
+          ~{sidebar/attendance-sidebar :: menu}
+      )}">
+<div th:fragment="content">
+    <style>
+        /* 월별 근태 조회 페이지 전용 스타일 */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .month-selector {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .month-selector label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .month-selector select {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        /* 월별 요약 카드 */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .summary-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .summary-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .summary-value {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .summary-value.work-hours {
+            color: #5687ef;
+        }
+
+        .summary-value.late-count {
+            color: #ff9800;
+        }
+
+        .summary-value.leave-count {
+            color: #dc3545;
+        }
+
+        /* 테이블 영역 */
+        .table-container {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .filter-select {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn.primary {
+            background: #28a745;
+            color: #fff;
+        }
+
+        .action-btn.primary:hover {
+            background: #218838;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8f9fa;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        td {
+            padding: 12px;
+            font-size: 14px;
+            color: #333;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .date-cell {
+            font-weight: 500;
+        }
+
+        .time-cell {
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        .time-cell.late {
+            color: #ff9800;
+            font-weight: 600;
+        }
+
+        .time-cell.missing {
+            color: #999;
+            font-style: italic;
+        }
+
+        .status-cell {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-cell.request {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-cell.completed {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .row-warning {
+            background: #fff3cd !important;
+        }
+
+        .row-error {
+            background: #f8d7da !important;
+        }
+
+        /* 페이지네이션 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .pagination button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #f0f0f0;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination button.active {
+            background: #5687ef;
+            color: #fff;
+            border-color: #5687ef;
+        }
+
+        .pagination .page-numbers {
+            display: flex;
+            gap: 4px;
+        }
+    </style>
+
+    <div style="padding: 24px 40px;">
+        <div class="page-header">
+            <h1 class="page-title">월별 근태 조회</h1>
+            <div class="month-selector">
+                <label>조회 월:</label>
+                <select id="monthSelect">
+                    <option value="2025-12">2025년 12월</option>
+                    <option value="2025-11">2025년 11월</option>
+                    <option value="2025-10">2025년 10월</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 월별 요약 카드 -->
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="summary-label">총 근무 시간 (누적)</div>
+                <div class="summary-value work-hours" id="totalWorkHours">152 시간</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">지각 횟수</div>
+                <div class="summary-value late-count" id="lateCount">2 회</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">휴가/결근 일수</div>
+                <div class="summary-value leave-count" id="leaveCount">3 일</div>
+            </div>
+        </div>
+
+        <!-- 일별 상세 테이블 -->
+        <div class="table-container">
+            <div class="table-header">
+                <h2 style="font-size: 18px; font-weight: 600; color: #333;">일별 상세 기록</h2>
+                <div class="table-actions">
+                    <select class="filter-select" id="statusFilter">
+                        <option value="all">전체</option>
+                        <option value="normal">정상</option>
+                        <option value="late">지각</option>
+                        <option value="early">조퇴</option>
+                        <option value="absent">결근</option>
+                    </select>
+                    <button class="action-btn primary" id="requestBtn">요청</button>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>날짜</th>
+                        <th>출근 시각</th>
+                        <th>퇴근 시각</th>
+                        <th>근무 시간</th>
+                        <th>수정</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceTableBody">
+                    <!-- 데이터는 JavaScript로 동적 생성 -->
+                </tbody>
+            </table>
+            <div class="pagination" id="pagination">
+                <!-- 페이지네이션은 JavaScript로 동적 생성 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API 기본 URL
+        const API_BASE_URL = '/api/attendance';
+        const CURRENT_COMPANY_ID = 1;
+        const CURRENT_EMPLOYEE_ID = 1;
+
+        // 전역 변수
+        let currentMonth = '2025-12';
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('monthSelect').addEventListener('change', handleMonthChange);
+            document.getElementById('statusFilter').addEventListener('change', loadAttendanceData);
+            loadAttendanceData();
+        });
+
+        // 월 변경 처리
+        function handleMonthChange() {
+            currentMonth = document.getElementById('monthSelect').value;
+            currentPage = 1;
+            loadAttendanceData();
+        }
+
+        // 근태 데이터 로드
+        async function loadAttendanceData() {
+            try {
+                const [year, month] = currentMonth.split('-');
+                const response = await fetch(`${API_BASE_URL}/monthly?year=${year}&month=${month}&page=${currentPage}&size=${itemsPerPage}`);
+                
+                if (!response.ok) {
+                    throw new Error('근태 데이터를 불러오는데 실패했습니다.');
+                }
+
+                const data = await response.json();
+                updateSummary(data.summary);
+                updateTable(data.records);
+                updatePagination(data.totalPages);
+            } catch (error) {
+                console.error('Error loading attendance data:', error);
+                // 임시 데이터로 표시
+                displaySampleData();
+            }
+        }
+
+        // 요약 정보 업데이트
+        function updateSummary(summary) {
+            if (summary) {
+                document.getElementById('totalWorkHours').textContent = `${summary.totalWorkHours || 0} 시간`;
+                document.getElementById('lateCount').textContent = `${summary.lateCount || 0} 회`;
+                document.getElementById('leaveCount').textContent = `${summary.leaveCount || 0} 일`;
+            }
+        }
+
+        // 테이블 업데이트
+        function updateTable(records) {
+            const tbody = document.getElementById('attendanceTableBody');
+            tbody.innerHTML = '';
+
+            if (!records || records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #999;">데이터가 없습니다.</td></tr>';
+                return;
+            }
+
+            records.forEach(record => {
+                const row = createTableRow(record);
+                tbody.appendChild(row);
+            });
+        }
+
+        // 테이블 행 생성
+        function createTableRow(record) {
+            const tr = document.createElement('tr');
+            
+            // 날짜
+            const dateCell = document.createElement('td');
+            dateCell.className = 'date-cell';
+            dateCell.textContent = formatDate(record.workDate);
+            tr.appendChild(dateCell);
+
+            // 출근 시각
+            const commuteCell = document.createElement('td');
+            commuteCell.className = 'time-cell';
+            if (record.commuteAt) {
+                const commuteTime = new Date(record.commuteAt);
+                const timeStr = formatTime(commuteTime);
+                commuteCell.textContent = timeStr;
+                if (record.status === 'LATE') {
+                    commuteCell.classList.add('late');
+                }
+            } else {
+                commuteCell.textContent = '-';
+                commuteCell.classList.add('missing');
+            }
+            tr.appendChild(commuteCell);
+
+            // 퇴근 시각
+            const leaveCell = document.createElement('td');
+            leaveCell.className = 'time-cell';
+            if (record.leaveAt) {
+                const leaveTime = new Date(record.leaveAt);
+                leaveCell.textContent = formatTime(leaveTime);
+            } else {
+                leaveCell.textContent = '미기록';
+                leaveCell.classList.add('missing');
+                tr.classList.add('row-warning');
+            }
+            tr.appendChild(leaveCell);
+
+            // 근무 시간
+            const workTimeCell = document.createElement('td');
+            if (record.commuteAt && record.leaveAt) {
+                const workTime = calculateWorkTime(record.commuteAt, record.leaveAt);
+                workTimeCell.textContent = workTime;
+            } else {
+                workTimeCell.textContent = '계산불가';
+                workTimeCell.style.color = '#999';
+            }
+            tr.appendChild(workTimeCell);
+
+            // 수정 버튼
+            const actionCell = document.createElement('td');
+            const statusBadge = document.createElement('span');
+            statusBadge.className = 'status-cell';
+            if (record.isCorrected) {
+                statusBadge.textContent = '정정 완료';
+                statusBadge.classList.add('completed');
+            } else {
+                statusBadge.textContent = '요청';
+                statusBadge.classList.add('request');
+                statusBadge.style.cursor = 'pointer';
+                statusBadge.addEventListener('click', () => requestCorrection(record.id));
+            }
+            actionCell.appendChild(statusBadge);
+            tr.appendChild(actionCell);
+
+            // 상태에 따른 행 스타일
+            if (record.status === 'ABSENT') {
+                tr.classList.add('row-error');
+            }
+
+            return tr;
+        }
+
+        // 날짜 포맷팅
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+            const weekday = weekdays[date.getDay()];
+            return `${month}월 ${String(day).padStart(2, '0')}일 (${weekday})`;
+        }
+
+        // 시간 포맷팅
+        function formatTime(date) {
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+
+        // 근무 시간 계산
+        function calculateWorkTime(commuteAt, leaveAt) {
+            const start = new Date(commuteAt);
+            const end = new Date(leaveAt);
+            const diffMs = end - start;
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            return `${diffHours}h ${String(diffMinutes).padStart(2, '0')}m`;
+        }
+
+        // 페이지네이션 업데이트
+        function updatePagination(totalPages) {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            // 이전 버튼
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = '‹';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    loadAttendanceData();
+                }
+            });
+            pagination.appendChild(prevBtn);
+
+            // 페이지 번호
+            const pageNumbers = document.createElement('div');
+            pageNumbers.className = 'page-numbers';
+            
+            const maxVisible = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+            
+            if (endPage - startPage < maxVisible - 1) {
+                startPage = Math.max(1, endPage - maxVisible + 1);
+            }
+
+            if (startPage > 1) {
+                const firstBtn = document.createElement('button');
+                firstBtn.textContent = '1';
+                firstBtn.addEventListener('click', () => {
+                    currentPage = 1;
+                    loadAttendanceData();
+                });
+                pageNumbers.appendChild(firstBtn);
+                
+                if (startPage > 2) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.textContent = '...';
+                    ellipsis.style.padding = '8px';
+                    pageNumbers.appendChild(ellipsis);
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.textContent = i;
+                if (i === currentPage) {
+                    pageBtn.classList.add('active');
+                }
+                pageBtn.addEventListener('click', () => {
+                    currentPage = i;
+                    loadAttendanceData();
+                });
+                pageNumbers.appendChild(pageBtn);
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.textContent = '...';
+                    ellipsis.style.padding = '8px';
+                    pageNumbers.appendChild(ellipsis);
+                }
+                
+                const lastBtn = document.createElement('button');
+                lastBtn.textContent = totalPages;
+                lastBtn.addEventListener('click', () => {
+                    currentPage = totalPages;
+                    loadAttendanceData();
+                });
+                pageNumbers.appendChild(lastBtn);
+            }
+
+            pagination.appendChild(pageNumbers);
+
+            // 다음 버튼
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = '›';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    loadAttendanceData();
+                }
+            });
+            pagination.appendChild(nextBtn);
+        }
+
+        // 정정 요청
+        function requestCorrection(attendanceId) {
+            if (confirm('근태 정정을 요청하시겠습니까?')) {
+                // TODO: 정정 요청 API 호출
+                alert('정정 요청이 완료되었습니다.');
+                loadAttendanceData();
+            }
+        }
+
+        // 샘플 데이터 표시 (API가 없을 경우)
+        function displaySampleData() {
+            const sampleRecords = [
+                { workDate: '2025-12-01', commuteAt: '2025-12-01T08:58:00', leaveAt: '2025-12-01T18:05:00', status: 'ON_TIME', isCorrected: false },
+                { workDate: '2025-12-02', commuteAt: '2025-12-02T09:15:00', leaveAt: '2025-12-02T18:02:00', status: 'LATE', isCorrected: false },
+                { workDate: '2025-12-03', commuteAt: null, leaveAt: null, status: 'ABSENT', isCorrected: false },
+                { workDate: '2025-12-04', commuteAt: '2025-12-04T08:59:00', leaveAt: null, status: 'ON_TIME', isCorrected: false },
+                { workDate: '2025-12-05', commuteAt: '2025-12-05T09:00:00', leaveAt: '2025-12-05T20:30:00', status: 'ON_TIME', isCorrected: true },
+            ];
+
+            updateTable(sampleRecords.map(r => ({ ...r, id: Math.random() })));
+            updatePagination(2);
+        }
+    </script>
+</div>

@@ -1,0 +1,104 @@
+/* 공통 사이드바 스타일 */
+.sidebar {
+    width: 250px;
+    background: #23273c;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+.sidebar-inner {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding-top: 24px;
+}
+
+.sidebar-title {
+    padding: 0 0 16px 36px;
+    letter-spacing: -2px;
+    font-weight: bold;
+    color: #b3b3cd;
+    font-size: 20px;
+}
+
+.sidebar-logo-icon {
+    color: #4a69bd;
+    margin-right: 8px;
+}
+
+.sidebar-menu-wrapper {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.sidebar-menu {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 16px 36px;
+}
+
+.sidebar-section-title {
+    margin-top: 20px;
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 15px;
+    color: #ffffff;
+}
+
+.sidebar-link {
+    text-decoration: none;
+    color: #c9ccdd;
+    font-size: 15px;
+    display: block;
+    padding: 4px 0;
+}
+
+.sidebar-link:hover {
+    color: #ffffff;
+}
+
+.sidebar-menu li {
+    margin: 6px 0;
+    cursor: pointer;
+    transition: color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.sidebar-menu li a {
+    display: block;
+    padding: 8px 0;
+    text-decoration: none;
+    color: #c9ccdd;
+    font-size: 15px;
+    transition: color 0.2s;
+}
+
+.sidebar-menu li:hover a {
+    color: #fff;
+}
+
+.sidebar-menu li.selected {
+    color: #fff;
+    font-weight: bold;
+    background: rgba(255, 255, 255, 0.1);
+    margin-left: -36px;
+    padding: 8px 36px;
+    border-left: 4px solid #4a69bd;
+}
+
+.sidebar-menu li.selected a {
+    color: #fff;
+    font-weight: bold;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    background: #fff;
+    min-height: 80px;
+    padding: 15px 24px;
+    font-size: 13px;
+    color: #333;
+}
+

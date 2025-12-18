@@ -3,14 +3,15 @@
 <body>
 <!-- 출석(근태) 영역 전용 사이드바 메뉴: 디자인은 sidebar-shell 에서 관리 -->
 <ul th:fragment="menu">
-    <li th:classappend="${currentMenu} == 'work' ? ' selected' : ''">
-        <a th:href="@{/attendance}" class="sidebar-link">출퇴근</a>
+    <li class="sidebar-section-title">MY 근태</li>
+    <li th:classappend="${currentMenu} == 'commute' ? ' selected' : ''">
+        <a th:href="@{/api/attendance/commute}" class="sidebar-link">출퇴근</a>
     </li>
-    <li th:classappend="${currentMenu} == 'daily' ? ' selected' : ''">
-        <a th:href="@{/attendance/daily}" class="sidebar-link">일별 근태 조회</a>
+    <li th:classappend="${currentMenu} == 'monthly' ? ' selected' : ''">
+        <a th:href="@{/api/attendance/monthly}" class="sidebar-link">월별 근태 조회</a>
     </li>
-    <li th:classappend="${currentMenu} == 'history' ? ' selected' : ''">
-        <a th:href="@{/attendance/history}" class="sidebar-link">출퇴근 조회</a>
+    <li th:classappend="${currentMenu} == 'annual-leave' ? ' selected' : ''">
+        <a th:href="@{/attendance/annual-leave}" class="sidebar-link">내 연차 조회</a>
     </li>
 
     <li class="sidebar-section-title">휴가 신청</li>
