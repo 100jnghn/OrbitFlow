@@ -1,0 +1,26 @@
+package com.finalproj.orbitflow.approval.formTemplate.repository;
+
+import com.finalproj.orbitflow.approval.formTemplate.enums.AffectTag;
+import com.finalproj.orbitflow.approval.formTemplate.enums.FormTemplateStatus;
+
+import java.time.Instant;
+import java.util.List;
+
+/**
+ * Please explain the class!!!
+ *
+ * @author : Choi MinHyeok
+ * @filename : FormTemplateAllListView
+ * @since : 25. 12. 18. 목요일
+ **/
+
+
+public interface FormTemplateAllListView {
+    Long getFormTemplateId();
+    String getFormTemplateGroupName();
+    int getFormTemplateVersion();
+    int getUseDocument();
+    Instant getUpdatedAt();
+    FormTemplateStatus getFormTemplateStatus();
+    List<AffectTag> getAffectTags();
+}

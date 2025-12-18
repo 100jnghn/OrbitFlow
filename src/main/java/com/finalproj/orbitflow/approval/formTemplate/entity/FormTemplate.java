@@ -9,6 +9,7 @@ package com.finalproj.orbitflow.approval.formTemplate.entity;
  */
 
 
+import com.finalproj.orbitflow.approval.formTemplate.enums.AffectTag;
 import com.finalproj.orbitflow.approval.formTemplate.enums.FormTemplateStatus;
 import com.finalproj.orbitflow.approval.formTemplateGroup.entity.FormTemplateGroup;
 import com.finalproj.orbitflow.approval.templateCategory.entity.TemplateCategory;
@@ -19,6 +20,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Entity
 @Table(
@@ -60,7 +63,9 @@ public class FormTemplate extends BaseEntity {
     private FormTemplateStatus status;
 
     @Column(name = "affect_tags", columnDefinition = "json")
-    private String affectTags;
+    @Convert(converter = AffectTagListConverter.class)
+    private List<AffectTag> affectTags;
+
 
     @Column(name = "template_json", nullable = false, columnDefinition = "json")
     private String templateJson;
@@ -79,7 +84,7 @@ public class FormTemplate extends BaseEntity {
         this.templateJson = templateJson;
     }
 
-    public void updateAffectTags(String affectTags) {
+    public void updateAffectTags(List<AffectTag> affectTags) {
         this.affectTags = affectTags;
     }
 
