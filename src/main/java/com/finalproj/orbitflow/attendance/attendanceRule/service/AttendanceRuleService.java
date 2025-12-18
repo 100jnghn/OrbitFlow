@@ -141,13 +141,13 @@ public class AttendanceRuleService {
      * 6. 예외 규칙 수정
      */
     @Transactional
-    public EmpAttRuleResDto updateExceptionRule(SecurityUser admin, Long ruleId, EmpAttRuleUpdateReqDto request) {
+    public EmpAttRuleResDto updateExceptionRule(Long companyId, Long ruleId, EmpAttRuleUpdateReqDto request) {
         // 1. 수정할 규칙 존재 여부 확인
         EmployeeAttRule rule = employeeRuleRepository.findById(ruleId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 규칙입니다. ID: " + ruleId));
 
         // 2. [보안] 관리자의 회사 ID와 규칙의 회사 ID가 일치하는지 검증
-        if (!rule.getCompanyId().equals(admin.getCompanyId())) {
+        if (!rule.getCompanyId().equals(companyId)) {
             throw new SecurityException("해당 규칙을 수정할 권한이 없습니다. (타사 데이터)");
         }
 
