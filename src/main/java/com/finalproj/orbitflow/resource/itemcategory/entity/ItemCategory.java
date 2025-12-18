@@ -31,4 +31,9 @@ public class ItemCategory extends BaseEntity {
 
     @Column(nullable = false, length = 50)
     private String name;
+
+    // 이름 변경
+    public void update(String name) {
+        this.name = name;
+    }
 }

@@ -11,5 +11,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * @filename : ResourceStatusRepository
  * @since : 2025-12-16 오전 10:43 화요일
  */
-public interface ResourceStatusRepository extends JpaRepository<ResourceStatus, ResourceStatusCode> {
+public interface ResourceStatusRepository extends JpaRepository<ResourceStatus, Long> {
+    ResourceStatus findByResourceStatusCode(ResourceStatusCode resourceStatusCode);
 }

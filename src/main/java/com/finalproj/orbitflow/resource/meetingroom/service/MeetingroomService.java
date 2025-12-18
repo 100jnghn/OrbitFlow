@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.servlet.View;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -52,15 +51,15 @@ public class MeetingroomService {
     @Transactional
     public void insertMeetingroom(Long companyId, MeetingroomReqDto dto) {
 
-        Company company = companyRepository.getReferenceById(companyId); // Proxy 조회 (쿼리 절약)
-        ResourceStatus status = findResourceStatus(dto.getStatusCode());
+        Company company = companyRepository.getReferenceById(companyId);
+        ResourceStatus resourceStatus = findResourceStatus(dto.getStatusId());
 
         Meetingroom meetingroom = Meetingroom.builder()
                 .company(company)
                 .name(dto.getName())
                 .position(dto.getPosition())
                 .description(dto.getDescription())
-                .resourceStatus(status)
+                .resourceStatus(resourceStatus)
                 .build();
 
         meetingroomRepository.save(meetingroom);
@@ -70,7 +69,7 @@ public class MeetingroomService {
     public void updateMeetingroom(Long meetingroomId, MeetingroomReqDto dto) {
 
         Meetingroom meetingroom = findMeetingroomById(meetingroomId);
-        ResourceStatus status = findResourceStatus(dto.getStatusCode());
+        ResourceStatus status = findResourceStatus(dto.getStatusId());
 
         meetingroom.update(
                 dto.getName(),
@@ -85,8 +84,8 @@ public class MeetingroomService {
 
         Meetingroom meetingroom = findMeetingroomById(meetingroomId);
 
-        ResourceStatus deleteStatus = resourceStatusRepository.findById(ResourceStatusCode.DELETED)
-                .orElseThrow(() -> new IllegalStateException("삭제 상태 코드가 DB에 없습니다."));
+        ResourceStatus deleteStatus = resourceStatusRepository
+                .findByResourceStatusCode(ResourceStatusCode.DELETED);
 
         meetingroom.delete(deleteStatus);
     }
@@ -94,10 +93,12 @@ public class MeetingroomService {
 
     // result dto로 변환
     private MeetingroomResDto convertToResDto(Meetingroom meetingroom) {
+        Long statusId = null;
         String code = "ETC";
         String name = "기타";
 
         if (meetingroom.getResourceStatus() != null) {
+            statusId = meetingroom.getResourceStatus().getId();
             code = meetingroom.getResourceStatus().getResourceStatusCode().name();
             name = meetingroom.getResourceStatus().getResourceStatusCode().getDescription();
         }
@@ -107,23 +108,16 @@ public class MeetingroomService {
                 .name(meetingroom.getName())
                 .position(meetingroom.getPosition())
                 .description(meetingroom.getDescription())
+                .statusId(statusId)
                 .statusCode(code)
                 .statusName(name)
                 .build();
     }
 
     // 상태 코드 조회
-    private ResourceStatus findResourceStatus(String statusCodeStr) {
-        ResourceStatusCode statusCode;
+    private ResourceStatus findResourceStatus(Long statusId) {
 
-        try {
-            statusCode = ResourceStatusCode.valueOf(statusCodeStr);
-
-        } catch (IllegalArgumentException | NullPointerException e) {
-            throw new IllegalArgumentException("유효하지 않은 상태 코드입니다: " + statusCodeStr);
-        }
-
-        return resourceStatusRepository.findById(statusCode)
+        return resourceStatusRepository.findById(statusId)
                 .orElseThrow(() -> new IllegalArgumentException("지원하지 않는 자원 상태입니다."));
     }
 
