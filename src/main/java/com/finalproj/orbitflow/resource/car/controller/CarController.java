@@ -4,9 +4,7 @@ import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import com.finalproj.orbitflow.resource.car.dto.CarReqDto;
 import com.finalproj.orbitflow.resource.car.dto.CarResDto;
-import com.finalproj.orbitflow.resource.car.repository.CarRepository;
 import com.finalproj.orbitflow.resource.car.service.CarService;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,7 +36,7 @@ public class CarController {
         List<CarResDto> cars = carService.getCars(companyId);
 
         return ResponseEntity.ok().body(
-                new ResponseDto(HttpStatus.OK, "차량 목록 조회 성공", null)
+                new ResponseDto(HttpStatus.OK, "차량 목록 조회 성공", cars)
         );
     }
 
@@ -70,7 +68,7 @@ public class CarController {
     @PutMapping("/admin/cars/{carId}")
     public ResponseEntity<ResponseDto> updateCar(
             @PathVariable Long carId,
-            @RequestBody CarReqDto dto
+            @ModelAttribute CarReqDto dto
     ) {
         carService.updateCar(carId, dto);
 

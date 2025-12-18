@@ -12,4 +12,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * @since : 2025-12-16 오전 11:34 화요일
  */
 public interface ItemRepository extends JpaRepository<Item, Long> {
+    int countByItemCategory(ItemCategory itemCategory);
 }

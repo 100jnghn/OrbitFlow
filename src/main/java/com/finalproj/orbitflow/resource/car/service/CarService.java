@@ -10,11 +10,8 @@ import com.finalproj.orbitflow.resource.car.repository.CarRepository;
 import com.finalproj.orbitflow.resource.enums.ResourceStatusCode;
 import com.finalproj.orbitflow.resource.status.entity.ResourceStatus;
 import com.finalproj.orbitflow.resource.status.repository.ResourceStatusRepository;
-import jakarta.persistence.Table;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.boot.model.naming.IllegalIdentifierException;
-import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,18 +52,19 @@ public class CarService {
     @Transactional
     public void insertCar(Long companyId, CarReqDto dto) {
 
-        Company company = companyRepository.getOne(companyId);
-        ResourceStatus status = findResourceStatus(dto.getResourceStatusCode());
+        Company company = companyRepository.getReferenceById(companyId);
+        ResourceStatus resourceStatus = findResourceStatus(dto.getStatusId());
+
 
         // todo - 이미지 파일 저장 기능 추가
-        
+
         Car car = Car.builder()
                 .company(company)
                 .number(dto.getNumber())
                 .name(dto.getName())
                 .driverAge(dto.getDriverAge())
                 .description(dto.getDescription())
-                .resourceStatus(status)
+                .resourceStatus(resourceStatus)
                 // todo - 이미지 파일 추가
                 .build();
 
@@ -74,17 +72,14 @@ public class CarService {
     }
 
 
-
-
-
-
-
     // dto로 변환
     private CarResDto convertToResDto(Car car) {
+        Long statusId = null;
         String code = "ETC";
         String name = "기타";
 
         if (car.getResourceStatus() != null) {
+            statusId = car.getResourceStatus().getId();
             code = car.getResourceStatus().getResourceStatusCode().name();
             name = car.getResourceStatus().getResourceStatusCode().getDescription();
         }
@@ -103,6 +98,7 @@ public class CarService {
                 .name(car.getName())
                 .driverAge(car.getDriverAge())
                 .description(car.getDescription())
+                .statusId(statusId)
                 .statusCode(code)
                 .statusName(name)
                 .objectKey(objectKey)
@@ -114,7 +110,7 @@ public class CarService {
     public void updateCar(Long carId, CarReqDto dto) {
 
         Car car = findCarById(carId);
-        ResourceStatus status = findResourceStatus(dto.getResourceStatusCode());
+        ResourceStatus status = findResourceStatus(dto.getStatusId());
 
         // todo - 이미지 수정 로직 추가
         File imgFile = car.getFile();
@@ -134,24 +130,14 @@ public class CarService {
 
         Car car = findCarById(carId);
 
-        ResourceStatus deleteStatus = resourceStatusRepository.findById(ResourceStatusCode.DELETED)
-                .orElseThrow(() -> new IllegalStateException("삭제 코드가 없음"));
-
+        ResourceStatus deleteStatus = resourceStatusRepository.findByResourceStatusCode(ResourceStatusCode.DELETED);
         car.delete(deleteStatus);
     }
 
     // 상태 코드 조회
-    private ResourceStatus findResourceStatus(String statusCodeStr) {
-        ResourceStatusCode statusCode;
-
-        try {
-            statusCode = ResourceStatusCode.valueOf(statusCodeStr);
-
-        } catch (IllegalArgumentException | NullPointerException e) {
-            throw new IllegalArgumentException("유효하지 않은 상태 코드입니다: " + statusCodeStr);
-        }
-
-        return resourceStatusRepository.findById(statusCode)
+    private ResourceStatus findResourceStatus(Long statusId) {
+        log.info("Find resource status by id {}", statusId);
+        return resourceStatusRepository.findById(statusId)
                 .orElseThrow(() -> new IllegalArgumentException("지원하지 않는 자원 상태입니다."));
     }
 
