@@ -1,6 +1,5 @@
 package com.finalproj.orbitflow.resource.car.dto;
 
-import com.finalproj.orbitflow.resource.car.entity.Car;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,6 +24,7 @@ public class CarResDto {
     private Integer driverAge;
     private String description;
 
+    private Long statusId;
     private String statusCode;
     private String statusName;
 

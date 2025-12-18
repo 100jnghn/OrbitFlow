@@ -1,19 +1,33 @@
 package com.finalproj.orbitflow.approval.formTemplate.service;
 
+import com.finalproj.orbitflow.approval.formTemplate.dto.FormTemplateActiveListResDto;
+import com.finalproj.orbitflow.approval.formTemplate.dto.FormTemplateAllListResDto;
+import com.finalproj.orbitflow.approval.formTemplate.dto.FormTemplateDetailResDto;
 import com.finalproj.orbitflow.approval.formTemplate.dto.FormTemplateUpdateReqDto;
 import com.finalproj.orbitflow.approval.formTemplate.entity.FormTemplate;
+import com.finalproj.orbitflow.approval.formTemplate.enums.AffectTag;
 import com.finalproj.orbitflow.approval.formTemplate.enums.FormTemplateStatus;
+import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateAllListView;
+import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateListView;
 import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateRepository;
 import com.finalproj.orbitflow.approval.formTemplateGroup.entity.FormTemplateGroup;
 import com.finalproj.orbitflow.approval.formTemplateGroup.repository.FormTemplateGroupRepository;
 import com.finalproj.orbitflow.approval.templateCategory.entity.TemplateCategory;
 import com.finalproj.orbitflow.approval.templateCategory.enums.TemplateCategoryCode;
 import com.finalproj.orbitflow.approval.templateCategory.repository.TemplateCategoryRepository;
+import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import tools.jackson.databind.ObjectMapper;
+
+import java.util.List;
 
 /**
  * 결재 양식(FormTemplate)의 생명주기 전반을 관리하는 서비스 클래스.
@@ -47,6 +61,8 @@ public class FormTemplateService {
     private final FormTemplateRepository formTemplateRepository;
     private final FormTemplateGroupRepository formTemplateGroupRepository;
     private final TemplateCategoryRepository templateCategoryRepository;
+    private final ObjectMapper objectMapper;
+
 
     @Transactional
     public Long saveFormTemplate(
@@ -120,7 +136,7 @@ public class FormTemplateService {
 
     private int calculateNextVersion(Long templateGroupId) {
         return formTemplateRepository
-                .findMaxVersionByTemplateGroup_Id(templateGroupId)
+                .findMaxVersionByTemplateGroupId(templateGroupId)
                 .orElse(0) + 1;
     }
 
@@ -131,7 +147,7 @@ public class FormTemplateService {
             TemplateCategory category,
             String templateJson,
             String approvalRuleJson,
-            String affectTags
+            List<AffectTag> affectTags
     ) {
         FormTemplate template = FormTemplate.builder()
                 .company(group.getCompany())
@@ -141,7 +157,7 @@ public class FormTemplateService {
                 .status(FormTemplateStatus.DRAFT)
                 .templateJson(templateJson)
                 .approvalRuleJson(approvalRuleJson)
-                .affectTags(affectTags)
+                .affectTags(affectTags == null ? List.of() : affectTags)
                 .build();
 
         formTemplateRepository.save(template);
@@ -167,7 +183,8 @@ public class FormTemplateService {
         }
 
         if (reqDto.getTemplateJson() != null) {
-            formTemplate.updateTemplateJson(reqDto.getTemplateJson());
+
+            formTemplate.updateTemplateJson(objectMapper.writeValueAsString(reqDto.getTemplateJson()));
         }
 
         if (reqDto.getAffectTags() != null) {
@@ -175,13 +192,14 @@ public class FormTemplateService {
         }
     }
 
+    @Transactional
     public void updateApprovalRule(Long formTemplateId, Long companyId, FormTemplateUpdateReqDto reqDto) {
         FormTemplate formTemplate = findFormTemplate(formTemplateId);
 
         checkCompany(companyId, formTemplate);
 
         if (reqDto.getApprovalRuleJson() != null) {
-            formTemplate.updateApprovalRuleJson(reqDto.getApprovalRuleJson());
+            formTemplate.updateApprovalRuleJson(objectMapper.writeValueAsString(reqDto.getApprovalRuleJson()));
         }
     }
 
@@ -241,4 +259,45 @@ public class FormTemplateService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "사용자의 소속(회사) 와 문서 양식의 주인(회사)가 일치하지 않습니다.");
         }
     }
+
+    public List<FormTemplateActiveListResDto> getActiveFormTemplates(Long companyId, String keyword) {
+        String searchKeyword = (keyword == null) ? "" : keyword;
+
+
+        List<FormTemplateListView> views = formTemplateRepository.findWithActiveTemplateAndCompanyAndKeyword(companyId, searchKeyword);
+        return views.stream()
+                .map(v -> new FormTemplateActiveListResDto(v.getId(), v.getVersion(), v.getName()))
+                .toList();
+    }
+
+    public FormTemplateDetailResDto getDetailFormTemplate(Long formTemplateId, Long companyId) {
+        FormTemplate formTemplate = findFormTemplate(formTemplateId);
+
+        checkCompany(companyId, formTemplate);
+
+        return FormTemplateDetailResDto.from(formTemplate, objectMapper);
+    }
+
+    public Page<FormTemplateAllListResDto> allFormTemplate(
+            Long companyId,
+            int size,
+            int offset,
+            String keyword
+    ) {
+        Pageable pageable = PageRequest.of(
+                offset,
+                size,
+                Sort.by(Sort.Direction.DESC, "updatedAt")
+        );
+
+        Page<FormTemplateAllListView> page =
+                formTemplateRepository.findAllWithDocumentCount(
+                        companyId,
+                        keyword,
+                        pageable
+                );
+
+        return page.map(FormTemplateAllListResDto::from);
+    }
+
 }

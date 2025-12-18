@@ -1,6 +1,7 @@
 package com.finalproj.orbitflow.global.security;
 
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
+import com.finalproj.orbitflow.hr.employee.enums.EmployeeRole;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
@@ -24,16 +25,20 @@ public class SecurityUser implements UserDetails {
 
     private final Long employeeId;
     private final Long companyId;
+    private final String name;
     private final String email;
     private final String password;
     private final EmployeeStatus status;
+    private final EmployeeRole role;
 
     public SecurityUser(Employee employee) {
         this.employeeId = employee.getId();
         this.companyId = employee.getCompany().getId();
+        this.name = employee.getName();
         this.email = employee.getEmail();
         this.password = employee.getPassword();
         this.status = employee.getStatus();
+        this.role = employee.getRole();
     }
 
     // 로그인 ID
@@ -45,7 +50,7 @@ public class SecurityUser implements UserDetails {
     // 권한
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override

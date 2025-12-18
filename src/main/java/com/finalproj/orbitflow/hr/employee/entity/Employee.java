@@ -2,10 +2,7 @@ package com.finalproj.orbitflow.hr.employee.entity;
 
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
-import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
-import com.finalproj.orbitflow.hr.employee.enums.EmploymentType;
-import com.finalproj.orbitflow.hr.employee.enums.Gender;
-import com.finalproj.orbitflow.hr.employee.enums.WorkStatus;
+import com.finalproj.orbitflow.hr.employee.enums.*;
 import com.finalproj.orbitflow.hr.organization.entity.Organization;
 import com.finalproj.orbitflow.hr.position.entity.Position;
 import com.finalproj.orbitflow.hr.rank.entity.HrRank;
@@ -116,6 +113,13 @@ public class Employee extends BaseEntity {
     @Column(name = "work_status", nullable = false, length = 20)
     private WorkStatus workStatus;
 
+    /* ==============================
+       역할
+       ============================== */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private EmployeeRole role;
+
 
     /**
      * 대표 관리자 생성
@@ -140,7 +144,14 @@ public class Employee extends BaseEntity {
         employee.status = EmployeeStatus.ACTIVE;
         employee.workStatus = WorkStatus.OFF_WORK;
 
+        employee.role = EmployeeRole.COMPANY_ADMIN;
+
         return employee;
+    }
+
+
+    public void updateWorkStatus(WorkStatus workStatus) {
+        this.workStatus = workStatus;
     }
 
 }

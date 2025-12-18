@@ -9,10 +9,10 @@ import com.finalproj.orbitflow.approval.formTemplateGroup.repository.FormTemplat
 import com.finalproj.orbitflow.approval.formTemplateGroup.repository.FormTemplateGroupRepository;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -28,6 +28,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class FormTemplateGroupService {
     private final FormTemplateGroupRepository formTemplateGroupRepository;
     private final CompanyRepository companyRepository;
@@ -36,14 +37,10 @@ public class FormTemplateGroupService {
             Long companyId,
             String keyword
     ) {
-        List<FormTemplateGroupListView> views;
-        if (keyword == null || keyword.isBlank()) {
-            views = formTemplateGroupRepository
-                    .findTop20ByCompany_IdOrderByNameAsc(companyId);
-        } else {
-            views = formTemplateGroupRepository
-                    .searchByCompanyAndKeyword(companyId, keyword);
-        }
+        String searchKeyword = (keyword == null) ? "" : keyword;
+
+        List<FormTemplateGroupListView> views = formTemplateGroupRepository
+                    .findByCompanyAndKeyword(companyId, searchKeyword);
 
         return views.stream()
                 .map(v -> new FormTemplateGroupListResDto(v.getId(), v.getName()))
@@ -98,5 +95,4 @@ public class FormTemplateGroupService {
             else target.deactivate();
         }
     }
-
 }

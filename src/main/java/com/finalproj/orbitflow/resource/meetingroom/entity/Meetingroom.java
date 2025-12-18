@@ -7,11 +7,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 /**
- * Please explain the class!!!
- *
- * @author : 종훈
- * @filename : Meetingroom
- * @since : 2025-12-16 오전 10:48 화요일
+ * Meetingroom Entity
+ * * @author : 종훈
+ * @since : 2025-12-16
  */
 @Entity
 @Table(name = "meetingroom")
@@ -42,8 +40,6 @@ public class Meetingroom extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "resource_status_id")
     private ResourceStatus resourceStatus;
-
-
 
     public void update(String name, String position, String description, ResourceStatus resourceStatus) {
         this.name = name;

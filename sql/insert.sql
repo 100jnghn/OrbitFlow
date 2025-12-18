@@ -5,8 +5,8 @@ use orbitflow;
 ===================================================== */
 INSERT INTO company
 (name, business_number, address, representative_name, representative_contact)
-VALUES ('OrbitFlow', '123-45-67890', '서울 강남구 테헤란로 123', '홍대표', '010-1111-2222'),
-       ('NovaWorks', '987-65-43210', '서울 서초구 서초대로 77', '김대표', '010-2222-3333');
+VALUES ('OrbitFlow', '1234567890', '서울 강남구 테헤란로 123', '홍대표', '01011112222'),
+       ('NovaWorks', '9876543210', '서울 서초구 서초대로 77', '김대표', '01022223333');
 
 
 /* =====================================================
@@ -110,7 +110,7 @@ VALUES
    ORG_POSITION_USAGE (조직-직책 정책)
 ===================================================== */
 INSERT INTO org_position_usage
-(company_id, org_id, position_id, is_enabled)
+    (company_id, org_id, position_id, is_enabled)
 VALUES
 -- OrbitFlow (company_id = 1)
 (1, 2, 1, TRUE),   -- 플랫폼본부 → 플랫폼본부장
@@ -127,7 +127,8 @@ VALUES
 (2, 10, 10, TRUE), -- 기술본부 → 기술본부장
 (2, 11, 11, TRUE), -- 플랫폼부 → 플랫폼부장
 (2, 12, 12, TRUE), -- AI팀 → AI팀장
-(2, 12, 13, TRUE); -- AI팀 → AI팀원
+(2, 12, 13, TRUE);
+-- AI팀 → AI팀원
 
 
 /* =====================================================
@@ -135,24 +136,24 @@ VALUES
 ===================================================== */
 INSERT INTO employee
 (company_id, employee_no, internal_phone, phone, org_id, hr_rank_id, position_id,
- name, email, password, gender, birth_date, employment_type, status, work_status)
+ name, email, password, gender, birth_date, employment_type, status, work_status, role)
 VALUES
 -- OrbitFlow
 (1, 'OF-001', '1001', '01012345678', 6, 5, 4, '홍길동', 'test1@test.com',
- '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK', 'MALE', '1990-01-01', 'REGULAR', 'ACTIVE', 'WORKING'),
+ '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK', 'MALE', '1990-01-01', 'REGULAR', 'ACTIVE', 'WORKING', 'COMPANY_ADMIN'),
 
 (1, 'OF-002', '1002', '01074108529', 6, 2, 7, '김철수', 'test2@test.com',
- '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK', 'MALE', '1996-03-03', 'REGULAR', 'ACTIVE', 'AWAY'),
+ '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK', 'MALE', '1996-03-03', 'REGULAR', 'ACTIVE', 'AWAY', 'ADMIN'),
 
 (1, 'OF-003', '1003', '01098765432', 8, 3, 6, '이영희', 'test3@test.com',
- '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK', 'FEMALE', '1994-06-06', 'REGULAR', 'ACTIVE', 'ON_LEAVE'),
+ '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK', 'FEMALE', '1994-06-06', 'REGULAR', 'ACTIVE', 'ON_LEAVE', 'EMPLOYEE'),
 
 -- NovaWorks
 (2, 'NW-001', '2001', '01055555555', 12, 7, 12, '박민수', 'test4@test.com',
- '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK', 'MALE', '1992-02-02', 'REGULAR', 'ACTIVE', 'WORKING'),
+ '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK', 'MALE', '1992-02-02', 'REGULAR', 'ACTIVE', 'WORKING', 'COMPANY_ADMIN'),
 
 (2, 'NW-002', '2002', '01099999999', 12, 6, 13, '정수빈', 'test5@test.com',
- '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK', 'FEMALE', '1999-09-09', 'NON_REGULAR', 'TEMP', 'OFF_WORK');
+ '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK', 'FEMALE', '1999-09-09', 'NON_REGULAR', 'TEMP', 'OFF_WORK', 'ADMIN');
 
 
 /* =====================================================
@@ -269,99 +270,102 @@ VALUES (1, '휴가 신청', '연차/반차/병가 신청', 1),
 INSERT INTO form_template
 (company_id, template_group_id, version, template_category_id,
  affect_tags, template_json, approval_rule_json, status)
-VALUES (1, 1, 1, 1, JSON_ARRAY('attendance'),
-        JSON_OBJECT('fields', JSON_ARRAY(
-                JSON_OBJECT('key', 'start_date'),
-                JSON_OBJECT('key', 'end_date'),
-                JSON_OBJECT('key', 'leave_type')
-                              )),
-        JSON_OBJECT('lines', JSON_ARRAY(
-                JSON_OBJECT('order', 1, 'approverType', 'MANAGER'),
-                JSON_OBJECT('order', 2, 'approverType', 'ADMIN')
-                             )), 'ACTIVE'),
+VALUES
+-- 회사 1
+(1, 1, 1, 1, JSON_ARRAY('ATTENDANCE'),
+ JSON_OBJECT('fields', JSON_ARRAY(
+         JSON_OBJECT('key', 'start_date'),
+         JSON_OBJECT('key', 'end_date'),
+         JSON_OBJECT('key', 'leave_type')
+                       )),
+ JSON_OBJECT('lines', JSON_ARRAY(
+         JSON_OBJECT('order', 1, 'approverType', 'MANAGER'),
+         JSON_OBJECT('order', 2, 'approverType', 'ADMIN')
+                      )), 'ACTIVE'),
 
-       (1, 2, 1, 2, JSON_ARRAY('schedule'),
-        JSON_OBJECT('fields', JSON_ARRAY(
-                JSON_OBJECT('key', 'destination'),
-                JSON_OBJECT('key', 'period')
-                              )),
-        JSON_OBJECT('lines', JSON_ARRAY(
-                JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
-                             )), 'ACTIVE'),
+(1, 2, 1, 2, JSON_ARRAY('SCHEDULE'),
+ JSON_OBJECT('fields', JSON_ARRAY(
+         JSON_OBJECT('key', 'destination'),
+         JSON_OBJECT('key', 'period')
+                       )),
+ JSON_OBJECT('lines', JSON_ARRAY(
+         JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
+                      )), 'ACTIVE'),
 
-       (1, 3, 1, 1, JSON_ARRAY('attendance'),
-        JSON_OBJECT('fields', JSON_ARRAY(
-                JSON_OBJECT('key', 'date'),
-                JSON_OBJECT('key', 'hours')
-                              )),
-        JSON_OBJECT('lines', JSON_ARRAY(
-                JSON_OBJECT('order', 1, 'approverType', 'MANAGER')
-                             )), 'ACTIVE'),
+(1, 3, 1, 1, JSON_ARRAY('ATTENDANCE'),
+ JSON_OBJECT('fields', JSON_ARRAY(
+         JSON_OBJECT('key', 'date'),
+         JSON_OBJECT('key', 'hours')
+                       )),
+ JSON_OBJECT('lines', JSON_ARRAY(
+         JSON_OBJECT('order', 1, 'approverType', 'MANAGER')
+                      )), 'ACTIVE'),
 
-       (1, 4, 1, 3, NULL,
-        JSON_OBJECT('fields', JSON_ARRAY(
-                JSON_OBJECT('key', 'amount'),
-                JSON_OBJECT('key', 'reason')
-                              )),
-        JSON_OBJECT('lines', JSON_ARRAY(
-                JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
-                             )), 'ACTIVE'),
+(1, 4, 1, 3, NULL,
+ JSON_OBJECT('fields', JSON_ARRAY(
+         JSON_OBJECT('key', 'amount'),
+         JSON_OBJECT('key', 'reason')
+                       )),
+ JSON_OBJECT('lines', JSON_ARRAY(
+         JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
+                      )), 'ACTIVE'),
 
-       (1, 5, 1, 3, NULL,
-        JSON_OBJECT('fields', JSON_ARRAY(
-                JSON_OBJECT('key', 'item'),
-                JSON_OBJECT('key', 'price')
-                              )),
-        JSON_OBJECT('lines', JSON_ARRAY(
-                JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
-                             )), 'ACTIVE'),
+(1, 5, 1, 3, NULL,
+ JSON_OBJECT('fields', JSON_ARRAY(
+         JSON_OBJECT('key', 'item'),
+         JSON_OBJECT('key', 'price')
+                       )),
+ JSON_OBJECT('lines', JSON_ARRAY(
+         JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
+                      )), 'ACTIVE'),
 
-       (2, 6, 1, 1, JSON_ARRAY('attendance'),
-        JSON_OBJECT('fields', JSON_ARRAY(
-                JSON_OBJECT('key', 'start_date'),
-                JSON_OBJECT('key', 'end_date'),
-                JSON_OBJECT('key', 'leave_type')
-                              )),
-        JSON_OBJECT('lines', JSON_ARRAY(
-                JSON_OBJECT('order', 1, 'approverType', 'MANAGER'),
-                JSON_OBJECT('order', 2, 'approverType', 'ADMIN')
-                             )), 'ACTIVE'),
+-- 회사 2
+(2, 6, 1, 1, JSON_ARRAY('ATTENDANCE'),
+ JSON_OBJECT('fields', JSON_ARRAY(
+         JSON_OBJECT('key', 'start_date'),
+         JSON_OBJECT('key', 'end_date'),
+         JSON_OBJECT('key', 'leave_type')
+                       )),
+ JSON_OBJECT('lines', JSON_ARRAY(
+         JSON_OBJECT('order', 1, 'approverType', 'MANAGER'),
+         JSON_OBJECT('order', 2, 'approverType', 'ADMIN')
+                      )), 'ACTIVE'),
 
-       (2, 7, 1, 2, JSON_ARRAY('schedule'),
-        JSON_OBJECT('fields', JSON_ARRAY(
-                JSON_OBJECT('key', 'destination'),
-                JSON_OBJECT('key', 'period')
-                              )),
-        JSON_OBJECT('lines', JSON_ARRAY(
-                JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
-                             )), 'ACTIVE'),
+(2, 7, 1, 2, JSON_ARRAY('SCHEDULE'),
+ JSON_OBJECT('fields', JSON_ARRAY(
+         JSON_OBJECT('key', 'destination'),
+         JSON_OBJECT('key', 'period')
+                       )),
+ JSON_OBJECT('lines', JSON_ARRAY(
+         JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
+                      )), 'ACTIVE'),
 
-       (2, 8, 1, 1, JSON_ARRAY('attendance'),
-        JSON_OBJECT('fields', JSON_ARRAY(
-                JSON_OBJECT('key', 'date'),
-                JSON_OBJECT('key', 'hours')
-                              )),
-        JSON_OBJECT('lines', JSON_ARRAY(
-                JSON_OBJECT('order', 1, 'approverType', 'MANAGER')
-                             )), 'ACTIVE'),
+(2, 8, 1, 1, JSON_ARRAY('ATTENDANCE'),
+ JSON_OBJECT('fields', JSON_ARRAY(
+         JSON_OBJECT('key', 'date'),
+         JSON_OBJECT('key', 'hours')
+                       )),
+ JSON_OBJECT('lines', JSON_ARRAY(
+         JSON_OBJECT('order', 1, 'approverType', 'MANAGER')
+                      )), 'ACTIVE'),
 
-       (2, 9, 1, 3, NULL,
-        JSON_OBJECT('fields', JSON_ARRAY(
-                JSON_OBJECT('key', 'amount'),
-                JSON_OBJECT('key', 'reason')
-                              )),
-        JSON_OBJECT('lines', JSON_ARRAY(
-                JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
-                             )), 'ACTIVE'),
+(2, 9, 1, 3, NULL,
+ JSON_OBJECT('fields', JSON_ARRAY(
+         JSON_OBJECT('key', 'amount'),
+         JSON_OBJECT('key', 'reason')
+                       )),
+ JSON_OBJECT('lines', JSON_ARRAY(
+         JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
+                      )), 'ACTIVE'),
 
-       (2, 10, 1, 3, NULL,
-        JSON_OBJECT('fields', JSON_ARRAY(
-                JSON_OBJECT('key', 'item'),
-                JSON_OBJECT('key', 'price')
-                              )),
-        JSON_OBJECT('lines', JSON_ARRAY(
-                JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
-                             )), 'ACTIVE');
+(2, 10, 1, 3, NULL,
+ JSON_OBJECT('fields', JSON_ARRAY(
+         JSON_OBJECT('key', 'item'),
+         JSON_OBJECT('key', 'price')
+                       )),
+ JSON_OBJECT('lines', JSON_ARRAY(
+         JSON_OBJECT('order', 1, 'approverType', 'ADMIN')
+                      )), 'ACTIVE');
 
 
 /* =========================================================
@@ -480,8 +484,6 @@ VALUES
 (4, 2, '2025-02-25', '2025-02-25', 1.0, 1, '연차', 6, 'APPROVED');
 
 
-
-
 /* =========================================================
  * FILE (10)
  * ========================================================= */
@@ -499,7 +501,6 @@ VALUES (1, 'docs/leave.pdf', '연차신청서.pdf', 'f001.pdf', 'application/pdf
        (2, 'docs2/overtime.pdf', '야근신청서.pdf', 'f103.pdf', 'application/pdf', 51200, 5),
        (2, 'docs2/expense.pdf', '정산서.pdf', 'f104.pdf', 'application/pdf', 102400, 4),
        (2, 'docs2/laptop.pdf', '구매요청서.pdf', 'f105.pdf', 'application/pdf', 307200, 5);
-
 
 
 /* =========================================================
@@ -548,8 +549,8 @@ INSERT INTO employee_signature
     (company_id, employee_id, file_id, is_active)
 VALUES (1, 1, 11, TRUE), -- 홍길동 서명
        (1, 2, 12, TRUE), -- 김철수 서명
-       (1, 3, 13, TRUE),  -- 이영희 서명
-       (2, 4, 14, TRUE),  -- 박민수 서명
+       (1, 3, 13, TRUE), -- 이영희 서명
+       (2, 4, 14, TRUE), -- 박민수 서명
        (2, 5, 15, TRUE);
 -- 정수빈 서명
 
@@ -574,70 +575,87 @@ VALUES
 INSERT INTO board_category
 (company_id, organization_id, board_name, board_type, is_activated, comment_activated)
 VALUES
-    (1, 8,  '인사팀 공지사항',        'NOTICE', 1, 1),
-    (1, 1,  '전사 자유 게시판',        'FREE',   1, 1),
-    (1, 3,  '경영지원본부 자료실',     'NOTICE', 1, 0),
-    (1, 8,  '주간 업무 공유',          'FREE',   1, 1),
-    (1, 1,  '경조사 게시판',          'NOTICE', 1, 1),
+    -- 회사 1 : 공용 게시판
+    (1, NULL, '전사 공지사항', 'NOTICE', 1, 1),
+    (1, NULL, '자유 게시판', 'FREE', 1, 1),
+    (1, NULL, '전사 자료실', 'FREE', 1, 0),
+    (1, NULL, '주간 업무 공유', 'FREE', 1, 1),
+    (1, NULL, '경조사 게시판', 'NOTICE', 1, 1),
+    -- 회사 1 : 조직 게시판
+    (1, 8, '인사팀 게시판', 'FREE', 1, 1),
+    (1, 6, '백엔드팀 게시판', 'FREE', 1, 1),
 
-    (2, 12, 'AI팀 공지',              'NOTICE', 1, 1),
-    (2, 9,  '전사 건의 게시판',        'FREE',   1, 0),
-    (2, 10, '기술본부 Q&A',            'FREE',   1, 1),
-    (2, 9,  '운영 매뉴얼',             'NOTICE', 1, 0),
-    (2, 12, 'AI 프로젝트 자료실',      'NOTICE', 1, 0);
+    -- 회사 2 : 공용 게시판
+    (2, NULL, '전사 공지사항', 'NOTICE', 1, 1),
+    (2, NULL, '전사 건의 게시판', 'FREE', 1, 0),
+    (2, NULL, '기술 Q&A', 'FREE', 1, 1),
+    (2, NULL, '운영 매뉴얼', 'NOTICE', 1, 0),
+    (2, NULL, '전사 자료실', 'NOTICE', 1, 0),
+    -- 회사 2 : 조직 게시판
+    (2, 12, 'AI팀 게시판', 'FREE', 1, 1),
+    (2, 11, '플랫폼부 게시판', 'FREE', 1, 1);
 
 -- board
-INSERT INTO board
-(board_category_id, employee_id, board_title, board_content, view_count, file_id)
+INSERT INTO board (board_category_id, employee_id, board_title, board_content, view_count, file_id)
 VALUES
-    (1, 1, '팀장 공지: 시스템 점검 안내', '내일 새벽 2시부터 4시까지 정기 점검이 있습니다.', 530, NULL),
-    (2, 2, '주말 영화 추천 요청',        '액션/SF 장르 추천 부탁드립니다.',              125, NULL),
-    (5, 1, '[경조사] 백엔드팀 결혼 소식', '결혼을 축하해주세요.',                        880, NULL),
-    (4, 3, '이영희 주간 보고서',          '주간 업무 보고서입니다.',                     20,  4),
-    (2, 2, '회사 근처 맛집 공유',         '점심 맛집 추천합니다.',                       450, NULL),
+    -- 회사 1 : 공용
+    (1, 1, '공지: 시스템 점검 안내', '내일 새벽 2시부터 4시까지 전사 시스템 점검이 예정되어 있습니다.', 530, NULL),
+    (2, 2, '주말 영화 추천 요청', '주말에 볼 만한 영화 추천 부탁드립니다.', 125, NULL),
+    (5, 1, '직원 결혼 소식', '이번 달 우리 회사 직원 결혼 소식입니다. 많은 축하 부탁드립니다.', 880, NULL),
+    (4, 3, '이번 주 업무 공유', '각 팀별 이번 주 주요 업무 내용을 공유해주세요.', 20, 4),
+    (2, 2, '회사 근처 맛집 공유', '회사 근처 점심 맛집 리스트 공유합니다.', 450, NULL),
+    -- 회사 1: 조직
+    (6, 4, '2025년 인사 평가 일정 안내', '상반기 인사 평가 일정 공유드립니다.', 120, NULL),
+    (6, 4, '연차 사용 가이드', '연차 사용 기준 및 프로세스 안내', 95, 6),
+    (7, 5, 'API 성능 개선 논의', 'DB 인덱스 개선 관련 논의합니다.', 80, NULL),
+    (7, 5, '배포 자동화 제안', 'CI/CD 개선 제안서 공유', 60, 8),
 
-    (6, 4, '[AI팀 공지] KPI 발표',        '10월 KPI 공유',                               150, 6),
-    (7, 5, '경영진에게 바라는 점',        '식대 지원 확대 요청',                         300, NULL),
-    (8, 4, 'API 성능 최적화 문의',        'API 지연 관련 질문',                          80,  NULL),
-    (10,5, '머신러닝 학습 가이드',        'Ver 1.0',                                     50,  8),
-    (7, 4, '휴게 공간 개선 요청',         '의자 교체 요청',                              210, NULL);
+    -- 회사 2: 공용
+    (8, 4, '공지: 서버 점검 안내', '금주 토요일 새벽 서버 점검이 진행될 예정입니다.', 410, NULL),
+    (9, 5, '복지 제도 개선 제안', '식대 및 복지 포인트 확대를 제안합니다.', 300, NULL),
+    (10, 4, 'API 응답 속도 관련 질문', '특정 API 호출 시 지연이 발생하는 원인이 궁금합니다.', 80, NULL),
+    (11, 5, '신규 직원 온보딩 매뉴얼', '신규 입사자 온보딩 절차 문서입니다.', 50, 8),
+    (9, 4, '사무실 환경 개선 요청', '회의실 예약 시스템 개선이 필요합니다.', 210, NULL),
+    -- 회사 2 : 조직
+    (13, 4, '모델 성능 리포트', '12월 모델 정확도 리포트 공유', 150, NULL),
+    (13, 4, '데이터 전처리 기준', '전처리 표준 가이드 공유', 90, NULL),
+    (14, 5, '서버 증설 계획', '트래픽 증가 대응 서버 증설 계획', 110, NULL),
+    (14, 5, '장애 대응 프로세스', '플랫폼 장애 대응 절차 정리', 70, NULL);
 
 -- board_permission
 INSERT INTO board_permission
-(employee_id, board_category_id)
-VALUES
-    (2, 1),
-    (1, 3),
-    (3, 2),
-    (1, 4),
-    (2, 5),
+    (employee_id, board_category_id)
+VALUES (2, 1),
+       (1, 3),
+       (3, 2),
+       (1, 4),
+       (2, 5),
 
-    (4, 6),
-    (5, 7),
-    (4, 8),
-    (5, 9),
-    (4, 10);
+       (4, 6),
+       (5, 7),
+       (4, 8),
+       (5, 9),
+       (4, 10);
 
 -- comment
 INSERT INTO message
-(company_id, employee_id, message_title, message_content, file_id)
-VALUES
-    (1, 1, '회의 자료 요청',     '회의 자료를 오늘 오후 5시까지 보내주세요.', NULL),
-    (1, 2, '휴가 승인 요청',     '내일 오전 반차 승인 부탁드립니다.',          NULL),
-    (1, 3, '부서 이동 문의',     '인사팀 TO 여부 문의드립니다.',               NULL),
-    (1, 1, '회식 장소 추천',     '금요일 회식 장소 추천 부탁드립니다.',        NULL),
-    (1, 2, '커피 쿠폰 전달',     '팀원들에게 커피 쿠폰 전달드립니다.',         NULL),
+    (company_id, employee_id, message_title, message_content, file_id)
+VALUES (1, 1, '회의 자료 요청', '회의 자료를 오늘 오후 5시까지 보내주세요.', NULL),
+       (1, 2, '휴가 승인 요청', '내일 오전 반차 승인 부탁드립니다.', NULL),
+       (1, 3, '부서 이동 문의', '인사팀 TO 여부 문의드립니다.', NULL),
+       (1, 1, '회식 장소 추천', '금요일 회식 장소 추천 부탁드립니다.', NULL),
+       (1, 2, '커피 쿠폰 전달', '팀원들에게 커피 쿠폰 전달드립니다.', NULL),
 
-    (2, 4, '신규 프로젝트 안내', 'AI 프로젝트 착수 안내드립니다.',             6),
-    (2, 5, '사원증 재발급',      '사원증 재발급 요청드립니다.',                NULL),
-    (2, 4, '주간 보고 요청',     '월요일까지 주간 보고 제출 바랍니다.',         NULL),
-    (2, 5, '휴게실 문의',        '냉장고 사용 규정 문의드립니다.',              NULL),
-    (2, 4, '파일 암호 전달',     '첨부 파일 암호 전달드립니다.',               7);
+       (2, 4, '신규 프로젝트 안내', 'AI 프로젝트 착수 안내드립니다.', 6),
+       (2, 5, '사원증 재발급', '사원증 재발급 요청드립니다.', NULL),
+       (2, 4, '주간 보고 요청', '월요일까지 주간 보고 제출 바랍니다.', NULL),
+       (2, 5, '휴게실 문의', '냉장고 사용 규정 문의드립니다.', NULL),
+       (2, 4, '파일 암호 전달', '첨부 파일 암호 전달드립니다.', 7);
 
 
 -- message
 INSERT INTO message
-(company_id, employee_id, message_title, message_content, file_id)
+    (company_id, employee_id, message_title, message_content, file_id)
 VALUES (1, 1, '회의 자료 요청', '회의 자료를 오늘 오후 5시까지 보내주세요.', NULL),
        (1, 2, '휴가 승인 요청', '내일 오전 반차 승인 부탁드립니다.', NULL),
        (1, 3, '부서 이동 문의', '인사팀 TO 여부 문의드립니다.', NULL),
@@ -652,7 +670,7 @@ VALUES (1, 1, '회의 자료 요청', '회의 자료를 오늘 오후 5시까지
 
 -- message_recipient
 INSERT INTO message_recipient
-(company_id, message_id, employee_id, is_read, read_at)
+    (company_id, message_id, employee_id, is_read, read_at)
 VALUES (1, 1, 2, 0, NULL),
        (1, 2, 1, 1, NOW()),
        (1, 3, 1, 0, NULL),
@@ -696,45 +714,46 @@ VALUES ('PENDING', '승인 대기'),
 -- 3. ITEM CATEGORY (Company 1)
 -- =========================================================
 INSERT INTO item_category (company_id, name)
-VALUES (1, '카메라'),      -- id = 1
-       (1, '모니터'),      -- id = 2
-       (1, '노트북'),      -- id = 3
-       (1, '카드 단말기'); -- id = 4
+VALUES (1, '카메라'), -- id = 1
+       (1, '모니터'), -- id = 2
+       (1, '노트북'), -- id = 3
+       (1, '카드 단말기');
+-- id = 4
 
 -- =========================================================
 -- 4. MEETING ROOM (Company 1)
 -- =========================================================
 INSERT INTO meetingroom
-(company_id, name, position, description, resource_status_id)
-VALUES
-    (1, '대회의실 A', '본관 3층 301호', '최대 20인 수용 가능, 빔프로젝터 및 화상회의 시스템 완비', 1), -- AVAILABLE
-    (1, '소회의실 1', '본관 3층 305호', '6인용 테이블, 화이트보드 있음', 1), -- AVAILABLE
-    (1, '집중 회의실', '별관 2층 202호', '방음 시설 완비, 현재 마이크 장비 점검 중', 2), -- INSPECTION
-    (1, '크리에이티브 룸', '본관 4층 로비 옆', '빈백 소파, 대형 모니터, 브레인스토밍 전용', 1), -- AVAILABLE
-    (1, 'VIP 접견실', '본관 10층 CEO실 옆', '내부 인테리어 공사로 인해 당분간 사용 불가', 3); -- UNAVAILABLE
+    (company_id, name, position, description, resource_status_id)
+VALUES (1, '대회의실 A', '본관 3층 301호', '최대 20인 수용 가능, 빔프로젝터 및 화상회의 시스템 완비', 1), -- AVAILABLE
+       (1, '소회의실 1', '본관 3층 305호', '6인용 테이블, 화이트보드 있음', 1),                 -- AVAILABLE
+       (1, '집중 회의실', '별관 2층 202호', '방음 시설 완비, 현재 마이크 장비 점검 중', 2),          -- INSPECTION
+       (1, '크리에이티브 룸', '본관 4층 로비 옆', '빈백 소파, 대형 모니터, 브레인스토밍 전용', 1),        -- AVAILABLE
+       (1, 'VIP 접견실', '본관 10층 CEO실 옆', '내부 인테리어 공사로 인해 당분간 사용 불가', 3);
+-- UNAVAILABLE
 
 -- =========================================================
 -- 5. CAR (Company 1)
 -- =========================================================
 INSERT INTO car
 (company_id, number, name, driver_age, description, resource_status_id, file_id)
-VALUES
-    (1, '12가 3456', '그랜저 GN7', 26, '임원 및 외부 미팅용 법인 차량', 1, NULL), -- AVAILABLE
-    (1, '78나 9012', '카니발 하이리무진', 26, '팀 워크샵 및 다인원 이동용 (9인승)', 1, NULL), -- AVAILABLE
-    (1, '34다 5678', '아반떼 CN7', 21, '근거리 업무 및 영업용 차량', 2, NULL), -- INSPECTION
-    (1, '90라 1234', '제네시스 G80', 30, 'VIP 의전용, 사용 전 비서실 문의 필수', 3, NULL), -- UNAVAILABLE
-    (1, '56마 7890', '아이오닉 5', 21, '친환경 전기차, 충전 카드 차량 내 비치', 1, NULL); -- AVAILABLE
+VALUES (1, '12가 3456', '그랜저 GN7', 26, '임원 및 외부 미팅용 법인 차량', 1, NULL),        -- AVAILABLE
+       (1, '78나 9012', '카니발 하이리무진', 26, '팀 워크샵 및 다인원 이동용 (9인승)', 1, NULL),  -- AVAILABLE
+       (1, '34다 5678', '아반떼 CN7', 21, '근거리 업무 및 영업용 차량', 2, NULL),          -- INSPECTION
+       (1, '90라 1234', '제네시스 G80', 30, 'VIP 의전용, 사용 전 비서실 문의 필수', 3, NULL), -- UNAVAILABLE
+       (1, '56마 7890', '아이오닉 5', 21, '친환경 전기차, 충전 카드 차량 내 비치', 1, NULL);
+-- AVAILABLE
 
 -- =========================================================
 -- 6. ITEM (Company 1)
 -- =========================================================
 INSERT INTO item
 (company_id, item_category_id, name, description, resource_status_id, file_id)
-VALUES
-    (1, 3, 'MacBook Pro 16 (M3 Max)', '신규 입사자 지급용 고성능 랩탑 (개발팀)', 1, NULL), -- AVAILABLE
-    (1, 2, 'LG 울트라파인 5K 모니터', '디자인팀 공용 모니터, 색보정 작업용', 1, NULL), -- AVAILABLE
-    (1, 4, 'LG 그램', '대여용 노트북', 3, NULL), -- UNAVAILABLE
-    (1, 2, 'Dell XPS 15', '영업팀 외부 미팅 및 프리젠테이션용 공용 노트북', 1, NULL); -- AVAILABLE
+VALUES (1, 3, 'MacBook Pro 16 (M3 Max)', '신규 입사자 지급용 고성능 랩탑 (개발팀)', 1, NULL), -- AVAILABLE
+       (1, 2, 'LG 울트라파인 5K 모니터', '디자인팀 공용 모니터, 색보정 작업용', 1, NULL),            -- AVAILABLE
+       (1, 4, 'LG 그램', '대여용 노트북', 3, NULL),                                   -- UNAVAILABLE
+       (1, 2, 'Dell XPS 15', '영업팀 외부 미팅 및 프리젠테이션용 공용 노트북', 1, NULL);
+-- AVAILABLE
 
 -- =========================================================
 -- 7. RESERVATION (Company 1)
@@ -793,7 +812,7 @@ VALUES
 -- 9. SCHEDULE SUMMARY (Company 1)
 -- =========================================================
 INSERT INTO schedule_summary
-(company_id, employee_id, week_summary, month_summary)
+    (company_id, employee_id, week_summary, month_summary)
 VALUES (1, 1,
         '12월 3주차 주간 요약: 이번 주는 전사 창립기념일 행사와 개발팀 주간 스프린트 회의가 주요 일정이었습니다.',
         '12월 월간 요약: 인증/인가 모듈(Spring Security) 개발 완료 및 주요 프로젝트 진행.');
@@ -804,35 +823,36 @@ VALUES (1, 1,
 -- =========================================================
 -- auto_increment로 인해 5, 6, 7, 8, 9번 ID 할당 가정
 INSERT INTO item_category (company_id, name)
-VALUES (2, '태블릿'),      -- id = 5
-       (2, '서버 장비'),    -- id = 6
-       (2, '촬영 장비'),    -- id = 7
-       (2, '사무 가구'),    -- id = 8
-       (2, '소프트웨어');   -- id = 9
+VALUES (2, '태블릿'),   -- id = 5
+       (2, '서버 장비'), -- id = 6
+       (2, '촬영 장비'), -- id = 7
+       (2, '사무 가구'), -- id = 8
+       (2, '소프트웨어');
+-- id = 9
 
 -- =========================================================
 -- [추가] MEETING ROOM (Company 2)
 -- =========================================================
 INSERT INTO meetingroom
-(company_id, name, position, description, resource_status_id)
-VALUES
-    (2, '전략 회의실', '글로벌 센터 501호', '임원 전용 회의실, 최고급 화상 장비', 1), -- AVAILABLE
-    (2, '아이디어 랩', '글로벌 센터 3층 휴게공간', '전면 화이트보드 벽면, 자유로운 분위기', 1), -- AVAILABLE
-    (2, '세미나실 B', '글로벌 센터 지하 1층', '50인 수용 가능, 강연대 및 마이크 설비', 2), -- INSPECTION
-    (2, '화상 미팅룸 1', '글로벌 센터 505호', '1인용 포커스 룸, 방음 부스', 1), -- AVAILABLE
-    (2, '프로젝트 룸 Alpha', '글로벌 센터 401호', 'TF팀 전용 장기 대관실', 3); -- UNAVAILABLE
+    (company_id, name, position, description, resource_status_id)
+VALUES (2, '전략 회의실', '글로벌 센터 501호', '임원 전용 회의실, 최고급 화상 장비', 1),     -- AVAILABLE
+       (2, '아이디어 랩', '글로벌 센터 3층 휴게공간', '전면 화이트보드 벽면, 자유로운 분위기', 1), -- AVAILABLE
+       (2, '세미나실 B', '글로벌 센터 지하 1층', '50인 수용 가능, 강연대 및 마이크 설비', 2), -- INSPECTION
+       (2, '화상 미팅룸 1', '글로벌 센터 505호', '1인용 포커스 룸, 방음 부스', 1),       -- AVAILABLE
+       (2, '프로젝트 룸 Alpha', '글로벌 센터 401호', 'TF팀 전용 장기 대관실', 3);
+-- UNAVAILABLE
 
 -- =========================================================
 -- [추가] CAR (Company 2)
 -- =========================================================
 INSERT INTO car
 (company_id, number, name, driver_age, description, resource_status_id, file_id)
-VALUES
-    (2, '99호 1111', '벤츠 E-Class', 30, 'CEO 의전 차량', 1, NULL), -- AVAILABLE
-    (2, '88하 2222', '쏘렌토 MQ4', 26, '영업 1팀 공용 차량', 1, NULL), -- AVAILABLE
-    (2, '77호 3333', '레이 EV', 21, '근거리 문서 수발신 및 마트 장보기용', 2, NULL), -- INSPECTION
-    (2, '66하 4444', '스타리아 라운지', 26, '공항 픽업 및 바이어 접대용 (7인승)', 1, NULL), -- AVAILABLE
-    (2, '55호 5555', '테슬라 Model Y', 26, 'IT 사업부 테스트 및 업무용', 3, NULL); -- UNAVAILABLE
+VALUES (2, '99호 1111', '벤츠 E-Class', 30, 'CEO 의전 차량', 1, NULL),           -- AVAILABLE
+       (2, '88하 2222', '쏘렌토 MQ4', 26, '영업 1팀 공용 차량', 1, NULL),            -- AVAILABLE
+       (2, '77호 3333', '레이 EV', 21, '근거리 문서 수발신 및 마트 장보기용', 2, NULL),     -- INSPECTION
+       (2, '66하 4444', '스타리아 라운지', 26, '공항 픽업 및 바이어 접대용 (7인승)', 1, NULL), -- AVAILABLE
+       (2, '55호 5555', '테슬라 Model Y', 26, 'IT 사업부 테스트 및 업무용', 3, NULL);
+-- UNAVAILABLE
 
 -- =========================================================
 -- [추가] ITEM (Company 2)
@@ -840,12 +860,11 @@ VALUES
 -- category_id는 위에서 생성된 순서(5,6,7,8,9) 매핑
 INSERT INTO item
 (company_id, item_category_id, name, description, resource_status_id, file_id)
-VALUES
-    (2, 5, 'iPad Pro 12.9 (6세대)', '디자인 시안 검토용 태블릿', 1, NULL),
-    (2, 6, 'Dell PowerEdge R750', '사내 테스트 서버, 전산실 B구역 위치', 1, NULL),
-    (2, 7, 'Sony Alpha 7 IV', '마케팅팀 유튜브 촬영용 카메라', 2, NULL),
-    (2, 8, '허먼밀러 에어론', '허리 디스크 환자 전용 의자 (신청 필요)', 3, NULL),
-    (2, 9, 'JetBrains All Products', '개발팀 공용 라이선스 계정', 1, NULL);
+VALUES (2, 5, 'iPad Pro 12.9 (6세대)', '디자인 시안 검토용 태블릿', 1, NULL),
+       (2, 6, 'Dell PowerEdge R750', '사내 테스트 서버, 전산실 B구역 위치', 1, NULL),
+       (2, 7, 'Sony Alpha 7 IV', '마케팅팀 유튜브 촬영용 카메라', 2, NULL),
+       (2, 8, '허먼밀러 에어론', '허리 디스크 환자 전용 의자 (신청 필요)', 3, NULL),
+       (2, 9, 'JetBrains All Products', '개발팀 공용 라이선스 계정', 1, NULL);
 
 -- =========================================================
 -- [추가] RESERVATION (Company 2)
@@ -905,7 +924,7 @@ VALUES
 -- [추가] SCHEDULE SUMMARY (Company 2)
 -- =========================================================
 INSERT INTO schedule_summary
-(company_id, employee_id, week_summary, month_summary)
+    (company_id, employee_id, week_summary, month_summary)
 VALUES (2, 4, '12월 2주차: 전사 체육대회 준비 위원회 참석 및 재택 근무 진행.', '12월 요약: 체육대회 기획 완료 및 개인 업무 목표 90% 달성.'),
        (2, 5, '12월 2주차: 지방 공장 실사 및 보고서 작성 완료.', '12월 요약: 현장 방문 일정 위주로 소화, 건강 문제로 인한 반차 사용 1회.');
 

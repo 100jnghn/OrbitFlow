@@ -52,14 +52,14 @@ CREATE TABLE organization
 
 CREATE TABLE hr_rank
 (
-    id             BIGINT AUTO_INCREMENT PRIMARY KEY,
-    company_id     BIGINT      NOT NULL,
+    id                BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id        BIGINT      NOT NULL,
     parent_hr_rank_id BIGINT      NULL,
-    name           VARCHAR(50) NOT NULL,
-    order_index    INT         NOT NULL,
-    is_active      BOOLEAN     NOT NULL DEFAULT TRUE,
-    created_at     TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at     TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
+    name              VARCHAR(50) NOT NULL,
+    order_index       INT         NOT NULL,
+    is_active         BOOLEAN     NOT NULL DEFAULT TRUE,
+    created_at        TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_hr_rank_company
         FOREIGN KEY (company_id) REFERENCES company (id),
@@ -127,24 +127,28 @@ CREATE TABLE employee
     internal_phone  VARCHAR(20),                                                                         -- 내선번호
     phone           VARCHAR(20),                                                                         -- 전화번호
     org_id          BIGINT                                           NOT NULL,                           -- 조직 아이디 (fk)
-    hr_rank_id         BIGINT                                           NULL,                               -- 직급 아이디 (fk)
+    hr_rank_id      BIGINT                                           NULL,                               -- 직급 아이디 (fk)
     position_id     BIGINT                                           NULL,                               -- 직책 아이디 (fk)
+
     name            VARCHAR(50)                                      NOT NULL,                           -- 이름
     email           VARCHAR(100)                                     NOT NULL,                           -- 이메일 (로그인 id)
     password        VARCHAR(255)                                     NOT NULL,                           -- 비밀번호
+    role            ENUM ('COMPANY_ADMIN', 'ADMIN', 'EMPLOYEE')      NOT NULL DEFAULT 'EMPLOYEE',
     gender          ENUM ('MALE', 'FEMALE')                          NOT NULL,                           -- 성별
     birth_date      DATE,                                                                                -- 생년월일
     employment_type ENUM ('REGULAR', 'NON_REGULAR')                  NOT NULL,                           -- 고용 형태
     status          ENUM ('TEMP', 'ACTIVE', 'SUSPENDED', 'RESIGNED') NOT NULL,                           -- 재직 상태
 
     work_status     ENUM ('WORKING', 'AWAY', 'ON_LEAVE', 'OFF_WORK')
-                                                                     NOT NULL DEFAULT 'OFF_WORK',        -- 근무 상태 ⭐
+                                                                     NOT NULL DEFAULT 'OFF_WORK',        -- 근무 상태
 
     created_at      TIMESTAMP                                        NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 생성일시
     updated_at      TIMESTAMP                                        NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
+
     UNIQUE KEY uk_employee_company_no (company_id, employee_no),
     UNIQUE KEY uk_employee_email (email),
+
     CONSTRAINT fk_emp_company
         FOREIGN KEY (company_id) REFERENCES company (id),
     CONSTRAINT fk_emp_org
@@ -154,6 +158,7 @@ CREATE TABLE employee
     CONSTRAINT fk_emp_position
         FOREIGN KEY (position_id) REFERENCES position (id)
 ) ENGINE = InnoDB;
+
 
 CREATE TABLE log_audit
 (
@@ -186,6 +191,21 @@ CREATE TABLE notification
     CONSTRAINT fk_notification_employee
         FOREIGN KEY (employee_id) REFERENCES employee (id)
 ) ENGINE = InnoDB;
+
+CREATE TABLE refresh_token
+(
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id  BIGINT       NOT NULL,
+    employee_id BIGINT       NOT NULL,
+    token       VARCHAR(500) NOT NULL UNIQUE ,
+    expires_at  TIMESTAMP    NOT NULL,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_refresh_employee
+        FOREIGN KEY (employee_id) REFERENCES employee (id),
+    CONSTRAINT fk_refresh_company
+        FOREIGN KEY (company_id) REFERENCES company (id)
+
+);
 
 
 -- =========================================================
@@ -651,12 +671,12 @@ CREATE TABLE employee_signature
 
     -- 활성 서명만 UNIQUE 제약을 걸기 위한 가상 컬럼
     active_flag TINYINT
-        GENERATED ALWAYS AS (
-            CASE
-                WHEN is_active = TRUE THEN 1
-                ELSE NULL
-                END
-            ),
+                GENERATED ALWAYS AS (
+                    CASE
+                        WHEN is_active = TRUE THEN 1
+                        ELSE NULL
+                        END
+                    ),
 
     created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
