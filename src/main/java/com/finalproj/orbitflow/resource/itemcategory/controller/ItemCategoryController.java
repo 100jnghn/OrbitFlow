@@ -4,7 +4,7 @@ import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import com.finalproj.orbitflow.resource.itemcategory.dto.ItemCategoryDto;
 import com.finalproj.orbitflow.resource.itemcategory.service.ItemCategoryService;
-import com.finalproj.orbitflow.resource.itemcategory.tempexception.ConfirmRequiredException;
+import com.finalproj.orbitflow.global.exception.ConfirmRequiredException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -82,9 +82,8 @@ public class ItemCategoryController {
         } catch (ConfirmRequiredException e) {
             // 하위 자원 삭제 경고가 필요한 경우 -> 409 error
             // 프론트에서 confirm 창을 띄우고 확인 -> force = true로 재요청
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(
-                    new ResponseDto(HttpStatus.CONFLICT, e.getMessage(), "확인이 필요합니다.")
-            );
+
+            throw new ConfirmRequiredException("확인이 필요합니다");
         }
     }
 }
