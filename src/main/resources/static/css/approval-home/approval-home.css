@@ -359,3 +359,28 @@
 #updatePopup .modal-form-group {
     position: relative;
 }
+
+.edit-icon {
+    margin-left: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.row-disabled .edit-icon {
+    display: none;
+}
+
+/* 상태별 행 텍스트 색상 */
+.row-active {
+    color: #222; /* ACTIVE */
+}
+
+.row-inactive {
+    color: #9e9e9e; /* INACTIVE */
+}
+
+.row-draft {
+    color: #1e88e5; /* DRAFT */
+    font-weight: 500; /* 살짝 강조 (선택) */
+}

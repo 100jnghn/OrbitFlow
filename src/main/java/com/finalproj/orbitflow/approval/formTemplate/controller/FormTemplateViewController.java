@@ -3,8 +3,11 @@ package com.finalproj.orbitflow.approval.formTemplate.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
+@RequestMapping("/view")
 public class FormTemplateViewController {
 
     /**
@@ -18,4 +21,15 @@ public class FormTemplateViewController {
         // templates/approval-home/approval-home.html 반환
         return "approval-home/approval-home";
     }
+
+    @GetMapping("/admin/create-template")
+    public String createTemplateView(
+            @RequestParam Long templateId,
+            Model model
+    ) {
+        model.addAttribute("templateId", templateId);
+        return "form-template/createTemplate";
+    }
+
+
 }
