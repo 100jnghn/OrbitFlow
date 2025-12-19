@@ -28,7 +28,6 @@
 
     if (res.ok) {
       sessionStorage.setItem('accessToken', result.accessToken);
-      // localStorage.setItem('refreshToken', result.refreshToken);
       location.href = '/';
     } else {
       alert(result.message);
