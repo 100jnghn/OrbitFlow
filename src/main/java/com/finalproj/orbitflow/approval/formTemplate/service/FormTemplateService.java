@@ -265,7 +265,7 @@ public class FormTemplateService {
 
         List<FormTemplateListView> views = formTemplateRepository.findWithActiveTemplateAndCompanyAndKeyword(companyId, searchKeyword);
         return views.stream()
-                .map(v -> new FormTemplateActiveListResDto(v.getId(), v.getVersion(), v.getName()))
+                .map(v -> new FormTemplateActiveListResDto(v.getId(), v.getVersion(), v.getGroupId(), v.getName()))
                 .toList();
     }
 

@@ -20,5 +20,6 @@ import lombok.NoArgsConstructor;
 public class FormTemplateActiveListResDto {
     private Long formTemplateId;
     private int formTemplateVersion;
-    private String FormTemplateGroupName;
+    private Long formTemplateGroupId;
+    private String formTemplateGroupName;
 }
