@@ -13,4 +13,5 @@ public interface FormTemplateListView {
     Long getId();
     int getVersion();
     String getName();
+    Long getGroupId();
 }

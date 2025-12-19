@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+    
+<head>
+    <!-- 인증 공통 JS 및 세션 만료 모달 -->
+    <script src="/js/common.js" defer></script>
+    
+    <meta charset="UTF-8">
+    <title>결재 양식 관리</title>
+    <link rel="stylesheet" href="/css/approval-home/approval-home.css">
+</head>
+<body>
+    <div class="approval-home-container">
+        <!-- 상단 UI: 좌우정렬 -->
+        <section class="approval-header-row">
+            <div class="header-left">
+                <button type="button" class="primary-btn" id="createTemplateBtn">결재 양식 생성</button>
+                <button type="button" class="secondary-btn" id="updateTemplateBtn">결재 양식 업데이트</button>
+            </div>
+            <div class="header-right">
+                <label for="statusFilter" class="filter-label">상태</label>
+                <select id="statusFilter" class="status-filter-select">
+                    <option value="">전체</option>
+                    <option value="DRAFT">초안</option>
+                    <option value="ACTIVE">활성</option>
+                    <option value="INACTIVE">비활성</option>
+                </select>
+                <input type="text" id="keywordInput" placeholder="양식명으로 검색" class="search-input" />
+                <button type="button" id="searchBtn" class="search-btn">검색</button>
+            </div>
+        </section>
+
+        <!-- 팝업(모달) : 새 문서 양식 생성 -->
+        <div id="createPopup" class="modal-backdrop" style="display:none;">
+            <div class="modal-content">
+                <div class="modal-title">새 문서 양식 생성</div>
+                <div class="modal-form-group">
+                    <label for="popupTemplateName">문서 양식 이름</label>
+                    <input type="text" id="popupTemplateName" class="modal-input" placeholder="문서 양식명을 입력하세요" />
+                </div>
+                <div class="modal-form-group">
+                    <label for="popupTemplateDesc">설명</label>
+                    <textarea id="popupTemplateDesc" class="modal-textarea" rows="3" placeholder="설명을 입력하세요"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="modal-cancel-btn" id="popupCancelBtn">취소</button>
+                    <button type="button" class="modal-create-btn" id="popupCreateBtn">작성</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- [추가] 문서 양식 업데이트 팝업 -->
+        <div id="updatePopup" class="modal-backdrop" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-title">문서 양식 업데이트</div>
+                <div class="modal-form-group" style="position:relative;">
+                    <label for="updateTemplateSearch">검색할 양식 이름</label>
+                    <input type="text" id="updateTemplateSearch" class="modal-input" placeholder="문서 양식명 검색" autocomplete="off" />
+                    <div id="updateDropdown" class="modal-dropdown-list" style="display: none;"></div>
+                    <div id="updateSelectedDesc" class="update-descbox">
+  <div style="font-weight:600;font-size:1.05rem;margin-bottom:2px;color:#242c5e;">양식 설명</div>
+  <span id="updateSelectedDescText"></span>
+</div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="modal-cancel-btn" id="popupUpdateCancelBtn">닫기</button>
+                    <button type="button" class="modal-create-btn" id="popupUpdateOkBtn">업데이트</button>
+                </div>
+            </div>
+        </div>
+        <!-- [/추가] -->
+
+        <!-- 테이블 영역 -->
+        <main>
+            <div class="approval-table-wrapper">
+                <table class="approval-table">
+                    <thead>
+                        <tr>
+                            <th class="col-title">양식명</th>
+                            <th class="col-version">버전</th>
+                            <th class="col-usedoc">사용 문서 수</th>
+                            <th class="col-updated">최종 수정일</th>
+                            <th class="col-attend">근태 연동</th>
+                            <th class="col-schedule">일정 연동</th>
+                            <th class="col-status">상태</th>
+                        </tr>
+                    </thead>
+                    <tbody id="approvalTableBody">
+                        <!-- JavaScript로 행 동적 생성 -->
+                    </tbody>
+                </table>
+                <div id="approvalTableEmpty" class="empty-msg" style="display: none;">
+                    해당하는 양식이 없습니다.
+                </div>
+            </div>
+        </main>
+
+        <!-- 페이지네이션 -->
+        <footer class="approval-pagination">
+            <button type="button" class="pagination-btn" id="prevPageBtn">이전</button>
+            <span id="pageIndicator" class="page-indicator"></span>
+            <button type="button" class="pagination-btn" id="nextPageBtn">다음</button>
+        </footer>
+    </div>
+
+    <div id="sessionModal"
+         style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4)">
+        <div style="background:#fff; padding:20px; margin:200px auto; width:300px;">
+            <p>세션이 만료되었습니다. 다시 로그인해주세요.</p>
+            <button onclick="confirmSessionExpired()">확인</button>
+        </div>
+    </div>
+
+    <script src="/css/approval-home/approval-home.js"></script>
+</body>
+</html>
