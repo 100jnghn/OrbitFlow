@@ -40,8 +40,20 @@ public class CarController {
         );
     }
 
+    // 사용자 - 차량 리스트 조회
+    @GetMapping("/cars")
+    public ResponseEntity<ResponseDto> getAvailableCars(@AuthenticationPrincipal SecurityUser user) {
+
+        Long companyId = user.getCompanyId();
+        List<CarResDto> cars = carService.getAvailableCars(companyId);
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, "차량 목록 조회 성공", cars)
+        );
+    }
+
     // 관리자 - 차량 상세 조회
-    @GetMapping("/admin/cars/{carId}")
+    @GetMapping("/cars/{carId}")
     public ResponseEntity<ResponseDto> getCar(@PathVariable Long carId) {
         CarResDto car = carService.getCar(carId);
 

@@ -1,101 +1,132 @@
-function loadMeetingRooms() {
-    // 1. API 호출
-    fetch('/api/admin/meetingrooms', {
-        method: 'GET',
-        headers: {
-            // [중요] JWT 토큰이 있다면 헤더에 포함해야 합니다.
-            // 로그인 시 저장해둔 토큰을 가져오세요 (예: localStorage)
-            'Authorization': 'Bearer ' + localStorage.getItem('accessToken'),
-            'Content-Type': 'application/json'
-        }
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('네트워크 응답이 올바르지 않습니다.');
-            }
-            return response.json(); // JSON 변환
-        })
-        .then(data => {
-            // 2. 받아온 데이터로 화면 그리기
-            const list = data.data; // ResponseDto 구조상 data 필드에 리스트가 있음
-            const tbody = document.querySelector('.resource-table tbody');
-            tbody.innerHTML = ''; // 기존 내용 초기화
+/* ==========================
+   Tooltip (singleton)
+========================== */
+let tooltipEl = null;
 
-            if (list && list.length > 0) {
-                list.forEach((room, index) => {
-                    const row = `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${room.name || ''}</td>
-                            <td>${room.position || ''}</td>
-                            <td>${room.description || ''}</td>
-                            <td>
-                                <div class="action-btns">
-                                    <button type="button" class="btn-edit" onclick="editMeetingRoom(${room.meetingroomId})">수정</button>
-                                    <button type="button" class="btn-delete" onclick="deleteMeetingRoom(${room.meetingroomId})">삭제</button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                    tbody.insertAdjacentHTML('beforeend', row);
-                });
-            } else {
-                // 데이터가 없을 경우
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="5">
-                            <div class="empty-state">
-                                <i class="fas fa-inbox"></i>
-                                <p>등록된 리소스가 없습니다.</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }
-        })
-        .catch(error => {
-            console.error('데이터 로드 실패:', error);
-            alert('회의실 목록을 불러오는데 실패했습니다.');
-        });
+function ensureTooltip() {
+    if (!tooltipEl) {
+        tooltipEl = document.createElement('div');
+        tooltipEl.className = 'tooltip';
+        document.body.appendChild(tooltipEl);
+    }
 }
 
-// 수정 기능
-function editMeetingRoom(meetingroomId) {
-    console.log('수정할 회의실 ID:', meetingroomId);
-    // TODO: 수정 모달 열기 또는 수정 페이지로 이동
-    alert(`회의실 ID ${meetingroomId} 수정 기능을 구현하세요.`);
+function showTooltip(e) {
+    const text = e.currentTarget.dataset.fulltext;
+    if (!text) return;
+
+    ensureTooltip();
+    tooltipEl.textContent = text;
+    tooltipEl.style.display = 'block';
+    moveTooltip(e);
 }
 
-// 삭제 기능
-function deleteMeetingRoom(meetingroomId) {
-    if (!confirm('정말 삭제하시겠습니까?')) {
-        return;
+function moveTooltip(e) {
+    if (!tooltipEl) return;
+    tooltipEl.style.left = e.pageX + 12 + 'px';
+    tooltipEl.style.top = e.pageY + 12 + 'px';
+}
+
+function hideTooltip() {
+    if (tooltipEl) {
+        tooltipEl.style.display = 'none';
+    }
+}
+
+/* ==========================
+   Table Cell Helpers
+========================== */
+function createCell(value = '', tooltip = false) {
+    const td = document.createElement('td');
+    const text = (value ?? '').toString();
+
+    td.textContent = text;
+
+    if (tooltip && text.length > 0) {
+        td.dataset.fulltext = text;
+        td.addEventListener('mouseenter', showTooltip);
+        td.addEventListener('mousemove', moveTooltip);
+        td.addEventListener('mouseleave', hideTooltip);
     }
 
-    fetch(`/api/admin/meetingrooms/${meetingroomId}`, {
-        method: 'DELETE',
-        headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('accessToken'),
-            'Content-Type': 'application/json'
-        }
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('삭제에 실패했습니다.');
-            }
-            return response.json();
-        })
-        .then(data => {
-            alert('삭제되었습니다.');
-            loadMeetingRooms(); // 목록 다시 로드
-        })
-        .catch(error => {
-            console.error('삭제 실패:', error);
-            alert('삭제에 실패했습니다.');
-        });
+    return td;
 }
 
-// 페이지 로드 시 자동 실행
-document.addEventListener('DOMContentLoaded', function() {
+function createActionCell(id) {
+    const td = document.createElement('td');
+    const box = document.createElement('div');
+    box.className = 'action-btns';
+
+    const edit = document.createElement('button');
+    edit.className = 'btn-edit';
+    edit.textContent = '수정';
+    edit.onclick = () => editMeetingRoom(id);
+
+    const del = document.createElement('button');
+    del.className = 'btn-delete';
+    del.textContent = '삭제';
+    del.onclick = () => deleteMeetingRoom(id);
+
+    box.append(edit, del);
+    td.appendChild(box);
+    return td;
+}
+
+/* ==========================
+   Data Load
+========================== */
+async function loadMeetingRooms() {
+    try {
+        const res = await apiFetch('/api/admin/meetingrooms');
+        if (!res.ok) throw new Error();
+
+        const { data } = await res.json();
+        const tbody = document.querySelector('.resource-table tbody');
+        tbody.innerHTML = '';
+
+        if (!data?.length) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>등록된 리소스가 없습니다.</p>
+                        </div>
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        data.forEach((room, i) => {
+            const tr = document.createElement('tr');
+            tr.append(
+                createCell(i + 1),
+                createCell(room.name),
+                createCell(room.position, true),
+                createCell(room.description, true),
+                createCell(room.statusCode),
+                createActionCell(room.meetingroomId)
+            );
+            tbody.appendChild(tr);
+        });
+
+    } catch (e) {
+        console.error(e);
+        alert('회의실 목록을 불러오지 못했습니다.');
+    }
+}
+
+/* ==========================
+   Actions
+========================== */
+function editMeetingRoom(id) {
+    alert(`회의실 ID ${id} 수정 기능을 구현하세요.`);
+}
+
+async function deleteMeetingRoom(id) {
+    if (!confirm('정말 삭제하시겠습니까?')) return;
+    await apiFetch(`/api/admin/meetingrooms/${id}`, { method: 'DELETE' });
     loadMeetingRooms();
-});
+}
+
+document.addEventListener('DOMContentLoaded', loadMeetingRooms);

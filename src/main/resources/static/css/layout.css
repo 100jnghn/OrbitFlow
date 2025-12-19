@@ -1,9 +1,16 @@
+/* ================================
+   Global
+================================ */
 body {
     margin: 0;
     font-family: 'Noto Sans KR', sans-serif;
-    background: #f1f1fa;
+    background: #f9fafb;
+    color: #111827;
 }
 
+/* ================================
+   App Layout
+================================ */
 .app-wrapper {
     display: flex;
     flex-direction: column;
@@ -16,153 +23,155 @@ body {
     overflow: hidden;
 }
 
-/* 헤더와 사이드바 CSS는 header.css와 sidebar.css에서 관리 */
-
-/* 공통 콘텐츠 영역 */
-.app-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 24px 40px 16px 40px;
-    overflow-y: auto;
-}
-
-.content-title {
-    font-size: 23px;
-    font-weight: bold;
-    margin-bottom: 20px;
-    letter-spacing: -1.5px;
-    color: #222;
-}
-
-/* 근태 페이지에서 재사용할 수 있는 스타일 (기존 attendance.css 일부 포함) */
-.work-summary-box {
-    background: #fff;
-    border-radius: 12px;
-    padding: 32px;
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 32px 0 #eaeaf1;
-}
-
-.work-summary-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 15px;
-}
-
-.work-summary-times {
-    display: flex;
-    align-items: flex-end;
-}
-
-.work-summary-times .label {
-    font-size: 16px;
-    color: #666;
-    font-weight: 500;
-}
-
-.work-clock {
-    color: #2372e2;
-    font-size: 38px;
-    font-family: 'Roboto Mono', monospace;
-    font-weight: bold;
-    letter-spacing: -1px;
-    margin-left: 12px;
-}
-
-.work-time-range {
-    font-size: 18px;
-    color: #666;
-    margin-left: 12px;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 18px;
-    margin-top: 24px;
-}
-
-.btn-checkin,
-.btn-checkout {
-    flex: 1;
-    padding: 18px 0;
-    border: none;
-    border-radius: 8px;
-    font-size: 20px;
-    font-weight: bold;
-    cursor: pointer;
-    color: #fff;
-    transition: background 0.2s;
-}
-
-.btn-checkin {
-    background: #62a356;
-}
-
-.btn-checkin:hover {
-    background: #4a8c3e;
-}
-
-.btn-checkout {
-    background: #d9534f;
-}
-
-.btn-checkout:hover {
-    background: #c3433e;
-}
-
-.record-title {
-    font-size: 18px;
-    font-weight: bold;
-    color: #444;
-    margin-bottom: 12px;
-}
-
-.record-details {
-    display: flex;
-    padding: 20px;
-    background: #fff;
-    border-radius: 8px;
-    border: 1px solid #e0e0e0;
-    font-size: 15px;
-    color: #444;
-}
-
-.record-item {
+/* ================================
+   Header (공통)
+================================ */
+.header-bar {
+    background-color: #ffffff;
+    height: 56px;
+    padding: 0 28px;
     display: flex;
     align-items: center;
-    margin-right: 30px;
+    border-bottom: 1px solid #e5e7eb;
 }
 
-.record-item-label {
-    color: #888;
+/* GNB */
+.gnb {
+    display: flex;
+    flex: 1;
+    gap: 28px;
+}
+
+.gnb a {
+    position: relative;
+    text-decoration: none;
+    color: #111827;
+    font-weight: 500;
+    line-height: 56px;
+    font-size: 15px;
+    padding: 0 4px;
+}
+
+.gnb a:hover {
+    color: #2563eb;
+}
+
+.gnb a.selected {
+    font-weight: 700;
+}
+
+.gnb a.selected::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: #111827;
+    border-radius: 2px;
+}
+
+/* Header Profile */
+.profile {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 14px;
+}
+
+.profile .icon-group {
+    display: flex;
+    gap: 18px;
+    color: #6b7280;
+}
+
+.profile .icon-group i {
+    cursor: pointer;
+    font-size: 17px;
+}
+
+.profile .icon-group i:hover {
+    color: #111827;
+}
+
+.profile .user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 12px;
+    border-left: 1px solid #e5e7eb;
+}
+
+.profile .user {
+    font-weight: 600;
+}
+
+.profile .logout {
+    font-size: 13px;
+    color: #9ca3af;
+    cursor: pointer;
+}
+
+.profile .logout:hover {
+    color: #ef4444;
+}
+
+/* ================================
+   Sidebar (공통 베이스)
+================================ */
+.sidebar {
+    width: 250px;
+    background: #23273c;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-inner {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding-top: 24px;
+}
+
+.sidebar-title {
+    padding: 0 0 16px 36px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.sidebar-logo-icon {
     margin-right: 8px;
 }
 
-.status-badge {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: bold;
-    margin-left: 10px;
-    color: #fff;
+.sidebar-menu {
+    list-style: none;
+    padding: 0 0 16px 36px;
+    margin: 0;
 }
 
-.status-ing {
-    background: #5cb85c;
+.sidebar-menu li {
+    margin: 6px 0;
 }
 
-.footer {
-    text-align: center;
-    padding: 15px;
-    font-size: 13px;
-    color: #aaa;
-    border-top: 1px solid #e0e0e0;
-    background: #f1f1fa;
+.sidebar-link {
+    color: #c9ccdd;
+    text-decoration: none;
+    font-size: 15px;
 }
 
+.sidebar-menu li.selected {
+    background: rgba(255, 255, 255, 0.1);
+    margin-left: -36px;
+    padding: 8px 36px;
+    border-left: 4px solid #4a69bd;
+}
 
+/* ================================
+   Content
+================================ */
+.app-content {
+    flex: 1;
+    padding: 24px 40px 16px;
+    overflow-y: auto;
+}

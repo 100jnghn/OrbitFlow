@@ -37,6 +37,7 @@ public class ItemService {
     private final ResourceStatusRepository resourceStatusRepository;
     private final ItemCategoryRepository itemCategoryRepository;
 
+    // companyId
     @Transactional(readOnly = true)
     public List<ItemResDto> getItems(Long companyId) {
         return itemRepository.getAllByCompanyId(companyId, ResourceStatusCode.DELETED).stream()
@@ -44,9 +45,31 @@ public class ItemService {
                 .collect(Collectors.toList());
     }
 
+    // companyId
+    // status != DELETED
+    @Transactional(readOnly = true)
+    public List<ItemResDto> getAvailableItems(Long companyId) {
+        return itemRepository.getAllByCompanyIdAndStatus(companyId, ResourceStatusCode.DELETED).stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    // companyId
+    // status != DELETED
+    // categoryId
     @Transactional(readOnly = true)
     public List<ItemResDto> getItemsByCategory(Long companyId, Long categoryId) {
         return itemRepository.getAllByCompanyIdAndItemCategoryId(companyId, categoryId, ResourceStatusCode.DELETED).stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    // companyId
+    // status = AVAILABLE
+    // categoryId
+    @Transactional(readOnly = true)
+    public List<ItemResDto> getItemsByStatusAndCategory(Long companyId, Long categoryId) {
+        return itemRepository.getAllByCompanyIdAndItemCategoryIdAndStatus(companyId, categoryId, ResourceStatusCode.AVAILABLE).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
@@ -140,5 +163,6 @@ public class ItemService {
         return resourceStatusRepository.findById(statusId)
                 .orElseThrow(() -> new IllegalArgumentException("지원하지 않는 자원 상태입니다."));
     }
+
 
 }

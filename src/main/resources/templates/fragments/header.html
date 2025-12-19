@@ -2,27 +2,46 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 <div th:fragment="header" class="header-bar">
+
     <nav class="gnb">
-        <a th:href="@{/home}" th:text="'홈'">홈</a>
-        <a th:href="@{/approval}" th:text="'결재'">결재</a>
-        <a th:href="@{/work}" th:classappend="${currentGNB} == 'work' ? ' selected' : ''" th:text="'근태'">근태</a>
-        <a th:href="@{/schedule}" th:text="'일정'">일정</a>
-        <a th:href="@{/reservation}" th:text="'예약'">예약</a>
-        <a th:href="@{/board}" th:text="'게시판'">게시판</a>
-        <a th:href="@{/admin}" th:text="'관리자'" style="margin-left: 20px;">관리자</a>
+        <a id="homeLink"
+           href="/view/home"
+           th:classappend="${currentGNB}=='home' ? ' selected' : ''">홈</a>
+
+        <a th:href="@{/view/approval}"
+           th:classappend="${currentGNB}=='approval' ? ' selected' : ''">결재</a>
+
+        <a th:href="@{/view/work}"
+           th:classappend="${currentGNB}=='work' ? ' selected' : ''">근태</a>
+
+        <a th:href="@{/view/schedule}"
+           th:classappend="${currentGNB}=='schedule' ? ' selected' : ''">일정</a>
+
+        <a th:href="@{/view/reservation}"
+           th:classappend="${currentGNB}=='reservation' ? ' selected' : ''">예약</a>
+
+        <a th:href="@{/view/board}"
+           th:classappend="${currentGNB}=='board' ? ' selected' : ''">게시판</a>
+
+        <a id="adminMenuLink"
+           href="/view/admin/menu"
+           style="display: none;"
+           th:classappend="${currentGNB}=='admin' ? ' selected' : ''">
+            관리자
+        </a>
     </nav>
+
     <div class="profile">
         <div class="icon-group">
+            <i class="fas fa-envelope"></i>
             <i class="fas fa-bell"></i>
-            <i class="fas fa-cog"></i>
         </div>
+
         <div class="user-info">
-            <i class="fas fa-user-circle"></i>
-            <span class="user" th:text="${userName} ?: '사용자'">사용자</span>
+            <span id="userName" class="user">사용자</span>
+            <span class="logout" onclick="logout()">로그아웃</span>
         </div>
     </div>
 </div>
 </body>
 </html>
-
-

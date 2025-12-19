@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:fragment="layout(content, headerFragment, pageCss)">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${pageTitle} ?: 'OrbitFlow'">OrbitFlow</title>
+
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/layout-admin.css}">
+
+    <!-- 페이지별 CSS 삽입 위치 -->
+    <th:block th:replace="${pageCss}"></th:block>
+</head>
+
+<body>
+
+<div class="app-wrapper">
+    <!-- Header -->
+    <header th:replace="${headerFragment}"></header>
+
+    <!-- Main Content (사이드바 없음) -->
+    <main class="app-content">
+        <th:block th:replace="${content}"></th:block>
+    </main>
+</div>
+
+<script th:src="@{/js/common.js}"></script>
+
+</body>
+</html>
+

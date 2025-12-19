@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-admin :: layout(
+        ~{::content},
+        ~{fragments/header :: header},
+        ~{sidebar/admin-sidebar :: menu},
+        ~{::pageCss}
+      )}">
+<head>
+    <meta charset="UTF-8">
+    <title>관리자 메뉴</title>
+
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/layout.css}">
+        <link rel="stylesheet" th:href="@{/css/layout-admin.css}">
+    </th:block>
+</head>
+<body>
+
+<div th:fragment="content">
+    <div class="content-area">
+        <div class="page-header">
+            <h1>관리자 메뉴</h1>
+            회의필요
+        </div>
+
+
+    </div>
+</div>
+
+<style>
+    .content-area {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        padding: 32px;
+    }
+
+    .page-header {
+        margin-bottom: 32px;
+    }
+
+    .page-header h1 {
+        font-size: 24px;
+        font-weight: 600;
+        color: #1e3a5f;
+        margin-bottom: 8px;
+    }
+
+    .page-description {
+        color: #666;
+        font-size: 14px;
+    }
+
+    .admin-menu-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 24px;
+    }
+
+    .admin-menu-card {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 24px;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .admin-menu-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+        border-color: #5687ef;
+    }
+
+    .menu-icon {
+        width: 60px;
+        height: 60px;
+        background: #f0f7ff;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+    }
+
+    .menu-icon i {
+        font-size: 28px;
+        color: #5687ef;
+    }
+
+    .admin-menu-card h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+    }
+
+    .admin-menu-card p {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 16px;
+        line-height: 1.5;
+    }
+
+    .menu-link {
+        color: #5687ef;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .menu-link:hover {
+        color: #386adc;
+        text-decoration: underline;
+    }
+</style>
+</body>
+</html>
+

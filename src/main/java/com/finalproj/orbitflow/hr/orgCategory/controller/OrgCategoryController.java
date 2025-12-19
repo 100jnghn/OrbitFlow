@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.hr.orgCategory.controller;
 
 import com.finalproj.orbitflow.global.security.SecurityUtils;
 import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryCreateReqDto;
+import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryOrderUpdateReqDto;
 import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryResDto;
 import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryUpdateReqDto;
 import com.finalproj.orbitflow.hr.orgCategory.service.OrgCategoryService;
@@ -35,11 +36,7 @@ public class OrgCategoryController {
     ) {
         Long companyId = SecurityUtils.getCompanyId();
 
-        Long id = orgCategoryService.create(
-                companyId,
-                request.getName(),
-                request.getOrderIndex()
-        );
+        Long id = orgCategoryService.create(companyId, request.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(id);
     }
 
@@ -58,14 +55,20 @@ public class OrgCategoryController {
     ) {
         Long companyId = SecurityUtils.getCompanyId();
 
-        orgCategoryService.update(
-                companyId,
-                id,
-                request.getName(),
-                request.getOrderIndex()
-        );
+        orgCategoryService.update(companyId, id, request.getName());
         return ResponseEntity.ok().build();
     }
+
+
+    @PutMapping("/order")
+    public ResponseEntity<Void> updateOrder(
+            @RequestBody @Valid OrgCategoryOrderUpdateReqDto request
+    ) {
+        Long companyId = SecurityUtils.getCompanyId();
+        orgCategoryService.updateOrder(companyId, request.getOrders());
+        return ResponseEntity.ok().build();
+    }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deactivate(

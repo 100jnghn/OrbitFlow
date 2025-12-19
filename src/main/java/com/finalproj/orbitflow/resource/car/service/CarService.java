@@ -43,6 +43,14 @@ public class CarService {
     }
 
     @Transactional(readOnly = true)
+    public List<CarResDto> getAvailableCars(Long companyId) {
+
+        return carRepository.findAllByCompanyIdAndStatus(companyId, ResourceStatusCode.AVAILABLE).stream()
+                .map(this::convertToResDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public CarResDto getCar(Long carId) {
 
         Car car = findCarById(carId);

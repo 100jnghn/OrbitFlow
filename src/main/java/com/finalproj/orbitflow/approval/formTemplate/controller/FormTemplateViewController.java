@@ -14,7 +14,10 @@ public class FormTemplateViewController {
      * 결재 양식 관리(어드민) 홈 화면 반환
      */
     @GetMapping("/admin/approval")
-    public String approvalHomeView() {
+    public String approvalHomeView(Model model) {
+        model.addAttribute("pageTitle", "결재 양식 관리");
+        model.addAttribute("currentGNB", "admin");
+        model.addAttribute("currentMenu", "approval");
         // templates/approval-home/approval-home.html 반환
         return "approval-home/approval-home";
     }

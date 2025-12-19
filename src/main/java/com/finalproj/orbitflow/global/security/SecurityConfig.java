@@ -40,30 +40,39 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
+                        // ===== 정적 리소스 =====
                         .requestMatchers(
                                 "/",
-                                "/index.html",
                                 "/login",
                                 "/favicon.ico",
                                 "/css/**",
                                 "/js/**",
+                                "/images/**",
                                 "/view/**",
-                                "/api/**",
-                                "/api/auth/login",
-                                "/api/auth/refresh"
+                                "/api/**"
                         ).permitAll()
 
-                        .requestMatchers("/api/auth/me").authenticated()
-
-                        // 회사 대표 관리자만
-                        .requestMatchers("/api/company-admin/**")
-                        .hasRole("COMPANY_ADMIN")
-
-                        // 회사 관리자 + 대표 관리자
-                        .requestMatchers("/api/admin/**")
-                        .hasAnyRole("ADMIN", "COMPANY_ADMIN")
-
-                        .anyRequest().authenticated()
+//                        // ===== 인증 API =====
+//                        .requestMatchers(
+//                                "/api/auth/login",
+//                                "/api/auth/refresh"
+//                        ).permitAll()
+//
+//                        // ===== 관리자 화면 =====
+//                        .requestMatchers("/view/admin/**").permitAll()
+//
+//                        // ===== 일반 화면 =====
+//                        .requestMatchers("/view/**")
+//                        .authenticated()
+//
+//                        // ===== API =====
+//                        .requestMatchers("/api/company-admin/**")
+//                        .hasRole("COMPANY_ADMIN")
+//
+//                        .requestMatchers("/api/admin/**")
+//                        .hasAnyRole("ADMIN", "COMPANY_ADMIN")
+//
+//                        .anyRequest().authenticated()
                 )
                 // HttpSession + JSESSIONID 기반이라 주석처리함
 //                .formLogin(login -> login
