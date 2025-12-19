@@ -1,6 +1,6 @@
-package com.finalproj.orbitflow.attendance.attendance.repository;
+package com.finalproj.orbitflow.attendance.commute.repository;
 
-import com.finalproj.orbitflow.attendance.attendance.entity.Attendance;
+import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.LocalDate;
 import java.util.Optional;

@@ -1,7 +1,6 @@
-package com.finalproj.orbitflow.attendance.attendance.controller;
+package com.finalproj.orbitflow.attendance.commute.controller;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
@@ -9,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
  */
 @Controller
 @RequestMapping("/attendance")
-public class AttendanceViewController {
+public class CommuteViewController {
 
 
 }

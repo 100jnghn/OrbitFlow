@@ -1,6 +1,6 @@
-package com.finalproj.orbitflow.attendance.attendance.entity;
+package com.finalproj.orbitflow.attendance.commute.entity;
 
-import com.finalproj.orbitflow.attendance.attendance.enums.AttendanceStatus;
+import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

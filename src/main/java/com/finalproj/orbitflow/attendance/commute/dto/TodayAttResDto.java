@@ -1,7 +1,7 @@
-package com.finalproj.orbitflow.attendance.attendance.dto;
+package com.finalproj.orbitflow.attendance.commute.dto;
 
-import com.finalproj.orbitflow.attendance.attendance.entity.Attendance;
-import com.finalproj.orbitflow.attendance.attendance.enums.AttendanceStatus;
+import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
+import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
 
 import java.time.LocalDateTime;
 

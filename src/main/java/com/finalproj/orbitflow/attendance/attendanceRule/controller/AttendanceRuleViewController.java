@@ -14,7 +14,7 @@ public class AttendanceRuleViewController {
 
     @GetMapping("/admin/attendance-rules")
     public String attendanceRulesPage() {
-        return "attendance/admin_attendanceexception";
+        return "admin_rule";
     }
 
     @GetMapping("/attendance/commute")
