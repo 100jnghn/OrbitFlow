@@ -37,6 +37,25 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             """)
     List<Item> getAllByCompanyIdAndItemCategoryId(Long companyId, Long categoryId, ResourceStatusCode deletedStatus);
 
+    @Query("""
+                SELECT i
+                FROM Item i
+                JOIN FETCH i.resourceStatus rs 
+                WHERE i.company.id = :companyId
+                    AND rs.resourceStatusCode != :resourcStatusCode
+            """)
+    List<Item> getAllByCompanyIdAndStatus(Long companyId, ResourceStatusCode resourceStatusCode);
+
 
     Item findItemById(Long itemId);
+
+    @Query("""
+                SELECT i
+                FROM Item i
+                JOIN FETCH i.resourceStatus rs 
+                WHERE i.company.id = :companyId
+                    AND i.itemCategory.id = :categoryId
+                    AND rs.resourceStatusCode = :resourceStatusCode
+            """)
+    List<Item> getAllByCompanyIdAndItemCategoryIdAndStatus(Long companyId, Long categoryId, ResourceStatusCode resourceStatusCode);
 }

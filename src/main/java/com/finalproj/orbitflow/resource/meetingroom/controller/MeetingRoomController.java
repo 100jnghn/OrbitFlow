@@ -39,8 +39,19 @@ public class MeetingRoomController {
                 .body(new ResponseDto(HttpStatus.OK, "회의실 목록 조회 성공", meetingrooms));
     }
 
-    // 관리자 - 회의실 상세 조회
-    @GetMapping("/admin/meetingrooms/{meetingroomId}")
+    // 사용자 - 회의실 조회 (상태가 AVAILABLE인 회의실만 조회)
+    @GetMapping("/meetingrooms")
+    public ResponseEntity<ResponseDto> getAvailableMeetingrooms(@AuthenticationPrincipal SecurityUser user) {
+        Long companyId = user.getCompanyId();
+        List<MeetingroomResDto> meetingrooms = meetingroomService.getAvailableMeetingrooms(companyId);
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, "회의실 목록 조회 성공", meetingrooms)
+        );
+    }
+
+    // 관리자 | 사용자 - 회의실 상세 조회
+    @GetMapping("/meetingrooms/{meetingroomId}")
     public ResponseEntity<ResponseDto> getMeetingroom(@PathVariable Long meetingroomId) {
 
         MeetingroomResDto meetingroom = meetingroomService.getMeetingroom(meetingroomId);

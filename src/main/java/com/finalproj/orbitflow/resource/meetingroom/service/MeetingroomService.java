@@ -42,6 +42,14 @@ public class MeetingroomService {
                 .collect(Collectors.toList());
     }
 
+    public List<MeetingroomResDto> getAvailableMeetingrooms(Long companyId) {
+
+        // AVAILABLE만 조회
+        return meetingroomRepository.findAllByCompanyIdAndStatus(companyId, ResourceStatusCode.AVAILABLE).stream()
+                .map(this::convertToResDto)
+                .collect(Collectors.toList());
+    }
+
     @Transactional(readOnly = true)
     public MeetingroomResDto getMeetingroom(Long meetingroomId) {
         Meetingroom meetingroom = findMeetingroomById(meetingroomId);
@@ -126,5 +134,6 @@ public class MeetingroomService {
         return meetingroomRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 회의실을 찾을 수 없습니다"));
     }
+
 
 }
