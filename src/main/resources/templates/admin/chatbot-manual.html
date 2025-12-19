@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-admin :: layout(
+          ~{::content},
+          ~{fragments/header :: header},
+          ~{::admin-sidebar-menu},
+          ~{::pageCss}
+      )}">
+<head>
+    <meta charset="UTF-8">
+    <title>챗봇 매뉴얼 관리</title>
+
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/layout.css}">
+        <link rel="stylesheet" th:href="@{/css/layout-admin.css}">
+        <link rel="stylesheet" th:href="@{/css/chatbot-manual.css}">
+    </th:block>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="content-area">
+        <div class="page-header">
+            <h1>챗봇 매뉴얼 문서 관리</h1>
+            <p class="page-description">RAG 기반 분답변 생성을 위한 카테고리 매뉴얼을 등록합니다.</p>
+        </div>
+
+        <!-- 1. 매뉴얼 카테고리 선택 -->
+        <section class="rule-section">
+            <h2>1. 매뉴얼 카테고리 선택</h2>
+            <div class="category-buttons">
+                <button type="button" class="category-btn" data-category="attendance">근태</button>
+                <button type="button" class="category-btn" data-category="approval">결재</button>
+                <button type="button" class="category-btn" data-category="resource">자원관리</button>
+                <button type="button" class="category-btn" data-category="schedule">일정</button>
+                <button type="button" class="category-btn" data-category="other">기타</button>
+            </div>
+        </section>
+
+        <!-- 2. 매뉴얼 파일 첨부 -->
+        <section class="rule-section">
+            <h2>2. 매뉴얼 파일 첨부 (.txt)</h2>
+            <div class="file-upload-area" id="fileUploadArea">
+                <div class="upload-content">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <p>파일을 드래그하여 여기에 놓거나, 클릭하여 파일을 선택하세요.</p>
+                    <p class="upload-hint">최대 10MB (TXT)</p>
+                </div>
+                <input type="file" id="fileInput" accept=".txt" style="display: none;">
+            </div>
+            <div class="upload-actions">
+                <button type="button" id="uploadBtn" class="btn-primary">업로드</button>
+            </div>
+        </section>
+
+        <!-- 3. 등록된 매뉴얼 목록 -->
+        <section class="rule-section">
+            <h2 id="manualListTitle">3. 등록된 매뉴얼 목록 (카테고리: <span id="selectedCategoryName">근태</span>)</h2>
+            <div class="table-container">
+                <table class="exception-table">
+                    <thead>
+                    <tr>
+                        <th>파일명</th>
+                        <th>등록일</th>
+                        <th>관리</th>
+                    </tr>
+                    </thead>
+                    <tbody id="manualListBody">
+                        <tr>
+                            <td colspan="3" style="text-align: center; padding: 20px;">등록된 매뉴얼이 없습니다.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script th:src="@{/js/chatbot-manual.js}"></script>
+</div>
+
+<!-- 사이드바 -->
+<ul th:fragment="admin-sidebar-menu" class="sidebar-menu">
+    <li class="selected">
+        <a th:href="@{/view/admin/chatbot}" class="sidebar-link">
+            챗봇 매뉴얼 관리
+        </a>
+    </li>
+</ul>
+
