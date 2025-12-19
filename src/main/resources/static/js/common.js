@@ -112,13 +112,24 @@ async function logout() {
 
 /** 헤더 사용자 정보 표시 */
 async function loadMe() {
-    const res = await apiFetch('/api/auth/me');
+    try {
+        const res = await apiFetch('/api/auth/me');
 
-    if (!res.ok) return;
+        if (!res.ok) {
+            location.href = '/login';
+            return;
+        }
 
-    const me = await res.json();
-    document.getElementById('userName').innerText =
-        `${me.name} (${me.role})`;
+        const me = await res.json();
+
+        const userNameEl = document.getElementById('userName');
+        if (userNameEl) {
+            userNameEl.innerText = `${me.name} (${me.role})`;
+        }
+
+    } catch (e) {
+        location.href = '/login';
+    }
 }
 
 document.addEventListener('DOMContentLoaded', loadMe);

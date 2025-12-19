@@ -46,8 +46,11 @@ public class SecurityConfig {
                                 "/login",
                                 "/css/**",
                                 "/js/**",
-                                "/api/auth/**"
+                                "/api/auth/login",
+                                "/api/auth/refresh"
                         ).permitAll()
+
+                        .requestMatchers("/api/auth/me").authenticated()
 
                         // 회사 대표 관리자만
                         .requestMatchers("/api/company-admin/**")
