@@ -20,16 +20,6 @@ import java.time.LocalDate;
 
 @Repository
 public interface AttendanceDashboardRepository extends JpaRepository<Attendance,Long> {
-    long countTotalEmployees(Long companyId);
 
-    long countCheckedIn(Long companyId, LocalDate today);
-
-    long countLateEmployees(Long companyId, LocalDate today);
-
-    long countWorkingNow(Long companyId, LocalDate today);
-
-    long countPendingCorrections(Long companyId);
-
-    Page<DashBoardListDto> searchAttendanceList(Long companyId, SearchConditionDto condition, Pageable pageable);
 }
 

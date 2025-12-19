@@ -1,0 +1,11 @@
+package com.finalproj.orbitflow.attendance.attendance.controller;
+
+/**
+ * Please explain the class!!!
+ *
+ * @author : rlagkdus
+ * @filename : AttendanceDashboardViewController
+ * @since : 2025. 12. 19. 금요일
+ */
+public class AttendanceViewController {
+}
