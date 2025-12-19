@@ -41,8 +41,12 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/auth/**",
-                                "/login"
+                                "/",
+                                "/index.html",
+                                "/login",
+                                "/css/**",
+                                "/js/**",
+                                "/api/auth/**"
                         ).permitAll()
 
                         // 회사 대표 관리자만
@@ -52,10 +56,6 @@ public class SecurityConfig {
                         // 회사 관리자 + 대표 관리자
                         .requestMatchers("/api/admin/**")
                         .hasAnyRole("ADMIN", "COMPANY_ADMIN")
-
-                        // 모든 사원
-                        .requestMatchers("/api/employee/**")
-                        .hasAnyRole("EMPLOYEE", "ADMIN", "COMPANY_ADMIN")
 
                         .anyRequest().authenticated()
                 )
