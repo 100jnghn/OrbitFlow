@@ -11,14 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/attendance")
 public class AttendanceViewController {
 
-    /**
-     * 근태 메인 페이지
-     * - 템플릿: templates/attendance/attendance.html
-     */
-    @GetMapping
-    public String attendancePage() {
-        return "attendance/attendance";
-    }
+
 }
 
 
