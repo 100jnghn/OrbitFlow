@@ -1,9 +1,6 @@
 package com.finalproj.orbitflow.approval.formTemplateGroup.service;
 
-import com.finalproj.orbitflow.approval.formTemplateGroup.dto.FormTemplateGroupCreateReqDto;
-import com.finalproj.orbitflow.approval.formTemplateGroup.dto.FormTemplateGroupDetailResDto;
-import com.finalproj.orbitflow.approval.formTemplateGroup.dto.FormTemplateGroupListResDto;
-import com.finalproj.orbitflow.approval.formTemplateGroup.dto.FormTemplateGroupUpdateReqDto;
+import com.finalproj.orbitflow.approval.formTemplateGroup.dto.*;
 import com.finalproj.orbitflow.approval.formTemplateGroup.entity.FormTemplateGroup;
 import com.finalproj.orbitflow.approval.formTemplateGroup.repository.FormTemplateGroupListView;
 import com.finalproj.orbitflow.approval.formTemplateGroup.repository.FormTemplateGroupRepository;
@@ -49,7 +46,7 @@ public class FormTemplateGroupService {
 
 
     @Transactional
-    public Long saveFormTemplateGroup(FormTemplateGroupCreateReqDto dto, Long companyId) {
+    public FormTemplateGroupCreateResDto saveFormTemplateGroup(FormTemplateGroupCreateReqDto dto, Long companyId) {
 
         Company company = companyRepository.findById(companyId).orElseThrow(
                 () -> new ResponseStatusException(
@@ -58,10 +55,16 @@ public class FormTemplateGroupService {
                 )
         );
 
+        if (formTemplateGroupRepository.existsByCompanyIdAndName(companyId, dto.getName())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "이미 존재하는 문서 양식 그룹 이름입니다."
+            );
+        }
         FormTemplateGroup entity = dto.toEntity(company);
         formTemplateGroupRepository.save(entity);
 
-        return entity.getId();
+        return new FormTemplateGroupCreateResDto(entity.getId());
     }
 
     public FormTemplateGroupDetailResDto getDetailTemplateGroup(Long id) {

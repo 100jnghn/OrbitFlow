@@ -214,7 +214,6 @@ const FIXED_COMPONENTS = [
 ];
 
 // 4. formComponents: 필드 구조만 정의 - 문서 구조의 일관성 보장
-// (초기값 예시, 실제 추가/삭제는 별도 로직에서 수행)
 let formComponents = [
     { ...FIXED_COMPONENTS[0], id: 'document-title' },
     { ...FIXED_COMPONENTS[1], id: 'document-meta' }
@@ -229,22 +228,13 @@ let dragSrcIdx = null;
 // ===============================
 // 중앙 문서 영역 렌더링 함수 정의 (renderFormComponents)
 // ===============================
-/**
- * formComponents 배열을 기반으로 #form-edit-area에 컴포넌트 목록(Render) 
- * - 각 컴포넌트는 div.form-comp-row로 출력
- * - label 항상 표시
- * - fixed 컴포넌트(document-title, document-meta)는 구분해서 보여줌
- * - 요구사항: drag & drop, 타입별 미리보기/범위 row 적용
- */
 function renderFormComponents() {
     // [요구사항1] 문서영역 스크롤 처리: CSS에만 위임. (이 주석 유지)
-    // (form-edit-area, form-edit-area-wrapper의 overflow/max-height 등은 CSS에서 제어)
     const container = document.getElementById("form-edit-area");
     if (!container) return;
 
     container.innerHTML = "";
 
-    // 고정 컴포넌트 위치 기억
     const fixedFirstIdx = 0;
     const fixedLastIdx = formComponents.length - 1;
 
@@ -261,10 +251,10 @@ function renderFormComponents() {
                 row.classList.add("dragging");
                 e.dataTransfer.effectAllowed = "move";
                 try {
-                    e.dataTransfer.setData("text/plain", comp.id); // for older browsers
+                    e.dataTransfer.setData("text/plain", comp.id);
                 } catch {}
             });
-            row.addEventListener("dragend", function(e) {
+            row.addEventListener("dragend", function() {
                 row.classList.remove("dragging");
                 dragSrcIdx = null;
             });
@@ -272,7 +262,6 @@ function renderFormComponents() {
             row.setAttribute("draggable", "false");
         }
 
-        // 드롭 이벤트 바인딩(모든 row: 자기 위치로 drop 허용, drop 가능한 조건은 아래에서 체크)
         row.addEventListener("dragover", function(e) {
             if (dragSrcIdx === null) return;
             if (comp.fixed) return;
@@ -281,7 +270,7 @@ function renderFormComponents() {
             e.preventDefault();
             row.style.backgroundColor = "#eaf4ff";
         });
-        row.addEventListener("dragleave", function(e) {
+        row.addEventListener("dragleave", function() {
             row.style.backgroundColor = (comp.id === selectedComponentId) ? "#eef5ff" : (comp.fixed ? "#f5f7fa" : "#fff");
         });
         row.addEventListener("drop", function(e) {
@@ -291,10 +280,8 @@ function renderFormComponents() {
             if (dragSrcIdx === idx) return;
             e.preventDefault();
             row.style.backgroundColor = "";
-            // 드래그&드롭 순서 변경
             const dragged = formComponents[dragSrcIdx];
             if (dragged.fixed) return;
-            let newIdx = idx;
             if (dragSrcIdx < idx) {
                 formComponents.splice(idx + 1, 0, dragged);
                 formComponents.splice(dragSrcIdx, 1);
@@ -320,7 +307,6 @@ function renderFormComponents() {
             dragSrcIdx = null;
         });
 
-        // --- 선택/선택된 row 강조 ---
         if (comp.fixed) {
             row.style.background = "#f5f7fa";
             row.style.border = "1px solid #e0e0ec";
@@ -339,14 +325,11 @@ function renderFormComponents() {
                 showComponentSettingPanel(comp.id);
             });
         }
-        
+
         row.style.padding = "10px 14px";
         row.style.marginBottom = "6px";
 
-        // ==============================================
-        // 미리보기: 타입별(preview) 출력 
-        // ==============================================
-        // fixed
+        // 타입별(preview)
         if (comp.fixed) {
             if (comp.type === 'document-title') {
                 row.innerHTML = `<strong style="font-size:1.15em;">${comp.label}</strong>
@@ -360,15 +343,13 @@ function renderFormComponents() {
             if (comp.required) {
                 row.innerHTML += `<span style="color:#e22719;font-size:0.95em;margin-left:7px;">*</span>`;
             }
-        } 
-        // --- 일반(Form) 컴포넌트 ---
+        }
         else {
             let inputHtml = "";
             let labelHtml = `<span>${comp.label || ""}</span>`;
             if (comp.required)
                 labelHtml += `<span style="color:#e22719;font-size:0.95em;margin-left:7px;">*</span>`;
 
-            // 범위형(form) 한 줄 2-input
             if (["date-range","time-range","leave-date-range"].includes(comp.type)) {
                 let leftLabel = "", rightLabel = "";
                 if (comp.meta) {
@@ -407,7 +388,6 @@ function renderFormComponents() {
                 row.innerHTML = labelHtml + inputHtml;
             }
             else if (comp.type === "radio" || comp.type === "checkbox") {
-                // [요구사항3] options 구조 및 세로 리스트 렌더링
                 let options =
                     (comp.meta && Array.isArray(comp.meta.options) && comp.meta.options.length > 0)
                         ? comp.meta.options
@@ -436,7 +416,6 @@ function renderFormComponents() {
                 row.innerHTML = `<hr style="margin:8px 0 6px 0;border:solid #e9e9e9 1.5px;">`;
             }
             else if (comp.type === "notice") {
-                // [요구사항2] 안내문구 미리보기 (message 반영)
                 let message = comp.meta && typeof comp.meta.message === "string" && comp.meta.message.length > 0
                     ? comp.meta.message
                     : "안내 문구 예시";
@@ -475,12 +454,12 @@ function renderFormComponents() {
         }
 
         if (row.getAttribute("draggable") === "true") {
-            row.addEventListener("dragenter", function(e) {
+            row.addEventListener("dragenter", function() {
                 if (dragSrcIdx !== null && !comp.fixed && idx !== fixedFirstIdx && idx !== fixedLastIdx && dragSrcIdx !== idx) {
                     row.classList.add("drag-hover");
                 }
             });
-            row.addEventListener("dragleave", function(e) {
+            row.addEventListener("dragleave", function() {
                 row.classList.remove("drag-hover");
             });
         }
@@ -490,9 +469,8 @@ function renderFormComponents() {
 }
 
 // ===============================
-// [ 컴포넌트 추가 로직 오버라이드: 요구사항 반영 ]
+// [ 컴포넌트 추가 로직 ]
 // ===============================
-
 function deepCopy(obj) {
     if (obj === null || typeof obj !== "object") return obj;
     if (Array.isArray(obj)) return obj.map(deepCopy);
@@ -505,7 +483,6 @@ function deepCopy(obj) {
     return res;
 }
 
-// generateId는 기존 프로젝트에 이미 있음(아니면 대체 구현)
 function generateId() {
     return 'comp_' + Math.random().toString(36).substr(2, 6) + '_' + Date.now();
 }
@@ -514,19 +491,14 @@ function generateOptionId() {
     return 'opt_' + Math.random().toString(36).substr(2, 4) + '_' + Date.now();
 }
 
-/**
- * 요구 조건에 따라 FORM_COMPONENT_SCHEMAS 기반으로 새 컴포넌트 생성
- */
 function addComponentByType(type) {
     if (!FORM_COMPONENT_SCHEMAS.hasOwnProperty(type)) {
         console.warn(`[FormTemplateBuilder] 컴포넌트 타입 '${type}'는 스키마에 정의되어 있지 않습니다. 추가 중단.`);
         return;
     }
-    // deep copy & id/fixed 할당 (meta도 반드시 복사)
     const schema = FORM_COMPONENT_SCHEMAS[type];
     const metaCopy = deepCopy(schema.meta);
 
-    // [요구3] radio/checkbox 추가 시 기본 옵션 객체 배열화 보장
     if ((type === "radio" || type === "checkbox")) {
         metaCopy.options = metaCopy.options && metaCopy.options.length > 0 ?
             deepCopy(metaCopy.options.map(opt => typeof opt === "string" ? {id: generateOptionId(), label: opt} : {...opt, id: generateOptionId()})) :
@@ -547,18 +519,11 @@ function addComponentByType(type) {
     showComponentSettingPanel(component.id);
 }
 
-// ===============================
-// [추가] 좌측 "컴포넌트 목록"을 동적으로 생성하는 함수
-// ===============================
+// 컴포넌트 목록 동적 생성
 function initComponentListPanel() {
     const listContainer = document.getElementById("component-btn-list");
     if (!listContainer) return;
     listContainer.innerHTML = "";
-
-    // [요구사항2] 2열(Grid) 구조 적용: CSS만으로 컨테이너에 grid 속성 부여 (JS 구조는 변경하지 않음)
-    // JS에서는 변동 없음. (아래 주석만 추가)
-    // CSS: .component-btn-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px 9px; }
-    // 버튼 크기, 클래스는 유지
 
     FORM_COMPONENT_TYPES.forEach(function(type) {
         if (!FORM_COMPONENT_SCHEMAS[type]) return;
@@ -577,19 +542,12 @@ function initComponentListPanel() {
 }
 
 // ===============================
-// [삭제/대체됨] 기존: .component-btn 클릭 이벤트 바인딩 코드
-// ===============================
-
-// ===============================
 // [ 추가 ] 문서 설정 전역 옵션
 // ===============================
 let documentSettings = {
-    allowReferenceDocument: false,
-    allowAttachment: true,
-    autoReflectAttendance: false,   // 근태 자동 반영
-    autoReflectSchedule: false      // 일정 자동 반영 (신규 추가)
+    autoReflectAttendance: false,
+    autoReflectSchedule: false
 };
-
 
 // ===============================
 // [ 추가 ] 컴포넌트 설정 패널에 필수 입력 토글 및 라벨 수정 추가 + 확장(UI)
@@ -610,7 +568,6 @@ function showComponentSettingPanel(componentId) {
         </div>
     `;
 
-    // [라벨(이름)] input 추가 (fixed면 disabled)
     let labelFieldHtml = `
         <div class="setting-row" style="margin-bottom:10px;align-items: center;display:flex;">
             <label style="min-width:54px;flex:1;" for="input-comp-label">이름</label>
@@ -621,7 +578,6 @@ function showComponentSettingPanel(componentId) {
     `;
     html += labelFieldHtml;
 
-    // [필수 입력] 토글 추가 (fixed 컴포넌트에는 UI 노출 안함)
     if (!isFixed) {
         html += `
         <div class="setting-row" style="margin-bottom:12px;align-items: center;display:flex;">
@@ -631,7 +587,6 @@ function showComponentSettingPanel(componentId) {
         `;
     }
 
-    // [요구2] 안내 문구 컴포넌트 전용 설정 (message 입력 textarea)
     if (comp.type === "notice") {
         const msgValue = (comp.meta && typeof comp.meta.message === "string") ? comp.meta.message.replace(/</g,"&lt;") : "";
         html += `
@@ -648,9 +603,7 @@ function showComponentSettingPanel(componentId) {
         `;
     }
 
-    // [요구3] 라디오/체크박스 옵션 편집 UI 제공
     if (comp.type === "radio" || comp.type === "checkbox") {
-        // options array 보장/타입 체크
         if (!comp.meta.options || !Array.isArray(comp.meta.options) || comp.meta.options.length === 0) {
             comp.meta.options = [{ id: generateOptionId(), label: "옵션 1" }];
         }
@@ -664,7 +617,7 @@ function showComponentSettingPanel(componentId) {
         `;
     }
 
-    // 추가 설정 확장 포인트...
+    // ...패널에 추가 설정 확장
 
     panel.innerHTML = html;
 
@@ -683,7 +636,7 @@ function showComponentSettingPanel(componentId) {
     if (!isFixed) {
         const requiredToggle = document.getElementById('toggle-required');
         if (requiredToggle) {
-            requiredToggle.addEventListener('change', function (e) {
+            requiredToggle.addEventListener('change', function(e){
                 comp.required = !!e.target.checked;
                 const idx = formComponents.findIndex(fc => fc.id === componentId);
                 if (idx !== -1) formComponents[idx].required = comp.required;
@@ -692,13 +645,11 @@ function showComponentSettingPanel(componentId) {
         }
     }
 
-    // [요구2] 안내문구 textarea 이벤트
     if (comp.type === "notice") {
         const msgTarea = document.getElementById("input-notice-message");
         if (msgTarea) {
             msgTarea.value = comp.meta && typeof comp.meta.message === "string" ? comp.meta.message : "";
             msgTarea.addEventListener('input', function(e) {
-                // 즉시 반영: meta.message에 업데이트
                 comp.meta = comp.meta || {};
                 comp.meta.message = e.target.value;
                 const idx = formComponents.findIndex(fc => fc.id === componentId);
@@ -708,14 +659,13 @@ function showComponentSettingPanel(componentId) {
         }
     }
 
-    // [요구3] 라디오/체크박스 옵션 관리 UI/로직 (최소 1개 옵션 유지)
+    // 라디오/체크박스 옵션 관리 UI/로직 (최소 1개 옵션 유지)
     if (comp.type === 'radio' || comp.type === 'checkbox') {
         function renderOptionPanel() {
             const pane = document.getElementById('option-list-pane');
             if (!pane) return;
             let optListHTML = "";
             comp.meta.options.forEach(function(opt, idx) {
-                // id, label 필드 보장
                 const optId = opt.id || generateOptionId();
                 if (!opt.id) opt.id = optId;
                 optListHTML += `
@@ -737,21 +687,18 @@ function showComponentSettingPanel(componentId) {
             });
             pane.innerHTML = optListHTML;
 
-            // Label 입력 바인딩
             Array.from(pane.querySelectorAll('.input-option-label')).forEach(function(input) {
                 input.addEventListener('input', function(e) {
                     const idx = Number(input.getAttribute('data-opt-idx'));
                     comp.meta.options[idx].label = e.target.value;
-                    // 동기화
                     const fcIdx = formComponents.findIndex(fc => fc.id === componentId);
                     if (fcIdx !== -1) formComponents[fcIdx].meta.options[idx].label = e.target.value;
                     renderFormComponents();
                 });
             });
 
-            // 삭제 버튼 바인딩 (최소1개 유지)
             Array.from(pane.querySelectorAll('.btn-remove-option')).forEach(function(btn) {
-                btn.addEventListener('click', function(e) {
+                btn.addEventListener('click', function() {
                     const idx = Number(btn.getAttribute('data-opt-idx'));
                     if (comp.meta.options.length > 1) {
                         comp.meta.options.splice(idx, 1);
@@ -766,7 +713,6 @@ function showComponentSettingPanel(componentId) {
 
         renderOptionPanel();
 
-        // 옵션 추가 버튼
         const addBtn = document.getElementById('add-option-btn');
         if (addBtn) {
             addBtn.addEventListener('click', function() {
@@ -774,7 +720,6 @@ function showComponentSettingPanel(componentId) {
                 const fcIdx = formComponents.findIndex(fc => fc.id === componentId);
                 if (fcIdx !== -1) formComponents[fcIdx].meta.options = comp.meta.options;
                 renderFormComponents();
-                // 다시 렌더(포커스 위해)
                 showComponentSettingPanel(componentId);
             });
         }
@@ -788,16 +733,7 @@ function bindDocumentSettingsPanel() {
     const panel = document.getElementById('form-setting-panel');
     if (!panel) return;
 
-    // [요구사항1] 근태, 일정 자동 반영 각각 분리된 토글로
     const settingTogglesHTML = `
-      <div class="setting-row" style="margin-bottom:9px;align-items:center;display:flex;">
-        <label for="toggle-reference-document" style="flex:1;">연관 문서 업로드 허용</label>
-        <input type="checkbox" id="toggle-reference-document" ${documentSettings.allowReferenceDocument ? "checked" : ""} style="transform:scale(1.15);margin-left:7px;cursor:pointer;">
-      </div>
-      <div class="setting-row" style="margin-bottom:9px;align-items:center;display:flex;">
-        <label for="toggle-attachment" style="flex:1;">첨부 파일 업로드 허용</label>
-        <input type="checkbox" id="toggle-attachment" ${documentSettings.allowAttachment ? "checked" : ""} style="transform:scale(1.15);margin-left:7px;cursor:pointer;">
-      </div>
       <div class="setting-row" style="margin-bottom:5px;align-items:center;display:flex;">
         <label for="toggle-auto-attendance" style="flex:1;">최종 승인 시 근태 자동 반영</label>
         <input type="checkbox" id="toggle-auto-attendance" ${documentSettings.autoReflectAttendance ? "checked" : ""} style="transform:scale(1.15);margin-left:7px;cursor:pointer;">
@@ -856,10 +792,155 @@ function bindDocumentSettingsPanel() {
     }
 }
 
-// ===============================
-// [초기화] DOMContentLoaded 시점에 필수 초기화 함수 호출
-// ===============================
-document.addEventListener('DOMContentLoaded', function () {
-    initComponentListPanel();
-    renderFormComponents();
-});
+async function loadFormTemplateGroupInfo() {
+    if (!groupId) return;
+
+    try {
+        const res = await apiFetch(`/api/form-template-groups/${groupId}`);
+        if (!res.ok) return;
+
+        const result = await res.json();
+        const group = result?.data;
+        if (!group) return;
+
+        renderFormTemplateGroupInfo(group);
+
+    } catch (e) {
+        console.warn('[FormTemplateGroup] 그룹 정보 조회 실패', e);
+    }
+}
+
+function renderFormTemplateGroupInfo(group) {
+    const panel = document.getElementById('form-setting-panel');
+    if (!panel) return;
+
+    const blockId = 'form-template-group-info';
+    if (document.getElementById(blockId)) return;
+
+    const html = `
+        <div id="${blockId}" style="margin-bottom:16px;padding:10px 12px;border:1px solid #dde1f0;border-radius:6px;background:#f7f8fc;">
+            <div style="font-weight:600;margin-bottom:6px;">문서 양식 그룹 정보</div>
+
+            <div style="display:flex;align-items:center;margin-bottom:6px;">
+                <label style="min-width:70px;color:#666;">그룹명</label>
+                <input type="text" value="${group.name ?? ''}" disabled
+                    style="flex:1;padding:4px 7px;border:1px solid #ccd;background:#f2f4f8;color:#555;">
+            </div>
+
+            <div style="display:flex;align-items:flex-start;">
+                <label style="min-width:70px;color:#666;margin-top:4px;">설명</label>
+                <textarea disabled
+                    style="flex:1;padding:4px 7px;border:1px solid #ccd;background:#f2f4f8;color:#555;resize:none;"
+                    rows="2">${group.description ?? ''}</textarea>
+            </div>
+        </div>
+    `;
+
+    panel.insertAdjacentHTML('afterbegin', html);
+}
+
+function buildAffectTags(settings) {
+    const tags = [];
+
+    if (settings.autoReflectAttendance) {
+        tags.push("ATTENDANCE");
+    }
+    if (settings.autoReflectSchedule) {
+        tags.push("SCHEDULE");
+    }
+
+    return tags;
+}
+
+function convertComponentsToFields(components) {
+    return components.map((comp, index) => ({
+        fieldId: comp.id,
+        fieldType: comp.type,
+        label: comp.label,
+        required: !!comp.required,
+        order: index + 1,
+        meta: comp.meta ?? {}
+    }));
+}
+
+/* ======================================================
+   [SAVE] 문서 양식 구조 저장 기능 (PATCH)
+   ====================================================== */
+
+async function saveFormTemplateStructure(templateId) {
+    if (!templateId) {
+        alert('저장할 문서 양식 ID(templateId)가 존재하지 않습니다.');
+        return;
+    }
+
+    // 1. fixed / 불필요 필드 제거
+    const filteredComponents = formComponents
+        .filter(fc => fc.type !== 'document-meta')
+        .map(fc => {
+            const comp = {...fc};
+            delete comp.fixed;
+            delete comp.selected;
+            return comp;
+        });
+
+    const categoryCode = document.getElementById('form-category-input')?.value;
+
+    if (!categoryCode) {
+        alert('카테고리를 선택해주세요.');
+        return;
+    }
+
+    // 3. affectTags 생성
+    const affectTags = buildAffectTags(documentSettings);
+
+    // 4. 서버 계약에 맞는 payload 구성
+    const payload = {
+        categoryCode,
+        affectTags,
+        templateJson: {
+            fields: convertComponentsToFields(filteredComponents)
+        }
+    };
+
+    try {
+        const res = await apiFetch(`/api/admin/form-templates/${templateId}/structure`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err?.message || '문서 양식 저장에 실패했습니다.');
+        }
+
+        alert('문서 양식이 저장되었습니다.');
+
+    } catch (e) {
+        console.error('[FormTemplate SAVE ERROR]', e);
+        alert(e.message || '문서 양식 저장 중 오류가 발생했습니다.');
+    }
+}
+
+
+/**
+ * 저장 버튼 이벤트 바인딩 (PATCH API만 바인딩)
+ */
+function bindSaveFormButton() {
+    const saveBtn = document.getElementById('save-form-btn');
+    if (!saveBtn) return;
+
+    // 기존 중복 기능 제거(PATCH 요청만 유지)
+    saveBtn.addEventListener('click', async function () {
+        saveBtn.disabled = true;
+        try {
+            // templateId는 선언돼있다고 가정(api 사용부와 동일)
+            await saveFormTemplateStructure(typeof templateId !== "undefined" ? templateId : undefined);
+        } finally {
+            saveBtn.disabled = false;
+        }
+    });
+}
+

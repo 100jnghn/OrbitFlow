@@ -129,6 +129,52 @@ function hideCreatePopup() {
     document.getElementById('createPopup').style.display = 'none';
 }
 
+/**
+ * 선택한 양식 그룹(groupId)을 기반으로 결재 양식 초안 생성
+ * @param {number} groupId - FormTemplateGroup ID
+ * @param {string} categoryCode - TemplateCategoryCode (예: 'ATTENDANCE', 'SCHEDULE', 'GENERAL')
+ */
+async function createFormTemplateByGroupId(groupId, categoryCode) {
+    if (!groupId) {
+        alert('양식 그룹 ID가 유효하지 않습니다.');
+        return null;
+    }
+    if (!categoryCode) {
+        alert('양식 카테고리를 선택해주세요.');
+        return null;
+    }
+
+    try {
+        const params = new URLSearchParams({
+            templateGroupId: groupId,
+            categoryCode: categoryCode
+        });
+
+        const res = await apiFetch(`/api/admin/form-templates?${params.toString()}`, {
+            method: 'POST'
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err?.message || '결재 양식 생성에 실패했습니다.');
+        }
+
+        const result = await res.json();
+        const formTemplateId = result?.data?.formTemplateId;
+
+        if (!formTemplateId) {
+            throw new Error('생성된 결재 양식 ID를 받지 못했습니다.');
+        }
+
+        return formTemplateId;
+
+    } catch (e) {
+        console.error('[createFormTemplateByGroupId error]', e);
+        alert(e.message || '결재 양식 생성 중 오류가 발생했습니다.');
+        return null;
+    }
+}
+
 function bindEventHandlers() {
     document.getElementById('statusFilter').addEventListener('change', function () {
         approvalState.status = this.value;
@@ -168,11 +214,63 @@ function bindEventHandlers() {
     document.getElementById('popupCancelBtn').addEventListener('click', function(){
         hideCreatePopup();
     });
-    document.getElementById('popupCreateBtn').addEventListener('click', function(){
-        const name = document.getElementById('popupTemplateName').value;
-        const desc = document.getElementById('popupTemplateDesc').value;
-        console.log('생성 요청:', { name, desc });
-        hideCreatePopup();
+    document.getElementById('popupCreateBtn').addEventListener('click', async function () {
+        const name = document.getElementById('popupTemplateName').value.trim();
+        const desc = document.getElementById('popupTemplateDesc').value.trim();
+
+        if (!name) {
+            alert('문서 양식명을 입력해주세요.');
+            return;
+        }
+
+        try {
+            const btn = document.getElementById('popupCreateBtn');
+            btn.disabled = true;
+
+            const res = await apiFetch('/api/admin/form-template-groups', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name,
+                    description: desc
+                })
+            });
+
+            if (!res.ok) {
+                const errMsg = (await res.json())?.message || '문서 양식 그룹 생성에 실패했습니다.';
+                alert(errMsg);
+                return;
+            }
+
+            const result = await res.json();
+
+            const groupId = result?.data?.createdFormTemplateGroupId;
+
+            if (!groupId) {
+
+
+                alert('생성된 양식 그룹 ID를 가져오지 못했습니다.');
+                return;
+            }
+
+            const templateId = await createFormTemplateByGroupId(
+                groupId,
+                "GENERAL"
+            );
+
+
+            hideCreatePopup();
+
+            window.location.href = `/view/admin/create-template?groupId=${groupId}&templateId=${templateId}`;
+
+        } catch (e) {
+            console.error(e);
+            alert('문서 양식 그룹 생성 중 오류가 발생했습니다.');
+        } finally {
+            document.getElementById('popupCreateBtn').disabled = false;
+        }
     });
 }
 
@@ -321,4 +419,7 @@ function bindUpdatePopupEvents() {
         const groupId = lastUpdateDropdownIdMap[input.value];
         if (groupId) showSelectedUpdateDescription(groupId);
     });
+
+
+
 }

@@ -31,4 +31,5 @@ public interface FormTemplateGroupRepository extends JpaRepository<FormTemplateG
     );
 
 
+    boolean existsByCompanyIdAndName(Long companyId, String name);
 }
