@@ -65,4 +65,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ResponseDto(HttpStatus.CONFLICT, e.getMessage(), null));
     }
+
+    /**
+     * throw new InvalidRequestException("잘못된 요청입니다.");
+     **/
+    @ExceptionHandler(InvalidRequestException.class) // → 400
+    public ResponseEntity<ResponseDto> handleInvalidRequest(InvalidRequestException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ResponseDto(HttpStatus.BAD_REQUEST, e.getMessage(), null));
+    }
+
+    /**
+     * throw new InvalidStateException("현재 상태에서는 수행할 수 없습니다.");
+     **/
+    @ExceptionHandler(InvalidStateException.class) // → 409
+    public ResponseEntity<ResponseDto> handleInvalidState(InvalidStateException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ResponseDto(HttpStatus.CONFLICT, e.getMessage(), null));
+    }
+
 }

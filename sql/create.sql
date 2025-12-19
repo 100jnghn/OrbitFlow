@@ -26,6 +26,10 @@ CREATE TABLE org_category
     created_at  TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT uk_org_category_company_order -- orderIndex 유니크 제약 추가
+        UNIQUE (company_id, order_index),
+
     CONSTRAINT fk_org_category_company
         FOREIGN KEY (company_id) REFERENCES company (id)
 ) ENGINE = InnoDB;
