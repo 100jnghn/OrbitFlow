@@ -54,14 +54,14 @@ public class FormTemplateController {
     public ResponseEntity<ResponseDto> reviseFormTemplate(
             @PathVariable(name = "templateId") Long templateGroupId
     ) {
-        Long formTemplateId = formTemplateService.reviseFormTemplateByTemplateGroup(templateGroupId, SecurityUtils.getCompanyId());
+        Long createdTemplateId = formTemplateService.reviseFormTemplateByTemplateGroup(templateGroupId, SecurityUtils.getCompanyId());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(new ResponseDto(
                         HttpStatus.CREATED,
                         "결재 양식이 복제되었습니다.",
-                        Map.of("formTemplateId", formTemplateId)));
+                        Map.of("createdTemplateId", createdTemplateId)));
     }
 
 

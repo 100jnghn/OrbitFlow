@@ -24,15 +24,7 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Entity
-@Table(
-        name = "form_template",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_template_group_company_version",
-                        columnNames = {"company_id", "template_group_id", "version"}
-                )
-        }
-)
+@Table(name = "form_template")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -54,6 +46,9 @@ public class FormTemplate extends BaseEntity {
     @Column(nullable = false)
     private int version;
 
+    @Column(name = "active_version", insertable = false, updatable = false)
+    private Integer activeVersion;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "template_category_id", nullable = false)
     private TemplateCategory templateCategory;
@@ -66,15 +61,11 @@ public class FormTemplate extends BaseEntity {
     @Convert(converter = AffectTagListConverter.class)
     private List<AffectTag> affectTags;
 
-
     @Column(name = "template_json", nullable = false, columnDefinition = "json")
     private String templateJson;
 
     @Column(name = "approval_rule_json", columnDefinition = "json")
     private String approvalRuleJson;
-
-
-
 
     public void changeCategory(TemplateCategory category) {
         this.templateCategory = category;
@@ -92,7 +83,9 @@ public class FormTemplate extends BaseEntity {
         this.approvalRuleJson = approvalRuleJson;
     }
 
-    public void updateStatus(FormTemplateStatus formTemplateStatus) {
-        this.status = formTemplateStatus;
+    public void updateStatus(FormTemplateStatus status) {
+        this.status = status;
     }
+
+    public void updateVersion(int nextVersion) {this.activeVersion = nextVersion;}
 }
