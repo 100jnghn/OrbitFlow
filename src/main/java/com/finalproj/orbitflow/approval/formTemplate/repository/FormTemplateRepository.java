@@ -49,29 +49,32 @@ public interface FormTemplateRepository extends JpaRepository<FormTemplate, Long
 
 
     @Query("""
-            select
-                t.id as formTemplateId,
-                g.name as formTemplateGroupName,
-                t.version as formTemplateVersion,
-                count(d.id) as useDocument,
-                t.updatedAt as updatedAt,
-                t.status as formTemplateStatus,
-                t.affectTags as affectTags
-            from FormTemplate t
-            join t.templateGroup g
-            left join Document d
-              on d.templateGroup.id = g.id
-             and d.templateVersion = t.version
-            where g.company.id = :companyId
-              and (:keyword is null or g.name like concat('%', :keyword, '%'))
-            group by
-                t.id, g.name, t.version, t.updatedAt, t.status
-            """)
+    select
+        t.id as formTemplateId,
+        g.name as formTemplateGroupName,
+        t.version as formTemplateVersion,
+        count(d.id) as useDocument,
+        t.updatedAt as updatedAt,
+        t.status as formTemplateStatus,
+        t.affectTags as affectTags
+    from FormTemplate t
+    join t.templateGroup g
+    left join Document d
+      on d.templateGroup.id = g.id
+     and d.templateVersion = t.version
+    where g.company.id = :companyId
+      and (:keyword is null or g.name like concat('%', :keyword, '%'))
+      and (:status is null or t.status = :status)
+    group by
+        t.id, g.name, t.version, t.updatedAt, t.status, t.affectTags
+    """)
     Page<FormTemplateAllListView> findAllWithDocumentCount(
             Long companyId,
             String keyword,
+            FormTemplateStatus status,
             Pageable pageable
     );
+
 }
 
 

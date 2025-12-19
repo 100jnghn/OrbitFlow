@@ -15,7 +15,6 @@ import com.finalproj.orbitflow.approval.formTemplateGroup.repository.FormTemplat
 import com.finalproj.orbitflow.approval.templateCategory.entity.TemplateCategory;
 import com.finalproj.orbitflow.approval.templateCategory.enums.TemplateCategoryCode;
 import com.finalproj.orbitflow.approval.templateCategory.repository.TemplateCategoryRepository;
-import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -278,24 +277,12 @@ public class FormTemplateService {
         return FormTemplateDetailResDto.from(formTemplate, objectMapper);
     }
 
-    public Page<FormTemplateAllListResDto> allFormTemplate(
-            Long companyId,
-            int size,
-            int offset,
-            String keyword
-    ) {
-        Pageable pageable = PageRequest.of(
-                offset,
-                size,
-                Sort.by(Sort.Direction.DESC, "updatedAt")
-        );
+    public Page<FormTemplateAllListResDto> allFormTemplate(Long companyId, int size, int offset, String keyword, FormTemplateStatus status) {
+        Pageable pageable = PageRequest.of(offset, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
 
-        Page<FormTemplateAllListView> page =
-                formTemplateRepository.findAllWithDocumentCount(
-                        companyId,
-                        keyword,
-                        pageable
-                );
+
+        Page<FormTemplateAllListView> page = formTemplateRepository.findAllWithDocumentCount(companyId, keyword, status, pageable);
+
 
         return page.map(FormTemplateAllListResDto::from);
     }

@@ -3,6 +3,7 @@ package com.finalproj.orbitflow.approval.formTemplate.controller;
 import com.finalproj.orbitflow.approval.formTemplate.dto.FormTemplateAllListResDto;
 import com.finalproj.orbitflow.approval.formTemplate.dto.FormTemplateDetailResDto;
 import com.finalproj.orbitflow.approval.formTemplate.dto.FormTemplateUpdateReqDto;
+import com.finalproj.orbitflow.approval.formTemplate.enums.FormTemplateStatus;
 import com.finalproj.orbitflow.approval.formTemplate.service.FormTemplateService;
 import com.finalproj.orbitflow.approval.templateCategory.enums.TemplateCategoryCode;
 import com.finalproj.orbitflow.global.common.ResponseDto;
@@ -130,19 +131,15 @@ public class FormTemplateController {
         );
     }
 
-    @GetMapping("/admin/form-templates/all")
+    @GetMapping("/admin/form-templates/all")//status 변수로 추가?
     public ResponseEntity<ResponseDto> getAllFormTemplates(
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "15") int size,
-            @RequestParam(defaultValue = "") String keyword
+            @RequestParam(defaultValue = "") String keyword,
+            @RequestParam(required = false) FormTemplateStatus status
     ) {
         Page<FormTemplateAllListResDto> result =
-                formTemplateService.allFormTemplate(
-                        SecurityUtils.getCompanyId(),
-                        size,
-                        offset,
-                        keyword
-                );
+                formTemplateService.allFormTemplate(SecurityUtils.getCompanyId(), size, offset, keyword, status);
 
         return ResponseEntity.ok(
                 new ResponseDto(
