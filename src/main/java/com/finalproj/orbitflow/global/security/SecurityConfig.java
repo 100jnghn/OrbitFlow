@@ -40,26 +40,33 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
+                        // ===== 정적 리소스 =====
                         .requestMatchers(
                                 "/",
-                                "/index.html",
                                 "/login",
                                 "/favicon.ico",
                                 "/css/**",
                                 "/js/**",
-                                "/admin/**",
-                                "/api/**",
+                                "/images/**"
+                        ).permitAll()
+
+                        // ===== 인증 API =====
+                        .requestMatchers(
                                 "/api/auth/login",
                                 "/api/auth/refresh"
                         ).permitAll()
 
-                        .requestMatchers("/api/auth/me").authenticated()
+                        // ===== 관리자 화면 =====
+                        .requestMatchers("/view/admin/**").permitAll()
 
-                        // 회사 대표 관리자만
+                        // ===== 일반 화면 =====
+                        .requestMatchers("/view/**")
+                        .authenticated()
+
+                        // ===== API =====
                         .requestMatchers("/api/company-admin/**")
                         .hasRole("COMPANY_ADMIN")
 
-                        // 회사 관리자 + 대표 관리자
                         .requestMatchers("/api/admin/**")
                         .hasAnyRole("ADMIN", "COMPANY_ADMIN")
 
