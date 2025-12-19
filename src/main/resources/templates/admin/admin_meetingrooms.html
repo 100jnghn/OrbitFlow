@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} ?: '관리자 - 리소스 관리'">관리자 - 리소스 관리</title>
+
+    <!-- 공통 폰트 / 아이콘 -->
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@100..700&display=swap">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- 공통 레이아웃 스타일 -->
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-meetingroom.css}">
+    <script th:src="@{/js/meetingroom.js}"></script>
+
+
+</head>
+<body>
+<div class="app-wrapper">
+    <!-- 공통 헤더 -->
+    <header th:replace="fragments/header :: header"></header>
+
+    <div class="app-body">
+        <!-- 공통 사이드바 -->
+        <aside th:replace="~{fragments/sidebar :: shell(~{::admin-sidebar-menu})}"></aside>
+
+        <!-- 페이지별 본문 -->
+        <main class="app-content">
+            <div class="page-header">
+                <h1 class="page-title">회의실 관리</h1>
+                <button type="button" class="btn-add">
+                    <i class="fas fa-plus"></i>
+                    회의실 추가
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table class="resource-table">
+                    <thead>
+                    <tr>
+                        <th>번호</th>
+                        <th>회의실명</th>
+                        <th>위치</th>
+                        <th>비고</th>
+                        <th>상태</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- 데이터가 없을 경우 표시 (동적으로 처리) -->
+                    <!-- <tr th:if="${#lists.isEmpty(resources)}">
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>등록된 리소스가 없습니다.</p>
+                            </div>
+                        </td>
+                    </tr> -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- 관리자 사이드바 메뉴 -->
+<ul th:fragment="admin-sidebar-menu" class="sidebar-menu">
+    <li class="selected">
+        <a href="/admin/meetingrooms" class="sidebar-link">회의실 관리</a>
+    </li>
+</ul>
+
+</body>
+</html>
+
