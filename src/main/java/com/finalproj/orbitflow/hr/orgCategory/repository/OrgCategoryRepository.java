@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.hr.orgCategory.repository;
 
 import com.finalproj.orbitflow.hr.orgCategory.entity.OrgCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,4 +31,12 @@ public interface OrgCategoryRepository extends JpaRepository<OrgCategory, Long> 
      */
     boolean existsByCompanyIdAndName(Long companyId, String name);
 
+    @Query("""
+                select max(o.orderIndex)
+                from OrgCategory o
+                where o.companyId = :companyId
+            """)
+    Integer findMaxOrderIndexByCompanyId(Long companyId);
+
+    long countByCompanyIdAndIsActiveTrue(Long companyId);
 }
