@@ -13,7 +13,7 @@ public class AttendanceRuleViewController {
 
     @GetMapping("/admin/attendance-rules")
     public String attendanceRulesPage() {
-        return "/attendance/admin_rule";
+        return "attendance/admin-rule";
     }
 
     @GetMapping("/attendance/commute")
