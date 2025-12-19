@@ -1045,7 +1045,7 @@ async function saveFormTemplateStructure(templateId) {
     }
 }
 
-async function loadFormTemplateGroupInfo() {
+async function loadFormTemplateGroupInfo(groupId) {
     if (!groupId) return;
 
     try {
@@ -1062,6 +1062,7 @@ async function loadFormTemplateGroupInfo() {
         console.warn('[FormTemplateGroup] 그룹 정보 조회 실패', e);
     }
 }
+
 
 function renderFormTemplateGroupInfo(group) {
     const panel = document.getElementById('form-setting-panel');
@@ -1220,10 +1221,8 @@ function observeComponentButtonHeight() {
 // ===============================
 
 document.addEventListener('DOMContentLoaded', async function () {
-    // 그룹 정보 로드 (읽기 전용)
-    if (typeof loadFormTemplateGroupInfo === 'function') {
-        await loadFormTemplateGroupInfo();
-    }
+
+    let resolvedGroupId = null;
 
     // templateId가 있으면 수정/복제/최신버전 로드
     if (typeof templateId !== "undefined" && templateId) {
@@ -1236,6 +1235,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                 if (data?.templateJson) {
                     loadTemplateJsonToFormComponents(data.templateJson);
                 }
+
+                // ✅ groupId 확보
+                resolvedGroupId = data?.templateGroupId ?? null;
 
                 // 카테고리 반영
                 const categorySelect = document.getElementById('form-category-input');
@@ -1253,15 +1255,18 @@ document.addEventListener('DOMContentLoaded', async function () {
                 // 문서 제목 input 초기 동기화
                 const titleComp = formComponents.find(c => c.type === "document-title");
                 const titleInput = document.getElementById("form-title-input");
-
                 if (titleComp && titleInput) {
                     titleInput.value = titleComp.meta?.value ?? "";
                 }
-
             }
         } catch (e) {
             console.warn('[FormTemplate] 상세 로드 실패', e);
         }
+    }
+
+    // ✅ groupId가 있을 때만 그룹 정보 로드
+    if (resolvedGroupId && typeof loadFormTemplateGroupInfo === 'function') {
+        await loadFormTemplateGroupInfo(resolvedGroupId);
     }
 
     // 컴포넌트 목록 초기화
@@ -1279,3 +1284,4 @@ document.addEventListener('DOMContentLoaded', async function () {
     // 컴포넌트 버튼 높이 정렬 (UI 보조)
     observeComponentButtonHeight();
 });
+

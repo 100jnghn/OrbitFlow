@@ -1,7 +1,7 @@
 const API_URL = '/api/admin/form-templates/all';
 
 const approvalStatusMap = {
-    DRAFT:    { text: '초안',   class: 'status-badge status-pending' },
+    DRAFT:    { text: '임시 저장',   class: 'status-badge status-pending' },
     ACTIVE:   { text: '활성',   class: 'status-badge status-approved' },
     INACTIVE: { text: '비활성', class: 'status-badge status-rejected' }
 };
@@ -12,6 +12,9 @@ let approvalState = {
     page: 0,
     pageSize: 15
 };
+
+let lastSelectedUpdateTemplateId = null;
+
 
 // fetch -> apiFetch 치환
 async function fetchApprovalDocs({ status, keyword, page, pageSize }) {
@@ -43,20 +46,45 @@ function renderTableRows(docs) {
         tr.className = 'approval-row';
         tr.tabIndex = 0;
         tr.setAttribute('role', 'button');
+
+        if (doc.formTemplateStatus === 'ACTIVE') {
+            tr.classList.add('row-active');
+        } else if (doc.formTemplateStatus === 'INACTIVE') {
+            tr.classList.add('row-inactive');
+        } else if (doc.formTemplateStatus === 'DRAFT') {
+            tr.classList.add('row-draft');
+        }
+
+        const isDraft = doc.formTemplateStatus === 'DRAFT';
+
+        tr.style.cursor = isDraft ? 'pointer' : 'not-allowed';
+        if (!isDraft) tr.classList.add('row-disabled');
+
         tr.addEventListener('click', () => {
-            console.log('결재 양식 상세로 이동:', doc.formTemplateId);
+            if (isDraft) {
+                window.location.href =
+                    `/view/admin/create-template?templateId=${doc.formTemplateId}`;
+            } else {
+                alert('임시 저장 상태의 문서만 수정할 수 있습니다.');
+            }
         });
+
         tr.innerHTML = `
-            <td class="col-title">${escapeHTML(doc.formTemplateGroupName)}</td>
-            <td class="col-version">${doc.formTemplateVersion}</td>
-            <td class="col-usedoc">${doc.useDocument || 0}</td>
-            <td class="col-updated">${formatDate(doc.updatedAt)}</td>
-            <td class="col-attend">${renderAttend(doc.affectTags)}</td>
-            <td class="col-schedule">${renderSchedule(doc.affectTags)}</td>
-            <td class="col-status">${renderStatusBadge(doc.formTemplateStatus)}</td>
-        `;
+        <td class="col-title">
+            ${escapeHTML(doc.formTemplateGroupName)}
+            ${renderEditIcon(doc.formTemplateStatus)}
+        </td>
+        <td class="col-version">${doc.formTemplateVersion}</td>
+        <td class="col-usedoc">${doc.useDocument || 0}</td>
+        <td class="col-updated">${formatDate(doc.updatedAt)}</td>
+        <td class="col-attend">${renderAttend(doc.affectTags)}</td>
+        <td class="col-schedule">${renderSchedule(doc.affectTags)}</td>
+        <td class="col-status">${renderStatusBadge(doc.formTemplateStatus)}</td>
+    `;
         tbody.appendChild(tr);
     });
+
+
 }
 
 function renderAttend(tags) {
@@ -129,8 +157,13 @@ function hideCreatePopup() {
     document.getElementById('createPopup').style.display = 'none';
 }
 
+function renderEditIcon(status) {
+    if (status !== 'DRAFT') return '';
+    return `<span class="edit-icon" title="수정 가능">✏️</span>`;
+}
+
 /**
- * 선택한 양식 그룹(groupId)을 기반으로 결재 양식 초안 생성
+ * 선택한 양식 그룹(groupId)을 기반으로 결재 양식 임시 저장 생성
  * @param {number} groupId - FormTemplateGroup ID
  * @param {string} categoryCode - TemplateCategoryCode (예: 'ATTENDANCE', 'SCHEDULE', 'GENERAL')
  */
@@ -263,7 +296,7 @@ function bindEventHandlers() {
 
             hideCreatePopup();
 
-            window.location.href = `/view/admin/create-template?groupId=${groupId}&templateId=${templateId}`;
+            window.location.href = `/view/admin/create-template?&templateId=${templateId}`;
 
         } catch (e) {
             console.error(e);
@@ -284,28 +317,40 @@ document.addEventListener('DOMContentLoaded', function () {
 let updatePopupDebounce;
 
 function showUpdatePopup() {
+    lastSelectedUpdateTemplateId = null;
+    lastSelectedUpdateId = null;
+
     document.getElementById('updatePopup').style.display = 'flex';
     document.getElementById('updateTemplateSearch').value = '';
+    document.getElementById('updateSelectedDescText').textContent = '';
     document.getElementById('updateDropdown').style.display = 'none';
 }
+
 function hideUpdatePopup() {
-    // 양식 설명 영역 비우기 (팝업 닫을 때마다)
-    const descTextEl = document.getElementById('updateSelectedDescText');
-    if (descTextEl) descTextEl.textContent = '';
+    lastSelectedUpdateTemplateId = null;
+    lastSelectedUpdateId = null;
 
     document.getElementById('updatePopup').style.display = 'none';
     document.getElementById('updateDropdown').style.display = 'none';
+    document.getElementById('updateTemplateSearch').value = '';
+    document.getElementById('updateSelectedDescText').textContent = '';
 }
+
+
 async function fetchUpdateTemplates(keyword) {
     if (!keyword) return [];
-    const url = '/api/form-templates/active?keyword=' + encodeURIComponent(keyword);
-    const res = await apiFetch(url, {});
+    const res = await apiFetch(
+        `/api/form-templates/active?keyword=${encodeURIComponent(keyword)}`
+    );
     if (!res.ok) return [];
+
     const result = await res.json();
     if (Array.isArray(result.data)) return result.data;
     if (result.data && Array.isArray(result.data.content)) return result.data.content;
     return [];
 }
+
+
 let lastUpdateDropdownItems = [];
 let lastUpdateDropdownIdMap = {};
 let lastSelectedUpdateId = null;
@@ -322,26 +367,29 @@ function renderUpdateDropdown(items, inputValue) {
     items.forEach(item => {
         const div = document.createElement('div');
         div.className = 'modal-dropdown-item';
-        let name = item.formTemplateGroupName
-            || item.FormTemplateGroupName
-            || item.formTemplateName
-            || item.FormTemplateName
-            || item.name
-            || '';
-        let groupId = item.formTemplateGroupId || item.FormTemplateGroupId || item.id;
+
+        const name =
+            item.formTemplateGroupName ||
+            item.formTemplateName ||
+            item.name ||
+            '';
+
+        const groupId = item.formTemplateGroupId || item.groupId;
+        const templateId = item.formTemplateId || item.templateId;
+
         div.textContent = name;
-        if (typeof groupId !== 'undefined') div.dataset.groupId = groupId;
-        lastUpdateDropdownIdMap[name] = groupId;
-        if (div.textContent === inputValue) div.classList.add('selected');
-        div.tabIndex = 0;
-        div.addEventListener('mousedown', function() {
-            document.getElementById('updateTemplateSearch').value = div.textContent;
+
+        div.addEventListener('mousedown', function () {
+            document.getElementById('updateTemplateSearch').value = name;
             lastSelectedUpdateId = groupId;
+            lastSelectedUpdateTemplateId = templateId; // ⭐️ 핵심
             dropdown.style.display = 'none';
             showSelectedUpdateDescription(groupId);
         });
+
         dropdown.appendChild(div);
     });
+
 
 // 입력에 일치하는 값이 있으면 description 즉시 요청/출력
     const autoId = lastUpdateDropdownIdMap[inputValue];
@@ -351,75 +399,111 @@ function renderUpdateDropdown(items, inputValue) {
     }
     dropdown.style.display = 'block';
 }
+
 async function showSelectedUpdateDescription(groupId) {
-    const descBoxEl = document.getElementById('updateSelectedDesc');
     const descTextEl = document.getElementById('updateSelectedDescText');
-    if (!descBoxEl || !descTextEl || !groupId) return;
+    if (!groupId || !descTextEl) return;
+
     descTextEl.textContent = '조회 중...';
+
     try {
         const res = await apiFetch(`/api/form-template-groups/${groupId}`);
-        if (res.ok) {
-            const result = await res.json();
-            // description or fallback 처리
-            let desc = (result.data && result.data.description) ||
-                       (result.data && result.data.desc) ||
-                       (result.data && result.data.summary) || '';
-            descTextEl.textContent = desc || '(설명 없음)';
-        } else {
-            descTextEl.textContent = '(설명 조회 실패)';
-        }
-    } catch (e) {
+        if (!res.ok) throw new Error();
+
+        const result = await res.json();
+        descTextEl.textContent =
+            result?.data?.description ||
+            result?.data?.desc ||
+            result?.data?.summary ||
+            '(설명 없음)';
+    } catch {
         descTextEl.textContent = '(설명 조회 실패)';
     }
 }
 
 function bindUpdatePopupEvents() {
-    document.getElementById('updateTemplateBtn').addEventListener('click', showUpdatePopup);
-    document.getElementById('popupUpdateCancelBtn').addEventListener('click', hideUpdatePopup);
-    if (document.getElementById('popupUpdateOkBtn')) {
-        document.getElementById('popupUpdateOkBtn').addEventListener('click', function() {
-            const selectedName = document.getElementById('updateTemplateSearch').value;
-            if (!selectedName) {
-                alert('업데이트할 양식을 선택해주세요.');
-                return;
-            }
-            // TODO: 실제 업데이트 처리 로직 구현 위치
-            console.log('업데이트 요청:', selectedName);
-            hideUpdatePopup();
-        });
-    }
-    document.getElementById('updatePopup').addEventListener('click', function(e) {
-        if (e.target === this) hideUpdatePopup();
-    });
+    const popup = document.getElementById('updatePopup');
     const input = document.getElementById('updateTemplateSearch');
     const dropdown = document.getElementById('updateDropdown');
-    input.addEventListener('input', function() {
+    const cancelBtn = document.getElementById('popupUpdateCancelBtn');
+    const okBtn = document.getElementById('popupUpdateOkBtn');
+
+    // 팝업 열기
+    document.getElementById('updateTemplateBtn')
+        .addEventListener('click', showUpdatePopup);
+
+    // 취소
+    cancelBtn.addEventListener('click', hideUpdatePopup);
+
+    // 팝업 바깥 클릭 시 닫기
+    popup.addEventListener('click', e => {
+        if (e.target === popup) hideUpdatePopup();
+    });
+
+    // 검색 입력
+    input.addEventListener('input', () => {
         clearTimeout(updatePopupDebounce);
         const keyword = input.value.trim();
+
         if (!keyword) {
             dropdown.style.display = 'none';
-            const descTextEl = document.getElementById('updateSelectedDescText');
-            if (descTextEl) descTextEl.textContent = '';
+            document.getElementById('updateSelectedDescText').textContent = '';
             return;
         }
+
         updatePopupDebounce = setTimeout(async () => {
             const items = await fetchUpdateTemplates(keyword);
-            renderUpdateDropdown(items, input.value);
-        }, 500);
-    });
-    input.addEventListener('focus', function() {
-        const keyword = input.value.trim();
-        if (keyword) fetchUpdateTemplates(keyword).then(items => renderUpdateDropdown(items, input.value));
-    });
-    input.addEventListener('blur', function() {
-        setTimeout(() => { dropdown.style.display = 'none'; }, 180);
-    });
-    // 인풋 변경 시 자동으로 descr 업데이트 자동 요청
-    input.addEventListener('change', function() {
-        const groupId = lastUpdateDropdownIdMap[input.value];
-        if (groupId) showSelectedUpdateDescription(groupId);
+            renderUpdateDropdown(items);
+        }, 400);
     });
 
+    input.addEventListener('blur', () => {
+        setTimeout(() => dropdown.style.display = 'none', 150);
+    });
+
+    // ✅ 업데이트 실행 (단일 이벤트)
+    okBtn.addEventListener('click', async () => {
+        if (!lastSelectedUpdateTemplateId) {
+            alert('업데이트할 문서를 선택해주세요.');
+            return;
+        }
+
+        try {
+            okBtn.disabled = true;
+
+            const res = await apiFetch(
+                `/api/admin/form-templates/${lastSelectedUpdateTemplateId}/revise`,
+                {method: 'POST'}
+            );
 
 
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err?.message || '문서 업데이트에 실패했습니다.');
+            }
+
+
+            const result = await res.json();
+
+            console.log('revise api result:', result);
+
+
+            const createdTemplateId = result?.data?.createdTemplateId;
+
+            if (!createdTemplateId) {
+                throw new Error('생성된 새 문서 ID를 받지 못했습니다.');
+            }
+
+            hideUpdatePopup();
+
+            window.location.href =
+                `/view/admin/create-template?templateId=${createdTemplateId}`;
+
+        } catch (e) {
+            console.error('[revise error]', e);
+            alert(e.message || '문서 업데이트 중 오류가 발생했습니다.');
+        } finally {
+            okBtn.disabled = false;
+        }
+    });
 }

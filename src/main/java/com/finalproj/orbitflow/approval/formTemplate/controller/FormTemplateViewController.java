@@ -21,11 +21,9 @@ public class FormTemplateViewController {
 
     @GetMapping("/admin/create-template")
     public String createTemplateView(
-            @RequestParam Long groupId,
             @RequestParam Long templateId,
             Model model
     ) {
-        model.addAttribute("groupId", groupId);
         model.addAttribute("templateId", templateId);
         return "form-template/createTemplate";
     }
