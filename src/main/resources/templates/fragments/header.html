@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="header" class="header-bar">
+    <nav class="gnb">
+        <a th:href="@{/home}" th:text="'홈'">홈</a>
+        <a th:href="@{/approval}" th:text="'결재'">결재</a>
+        <a th:href="@{/work}" th:classappend="${currentGNB} == 'work' ? ' selected' : ''" th:text="'근태'">근태</a>
+        <a th:href="@{/schedule}" th:text="'일정'">일정</a>
+        <a th:href="@{/reservation}" th:text="'예약'">예약</a>
+        <a th:href="@{/board}" th:text="'게시판'">게시판</a>
+        <a th:href="@{/admin}" th:text="'관리자'" style="margin-left: 20px;">관리자</a>
+    </nav>
+    <div class="profile">
+        <div class="icon-group">
+            <i class="fas fa-bell"></i>
+            <i class="fas fa-cog"></i>
+        </div>
+        <div class="user-info">
+            <i class="fas fa-user-circle"></i>
+            <span class="user" th:text="${userName} ?: '사용자'">사용자</span>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+
+
