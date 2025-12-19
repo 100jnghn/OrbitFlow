@@ -28,6 +28,7 @@ public class ItemController {
 
     private final ItemService itemService;
 
+    // 관리자 - 기타 자원 리스트 조회
     @GetMapping("/admin/items")
     public ResponseEntity<ResponseDto> getItems(
             @AuthenticationPrincipal SecurityUser user
@@ -40,6 +41,19 @@ public class ItemController {
         );
     }
 
+    // 사용자 - 기타 자원 리스트 조회
+    @GetMapping("items")
+    public ResponseEntity<ResponseDto> getAvailableItems(@AuthenticationPrincipal SecurityUser user) {
+
+        Long companyId = user.getCompanyId();
+        List<ItemResDto> items = itemService.getAvailableItems(companyId);
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, "자원리스트 조회 성공", items)
+        );
+    }
+
+    // 관리자 - 자원 카테고리별 조회
     @GetMapping("/admin/categories/{categoryId}/items")
     public ResponseEntity<ResponseDto> getItemsByCategory(
             @AuthenticationPrincipal SecurityUser user,
@@ -53,7 +67,22 @@ public class ItemController {
         );
     }
 
-    @GetMapping("/admin/items/{itemId}")
+    // 사용자 - 자원 카테고리별 조회
+    @GetMapping("/categories/{categoryId}/items")
+    public ResponseEntity<ResponseDto> getAvailableItemsByCategory(
+            @AuthenticationPrincipal SecurityUser user,
+            @PathVariable Long categoryId
+    ) {
+        Long companyId = user.getCompanyId();
+        List<ItemResDto> items = itemService.getItemsByStatusAndCategory(companyId, categoryId);
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, "카테고리 자원 리스트 조회 성공", items)
+        );
+    }
+
+    // 관리자 | 사용자 - 자원 상세 조회
+    @GetMapping("/items/{itemId}")
     public ResponseEntity<ResponseDto> getItem(
             @PathVariable Long itemId
     ) {

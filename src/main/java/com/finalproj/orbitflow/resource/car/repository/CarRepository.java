@@ -1,10 +1,12 @@
 package com.finalproj.orbitflow.resource.car.repository;
 
 import com.finalproj.orbitflow.resource.car.entity.Car;
+import com.finalproj.orbitflow.resource.enums.ResourceStatusCode;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Please explain the class!!!
@@ -22,4 +24,12 @@ public interface CarRepository extends JpaRepository<Car, Long> {
                 and c.resourceStatus.resourceStatusCode != 'DELETED'
             """)
     Collection<Car> findAllByCompany_Id(Long companyId);
+
+    @Query("""
+                select c 
+                from Car c
+                where c.company.id = :companyId
+                    and c.resourceStatus.resourceStatusCode = :resourceStatusCode
+            """)
+    List<Car> findAllByCompanyIdAndStatus(Long companyId, ResourceStatusCode resourceStatusCode);
 }

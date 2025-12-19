@@ -28,8 +28,8 @@ public class ItemCategoryController {
 
     private final ItemCategoryService itemCategoryService;
 
-    // 기타 자원 카테고리 목록 조회
-    @GetMapping("/admin/item-categories")
+    // 관리자 | 사용자 - 기타 자원 카테고리 목록 조회
+    @GetMapping("/item-categories")
     public ResponseEntity<ResponseDto> getItemCategories(
             @AuthenticationPrincipal SecurityUser user
     ) {

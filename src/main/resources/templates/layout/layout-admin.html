@@ -1,33 +1,39 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<html xmlns:th="http://www.thymeleaf.org"
+      th:fragment="layout(content, headerFragment, sidebarFragment, pageCss)">
+
 <head>
     <meta charset="UTF-8">
     <title th:text="${pageTitle} ?: 'OrbitFlow'">OrbitFlow</title>
 
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-
     <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/layout-admin.css}">
+
+    <!-- ✅ 페이지별 CSS 삽입 위치 -->
+    <th:block th:replace="${pageCss}"></th:block>
 </head>
+
 <body>
 
-<div th:fragment="layout(content, headerFragment, sidebarFragment)"
-     class="app-wrapper">
+<div class="app-wrapper">
 
+    <!-- Header -->
     <header th:replace="${headerFragment}"></header>
 
     <div class="app-body">
+
+        <!-- Sidebar -->
         <aside th:replace="~{fragments/sidebar :: shell(${sidebarFragment})}"></aside>
 
+        <!-- Main Content -->
         <main class="app-content">
-            <div th:replace="${content}"></div>
+            <th:block th:replace="${content}"></th:block>
         </main>
-    </div>
 
-    <script src="/js/common.js"></script>
+    </div>
 </div>
+
+<script th:src="@{/js/common.js}"></script>
 
 </body>
 </html>

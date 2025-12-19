@@ -1,26 +1,18 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <title th:text="${pageTitle} ?: '관리자 - 회의실 관리'">관리자 - 회의실 관리</title>
-
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-
-    <link rel="stylesheet" th:href="@{/css/layout.css}">
-    <link rel="stylesheet" th:href="@{/css/layout-admin.css}">
-    <link rel="stylesheet" th:href="@{/css/admin-meetingroom.css}">
-</head>
-<body>
-
-<div th:replace="~{layout/layout-admin :: layout(
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-admin :: layout(
         ~{::content},
         ~{fragments/header :: header},
-        ~{::admin-sidebar-menu}
-)}"></div>
+        ~{::admin-sidebar-menu},
+        ~{::page-css}
+      )}">
 
+<!-- 페이지 전용 CSS -->
+<th:block th:fragment="page-css">
+    <link rel="stylesheet" th:href="@{/css/admin_meetingroom.css}">
+</th:block>
+
+<!-- 페이지 콘텐츠 -->
 <div th:fragment="content">
     <div class="page-header">
         <h1 class="page-title">회의실 관리</h1>
@@ -32,6 +24,14 @@
 
     <div class="table-container">
         <table class="resource-table">
+            <colgroup>
+                <col style="width:5%">
+                <col style="width:20%">
+                <col style="width:20%">
+                <col style="width:35%">
+                <col style="width:10%">
+                <col style="width:10%">
+            </colgroup>
             <thead>
             <tr>
                 <th>번호</th>
@@ -49,6 +49,7 @@
     <script th:src="@{/js/meetingroom.js}"></script>
 </div>
 
+<!-- 사이드바 -->
 <ul th:fragment="admin-sidebar-menu" class="sidebar-menu">
     <li class="selected">
         <a th:href="@{/view/admin/resource/meetingrooms}" class="sidebar-link">
@@ -56,6 +57,4 @@
         </a>
     </li>
 </ul>
-
-</body>
 </html>
