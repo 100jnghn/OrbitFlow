@@ -4,8 +4,10 @@
         ~{::content},
         ~{fragments/header :: header},
         ~{sidebar/admin-sidebar :: menu},
-        ~{::pageCss}
+        ~{::pageCss},
+        ~{::pageScript}
       )}">
+
 <head>
     <meta charset="UTF-8">
     <title>결재 양식 관리</title>
@@ -15,17 +17,24 @@
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
+    <!-- 페이지별 CSS -->
     <th:block th:fragment="pageCss">
-        <link rel="stylesheet" th:href="@{/css/layout.css}">
-        <link rel="stylesheet" th:href="@{/css/layout-admin.css}">
         <link rel="stylesheet" th:href="@{/css/approval-home/approval-home.css}">
     </th:block>
+
+    <!-- ✅ 페이지별 JS -->
+    <th:block th:fragment="pageScript">
+        <script th:src="@{/css/approval-home/approval-home.js}"></script>
+    </th:block>
 </head>
+
 <body>
 
+<!-- Main Content -->
 <div th:fragment="content">
     <div class="approval-home-container">
-        <!-- 상단 UI: 좌우정렬 -->
+
+        <!-- 상단 UI -->
         <section class="approval-header-row">
             <div class="header-left">
                 <button type="button" class="primary-btn" id="createTemplateBtn">결재 양식 생성</button>
@@ -39,22 +48,22 @@
                     <option value="ACTIVE">활성</option>
                     <option value="INACTIVE">비활성</option>
                 </select>
-                <input type="text" id="keywordInput" placeholder="양식명으로 검색" class="search-input" />
+                <input type="text" id="keywordInput" placeholder="양식명으로 검색" class="search-input"/>
                 <button type="button" id="searchBtn" class="search-btn">검색</button>
             </div>
         </section>
 
-        <!-- 팝업(모달) : 새 문서 양식 생성 -->
+        <!-- 생성 팝업 -->
         <div id="createPopup" class="modal-backdrop" style="display:none;">
             <div class="modal-content">
                 <div class="modal-title">새 문서 양식 생성</div>
                 <div class="modal-form-group">
                     <label for="popupTemplateName">문서 양식 이름</label>
-                    <input type="text" id="popupTemplateName" class="modal-input" placeholder="문서 양식명을 입력하세요" />
+                    <input type="text" id="popupTemplateName" class="modal-input"/>
                 </div>
                 <div class="modal-form-group">
                     <label for="popupTemplateDesc">설명</label>
-                    <textarea id="popupTemplateDesc" class="modal-textarea" rows="3" placeholder="설명을 입력하세요"></textarea>
+                    <textarea id="popupTemplateDesc" class="modal-textarea"></textarea>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="modal-cancel-btn" id="popupCancelBtn">취소</button>
@@ -63,16 +72,16 @@
             </div>
         </div>
 
-        <!-- [추가] 문서 양식 업데이트 팝업 -->
-        <div id="updatePopup" class="modal-backdrop" style="display: none;">
+        <!-- 업데이트 팝업 -->
+        <div id="updatePopup" class="modal-backdrop" style="display:none;">
             <div class="modal-content">
                 <div class="modal-title">문서 양식 업데이트</div>
-                <div class="modal-form-group" style="position:relative;">
+                <div class="modal-form-group">
                     <label for="updateTemplateSearch">검색할 양식 이름</label>
-                    <input type="text" id="updateTemplateSearch" class="modal-input" placeholder="문서 양식명 검색" autocomplete="off" />
-                    <div id="updateDropdown" class="modal-dropdown-list" style="display: none;"></div>
+                    <input type="text" id="updateTemplateSearch" class="modal-input"/>
+                    <div id="updateDropdown" class="modal-dropdown-list"></div>
                     <div id="updateSelectedDesc" class="update-descbox">
-                        <div style="font-weight:600;font-size:1.05rem;margin-bottom:2px;color:#242c5e;">양식 설명</div>
+                        <strong>양식 설명</strong>
                         <span id="updateSelectedDescText"></span>
                     </div>
                 </div>
@@ -82,32 +91,25 @@
                 </div>
             </div>
         </div>
-        <!-- [/추가] -->
 
-        <!-- 테이블 영역 -->
-        <main>
-            <div class="approval-table-wrapper">
-                <table class="approval-table">
-                    <thead>
-                        <tr>
-                            <th class="col-title">양식명</th>
-                            <th class="col-version">버전</th>
-                            <th class="col-usedoc">사용 문서 수</th>
-                            <th class="col-updated">최종 수정일</th>
-                            <th class="col-attend">근태 연동</th>
-                            <th class="col-schedule">일정 연동</th>
-                            <th class="col-status">상태</th>
-                        </tr>
-                    </thead>
-                    <tbody id="approvalTableBody">
-                        <!-- JavaScript로 행 동적 생성 -->
-                    </tbody>
-                </table>
-                <div id="approvalTableEmpty" class="empty-msg" style="display: none;">
-                    해당하는 양식이 없습니다.
-                </div>
-            </div>
-        </main>
+        <!-- 테이블 -->
+        <div class="approval-table-wrapper">
+            <table class="approval-table">
+                <thead>
+                <tr>
+                    <th>양식명</th>
+                    <th>버전</th>
+                    <th>사용 문서 수</th>
+                    <th>최종 수정일</th>
+                    <th>근태 연동</th>
+                    <th>일정 연동</th>
+                    <th>상태</th>
+                </tr>
+                </thead>
+                <tbody id="approvalTableBody"></tbody>
+            </table>
+            <div id="approvalTableEmpty" class="empty-msg">해당하는 양식이 없습니다.</div>
+        </div>
 
         <!-- 페이지네이션 -->
         <footer class="approval-pagination">
@@ -115,20 +117,9 @@
             <span id="pageIndicator" class="page-indicator"></span>
             <button type="button" class="pagination-btn" id="nextPageBtn">다음</button>
         </footer>
-    </div>
 
-    <!-- 세션 만료 모달 -->
-    <div id="sessionModal"
-         style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:10000;">
-        <div style="background:#fff; padding:20px; margin:200px auto; width:300px;">
-            <p>세션이 만료되었습니다. 다시 로그인해주세요.</p>
-            <button onclick="confirmSessionExpired()">확인</button>
-        </div>
     </div>
 </div>
-
-<!-- JavaScript 파일은 layout-admin에서 common.js가 로드되므로, approval-home.js만 추가 -->
-<script th:src="@{/css/approval-home/approval-home.js}"></script>
 
 </body>
 </html>
