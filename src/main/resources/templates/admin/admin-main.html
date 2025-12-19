@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/layout-admin :: layout(
+      th:replace="~{layout/layout-admin-main :: layout(
           ~{::content},
           ~{fragments/header :: header},
-          ~{sidebar/admin-sidebar :: menu},
           ~{::pageCss}
       )}">
 <head>
@@ -22,203 +21,96 @@
 </head>
 <body>
 <div th:fragment="content">
-    <div class="content-area">
+    <div class="dashboard-container">
         <div class="page-header">
-            <h1>관리자 메인</h1>
-            <p class="page-description">관리자 메뉴를 선택하여 각 기능을 관리할 수 있습니다.</p>
+            <h1>관리자 대시보드</h1>
+
         </div>
 
-        <div class="admin-menu-grid">
-            <div class="admin-menu-card">
-                <div class="menu-icon">
-                    <i class="fas fa-users"></i>
-                </div>
-                <h3>사원 관리</h3>
-                <p>사원 정보를 조회하고 관리합니다.</p>
-                <a th:href="@{/admin/employee}" class="menu-link">이동하기 →</a>
-            </div>
 
-            <div class="admin-menu-card">
-                <div class="menu-icon">
-                    <i class="fas fa-file-signature"></i>
-                </div>
-                <h3>결재 관리</h3>
-                <p>결재 문서를 관리합니다.</p>
-                <a th:href="@{/admin/approval}" class="menu-link">이동하기 →</a>
-            </div>
-
-            <div class="admin-menu-card">
-                <div class="menu-icon">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <h3>근태 관리</h3>
-                <p>근태 규칙 및 근무 시간을 관리합니다.</p>
-                <a th:href="@{/view/admin/attendance-rules}" class="menu-link">이동하기 →</a>
-            </div>
-
-            <div class="admin-menu-card">
-                <div class="menu-icon">
-                    <i class="fas fa-calendar"></i>
-                </div>
-                <h3>일정 관리</h3>
-                <p>회사 일정을 관리합니다.</p>
-                <a th:href="@{/admin/schedule}" class="menu-link">이동하기 →</a>
-            </div>
-
-            <div class="admin-menu-card">
-                <div class="menu-icon">
-                    <i class="fas fa-calendar-check"></i>
-                </div>
-                <h3>예약 관리</h3>
-                <p>자원 예약을 관리합니다.</p>
-                <a th:href="@{/admin/reservation}" class="menu-link">이동하기 →</a>
-            </div>
-
-            <div class="admin-menu-card">
-                <div class="menu-icon">
-                    <i class="fas fa-door-open"></i>
-                </div>
-                <h3>회의실 관리</h3>
-                <p>회의실 정보를 관리합니다.</p>
-                <a th:href="@{/view/resource/admin/meetingrooms}" class="menu-link">이동하기 →</a>
-            </div>
-
-            <div class="admin-menu-card">
-                <div class="menu-icon">
-                    <i class="fas fa-car"></i>
-                </div>
-                <h3>차량 관리</h3>
-                <p>차량 정보를 관리합니다.</p>
-                <a th:href="@{/view/resource/admin/cars}" class="menu-link">이동하기 →</a>
-            </div>
-
-            <div class="admin-menu-card">
-                <div class="menu-icon">
-                    <i class="fas fa-box"></i>
-                </div>
-                <h3>기타 자원 관리</h3>
-                <p>기타 자원을 관리합니다.</p>
-                <a th:href="@{/view/resource/admin/items}" class="menu-link">이동하기 →</a>
-            </div>
-
-            <div class="admin-menu-card">
-                <div class="menu-icon">
-                    <i class="fas fa-clipboard-list"></i>
-                </div>
-                <h3>게시판 관리</h3>
-                <p>게시판을 관리합니다.</p>
-                <a th:href="@{/admin/board}" class="menu-link">이동하기 →</a>
-            </div>
-
-            <div class="admin-menu-card">
-                <div class="menu-icon">
-                    <i class="fas fa-sitemap"></i>
-                </div>
-                <h3>조직도 관리</h3>
-                <p>조직도를 관리합니다.</p>
-                <a th:href="@{/admin/organization}" class="menu-link">이동하기 →</a>
-            </div>
-
-            <div class="admin-menu-card">
-                <div class="menu-icon">
-                    <i class="fas fa-robot"></i>
-                </div>
-                <h3>챗봇 매뉴얼 관리</h3>
-                <p>챗봇 매뉴얼을 관리합니다.</p>
-                <a th:href="@{/view/admin/chatbot}" class="menu-link">이동하기 →</a>
-            </div>
-        </div>
     </div>
 </div>
 
 <style>
-    .content-area {
-        background: #fff;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        padding: 32px;
+    .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 40px;
     }
 
     .page-header {
-        margin-bottom: 32px;
+        margin-bottom: 40px;
     }
 
     .page-header h1 {
-        font-size: 24px;
+        font-size: 32px;
+        font-weight: 700;
+        color: #1e3a5f;
+        margin-bottom: 12px;
+    }
+
+    .page-description {
+        color: #666;
+        font-size: 16px;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 24px;
+    }
+
+    .dashboard-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 32px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .dashboard-card:hover {
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        transform: translateY(-4px);
+        border-color: #5687ef;
+    }
+
+    .card-icon {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .card-icon i {
+        font-size: 28px;
+        color: #fff;
+    }
+
+    .card-content {
+        flex: 1;
+    }
+
+    .card-content h3 {
+        font-size: 20px;
         font-weight: 600;
         color: #1e3a5f;
         margin-bottom: 8px;
     }
 
-    .page-description {
-        color: #666;
+    .card-content p {
         font-size: 14px;
-    }
-
-    .admin-menu-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 24px;
-    }
-
-    .admin-menu-card {
-        background: #fff;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 24px;
-        transition: all 0.2s;
-        cursor: pointer;
-    }
-
-    .admin-menu-card:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        transform: translateY(-2px);
-        border-color: #5687ef;
-    }
-
-    .menu-icon {
-        width: 60px;
-        height: 60px;
-        background: #f0f7ff;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 16px;
-    }
-
-    .menu-icon i {
-        font-size: 28px;
-        color: #5687ef;
-    }
-
-    .admin-menu-card h3 {
-        font-size: 18px;
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 8px;
-    }
-
-    .admin-menu-card p {
-        font-size: 14px;
-        color: #666;
-        margin-bottom: 16px;
+        color: #6b7280;
         line-height: 1.5;
-    }
-
-    .menu-link {
-        color: #5687ef;
-        text-decoration: none;
-        font-size: 14px;
-        font-weight: 500;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .menu-link:hover {
-        color: #386adc;
-        text-decoration: underline;
+        margin: 0;
     }
 </style>
 </body>

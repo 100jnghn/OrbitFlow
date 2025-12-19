@@ -123,6 +123,38 @@ async function loadMe() {
             userNameEl.innerText = `${me.name} (${me.role})`;
         }
 
+        // 관리자 메뉴 표시/숨김 처리
+        const adminMenuLink = document.getElementById('adminMenuLink');
+        if (adminMenuLink) {
+            if (me.role === 'ADMIN' || me.role === 'COMPANY_ADMIN') {
+                adminMenuLink.style.display = '';
+                
+                // 현재 URL이 관리자 메뉴 페이지(/view/admin/menu)인 경우에만 selected 클래스 추가
+                const currentPath = window.location.pathname;
+                if (currentPath === '/view/admin/menu') {
+                    adminMenuLink.classList.add('selected');
+                } else {
+                    adminMenuLink.classList.remove('selected');
+                }
+            } else {
+                adminMenuLink.style.display = 'none';
+            }
+        }
+
+        // 홈 링크 처리: 관리자는 대시보드로, 일반 사용자는 홈으로
+        const homeLink = document.getElementById('homeLink');
+        if (homeLink) {
+            if (me.role === 'ADMIN' || me.role === 'COMPANY_ADMIN') {
+                homeLink.href = '/view/admin';
+                // 관리자 대시보드인 경우 selected 클래스 추가
+                if (window.location.pathname === '/view/admin') {
+                    homeLink.classList.add('selected');
+                }
+            } else {
+                homeLink.href = '/view/home';
+            }
+        }
+
     } catch (e) {
         location.href = '/login';
     }
