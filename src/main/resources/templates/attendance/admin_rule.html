@@ -1,11 +1,25 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/layout-user :: layout(
-          ~{::content},
-          ~{fragments/header :: header},
-          ~{sidebar/admin-sidebar :: menu}
-      )}">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${pageTitle} ?: '관리자 - 근태 규칙 관리'">관리자 - 근태 규칙 관리</title>
+
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/layout-admin.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-rule.css}">
+</head>
 <body>
+
+<div th:replace="~{layout/layout-admin :: layout(
+        ~{::content},
+        ~{fragments/header :: header},
+        ~{::admin-sidebar-menu}
+)}"></div>
 
 <div th:fragment="content">
     <div class="content-area">
@@ -133,5 +147,14 @@
 
     <script th:src="@{/js/attendance_exception.js}"></script>
 </div>
+
+<ul th:fragment="admin-sidebar-menu" class="sidebar-menu">
+    <li class="selected">
+        <a th:href="@{/api/admin/attendance-rules}" class="sidebar-link">
+            근태 규칙 관리
+        </a>
+    </li>
+</ul>
+
 </body>
 </html>
