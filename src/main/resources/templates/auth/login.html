@@ -27,7 +27,7 @@
     const result = await res.json();
 
     if (res.ok) {
-      localStorage.setItem('accessToken', result.accessToken);
+      sessionStorage.setItem('accessToken', result.accessToken);
       // localStorage.setItem('refreshToken', result.refreshToken);
       location.href = '/';
     } else {

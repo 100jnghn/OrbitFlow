@@ -12,7 +12,7 @@ let refreshSubscribers = [];
 
 /** apiFetch() 함수 */
 async function apiFetch(url, options = {}) {
-    const accessToken = localStorage.getItem('accessToken');
+    const accessToken = sessionStorage.getItem('accessToken');
 
     options.headers = {
         ...(options.headers || {}),
@@ -30,7 +30,7 @@ async function apiFetch(url, options = {}) {
         return new Promise((resolve, reject) => {
             refreshSubscribers.push(async () => {
                 options.headers.Authorization =
-                    `Bearer ${localStorage.getItem('accessToken')}`;
+                    `Bearer ${sessionStorage.getItem('accessToken')}`;
                 try {
                     resolve(await fetch(url, options));
                 } catch (e) {
@@ -55,7 +55,7 @@ async function apiFetch(url, options = {}) {
     refreshSubscribers = [];
 
     options.headers.Authorization =
-        `Bearer ${localStorage.getItem('accessToken')}`;
+        `Bearer ${sessionStorage.getItem('accessToken')}`;
 
     return fetch(url, options);
 }
@@ -63,7 +63,7 @@ async function apiFetch(url, options = {}) {
 
 /** Refresh 호출 함수 */
 async function refreshAccessToken() {
-    const refreshToken = localStorage.getItem('refreshToken');
+    const refreshToken = sessionStorage.getItem('refreshToken');
     if (!refreshToken) return false;
 
     const res = await fetch('/api/auth/refresh', {
@@ -76,15 +76,15 @@ async function refreshAccessToken() {
     if (!res.ok) return false;
 
     const data = await res.json();
-    localStorage.setItem('accessToken', data.accessToken);
-    localStorage.setItem('refreshToken', data.refreshToken);
+    sessionStorage.setItem('accessToken', data.accessToken);
+    sessionStorage.setItem('refreshToken', data.refreshToken);
 
     return true;
 }
 
 /** 세션 만료 처리 함수 */
 function handleSessionExpired() {
-    localStorage.clear();
+    sessionStorage.clear();
     document.getElementById('sessionModal').style.display = 'block';
 }
 
@@ -95,7 +95,7 @@ function confirmSessionExpired() {
 
 /** 로그아웃 함수 */
 async function logout() {
-    const refreshToken = localStorage.getItem('refreshToken');
+    const refreshToken = sessionStorage.getItem('refreshToken');
 
     if (refreshToken) {
         await fetch('/api/auth/logout', {
@@ -106,7 +106,7 @@ async function logout() {
         });
     }
 
-    localStorage.clear();
+    sessionStorage.clear();
     location.href = '/login';
 }
 
