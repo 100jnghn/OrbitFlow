@@ -15,7 +15,7 @@ public class ApprovalViewController {
     /**
      * 결재 관리 메인 화면 반환 (결재 문서 목록)
      */
-    @GetMapping("/approval")
+    @GetMapping("/approval-tmp")
     public String approvalManagementView(Model model) {
         model.addAttribute("pageTitle", "결재 관리");
         model.addAttribute("currentGNB", "admin");

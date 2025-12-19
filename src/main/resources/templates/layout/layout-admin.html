@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      th:fragment="layout(content, headerFragment, sidebarFragment, pageCss)">
+      th:fragment="layout(content, headerFragment, sidebarFragment, pageCss, pageScript)">
 
 <head>
     <meta charset="UTF-8">
@@ -33,7 +33,11 @@
     </div>
 </div>
 
+<!-- 공통 JS -->
 <script th:src="@{/js/common.js}"></script>
+
+<!-- ✅ 페이지별 JS 삽입 위치 (이 줄이 핵심) -->
+<th:block th:replace="${pageScript}"></th:block>
 
 </body>
 </html>
