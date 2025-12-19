@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${pageTitle} ?: 'OrbitFlow'">OrbitFlow</title>
+
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+</head>
+<body>
+
+<div th:fragment="layout(content, headerFragment, sidebarFragment)"
+     class="app-wrapper">
+
+    <header th:replace="${headerFragment}"></header>
+
+    <div class="app-body">
+        <aside th:replace="~{fragments/sidebar :: shell(${sidebarFragment})}"></aside>
+
+        <main class="app-content">
+            <div th:replace="${content}"></div>
+        </main>
+    </div>
+
+    <script src="/js/common.js"></script>
+</div>
+
+</body>
+</html>

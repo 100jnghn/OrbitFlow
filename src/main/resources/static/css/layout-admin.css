@@ -1,0 +1,67 @@
+/* ================================
+   Admin Layout Override
+================================ */
+.admin-wrapper {
+    background: #f4f5fb;
+}
+
+/* ================================
+   Admin Sidebar
+================================ */
+.admin-sidebar {
+    background: #1f2636;
+}
+
+.admin-sidebar .sidebar-title {
+    color: #d1d5f0;
+}
+
+.admin-sidebar .sidebar-logo-icon {
+    color: #5dade2;
+}
+
+.admin-sidebar .sidebar-menu li.selected {
+    background: rgba(93, 173, 226, 0.15);
+    border-left: 4px solid #5dade2;
+}
+
+.admin-sidebar .sidebar-footer {
+    background: #1b2030;
+    color: #aaa;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ================================
+   Admin Content
+================================ */
+.admin-content {
+    background: #f4f5fb;
+}
+
+.admin-content .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.admin-content .page-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #1f2933;
+}
+
+.admin-content .btn-add {
+    background: #2563eb;
+    border: none;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.admin-content .btn-add:hover {
+    background: #1d4ed8;
+}
