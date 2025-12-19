@@ -28,7 +28,7 @@
 
     if (res.ok) {
       localStorage.setItem('accessToken', result.accessToken);
-      localStorage.setItem('refreshToken', result.refreshToken);
+      // localStorage.setItem('refreshToken', result.refreshToken);
       location.href = '/';
     } else {
       alert(result.message);
