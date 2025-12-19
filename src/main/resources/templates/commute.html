@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>출퇴근 - 멀티캠퍼스</title>
+    <style>
+        /* 기본 스타일 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            height: 100%;
+            font-family: 'Segoe UI', 'Malgun Gothic', Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        /* 좌측 사이드바 */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 220px;
+            height: 100vh;
+            background: #1e3a5f;
+            color: #fff;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .sidebar-section-title {
+            padding: 20px 20px 10px 20px;
+            font-weight: 700;
+            font-size: 16px;
+            color: #fff;
+        }
+
+        .sidebar-nav {
+            margin-bottom: 20px;
+        }
+
+        .sidebar-nav ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar-nav li {
+            margin: 0;
+        }
+
+        .sidebar-nav a {
+            display: block;
+            padding: 12px 20px;
+            color: #b8c5d6;
+            text-decoration: none;
+            transition: background 0.2s, color 0.2s;
+            font-size: 14px;
+        }
+
+        .sidebar-nav a:hover {
+            background: #2a4a6f;
+            color: #fff;
+        }
+
+        .sidebar-nav a.active {
+            background: #3a5a7f;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .sidebar-notice {
+            margin: 20px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            font-size: 12px;
+            color: #b8c5d6;
+            line-height: 1.6;
+        }
+
+        /* 메인 컨테이너 */
+        .main-container {
+            margin-left: 220px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 상단 헤더 */
+        .top-header {
+            background: #e8e8e8;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e3a5f;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: #5687ef;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 20px;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 16px;
+        }
+
+        .header-nav a {
+            color: #555;
+            text-decoration: none;
+            font-size: 14px;
+            padding: 4px 8px;
+            transition: color 0.2s;
+        }
+
+        .header-nav a:hover {
+            color: #1e3a5f;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .icon {
+            font-size: 18px;
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+        }
+
+        .username {
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* 메인 콘텐츠 영역 */
+        .content-area {
+            flex: 1;
+            padding: 32px;
+            background: #f5f5f5;
+            min-height: calc(100vh - 60px);
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 32px;
+        }
+
+        /* 시간 및 버튼 카드 */
+        .main-action-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .time-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 32px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .time-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .time-label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .current-time {
+            font-size: 64px;
+            font-weight: 700;
+            color: #5687ef;
+            font-family: 'Courier New', monospace;
+            line-height: 1;
+        }
+
+        .work-hours {
+            font-size: 32px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 16px;
+        }
+
+        .btn-checkin {
+            flex: 1;
+            padding: 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #28a745;
+            color: #fff;
+        }
+
+        .btn-checkin:hover:not(:disabled) {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-checkin:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .btn-checkout {
+            flex: 1;
+            padding: 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #dc3545;
+            color: #fff;
+        }
+
+        .btn-checkout:hover:not(:disabled) {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-checkout:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .btn-away {
+            flex: 1;
+            padding: 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-away:hover:not(:disabled) {
+            background: #e0a800;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+        }
+
+        .btn-away:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .btn-away.active {
+            background: #ff9800;
+            color: #fff;
+        }
+
+        .btn-away.active:hover {
+            background: #f57c00;
+        }
+
+        /* 오늘의 기록 섹션 */
+        .record-section {
+            background: #fff;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 24px;
+        }
+
+        .record-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .record-item:last-child {
+            border-bottom: none;
+        }
+
+        .record-label {
+            font-size: 15px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .record-value {
+            font-size: 16px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .record-value.empty {
+            color: #999;
+            font-style: italic;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            background: #28a745;
+            color: #fff;
+        }
+
+        .away-badge {
+            background: #ffc107 !important;
+            color: #333 !important;
+        }
+
+        /* 푸터 */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-size: 12px;
+            background: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <!-- 좌측 사이드바 -->
+    <aside class="sidebar">
+        <div class="sidebar-section-title">MY 근태</div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li><a href="/api/attendance/commute" class="active">출퇴근</a></li>
+                <li><a href="/api/attendance/monthly">월별 근태 조회</a></li>
+                <li><a href="#">내 연차 조회</a></li>
+            </ul>
+        </nav>
+        
+        <div class="sidebar-section-title">휴가 신청</div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li><a href="#">휴가 신청서 작성</a></li>
+                <li><a href="#">휴가 신청 현황</a></li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-notice">
+            사용자 전용 공지사항이나 안내 문구를 표시할 수 있습니다.
+        </div>
+    </aside>
+
+    <!-- 메인 컨테이너 -->
+    <div class="main-container">
+        <!-- 상단 헤더 -->
+        <header class="top-header">
+            <div class="header-left">
+                <div class="logo">
+                    <div class="logo-icon">🖥️</div>
+                    <span>멀티캠퍼스</span>
+                </div>
+                <nav class="header-nav">
+                    <a href="#">홈</a>
+                    <a href="#">결재</a>
+                    <a href="#">근태</a>
+                    <a href="#">일정</a>
+                    <a href="#">예약</a>
+                    <a href="#">게시판</a>
+                    <a href="#">관리자</a>
+                </nav>
+            </div>
+            <div class="header-right">
+                <div class="header-icons">
+                    <span class="icon">🔔</span>
+                    <span class="icon">⚙️</span>
+                    <span class="icon">👤</span>
+                </div>
+                <div class="user-info">
+                    <span class="username">김오빗</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 메인 콘텐츠 -->
+        <main class="content-area">
+            <h1 class="page-title">출퇴근 기록</h1>
+
+            <!-- 현재 시각 및 출퇴근 버튼 카드 -->
+            <div class="main-action-card">
+                <div class="time-info">
+                    <div class="time-section">
+                        <div class="time-label">현재 시각</div>
+                        <div class="current-time" id="currentTime">00:00:00</div>
+                    </div>
+                    <div class="time-section">
+                        <div class="time-label">기준 근무 시간</div>
+                        <div class="work-hours" id="workHours">09:00 ~ 18:00</div>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button type="button" id="checkInBtn" class="btn-checkin">출근</button>
+                    <button type="button" id="awayBtn" class="btn-away">자리비움</button>
+                    <button type="button" id="checkOutBtn" class="btn-checkout">퇴근</button>
+                </div>
+            </div>
+
+            <!-- 오늘의 기록 섹션 -->
+            <div class="record-section">
+                <h2 class="section-title">오늘의 기록</h2>
+                <div class="record-item">
+                    <span class="record-label">출근 시각:</span>
+                    <span class="record-value" id="commuteTime">미기록</span>
+                </div>
+                <div class="record-item">
+                    <span class="record-label">퇴근 시각:</span>
+                    <span class="record-value" id="leaveTime">미기록</span>
+                </div>
+                <div class="record-item">
+                    <span class="record-label">근무 상태:</span>
+                    <span id="workStatusContainer">
+                        <span class="status-badge" id="workStatus" style="display: none;">근무 중</span>
+                        <span class="status-badge away-badge" id="awayStatus" style="display: none; background: #ffc107; color: #333;">자리비움</span>
+                        <span class="record-value" id="workStatusText">-</span>
+                    </span>
+                </div>
+                <div class="record-item" id="awayTimeItem" style="display: none;">
+                    <span class="record-label">자리비움 시작:</span>
+                    <span class="record-value" id="awayStartTime">-</span>
+                </div>
+            </div>
+        </main>
+
+        <!-- 푸터 -->
+        <footer class="footer">
+            © 2025 TRAVEL PLANING. All rights reserved.
+        </footer>
+    </div>
+
+    <script>
+        // API 기본 URL
+        const API_BASE_URL = '/api/attendance';
+        const RULES_API_URL = '/api/admin/rules';
+
+        // 전역 변수
+        let currentAttendance = null;
+        let workHours = { start: '09:00', end: '18:00' };
+        let isAway = false;
+        let awayStartTime = null;
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            updateClock();
+            setInterval(updateClock, 1000);
+            loadWorkHours();
+            loadTodayAttendance();
+            setupEventListeners();
+        });
+
+        // 실시간 시계 업데이트
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('currentTime').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        // 기준 근무시간 로드
+        async function loadWorkHours() {
+            try {
+                const response = await fetch(`${RULES_API_URL}/default`);
+                if (!response.ok) throw new Error('근무시간을 불러오는데 실패했습니다.');
+
+                const data = await response.json();
+                if (data.defaultStartTime && data.defaultEndTime) {
+                    workHours.start = data.defaultStartTime.substring(0, 5);
+                    workHours.end = data.defaultEndTime.substring(0, 5);
+                    document.getElementById('workHours').textContent = `${workHours.start} ~ ${workHours.end}`;
+                }
+            } catch (error) {
+                console.error('Error loading work hours:', error);
+            }
+        }
+
+        // 오늘의 출퇴근 기록 로드
+        async function loadTodayAttendance() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/today`);
+                if (!response.ok) throw new Error('출퇴근 기록을 불러오는데 실패했습니다.');
+
+                const data = await response.json();
+                currentAttendance = data;
+
+                // 자리비움 상태 동기화
+                isAway = data.isAway || false;
+                if (isAway && !awayStartTime) {
+                    awayStartTime = new Date().toISOString();
+                }
+
+                // 출근 시각 업데이트
+                const commuteTimeEl = document.getElementById('commuteTime');
+                if (data.commuteAt) {
+                    const commuteTime = new Date(data.commuteAt);
+                    commuteTimeEl.textContent = 
+                        `${String(commuteTime.getHours()).padStart(2, '0')}:${String(commuteTime.getMinutes()).padStart(2, '0')}`;
+                    commuteTimeEl.className = 'record-value';
+                } else {
+                    commuteTimeEl.textContent = '미기록';
+                    commuteTimeEl.className = 'record-value empty';
+                }
+
+                // 퇴근 시각 업데이트
+                const leaveTimeEl = document.getElementById('leaveTime');
+                if (data.leaveAt) {
+                    const leaveTime = new Date(data.leaveAt);
+                    leaveTimeEl.textContent = 
+                        `${String(leaveTime.getHours()).padStart(2, '0')}:${String(leaveTime.getMinutes()).padStart(2, '0')}`;
+                    leaveTimeEl.className = 'record-value';
+                } else {
+                    leaveTimeEl.textContent = '미기록';
+                    leaveTimeEl.className = 'record-value empty';
+                }
+
+                // 근무 상태 업데이트
+                const workStatusBadge = document.getElementById('workStatus');
+                const awayStatusBadge = document.getElementById('awayStatus');
+                const workStatusText = document.getElementById('workStatusText');
+                const awayTimeItem = document.getElementById('awayTimeItem');
+                const awayStartTimeEl = document.getElementById('awayStartTime');
+                
+                if (data.commuteAt && !data.leaveAt) {
+                    if (isAway) {
+                        workStatusBadge.style.display = 'none';
+                        awayStatusBadge.style.display = 'inline-block';
+                        workStatusText.style.display = 'none';
+                        awayTimeItem.style.display = 'flex';
+                        if (awayStartTime) {
+                            const awayTime = new Date(awayStartTime);
+                            awayStartTimeEl.textContent = 
+                                `${String(awayTime.getHours()).padStart(2, '0')}:${String(awayTime.getMinutes()).padStart(2, '0')}`;
+                        }
+                    } else {
+                        workStatusBadge.style.display = 'inline-block';
+                        awayStatusBadge.style.display = 'none';
+                        workStatusText.style.display = 'none';
+                        awayTimeItem.style.display = 'none';
+                    }
+                } else if (data.commuteAt && data.leaveAt) {
+                    workStatusBadge.style.display = 'none';
+                    awayStatusBadge.style.display = 'none';
+                    workStatusText.textContent = '퇴근 완료';
+                    workStatusText.className = 'record-value';
+                    workStatusText.style.display = 'inline';
+                    awayTimeItem.style.display = 'none';
+                } else {
+                    workStatusBadge.style.display = 'none';
+                    awayStatusBadge.style.display = 'none';
+                    workStatusText.textContent = '미출근';
+                    workStatusText.className = 'record-value empty';
+                    workStatusText.style.display = 'inline';
+                    awayTimeItem.style.display = 'none';
+                }
+
+                // 버튼 상태 업데이트
+                updateButtonStates();
+            } catch (error) {
+                console.error('Error loading today attendance:', error);
+                // 에러가 발생해도 기본 상태로 설정
+                updateButtonStates();
+            }
+        }
+
+        // 버튼 상태 업데이트
+        function updateButtonStates() {
+            const checkInBtn = document.getElementById('checkInBtn');
+            const checkOutBtn = document.getElementById('checkOutBtn');
+            const awayBtn = document.getElementById('awayBtn');
+
+            if (currentAttendance && currentAttendance.commuteAt) {
+                checkInBtn.disabled = true;
+                checkOutBtn.disabled = false;
+                awayBtn.disabled = false;
+            } else {
+                checkInBtn.disabled = false;
+                checkOutBtn.disabled = true;
+                awayBtn.disabled = true;
+            }
+
+            if (currentAttendance && currentAttendance.leaveAt) {
+                checkOutBtn.disabled = true;
+                awayBtn.disabled = true;
+            }
+
+            // 자리비움 상태에 따른 버튼 스타일 업데이트
+            if (isAway) {
+                awayBtn.classList.add('active');
+                awayBtn.textContent = '자리비움 해제';
+            } else {
+                awayBtn.classList.remove('active');
+                awayBtn.textContent = '자리비움';
+            }
+        }
+
+        // 이벤트 리스너 설정
+        function setupEventListeners() {
+            document.getElementById('checkInBtn').addEventListener('click', handleCheckIn);
+            document.getElementById('checkOutBtn').addEventListener('click', handleCheckOut);
+            document.getElementById('awayBtn').addEventListener('click', handleAway);
+        }
+
+        // 출근 처리
+        async function handleCheckIn() {
+            if (!confirm('출근하시겠습니까?')) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/checkin`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || '출근 처리에 실패했습니다.');
+                }
+
+                alert('출근이 완료되었습니다.');
+                loadTodayAttendance();
+            } catch (error) {
+                console.error('Error checking in:', error);
+                alert(error.message || '출근 처리에 실패했습니다.');
+            }
+        }
+
+        // 퇴근 처리
+        async function handleCheckOut() {
+            if (!confirm('퇴근하시겠습니까?')) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/checkout`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || '퇴근 처리에 실패했습니다.');
+                }
+
+                // 자리비움 상태 초기화
+                isAway = false;
+                awayStartTime = null;
+
+                alert('퇴근이 완료되었습니다.');
+                loadTodayAttendance();
+            } catch (error) {
+                console.error('Error checking out:', error);
+                alert(error.message || '퇴근 처리에 실패했습니다.');
+            }
+        }
+
+        // 자리비움 처리
+        async function handleAway() {
+            if (!currentAttendance || !currentAttendance.commuteAt || currentAttendance.leaveAt) {
+                alert('출근 후에만 자리비움을 설정할 수 있습니다.');
+                return;
+            }
+
+            if (isAway) {
+                // 자리비움 해제
+                if (!confirm('자리비움을 해제하시겠습니까?')) return;
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/away/end`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.message || '자리비움 해제에 실패했습니다.');
+                    }
+
+                    isAway = false;
+                    awayStartTime = null;
+                    alert('자리비움이 해제되었습니다.');
+                    loadTodayAttendance();
+                } catch (error) {
+                    console.error('Error ending away:', error);
+                    // 백엔드 API가 없을 경우 프론트엔드에서만 처리
+                    if (error.message.includes('Failed to fetch') || error.message.includes('404')) {
+                        isAway = false;
+                        awayStartTime = null;
+                        loadTodayAttendance();
+                    } else {
+                        alert(error.message || '자리비움 해제에 실패했습니다.');
+                    }
+                }
+            } else {
+                // 자리비움 시작
+                if (!confirm('자리비움을 시작하시겠습니까?')) return;
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/away/start`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.message || '자리비움 시작에 실패했습니다.');
+                    }
+
+                    isAway = true;
+                    awayStartTime = new Date().toISOString();
+                    alert('자리비움이 시작되었습니다.');
+                    loadTodayAttendance();
+                } catch (error) {
+                    console.error('Error starting away:', error);
+                    // 백엔드 API가 없을 경우 프론트엔드에서만 처리
+                    if (error.message.includes('Failed to fetch') || error.message.includes('404')) {
+                        isAway = true;
+                        awayStartTime = new Date().toISOString();
+                        loadTodayAttendance();
+                    } else {
+                        alert(error.message || '자리비움 시작에 실패했습니다.');
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

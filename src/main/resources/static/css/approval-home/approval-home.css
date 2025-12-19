@@ -1,0 +1,361 @@
+.approval-home-container {
+    max-width: 1080px;
+    margin: 40px auto;
+    background: #fff;
+    box-shadow: 0 3px 18px rgba(30, 34, 89, 0.09);
+    border-radius: 16px;
+    padding: 32px 40px 42px 40px;
+    font-family: 'Noto Sans KR', Arial, Helvetica, sans-serif;
+}
+
+.approval-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+.header-left {
+    display: flex;
+    gap: 10px;
+}
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.primary-btn,
+.secondary-btn {
+    padding: 8px 20px;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.13s, color 0.13s;
+}
+.primary-btn {
+    background: #3563e9;
+    color: #fff;
+}
+.primary-btn:hover {
+    background: #264cbd;
+}
+.secondary-btn {
+    background: transparent;
+    color: #3563e9;
+    border: 1.5px solid #3563e9;
+}
+.secondary-btn:hover {
+    background: #f7faff;
+}
+.filter-label {
+    font-size: 1rem;
+    color: #3c4155;
+    font-weight: 500;
+}
+.status-filter-select {
+    padding: 6px 14px;
+    border: 1px solid #c7c9d9;
+    border-radius: 7px;
+    background: #f9fafc;
+    font-size: 1rem;
+}
+.search-input {
+    padding: 7px 18px;
+    font-size: 1rem;
+    border: 1.5px solid #bfc4e0;
+    border-radius: 7px;
+    background: #f8fafd;
+}
+.search-btn {
+    padding: 8px 17px;
+    background: #f3f5fd;
+    border-radius: 7px;
+    border: 1.5px solid #bfc4e0;
+    color: #2b2e46;
+    cursor: pointer;
+    font-size: 1rem;
+}
+.search-btn:hover {
+    background: #e7e9f7;
+}
+
+/* ----- 모달 팝업 ----- */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(27,32,54,0.36);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+}
+.modal-content {
+    width: 380px;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 6px 30px rgba(31, 36, 73, 0.17);
+    padding: 34px 32px 26px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.modal-title {
+    font-size: 1.22rem;
+    font-weight: 700;
+    color: #18246e;
+    margin-bottom: 10px;
+}
+.modal-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+    position: relative;
+}
+.modal-input {
+    padding: 8px 13px;
+    border-radius: 7px;
+    border: 1.3px solid #bfc4e0;
+    font-size: 1.01rem;
+    background: #fafbff;
+}
+.modal-textarea {
+    border-radius: 7px;
+    border: 1.3px solid #bfc4e0;
+    font-size: 1.01rem;
+    padding: 9px 13px;
+    background: #fafbff;
+    resize: vertical;
+}
+.modal-actions {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+.modal-cancel-btn, .modal-create-btn {
+    padding: 8px 28px;
+    font-size: 1.05rem;
+    border-radius: 8px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+}
+.modal-cancel-btn {
+    background: #f4f6fa;
+    color: #4b515c;
+    border: 1.4px solid #c2c7d1;
+}
+.modal-cancel-btn:hover {
+    background: #eceef1;
+}
+.modal-create-btn {
+    background: #3563e9;
+    color: #fff;
+    border: 1.4px solid #3563e9;
+}
+.modal-create-btn:hover {
+    background: #264cbd;
+}
+
+/* ----- description(양식설명) 박스 (드롭다운 통일 스타일) ----- */
+.update-descbox {
+    border: 1.4px solid #bfc4e0;
+    border-radius: 7px;
+    background: #fff;
+    margin-top: 10px;
+    min-height: 46px;
+    box-shadow: 0 3px 18px rgba(80,87,149,0.11);
+}
+.update-desc-title {
+    font-weight: 600;
+    font-size: 1.05rem;
+    margin-bottom: 2px;
+    color: #242c5e;
+    padding: 12px 16px 3px 16px;
+}
+.update-desc-text {
+    padding: 4px 16px 13px 16px;
+    font-size: 1.07rem;
+    color: #294d91;
+    min-height: 22px;
+}
+
+/* ----- 드롭다운 for 업데이트 팝업 ----- */
+.dropdown-group {
+    position: relative;
+}
+.modal-dropdown-list {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    background: #fff;
+    border: 1.4px solid #bfc4e0;
+    box-shadow: 0 3px 18px rgba(80, 87, 149, 0.11);
+    z-index: 30;
+    border-radius: 8px;
+    max-height: 210px;
+    overflow-y: auto;
+}
+.modal-dropdown-item {
+    padding: 9px 15px;
+    cursor: pointer;
+    font-size: 1.04rem;
+    color: #294d91;
+    transition: background 0.11s;
+}
+.modal-dropdown-item:hover, .modal-dropdown-item.selected {
+    background: #ecf2fd;
+}
+#updateDropdown.modal-dropdown-list {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 105;
+    background: #fff;
+    border: 1.3px solid #bfc4e0;
+    box-shadow: 0 3px 18px rgba(80,87,149,0.15);
+    border-radius: 7px;
+    margin-top: 0;
+    max-height: 220px;
+    overflow-y: auto;
+    display: block;
+}
+#updateDropdown.modal-dropdown-list[style*="display: none"] {
+    display: none;
+}
+#updateDropdown .modal-dropdown-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 1.05rem;
+    color: #294d91;
+    border-radius: 3px;
+    transition: background 0.13s;
+}
+#updateDropdown .modal-dropdown-item:hover,
+#updateDropdown .modal-dropdown-item.selected {
+    background: #ecf2fd;
+}
+
+/* ----- 테이블 영역 ----- */
+.approval-table-wrapper {
+    width: 100%;
+}
+.approval-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1.08rem;
+    background: #fff;
+    margin-bottom: 16px;
+}
+.approval-table th,
+.approval-table td {
+    padding: 14px 9px;
+    text-align: left;
+    border-bottom: 1.5px solid #ececf9;
+}
+.approval-table thead th {
+    color: #61616b;
+    font-size: 1rem;
+    font-weight: 600;
+    background: #f7f8fa;
+}
+.approval-table tbody tr {
+    cursor: pointer;
+    transition: background 0.11s;
+}
+.approval-table tbody tr:hover {
+    background: #f2f7fe;
+}
+.col-title    { width: 24%; }
+.col-version  { width: 8%; }
+.col-usedoc   { width: 12%; }
+.col-updated  { width: 20%; }
+.col-attend   { width: 10%; }
+.col-schedule { width: 10%; }
+.col-status   { width: 11%; }
+
+.status-badge {
+    display: inline-block;
+    min-width: 50px;
+    padding: 4px 13px;
+    border-radius: 12px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    text-align: center;
+    vertical-align: middle;
+}
+.status-pending { background: #fff8e1;  color: #956804;  border: 1.5px solid #ffe599; }
+.status-approved { background: #e2f2ee; color: #177b64; border: 1.5px solid #98e7c9; }
+.status-rejected { background: #ffe2ee; color: #b40d50; border: 1.5px solid #fcd7e0; }
+
+.tag-on {
+    background: #e2f2ee;
+    color: #177b64;
+    border: 1.2px solid #84dbc2;
+    border-radius: 9px;
+    padding: 2px 9px;
+    font-size: 0.96rem;
+    font-weight: 600;
+    display: inline-block;
+    text-align: center;
+}
+.tag-off {
+    background: #f7f8fa;
+    color: #a5a7b4;
+    border: 1.2px solid #dadbe6;
+    border-radius: 9px;
+    padding: 2px 9px;
+    font-size: 0.96rem;
+    font-weight: 400;
+    display: inline-block;
+    text-align: center;
+    opacity: 0.75;
+}
+.empty-msg {
+    margin-top: 28px;
+    text-align: center;
+    color: #8a8b94;
+    font-size: 1.15rem;
+}
+.approval-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 18px;
+    gap: 13px;
+}
+.pagination-btn {
+    padding: 6px 17px;
+    border-radius: 8px;
+    border: 1.2px solid #bfc4e0;
+    background: #f8fafd;
+    font-size: 1rem;
+    color: #2b2e46;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.13s;
+}
+.pagination-btn:hover {
+    background: #e7e9f7;
+}
+.page-indicator {
+    font-weight: 600;
+    color: #324091;
+}
+#updatePopup {
+    z-index: 101;
+}
+#updatePopup .modal-content {
+    min-width: 350px;
+}
+#updatePopup .modal-form-group {
+    position: relative;
+}

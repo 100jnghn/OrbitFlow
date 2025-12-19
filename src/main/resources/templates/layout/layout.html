@@ -3,35 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${pageTitle} ?: 'Multi Project'">Multi Project</title>
-
-    <!-- 공통 폰트 / 아이콘 -->
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@100..700&display=swap">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-
-    <!-- 공통 레이아웃 스타일 -->
+    <title th:text="${pageTitle} ?: 'OrbitFlow'">OrbitFlow</title>
+    
+    <!-- Font 및 아이콘 -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <!-- 공통 CSS -->
     <link rel="stylesheet" th:href="@{/css/layout.css}">
+    
+    <!-- 헤더 및 사이드바 CSS - 인라인으로 직접 포함 -->
+    <style>
+        /* 공통 헤더 스타일 */
+        .header-bar {
+            background-color: #e1e2ef;
+            height: 55px;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        .gnb {
+            display: flex;
+            flex: 1;
+            gap: 20px;
+        }
+        .gnb a {
+            text-decoration: none;
+            color: #363637;
+            font-weight: 500;
+            line-height: 55px;
+            font-size: 16px;
+            transition: color 0.2s, border-bottom 0.2s;
+        }
+        .gnb a:hover {
+            color: #4a69bd;
+        }
+        .gnb a.selected {
+            border-bottom: 3px solid #23273c;
+            color: #23273c;
+            font-weight: 700;
+        }
+        .header-bar .profile {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+            color: #23273c;
+        }
+        .header-bar .profile .icon-group {
+            margin-right: 15px;
+            color: #666;
+        }
+        .header-bar .profile .icon-group i {
+            margin: 0 8px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .header-bar .profile .icon-group i:hover {
+            color: #333;
+        }
+        .header-bar .profile .user-info {
+            display: flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.5);
+        }
+        .header-bar .profile .user-info span {
+            margin-right: 8px;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+        }
+        .header-bar .profile .user-info span:hover {
+            color: #333;
+        }
+        .header-bar .profile .user-info i.fa-user-circle {
+            margin-left: 8px;
+            font-size: 24px;
+            color: #666;
+        }
+        .header-bar .profile .user {
+            margin-left: 8px;
+            font-weight: bold;
+        }
+        .admin-header {
+            background-color: #2c3e50;
+        }
+        .admin-header .gnb a {
+            color: #ecf0f1;
+        }
+        .admin-header .gnb a:hover {
+            color: #3498db;
+        }
+        .admin-header .gnb a.selected {
+            border-bottom: 3px solid #3498db;
+            color: #3498db;
+        }
+        .admin-header .profile {
+            color: #ecf0f1;
+        }
+        
+        /* 공통 사이드바 스타일 */
+        .sidebar {
+            width: 250px;
+            background: #23273c;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+        .sidebar-inner {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding-top: 24px;
+        }
+        .sidebar-title {
+            padding: 0 0 16px 36px;
+            letter-spacing: -2px;
+            font-weight: bold;
+            color: #b3b3cd;
+            font-size: 20px;
+        }
+        .sidebar-logo-icon {
+            color: #4a69bd;
+            margin-right: 8px;
+        }
+        .sidebar-menu-wrapper {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .sidebar-menu {
+            list-style: none;
+            margin: 0;
+            padding: 0 0 16px 36px;
+        }
+        .sidebar-section-title {
+            margin-top: 20px;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 15px;
+            color: #ffffff;
+        }
+        .sidebar-link {
+            text-decoration: none;
+            color: #c9ccdd;
+            font-size: 15px;
+            display: block;
+            padding: 4px 0;
+        }
+        .sidebar-link:hover {
+            color: #ffffff;
+        }
+        .sidebar-menu li {
+            margin: 6px 0;
+            cursor: pointer;
+            transition: color 0.2s, background 0.2s, transform 0.2s;
+        }
+        .sidebar-menu li a {
+            display: block;
+            padding: 8px 0;
+            text-decoration: none;
+            color: #c9ccdd;
+            font-size: 15px;
+            transition: color 0.2s;
+        }
+        .sidebar-menu li:hover a {
+            color: #fff;
+        }
+        .sidebar-menu li.selected {
+            color: #fff;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.1);
+            margin-left: -36px;
+            padding: 8px 36px;
+            border-left: 4px solid #4a69bd;
+        }
+        .sidebar-menu li.selected a {
+            color: #fff;
+            font-weight: bold;
+        }
+        .sidebar-footer {
+            margin-top: auto;
+            background: #fff;
+            min-height: 80px;
+            padding: 15px 24px;
+            font-size: 13px;
+            color: #333;
+        }
+    </style>
+
+    <!-- 페이지별 추가 CSS -->
+    <th:block th:if="${pageStyles != null}">
+        <link th:each="style : ${pageStyles}" rel="stylesheet" th:href="@{${style}}">
+    </th:block>
 </head>
 <body>
-<div class="app-wrapper">
-    <!-- 공통 헤더 -->
-    <header th:replace="fragments/header :: header"></header>
+<div th:fragment="layout(content, headerFragment, sidebarFragment)" class="app-wrapper">
+    <header th:replace="${headerFragment}"></header>
 
     <div class="app-body">
-        <!-- 공통 사이드바 디자인 틀 (shell) 안에 팀별 메뉴 fragment 삽입 -->
-        <aside th:replace="fragments/sidebar-shell :: shell(${sidebarFragment})"></aside>
+        <aside th:replace="~{fragments/sidebar :: shell(${sidebarFragment})}"></aside>
 
-        <!-- 페이지별 본문 -->
         <main class="app-content">
-            <div th:insert="${content}"></div>
+            <div th:replace="${content}"></div>
         </main>
     </div>
 </div>
 </body>
 </html>
-
-

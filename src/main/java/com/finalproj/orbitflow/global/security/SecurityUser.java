@@ -25,18 +25,25 @@ public class SecurityUser implements UserDetails {
 
     private final Long employeeId;
     private final Long companyId;
+    private final String name;
     private final String email;
     private final String password;
     private final EmployeeStatus status;
     private final EmployeeRole role;
+    private final Long organizationId;  // 조직 정보
 
     public SecurityUser(Employee employee) {
         this.employeeId = employee.getId();
         this.companyId = employee.getCompany().getId();
+        this.name = employee.getName();
         this.email = employee.getEmail();
         this.password = employee.getPassword();
         this.status = employee.getStatus();
         this.role = employee.getRole();
+        this.organizationId =
+                employee.getOrganization() != null
+                        ? employee.getOrganization().getId()
+                        : null;          // 안전 처리
     }
 
     // 로그인 ID

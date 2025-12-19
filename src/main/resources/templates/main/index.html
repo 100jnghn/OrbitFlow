@@ -1,10 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Orbit Flow</title>
+
+    <!-- 공통 JS (인증/갱신/로그아웃 담당) -->
+    <script src="/js/common.js" defer></script>
 </head>
 <body>
-메인 페이지는 다같이 만들어보아용 ><
+
+<h2>메인 페이지</h2>
+
+<!-- 세션 만료 모달 -->
+<div id="sessionModal"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4)">
+    <div style="background:#fff; padding:20px; margin:200px auto; width:300px;">
+        <p>세션이 만료되었습니다. 다시 로그인해주세요.</p>
+        <button onclick="confirmSessionExpired()">확인</button>
+    </div>
+</div>
+
+<p>
+    환영합니다, <strong><span id="userName"></span></strong>
+</p>
+
+<button onclick="location.href='/view/admin/approval'">결재 양식 관리 이동</button>
+<button onclick="logout()">로그아웃</button>
+
 </body>
 </html>

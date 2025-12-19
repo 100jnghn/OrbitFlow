@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout :: layout(
+          ~{::content},
+          ~{fragments/header :: header},
+          ~{sidebar/admin-sidebar :: menu}
+      )}">
+<body>
+
+<div th:fragment="content">
+    <div class="content-area">
+        <div class="page-header">
+            <h1>근태 규칙 및 근무 시간 관리</h1>
+            <p class="page-description">회사 전체의 기본 규칙을 설정하고, 특정 사원에게 예외 규칙을 적용합니다.</p>
+        </div>
+
+        <section class="rule-section">
+            <h2>회사 전체 기본 규칙 설정 (기본 전일제)</h2>
+            <div class="rule-form">
+                <div class="form-group">
+                    <label>기본 출근/퇴근 시간</label>
+                    <div class="time-input-group">
+                        <input type="time" id="defaultStartTime" value="09:00" class="time-input">
+                        <span class="time-separator">~</span>
+                        <input type="time" id="defaultEndTime" value="18:00" class="time-input">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>기본 휴게 시간</label>
+                    <div class="break-time-input">
+                        <input type="number" id="defaultBreakMinutes" value="60" min="0" class="number-input">
+                        <span class="input-suffix">분</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>지각 판정 기준</label>
+                    <div class="judgment-input">
+                        <input type="number" id="tardinessMinutes" value="10" min="0" class="number-input">
+                        <span class="input-suffix">분 초과 시 지각 처리</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>조퇴 판정 기준</label>
+                    <div class="judgment-input">
+                        <input type="number" id="earlyLeaveMinutes" value="5" min="0" class="number-input">
+                        <span class="input-suffix">분 이전 퇴근 시 조퇴 처리</span>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="saveDefaultRuleBtn" class="btn-primary">저장</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="rule-section">
+            <div class="section-header">
+                <h2>사원별 예외 규칙 관리 (유연/단축 근무)</h2>
+                <button type="button" id="addExceptionRuleBtn" class="btn-success">+ 예외 규칙 추가</button>
+            </div>
+            <div class="table-container">
+                <table class="exception-table">
+                    <thead>
+                    <tr>
+                        <th>대상 사원</th>
+                        <th>적용 시간</th>
+                        <th>규칙 내용 (사유)</th>
+                        <th>휴게시간</th>
+                        <th>적용 기간</th>
+                        <th>관리</th>
+                    </tr>
+                    </thead>
+                    <tbody id="exceptionRulesTableBody">
+                    </tbody>
+                </table>
+            </div>
+            <div class="warning-box">
+                <strong>▲ 주의:</strong> 사원별 예외 규칙이 적용되면, <strong>회사 기본 규칙보다 우선</strong>합니다. (Override) NULL 값은 자동으로 회사 기본 규칙으로 대체됩니다.
+            </div>
+            <div class="pagination" id="pagination"></div>
+        </section>
+    </div>
+
+    <div id="exceptionRuleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">예외 규칙 추가</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="exceptionRuleForm">
+                    <input type="hidden" id="ruleId" name="ruleId">
+                    <div class="form-group">
+                        <label for="employeeSelect">대상 사원</label>
+                        <select id="employeeSelect" name="employeeId" class="form-control" required>
+                            <option value="">사원 선택</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>적용 시간</label>
+                        <div class="time-input-group">
+                            <input type="time" id="exceptionStartTime" name="startTime" class="time-input">
+                            <span class="time-separator">~</span>
+                            <input type="time" id="exceptionEndTime" name="endTime" class="time-input">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="reason">규칙 내용 (사유)</label>
+                        <input type="text" id="reason" name="reason" class="form-control" placeholder="예: 유연 근무 (출퇴근 1시간 조정)" required>
+                    </div>
+                    <div class="form-group">
+                        <label>휴게시간</label>
+                        <div class="break-time-input">
+                            <input type="number" id="exceptionBreakMinutes" name="breakMinutes" min="0" class="number-input">
+                            <span class="input-suffix">분</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>적용 기간</label>
+                        <div class="date-input-group">
+                            <input type="date" id="validFrom" name="validFrom" class="date-input" required>
+                            <span class="date-separator">~</span>
+                            <input type="date" id="validTo" name="validTo" class="date-input">
+                            <span class="date-note">(종료일 없으면 비워두세요)</span>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" id="cancelBtn">취소</button>
+                        <button type="submit" class="btn-primary">저장</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/attendance_exception.js}"></script>
+</div>
+</body>
+</html>

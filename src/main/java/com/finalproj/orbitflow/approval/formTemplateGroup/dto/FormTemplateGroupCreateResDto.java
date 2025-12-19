@@ -14,5 +14,5 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class FormTemplateGroupCreateResDto {
-    private Long id;
+    private Long createdFormTemplateGroupId;
 }

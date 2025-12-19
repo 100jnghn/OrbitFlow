@@ -4,6 +4,7 @@ import com.finalproj.orbitflow.global.security.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -23,6 +24,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  */
 
 @Configuration
+@EnableMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -38,9 +40,30 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/api/auth/login").permitAll()
-//                        .anyRequest().authenticated()
-                        .anyRequest().permitAll()
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/login",
+                                "/favicon.ico",
+                                "/css/**",
+                                "/js/**",
+                                "/view/**",
+                                "/api/**",
+                                "/api/auth/login",
+                                "/api/auth/refresh"
+                        ).permitAll()
+
+                        .requestMatchers("/api/auth/me").authenticated()
+
+                        // 회사 대표 관리자만
+                        .requestMatchers("/api/company-admin/**")
+                        .hasRole("COMPANY_ADMIN")
+
+                        // 회사 관리자 + 대표 관리자
+                        .requestMatchers("/api/admin/**")
+                        .hasAnyRole("ADMIN", "COMPANY_ADMIN")
+
+                        .anyRequest().authenticated()
                 )
                 // HttpSession + JSESSIONID 기반이라 주석처리함
 //                .formLogin(login -> login

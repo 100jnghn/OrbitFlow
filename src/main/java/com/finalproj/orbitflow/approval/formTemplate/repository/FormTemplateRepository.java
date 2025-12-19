@@ -34,7 +34,7 @@ public interface FormTemplateRepository extends JpaRepository<FormTemplate, Long
     Optional<FormTemplate> findTopByTemplateGroup_IdAndStatusOrderByVersionDesc(Long id, FormTemplateStatus formTemplateStatus);
 
     @Query("""
-            select distinct t.id as id, g.name as name, t.version as version
+            select distinct t.id as id, g.name as name, t.version as version, g.id as groupId
             from FormTemplateGroup g
             join FormTemplate t on t.templateGroup = g
             where g.company.id = :companyId

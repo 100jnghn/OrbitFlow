@@ -58,7 +58,7 @@ public class Board extends BaseEntity {
     }
 
     // 조회수 증가 메서드
-    public void incrementViewCount() {
+    public void increaseViewCount() {
         this.viewCount += 1;
     }
 

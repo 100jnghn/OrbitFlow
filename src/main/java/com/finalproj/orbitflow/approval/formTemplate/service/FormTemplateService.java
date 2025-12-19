@@ -25,6 +25,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.util.List;
 
@@ -79,14 +81,37 @@ public class FormTemplateService {
 
         int nextVersion = calculateNextVersion(templateGroupId);
 
+        String initialTemplateJson = buildInitialTemplateJson();
+
         return createDraftTemplate(
                 group,
                 nextVersion,
                 category,
+                initialTemplateJson,
                 "{}",
-                null,
                 null
         );
+    }
+
+
+    private String buildInitialTemplateJson() {
+        ObjectNode root = objectMapper.createObjectNode();
+        ArrayNode fields = root.putArray("fields");
+
+        ObjectNode titleField = objectMapper.createObjectNode();
+        titleField.put("fieldId", "document-title");
+        titleField.put("fieldType", "document-title");
+        titleField.put("label", "문서 제목");
+        titleField.put("required", true);
+        titleField.put("order", 1);
+
+        ObjectNode meta = titleField.putObject("meta");
+        meta.put("placeholder", "문서 제목을 입력하세요.");
+        meta.put("maxLength", 100);
+
+        fields.add(titleField);
+
+        return root.toString();
     }
 
 
@@ -265,7 +290,7 @@ public class FormTemplateService {
 
         List<FormTemplateListView> views = formTemplateRepository.findWithActiveTemplateAndCompanyAndKeyword(companyId, searchKeyword);
         return views.stream()
-                .map(v -> new FormTemplateActiveListResDto(v.getId(), v.getVersion(), v.getName()))
+                .map(v -> new FormTemplateActiveListResDto(v.getId(), v.getVersion(), v.getGroupId(), v.getName()))
                 .toList();
     }
 
