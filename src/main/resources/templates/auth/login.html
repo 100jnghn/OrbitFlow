@@ -28,7 +28,26 @@
 
     if (res.ok) {
       sessionStorage.setItem('accessToken', result.accessToken);
-      location.href = '/';
+      sessionStorage.setItem('refreshToken', result.refreshToken);
+      
+      // 사용자 역할 확인하여 리다이렉트
+      const meRes = await fetch('/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${result.accessToken}`
+        }
+      });
+      
+      if (meRes.ok) {
+        const me = await meRes.json();
+        // 관리자(ADMIN, COMPANY_ADMIN)는 관리자 메인으로, 일반 사용자는 메인으로
+        if (me.role === 'ADMIN' || me.role === 'COMPANY_ADMIN') {
+          location.href = '/view/admin';
+        } else {
+          location.href = '/';
+        }
+      } else {
+        location.href = '/';
+      }
     } else {
       alert(result.message);
     }

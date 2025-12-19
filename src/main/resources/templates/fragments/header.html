@@ -23,7 +23,7 @@
            th:classappend="${currentGNB}=='board' ? ' selected' : ''">게시판</a>
 
         <a th:if="${#authorization.expression('hasAnyRole(''ADMIN'',''COMPANY_ADMIN'')')}"
-           th:href="@{/view/admin/resource/meetingrooms}"
+           th:href="@{/view/admin}"
            th:classappend="${currentGNB}=='admin' ? ' selected' : ''">
             관리자
         </a>

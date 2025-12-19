@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class AttendanceRuleViewController {
 
     @GetMapping("/admin/attendance-rules")
-    public String attendanceRulesPage() {
+    public String attendanceRulesPage(org.springframework.ui.Model model) {
+        model.addAttribute("currentGNB", "admin");
+        model.addAttribute("currentMenu", "attendance-rules");
         return "attendance/admin-rule";
     }
 
