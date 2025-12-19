@@ -23,13 +23,7 @@ public class BoardController {
 
     private final BoardService boardService;
 
-    /**
-     * [사용자용] 게시글 목록 조회
-     * - 공용 게시판
-     * - 조직 게시판
-     *
-     * categoryId : 게시판 카테고리 ID
-     */
+    /** [사용자용] 게시글 목록 조회(공용 게시판, 조직 게시판) */
     @GetMapping("/categories/{categoryId}")
     public ResponseEntity<ResponseDto> getBoardList(
             @AuthenticationPrincipal SecurityUser user,
@@ -52,4 +46,23 @@ public class BoardController {
                 )
         );
     }
+
+    /** [사용자용] 게시글 상세 조회 */
+    @GetMapping("/{boardId}")
+    public ResponseEntity<ResponseDto> getBoardDetail(
+            @AuthenticationPrincipal SecurityUser user,
+            @PathVariable Long boardId
+    ) {
+        BoardResDto.DetailInfo detail =
+                boardService.getBoardDetail(
+                        user.getCompanyId(),
+                        user.getOrganizationId(), // 없으면 null
+                        boardId
+                );
+
+        return ResponseEntity.ok(
+                new ResponseDto(HttpStatus.OK, "게시글 상세 조회 성공", detail)
+        );
+    }
 }
+

@@ -21,9 +21,7 @@ public class BoardService {
     private final BoardRepository boardRepository;
     private final BoardCategoryRepository boardCategoryRepository;
 
-    /**
-     * [사용자용] 게시글 목록 조회 (공용 / 조직 게시판 공용)
-     */
+    /** [사용자용] 게시글 목록 조회 (공용 / 조직 게시판 공용) */
     public Page<BoardResDto.ListInfo> getBoardList(
             Long companyId,
             Long organizationId,
@@ -45,9 +43,7 @@ public class BoardService {
         return page.map(BoardResDto.ListInfo::from);
     }
 
-    /**
-     * 게시판 접근 가능 여부 검증
-     */
+    /** 게시판 접근 가능 여부 검증 */
     private BoardCategory getVerifiedAccessibleCategory(
             Long companyId,
             Long organizationId,
@@ -73,5 +69,41 @@ public class BoardService {
         }
 
         return category;
+    }
+
+    /** 게시글 상세 조회 */
+    @Transactional
+    public BoardResDto.DetailInfo getBoardDetail(
+            Long companyId,
+            Long organizationId,
+            Long boardId
+    ) {
+        Board board = boardRepository.findByIdAndDeletedAtIsNull(boardId)
+                .orElseThrow(() -> new NotFoundException("게시글이 존재하지 않습니다."));
+
+        BoardCategory category = board.getCategory();
+
+        // 1. 회사 검증
+        if (!category.getCompany().getId().equals(companyId)) {
+            throw new ForbiddenException("접근 권한이 없는 게시글입니다.");
+        }
+
+        // 2. 게시판 활성화 여부
+        if (!category.isActivated()) {
+            throw new ForbiddenException("비활성화된 게시판입니다.");
+        }
+
+        // 3. 조직 게시판 접근 검증
+        if (category.getOrganization() != null) {
+            if (organizationId == null ||
+                    !category.getOrganization().getId().equals(organizationId)) {
+                throw new ForbiddenException("소속 조직 게시판이 아닙니다.");
+            }
+        }
+
+        // 4. 조회수 증가
+        board.increaseViewCount();
+
+        return BoardResDto.DetailInfo.from(board);
     }
 }
