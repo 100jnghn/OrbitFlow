@@ -5,10 +5,8 @@
  * - Refresh Token 만료 시 세션 종료
  */
 
-
 let isRefreshing = false;
 let refreshSubscribers = [];
-
 
 /** apiFetch() 함수 */
 async function apiFetch(url, options = {}) {
@@ -60,7 +58,6 @@ async function apiFetch(url, options = {}) {
     return fetch(url, options);
 }
 
-
 /** Refresh 호출 함수 */
 async function refreshAccessToken() {
     const refreshToken = sessionStorage.getItem('refreshToken');
@@ -91,7 +88,6 @@ function handleSessionExpired() {
 function confirmSessionExpired() {
     location.href = '/login';
 }
-
 
 /** 로그아웃 함수 */
 async function logout() {

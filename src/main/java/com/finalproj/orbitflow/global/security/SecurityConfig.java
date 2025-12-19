@@ -44,8 +44,10 @@ public class SecurityConfig {
                                 "/",
                                 "/index.html",
                                 "/login",
+                                "/favicon.ico",
                                 "/css/**",
                                 "/js/**",
+                                "/admin/**",
                                 "/api/auth/login",
                                 "/api/auth/refresh"
                         ).permitAll()
