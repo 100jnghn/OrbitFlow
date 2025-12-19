@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.attendance.controller;
+package com.finalproj.orbitflow.attendance.dashboard.controller;
 
 /**
  * Please explain the class!!!
@@ -7,5 +7,5 @@ package com.finalproj.orbitflow.attendance.attendance.controller;
  * @filename : AttendanceDashboardViewController
  * @since : 2025. 12. 19. 금요일
  */
-public class AttendanceViewController {
+public class AttendanceDashboardController {
 }

@@ -1,11 +1,11 @@
-package com.finalproj.orbitflow.attendance.attendance.service;
+package com.finalproj.orbitflow.attendance.commute.service;
 
-import com.finalproj.orbitflow.attendance.attendance.dto.TodayAttResDto; // 변경된 DTO 임포트
-import com.finalproj.orbitflow.attendance.attendance.entity.Attendance;
+import com.finalproj.orbitflow.attendance.commute.dto.TodayAttResDto; // 변경된 DTO 임포트
+import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
 import com.finalproj.orbitflow.attendance.attendanceRule.entity.AttendanceRule;
 import com.finalproj.orbitflow.attendance.employeeAttRule.entity.EmployeeAttRule;
-import com.finalproj.orbitflow.attendance.attendance.enums.AttendanceStatus;
-import com.finalproj.orbitflow.attendance.attendance.repository.AttendanceRepository;
+import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
+import com.finalproj.orbitflow.attendance.commute.repository.AttendanceRepository;
 import com.finalproj.orbitflow.attendance.attendanceRule.repository.AttendanceRuleRepository;
 import com.finalproj.orbitflow.attendance.employeeAttRule.repository.EmployeeAttRuleRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
@@ -23,7 +23,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class AttendanceService {
+public class CommuteService {
 
     private final AttendanceRepository attendanceRepository;
     private final AttendanceRuleRepository attendanceRuleRepository;

@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.attendance.enums;
+package com.finalproj.orbitflow.attendance.commute.enums;
 
 import lombok.Getter;
 

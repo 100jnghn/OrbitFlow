@@ -1,7 +1,7 @@
-package com.finalproj.orbitflow.attendance.attendance.controller;
+package com.finalproj.orbitflow.attendance.commute.controller;
 
-import com.finalproj.orbitflow.attendance.attendance.dto.TodayAttResDto;
-import com.finalproj.orbitflow.attendance.attendance.service.AttendanceService;
+import com.finalproj.orbitflow.attendance.commute.dto.TodayAttResDto;
+import com.finalproj.orbitflow.attendance.commute.service.CommuteService;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/attendance")
 @RequiredArgsConstructor
-public class AttendanceController {
+public class CommuteController {
 
-    private final AttendanceService attendanceService;
+    private final CommuteService commuteService;
 
     /**
      * 오늘 출근 현황 조회
@@ -23,7 +23,7 @@ public class AttendanceController {
     @GetMapping("/today")
     public ResponseEntity<TodayAttResDto> getTodayAttendance(
             @AuthenticationPrincipal SecurityUser user) {
-        TodayAttResDto response=attendanceService.getTodayAttendance(user.getCompanyId(), user.getEmployeeId());
+        TodayAttResDto response= commuteService.getTodayAttendance(user.getCompanyId(), user.getEmployeeId());
         return ResponseEntity.ok(response);
     }
 
@@ -35,7 +35,7 @@ public class AttendanceController {
     public ResponseEntity<TodayAttResDto> checkIn(
             @AuthenticationPrincipal SecurityUser user) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(attendanceService.checkIn(user.getCompanyId(), user.getEmployeeId()));
+                .body(commuteService.checkIn(user.getCompanyId(), user.getEmployeeId()));
     }
 
     /**
@@ -45,7 +45,7 @@ public class AttendanceController {
     @PostMapping("/checkout")
     public ResponseEntity<TodayAttResDto> checkOut(
             @AuthenticationPrincipal SecurityUser user) {
-        return ResponseEntity.ok(attendanceService.checkOut(user.getCompanyId(), user.getEmployeeId()));
+        return ResponseEntity.ok(commuteService.checkOut(user.getCompanyId(), user.getEmployeeId()));
     }
 
     /**
@@ -55,9 +55,9 @@ public class AttendanceController {
     @PostMapping("/away/start")
     public ResponseEntity<TodayAttResDto> startAway(
             @AuthenticationPrincipal SecurityUser user) {
-        attendanceService.startAway(user.getCompanyId(), user.getEmployeeId());
+        commuteService.startAway(user.getCompanyId(), user.getEmployeeId());
         // 상태 변경 후 최신 상태를 다시 조회하여 반환
-        return ResponseEntity.ok(attendanceService.getTodayAttendance(user.getCompanyId(), user.getEmployeeId()));
+        return ResponseEntity.ok(commuteService.getTodayAttendance(user.getCompanyId(), user.getEmployeeId()));
     }
 
     /**
@@ -67,8 +67,8 @@ public class AttendanceController {
     @PostMapping("/away/end")
     public ResponseEntity<TodayAttResDto> endAway(
             @AuthenticationPrincipal SecurityUser user) {
-        attendanceService.endAway(user.getCompanyId(), user.getEmployeeId());
+        commuteService.endAway(user.getCompanyId(), user.getEmployeeId());
         // 상태 변경 후 최신 상태를 다시 조회하여 반환
-        return ResponseEntity.ok(attendanceService.getTodayAttendance(user.getCompanyId(), user.getEmployeeId()));
+        return ResponseEntity.ok(commuteService.getTodayAttendance(user.getCompanyId(), user.getEmployeeId()));
     }
 }

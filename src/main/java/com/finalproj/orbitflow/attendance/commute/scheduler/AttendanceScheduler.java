@@ -1,8 +1,8 @@
-package com.finalproj.orbitflow.attendance.attendance.scheduler;
+package com.finalproj.orbitflow.attendance.commute.scheduler;
 
-import com.finalproj.orbitflow.attendance.attendance.entity.Attendance;
-import com.finalproj.orbitflow.attendance.attendance.enums.AttendanceStatus;
-import com.finalproj.orbitflow.attendance.attendance.repository.AttendanceRepository;
+import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
+import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
+import com.finalproj.orbitflow.attendance.commute.repository.AttendanceRepository;
 import com.finalproj.orbitflow.hr.employee.enums.WorkStatus;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
