@@ -4,7 +4,8 @@
 <div th:fragment="header" class="header-bar">
 
     <nav class="gnb">
-        <a th:href="@{/view/home}"
+        <a id="homeLink"
+           href="/view/home"
            th:classappend="${currentGNB}=='home' ? ' selected' : ''">홈</a>
 
         <a th:href="@{/view/approval}"
@@ -22,8 +23,9 @@
         <a th:href="@{/view/board}"
            th:classappend="${currentGNB}=='board' ? ' selected' : ''">게시판</a>
 
-        <a th:if="${#authorization.expression('hasAnyRole(''ADMIN'',''COMPANY_ADMIN'')')}"
-           th:href="@{/view/admin/resource/meetingrooms}"
+        <a id="adminMenuLink"
+           href="/view/admin/menu"
+           style="display: none;"
            th:classappend="${currentGNB}=='admin' ? ' selected' : ''">
             관리자
         </a>

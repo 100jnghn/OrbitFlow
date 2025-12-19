@@ -21,8 +21,15 @@
 }
 
 .admin-sidebar .sidebar-menu li.selected {
-    background: rgba(93, 173, 226, 0.15);
+    background: rgba(93, 173, 226, 0.2);
+    margin-left: -36px;
+    padding: 8px 36px;
     border-left: 4px solid #5dade2;
+}
+
+.admin-sidebar .sidebar-menu li.selected .sidebar-link {
+    color: #fff;
+    font-weight: 600;
 }
 
 .admin-sidebar .sidebar-footer {

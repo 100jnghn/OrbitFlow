@@ -1,0 +1,200 @@
+/* 출퇴근 페이지 전용 스타일 */
+.page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 32px;
+}
+
+/* 시간 및 버튼 카드 */
+.main-action-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.time-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.time-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.time-label {
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+}
+
+.current-time {
+    font-size: 64px;
+    font-weight: 700;
+    color: #5687ef;
+    font-family: 'Roboto Mono', monospace;
+    line-height: 1;
+}
+
+.work-hours {
+    font-size: 32px;
+    font-weight: 600;
+    color: #333;
+}
+
+.button-group {
+    display: flex;
+    gap: 16px;
+}
+
+.btn-checkin {
+    flex: 1;
+    padding: 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #28a745;
+    color: #fff;
+}
+
+.btn-checkin:hover:not(:disabled) {
+    background: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.btn-checkin:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn-checkout {
+    flex: 1;
+    padding: 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #dc3545;
+    color: #fff;
+}
+
+.btn-checkout:hover:not(:disabled) {
+    background: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.btn-checkout:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn-away {
+    flex: 1;
+    padding: 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #ffc107;
+    color: #333;
+}
+
+.btn-away:hover:not(:disabled) {
+    background: #e0a800;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+.btn-away:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn-away.active {
+    background: #ff9800;
+    color: #fff;
+}
+
+.btn-away.active:hover {
+    background: #f57c00;
+}
+
+/* 오늘의 기록 섹션 */
+.record-section {
+    background: #fff;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 24px;
+}
+
+.record-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.record-item:last-child {
+    border-bottom: none;
+}
+
+.record-label {
+    font-size: 15px;
+    color: #666;
+    font-weight: 500;
+}
+
+.record-value {
+    font-size: 16px;
+    color: #333;
+    font-weight: 600;
+}
+
+.record-value.empty {
+    color: #999;
+    font-style: italic;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    background: #28a745;
+    color: #fff;
+}
+
+.away-badge {
+    background: #ffc107 !important;
+    color: #333 !important;
+}
+

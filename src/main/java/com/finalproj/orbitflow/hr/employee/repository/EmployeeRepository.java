@@ -2,6 +2,8 @@ package com.finalproj.orbitflow.hr.employee.repository;
 
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,4 +39,14 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     List<Employee> findAllByIdIn(List<Long> ids);
 
+    /**
+     * 회사 ID + 이름 또는 사번으로 사원 검색
+     */
+    @Query("SELECT e FROM Employee e WHERE e.company.id = :companyId " +
+           "AND (e.name LIKE CONCAT('%', :keyword, '%') OR e.employeeNo LIKE CONCAT('%', :keyword, '%')) " +
+           "AND e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE")
+    List<Employee> searchByCompanyIdAndKeyword(
+            @Param("companyId") Long companyId,
+            @Param("keyword") String keyword
+    );
 }
