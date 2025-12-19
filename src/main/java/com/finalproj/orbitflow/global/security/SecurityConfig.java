@@ -47,30 +47,32 @@ public class SecurityConfig {
                                 "/favicon.ico",
                                 "/css/**",
                                 "/js/**",
-                                "/images/**"
+                                "/images/**",
+                                "/view/**",
+                                "/api/**"
                         ).permitAll()
 
-                        // ===== 인증 API =====
-                        .requestMatchers(
-                                "/api/auth/login",
-                                "/api/auth/refresh"
-                        ).permitAll()
-
-                        // ===== 관리자 화면 =====
-                        .requestMatchers("/view/admin/**").permitAll()
-
-                        // ===== 일반 화면 =====
-                        .requestMatchers("/view/**")
-                        .authenticated()
-
-                        // ===== API =====
-                        .requestMatchers("/api/company-admin/**")
-                        .hasRole("COMPANY_ADMIN")
-
-                        .requestMatchers("/api/admin/**")
-                        .hasAnyRole("ADMIN", "COMPANY_ADMIN")
-
-                        .anyRequest().authenticated()
+//                        // ===== 인증 API =====
+//                        .requestMatchers(
+//                                "/api/auth/login",
+//                                "/api/auth/refresh"
+//                        ).permitAll()
+//
+//                        // ===== 관리자 화면 =====
+//                        .requestMatchers("/view/admin/**").permitAll()
+//
+//                        // ===== 일반 화면 =====
+//                        .requestMatchers("/view/**")
+//                        .authenticated()
+//
+//                        // ===== API =====
+//                        .requestMatchers("/api/company-admin/**")
+//                        .hasRole("COMPANY_ADMIN")
+//
+//                        .requestMatchers("/api/admin/**")
+//                        .hasAnyRole("ADMIN", "COMPANY_ADMIN")
+//
+//                        .anyRequest().authenticated()
                 )
                 // HttpSession + JSESSIONID 기반이라 주석처리함
 //                .formLogin(login -> login
