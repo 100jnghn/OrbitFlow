@@ -106,7 +106,7 @@ async function loadMeetingRooms() {
                 createCell(room.name),
                 createCell(room.position, true),
                 createCell(room.description, true),
-                createCell(room.statusCode),
+                createCell(room.statusName),
                 createActionCell(room.meetingroomId));
             tbody.appendChild(tr);
         });
@@ -152,4 +152,23 @@ async function deleteMeetingRoom(id) {
     loadMeetingRooms();
 }
 
-document.addEventListener('DOMContentLoaded', loadMeetingRooms);
+/* ==========================
+   추가 버튼
+========================== */
+function initAddButton() {
+    const addBtn = document.querySelector('.btn-add');
+    if (addBtn) {
+        addBtn.addEventListener('click', () => {
+            // 회의실 추가 페이지로 이동
+            window.location.href = '/view/resource/admin/meetingrooms/insert';
+        });
+    }
+}
+
+/* ==========================
+   초기화
+========================== */
+document.addEventListener('DOMContentLoaded', () => {
+    loadMeetingRooms();
+    initAddButton();
+});

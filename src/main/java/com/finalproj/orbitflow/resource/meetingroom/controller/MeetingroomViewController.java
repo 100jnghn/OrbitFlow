@@ -34,6 +34,11 @@ public class MeetingroomViewController {
         return "admin-meetingroom/admin-meetingroom";
     }
 
+    @GetMapping("/admin/meetingrooms/insert")
+    public String insertMeetingroomPage() {
+        return "admin-meetingroom/admin-meetingroom-insert";
+    }
+
     // 사용자 회의실 조회 화면
     @GetMapping("/meetingrooms")
     public String meetingroomList() {
