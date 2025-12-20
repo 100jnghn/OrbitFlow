@@ -26,23 +26,20 @@ public class AuthService {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtProvider jwtProvider;
+    private static final long REFRESH_TOKEN_TTL_SECONDS = 60 * 60 * 20;
 
     // Refresh Token 생성 + 저장
-    public String issueRefreshToken(SecurityUser user) {
+    public RefreshToken issueRefreshToken(SecurityUser user) {
+        Instant expiresAt = Instant.now().plusSeconds(REFRESH_TOKEN_TTL_SECONDS);
 
-        String refreshToken = UUID.randomUUID().toString();
-        Instant expiresAt = Instant.now().plusSeconds(60 * 60 * 24 * 14); // 14일
-
-        refreshTokenRepository.save(
+        return refreshTokenRepository.save(
                 new RefreshToken(
                         user.getCompanyId(),
                         user.getEmployeeId(),
-                        refreshToken,
+                        UUID.randomUUID().toString(),
                         expiresAt
                 )
         );
-
-        return refreshToken;
     }
 
     // Refresh Token 검증

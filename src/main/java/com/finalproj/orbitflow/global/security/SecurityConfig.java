@@ -43,6 +43,7 @@ public class SecurityConfig {
                         // ===== 정적 리소스 =====
                         .requestMatchers(
                                 "/",
+                                "/companies/signup",
                                 "/login",
                                 "/favicon.ico",
                                 "/css/**",

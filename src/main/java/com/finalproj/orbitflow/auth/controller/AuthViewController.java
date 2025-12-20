@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
  * @since : 2025-12-17 수요일
  */
 @Controller
-@RequestMapping("/login")
+@RequestMapping("/view/login")
 public class AuthViewController {
 
     @GetMapping
