@@ -90,16 +90,24 @@
                                    placeholder="차종을 입력하세요"/>
                         </div>
 
-                        <!-- 차량 이미지 -->
+                        <!-- 차량 이미지 업로드 -->
                         <div class="car-image-wrapper">
-                            <div class="car-image-container" id="car-image-container">
-                                <img id="car-image" 
-                                     src="" 
-                                     alt="차량 이미지" 
-                                     style="display: none;">
-                                <div class="car-image-placeholder" id="car-image-placeholder">
-                                    <i class="fas fa-car"></i>
-                                    <p>차량 이미지가 없습니다</p>
+                            <label class="info-label">차량 이미지 (선택사항)</label>
+                            <div class="car-image-upload-container">
+                                <input type="file"
+                                       id="car-image-input"
+                                       accept="image/*"
+                                       style="display: none;">
+                                <div class="car-image-preview" id="car-image-preview">
+                                    <img id="car-image"
+                                         src=""
+                                         alt="차량 이미지"
+                                         style="display: none;">
+                                    <div class="upload-placeholder" id="upload-placeholder">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <p>클릭하여 이미지 업로드</p>
+                                        <span class="upload-hint">JPG, PNG, GIF (최대 5MB)</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -107,10 +115,18 @@
                         <!-- 운전 나이 -->
                         <div class="info-item">
                             <label class="info-label">운전 가능 나이</label>
-                            <input type="text"
+                            <input type="number"
                                    class="info-input"
                                    id="car-age"
-                                   placeholder="운전 가능한 나이를 입력하세요"/>
+                                   placeholder="운전 가능한 나이를 입력하세요"
+                                   min="18"/>
+                        </div>
+
+                        <div class="upload-actions">
+                            <button type="button" class="btn-remove" id="btn-remove" style="display: none;">
+                                <i class="fas fa-trash"></i>
+                                제거
+                            </button>
                         </div>
 
                         <!-- 상태 -->

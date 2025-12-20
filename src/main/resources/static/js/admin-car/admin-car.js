@@ -5,6 +5,9 @@
 // 현재 차량 ID
 let currentCarId = null;
 
+// 선택된 이미지 파일 (새로 업로드하는 경우)
+let selectedImageFile = null;
+
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', () => {
     currentCarId = getCarId();
@@ -41,6 +44,109 @@ function initEventListeners() {
     if (deleteBtn) {
         deleteBtn.addEventListener('click', handleDelete);
     }
+
+    // 이미지 업로드 관련
+    const imageInput = document.getElementById('car-image-input');
+    const removeBtn = document.getElementById('btn-remove');
+    const previewArea = document.getElementById('car-image-preview');
+
+    // 미리보기 영역 클릭
+    if (previewArea) {
+        previewArea.addEventListener('click', () => {
+            imageInput.click();
+        });
+    }
+
+    // 파일 선택 시
+    if (imageInput) {
+        imageInput.addEventListener('change', handleImageSelect);
+    }
+
+    // 이미지 제거 버튼
+    if (removeBtn) {
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            handleImageRemove();
+        });
+    }
+}
+
+/**
+ * 이미지 선택 핸들러
+ */
+function handleImageSelect(event) {
+    const file = event.target.files[0];
+    
+    if (!file) return;
+
+    // 파일 타입 검증
+    if (!file.type.startsWith('image/')) {
+        alert('이미지 파일만 업로드 가능합니다.');
+        return;
+    }
+
+    // 파일 크기 검증 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('이미지 크기는 5MB를 초과할 수 없습니다.');
+        return;
+    }
+
+    selectedImageFile = file;
+
+    // 미리보기 표시
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        displayImagePreview(e.target.result);
+    };
+    reader.readAsDataURL(file);
+}
+
+/**
+ * 이미지 미리보기 표시
+ */
+function displayImagePreview(imageUrl) {
+    const carImage = document.getElementById('car-image');
+    const placeholder = document.getElementById('upload-placeholder');
+    const removeBtn = document.getElementById('btn-remove');
+
+    if (carImage && placeholder) {
+        carImage.src = imageUrl;
+        carImage.style.display = 'block';
+        placeholder.style.display = 'none';
+        
+        if (removeBtn) {
+            removeBtn.style.display = 'inline-flex';
+        }
+    }
+}
+
+/**
+ * 이미지 제거 핸들러
+ */
+function handleImageRemove() {
+    selectedImageFile = null;
+    
+    const carImage = document.getElementById('car-image');
+    const placeholder = document.getElementById('upload-placeholder');
+    const removeBtn = document.getElementById('btn-remove');
+    const imageInput = document.getElementById('car-image-input');
+
+    if (carImage) {
+        carImage.src = '';
+        carImage.style.display = 'none';
+    }
+    
+    if (placeholder) {
+        placeholder.style.display = 'flex';
+    }
+    
+    if (removeBtn) {
+        removeBtn.style.display = 'none';
+    }
+    
+    if (imageInput) {
+        imageInput.value = '';
+    }
 }
 
 /**
@@ -63,7 +169,12 @@ async function handleEdit() {
     formData.append('name', document.getElementById('car-model').value);
     formData.append('driverAge', document.getElementById('car-age').value);
     formData.append('description', document.getElementById('car-description').value);
-    formData.append('statusId', statusValue); // 중요
+    formData.append('statusId', statusValue);
+
+    // 이미지 파일이 새로 선택된 경우 추가
+    if (selectedImageFile) {
+        formData.append('file', selectedImageFile);
+    }
 
     try {
         const response = await apiFetch(
@@ -179,21 +290,32 @@ async function loadCarDetail() {
 }
 
 /**
- * 차량 이미지 표시
+ * 차량 이미지 표시 (기존 이미지 로드 시)
  */
 function displayCarImage(imageUrl) {
     const carImage = document.getElementById('car-image');
-    const placeholder = document.getElementById('car-image-placeholder');
+    const placeholder = document.getElementById('upload-placeholder');
+    const removeBtn = document.getElementById('btn-remove');
     
     if (imageUrl) {
         // 이미지가 있는 경우
         carImage.src = imageUrl;
         carImage.style.display = 'block';
-        placeholder.style.display = 'none';
+        if (placeholder) {
+            placeholder.style.display = 'none';
+        }
+        if (removeBtn) {
+            removeBtn.style.display = 'inline-flex';
+        }
     } else {
         // 이미지가 없는 경우
         carImage.style.display = 'none';
-        placeholder.style.display = 'flex';
+        if (placeholder) {
+            placeholder.style.display = 'flex';
+        }
+        if (removeBtn) {
+            removeBtn.style.display = 'none';
+        }
     }
 }
 

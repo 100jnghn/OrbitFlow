@@ -171,8 +171,18 @@
     grid-row: 3 / 4;
 }
 
+/*제거 버튼 컨테이너*/
+.info-grid .upload-actions {
+    grid-column: 2 / 3;
+    grid-row: 4 / 5;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;  /* 오른쪽 정렬 */
+    align-items: center;         /* 세로 가운데 정렬 */
+}
+
 /* 상태 (1,4) */
-.info-grid .info-item:nth-child(5) {
+.info-grid .info-item:nth-child(6) {
     grid-column: 1 / 2;
     grid-row: 4 / 5;
 }
@@ -194,14 +204,23 @@
 }
 
 /* =========================
-   Car Image
+   Car Image Upload
 ========================= */
 .car-image-wrapper {
     display: flex;
     flex-direction: column;
+    gap: 8px;
 }
 
-.car-image-container {
+.car-image-upload-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.car-image-preview {
     flex: 1;
     width: 100%;
     display: flex;
@@ -211,17 +230,24 @@
     border-radius: 12px;
     border: 2px dashed #ddd;
     overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
     position: relative;
 }
 
-.car-image-container img {
+.car-image-preview:hover {
+    border-color: #4a69bd;
+    background: #f0f4ff;
+}
+
+.car-image-preview img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     padding: 10px;
 }
 
-.car-image-placeholder {
+.upload-placeholder {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -232,17 +258,45 @@
     padding: 20px;
 }
 
-.car-image-placeholder i {
+.upload-placeholder i {
     font-size: 64px;
     opacity: 0.3;
 }
 
-.car-image-placeholder p {
+.upload-placeholder p {
     font-size: 14px;
     font-weight: 500;
     margin: 0;
     color: #666;
 }
+
+.upload-hint {
+    font-size: 12px;
+    color: #999;
+}
+
+.btn-remove {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+
+.btn-remove {
+    background: #e74c3c;
+    color: #fff;
+}
+
+.btn-remove:hover {
+    background: #c0392b;
+}
+
 
 /* =========================
    Form Inputs

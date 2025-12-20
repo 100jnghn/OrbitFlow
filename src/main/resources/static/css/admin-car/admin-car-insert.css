@@ -191,10 +191,14 @@
     grid-row: 4 / 5;
 }
 
-/*제거 버튼*/
-.info-grid .info-item:nth-child(5) {
+/*제거 버튼 컨테이너*/
+.info-grid .upload-actions {
     grid-column: 2 / 3;
     grid-row: 4 / 5;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;  /* 오른쪽 정렬 */
+    align-items: center;         /* 세로 가운데 정렬 */
 }
 
 .info-description-wrapper {
