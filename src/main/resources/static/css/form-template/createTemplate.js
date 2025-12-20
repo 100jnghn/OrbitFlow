@@ -1101,59 +1101,82 @@ function bindDocumentSettingsPanel() {
     const panel = document.getElementById('form-setting-panel');
     if (!panel) return;
 
+    const insertedId = "document-global-toggles";
+    if (document.getElementById(insertedId)) return;
+
     const settingTogglesHTML = `
       <div class="setting-row" style="margin-bottom:5px;align-items:center;display:flex;">
-        <label for="toggle-auto-attendance" style="flex:1;">최종 승인 시 근태 자동 반영</label>
-        <input type="checkbox" id="toggle-auto-attendance" ${documentSettings.autoReflectAttendance ? "checked" : ""} style="transform:scale(1.15);margin-left:7px;cursor:pointer;">
+        <label for="toggle-auto-attendance" style="flex:1;">
+          최종 승인 시 근태 자동 반영
+        </label>
+        <input
+          type="checkbox"
+          id="toggle-auto-attendance"
+          ${documentSettings.autoReflectAttendance ? "checked" : ""}
+          style="transform:scale(1.15);margin-left:7px;cursor:pointer;"
+        >
       </div>
+
       <div class="setting-row" style="margin-bottom:5px;align-items:center;display:flex;">
-        <label for="toggle-auto-schedule" style="flex:1;">최종 승인 시 일정 자동 반영</label>
-        <input type="checkbox" id="toggle-auto-schedule" ${documentSettings.autoReflectSchedule ? "checked" : ""} style="transform:scale(1.15);margin-left:7px;cursor:pointer;">
+        <label for="toggle-auto-schedule" style="flex:1;">
+          최종 승인 시 일정 자동 반영
+        </label>
+        <input
+          type="checkbox"
+          id="toggle-auto-schedule"
+          ${documentSettings.autoReflectSchedule ? "checked" : ""}
+          style="transform:scale(1.15);margin-left:7px;cursor:pointer;"
+        >
       </div>
     `;
 
-    let insertedId = "document-global-toggles";
-    if (!document.getElementById(insertedId)) {
-        const wrapper = document.createElement('div');
-        wrapper.id = insertedId;
-        wrapper.innerHTML = settingTogglesHTML;
+    const wrapper = document.createElement('div');
+    wrapper.id = insertedId;
+    wrapper.innerHTML = settingTogglesHTML;
 
-        const saveBtn = document.getElementById('save-form-btn');
-        if (saveBtn) {
-            panel.insertBefore(wrapper, saveBtn);
-        } else {
-            panel.appendChild(wrapper);
-        }
+    // ✅ 핵심 수정: 버튼 묶음(.form-action-buttons) 기준으로 삽입
+    const actionButtons = panel.querySelector('.form-action-buttons');
+    if (actionButtons) {
+        panel.insertBefore(wrapper, actionButtons);
+    } else {
+        panel.appendChild(wrapper);
     }
+
+    /* ======================
+       기존 이벤트 바인딩 (그대로 유지)
+       ====================== */
 
     const refToggle = document.getElementById('toggle-reference-document');
     if (refToggle) {
         refToggle.checked = documentSettings.allowReferenceDocument;
-        refToggle.addEventListener('change', function (e) {
+        refToggle.addEventListener('change', e => {
             documentSettings.allowReferenceDocument = !!e.target.checked;
             console.log('[documentSettings]', documentSettings);
         });
     }
+
     const attToggle = document.getElementById('toggle-attachment');
     if (attToggle) {
         attToggle.checked = documentSettings.allowAttachment;
-        attToggle.addEventListener('change', function (e) {
+        attToggle.addEventListener('change', e => {
             documentSettings.allowAttachment = !!e.target.checked;
             console.log('[documentSettings]', documentSettings);
         });
     }
+
     const autoAttendanceToggle = document.getElementById('toggle-auto-attendance');
     if (autoAttendanceToggle) {
         autoAttendanceToggle.checked = documentSettings.autoReflectAttendance;
-        autoAttendanceToggle.addEventListener('change', function (e) {
+        autoAttendanceToggle.addEventListener('change', e => {
             documentSettings.autoReflectAttendance = !!e.target.checked;
             console.log('[documentSettings]', documentSettings);
         });
     }
+
     const autoScheduleToggle = document.getElementById('toggle-auto-schedule');
     if (autoScheduleToggle) {
         autoScheduleToggle.checked = documentSettings.autoReflectSchedule;
-        autoScheduleToggle.addEventListener('change', function (e) {
+        autoScheduleToggle.addEventListener('change', e => {
             documentSettings.autoReflectSchedule = !!e.target.checked;
             console.log('[documentSettings]', documentSettings);
         });
@@ -1161,24 +1184,18 @@ function bindDocumentSettingsPanel() {
 
     const titleInput = document.getElementById("form-title-input");
     if (titleInput) {
-
-        // 초기 값 반영
         const titleComp = formComponents.find(c => c.type === "document-title");
         if (titleComp?.meta?.value !== undefined) {
             titleInput.value = titleComp.meta.value;
         }
 
-        // 입력 시 항상 최신 document-title에 반영
         titleInput.addEventListener("input", e => {
             const titleComp = formComponents.find(c => c.type === "document-title");
             if (!titleComp) return;
-
             titleComp.meta.value = e.target.value;
             renderFormComponents();
         });
     }
-
-
 }
 
 function bindSaveFormButton() {
@@ -1213,6 +1230,33 @@ function observeComponentButtonHeight() {
         .observe(list, {childList: true});
 
     equalizeHeights();
+}
+
+function bindStepNavigationButtons() {
+    const prevBtn = document.getElementById('before-form-btn');
+    const nextBtn = document.getElementById('next-form-btn');
+
+    /* ===== 이전 ===== */
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            // 가장 직관적인 방식
+            window.history.back();
+        });
+    }
+
+    /* ===== 다음 ===== */
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            if (typeof templateId === "undefined" || !templateId) {
+                alert("템플릿 ID가 없어 다음 단계로 이동할 수 없습니다.");
+                return;
+            }
+
+            // Spring MVC @GetMapping("/admin/approval-rule")
+            const url = `/view/admin/approval-rule?templateId=${templateId}`;
+            window.location.href = url;
+        });
+    }
 }
 
 
@@ -1280,6 +1324,9 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // 저장 버튼 바인딩
     bindSaveFormButton();
+
+    // 이전 / 다음 버튼 바인딩
+    bindStepNavigationButtons();
 
     // 컴포넌트 버튼 높이 정렬 (UI 보조)
     observeComponentButtonHeight();

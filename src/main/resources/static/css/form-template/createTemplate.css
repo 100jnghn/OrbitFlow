@@ -268,24 +268,54 @@ body, html {
   border-color: #89afe2;
 }
 
+/* ===============================
+   하단 액션 버튼 영역
+   =============================== */
+
+.form-action-buttons {
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+}
+
+/* 공통 버튼 */
+.form-action-buttons button {
+    flex: 1;
+    padding: 10px 0;
+    border-radius: 5px;
+    font-size: 0.95em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, border 0.15s;
+}
+
+/* 이전 / 다음 */
+#before-form-btn,
+#next-form-btn {
+    background: #f0f2f7;
+    border: 1px solid #cfd8e7;
+    color: #314066;
+}
+
+#before-form-btn:hover,
+#next-form-btn:hover {
+    background: #e9eef9;
+    border-color: #89afe2;
+}
+
+/* 저장 버튼 (기존 스타일 유지 + flex 대응) */
 #save-form-btn {
-  display: block;
-  background: #5687ef;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  font-weight: 600;
-  font-size: 1em;
-  padding: 12px 0;
-  margin-top: 8px;
-  width: 100%;
-  cursor: pointer;
-  transition: background 0.15s;
-  letter-spacing: 0.01em;
+    background: #5687ef;
+    color: #fff;
+    border: none;
+    font-weight: 600;
+    letter-spacing: 0.01em;
 }
-#save-form-btn:hover, #save-form-btn:focus {
-  background: #386adc;
+
+#save-form-btn:hover {
+    background: #386adc;
 }
+
 
 /* 미니멀 반응형 (수동 줄임 최소 지원) */
 @media (max-width: 1200px) {
@@ -343,3 +373,4 @@ body, html {
     white-space: nowrap;
     user-select: none;
 }
+
