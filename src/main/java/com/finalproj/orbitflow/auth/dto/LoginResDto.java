@@ -3,6 +3,8 @@ package com.finalproj.orbitflow.auth.dto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.time.Instant;
+
 /**
  * Please explain the class!!!
  *
@@ -16,4 +18,6 @@ public class LoginResDto {
 
     private String accessToken;
     private String refreshToken;
+    private Instant refreshExpiresAt;
+
 }
