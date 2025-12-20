@@ -317,3 +317,29 @@ body, html {
     padding: 13px 3vw;
   }
 }
+
+
+/* ===============================
+   Divider (구분선) 미리보기
+   =============================== */
+
+.form-comp-row .divider-preview {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 14px;
+    padding: 6px 4px;
+    box-sizing: border-box;
+}
+
+.form-comp-row .divider-line {
+    flex: 1;
+    border-top: 1.5px dashed #cfd6e4;
+}
+
+.form-comp-row .divider-text {
+    font-size: 12px;
+    color: #8a94a6;
+    white-space: nowrap;
+    user-select: none;
+}

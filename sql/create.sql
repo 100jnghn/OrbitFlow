@@ -280,14 +280,18 @@ CREATE TABLE form_template_group
 
 
 -- =========================================================
--- 4. FORM TEMPLATE
+-- FORM TEMPLATE
 -- =========================================================
 CREATE TABLE form_template
 (
     id                   BIGINT AUTO_INCREMENT PRIMARY KEY,
+
     company_id           BIGINT                             NOT NULL,
     template_group_id    BIGINT                             NOT NULL,
+
+    -- 정식 배포 버전 (ACTIVE에서만 의미 있음)
     version              INT                                NOT NULL,
+
     template_category_id BIGINT                             NOT NULL,
 
     status               ENUM ('DRAFT','ACTIVE','INACTIVE') NOT NULL,
@@ -298,9 +302,18 @@ CREATE TABLE form_template
 
     created_at           TIMESTAMP                          NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT uk_template_group_company_version
-        UNIQUE (company_id, template_group_id, version),
+    -- ✅ ACTIVE 상태에서만 version을 유니크하게 만들기 위한 컬럼
+    active_version       INT
+        GENERATED ALWAYS AS (
+            CASE
+                WHEN status = 'ACTIVE' THEN version
+                ELSE NULL
+                END
+            ) STORED,
 
+    -- ===============================
+    -- CONSTRAINTS
+    -- ===============================
     CONSTRAINT fk_ft_company
         FOREIGN KEY (company_id)
             REFERENCES company (id)
@@ -317,11 +330,21 @@ CREATE TABLE form_template
             ON DELETE RESTRICT
 ) ENGINE = InnoDB;
 
+-- ACTIVE 상태에서만 version 유니크 보장
+CREATE UNIQUE INDEX uk_ft_company_group_active_version
+    ON form_template (company_id, template_group_id, active_version);
+
+-- 회사 + 상태 조회
 CREATE INDEX idx_ft_company_status
     ON form_template (company_id, status);
 
+-- 그룹 내 상태 / 버전 조회
 CREATE INDEX idx_ft_group_status_version
     ON form_template (template_group_id, status, version);
+
+-- 최신 ACTIVE 버전 조회 최적화 (선택)
+CREATE INDEX idx_ft_group_active_version
+    ON form_template (template_group_id, active_version);
 
 
 -- =========================================================
