@@ -4,6 +4,7 @@ import com.finalproj.orbitflow.board.boardCategory.dto.BoardCategoryReqDto;
 import com.finalproj.orbitflow.board.boardCategory.dto.BoardCategoryResDto;
 import com.finalproj.orbitflow.board.boardCategory.service.AdminBoardCategoryService;
 import com.finalproj.orbitflow.global.common.ResponseDto;
+import com.finalproj.orbitflow.global.exception.UnauthorizedException;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,10 @@ public class AdminBoardCategoryController {
             @RequestParam(defaultValue = "false") boolean organizationOnly,
             @PageableDefault(size = 5, sort = "createdAt") Pageable pageable
     ) {
+        if (user == null) {
+            throw new UnauthorizedException("인증 정보가 없습니다.");
+        }
+
         Page<BoardCategoryResDto.Category> page =
                 adminBoardCategoryService.getBoardCategoryList(
                         user.getCompanyId(),
@@ -52,6 +57,10 @@ public class AdminBoardCategoryController {
             @AuthenticationPrincipal SecurityUser user,
             @PathVariable Long categoryId
     ) {
+        if (user == null) {
+            throw new UnauthorizedException("인증 정보가 없습니다.");
+        }
+
         BoardCategoryResDto.Detail detail =
                 adminBoardCategoryService.getCategoryDetail(
                         user.getCompanyId(),
@@ -69,6 +78,10 @@ public class AdminBoardCategoryController {
             @AuthenticationPrincipal SecurityUser user,
             @RequestBody @Valid BoardCategoryReqDto.Create dto
     ) {
+        if (user == null) {
+            throw new UnauthorizedException("인증 정보가 없습니다.");
+        }
+
         Long id = adminBoardCategoryService.createCategory(
                 user.getCompanyId(),
                 dto
@@ -87,6 +100,10 @@ public class AdminBoardCategoryController {
             @PathVariable Long categoryId,
             @RequestBody @Valid BoardCategoryReqDto.Update dto
     ) {
+        if (user == null) {
+            throw new UnauthorizedException("인증 정보가 없습니다.");
+        }
+
         adminBoardCategoryService.updateCategory(
                 user.getCompanyId(),
                 categoryId,
@@ -105,6 +122,10 @@ public class AdminBoardCategoryController {
             @AuthenticationPrincipal SecurityUser user,
             @PathVariable Long categoryId
     ) {
+        if (user == null) {
+            throw new UnauthorizedException("인증 정보가 없습니다.");
+        }
+
         adminBoardCategoryService.deleteCategory(
                 user.getCompanyId(),
                 categoryId
@@ -124,6 +145,10 @@ public class AdminBoardCategoryController {
             @PathVariable Long categoryId,
             @RequestBody @Valid BoardCategoryReqDto.Activation dto
     ) {
+        if (user == null) {
+            throw new UnauthorizedException("인증 정보가 없습니다.");
+        }
+
         adminBoardCategoryService.changeOrganizationBoardActivation(
                 user.getCompanyId(),
                 categoryId,
