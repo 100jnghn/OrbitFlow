@@ -1,7 +1,9 @@
 package com.finalproj.orbitflow.hr.company.service;
 
+import com.finalproj.orbitflow.global.exception.BusinessException;
 import com.finalproj.orbitflow.hr.company.dto.CompanySignupReqDto;
 import com.finalproj.orbitflow.hr.company.entity.Company;
+import com.finalproj.orbitflow.hr.company.external.BsnClient;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
@@ -10,6 +12,7 @@ import com.finalproj.orbitflow.hr.orgCategory.repository.OrgCategoryRepository;
 import com.finalproj.orbitflow.hr.organization.entity.Organization;
 import com.finalproj.orbitflow.hr.organization.repository.OrgRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,12 +34,15 @@ public class CompanyService {
     private final PasswordEncoder passwordEncoder;
     private final OrgRepository orgRepository;
     private final OrgCategoryRepository orgCategoryRepository;
+    private final BsnClient bsnClient;
+
+    @Value("${business.validation.strict}")
+    private boolean strictValidation;
+
 
     public Long signup(CompanySignupReqDto request) {
 
-        if (companyRepository.existsByBusinessNumber(request.getBusinessNumber())) {
-            throw new IllegalArgumentException("이미 등록된 사업자번호입니다.");
-        }
+        validateBusinessNumber(request.getBusinessNumber());
 
         // 회사 생성
         Company company = Company.create(
@@ -101,6 +107,11 @@ public class CompanyService {
                 )
         );
 
+        // 대표 관리자 이메일 중복 체크
+        if (employeeRepository.existsByEmail(request.getAdminEmail())) {
+            throw new BusinessException("이미 사용 중인 이메일입니다.");
+        }
+
         // 대표 관리자 생성
         Employee admin = Employee.createAdmin(
                 company,
@@ -112,5 +123,29 @@ public class CompanyService {
 
         return company.getId();
     }
+
+    public boolean isEmailAvailable(String email) {
+        return !employeeRepository.existsByEmail(email);
+    }
+
+    public void validateBusinessNumber(String businessNumber) {
+
+        // DB 중복 체크 (무조건)
+        if (companyRepository.existsByBusinessNumber(businessNumber)) {
+            throw new BusinessException("이미 등록된 사업자번호입니다.");
+        }
+
+        // 외부 API 상태 조회
+        String status = bsnClient.getBusinessStatus(businessNumber);
+
+        // 운영 모드 → 계속사업자만 허용
+        if (strictValidation && !"계속사업자".equals(status)) {
+            throw new BusinessException("계속사업자만 가입할 수 있습니다.");
+        }
+
+        // 시연 모드(strict=false)는 통과
+    }
+
+
 }
 

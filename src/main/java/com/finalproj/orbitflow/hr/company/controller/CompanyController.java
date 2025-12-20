@@ -44,13 +44,28 @@ public class CompanyController {
     public ResponseEntity<ResponseDto> checkBusinessNumber(
             @RequestParam String businessNumber
     ) {
-        boolean exists = companyRepository.existsByBusinessNumber(businessNumber);
+        companyService.validateBusinessNumber(businessNumber);
 
         return ResponseEntity.ok(
                 new ResponseDto(
                         HttpStatus.OK,
-                        exists ? "이미 등록된 사업자번호입니다." : "사용 가능한 사업자번호입니다.",
-                        Map.of("available", !exists)
+                        "사용 가능한 사업자번호입니다.",
+                        Map.of("available", true)
+                )
+        );
+    }
+
+    @GetMapping("/check-email")
+    public ResponseEntity<ResponseDto> checkEmail(
+            @RequestParam String email
+    ) {
+        boolean available = companyService.isEmailAvailable(email);
+
+        return ResponseEntity.ok(
+                new ResponseDto(
+                        HttpStatus.OK,
+                        "이메일 중복 확인 완료",
+                        Map.of("available", available)
                 )
         );
     }
