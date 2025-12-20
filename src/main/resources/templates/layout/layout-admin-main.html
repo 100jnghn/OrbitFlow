@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      th:fragment="layout(content, headerFragment, sidebarFragment, pageCss, pageScript)">
-
+      th:fragment="layout(content, headerFragment, pageCss)">
 <head>
     <meta charset="UTF-8">
     <title th:text="${pageTitle} ?: 'OrbitFlow'">OrbitFlow</title>
@@ -16,28 +15,17 @@
 <body>
 
 <div class="app-wrapper">
-
     <!-- Header -->
     <header th:replace="${headerFragment}"></header>
 
-    <div class="app-body">
-
-        <!-- Sidebar -->
-        <aside th:replace="~{fragments/sidebar :: shell(${sidebarFragment})}"></aside>
-
-        <!-- Main Content -->
-        <main class="app-content">
-            <th:block th:replace="${content}"></th:block>
-        </main>
-
-    </div>
+    <!-- Main Content (사이드바 없음) -->
+    <main class="app-content">
+        <th:block th:replace="${content}"></th:block>
+    </main>
 </div>
 
-<!-- 공통 JS -->
 <script th:src="@{/js/common.js}"></script>
-
-<!-- ✅ 페이지별 JS 삽입 위치 (이 줄이 핵심) -->
-<th:block th:replace="${pageScript}"></th:block>
 
 </body>
 </html>
+

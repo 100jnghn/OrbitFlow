@@ -8,6 +8,8 @@ import com.finalproj.orbitflow.attendance.employeeAttRule.dto.EmpAttRuleUpdateRe
 import com.finalproj.orbitflow.attendance.attendanceRule.service.AttendanceRuleService;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import com.finalproj.orbitflow.global.security.SecurityUtils;
+import com.finalproj.orbitflow.hr.employee.entity.Employee;
+import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Security;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin/rules")
@@ -23,6 +26,7 @@ import java.util.List;
 public class AttendanceRuleController {
 
     private final AttendanceRuleService attendanceRuleService;
+    private final EmployeeRepository employeeRepository;
 
     // =======================================================
     // I. 회사 기본 규칙 (Default Rule) 관리 API
@@ -127,4 +131,39 @@ public class AttendanceRuleController {
         // 포스트맨 Body에 띄울 메시지 반환
         return ResponseEntity.ok("성공적으로 삭제되었습니다. (규칙 ID: " + ruleId + ")");
     }
+
+    /**
+     * 8. 사원 검색 (이름 또는 사번으로 검색)
+     */
+    @GetMapping("/employees/search")
+    public ResponseEntity<List<EmployeeSearchDto>> searchEmployees(
+            @AuthenticationPrincipal SecurityUser admin,
+            @RequestParam String keyword) {
+
+        List<Employee> employees = employeeRepository
+                .searchByCompanyIdAndKeyword(admin.getCompanyId(), keyword);
+
+        List<EmployeeSearchDto> result = employees.stream()
+                .map(emp -> new EmployeeSearchDto(
+                        emp.getId(),
+                        emp.getName(),
+                        emp.getEmployeeNo(),
+                        emp.getOrganization() != null ? emp.getOrganization().getName() : "",
+                        emp.getPosition() != null ? emp.getPosition().getName() : ""
+                ))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * 사원 검색 결과 DTO
+     */
+    public record EmployeeSearchDto(
+            Long id,
+            String name,
+            String employeeNo,
+            String organizationName,
+            String positionName
+    ) {}
 }

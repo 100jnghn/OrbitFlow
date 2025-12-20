@@ -21,15 +21,8 @@ import java.util.Optional;
 
 
 public interface FormTemplateRepository extends JpaRepository<FormTemplate, Long> {
-    @Query("""
-            
-                    select max(ft.version)
-            from FormTemplate ft
-            where ft.templateGroup.id = :templateGroupId
-            """)
-    Optional<Integer> findMaxVersionByTemplateGroupId(
-            @Param("templateGroupId") Long templateGroupId
-    );
+
+    Optional<FormTemplate> findTopByTemplateGroup_IdAndStatusOrderByUpdatedAtDesc(Long templateGroupId, FormTemplateStatus status);
 
     Optional<FormTemplate> findTopByTemplateGroup_IdAndStatusOrderByVersionDesc(Long id, FormTemplateStatus formTemplateStatus);
 
@@ -75,7 +68,15 @@ public interface FormTemplateRepository extends JpaRepository<FormTemplate, Long
             Pageable pageable
     );
 
-}
+    @Query("""
+    select max(t.version)
+    from FormTemplate t
+    where t.templateGroup.id = :templateGroupId
+      and t.status = 'ACTIVE'
+    """)
+    Optional<Integer> findMaxActiveVersionByTemplateGroupId(
+            @Param("templateGroupId") Long templateGroupId
+    );}
 
 
 

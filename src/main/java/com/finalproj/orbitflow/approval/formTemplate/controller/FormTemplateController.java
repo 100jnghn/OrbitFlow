@@ -50,25 +50,25 @@ public class FormTemplateController {
                         Map.of("formTemplateId", formTemplateId)));
     }
 
-    @PostMapping("/admin/form-templates/{id}/revise")
+    @PostMapping("/admin/form-templates/{templateId}/revise")
     public ResponseEntity<ResponseDto> reviseFormTemplate(
-            @PathVariable(name = "id") Long templateGroupId
+            @PathVariable(name = "templateId") Long templateGroupId
     ) {
-        Long formTemplateId = formTemplateService.reviseFormTemplateByTemplateGroup(templateGroupId, SecurityUtils.getCompanyId());
+        Long createdTemplateId = formTemplateService.reviseFormTemplateByTemplateGroup(templateGroupId, SecurityUtils.getCompanyId());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(new ResponseDto(
                         HttpStatus.CREATED,
                         "결재 양식이 복제되었습니다.",
-                        Map.of("formTemplateId", formTemplateId)));
+                        Map.of("createdTemplateId", createdTemplateId)));
     }
 
 
-    @PatchMapping("/admin/form-templates/{id}/structure")
+    @PatchMapping("/admin/form-templates/{templateId}/structure")
     public ResponseEntity<ResponseDto> updateFormTemplateStructure(
             @RequestBody FormTemplateUpdateReqDto reqDto,
-            @PathVariable(name = "id") Long formTemplateId
+            @PathVariable(name = "templateId") Long formTemplateId
     ) {
         formTemplateService.updateStructure(formTemplateId, SecurityUtils.getCompanyId(), reqDto);
 
@@ -77,10 +77,10 @@ public class FormTemplateController {
                 .body(new ResponseDto(HttpStatus.OK, "결재 양식 구조가 수정되었습니다.", null));
     }
 
-    @PatchMapping("/admin/form-templates/{id}/approval-rule")
+    @PatchMapping("/admin/form-templates/{templateId}/approval-rule")
     public ResponseEntity<ResponseDto> updateFormTemplateApprovalRule(
             @RequestBody FormTemplateUpdateReqDto reqDto,
-            @PathVariable(name = "id") Long formTemplateId
+            @PathVariable(name = "templateId") Long formTemplateId
     ) {
 
         formTemplateService.updateApprovalRule(formTemplateId, SecurityUtils.getCompanyId(), reqDto);
@@ -90,9 +90,9 @@ public class FormTemplateController {
                 .body(new ResponseDto(HttpStatus.OK, "결재선 규칙이 수정되었습니다.", null));
     }
 
-    @PostMapping("/admin/form-templates/{id}/publish")
+    @PostMapping("/admin/form-templates/{templateId}/publish")
     public ResponseEntity<ResponseDto> publishFormTemplate(
-            @PathVariable(name = "id") Long formTemplateId
+            @PathVariable(name = "templateId") Long formTemplateId
     ) {
         formTemplateService.publishFormTemplate(formTemplateId, SecurityUtils.getCompanyId());
 
@@ -115,9 +115,9 @@ public class FormTemplateController {
     }
 
 
-    @GetMapping("/form-templates/{id}")
+    @GetMapping("/form-templates/{templateId}")
     public ResponseEntity<ResponseDto> getDetailFormTemplate(
-            @PathVariable(name = "id") Long formTemplateId
+            @PathVariable(name = "templateId") Long formTemplateId
     ) {
 
         FormTemplateDetailResDto result = formTemplateService.getDetailFormTemplate(formTemplateId, SecurityUtils.getCompanyId());

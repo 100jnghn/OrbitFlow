@@ -1,15 +1,13 @@
 package com.finalproj.orbitflow.approval.formTemplateGroup.controller;
 
 import com.finalproj.orbitflow.approval.formTemplateGroup.dto.FormTemplateGroupCreateReqDto;
-import com.finalproj.orbitflow.approval.formTemplateGroup.dto.FormTemplateGroupCreateResDto;
 import com.finalproj.orbitflow.approval.formTemplateGroup.dto.FormTemplateGroupUpdateReqDto;
 import com.finalproj.orbitflow.approval.formTemplateGroup.service.FormTemplateGroupService;
 import com.finalproj.orbitflow.global.common.ResponseDto;
-import com.finalproj.orbitflow.global.security.SecurityUser;
+import com.finalproj.orbitflow.global.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -30,7 +28,6 @@ public class FormTemplateGroupController {
 
     @GetMapping("form-template-groups")
     public ResponseEntity<ResponseDto> formTemplateGroups(
-            @AuthenticationPrincipal SecurityUser user,
             @RequestParam(required = false) String keyword
     ) {
 
@@ -38,19 +35,22 @@ public class FormTemplateGroupController {
                 new ResponseDto(
                         HttpStatus.OK,
                         "양식 그룹 목록 조회",
-                        formTemplateGroupService.getFormTemplateGroups(user.getCompanyId(), keyword)));
+                        formTemplateGroupService.getFormTemplateGroups(SecurityUtils.getCompanyId(), keyword)));
     }
 
 
     @PostMapping("admin/form-template-groups")
     public ResponseEntity<ResponseDto> saveFormTemplateGroup(
-            @RequestBody FormTemplateGroupCreateReqDto dto,
-            @AuthenticationPrincipal SecurityUser user
+            @RequestBody FormTemplateGroupCreateReqDto dto
     ) {
-
-        FormTemplateGroupCreateResDto result = new FormTemplateGroupCreateResDto(formTemplateGroupService.saveFormTemplateGroup(dto, user.getCompanyId()));
-
-        return ResponseEntity.ok(new ResponseDto(HttpStatus.CREATED, "양식 그룹 생성 성공", result));
+        return ResponseEntity.ok(
+                new ResponseDto(
+                        HttpStatus.CREATED,
+                        "양식 그룹 생성 성공",
+                        formTemplateGroupService.saveFormTemplateGroup(dto, SecurityUtils.getCompanyId()
+                        )
+                )
+        );
     }
 
     @GetMapping("form-template-groups/{id}")
@@ -73,5 +73,5 @@ public class FormTemplateGroupController {
         formTemplateGroupService.updateFormTemplateGroup(dto, id);
         return ResponseEntity.ok(new ResponseDto(HttpStatus.OK, "양식 그룹 수정 완료", null));
     }
-    
+
 }

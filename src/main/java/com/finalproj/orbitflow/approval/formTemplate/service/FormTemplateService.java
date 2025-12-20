@@ -25,8 +25,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 결재 양식(FormTemplate)의 생명주기 전반을 관리하는 서비스 클래스.
@@ -71,22 +74,61 @@ public class FormTemplateService {
     ) {
         FormTemplateGroup group = findGroupAndCheckCompany(templateGroupId, companyId);
 
+        Optional<FormTemplate> existingDraft =
+                formTemplateRepository.findTopByTemplateGroup_IdAndStatusOrderByUpdatedAtDesc(
+                        templateGroupId,
+                        FormTemplateStatus.DRAFT
+                );
+
+        if (existingDraft.isPresent()) {
+            return existingDraft.get().getId();
+        }
+
         TemplateCategory category = templateCategoryRepository.findByCode(categoryCode)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "양식 카테고리를 찾을 수 없습니다."
                 ));
 
-        int nextVersion = calculateNextVersion(templateGroupId);
+        int baseVersion = formTemplateRepository
+                .findTopByTemplateGroup_IdAndStatusOrderByVersionDesc(
+                        templateGroupId,
+                        FormTemplateStatus.ACTIVE
+                )
+                .map(FormTemplate::getVersion)
+                .orElse(1);
+
+        String initialTemplateJson = buildInitialTemplateJson();
 
         return createDraftTemplate(
                 group,
-                nextVersion,
+                baseVersion,
                 category,
+                initialTemplateJson,
                 "{}",
-                null,
                 null
         );
+    }
+
+
+    private String buildInitialTemplateJson() {
+        ObjectNode root = objectMapper.createObjectNode();
+        ArrayNode fields = root.putArray("fields");
+
+        ObjectNode titleField = objectMapper.createObjectNode();
+        titleField.put("fieldId", "document-title");
+        titleField.put("fieldType", "document-title");
+        titleField.put("label", "문서 제목");
+        titleField.put("required", true);
+        titleField.put("order", 1);
+
+        ObjectNode meta = titleField.putObject("meta");
+        meta.put("placeholder", "문서 제목을 입력하세요.");
+        meta.put("maxLength", 100);
+
+        fields.add(titleField);
+
+        return root.toString();
     }
 
 
@@ -94,6 +136,16 @@ public class FormTemplateService {
     public Long reviseFormTemplateByTemplateGroup(Long templateGroupId, Long companyId) {
 
         FormTemplateGroup group = findGroupAndCheckCompany(templateGroupId, companyId);
+
+        Optional<FormTemplate> existingDraft =
+                formTemplateRepository.findTopByTemplateGroup_IdAndStatusOrderByUpdatedAtDesc(
+                        templateGroupId,
+                        FormTemplateStatus.DRAFT
+                );
+
+        if (existingDraft.isPresent()) {
+            return existingDraft.get().getId();
+        }
 
         FormTemplate active = formTemplateRepository
                 .findTopByTemplateGroup_IdAndStatusOrderByVersionDesc(
@@ -105,17 +157,18 @@ public class FormTemplateService {
                         "ACTIVE 상태의 양식을 찾을 수 없습니다."
                 ));
 
-        int nextVersion = calculateNextVersion(templateGroupId);
+        int baseVersion = active.getVersion();
 
         return createDraftTemplate(
                 group,
-                nextVersion,
+                baseVersion,
                 active.getTemplateCategory(),
                 active.getTemplateJson(),
                 active.getApprovalRuleJson(),
                 active.getAffectTags()
         );
     }
+
 
     private FormTemplateGroup findGroupAndCheckCompany(Long templateGroupId, Long companyId) {
         FormTemplateGroup group = formTemplateGroupRepository.findById(templateGroupId)
@@ -133,9 +186,9 @@ public class FormTemplateService {
         return group;
     }
 
-    private int calculateNextVersion(Long templateGroupId) {
+    private int calculateNextActiveVersion(Long templateGroupId) {
         return formTemplateRepository
-                .findMaxVersionByTemplateGroupId(templateGroupId)
+                .findMaxActiveVersionByTemplateGroupId(templateGroupId)
                 .orElse(0) + 1;
     }
 
@@ -205,44 +258,32 @@ public class FormTemplateService {
     @Transactional
     public void publishFormTemplate(Long formTemplateId, Long companyId) {
 
-        FormTemplate newTemplate = findFormTemplate(formTemplateId);
+        FormTemplate draft = findFormTemplate(formTemplateId);
+        checkCompany(companyId, draft);
 
-        checkCompany(companyId, newTemplate);
-
-        if (newTemplate.getStatus() != FormTemplateStatus.DRAFT) {
+        if (draft.getStatus() != FormTemplateStatus.DRAFT) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "DRAFT 상태의 결재 양식만 활성화할 수 있습니다."
             );
         }
 
-        if (newTemplate.getTemplateJson() == null || newTemplate.getTemplateJson().isBlank()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "결재 양식 구조가 입력되지 않았습니다."
-            );
-        }
-
-        if (newTemplate.getApprovalRuleJson() == null || newTemplate.getApprovalRuleJson().isBlank()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "결재선 규칙이 설정되지 않았습니다."
-            );
-        }
-
+        // 기존 ACTIVE 비활성화
         formTemplateRepository
                 .findTopByTemplateGroup_IdAndStatusOrderByVersionDesc(
-                        newTemplate.getTemplateGroup().getId(),
+                        draft.getTemplateGroup().getId(),
                         FormTemplateStatus.ACTIVE
                 )
-                .ifPresent(activeTemplate ->
-                        activeTemplate.updateStatus(FormTemplateStatus.INACTIVE)
-                );
+                .ifPresent(active -> active.updateStatus(FormTemplateStatus.INACTIVE));
 
-        newTemplate.updateStatus(FormTemplateStatus.ACTIVE);
+        // publish 시점에 version 증가
+        int nextVersion = calculateNextActiveVersion(
+                draft.getTemplateGroup().getId()
+        );
+
+        draft.updateVersion(nextVersion);
+        draft.updateStatus(FormTemplateStatus.ACTIVE);
     }
-
-
 
 
     private FormTemplate findFormTemplate(Long formTemplateId) {
