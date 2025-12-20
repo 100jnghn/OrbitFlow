@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "board")
@@ -43,18 +44,23 @@ public class Board extends BaseEntity {
     @Column(name = "view_count", nullable = false)
     private int viewCount = 0; // 게시글 조회수
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "file_id")
-    private File file; // 첨부파일 (FK) (Nullable)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "board_id")
+    private List<File> files; // 첨부파일 (FK) (Nullable)
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt; // 삭제 일시 (소프트 삭제)
 
     // 게시글 수정 메서드
-    public void update(String boardTitle, String boardContent, File file) {
+    public void update(String boardTitle, String boardContent, List<File> files) {
         this.boardTitle = boardTitle;
         this.boardContent = boardContent;
-        this.file = file;
+
+        // 파일 교체 (기존 제거 후 새로 설정)
+        this.files.clear();
+        if (files != null) {
+            this.files.addAll(files);
+        }
     }
 
     // 조회수 증가 메서드
@@ -65,6 +71,21 @@ public class Board extends BaseEntity {
     // 소프트 삭제 처리
     public void softDelete() {
         this.deletedAt = LocalDateTime.now();
+    }
+
+    public static Board create(
+            BoardCategory category,
+            Employee writer,
+            String title,
+            String content
+    ) {
+        Board board = new Board();
+        board.category = category;
+        board.writer = writer;
+        board.boardTitle = title;
+        board.boardContent = content;
+        board.viewCount = 0;
+        return board;
     }
 
 }
