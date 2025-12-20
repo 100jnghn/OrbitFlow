@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.attendance.commute.service;
 
+import com.finalproj.orbitflow.attendance.commute.dto.ActiveRuleResDto;
 import com.finalproj.orbitflow.attendance.commute.dto.TodayAttResDto;
 import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
 import com.finalproj.orbitflow.attendance.attendanceRule.entity.AttendanceRule;
@@ -29,6 +30,29 @@ public class CommuteService {
     private final AttendanceRuleRepository attendanceRuleRepository;
     private final EmployeeAttRuleRepository employeeAttRuleRepository;
     private final EmployeeRepository employeeRepository;
+
+
+    @Transactional(readOnly = true)
+    public ActiveRuleResDto getActiveRule(Long companyId, Long employeeId) {
+        LocalDate today = LocalDate.now();
+
+        // 1순위: 해당 사원의 오늘 날짜에 해당하는 '예외 규칙'이 있는지 조회
+        return employeeAttRuleRepository.findActiveRuleByEmployeeIdAndDate(employeeId, today)
+                .map(exceptionRule -> new ActiveRuleResDto(
+                        exceptionRule.getStartTime(),
+                        exceptionRule.getEndTime(),
+                        "EXCEPTION" // 예외 규칙임을 표시 (디버깅용)
+                ))
+                // 2순위: 예외 규칙이 없으면 '회사의 기본 규칙' 조회
+                .orElseGet(() -> attendanceRuleRepository.findByCompanyIdAndIsDefaultTrue(companyId)
+                        .map(defaultRule -> new ActiveRuleResDto(
+                                defaultRule.getDefaultStartTime(),
+                                defaultRule.getDefaultEndTime(),
+                                "DEFAULT"
+                        ))
+                        // 3순위: 둘 다 없으면 시스템 기본값 반환
+                        .orElse(new ActiveRuleResDto(LocalTime.of(9, 0), LocalTime.of(18, 0), "SYSTEM")));
+    }
 
     /**
      * 오늘의 근태 및 실시간 상태 조회
@@ -132,6 +156,7 @@ public class CommuteService {
                 .orElseThrow(() -> new IllegalStateException("사원 정보를 찾을 수 없습니다."));
         employee.updateWorkStatus(status);
     }
+
 
     /**
      * [수정] 적용 가능한 출근 시간 조회 (Public으로 변경)

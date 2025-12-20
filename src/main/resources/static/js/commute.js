@@ -46,6 +46,9 @@ async function loadActiveWorkHours() {
 
             // 화면의 '기준 근무 시간' 영역 업데이트
             document.getElementById('workHours').textContent = `${start} ~ ${end}`;
+
+            // 콘솔에서 예외 규칙이 적용되었는지 확인 (디버깅)
+            console.log(`[규칙 적용 상태] 타입: ${data.ruleType}, 시간: ${start}~${end}`);
         }
     } catch (error) {
         console.error('기준 시간 로드 실패:', error);
