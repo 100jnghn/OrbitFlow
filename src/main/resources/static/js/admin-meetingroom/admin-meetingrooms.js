@@ -80,7 +80,7 @@ async function loadMeetingRooms() {
         const res = await apiFetch('/api/admin/meetingrooms');
         if (!res.ok) throw new Error();
 
-        const { data } = await res.json();
+        const {data} = await res.json();
         const tbody = document.querySelector('.resource-table tbody');
         tbody.innerHTML = '';
 
@@ -99,14 +99,7 @@ async function loadMeetingRooms() {
 
         data.forEach((room, i) => {
             const tr = document.createElement('tr');
-            tr.append(
-                createCell(i + 1),
-                createCell(room.name),
-                createCell(room.position, true),
-                createCell(room.description, true),
-                createCell(room.statusCode),
-                createActionCell(room.meetingroomId)
-            );
+            tr.append(createCell(i + 1), createCell(room.name), createCell(room.position, true), createCell(room.description, true), createCell(room.statusCode), createActionCell(room.meetingroomId));
             tbody.appendChild(tr);
         });
 
@@ -119,13 +112,35 @@ async function loadMeetingRooms() {
 /* ==========================
    Actions
 ========================== */
+// function editMeetingRoom(id) {
+//     alert(`회의실 ID ${id} 수정 기능을 구현하세요.`);
+// }
+
 function editMeetingRoom(id) {
-    alert(`회의실 ID ${id} 수정 기능을 구현하세요.`);
+    // 상세 페이지로 이동 (id 전달)
+    window.location.href = `/view/resource/admin/meetingrooms/detail?id=${id}`;
 }
 
 async function deleteMeetingRoom(id) {
-    if (!confirm('정말 삭제하시겠습니까?')) return;
-    await apiFetch(`/api/admin/meetingrooms/${id}`, { method: 'DELETE' });
+    if (!confirm('정말로 이 회의실을 삭제하시겠습니까?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `/api/admin/meetingrooms/${id}/delete`,
+            { method: 'PATCH' }
+        );
+
+        if (!response.ok) {
+            throw new Error();
+        }
+
+    } catch (error) {
+        console.error(error);
+        alert('회의실 삭제에 실패했습니다.');
+    }
+
     loadMeetingRooms();
 }
 

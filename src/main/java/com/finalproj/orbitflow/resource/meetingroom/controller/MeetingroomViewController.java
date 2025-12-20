@@ -4,6 +4,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * Please explain the class!!!
@@ -22,6 +23,15 @@ public class MeetingroomViewController {
         model.addAttribute("currentGNB", "admin");
 
         return "admin-meetingroom/admin-meetingrooms";
+    }
+
+    @GetMapping("/admin/meetingrooms/detail")
+    public String getMeetingroomPage(
+            @RequestParam Long id,
+            Model model
+    ) {
+        model.addAttribute("meetingroomId", id);
+        return "admin-meetingroom/admin-meetingroom";
     }
 
     // 사용자 회의실 조회 화면
