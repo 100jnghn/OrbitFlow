@@ -6,7 +6,7 @@ import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryOrderUpdateReqDto;
 import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryResDto;
 import com.finalproj.orbitflow.hr.orgCategory.entity.OrgCategory;
 import com.finalproj.orbitflow.hr.orgCategory.repository.OrgCategoryRepository;
-import com.finalproj.orbitflow.hr.organization.repository.OrganizationRepository;
+import com.finalproj.orbitflow.hr.organization.repository.OrgRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +26,7 @@ import java.util.List;
 public class OrgCategoryService {
 
     private final OrgCategoryRepository orgCategoryRepository;
-    private final OrganizationRepository organizationRepository;
+    private final OrgRepository orgRepository;
 
     /**
      * 조직 카테고리 생성
@@ -83,7 +83,7 @@ public class OrgCategoryService {
                 .findByCompanyIdAndId(companyId, categoryId)
                 .orElseThrow(() -> new NotFoundException("조직 카테고리를 찾을 수 없습니다."));
 
-        if (organizationRepository.existsByCompanyIdAndCategoryIdAndIsActiveTrue(companyId, categoryId)) {
+        if (orgRepository.existsByCompanyIdAndCategoryIdAndIsActiveTrue(companyId, categoryId)) {
             throw new InvalidStateException(
                     "해당 카테고리를 사용하는 조직이 존재하여 비활성화할 수 없습니다."
             );

@@ -8,7 +8,7 @@ import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import com.finalproj.orbitflow.hr.orgCategory.entity.OrgCategory;
 import com.finalproj.orbitflow.hr.orgCategory.repository.OrgCategoryRepository;
 import com.finalproj.orbitflow.hr.organization.entity.Organization;
-import com.finalproj.orbitflow.hr.organization.repository.OrganizationRepository;
+import com.finalproj.orbitflow.hr.organization.repository.OrgRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ public class CompanyService {
     private final CompanyRepository companyRepository;
     private final EmployeeRepository employeeRepository;
     private final PasswordEncoder passwordEncoder;
-    private final OrganizationRepository organizationRepository;
+    private final OrgRepository orgRepository;
     private final OrgCategoryRepository orgCategoryRepository;
 
     public Long signup(CompanySignupReqDto request) {
@@ -67,11 +67,11 @@ public class CompanyService {
                 );
 
         // 4. 기본 조직 트리 생성
-        Organization rootOrg = organizationRepository.save(
+        Organization rootOrg = orgRepository.save(
                 Organization.createRoot(company, companyCat.getId())
         );
 
-        Organization hqOrg = organizationRepository.save(
+        Organization hqOrg = orgRepository.save(
                 Organization.create(
                         company.getId(),
                         hqCat.getId(),
@@ -81,7 +81,7 @@ public class CompanyService {
                 )
         );
 
-        Organization deptOrg = organizationRepository.save(
+        Organization deptOrg = orgRepository.save(
                 Organization.create(
                         company.getId(),
                         deptCat.getId(),
@@ -91,7 +91,7 @@ public class CompanyService {
                 )
         );
 
-        Organization teamOrg = organizationRepository.save(
+        Organization teamOrg = orgRepository.save(
                 Organization.create(
                         company.getId(),
                         teamCat.getId(),

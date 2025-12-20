@@ -1,6 +1,7 @@
 package com.finalproj.orbitflow.hr.employee.repository;
 
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
+import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -39,6 +40,12 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     List<Employee> findAllByIdIn(List<Long> ids);
 
+    boolean existsByCompanyIdAndOrganizationIdAndStatusNot(
+            Long companyId,
+            Long organizationId,
+            EmployeeStatus status
+    );
+  
     /**
      * 회사 ID + 이름 또는 사번으로 사원 검색
      */
@@ -48,5 +55,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     List<Employee> searchByCompanyIdAndKeyword(
             @Param("companyId") Long companyId,
             @Param("keyword") String keyword
+
     );
 }
