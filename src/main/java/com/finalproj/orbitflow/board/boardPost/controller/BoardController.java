@@ -16,6 +16,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -30,6 +31,12 @@ public class BoardController {
     public ResponseEntity<ResponseDto> getBoardList(
             @AuthenticationPrincipal SecurityUser user,
             @PathVariable Long categoryId,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+            LocalDate startDate,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+            LocalDate endDate,
+            @RequestParam(required = false) String searchType,   // TITLE/CONTENT/AUTHOR/ALL
+            @RequestParam(required = false) String keyword,
             @PageableDefault(size = 10, sort = "createdAt") Pageable pageable
     ) {
         Page<BoardResDto.ListInfo> result =
@@ -37,6 +44,10 @@ public class BoardController {
                         user.getCompanyId(),
                         user.getOrganizationId(),
                         categoryId,
+                        startDate,
+                        endDate,
+                        searchType,
+                        keyword,
                         pageable
                 );
 

@@ -13,17 +13,28 @@ let deletingBoardId = null; // 삭제할 게시판 ID
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', function() {
-    loadBoardList();
-    loadOrganizationList();
-    
-    // 모달 폼 이벤트 리스너
-    document.getElementById('boardForm').addEventListener('submit', handleBoardSubmit);
+    try {
+        loadBoardList();
+        loadOrganizationList();
+        
+        // 모달 폼 이벤트 리스너
+        const boardForm = document.getElementById('boardForm');
+        if (boardForm) {
+            boardForm.addEventListener('submit', handleBoardSubmit);
+        } else {
+            console.warn('boardForm element not found');
+        }
+    } catch (error) {
+        console.error('Error initializing board admin page:', error);
+    }
 });
 
 // 게시판 목록 로드
 async function loadBoardList(page = 0) {
     try {
-        const response = await apiFetch(`${API_BASE_URL}?organizationOnly=false&page=${page}&size=5&sort=createdAt,desc`, {
+        // Spring Data의 sort 파라미터 형식: sort=createdAt,desc (방향 포함)
+        // 페이지 크기를 10으로 늘려서 더 많은 게시판을 한 번에 표시
+        const response = await apiFetch(`${API_BASE_URL}?organizationOnly=false&page=${page}&size=10&sort=createdAt,desc`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -41,19 +52,62 @@ async function loadBoardList(page = 0) {
 
         const result = await response.json();
         console.log('Board list response:', result); // 디버깅용
+        console.log('Response structure:', JSON.stringify(result, null, 2));
         
-        if (!result.data) {
+        // ResponseDto 구조 확인
+        if (!result) {
+            console.error('No response received');
+            alert('게시판 목록을 불러오는데 실패했습니다.');
+            return;
+        }
+        
+        // status가 200인지 확인 (ResponseDto 구조)
+        if (result.status && result.status !== 200) {
+            console.error('Invalid status:', result.status, result.message);
+            alert(result.message || '게시판 목록을 불러오는데 실패했습니다.');
+            return;
+        }
+        
+        // data 추출 (ResponseDto.data 또는 직접 Page 객체)
+        let data = result.data;
+        
+        // data가 없으면 result 자체가 Page 객체일 수 있음
+        if (!data && result.content) {
+            data = result;
+        }
+        
+        if (!data) {
             console.error('No data in response:', result);
             alert('게시판 목록 데이터가 없습니다.');
             return;
         }
         
-        const data = result.data;
+        console.log('Extracted data:', data);
+        console.log('Data type:', typeof data);
+        console.log('Data keys:', Object.keys(data));
         
-        currentBoardPage = data.number;
-        totalBoardPages = data.totalPages;
+        // Page 객체 구조 확인 (content, number, totalPages 등)
+        const content = data.content || data.elements || (Array.isArray(data) ? data : []);
+        const number = data.number !== undefined ? data.number : (data.pageNumber !== undefined ? data.pageNumber : 0);
+        const totalPages = data.totalPages !== undefined ? data.totalPages : (data.totalPageCount !== undefined ? data.totalPageCount : 1);
+        const totalElements = data.totalElements !== undefined ? data.totalElements : (data.total !== undefined ? data.total : content.length);
         
-        renderBoardTable(data.content || []);
+        console.log('Page info:', { 
+            content: content.length, 
+            number, 
+            totalPages,
+            totalElements: totalElements,
+            size: data.size || 5,
+            first: data.first !== undefined ? data.first : (number === 0),
+            last: data.last !== undefined ? data.last : (number === totalPages - 1)
+        });
+        
+        currentBoardPage = number;
+        totalBoardPages = totalPages;
+        
+        console.log(`현재 페이지: ${currentBoardPage + 1}/${totalBoardPages}, 게시판 수: ${content.length}개, 전체: ${totalElements}개`);
+        
+        renderBoardTable(content);
         renderBoardPagination();
     } catch (error) {
         console.error('Error loading board list:', error);
@@ -75,7 +129,7 @@ function renderBoardTable(boards) {
 
     boards.forEach((board, index) => {
         const row = document.createElement('tr');
-        const rowNumber = currentBoardPage * 5 + index + 1;
+        const rowNumber = currentBoardPage * 10 + index + 1;
         
         const createdAt = new Date(board.createdAt).toLocaleString('ko-KR', {
             year: 'numeric',
@@ -104,7 +158,26 @@ function renderBoardPagination() {
     const pagination = document.getElementById('boardPagination');
     pagination.innerHTML = '';
 
-    if (totalBoardPages <= 1) return;
+    // 기존 페이지네이션 정보 제거
+    const existingInfo = pagination.parentElement.querySelector('.pagination-info');
+    if (existingInfo) {
+        existingInfo.remove();
+    }
+    
+    // 페이지네이션 정보 표시
+    const pageInfo = document.createElement('div');
+    pageInfo.className = 'pagination-info';
+    pageInfo.textContent = `전체 ${totalBoardPages}페이지 중 ${currentBoardPage + 1}페이지`;
+    pageInfo.style.cssText = 'margin-bottom: 10px; color: #666; font-size: 14px; text-align: center;';
+    pagination.parentElement.insertBefore(pageInfo, pagination);
+    
+    if (totalBoardPages <= 1) {
+        // 페이지가 1개뿐이면 페이지네이션 숨기기
+        pagination.style.display = 'none';
+        return;
+    }
+    
+    pagination.style.display = 'flex';
 
     // 이전 버튼
     const prevBtn = document.createElement('button');
@@ -198,13 +271,24 @@ async function loadOrganizationList(page = 0) {
             throw new Error('부서 목록을 불러오는데 실패했습니다.');
         }
 
-        const organizations = await orgResponse.json();
+        const orgResult = await orgResponse.json();
+        // /api/admin/organizations는 List를 직접 반환하므로 data가 아닐 수 있음
+        const organizations = Array.isArray(orgResult) ? orgResult : (orgResult.data || []);
         
         // 조직 게시판 목록에서 각 부서별 활성화 상태 및 게시판 ID 확인
         let orgBoardsMap = {};
         if (boardResponse.ok) {
             const boardResult = await boardResponse.json();
-            const orgBoards = boardResult.data?.content || [];
+            console.log('Organization board response:', boardResult);
+            
+            // ResponseDto 구조에서 data 추출
+            let boardData = boardResult.data;
+            if (!boardData && boardResult.content) {
+                boardData = boardResult;
+            }
+            
+            // Page 객체에서 content 추출
+            const orgBoards = boardData?.content || boardData?.elements || (Array.isArray(boardData) ? boardData : []);
             console.log('=== Loaded organization boards ===');
             console.log('Raw board data:', JSON.stringify(orgBoards, null, 2));
             orgBoards.forEach(board => {
