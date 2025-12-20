@@ -35,7 +35,7 @@ public class CompanyController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ResponseDto(
                         HttpStatus.CREATED,
-                        "회사 가입이 완료되었습니다.",
+                        "회사 가입 완료",
                         Map.of("companyId", companyId)
                 ));
     }

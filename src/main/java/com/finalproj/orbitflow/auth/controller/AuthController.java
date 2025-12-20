@@ -5,6 +5,7 @@ import com.finalproj.orbitflow.auth.dto.LoginResDto;
 import com.finalproj.orbitflow.auth.dto.MeResDto;
 import com.finalproj.orbitflow.auth.entity.RefreshToken;
 import com.finalproj.orbitflow.auth.service.AuthService;
+import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.UnauthorizedException;
 import com.finalproj.orbitflow.global.security.CustomUserDetailsService;
@@ -12,6 +13,8 @@ import com.finalproj.orbitflow.global.security.SecurityUser;
 import com.finalproj.orbitflow.global.security.jwt.JwtProvider;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -40,7 +43,7 @@ public class AuthController {
      * 로그인
      */
     @PostMapping("/login")
-    public LoginResDto login(@RequestBody LoginReqDto request) {
+    public ResponseEntity<ResponseDto> login(@RequestBody LoginReqDto request) {
 
         SecurityUser user;
         try {
@@ -64,10 +67,18 @@ public class AuthController {
         String accessToken = jwtProvider.createToken(user);
         RefreshToken refreshToken = authService.issueRefreshToken(user);
 
-        return new LoginResDto(
+        LoginResDto res = new LoginResDto(
                 accessToken,
                 refreshToken.getToken(),
                 refreshToken.getExpiresAt()
+        );
+
+        return ResponseEntity.ok(
+                new ResponseDto(
+                        HttpStatus.OK,
+                        "로그인 성공",
+                        res
+                )
         );
     }
 
@@ -75,8 +86,9 @@ public class AuthController {
      * Access Token 재발급 (Refresh 만료 연장 X)
      */
     @PostMapping("/refresh")
-    public LoginResDto refresh(@RequestHeader("Refresh-Token") String token) {
-
+    public ResponseEntity<ResponseDto> refresh(
+            @RequestHeader("Refresh-Token") String token
+    ) {
         RefreshToken refreshToken = authService.validateRefreshToken(token);
 
         SecurityUser user =
@@ -86,12 +98,14 @@ public class AuthController {
             throw new ForbiddenException("로그인할 수 없는 계정 상태입니다.");
         }
 
-        String newAccessToken = jwtProvider.createToken(user);
-
-        return new LoginResDto(
-                newAccessToken,
+        LoginResDto res = new LoginResDto(
+                jwtProvider.createToken(user),
                 null,
                 refreshToken.getExpiresAt()
+        );
+
+        return ResponseEntity.ok(
+                new ResponseDto(HttpStatus.OK, "Access Token 재발급 성공", res)
         );
     }
 
@@ -101,8 +115,9 @@ public class AuthController {
      * - 만료 20시간 재설정
      */
     @PostMapping("/extend-session")
-    public LoginResDto extendSession(@RequestHeader("Refresh-Token") String token) {
-
+    public ResponseEntity<ResponseDto> extendSession(
+            @RequestHeader("Refresh-Token") String token
+    ) {
         RefreshToken oldToken = authService.validateRefreshToken(token);
 
         SecurityUser user =
@@ -118,12 +133,18 @@ public class AuthController {
         // 새 Refresh Token 발급 (20시간)
         RefreshToken newRefreshToken = authService.issueRefreshToken(user);
 
-        String newAccessToken = jwtProvider.createToken(user);
-
-        return new LoginResDto(
-                newAccessToken,
+        LoginResDto res = new LoginResDto(
+                jwtProvider.createToken(user),
                 newRefreshToken.getToken(),
                 newRefreshToken.getExpiresAt()
+        );
+
+        return ResponseEntity.ok(
+                new ResponseDto(
+                        HttpStatus.OK,
+                        "세션 연장 완료",
+                        res
+                )
         );
     }
 
@@ -131,26 +152,38 @@ public class AuthController {
      * 로그아웃
      */
     @PostMapping("/logout")
-    public void logout(@RequestHeader(value = "Refresh-Token", required = false) String token) {
+    public ResponseEntity<ResponseDto> logout(
+            @RequestHeader(value = "Refresh-Token", required = false) String token
+    ) {
         if (token != null) {
             authService.invalidateRefreshToken(token);
         }
+
+        return ResponseEntity.ok(
+                new ResponseDto(HttpStatus.OK, "로그아웃 완료", null)
+        );
     }
 
     /**
      * 내 정보 조회
      */
     @GetMapping("/me")
-    public MeResDto me(@AuthenticationPrincipal SecurityUser user) {
+    public ResponseEntity<ResponseDto> me(
+            @AuthenticationPrincipal SecurityUser user
+    ) {
         if (user == null) {
             throw new UnauthorizedException("인증 정보가 없습니다.");
         }
 
-        return new MeResDto(
+        MeResDto res = new MeResDto(
                 user.getEmployeeId(),
                 user.getName(),
                 user.getEmail(),
                 user.getRole().name()
+        );
+
+        return ResponseEntity.ok(
+                new ResponseDto(HttpStatus.OK, "내 정보 조회 성공", res)
         );
     }
 }

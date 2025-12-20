@@ -20,20 +20,18 @@ async function apiFetch(url, options = {}) {
     let res = await fetch(url, options);
 
     if (res.status !== 401) {
-        return res;
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.message);
+        return result.data;
     }
 
-    // 이미 refresh 중이면 대기
+    // refresh 로직
     if (isRefreshing) {
-        return new Promise((resolve, reject) => {
+        return new Promise(resolve => {
             refreshSubscribers.push(async () => {
                 options.headers.Authorization =
                     `Bearer ${sessionStorage.getItem('accessToken')}`;
-                try {
-                    resolve(await fetch(url, options));
-                } catch (e) {
-                    reject(e);
-                }
+                resolve(await apiFetch(url, options));
             });
         });
     }
@@ -43,19 +41,14 @@ async function apiFetch(url, options = {}) {
     isRefreshing = false;
 
     if (!refreshed) {
-        refreshSubscribers = []; // 대기 큐 정리
         handleSessionExpired();
         throw new Error('SESSION_EXPIRED');
     }
 
-    // 대기 중이던 요청 재개
     refreshSubscribers.forEach(cb => cb());
     refreshSubscribers = [];
 
-    options.headers.Authorization =
-        `Bearer ${sessionStorage.getItem('accessToken')}`;
-
-    return fetch(url, options);
+    return apiFetch(url, options);
 }
 
 /** Refresh 호출 함수 */
@@ -65,17 +58,15 @@ async function refreshAccessToken() {
 
     const res = await fetch('/api/auth/refresh', {
         method: 'POST',
-        headers: {
-            'Refresh-Token': refreshToken
-        }
+        headers: { 'Refresh-Token': refreshToken }
     });
 
     if (!res.ok) return false;
 
-    const data = await res.json();
-    sessionStorage.setItem('accessToken', data.accessToken);
-    sessionStorage.setItem('refreshToken', data.refreshToken);
+    const result = await res.json();
+    const data = result.data;
 
+    sessionStorage.setItem('accessToken', data.accessToken);
     return true;
 }
 
@@ -109,14 +100,7 @@ async function logout() {
 /** 헤더 사용자 정보 표시 */
 async function loadMe() {
     try {
-        const res = await apiFetch('/api/auth/me');
-
-        if (!res.ok) {
-            location.href = '/login';
-            return;
-        }
-
-        const me = await res.json();
+        const me = await apiFetch('/api/auth/me');
 
         const userNameEl = document.getElementById('userName');
         if (userNameEl) {

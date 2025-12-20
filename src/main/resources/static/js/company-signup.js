@@ -243,10 +243,15 @@ async function submitSignup() {
         body: JSON.stringify(body)
     });
 
-    if (res.ok) {
-        alert('회사 가입이 완료되었습니다.');
-        location.href = '/login';
+    const result = await res.json();
+
+    if (!res.ok) {
+        alert(result.message);
+        return;
     }
+
+    alert(result.message);
+    location.href = '/login';
 }
 
 /* ======================
