@@ -27,6 +27,7 @@ function getCarId() {
     return new URLSearchParams(window.location.search).get('id');
 }
 
+
 /**
  * 이벤트 리스너 초기화
  */
@@ -49,27 +50,27 @@ async function handleEdit() {
 
     const statusValue = document.getElementById('car-status').value;
 
+    console.log("수정 " + currentCarId)
+    console.log("상태값 " + statusValue)
+
     if (!statusValue) {
         alert('차량 상태를 선택해주세요.');
         return;
     }
 
-    const payload = {
-        number: document.getElementById('car-number').value,
-        name: document.getElementById('car-model').value,
-        description: document.getElementById('car-description').value,
-        statusId: Number(statusValue)
-    };
+    const formData = new FormData();
+    formData.append('number', document.getElementById('car-number').value);
+    formData.append('name', document.getElementById('car-model').value);
+    formData.append('driverAge', document.getElementById('car-age').value);
+    formData.append('description', document.getElementById('car-description').value);
+    formData.append('statusId', statusValue); // 중요
 
     try {
         const response = await apiFetch(
             `/api/admin/cars/${currentCarId}`,
             {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
+                body: formData
             }
         );
 
@@ -147,9 +148,11 @@ async function loadStatusOptions(selectedStatusId) {
 }
 
 async function loadCarDetail() {
+    console.log(currentCarId)
+
     try {
         const response = await apiFetch(
-            '/api/cars/${currentCarId}',
+            `/api/cars/${currentCarId}`,
             { method: 'GET' }
         );
 
@@ -161,6 +164,7 @@ async function loadCarDetail() {
 
         document.getElementById('car-number').value = data.number ?? '';
         document.getElementById('car-model').value = data.name ?? '';
+        document.getElementById('car-age').value = data.driverAge ?? '';
         document.getElementById('car-description').value = data.description ?? '';
 
         await loadStatusOptions(data.statusId);

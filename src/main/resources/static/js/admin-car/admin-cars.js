@@ -109,7 +109,7 @@ async function loadCars() {
                 createCell(car.name),
                 createCell(car.description, true),
                 createCell(car.statusName),
-                createActionCell(car.id)
+                createActionCell(car.carId)
             );
             tbody.appendChild(tr);
         });

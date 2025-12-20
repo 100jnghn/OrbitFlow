@@ -4,6 +4,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * Please explain the class!!!
@@ -22,6 +23,15 @@ public class CarViewController {
         model.addAttribute("currentGNB", "admin");
 
         return "admin-car/admin-cars";
+    }
+
+    @GetMapping("/admin/cars/detail")
+    public String getCarPage(
+            Model model,
+            @RequestParam Long id
+    ) {
+        model.addAttribute("carId", id);
+        return "admin-car/admin-car";
     }
 
 }
