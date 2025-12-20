@@ -20,18 +20,20 @@ async function apiFetch(url, options = {}) {
     let res = await fetch(url, options);
 
     if (res.status !== 401) {
-        const result = await res.json();
-        if (!res.ok) throw new Error(result.message);
-        return result.data;
+        return res;
     }
 
     // refresh 로직
     if (isRefreshing) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             refreshSubscribers.push(async () => {
                 options.headers.Authorization =
                     `Bearer ${sessionStorage.getItem('accessToken')}`;
-                resolve(await apiFetch(url, options));
+                try {
+                    resolve(await fetch(url, options));
+                } catch (e) {
+                    reject(e);
+                }
             });
         });
     }
@@ -41,14 +43,19 @@ async function apiFetch(url, options = {}) {
     isRefreshing = false;
 
     if (!refreshed) {
+        refreshSubscribers = []; // 대기 큐 정리
         handleSessionExpired();
         throw new Error('SESSION_EXPIRED');
     }
 
+    // 대기 중이던 요청 재개
     refreshSubscribers.forEach(cb => cb());
     refreshSubscribers = [];
 
-    return apiFetch(url, options);
+    options.headers.Authorization =
+        `Bearer ${sessionStorage.getItem('accessToken')}`;
+
+    return fetch(url, options);
 }
 
 /** Refresh 호출 함수 */
