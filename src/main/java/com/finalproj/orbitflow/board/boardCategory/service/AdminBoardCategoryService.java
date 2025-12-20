@@ -9,7 +9,7 @@ import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
-import com.finalproj.orbitflow.hr.organization.repository.OrganizationRepository;
+import com.finalproj.orbitflow.hr.organization.repository.OrgRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,7 +25,7 @@ public class AdminBoardCategoryService {
 
     private final BoardCategoryRepository boardCategoryRepository;
     private final CompanyRepository companyRepository;
-    private final OrganizationRepository organizationRepository;
+    private final OrgRepository orgRepository;
 
 
     // =========================================================================
@@ -71,7 +71,7 @@ public class AdminBoardCategoryService {
                 .organization(
                         dto.getOrganizationId() == null
                                 ? null
-                                : organizationRepository.findById(dto.getOrganizationId())
+                                : orgRepository.findById(dto.getOrganizationId())
                                 .orElseThrow(() ->
                                         new NotFoundException("존재하지 않는 조직입니다.")
                                 )

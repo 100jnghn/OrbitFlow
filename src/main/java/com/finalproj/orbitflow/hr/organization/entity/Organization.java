@@ -75,5 +75,17 @@ public class Organization extends BaseEntity {
         return org;
     }
 
+    public void update(Long categoryId, Long parentOrgId, String name) {
+        this.categoryId = categoryId;
+        this.parentOrgId = parentOrgId;
+        this.name = name;
+    }
 
+    public void updateOrderIndex(Integer orderIndex) {
+        this.orderIndex = orderIndex;
+    }
+
+    public void deactivate() {
+        this.isActive = false;
+    }
 }

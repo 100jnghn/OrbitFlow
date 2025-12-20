@@ -1,6 +1,7 @@
 package com.finalproj.orbitflow.hr.employee.repository;
 
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
+import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -37,4 +38,9 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     List<Employee> findAllByIdIn(List<Long> ids);
 
+    boolean existsByCompanyIdAndOrganizationIdAndStatusNot(
+            Long companyId,
+            Long organizationId,
+            EmployeeStatus status
+    );
 }
