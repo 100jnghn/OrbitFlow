@@ -59,21 +59,17 @@ async function apiFetch(url, options = {}) {
 }
 
 /** Refresh 호출 함수 */
+/** Access Token 재발급 (Refresh Token은 서버 DB에서 처리) */
 async function refreshAccessToken() {
-    const refreshToken = sessionStorage.getItem('refreshToken');
-    if (!refreshToken) return false;
-
     const res = await fetch('/api/auth/refresh', {
         method: 'POST',
-        headers: { 'Refresh-Token': refreshToken }
+        credentials: 'include'
     });
 
     if (!res.ok) return false;
 
     const result = await res.json();
-    const data = result.data;
-
-    sessionStorage.setItem('accessToken', data.accessToken);
+    sessionStorage.setItem('accessToken', result.data.accessToken);
     return true;
 }
 
@@ -89,16 +85,10 @@ function confirmSessionExpired() {
 
 /** 로그아웃 함수 */
 async function logout() {
-    const refreshToken = sessionStorage.getItem('refreshToken');
-
-    if (refreshToken) {
-        await fetch('/api/auth/logout', {
-            method: 'POST',
-            headers: {
-                'Refresh-Token': refreshToken
-            }
-        });
-    }
+    await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+    });
 
     sessionStorage.clear();
     location.href = '/login';
@@ -107,7 +97,14 @@ async function logout() {
 /** 헤더 사용자 정보 표시 */
 async function loadMe() {
     try {
-        const me = await apiFetch('/api/auth/me');
+        const res = await apiFetch('/api/auth/me');
+
+        if (!res.ok) {
+            throw new Error('AUTH_FAILED');
+        }
+
+        const result = await res.json();
+        const me = result.data;
 
         const userNameEl = document.getElementById('userName');
         if (userNameEl) {
@@ -119,10 +116,9 @@ async function loadMe() {
         if (adminMenuLink) {
             if (me.role === 'ADMIN' || me.role === 'COMPANY_ADMIN') {
                 adminMenuLink.style.display = '';
-                
-                // 현재 URL이 관리자 메뉴 페이지(/view/admin/menu)인 경우에만 selected 클래스 추가
+
                 const currentPath = window.location.pathname;
-                if (currentPath === '/view/admin/menu') {
+                if (currentPath.startsWith('/view/admin')) {
                     adminMenuLink.classList.add('selected');
                 } else {
                     adminMenuLink.classList.remove('selected');
@@ -132,15 +128,11 @@ async function loadMe() {
             }
         }
 
-        // 홈 링크 처리: 관리자는 대시보드로, 일반 사용자는 홈으로
+        // 홈 링크 처리
         const homeLink = document.getElementById('homeLink');
         if (homeLink) {
             if (me.role === 'ADMIN' || me.role === 'COMPANY_ADMIN') {
                 homeLink.href = '/view/admin';
-                // 관리자 대시보드인 경우 selected 클래스 추가
-                if (window.location.pathname === '/view/admin') {
-                    homeLink.classList.add('selected');
-                }
             } else {
                 homeLink.href = '/view/home';
             }

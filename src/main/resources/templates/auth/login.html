@@ -117,9 +117,7 @@
   <div class="form-group">
     <label for="password">비밀번호</label>
     <input id="password" type="password" placeholder="비밀번호를 입력하세요">
-    <div id="loginError" class="error-msg">
-      아이디 또는 비밀번호가 올바르지 않습니다.
-    </div>
+    <div id="loginError" class="error-msg"></div>
   </div>
 
   <button class="login-btn" onclick="login()">로그인</button>
@@ -130,46 +128,55 @@
     const errorEl = document.getElementById('loginError');
     errorEl.style.display = 'none';
 
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: email.value,
-        password: password.value
-      })
-    });
+    try {
+      /* 로그인 (refresh 개념 없음 → fetch 사용) */
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.value,
+          password: password.value
+        })
+      });
 
-    const result = await res.json();
+      const result = await res.json();
 
-    if (!res.ok) {
-      errorEl.textContent = result.message;
-      errorEl.style.display = 'block';
-      return;
-    }
-
-    const data = result.data;
-
-    sessionStorage.setItem('accessToken', data.accessToken);
-    sessionStorage.setItem('refreshToken', data.refreshToken);
-
-    const meRes = await fetch('/api/auth/me', {
-      headers: {
-        'Authorization': `Bearer ${data.accessToken}`
+      if (!res.ok) {
+        errorEl.textContent = result.message;
+        errorEl.style.display = 'block';
+        return;
       }
-    });
 
-    if (!meRes.ok) {
-      location.href = '/';
-      return;
-    }
+      /* accessToken 저장 */
+      const accessToken = result.data.accessToken;
+      sessionStorage.setItem('accessToken', accessToken);
 
-    const meResult = await meRes.json();
-    const me = meResult.data;
+      /* 내 정보 조회 (apiFetch 사용 금지) */
+      const meRes = await fetch('/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
 
-    if (me.role === 'ADMIN' || me.role === 'COMPANY_ADMIN') {
-      location.href = '/view/admin';
-    } else {
-      location.href = '/';
+      if (!meRes.ok) {
+        console.error('me 조회 실패');
+        errorEl.textContent = '로그인 처리 중 오류가 발생했습니다.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      const me = (await meRes.json()).data;
+
+      /* 역할별 이동 */
+      location.href =
+              (me.role === 'ADMIN' || me.role === 'COMPANY_ADMIN')
+                      ? '/view/admin'
+                      : '/';
+
+    } catch (e) {
+      console.error(e);
+      errorEl.textContent = '로그인 중 오류가 발생했습니다.';
+      errorEl.style.display = 'block';
     }
   }
 </script>
