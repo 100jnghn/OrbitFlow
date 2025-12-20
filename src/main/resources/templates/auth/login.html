@@ -2,22 +2,137 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>로그인 | Orbit Flow</title>
+  <title>로그인 | OrbitFlow</title>
+
+  <!-- Font -->
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #f6f8fb;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .login-card {
+      width: 420px;
+      background: #fff;
+      border-radius: 16px;
+      padding: 48px 40px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    }
+
+    .login-title {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .login-title h1 {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 700;
+      color: #111;
+    }
+
+    .login-title p {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    input {
+      width: 100%;
+      height: 44px;
+      padding: 0 14px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #4f7cff;
+      box-shadow: 0 0 0 3px rgba(79,124,255,0.15);
+    }
+
+    .error-msg {
+      margin-top: 6px;
+      font-size: 13px;
+      color: #ef4444;
+      display: none;
+    }
+
+    .login-btn {
+      width: 100%;
+      height: 48px;
+      border-radius: 10px;
+      border: none;
+      background: #4f7cff;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+
+    .login-btn:hover {
+      background: #3f6bf2;
+    }
+  </style>
 </head>
 <body>
 
-<h2>로그인</h2>
+<div class="login-card">
+  <div class="login-title">
+    <h1>OrbitFlow</h1>
+    <p>로그인 정보를 입력하세요.</p>
+  </div>
 
-<input id="email" placeholder="이메일">
-<input id="password" type="password" placeholder="비밀번호">
+  <div class="form-group">
+    <label for="email">이메일</label>
+    <input id="email" type="email" placeholder="example@company.com">
+  </div>
 
-<button onclick="login()">로그인</button>
+  <div class="form-group">
+    <label for="password">비밀번호</label>
+    <input id="password" type="password" placeholder="비밀번호를 입력하세요">
+    <div id="loginError" class="error-msg">
+      아이디 또는 비밀번호가 올바르지 않습니다.
+    </div>
+  </div>
+
+  <button class="login-btn" onclick="login()">로그인</button>
+</div>
 
 <script>
   async function login() {
+    const errorEl = document.getElementById('loginError');
+    errorEl.style.display = 'none';
+
     const res = await fetch('/api/auth/login', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: email.value,
         password: password.value
@@ -26,30 +141,35 @@
 
     const result = await res.json();
 
-    if (res.ok) {
-      sessionStorage.setItem('accessToken', result.accessToken);
-      sessionStorage.setItem('refreshToken', result.refreshToken);
-      
-      // 사용자 역할 확인하여 리다이렉트
-      const meRes = await fetch('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${result.accessToken}`
-        }
-      });
-      
-      if (meRes.ok) {
-        const me = await meRes.json();
-        // 관리자(ADMIN, COMPANY_ADMIN)는 관리자 메인으로, 일반 사용자는 메인으로
-        if (me.role === 'ADMIN' || me.role === 'COMPANY_ADMIN') {
-          location.href = '/view/admin';
-        } else {
-          location.href = '/';
-        }
-      } else {
-        location.href = '/';
+    if (!res.ok) {
+      errorEl.textContent = result.message;
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    const data = result.data;
+
+    sessionStorage.setItem('accessToken', data.accessToken);
+    sessionStorage.setItem('refreshToken', data.refreshToken);
+
+    const meRes = await fetch('/api/auth/me', {
+      headers: {
+        'Authorization': `Bearer ${data.accessToken}`
       }
+    });
+
+    if (!meRes.ok) {
+      location.href = '/';
+      return;
+    }
+
+    const meResult = await meRes.json();
+    const me = meResult.data;
+
+    if (me.role === 'ADMIN' || me.role === 'COMPANY_ADMIN') {
+      location.href = '/view/admin';
     } else {
-      alert(result.message);
+      location.href = '/';
     }
   }
 </script>

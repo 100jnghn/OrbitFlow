@@ -39,7 +39,7 @@ public class OrgCategoryController {
                 .status(HttpStatus.CREATED)
                 .body(new ResponseDto(
                         HttpStatus.CREATED,
-                        "결재 양식 초안이 생성되었습니다.",
+                        "조직 카테고리 생성 완료",
                         id));
 
     }
@@ -52,7 +52,7 @@ public class OrgCategoryController {
         return ResponseEntity.ok(
                 new ResponseDto(
                         HttpStatus.OK,
-                        "조직 카테고리 목록 조회",
+                        "조직 카테고리 목록 조회 완료",
                         orgCategoryService.findAll(companyId)));
     }
 
@@ -67,7 +67,7 @@ public class OrgCategoryController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new ResponseDto(HttpStatus.OK,
-                        "조직 카테고리가 수정되었습니다.",
+                        "조직 카테고리 수정 완료",
                         null));
     }
 
@@ -81,7 +81,7 @@ public class OrgCategoryController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new ResponseDto(HttpStatus.OK,
-                        "조직 카테고리의 순서가 일괄 수정되었습니다.",
+                        "조직 카테고리 순서 수정 완료",
                         null));
     }
 
@@ -94,6 +94,6 @@ public class OrgCategoryController {
 
         orgCategoryService.deactivate(companyId, id);
         return ResponseEntity.ok().body(
-                new ResponseDto(HttpStatus.OK, "조직 카테고리를 비활성화 하였습니다.", null)
+                new ResponseDto(HttpStatus.OK, "조직 카테고리 비활성화 완료", null)
         );    }
 }
