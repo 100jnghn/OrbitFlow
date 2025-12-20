@@ -12,15 +12,19 @@ package com.finalproj.orbitflow.global.file.entity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+@AllArgsConstructor
 @Entity
 @Table(name = "file")
 @Getter
 @NoArgsConstructor
+@Builder
 public class File {
 
     @Id

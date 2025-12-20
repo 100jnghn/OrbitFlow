@@ -2,16 +2,23 @@ package com.finalproj.orbitflow.board.boardPost.service;
 
 import com.finalproj.orbitflow.board.boardCategory.entity.BoardCategory;
 import com.finalproj.orbitflow.board.boardCategory.repository.BoardCategoryRepository;
+import com.finalproj.orbitflow.board.boardPost.dto.BoardReqDto;
 import com.finalproj.orbitflow.board.boardPost.dto.BoardResDto;
 import com.finalproj.orbitflow.board.boardPost.entity.Board;
 import com.finalproj.orbitflow.board.boardPost.repository.BoardRepository;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
+import com.finalproj.orbitflow.global.file.entity.File;
+import com.finalproj.orbitflow.hr.employee.entity.Employee;
+import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +27,7 @@ public class BoardService {
 
     private final BoardRepository boardRepository;
     private final BoardCategoryRepository boardCategoryRepository;
+    private final EmployeeRepository employeeRepository;
 
     /** [사용자용] 게시글 목록 조회 (공용 / 조직 게시판 공용) */
     public Page<BoardResDto.ListInfo> getBoardList(
@@ -105,5 +113,64 @@ public class BoardService {
         board.increaseViewCount();
 
         return BoardResDto.DetailInfo.from(board);
+    }
+
+    /** [사용자용] 게시글 생성(공용 게시판 / 조직 게시판, 첨부파일 포함) */
+    @Transactional
+    public BoardResDto.DetailInfo createBoard(
+            Long companyId,
+            Long organizationId,
+            Long employeeId,
+            BoardReqDto.Create request,
+            List<MultipartFile> files
+    ) {
+        // 1. 게시판 접근 가능 여부 검증 (회사 / 조직 / 활성화 여부)
+        BoardCategory category = getVerifiedAccessibleCategory(
+                companyId,
+                organizationId,
+                request.getCategoryId()
+        );
+
+        // 2. 작성자(Employee) 존재 여부 검증
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new NotFoundException("작성자 정보가 존재하지 않습니다."));
+
+        // 3. 회사 소속 검증 (다른 회사 직원 작성 방지)
+        if (!employee.getCompany().getId().equals(companyId)) {
+            throw new ForbiddenException("게시글 작성 권한이 없습니다.");
+        }
+
+        // 4. 첨부파일 처리 (파일이 있는 경우만)
+        List<File> attachedFiles = null;
+        if (files != null && !files.isEmpty()) {
+            attachedFiles = files.stream()
+                    .map(file -> File.builder()
+                            .originFile(file.getOriginalFilename())
+                            .sysFile(saveFileToSystem(file)) // 실제 파일 저장 로직 메서드
+                            .build())
+                    .toList();
+        }
+
+        // 5. 게시글 엔티티 생성 (Builder 사용)
+        Board board = Board.builder()
+                .category(category)
+                .writer(employee)
+                .boardTitle(request.getBoardTitle())
+                .boardContent(request.getBoardContent())
+                .files(attachedFiles) // 수정: 파일 리스트
+                .build();
+
+        // 6. 게시글 저장
+        Board savedBoard = boardRepository.save(board);
+
+        // 7. 상세 응답 DTO 반환
+        return BoardResDto.DetailInfo.from(savedBoard);
+    }
+
+    /** 실제 파일 시스템에 저장하고 경로 반환하는 메서드 (예시) */
+    private String saveFileToSystem(MultipartFile file) {
+        // TODO: 실제 파일 저장 로직 구현
+        // 예: UUID + 원본 이름으로 저장 후 경로 반환
+        return "/files/" + file.getOriginalFilename();
     }
 }
