@@ -118,6 +118,7 @@ async function handleDelete() {
 async function loadStatusOptions(selectedStatusId) {
     try {
         const response = await fetch('/api/admin/resource-status');
+
         if (!response.ok) throw new Error();
 
         const result = await response.json();
