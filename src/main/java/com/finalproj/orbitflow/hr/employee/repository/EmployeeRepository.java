@@ -57,4 +57,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
             @Param("keyword") String keyword
 
     );
+
+    boolean existsByEmail(String email);
+
 }
