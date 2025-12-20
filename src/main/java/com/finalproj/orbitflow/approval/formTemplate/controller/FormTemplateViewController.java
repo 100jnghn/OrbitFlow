@@ -32,4 +32,17 @@ public class FormTemplateViewController {
     }
 
 
+    @GetMapping("/admin/approval-rule")
+    public String approvalRuleView(
+            @RequestParam Long templateId,
+            Model model
+    ) {
+        model.addAttribute("pageTitle", "결재 규칙 생성");
+        model.addAttribute("currentGNB", "admin");
+        model.addAttribute("currentMenu", "approval");
+        model.addAttribute("templateId", templateId);
+        return "approval-rule/approval-rule";
+    }
+
+
 }

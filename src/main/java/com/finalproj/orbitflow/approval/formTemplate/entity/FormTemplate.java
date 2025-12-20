@@ -87,5 +87,5 @@ public class FormTemplate extends BaseEntity {
         this.status = status;
     }
 
-    public void updateVersion(int nextVersion) {this.activeVersion = nextVersion;}
+    public void updateVersion(int nextVersion) {this.version = nextVersion;}
 }

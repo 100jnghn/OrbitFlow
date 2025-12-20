@@ -15,15 +15,17 @@ import com.finalproj.orbitflow.approval.formTemplateGroup.repository.FormTemplat
 import com.finalproj.orbitflow.approval.templateCategory.entity.TemplateCategory;
 import com.finalproj.orbitflow.approval.templateCategory.enums.TemplateCategoryCode;
 import com.finalproj.orbitflow.approval.templateCategory.repository.TemplateCategoryRepository;
+import com.finalproj.orbitflow.global.exception.ForbiddenException;
+import com.finalproj.orbitflow.global.exception.InvalidRequestException;
+import com.finalproj.orbitflow.global.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
@@ -58,6 +60,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class FormTemplateService {
 
     private final FormTemplateRepository formTemplateRepository;
@@ -85,10 +88,7 @@ public class FormTemplateService {
         }
 
         TemplateCategory category = templateCategoryRepository.findByCode(categoryCode)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "양식 카테고리를 찾을 수 없습니다."
-                ));
+                .orElseThrow(() -> new NotFoundException("양식 카테고리를 찾을 수 없습니다."));
 
         int baseVersion = formTemplateRepository
                 .findTopByTemplateGroup_IdAndStatusOrderByVersionDesc(
@@ -99,13 +99,14 @@ public class FormTemplateService {
                 .orElse(1);
 
         String initialTemplateJson = buildInitialTemplateJson();
+        String initialApprovalRuleJson = buildInitialApprovalRuleJson();
 
         return createDraftTemplate(
                 group,
                 baseVersion,
                 category,
                 initialTemplateJson,
-                "{}",
+                initialApprovalRuleJson,
                 null
         );
     }
@@ -132,6 +133,20 @@ public class FormTemplateService {
     }
 
 
+    private String buildInitialApprovalRuleJson() {
+        ArrayNode rootArray = objectMapper.createArrayNode();
+
+        ObjectNode firstStep = objectMapper.createObjectNode();
+        firstStep.put("step", 1);
+        firstStep.putNull("organizationId");
+        firstStep.putNull("positionCategoryId");
+
+        rootArray.add(firstStep);
+
+        return rootArray.toString();
+    }
+
+
     @Transactional
     public Long reviseFormTemplateByTemplateGroup(Long templateGroupId, Long companyId) {
 
@@ -152,8 +167,7 @@ public class FormTemplateService {
                         templateGroupId,
                         FormTemplateStatus.ACTIVE
                 )
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
+                .orElseThrow(() -> new NotFoundException(
                         "ACTIVE 상태의 양식을 찾을 수 없습니다."
                 ));
 
@@ -172,14 +186,12 @@ public class FormTemplateService {
 
     private FormTemplateGroup findGroupAndCheckCompany(Long templateGroupId, Long companyId) {
         FormTemplateGroup group = formTemplateGroupRepository.findById(templateGroupId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
+                .orElseThrow(() -> new NotFoundException(
                         "양식 그룹을 찾을 수 없습니다."
                 ));
 
         if (!group.getCompany().getId().equals(companyId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
+            throw new ForbiddenException(
                     "해당 회사의 양식 그룹이 아닙니다."
             );
         }
@@ -188,7 +200,7 @@ public class FormTemplateService {
 
     private int calculateNextActiveVersion(Long templateGroupId) {
         return formTemplateRepository
-                .findMaxActiveVersionByTemplateGroupId(templateGroupId)
+                .findMaxVersionByTemplateGroupId(templateGroupId)
                 .orElse(0) + 1;
     }
 
@@ -226,8 +238,7 @@ public class FormTemplateService {
         if (reqDto.getCategoryCode() != null) {
             TemplateCategory category = templateCategoryRepository
                     .findByCode(reqDto.getCategoryCode())
-                    .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.NOT_FOUND,
+                    .orElseThrow(() -> new NotFoundException(
                             "양식 카테고리를 찾을 수 없습니다."
                     ));
 
@@ -246,6 +257,7 @@ public class FormTemplateService {
 
     @Transactional
     public void updateApprovalRule(Long formTemplateId, Long companyId, FormTemplateUpdateReqDto reqDto) {
+
         FormTemplate formTemplate = findFormTemplate(formTemplateId);
 
         checkCompany(companyId, formTemplate);
@@ -262,24 +274,25 @@ public class FormTemplateService {
         checkCompany(companyId, draft);
 
         if (draft.getStatus() != FormTemplateStatus.DRAFT) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
+            throw new InvalidRequestException(
                     "DRAFT 상태의 결재 양식만 활성화할 수 있습니다."
             );
         }
 
-        // 기존 ACTIVE 비활성화
+        int nextVersion = calculateNextActiveVersion(
+                draft.getTemplateGroup().getId()
+        );
+
+
         formTemplateRepository
                 .findTopByTemplateGroup_IdAndStatusOrderByVersionDesc(
                         draft.getTemplateGroup().getId(),
                         FormTemplateStatus.ACTIVE
                 )
-                .ifPresent(active -> active.updateStatus(FormTemplateStatus.INACTIVE));
-
-        // publish 시점에 version 증가
-        int nextVersion = calculateNextActiveVersion(
-                draft.getTemplateGroup().getId()
-        );
+                .ifPresent(active -> {
+                    active.updateStatus(FormTemplateStatus.INACTIVE);
+                    formTemplateRepository.flush(); // 🔥 핵심
+                });
 
         draft.updateVersion(nextVersion);
         draft.updateStatus(FormTemplateStatus.ACTIVE);
@@ -288,15 +301,15 @@ public class FormTemplateService {
 
     private FormTemplate findFormTemplate(Long formTemplateId) {
         return formTemplateRepository.findById(formTemplateId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
+                .orElseThrow(() -> new NotFoundException(
                         "결재 양식을 찾을 수 없습니다."
                 ));
     }
 
+
     private static void checkCompany(Long companyId, FormTemplate formTemplate) {
         if (!formTemplate.getCompany().getId().equals(companyId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "사용자의 소속(회사) 와 문서 양식의 주인(회사)가 일치하지 않습니다.");
+            throw new ForbiddenException("사용자의 소속(회사) 와 문서 양식의 주인(회사)가 일치하지 않습니다.");
         }
     }
 
