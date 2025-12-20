@@ -10,7 +10,7 @@ let approvalState = {
     keyword: '',
     status: '',
     page: 0,
-    pageSize: 15
+    pageSize: 10
 };
 
 let lastSelectedUpdateTemplateId = null;
@@ -463,7 +463,7 @@ function bindUpdatePopupEvents() {
 
     // ✅ 업데이트 실행 (단일 이벤트)
     okBtn.addEventListener('click', async () => {
-        if (!lastSelectedUpdateTemplateId) {
+        if (!lastSelectedUpdateId) {
             alert('업데이트할 문서를 선택해주세요.');
             return;
         }
@@ -472,7 +472,7 @@ function bindUpdatePopupEvents() {
             okBtn.disabled = true;
 
             const res = await apiFetch(
-                `/api/admin/form-templates/${lastSelectedUpdateTemplateId}/revise`,
+                `/api/admin/form-templates/${lastSelectedUpdateId}/revise`,
                 {method: 'POST'}
             );
 
