@@ -17,6 +17,7 @@ function updateSignupButtonState() {
         validateAddress() &&
         validateRepresentativeName() &&
         validateEmail() &&
+        emailChecked &&
         validateContact() &&
         businessChecked &&
         validatePasswordLength() &&
@@ -76,9 +77,31 @@ function validateContact() {
 /* ======================
    이메일
 ====================== */
+adminEmail.addEventListener('input', () => {
+    // 한글 제거 (입력/붙여넣기 모두 차단)
+    adminEmail.value = adminEmail.value.replace(/[ㄱ-ㅎㅏ-ㅣ가-힣]/g, '');
+
+    validateEmail();
+    updateSignupButtonState();
+
+    adminEmail.addEventListener('blur', checkEmailDuplicate);
+
+});
+
+
 function validateEmail() {
     const v = adminEmail.value.trim();
-    if (!v) return emailMsg.textContent = '', false;
+
+    if (!v) {
+        emailMsg.textContent = '';
+        return false;
+    }
+
+    // 한글 포함 차단 (최종 방어)
+    if (/[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(v)) {
+        showMsg(emailMsg, '이메일에는 한글을 사용할 수 없습니다.', 'error');
+        return false;
+    }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
         showMsg(emailMsg, '이메일 형식이 올바르지 않습니다.', 'error');
@@ -158,18 +181,33 @@ businessNumber.addEventListener('input', () => {
 
 async function checkBusinessNumber() {
     const v = businessNumber.value.trim();
-    if (!v) return showMsg(businessMsg, '사업자번호를 입력해주세요.', 'error');
 
-    const res = await fetch(
-        `/api/companies/check-business-number?businessNumber=${encodeURIComponent(v)}`
-    );
-    const json = await res.json();
+    if (!v) {
+        showMsg(businessMsg, '사업자번호를 입력해주세요.', 'error');
+        businessChecked = false;
+        updateSignupButtonState();
+        return;
+    }
 
-    if (json.data.available) {
-        showMsg(businessMsg, '사용 가능한 사업자번호입니다.', 'success');
+    try {
+        const res = await fetch(
+            `/api/companies/check-business-number?businessNumber=${encodeURIComponent(v)}`
+        );
+
+        const json = await res.json();
+
+        if (!res.ok) {
+            showMsg(businessMsg, json.message, 'error');
+            businessChecked = false;
+            return;
+        }
+
+        // 성공 (시연 모드 포함)
+        showMsg(businessMsg, json.message, 'success');
         businessChecked = true;
-    } else {
-        showMsg(businessMsg, '이미 등록된 사업자번호입니다.', 'error');
+
+    } catch (e) {
+        showMsg(businessMsg, '사업자번호 검증 중 오류가 발생했습니다.', 'error');
         businessChecked = false;
     }
     updateSignupButtonState();
@@ -209,4 +247,33 @@ async function submitSignup() {
         alert('회사 가입이 완료되었습니다.');
         location.href = '/login';
     }
+}
+
+/* ======================
+   이메일 중복 체크 (자동)
+====================== */
+
+let emailChecked = false;
+
+async function checkEmailDuplicate() {
+    const v = adminEmail.value.trim();
+    if (!validateEmail()) {
+        emailChecked = false;
+        return;
+    }
+
+    const res = await fetch(
+        `/api/companies/check-email?email=${encodeURIComponent(v)}`
+    );
+    const json = await res.json();
+
+    if (json.data.available) {
+        showMsg(emailMsg, '사용 가능한 이메일입니다.', 'success');
+        emailChecked = true;
+    } else {
+        showMsg(emailMsg, '이미 사용 중인 이메일입니다.', 'error');
+        emailChecked = false;
+    }
+
+    updateSignupButtonState();
 }

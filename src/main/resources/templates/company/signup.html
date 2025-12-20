@@ -31,16 +31,18 @@
         .row {
             display: flex;
             gap: 24px;
-            margin-bottom: 24px;
+            margin-bottom: 28px;
         }
 
         .field {
             flex: 1;
+            padding-right: 8px;
+            padding-left: 8px;
         }
 
         label {
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             font-weight: 600;
             color: #374151;
         }
@@ -86,6 +88,7 @@
 
         .btn-check {
             width: 120px;
+            height: 43.2px;
             background: #e5e7eb;
             border: none;
             border-radius: 6px;
@@ -142,7 +145,7 @@
     <div class="row">
         <div class="field">
             <label>대표 관리자 이메일</label>
-            <input id="adminEmail" maxlength="100">
+            <input id="adminEmail" maxlength="100" inputmode="email" autocomplete="email" placeholder="example@company.com">
             <div id="emailMsg" class="hint"></div>
         </div>
         <div class="field">
@@ -173,10 +176,10 @@
             <label>사업자번호</label>
             <div class="business-row">
                 <input
-                id="businessNumber"
-                maxlength="20"
-                inputmode="numeric"
-                pattern="[0-9]*"
+                        id="businessNumber"
+                        maxlength="20"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
                         placeholder="숫자만 입력"
                 />
                 <button type="button" class="btn-check" onclick="checkBusinessNumber()">확인</button>
