@@ -2,8 +2,6 @@ package com.finalproj.orbitflow.auth.controller;
 
 import com.finalproj.orbitflow.auth.dto.LoginReqDto;
 import com.finalproj.orbitflow.auth.dto.LoginResDto;
-import com.finalproj.orbitflow.auth.dto.LoginReqDto;
-import com.finalproj.orbitflow.auth.dto.LoginResDto;
 import com.finalproj.orbitflow.auth.dto.MeResDto;
 import com.finalproj.orbitflow.auth.entity.RefreshToken;
 import com.finalproj.orbitflow.auth.service.AuthService;
@@ -38,6 +36,9 @@ public class AuthController {
     private final JwtProvider jwtProvider;
     private final AuthService authService;
 
+    /**
+     * 로그인
+     */
     @PostMapping("/login")
     public LoginResDto login(@RequestBody LoginReqDto request) {
 
@@ -61,34 +62,84 @@ public class AuthController {
 
 
         String accessToken = jwtProvider.createToken(user);
-        String refreshToken = authService.issueRefreshToken(user);
+        RefreshToken refreshToken = authService.issueRefreshToken(user);
 
-        return new LoginResDto(accessToken, refreshToken);
+        return new LoginResDto(
+                accessToken,
+                refreshToken.getToken(),
+                refreshToken.getExpiresAt()
+        );
     }
 
+    /**
+     * Access Token 재발급 (Refresh 만료 연장 X)
+     */
     @PostMapping("/refresh")
     public LoginResDto refresh(@RequestHeader("Refresh-Token") String token) {
+
+        RefreshToken refreshToken = authService.validateRefreshToken(token);
+
+        SecurityUser user =
+                userDetailsService.loadByEmployeeId(refreshToken.getEmployeeId());
+
+        if (user.getStatus() != EmployeeStatus.ACTIVE) {
+            throw new ForbiddenException("로그인할 수 없는 계정 상태입니다.");
+        }
+
+        String newAccessToken = jwtProvider.createToken(user);
+
+        return new LoginResDto(
+                newAccessToken,
+                null,
+                refreshToken.getExpiresAt()
+        );
+    }
+
+    /**
+     * 세션 연장 (사용자 명시적 선택 시)
+     * - Refresh Token Rotation
+     * - 만료 20시간 재설정
+     */
+    @PostMapping("/extend-session")
+    public LoginResDto extendSession(@RequestHeader("Refresh-Token") String token) {
 
         RefreshToken oldToken = authService.validateRefreshToken(token);
 
         SecurityUser user =
                 userDetailsService.loadByEmployeeId(oldToken.getEmployeeId());
 
-        // 기존 토큰 제거
+        if (user.getStatus() != EmployeeStatus.ACTIVE) {
+            throw new ForbiddenException("로그인할 수 없는 계정 상태입니다.");
+        }
+
+        // 기존 Refresh Token 폐기
         authService.invalidateRefreshToken(token);
 
-        // 새 토큰 발급
+        // 새 Refresh Token 발급 (20시간)
+        RefreshToken newRefreshToken = authService.issueRefreshToken(user);
+
         String newAccessToken = jwtProvider.createToken(user);
-        String newRefreshToken = authService.issueRefreshToken(user);
 
-        return new LoginResDto(newAccessToken, newRefreshToken);
+        return new LoginResDto(
+                newAccessToken,
+                newRefreshToken.getToken(),
+                newRefreshToken.getExpiresAt()
+        );
     }
 
+    /**
+     * 로그아웃
+     */
     @PostMapping("/logout")
-    public void logout(@RequestHeader("Refresh-Token") String token) {
-        authService.invalidateRefreshToken(token);
+    public void logout(@RequestHeader(value = "Refresh-Token", required = false) String token) {
+        if (token != null) {
+            authService.invalidateRefreshToken(token);
+        }
     }
 
+    /**
+     * 내 정보 조회
+     */
     @GetMapping("/me")
     public MeResDto me(@AuthenticationPrincipal SecurityUser user) {
         if (user == null) {
