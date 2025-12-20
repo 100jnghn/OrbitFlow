@@ -6,7 +6,8 @@
           ~{sidebar/attendance-sidebar :: menu},
           ~{::pageCss},
           ~{::pageScript}
-      )}"> <head>
+      )}">
+<head>
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 
@@ -14,7 +15,6 @@
         <link rel="stylesheet" th:href="@{/css/commute.css}">
     </th:block>
 </head>
-
 <body>
 <div th:fragment="content">
     <div style="padding: 24px 40px;">
@@ -59,7 +59,9 @@
         </div>
     </div>
 
-    <script th:src="@{/js/commute.js}"></script>
+    <th:block th:fragment="pageScript">
+        <script th:src="@{/js/commute.js}"></script>
+    </th:block>
 </div>
 </body>
 </html>

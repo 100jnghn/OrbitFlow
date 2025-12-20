@@ -23,19 +23,32 @@ function updateClock() {
 }
 
 // 사원별 적용 시간 로드 (403 방지를 위해 사용자 API 호출)
+// commute.js
 async function loadActiveWorkHours() {
+    // 세션스토리지에서 JWT 토큰 추출
+    const token = sessionStorage.getItem('accessToken');
+    if (!token) return;
+
     try {
-        // CommuteController의 /api/attendance/active-rule 호출
-        const response = await fetch('/api/attendance/active-rule');
+        const response = await fetch('/api/attendance/active-rule', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`, // 인증 헤더 추가
+                'Content-Type': 'application/json'
+            }
+        });
+
         if (response.ok) {
-            const data = await response.json(); // { startTime, endTime }
+            const data = await response.json();
+            // 시간 포맷팅 (HH:mm:ss -> HH:mm)
             const start = data.startTime.substring(0, 5);
             const end = data.endTime.substring(0, 5);
+
+            // 화면의 '기준 근무 시간' 영역 업데이트
             document.getElementById('workHours').textContent = `${start} ~ ${end}`;
         }
     } catch (error) {
-        console.error('근무 규칙 로드 실패:', error);
-        document.getElementById('workHours').textContent = "09:00 ~ 18:00";
+        console.error('기준 시간 로드 실패:', error);
     }
 }
 
