@@ -167,6 +167,9 @@ async function loadCarDetail() {
         document.getElementById('car-age').value = data.driverAge ?? '';
         document.getElementById('car-description').value = data.description ?? '';
 
+        // 차량 이미지 표시
+        displayCarImage(data.fileUrl);
+
         await loadStatusOptions(data.statusId);
 
     } catch (error) {
@@ -176,12 +179,35 @@ async function loadCarDetail() {
 }
 
 /**
+ * 차량 이미지 표시
+ */
+function displayCarImage(imageUrl) {
+    const carImage = document.getElementById('car-image');
+    const placeholder = document.getElementById('car-image-placeholder');
+    
+    if (imageUrl) {
+        // 이미지가 있는 경우
+        carImage.src = imageUrl;
+        carImage.style.display = 'block';
+        placeholder.style.display = 'none';
+    } else {
+        // 이미지가 없는 경우
+        carImage.style.display = 'none';
+        placeholder.style.display = 'flex';
+    }
+}
+
+/**
  * 에러 처리
  */
 function showError() {
     document.getElementById('car-number').value = '';
     document.getElementById('car-model').value = '';
+    document.getElementById('car-age').value = '';
     document.getElementById('car-description').value = '차량 정보를 불러올 수 없습니다.';
+    
+    // 이미지도 초기화
+    displayCarImage(null);
 }
 
 
