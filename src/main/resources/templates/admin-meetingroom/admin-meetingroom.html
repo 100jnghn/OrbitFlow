@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-admin :: layout(
+        ~{::content},
+        ~{fragments/header :: header},
+        ~{sidebar/admin-sidebar :: menu},
+        ~{::pageCss},
+        ~{::pageScript}
+      )}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>회의실 관리</title>
+
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- 페이지별 CSS -->
+    <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/admin-meetingroom/admin-meetingroom.css}">
+    </th:block>
+    <!-- ✅ 페이지별 JS -->
+    <th:block th:fragment="pageScript">
+        <script th:src="@{/js/admin-meetingroom/admin-meetingroom.js}"></script>
+    </th:block>
+</head>
+<body>
+
+</body>
+</html>

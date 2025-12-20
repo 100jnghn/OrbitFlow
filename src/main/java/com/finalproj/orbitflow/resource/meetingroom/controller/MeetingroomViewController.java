@@ -21,7 +21,7 @@ public class MeetingroomViewController {
 
         model.addAttribute("currentGNB", "admin");
 
-        return "admin/admin_meetingrooms";
+        return "admin-meetingroom/admin-meetingrooms";
     }
 
     // 사용자 회의실 조회 화면
