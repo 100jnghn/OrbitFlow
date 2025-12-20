@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-user :: layout(
+        ~{::content},
+        ~{fragments/header :: header},
+        ~{::sidebar},
+        ~{::pageCss},
+        ~{::pageScript}
+      )}">
+<head>
+    <meta charset="UTF-8">
+    <title>게시판</title>
+
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/layout.css}">
+        <link rel="stylesheet" th:href="@{/css/layout-user.css}">
+        <link rel="stylesheet" th:href="@{/css/board.css}">
+    </th:block>
+
+    <th:block th:fragment="pageScript">
+        <script th:src="@{/js/board.js}"></script>
+    </th:block>
+</head>
+<body>
+
+<!-- 사이드바 메뉴 -->
+<th:block th:fragment="sidebar">
+    <ul class="sidebar-menu" id="boardSidebar">
+        <!-- 동적으로 로드됨 -->
+    </ul>
+</th:block>
+
+<div th:fragment="content">
+    <div class="board-container">
+        <!-- 게시판 제목 -->
+        <div class="board-header">
+            <h1 id="boardTitle">게시판</h1>
+        </div>
+
+        <!-- 검색 및 필터 -->
+        <div class="board-search-section">
+            <div class="search-filters">
+                <select id="dateFilter" class="filter-select">
+                    <option value="">날짜(기간)</option>
+                    <option value="today">오늘</option>
+                    <option value="week">이번 주</option>
+                    <option value="month">이번 달</option>
+                    <option value="custom">기간 선택</option>
+                </select>
+                <input type="date" id="startDate" class="date-input" style="display: none;">
+                <input type="date" id="endDate" class="date-input" style="display: none;">
+                
+                <select id="searchType" class="filter-select">
+                    <option value="ALL">제목</option>
+                    <option value="TITLE">제목만</option>
+                    <option value="CONTENT">내용만</option>
+                    <option value="AUTHOR">작성자</option>
+                </select>
+                
+                <input type="text" id="searchKeyword" class="search-input" 
+                       placeholder="검색어를 입력하세요">
+                <button type="button" class="btn-search" onclick="searchBoards()">
+                    <i class="fas fa-search"></i> 검색
+                </button>
+            </div>
+        </div>
+
+        <!-- 게시글 목록 테이블 -->
+        <div class="board-table-container">
+            <table class="board-table">
+                <thead>
+                    <tr>
+                        <th>번호</th>
+                        <th>제목</th>
+                        <th>작성자</th>
+                        <th>등록일</th>
+                        <th>조회수</th>
+                    </tr>
+                </thead>
+                <tbody id="boardTableBody">
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px; color: #9ca3af;">
+                            게시판을 선택해주세요.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 페이지네이션 -->
+        <div class="pagination" id="boardPagination">
+            <!-- 동적으로 생성됨 -->
+        </div>
+
+        <!-- 글쓰기 버튼 -->
+        <div class="board-actions">
+            <button type="button" class="btn-write" onclick="writePost()" id="writeBtn" style="display: none;">
+                <i class="fas fa-pencil-alt"></i> 글쓰기
+            </button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+
+

@@ -6,6 +6,8 @@ import com.finalproj.orbitflow.board.boardPost.dto.BoardReqDto;
 import com.finalproj.orbitflow.board.boardPost.dto.BoardResDto;
 import com.finalproj.orbitflow.board.boardPost.entity.Board;
 import com.finalproj.orbitflow.board.boardPost.repository.BoardRepository;
+import com.finalproj.orbitflow.board.boardPost.repository.BoardSpecifications;
+import com.finalproj.orbitflow.board.enums.BoardSearchType;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.global.file.entity.File;
@@ -14,10 +16,14 @@ import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -29,93 +35,57 @@ public class BoardService {
     private final BoardCategoryRepository boardCategoryRepository;
     private final EmployeeRepository employeeRepository;
 
-    /** [사용자용] 게시글 목록 조회 (공용 / 조직 게시판 공용) */
+    /** [사용자용] 게시글 목록 조회 (공용/조직 게시판 공용, 검색 포함) */
     public Page<BoardResDto.ListInfo> getBoardList(
             Long companyId,
             Long organizationId,
             Long categoryId,
+            LocalDate startDate,
+            LocalDate endDate,
+            String searchTypeStr,
+            String keyword,
             Pageable pageable
     ) {
-        BoardCategory category = getVerifiedAccessibleCategory(
-                companyId,
-                organizationId,
-                categoryId
+        // 1) 카테고리 접근 검증 + 조회
+        BoardCategory category = getVerifiedAccessibleCategory(companyId, organizationId, categoryId);
+
+        // 2) searchType 파싱
+        BoardSearchType searchType = BoardSearchType.from(searchTypeStr);
+
+        // 3) 기간 조건(LocalDate -> Instant 범위)
+        ZoneId zoneId = ZoneId.systemDefault();
+        Instant startInstant = (startDate != null) ? startDate.atStartOfDay(zoneId).toInstant() : null;
+        Instant endExclusiveInstant = (endDate != null) ? endDate.plusDays(1).atStartOfDay(zoneId).toInstant() : null;
+
+        // 4) Spec 생성
+        Specification<Board> spec = BoardSpecifications.listSpec(
+                category.getId(),
+                startInstant,
+                endExclusiveInstant,
+                searchType,
+                keyword
         );
 
-        Page<Board> page =
-                boardRepository.findAllByCategory_IdAndDeletedAtIsNull(
-                        category.getId(),
-                        pageable
-                );
-
-        return page.map(BoardResDto.ListInfo::from);
+        // 5) 조회
+        return boardRepository.findAll(spec, pageable)
+                .map(BoardResDto.ListInfo::from);
     }
 
-    /** 게시판 접근 가능 여부 검증 */
-    private BoardCategory getVerifiedAccessibleCategory(
-            Long companyId,
-            Long organizationId,
-            Long categoryId
-    ) {
-        BoardCategory category = boardCategoryRepository
-                .findByIdAndDeletedAtIsNull(categoryId)
-                .orElseThrow(() -> new NotFoundException("게시판이 존재하지 않습니다."));
-
-        if (!category.getCompany().getId().equals(companyId)) {
-            throw new ForbiddenException("접근 권한이 없는 게시판입니다.");
-        }
-
-        if (!category.isActivated()) {
-            throw new ForbiddenException("비활성화된 게시판입니다.");
-        }
-
-        if (category.getOrganization() != null) {
-            if (organizationId == null ||
-                    !category.getOrganization().getId().equals(organizationId)) {
-                throw new ForbiddenException("소속 조직 게시판이 아닙니다.");
-            }
-        }
-
-        return category;
-    }
-
-    /** 게시글 상세 조회 */
+    /** [사용자용] 게시글 상세 조회 */
     @Transactional
-    public BoardResDto.DetailInfo getBoardDetail(
-            Long companyId,
-            Long organizationId,
-            Long boardId
-    ) {
+    public BoardResDto.DetailInfo getBoardDetail(Long companyId, Long organizationId, Long boardId) {
         Board board = boardRepository.findByIdAndDeletedAtIsNull(boardId)
                 .orElseThrow(() -> new NotFoundException("게시글이 존재하지 않습니다."));
 
         BoardCategory category = board.getCategory();
 
-        // 1. 회사 검증
-        if (!category.getCompany().getId().equals(companyId)) {
-            throw new ForbiddenException("접근 권한이 없는 게시글입니다.");
-        }
+        validateCategoryAccess(companyId, organizationId, category);
 
-        // 2. 게시판 활성화 여부
-        if (!category.isActivated()) {
-            throw new ForbiddenException("비활성화된 게시판입니다.");
-        }
-
-        // 3. 조직 게시판 접근 검증
-        if (category.getOrganization() != null) {
-            if (organizationId == null ||
-                    !category.getOrganization().getId().equals(organizationId)) {
-                throw new ForbiddenException("소속 조직 게시판이 아닙니다.");
-            }
-        }
-
-        // 4. 조회수 증가
         board.increaseViewCount();
-
         return BoardResDto.DetailInfo.from(board);
     }
 
-    /** [사용자용] 게시글 생성(공용 게시판 / 조직 게시판, 첨부파일 포함) */
+    /** [사용자용] 게시글 생성(공용/조직 게시판, 첨부파일 포함) */
     @Transactional
     public BoardResDto.DetailInfo createBoard(
             Long companyId,
@@ -124,53 +94,71 @@ public class BoardService {
             BoardReqDto.Create request,
             List<MultipartFile> files
     ) {
-        // 1. 게시판 접근 가능 여부 검증 (회사 / 조직 / 활성화 여부)
+        // ✅ 여기! 빨간줄 뜨던 부분: 메서드명을 “존재하는 메서드”로!
         BoardCategory category = getVerifiedAccessibleCategory(
                 companyId,
                 organizationId,
                 request.getCategoryId()
         );
 
-        // 2. 작성자(Employee) 존재 여부 검증
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new NotFoundException("작성자 정보가 존재하지 않습니다."));
 
-        // 3. 회사 소속 검증 (다른 회사 직원 작성 방지)
         if (!employee.getCompany().getId().equals(companyId)) {
             throw new ForbiddenException("게시글 작성 권한이 없습니다.");
         }
 
-        // 4. 첨부파일 처리 (파일이 있는 경우만)
+        // 파일처리: 지금은 예시로만 (네 프로젝트 파일 저장 로직에 맞춰 교체 권장)
         List<File> attachedFiles = null;
         if (files != null && !files.isEmpty()) {
             attachedFiles = files.stream()
-                    .map(file -> File.builder()
-                            .originFile(file.getOriginalFilename())
-                            .sysFile(saveFileToSystem(file)) // 실제 파일 저장 로직 메서드
+                    .map(f -> File.builder()
+                            .originFile(f.getOriginalFilename())
+                            .sysFile(saveFileToSystem(f))
                             .build())
                     .toList();
         }
 
-        // 5. 게시글 엔티티 생성 (Builder 사용)
         Board board = Board.builder()
                 .category(category)
                 .writer(employee)
                 .boardTitle(request.getBoardTitle())
                 .boardContent(request.getBoardContent())
-                .files(attachedFiles) // 수정: 파일 리스트
+                .files(attachedFiles)
                 .build();
 
-        // 6. 게시글 저장
-        Board savedBoard = boardRepository.save(board);
-
-        // 7. 상세 응답 DTO 반환
-        return BoardResDto.DetailInfo.from(savedBoard);
+        Board saved = boardRepository.save(board);
+        return BoardResDto.DetailInfo.from(saved);
     }
 
-    /** 실제 파일 시스템에 저장하고 경로 반환하는 메서드 (예시) */
+    /** 게시판 카테고리 접근 검증 + 조회 */
+    private BoardCategory getVerifiedAccessibleCategory(Long companyId, Long organizationId, Long categoryId) {
+        BoardCategory category = boardCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException("게시판 카테고리를 찾을 수 없습니다."));
+
+        validateCategoryAccess(companyId, organizationId, category);
+        return category;
+    }
+
+    /** 게시판 접근 가능 여부 검증 */
+    private void validateCategoryAccess(Long companyId, Long organizationId, BoardCategory category) {
+        if (!category.getCompany().getId().equals(companyId)) {
+            throw new ForbiddenException("접근 권한이 없는 게시판입니다.");
+        }
+        if (!category.isActivated()) {
+            throw new ForbiddenException("비활성화된 게시판입니다.");
+        }
+
+        // 조직 게시판이면 organizationId 일치해야 함
+        if (category.getOrganization() != null) {
+            if (organizationId == null || !category.getOrganization().getId().equals(organizationId)) {
+                throw new ForbiddenException("소속 조직 게시판이 아닙니다.");
+            }
+        }
+    }
+
+    /** 실제 파일 시스템 저장 (예시) */
     private String saveFileToSystem(MultipartFile file) {
-        // TODO: 실제 파일 저장 로직 구현
-        // 예: UUID + 원본 이름으로 저장 후 경로 반환
         return "/files/" + file.getOriginalFilename();
     }
 }
