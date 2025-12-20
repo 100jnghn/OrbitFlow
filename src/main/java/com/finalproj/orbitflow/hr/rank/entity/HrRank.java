@@ -45,4 +45,34 @@ public class HrRank extends BaseEntity {
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
+
+    // ====== 팩토리 ======
+    public static HrRank create(Company company, HrRank parentHrRank, String name, Integer orderIndex) {
+        HrRank rank = new HrRank();
+        rank.company = company;
+        rank.parentHrRank = parentHrRank;
+        rank.name = name;
+        rank.orderIndex = orderIndex;
+        rank.isActive = true;
+        return rank;
+    }
+
+    // ====== 도메인 메서드 ======
+    public void update(String name, HrRank parentHrRank, Boolean isActive) {
+        this.name = name;
+        this.parentHrRank = parentHrRank;
+        this.isActive = isActive;
+    }
+
+    public void changeOrderIndex(Integer orderIndex) {
+        this.orderIndex = orderIndex;
+    }
+
+    public void activate() {
+        this.isActive = true;
+    }
+
+    public void deactivate() {
+        this.isActive = false;
+    }
 }
