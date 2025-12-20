@@ -190,7 +190,7 @@ async function checkBusinessNumber() {
     }
 
     try {
-        const res = await fetch(
+        const res = await apiFetch(
             `/api/companies/check-business-number?businessNumber=${encodeURIComponent(v)}`
         );
 
@@ -237,21 +237,26 @@ async function submitSignup() {
         businessNumber: businessNumber.value.trim()
     };
 
-    const res = await fetch('/api/companies', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-    });
+    try {
+        const res = await apiFetch('/api/companies', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
 
-    const result = await res.json();
+        const result = await res.json();
 
-    if (!res.ok) {
+        if (!res.ok) {
+            alert(result.message);
+            return;
+        }
+
         alert(result.message);
-        return;
-    }
+        location.href = '/login';
 
-    alert(result.message);
-    location.href = '/login';
+    } catch (e) {
+        alert('회사 가입 중 오류가 발생했습니다.');
+    }
 }
 
 /* ======================
@@ -267,16 +272,22 @@ async function checkEmailDuplicate() {
         return;
     }
 
-    const res = await fetch(
-        `/api/companies/check-email?email=${encodeURIComponent(v)}`
-    );
-    const json = await res.json();
+    try {
+        const res = await apiFetch(
+            `/api/companies/check-email?email=${encodeURIComponent(v)}`
+        );
 
-    if (json.data.available) {
-        showMsg(emailMsg, '사용 가능한 이메일입니다.', 'success');
-        emailChecked = true;
-    } else {
-        showMsg(emailMsg, '이미 사용 중인 이메일입니다.', 'error');
+        const json = await res.json();
+
+        if (json.data.available) {
+            showMsg(emailMsg, '사용 가능한 이메일입니다.', 'success');
+            emailChecked = true;
+        } else {
+            showMsg(emailMsg, '이미 사용 중인 이메일입니다.', 'error');
+            emailChecked = false;
+        }
+    } catch (e) {
+        showMsg(emailMsg, '이메일 검증 중 오류가 발생했습니다.', 'error');
         emailChecked = false;
     }
 
