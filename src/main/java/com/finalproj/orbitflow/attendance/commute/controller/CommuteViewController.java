@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/view")
 public class CommuteViewController {
 
-    @GetMapping
+    @GetMapping("/attendance/commute")
     public String commutePage() {
         // templates/attendance/commute.html 파일을 반환한다고 가정합니다.
         return "attendance/commute";

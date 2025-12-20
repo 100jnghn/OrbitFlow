@@ -6,8 +6,7 @@
           ~{sidebar/attendance-sidebar :: menu},
           ~{::pageCss},
           ~{::pageScript}
-      )}">
-<head>
+      )}"> <head>
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 
@@ -29,7 +28,7 @@
                 </div>
                 <div class="time-section">
                     <div class="time-label">기준 근무 시간</div>
-                    <div class="work-hours" id="workHours">09:00 ~ 18:00</div>
+                    <div class="work-hours" id="workHours">조회 중...</div>
                 </div>
             </div>
             <div class="button-group">
@@ -59,10 +58,8 @@
             </div>
         </div>
     </div>
-</div>
 
-<th:block th:fragment="pageScript">
     <script th:src="@{/js/commute.js}"></script>
-</th:block>
+</div>
 </body>
 </html>

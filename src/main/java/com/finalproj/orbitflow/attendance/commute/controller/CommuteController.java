@@ -22,11 +22,19 @@ public class CommuteController {
 
 
     @GetMapping("/active-rule")
-    public ResponseEntity<ActiveRuleResDto> getActiveRule(@AuthenticationPrincipal SecurityUser user) {
-        // Service에서 현재 사원에게 적용되는(예외규칙 우선, 없으면 기본규칙) 시간을 가져옴
-        LocalTime startTime = commuteService.getApplicableStartTime(user.getCompanyId(), user.getEmployeeId(), LocalDate.now());
-        LocalTime endTime = commuteService.getApplicableEndTime(user.getCompanyId(), user.getEmployeeId(), LocalDate.now());
+    public ResponseEntity<?> getActiveRule(@AuthenticationPrincipal SecurityUser user) {
+        // 1. 인증 객체 널 체크 (NPE 방지 및 401 에러 처리)
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
+        // 2. 현재 날짜 기준 적용 시간 조회
+        // CommuteService 내부에 사원별 예외 규칙을 먼저 찾고, 없으면 기본 규칙을 찾는 로직이 구현되어 있어야 합니다.
+        LocalDate today = LocalDate.now();
+        LocalTime startTime = commuteService.getApplicableStartTime(user.getCompanyId(), user.getEmployeeId(), today);
+        LocalTime endTime = commuteService.getApplicableEndTime(user.getCompanyId(), user.getEmployeeId(), today);
+
+        // 3. 결과 반환
         return ResponseEntity.ok(new ActiveRuleResDto(startTime, endTime));
     }
 
