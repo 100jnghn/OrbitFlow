@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow.attendance.commute.service;
 
-import com.finalproj.orbitflow.attendance.commute.dto.TodayAttResDto; // 변경된 DTO 임포트
+import com.finalproj.orbitflow.attendance.commute.dto.TodayAttResDto;
 import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
 import com.finalproj.orbitflow.attendance.attendanceRule.entity.AttendanceRule;
 import com.finalproj.orbitflow.attendance.employeeAttRule.entity.EmployeeAttRule;
@@ -95,7 +95,7 @@ public class CommuteService {
 
         // 5. 퇴근 기록 및 조퇴(EARLY_LEAVE) 판정
         attendance.setLeaveAt(now);
-        if (now.toLocalTime().isBefore(endTimeThreshold)) {
+        if (now.toLocalTime().withNano(0).isBefore(endTimeThreshold)) {
             attendance.setStatus(AttendanceStatus.EARLY_LEAVE);
         }
 
@@ -124,25 +124,40 @@ public class CommuteService {
         updateEmployeeWorkStatus(employeeId, WorkStatus.WORKING);
     }
 
+    /**
+     * 사원 실시간 상태 업데이트 공통 메서드
+     */
     private void updateEmployeeWorkStatus(Long employeeId, WorkStatus status) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new IllegalStateException("사원 정보를 찾을 수 없습니다."));
         employee.updateWorkStatus(status);
     }
 
-    private LocalTime getApplicableStartTime(Long companyId, Long employeeId, LocalDate date) {
+    /**
+     * [수정] 적용 가능한 출근 시간 조회 (Public으로 변경)
+     * 1. 사원별 활성화된 예외 규칙 우선 조회
+     * 2. 없으면 회사의 기본 규칙 조회
+     * 3. 모두 없으면 09:00 반환
+     */
+    public LocalTime getApplicableStartTime(Long companyId, Long employeeId, LocalDate date) {
         return employeeAttRuleRepository.findActiveRuleByEmployeeIdAndDate(employeeId, date)
-                .map(EmployeeAttRule::getStartTime)
+                .map(EmployeeAttRule::getStartTime) // 예외 규칙
                 .orElseGet(() -> attendanceRuleRepository.findByCompanyIdAndIsDefaultTrue(companyId)
-                        .map(AttendanceRule::getDefaultStartTime)
-                        .orElse(LocalTime.of(9, 0)));
+                        .map(AttendanceRule::getDefaultStartTime) // 기본 규칙
+                        .orElse(LocalTime.of(9, 0))); // 시스템 기본값
     }
 
-    private LocalTime getApplicableEndTime(Long companyId, Long employeeId, LocalDate date) {
+    /**
+     * [수정] 적용 가능한 퇴근 시간 조회 (Public으로 변경)
+     * 1. 사원별 활성화된 예외 규칙 우선 조회
+     * 2. 없으면 회사의 기본 규칙 조회
+     * 3. 모두 없으면 18:00 반환
+     */
+    public LocalTime getApplicableEndTime(Long companyId, Long employeeId, LocalDate date) {
         return employeeAttRuleRepository.findActiveRuleByEmployeeIdAndDate(employeeId, date)
-                .map(EmployeeAttRule::getEndTime)
+                .map(EmployeeAttRule::getEndTime) // 예외 규칙
                 .orElseGet(() -> attendanceRuleRepository.findByCompanyIdAndIsDefaultTrue(companyId)
-                        .map(AttendanceRule::getDefaultEndTime)
-                        .orElse(LocalTime.of(18, 0)));
+                        .map(AttendanceRule::getDefaultEndTime) // 기본 규칙
+                        .orElse(LocalTime.of(18, 0))); // 시스템 기본값
     }
 }

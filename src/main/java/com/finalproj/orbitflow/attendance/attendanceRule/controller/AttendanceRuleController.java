@@ -88,9 +88,7 @@ public class AttendanceRuleController {
     /**
      * 5. 예외 규칙 추가 (POST /api/admin/rules/exception)
      */
-    /**
-     * 5. 예외 규칙 추가 (POST /api/admin/rules/exception)
-     */
+
     @PostMapping("/exception")
     public ResponseEntity<EmpAttRuleResDto> createExceptionRule(
             @AuthenticationPrincipal SecurityUser admin, // 세션에서 관리자 정보 주입

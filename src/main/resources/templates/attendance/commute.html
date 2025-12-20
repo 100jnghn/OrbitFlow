@@ -4,9 +4,13 @@
           ~{::content},
           ~{fragments/header :: header},
           ~{sidebar/attendance-sidebar :: menu},
-          ~{::pageCss}
+          ~{::pageCss},
+          ~{::pageScript}
       )}">
 <head>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
     <th:block th:fragment="pageCss">
         <link rel="stylesheet" th:href="@{/css/commute.css}">
     </th:block>
@@ -53,12 +57,12 @@
                     <span class="record-value" id="workStatusText">-</span>
                 </span>
             </div>
-            <div class="record-item" id="awayTimeItem" style="display: none;">
-                <span class="record-label">자리비움 시작:</span>
-                <span class="record-value" id="awayStartTime">-</span>
-            </div>
         </div>
     </div>
-
-    <script th:src="@{/js/commute.js}"></script>
 </div>
+
+<th:block th:fragment="pageScript">
+    <script th:src="@{/js/commute.js}"></script>
+</th:block>
+</body>
+</html>

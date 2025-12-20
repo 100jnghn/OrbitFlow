@@ -18,10 +18,6 @@ public class AttendanceRuleViewController {
         return "attendance/admin-rule";
     }
 
-    @GetMapping("/attendance/commute")
-    public String commutePage() {
-        return "attendance/commute";
-    }
 
     @GetMapping("/attendance/monthly")
     public String monthlyAttendancePage() {

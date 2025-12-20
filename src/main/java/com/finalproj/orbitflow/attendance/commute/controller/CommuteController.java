@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.attendance.commute.controller;
 
+import com.finalproj.orbitflow.attendance.commute.dto.ActiveRuleResDto;
 import com.finalproj.orbitflow.attendance.commute.dto.TodayAttResDto;
 import com.finalproj.orbitflow.attendance.commute.service.CommuteService;
 import com.finalproj.orbitflow.global.security.SecurityUser;
@@ -9,12 +10,25 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 @RestController
 @RequestMapping("/api/attendance")
 @RequiredArgsConstructor
 public class CommuteController {
 
     private final CommuteService commuteService;
+
+
+    @GetMapping("/active-rule")
+    public ResponseEntity<ActiveRuleResDto> getActiveRule(@AuthenticationPrincipal SecurityUser user) {
+        // Service에서 현재 사원에게 적용되는(예외규칙 우선, 없으면 기본규칙) 시간을 가져옴
+        LocalTime startTime = commuteService.getApplicableStartTime(user.getCompanyId(), user.getEmployeeId(), LocalDate.now());
+        LocalTime endTime = commuteService.getApplicableEndTime(user.getCompanyId(), user.getEmployeeId(), LocalDate.now());
+
+        return ResponseEntity.ok(new ActiveRuleResDto(startTime, endTime));
+    }
 
     /**
      * 오늘 출근 현황 조회
