@@ -69,14 +69,18 @@ public interface FormTemplateRepository extends JpaRepository<FormTemplate, Long
     );
 
     @Query("""
-    select max(t.version)
-    from FormTemplate t
-    where t.templateGroup.id = :templateGroupId
-      and t.status = 'ACTIVE'
-    """)
-    Optional<Integer> findMaxActiveVersionByTemplateGroupId(
+            
+                    select max(ft.version)
+            from FormTemplate ft
+            where ft.templateGroup.id = :templateGroupId and ft.status = "ACTIVE"
+            """)
+    Optional<Integer> findMaxVersionByTemplateGroupId(
             @Param("templateGroupId") Long templateGroupId
-    );}
+    );
+
+
+
+}
 
 
 

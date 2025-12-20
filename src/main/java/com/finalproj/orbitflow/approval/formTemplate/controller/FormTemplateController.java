@@ -50,9 +50,9 @@ public class FormTemplateController {
                         Map.of("formTemplateId", formTemplateId)));
     }
 
-    @PostMapping("/admin/form-templates/{templateId}/revise")
+    @PostMapping("/admin/form-templates/{templateGroupId}/revise")
     public ResponseEntity<ResponseDto> reviseFormTemplate(
-            @PathVariable(name = "templateId") Long templateGroupId
+            @PathVariable(name = "templateGroupId") Long templateGroupId
     ) {
         Long createdTemplateId = formTemplateService.reviseFormTemplateByTemplateGroup(templateGroupId, SecurityUtils.getCompanyId());
 
@@ -65,10 +65,10 @@ public class FormTemplateController {
     }
 
 
-    @PatchMapping("/admin/form-templates/{templateId}/structure")
+    @PatchMapping("/admin/form-templates/{formTemplateId}/structure")
     public ResponseEntity<ResponseDto> updateFormTemplateStructure(
             @RequestBody FormTemplateUpdateReqDto reqDto,
-            @PathVariable(name = "templateId") Long formTemplateId
+            @PathVariable(name = "formTemplateId") Long formTemplateId
     ) {
         formTemplateService.updateStructure(formTemplateId, SecurityUtils.getCompanyId(), reqDto);
 
@@ -77,10 +77,10 @@ public class FormTemplateController {
                 .body(new ResponseDto(HttpStatus.OK, "결재 양식 구조가 수정되었습니다.", null));
     }
 
-    @PatchMapping("/admin/form-templates/{templateId}/approval-rule")
+    @PatchMapping("/admin/form-templates/{formTemplateId}/approval-rule")
     public ResponseEntity<ResponseDto> updateFormTemplateApprovalRule(
             @RequestBody FormTemplateUpdateReqDto reqDto,
-            @PathVariable(name = "templateId") Long formTemplateId
+            @PathVariable(name = "formTemplateId") Long formTemplateId
     ) {
 
         formTemplateService.updateApprovalRule(formTemplateId, SecurityUtils.getCompanyId(), reqDto);
@@ -90,9 +90,9 @@ public class FormTemplateController {
                 .body(new ResponseDto(HttpStatus.OK, "결재선 규칙이 수정되었습니다.", null));
     }
 
-    @PostMapping("/admin/form-templates/{templateId}/publish")
+    @PostMapping("/admin/form-templates/{formTemplateId}/publish")
     public ResponseEntity<ResponseDto> publishFormTemplate(
-            @PathVariable(name = "templateId") Long formTemplateId
+            @PathVariable(name = "formTemplateId") Long formTemplateId
     ) {
         formTemplateService.publishFormTemplate(formTemplateId, SecurityUtils.getCompanyId());
 
@@ -134,7 +134,7 @@ public class FormTemplateController {
     @GetMapping("/admin/form-templates/all")//status 변수로 추가?
     public ResponseEntity<ResponseDto> getAllFormTemplates(
             @RequestParam(defaultValue = "0") int offset,
-            @RequestParam(defaultValue = "15") int size,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "") String keyword,
             @RequestParam(required = false) FormTemplateStatus status
     ) {
