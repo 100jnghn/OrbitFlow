@@ -156,7 +156,7 @@ function initAddButton() {
     if (addBtn) {
         addBtn.addEventListener('click', () => {
             // 차량 추가 페이지로 이동
-            window.location.href = '/view/resource/admin/cars/create';
+            window.location.href = '/view/resource/admin/cars/insert';
         });
     }
 }
