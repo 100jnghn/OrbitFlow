@@ -60,12 +60,12 @@ function createActionCell(id) {
     const edit = document.createElement('button');
     edit.className = 'btn-edit';
     edit.textContent = '수정';
-    edit.onclick = () => editMeetingRoom(id);
+    edit.onclick = () => editCar(id);
 
     const del = document.createElement('button');
     del.className = 'btn-delete';
     del.textContent = '삭제';
-    del.onclick = () => deleteMeetingRoom(id);
+    del.onclick = () => deleteCar(id);
 
     box.append(edit, del);
     td.appendChild(box);
@@ -75,9 +75,13 @@ function createActionCell(id) {
 /* ==========================
    Data Load
 ========================== */
-async function loadMeetingRooms() {
+async function loadCars() {
     try {
-        const res = await apiFetch('/api/admin/meetingrooms');
+        const res = await apiFetch(
+            `/api/admin/cars`,
+            { method: 'GET' }
+        );
+
         if (!res.ok) throw new Error();
 
         const { data } = await res.json();
@@ -89,44 +93,79 @@ async function loadMeetingRooms() {
                 <tr>
                     <td colspan="6">
                         <div class="empty-state">
-                            <i class="fas fa-inbox"></i>
-                            <p>등록된 리소스가 없습니다.</p>
+                            <i class="fas fa-car"></i>
+                            <p>등록된 차량이 없습니다.</p>
                         </div>
                     </td>
                 </tr>`;
             return;
         }
 
-        data.forEach((room, i) => {
+        data.forEach((car, i) => {
             const tr = document.createElement('tr');
             tr.append(
                 createCell(i + 1),
-                createCell(room.name),
-                createCell(room.position, true),
-                createCell(room.description, true),
-                createCell(room.statusCode),
-                createActionCell(room.meetingroomId)
+                createCell(car.number),
+                createCell(car.name),
+                createCell(car.description, true),
+                createCell(car.statusName),
+                createActionCell(car.id)
             );
             tbody.appendChild(tr);
         });
 
     } catch (e) {
         console.error(e);
-        alert('회의실 목록을 불러오지 못했습니다.');
+        alert('차량 목록을 불러오지 못했습니다.');
     }
 }
 
 /* ==========================
    Actions
 ========================== */
-function editMeetingRoom(id) {
-    alert(`회의실 ID ${id} 수정 기능을 구현하세요.`);
+function editCar(id) {
+    // 차량 상세 조회 페이지로 이동
+    window.location.href = `/view/resource/admin/cars/detail?id=${id}`;
 }
 
-async function deleteMeetingRoom(id) {
+async function deleteCar(id) {
     if (!confirm('정말 삭제하시겠습니까?')) return;
-    await apiFetch(`/api/admin/meetingrooms/${id}`, { method: 'DELETE' });
-    loadMeetingRooms();
+
+    try {
+        const res = await apiFetch(
+            `/api/admin/cars/${id}/delete`,
+            { method: 'PATCH' }
+        );
+
+        if (!res.ok) throw new Error();
+
+        alert('차량이 삭제되었습니다.');
+        loadCars();
+
+    } catch (e) {
+        console.error(e);
+        alert('차량 삭제에 실패했습니다.');
+    }
 }
 
-document.addEventListener('DOMContentLoaded', loadMeetingRooms);
+/* ==========================
+   추가 버튼
+========================== */
+function initAddButton() {
+    const addBtn = document.querySelector('.btn-add');
+    if (addBtn) {
+        addBtn.addEventListener('click', () => {
+            // 차량 추가 페이지로 이동
+            window.location.href = '/view/resource/admin/cars/create';
+        });
+    }
+}
+
+/* ==========================
+   초기화
+========================== */
+document.addEventListener('DOMContentLoaded', () => {
+    loadCars();
+    initAddButton();
+});
+

@@ -53,6 +53,8 @@ public class MeetingroomService {
     @Transactional(readOnly = true)
     public MeetingroomResDto getMeetingroom(Long meetingroomId) {
         Meetingroom meetingroom = findMeetingroomById(meetingroomId);
+
+        log.info("회의실 조회 : " + meetingroom.getId() + " " + meetingroom.getName());
         return convertToResDto(meetingroom);
     }
 

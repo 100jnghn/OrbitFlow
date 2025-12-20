@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,7 +21,7 @@ import java.util.List;
  * @since : 2025-12-16 오후 6:52 화요일
  */
 @RequestMapping("/api")
-@Controller
+@RestController
 @RequiredArgsConstructor
 public class CarController {
 
