@@ -60,4 +60,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     boolean existsByEmail(String email);
 
+    /**
+     * 직급에 부여된 사원 수 조회
+     */
+    long countByCompanyIdAndRank_Id(Long companyId, Long rankId);
 }
