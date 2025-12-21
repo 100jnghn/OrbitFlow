@@ -19,12 +19,6 @@ public class AttendanceRuleViewController {
     }
 
 
-    @GetMapping("/attendance/monthly")
-    public String monthlyAttendancePage() {
-        return "attendance/monthly-attendance";
-    }
-
-
 
 }
 

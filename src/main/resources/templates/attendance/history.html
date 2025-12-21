@@ -9,7 +9,7 @@
       )}">
 <head>
     <th:block th:fragment="pageCss">
-        <link rel="stylesheet" th:href="@{/css/attendance-history.css}">
+        <link rel="stylesheet" th:href="@{/css/history.css}">
     </th:block>
 </head>
 <body>
@@ -19,8 +19,9 @@
     <div class="search-section">
         <label for="monthSelect">조회 월:</label>
         <select id="monthSelect" class="form-select-sm">
-            <option value="2025-12">2025년 12월 ▼</option>
-            <option value="2025-11">2025년 11월 ▼</option>
+            <option value="2025-12">2025년 12월</option>
+            <option value="2025-11">2025년 11월</option>
+            <option value="2025-10">2025년 10월</option>
         </select>
     </div>
 
@@ -30,21 +31,21 @@
             <div class="card">
                 <span class="card-label">총 근무 시간 (누적)</span>
                 <div class="card-value-group">
-                    <span class="value-blue">152</span>
+                    <span id="totalWorkHours" class="value-blue">0</span>
                     <span class="unit">시간</span>
                 </div>
             </div>
             <div class="card">
                 <span class="card-label">지각 횟수</span>
                 <div class="card-value-group">
-                    <span class="value-orange">2</span>
+                    <span id="lateCount" class="value-orange">0</span>
                     <span class="unit">회</span>
                 </div>
             </div>
             <div class="card">
                 <span class="card-label">휴가/결근 일수</span>
                 <div class="card-value-group">
-                    <span class="value-red">3</span>
+                    <span id="absentCount" class="value-red">0</span>
                     <span class="unit">일</span>
                 </div>
             </div>
@@ -54,11 +55,11 @@
     <div class="detail-container">
         <div class="detail-header">
             <h2 class="section-title">일별 상세 기록</h2>
-            <select class="form-select-sm status-filter">
-                <option>전체 ▼</option>
+            <select class="form-select-sm status-filter" id="statusFilter">
+                <option value="ALL">전체 ▼</option>
             </select>
         </div>
-        <table class="history-table">
+        <table class="history-table" id="attendanceTable">
             <thead>
             <tr>
                 <th>날짜</th>
@@ -69,46 +70,18 @@
             </thead>
             <tbody>
             <tr>
-                <td>12월 01일 (월)</td>
-                <td>08:58</td>
-                <td>18:05</td>
-                <td class="work-time-text">8h 07m</td>
-            </tr>
-            <tr class="highlight-late">
-                <td>12월 02일 (화)</td>
-                <td class="text-orange">09:15</td>
-                <td>18:02</td>
-                <td>7h 47m</td>
-            </tr>
-            <tr>
-                <td>12월 03일 (수)</td>
-                <td>-</td>
-                <td>-</td>
-                <td class="text-blue">0h 00m</td>
-            </tr>
-            <tr>
-                <td>12월 04일 (목)</td>
-                <td>08:59</td>
-                <td class="text-red">미기록</td>
-                <td class="text-red">계산불가</td>
+                <td colspan="4" style="text-align:center; padding: 50px;">데이터를 불러오는 중입니다...</td>
             </tr>
             </tbody>
         </table>
     </div>
 
-    <div class="pagination">
-        <button class="page-btn">&lt;</button>
-        <button class="page-btn">1</button>
-        <button class="page-btn active">2</button>
-        <button class="page-btn">3</button>
-        <span>...</span>
-        <button class="page-btn">10</button>
-        <button class="page-btn">&gt;</button>
+    <div class="pagination" id="pagination">
     </div>
 </div>
 
 <th:block th:fragment="pageScript">
-    <script th:src="@{/js/attendance-history.js}"></script>
+    <script th:src="@{/js/history.js}"></script>
 </th:block>
 </body>
 </html>

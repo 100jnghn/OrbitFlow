@@ -1,6 +1,7 @@
 package com.finalproj.orbitflow.attendance.commute.controller;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -12,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class CommuteViewController {
 
     @GetMapping("/attendance/commute")
-    public String commutePage() {
-        // templates/attendance/commute.html 파일을 반환한다고 가정합니다.
+    public String commutePage(Model model) {
+        model.addAttribute("currentMenu", "commute");
         return "attendance/commute";
     }
 

@@ -1,6 +1,7 @@
 package com.finalproj.orbitflow.attendance.history.controller;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -13,11 +14,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
  */
 
 @Controller
-@RequestMapping("/view/attendance/history")
+@RequestMapping("/view/attendance")
 public class AttendanceHistoryViewController {
 
     @GetMapping("/monthly")
-    public String monthlyHistoryPage() {
-        return "attendance/attendance-history";
+    public String monthlyHistoryPage(Model model) {
+        model.addAttribute("currentMenu", "monthly");
+        return "/attendance/history";
     }
 }
