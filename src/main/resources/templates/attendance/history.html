@@ -57,6 +57,10 @@
             <h2 class="section-title">일별 상세 기록</h2>
             <select class="form-select-sm status-filter" id="statusFilter">
                 <option value="ALL">전체 ▼</option>
+                <option value="ON_TIME">정상출근</option>
+                <option value="LATE">지각</option>
+                <option value="ABSENT">결근</option>
+                <option value="BEFORE_WORK">출근전</option>
             </select>
         </div>
         <table class="history-table" id="attendanceTable">
@@ -71,7 +75,7 @@
             </thead>
             <tbody>
             <tr>
-                <td colspan="4" style="text-align:center; padding: 50px;">데이터를 불러오는 중입니다...</td>
+                <td colspan="5" style="text-align:center; padding: 50px;">데이터를 불러오는 중입니다...</td>
             </tr>
             </tbody>
         </table>
