@@ -1,6 +1,7 @@
 package com.finalproj.orbitflow.hr.orgCategory.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 
 /**
@@ -14,6 +15,7 @@ import lombok.Getter;
 public class OrgCategoryCreateReqDto {
 
     @NotBlank
+    @Size(max = 50)
     private String name;
 
 }

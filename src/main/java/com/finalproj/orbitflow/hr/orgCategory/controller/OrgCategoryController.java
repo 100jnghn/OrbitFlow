@@ -4,6 +4,7 @@ import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUtils;
 import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryCreateReqDto;
 import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryOrderUpdateReqDto;
+import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryResDto;
 import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryUpdateReqDto;
 import com.finalproj.orbitflow.hr.orgCategory.service.OrgCategoryService;
 import jakarta.validation.Valid;
@@ -12,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * Please explain the class!!!
@@ -26,74 +29,50 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/admin/org-categories")
 public class OrgCategoryController {
 
-    private final OrgCategoryService orgCategoryService;
-
-    @PostMapping
-    public ResponseEntity<ResponseDto> create(
-            @RequestBody @Valid OrgCategoryCreateReqDto request
-    ) {
-        Long companyId = SecurityUtils.getCompanyId();
-
-        Long id = orgCategoryService.create(companyId, request.getName());
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(new ResponseDto(
-                        HttpStatus.CREATED,
-                        "조직 카테고리 생성 완료",
-                        id));
-
-    }
-
+    private final OrgCategoryService service;
 
     @GetMapping
-    public ResponseEntity<ResponseDto> list() {
-        Long companyId = SecurityUtils.getCompanyId();
-
+    public ResponseEntity<ResponseDto<List<OrgCategoryResDto>>> list(
+            @RequestParam(required = false) String keyword
+    ) {
         return ResponseEntity.ok(
-                new ResponseDto(
+                new ResponseDto<>(
                         HttpStatus.OK,
-                        "조직 카테고리 목록 조회 완료",
-                        orgCategoryService.findAll(companyId)));
+                        "조직 카테고리 목록 조회 성공",
+                        service.findAll(SecurityUtils.getCompanyId(), keyword)
+                )
+        );
+    }
+
+    @PostMapping
+    public ResponseEntity<ResponseDto<Long>> create(
+            @RequestBody @Valid OrgCategoryCreateReqDto request
+    ) {
+        Long id = service.create(SecurityUtils.getCompanyId(), request.getName());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ResponseDto<>(HttpStatus.CREATED, "조직 카테고리 생성 성공", id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseDto> update(
+    public ResponseEntity<ResponseDto<Void>> update(
             @PathVariable Long id,
             @RequestBody @Valid OrgCategoryUpdateReqDto request
     ) {
-        Long companyId = SecurityUtils.getCompanyId();
-
-        orgCategoryService.update(companyId, id, request.getName());
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(new ResponseDto(HttpStatus.OK,
-                        "조직 카테고리 수정 완료",
-                        null));
+        service.update(SecurityUtils.getCompanyId(), id, request.getName());
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "조직 카테고리 수정 성공", null));
     }
-
 
     @PutMapping("/order")
-    public ResponseEntity<ResponseDto> updateOrder(
+    public ResponseEntity<ResponseDto<Void>> updateOrder(
             @RequestBody @Valid OrgCategoryOrderUpdateReqDto request
     ) {
-        Long companyId = SecurityUtils.getCompanyId();
-        orgCategoryService.updateOrder(companyId, request.getOrders());
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(new ResponseDto(HttpStatus.OK,
-                        "조직 카테고리 순서 수정 완료",
-                        null));
+        service.updateOrder(SecurityUtils.getCompanyId(), request.getOrders());
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "순서 변경 저장 완료", null));
     }
 
-
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseDto> deactivate(
-            @PathVariable Long id
-    ) {
-        Long companyId = SecurityUtils.getCompanyId();
-
-        orgCategoryService.deactivate(companyId, id);
-        return ResponseEntity.ok().body(
-                new ResponseDto(HttpStatus.OK, "조직 카테고리 비활성화 완료", null)
-        );    }
+    public ResponseEntity<ResponseDto<Void>> deactivate(@PathVariable Long id) {
+        service.deactivate(SecurityUtils.getCompanyId(), id);
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "조직 카테고리 비활성화 완료", null));
+    }
 }

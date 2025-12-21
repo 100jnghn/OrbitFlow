@@ -4,14 +4,17 @@
           ~{::content},
           ~{fragments/header :: header},
           ~{sidebar/attendance-sidebar :: menu},
-          ~{::pageCss}
+          ~{::pageCss},
+          ~{::pageScript}
       )}">
 <head>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
     <th:block th:fragment="pageCss">
         <link rel="stylesheet" th:href="@{/css/commute.css}">
     </th:block>
 </head>
-
 <body>
 <div th:fragment="content">
     <div style="padding: 24px 40px;">
@@ -25,7 +28,7 @@
                 </div>
                 <div class="time-section">
                     <div class="time-label">기준 근무 시간</div>
-                    <div class="work-hours" id="workHours">09:00 ~ 18:00</div>
+                    <div class="work-hours" id="workHours">조회 중...</div>
                 </div>
             </div>
             <div class="button-group">
@@ -53,12 +56,12 @@
                     <span class="record-value" id="workStatusText">-</span>
                 </span>
             </div>
-            <div class="record-item" id="awayTimeItem" style="display: none;">
-                <span class="record-label">자리비움 시작:</span>
-                <span class="record-value" id="awayStartTime">-</span>
-            </div>
         </div>
     </div>
 
-    <script th:src="@{/js/commute.js}"></script>
+    <th:block th:fragment="pageScript">
+        <script th:src="@{/js/commute.js}"></script>
+    </th:block>
 </div>
+</body>
+</html>

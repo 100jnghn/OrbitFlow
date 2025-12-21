@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.attendance.commute.controller;
 
+import com.finalproj.orbitflow.attendance.commute.dto.ActiveRuleResDto;
 import com.finalproj.orbitflow.attendance.commute.dto.TodayAttResDto;
 import com.finalproj.orbitflow.attendance.commute.service.CommuteService;
 import com.finalproj.orbitflow.global.security.SecurityUser;
@@ -9,12 +10,25 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 @RestController
 @RequestMapping("/api/attendance")
 @RequiredArgsConstructor
 public class CommuteController {
 
     private final CommuteService commuteService;
+
+
+    @GetMapping("/active-rule")
+    public ResponseEntity<?> getActiveRule(@AuthenticationPrincipal SecurityUser user) {
+        if (user == null) return ResponseEntity.status(401).build();
+
+        // 서비스 호출 시 반드시 user.getEmployeeId()를 넘겨야 사원별 예외를 찾을 수 있습니다.
+        ActiveRuleResDto rule = commuteService.getActiveRule(user.getCompanyId(), user.getEmployeeId());
+        return ResponseEntity.ok(rule);
+    }
 
     /**
      * 오늘 출근 현황 조회
@@ -31,12 +45,19 @@ public class CommuteController {
      * 출근 처리
      * 결과: 정상출근(ON_TIME) 또는 지각(LATE) 판정
      */
+
     @PostMapping("/checkin")
-    public ResponseEntity<TodayAttResDto> checkIn(
-            @AuthenticationPrincipal SecurityUser user) {
+    public ResponseEntity<?> checkIn(@AuthenticationPrincipal SecurityUser user) {
+        // 1. user가 null인지 먼저 확인 (NPE 방지)
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 정보가 없습니다.");
+        }
+
+        // 2. 이후 로직 진행
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(commuteService.checkIn(user.getCompanyId(), user.getEmployeeId()));
     }
+
 
     /**
      * 퇴근 처리

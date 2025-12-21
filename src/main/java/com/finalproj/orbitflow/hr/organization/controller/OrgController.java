@@ -4,6 +4,7 @@ import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUtils;
 import com.finalproj.orbitflow.hr.organization.dto.OrgCreateReqDto;
 import com.finalproj.orbitflow.hr.organization.dto.OrgOrderUpdateReqDto;
+import com.finalproj.orbitflow.hr.organization.dto.OrgResDto;
 import com.finalproj.orbitflow.hr.organization.dto.OrgUpdateReqDto;
 import com.finalproj.orbitflow.hr.organization.service.OrgService;
 import jakarta.validation.Valid;
@@ -12,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 조직 관리 컨트롤러 (관리자 전용)
@@ -37,15 +40,15 @@ public class OrgController {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(new ResponseDto(
+                .body(new ResponseDto<>(
                         HttpStatus.CREATED,
-                        "조직 생성 완료.",
+                        "조직 생성 완료",
                         id
                 ));
     }
 
     @GetMapping
-    public ResponseEntity<ResponseDto> list() {
+    public ResponseEntity<ResponseDto<List<OrgResDto>>> list() {
         Long companyId = SecurityUtils.getCompanyId();
 
         return ResponseEntity.ok(
@@ -58,7 +61,7 @@ public class OrgController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseDto> update(
+    public ResponseEntity<ResponseDto<Void>> update(
             @PathVariable Long id,
             @RequestBody @Valid OrgUpdateReqDto request
     ) {
@@ -69,7 +72,7 @@ public class OrgController {
     }
 
     @PutMapping("/order")
-    public ResponseEntity<ResponseDto> updateOrder(
+    public ResponseEntity<ResponseDto<Void>> updateOrder(
             @RequestBody @Valid OrgOrderUpdateReqDto request
     ) {
         Long companyId = SecurityUtils.getCompanyId();
@@ -80,10 +83,10 @@ public class OrgController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseDto> deactivate(@PathVariable Long id) {
+    public ResponseEntity<ResponseDto<Void>> deactivate(@PathVariable Long id) {
         Long companyId = SecurityUtils.getCompanyId();
         orgService.deactivate(companyId, id);
         return ResponseEntity.ok(
-                new ResponseDto(HttpStatus.OK, "조직 비활성화 완료", null)
-        );    }
+        new ResponseDto<>(HttpStatus.OK, "조직 비활성화 완료", null));
+    }
 }

@@ -43,6 +43,10 @@ public class CompanyService {
     public Long signup(CompanySignupReqDto request) {
 
         validateBusinessNumber(request.getBusinessNumber());
+        // 대표 관리자 이메일 중복 체크
+        if (employeeRepository.existsByEmail(request.getAdminEmail())) {
+            throw new BusinessException("이미 사용 중인 이메일입니다.");
+        }
 
         // 회사 생성
         Company company = Company.create(
@@ -107,11 +111,6 @@ public class CompanyService {
                 )
         );
 
-        // 대표 관리자 이메일 중복 체크
-        if (employeeRepository.existsByEmail(request.getAdminEmail())) {
-            throw new BusinessException("이미 사용 중인 이메일입니다.");
-        }
-
         // 대표 관리자 생성
         Employee admin = Employee.createAdmin(
                 company,
@@ -136,14 +135,26 @@ public class CompanyService {
         }
 
         // 외부 API 상태 조회
-        String status = bsnClient.getBusinessStatus(businessNumber);
-
-        // 운영 모드 → 계속사업자만 허용
-        if (strictValidation && !"계속사업자".equals(status)) {
-            throw new BusinessException("계속사업자만 가입할 수 있습니다.");
+        String status;
+        try {
+            status = bsnClient.getBusinessStatus(businessNumber);
+        } catch (Exception e) {
+            throw new BusinessException("사업자번호 외부 검증에 실패했습니다.");
         }
 
-        // 시연 모드(strict=false)는 통과
+        // strict 정책 분기
+        if (strictValidation) { // 운영
+            if (!"계속사업자".equals(status)) {
+                throw new BusinessException("계속사업자만 가입할 수 있습니다.");
+            }
+        } else { // 개발/시연
+            if (!"계속사업자".equals(status)
+                    && !"휴업자".equals(status)
+                    && !"폐업자".equals(status)
+            ) {
+                throw new BusinessException("유효하지 않은 사업자번호입니다.");
+            }
+        }
     }
 
 

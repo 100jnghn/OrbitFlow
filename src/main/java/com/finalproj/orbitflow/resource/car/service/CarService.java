@@ -82,6 +82,9 @@ public class CarService {
     @Transactional
     public void updateCar(Long carId, CarReqDto dto) {
 
+        log.info("수정 차 번호 " + carId);
+        log.info("차 상태값 : " + dto.getStatusId());
+
         Car car = findCarById(carId);
         ResourceStatus status = findResourceStatus(dto.getStatusId());
 

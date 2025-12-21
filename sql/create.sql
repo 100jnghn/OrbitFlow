@@ -27,6 +27,9 @@ CREATE TABLE org_category
     updated_at  TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
 
+    CONSTRAINT uk_org_category_company_name
+        UNIQUE (company_id, name),
+
     CONSTRAINT uk_org_category_company_order -- orderIndex 유니크 제약 추가
         UNIQUE (company_id, order_index),
 
@@ -51,7 +54,12 @@ CREATE TABLE organization
     CONSTRAINT fk_org_category
         FOREIGN KEY (category_id) REFERENCES org_category (id),
     CONSTRAINT fk_org_parent
-        FOREIGN KEY (parent_org_id) REFERENCES organization (id)
+        FOREIGN KEY (parent_org_id) REFERENCES organization (id),
+
+    CONSTRAINT uk_org_sibling_order -- 형제 단위 정렬 충돌 방지
+        UNIQUE (company_id, parent_org_id, order_index),
+    CONSTRAINT uk_org_sibling_name -- 형제 단위 이름 중복 방지
+        UNIQUE (company_id, parent_org_id, name)
 ) ENGINE = InnoDB;
 
 CREATE TABLE hr_rank
@@ -65,6 +73,7 @@ CREATE TABLE hr_rank
     created_at        TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT uk_hr_rank_company_name UNIQUE (company_id, name),
     CONSTRAINT fk_hr_rank_company
         FOREIGN KEY (company_id) REFERENCES company (id),
     CONSTRAINT fk_hr_rank_parent
