@@ -3,8 +3,8 @@ package com.finalproj.orbitflow.attendance.history.service;
 import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
 import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
 import com.finalproj.orbitflow.attendance.commute.repository.AttendanceRepository;
-import com.finalproj.orbitflow.attendance.history.dto.MonthlyAttHistoryResDto;
 import com.finalproj.orbitflow.attendance.history.dto.DailyAttRecordResDto;
+import com.finalproj.orbitflow.attendance.history.dto.MonthlyAttHistoryResDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,50 +22,74 @@ public class AttendanceHistoryService {
     private final AttendanceRepository attendanceRepository;
 
     public MonthlyAttHistoryResDto getMonthlyHistory(Long employeeId, int year, int month) {
-        // 1. 조회 기간 설정
+        // 1. 해당 월의 시작일과 마지막일 설정
         LocalDate startDate = LocalDate.of(year, month, 1);
-        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+        LocalDate lastDayOfMonth = startDate.withDayOfMonth(startDate.lengthOfMonth());
 
-        // 2. 데이터 조회
+        // 미래의 날짜까지 결근으로 나오지 않게 오늘까지만 데이터를 생성 (필요 시 lastDayOfMonth로 변경 가능)
+        LocalDate today = LocalDate.now();
+        LocalDate endLoopDate = (today.isBefore(lastDayOfMonth) && today.getMonthValue() == month) ? today : lastDayOfMonth;
+
+        // 2. DB에서 해당 월의 모든 기록을 가져와 Map으로 변환 (날짜 찾기 최적화)
         List<Attendance> records = attendanceRepository.findByEmployeeIdAndWorkDateBetweenOrderByWorkDateAsc(
-                employeeId, startDate, endDate);
+                employeeId, startDate, lastDayOfMonth);
+        Map<LocalDate, Attendance> attendanceMap = records.stream()
+                .collect(Collectors.toMap(Attendance::getWorkDate, a -> a));
 
-        // 3. 통계 및 리스트 변환
         long totalMinutes = 0;
         long lateCount = 0;
-
+        long absentCount = 0;
         List<DailyAttRecordResDto> dailyList = new ArrayList<>();
 
-        for (Attendance a : records) {
-            // 지각 횟수 카운트
-            if (a.getStatus() == AttendanceStatus.LATE) lateCount++;
+        // 3. 1일부터 말일까지 루프를 돌며 데이터 생성
+        for (LocalDate date = startDate; !date.isAfter(endLoopDate); date = date.plusDays(1)) {
+            Attendance a = attendanceMap.get(date);
+            DayOfWeek dayOfWeek = date.getDayOfWeek();
+            boolean isWeekend = (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY);
 
-            // 근무 시간 계산 (초 단위까지 정밀 계산 후 포맷팅)
-            long diffMin = 0;
-            if (a.getCommuteAt() != null && a.getLeaveAt() != null) {
-                diffMin = Duration.between(a.getCommuteAt(), a.getLeaveAt()).toMinutes();
-                totalMinutes += diffMin;
+            DailyAttRecordResDto.DailyAttRecordResDtoBuilder builder = DailyAttRecordResDto.builder()
+                    .date(date.format(DateTimeFormatter.ofPattern("MM월 dd일 (E)", Locale.KOREAN)));
+
+            if (a != null) {
+                // [Case 1] DB에 출퇴근 기록이 있는 경우
+                if (a.getStatus() == AttendanceStatus.LATE) lateCount++;
+
+                long diffMin = 0;
+                if (a.getCommuteAt() != null && a.getLeaveAt() != null) {
+                    diffMin = Duration.between(a.getCommuteAt(), a.getLeaveAt()).toMinutes();
+                    totalMinutes += diffMin;
+                }
+
+                builder.commuteAt(formatTime(a.getCommuteAt()))
+                        .leaveAt(formatTime(a.getLeaveAt()))
+                        .workingTime(formatDuration(diffMin))
+                        .statusName(a.getStatus().getDescription()) // Enum에서 "정상출근", "지각" 등을 가져옴
+                        .statusCode(a.getStatus().name());
+            } else {
+                // [Case 2] DB에 기록이 없는 경우
+                if (isWeekend) {
+                    // 주말인 경우
+                    builder.commuteAt("-").leaveAt("-").workingTime("-")
+                            .statusName("주말").statusCode("WEEKEND");
+                } else {
+                    // 평일인데 기록이 없는 경우 -> 결근
+                    absentCount++;
+                    builder.commuteAt("-").leaveAt("-").workingTime("0h 00m")
+                            .statusName("결근").statusCode("ABSENT");
+                }
             }
-
-            dailyList.add(DailyAttRecordResDto.builder()
-                    .date(a.getWorkDate().format(DateTimeFormatter.ofPattern("MM월 dd일 (E)", Locale.KOREAN)))
-                    .commuteAt(formatTime(a.getCommuteAt()))
-                    .leaveAt(formatTime(a.getLeaveAt()))
-                    .workingTime(formatDuration(diffMin)) // "8h 07m" 형식
-                    .statusName(a.getStatus().getDescription())
-                    .statusCode(a.getStatus().name())
-                    .build());
+            dailyList.add(builder.build());
         }
 
         return MonthlyAttHistoryResDto.builder()
                 .totalWorkHours(totalMinutes / 60)
                 .lateCount(lateCount)
-                .leaveAbsentCount(0) // 추후 휴가 테이블 연동 시 구현
+                .leaveAbsentCount(absentCount)
                 .dailyRecords(dailyList)
                 .build();
     }
 
-    private String formatTime(java.time.LocalDateTime dt) {
+    private String formatTime(LocalDateTime dt) {
         return (dt != null) ? dt.format(DateTimeFormatter.ofPattern("HH:mm")) : "-";
     }
 

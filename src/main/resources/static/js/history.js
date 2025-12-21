@@ -57,33 +57,41 @@ function updateSummaryUI(data) {
     document.querySelector('.value-orange').textContent = data.lateCount || 0;
     document.querySelector('.value-red').textContent = data.leaveAbsentCount || 0;
 }
-
 function renderHistoryTable(records) {
     const tbody = document.querySelector('.history-table tbody');
     if (!tbody) return;
 
     if (!records || records.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 50px;">해당 월의 출퇴근 기록이 없습니다.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 50px;">기록이 없습니다.</td></tr>`;
         return;
     }
 
     tbody.innerHTML = records.map(record => {
-        // DailyAttRecordResDto의 statusCode 필드로 스타일 조건 처리
         const isLate = record.statusCode === 'LATE';
-        const rowClass = isLate ? 'highlight-late' : '';
-        const timeClass = isLate ? 'text-orange' : '';
+        const isAbsent = record.statusCode === 'ABSENT';
+        const isWeekend = record.statusCode === 'WEEKEND';
 
-        // 퇴근 기록이 없는 경우 처리 (Service에서 "-" 또는 "미기록"으로 줌)
-        const isNoLeave = record.leaveAt === '-' || record.leaveAt === '미기록';
-        const leaveTimeClass = isNoLeave ? 'text-red' : '';
-        const workTimeClass = record.workingTime.includes('0h 00m') ? 'text-blue' : 'work-time-text';
+        let rowClass = '';
+        let statusBadgeClass = 'badge-normal';
+
+        if (isAbsent) {
+            rowClass = 'row-absent';
+            statusBadgeClass = 'badge-absent';
+        } else if (isLate) {
+            rowClass = 'row-late';
+            statusBadgeClass = 'badge-late';
+        } else if (isWeekend) {
+            rowClass = 'row-weekend';
+            statusBadgeClass = 'badge-weekend';
+        }
 
         return `
             <tr class="${rowClass}">
                 <td>${record.date}</td>
-                <td class="${timeClass}">${record.commuteAt}</td>
-                <td class="${leaveTimeClass}">${record.leaveAt}</td>
-                <td class="${workTimeClass}">${record.workingTime}</td>
+                <td class="${isLate ? 'text-orange' : ''}">${record.commuteAt}</td>
+                <td>${record.leaveAt}</td>
+                <td>${record.workingTime}</td>
+                <td><span class="status-badge ${statusBadgeClass}">${record.statusName}</span></td>
             </tr>
         `;
     }).join('');
