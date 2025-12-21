@@ -1,0 +1,181 @@
+/* attendance-history.css */
+
+.history-container {
+    padding: 24px 40px;
+    background-color: #f8f9fc;
+    min-height: 100vh;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    color: #333;
+}
+
+/* 월 선택 (2번 영역) */
+.search-section {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+}
+
+.form-select-sm {
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fff;
+}
+
+/* 요약 카드 (3번 영역) */
+.summary-container {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.summary-cards {
+    display: flex;
+    gap: 20px;
+}
+
+.card {
+    flex: 1;
+    padding: 20px;
+    border-right: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.card:last-child {
+    border-right: none;
+}
+
+.card-label {
+    font-size: 13px;
+    color: #888;
+}
+
+.card-value-group {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+}
+
+.value-blue {
+    font-size: 28px;
+    font-weight: 700;
+    color: #5687ef;
+}
+
+.value-orange {
+    font-size: 28px;
+    font-weight: 700;
+    color: #f6c23e;
+}
+
+.value-red {
+    font-size: 28px;
+    font-weight: 700;
+    color: #e74a3b;
+}
+
+.unit {
+    font-size: 14px;
+    color: #555;
+}
+
+/* 상세 기록 테이블 (4, 5번 영역) */
+.detail-container {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.history-table th {
+    background: #f4f7fa;
+    padding: 12px;
+    text-align: left;
+    color: #666;
+    font-weight: 500;
+    border-bottom: 1px solid #eee;
+}
+
+.history-table td {
+    padding: 15px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    color: #333;
+}
+
+/* 지각 데이터 강조 */
+.highlight-late {
+    background-color: #fffdf0;
+}
+
+/* 상태별 텍스트 색상 */
+.text-orange {
+    color: #f6c23e;
+    font-weight: 600;
+}
+
+.text-red {
+    color: #e74a3b;
+    font-weight: 600;
+}
+
+.text-blue {
+    color: #5687ef;
+}
+
+.work-time-text {
+    color: #28a745;
+    font-weight: 500;
+}
+
+/* 페이지네이션 (6번 영역) */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 30px;
+}
+
+.page-btn {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.page-btn.active {
+    background: #5687ef;
+    color: #fff;
+    border-color: #5687ef;
+}
