@@ -14,10 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * Please explain the class!!!
@@ -37,21 +34,17 @@ public class RankService {
 
     public List<RankResDto> getRanks(Long companyId, String keyword, boolean includeInactive) {
 
-        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+        boolean hasKeyword = keyword != null && !keyword.isBlank();
         List<HrRank> ranks;
 
         if (hasKeyword) {
-            if (includeInactive) {
-                ranks = rankRepository.findByCompanyIdAndNameContainingIgnoreCaseOrderByOrderIndexAsc(companyId, keyword.trim());
-            } else {
-                ranks = rankRepository.findByCompanyIdAndIsActiveTrueAndNameContainingIgnoreCaseOrderByOrderIndexAsc(companyId, keyword.trim());
-            }
+            ranks = includeInactive
+                    ? rankRepository.findByCompanyIdAndNameContainingIgnoreCaseOrderByOrderIndexAsc(companyId, keyword.trim())
+                    : rankRepository.findByCompanyIdAndIsActiveTrueAndNameContainingIgnoreCaseOrderByOrderIndexAsc(companyId, keyword.trim());
         } else {
-            if (includeInactive) {
-                ranks = rankRepository.findByCompanyIdOrderByOrderIndexAsc(companyId);
-            } else {
-                ranks = rankRepository.findByCompanyIdAndIsActiveTrueOrderByOrderIndexAsc(companyId);
-            }
+            ranks = includeInactive
+                    ? rankRepository.findByCompanyIdOrderByOrderIndexAsc(companyId)
+                    : rankRepository.findByCompanyIdAndIsActiveTrueOrderByOrderIndexAsc(companyId);
         }
 
         // employeeCount 포함
@@ -64,16 +57,14 @@ public class RankService {
                         .orderIndex(rank.getOrderIndex())
                         .isActive(rank.getIsActive())
                         .employeeCount(employeeRepository.countByCompanyIdAndRank_Id(companyId, rank.getId()))
-                        .build()
-                )
-                .collect(Collectors.toList());
+                        .build())
+                .toList();
     }
 
     @Transactional
-    public Long createRank(Long companyId, RankCreateReqDto request) {
+    public Long createRank(Long companyId, RankCreateReqDto req) {
 
-        String name = normalizeName(request.getName());
-        validateNameNotEmpty(name);
+        String name = req.getName().trim();
 
         if (rankRepository.existsByCompanyIdAndName(companyId, name)) {
             throw new BusinessException("이미 존재하는 직급명입니다.");
@@ -83,105 +74,108 @@ public class RankService {
                 .orElseThrow(() -> new BusinessException("회사를 찾을 수 없습니다."));
 
         HrRank parent = null;
-        if (request.getParentRankId() != null) {
-            parent = getRankInCompanyOrThrow(companyId, request.getParentRankId());
-            if (!Boolean.TRUE.equals(parent.getIsActive())) {
+        if (req.getParentRankId() != null) {
+            parent = getRank(companyId, req.getParentRankId());
+            if (!parent.getIsActive()) {
                 throw new BusinessException("비활성 직급은 상위 직급으로 지정할 수 없습니다.");
             }
         }
 
-        Integer nextOrderIndex = calcNextOrderIndex(companyId);
-
-        HrRank saved = rankRepository.save(HrRank.create(company, parent, name, nextOrderIndex));
+        Integer orderIndex = calcNextOrder(companyId);
+        HrRank saved = rankRepository.save(HrRank.create(company, parent, name, orderIndex));
         return saved.getId();
     }
 
     @Transactional
-    public void updateRank(Long companyId, Long rankId, RankUpdateReqDto request) {
+    public void updateRank(Long companyId, Long rankId, RankUpdateReqDto req) {
 
-        HrRank rank = getRankInCompanyOrThrow(companyId, rankId);
+        HrRank rank = getRank(companyId, rankId);
 
-        String name = normalizeName(request.getName());
-        validateNameNotEmpty(name);
-
+        String name = req.getName().trim();
         if (rankRepository.existsByCompanyIdAndNameAndIdNot(companyId, name, rankId)) {
             throw new BusinessException("이미 존재하는 직급명입니다.");
         }
 
         HrRank parent = null;
-        if (request.getParentRankId() != null) {
-            if (Objects.equals(request.getParentRankId(), rankId)) {
+        if (req.getParentRankId() != null) {
+            if (req.getParentRankId().equals(rankId)) {
                 throw new BusinessException("자기 자신을 상위 직급으로 설정할 수 없습니다.");
             }
-            parent = getRankInCompanyOrThrow(companyId, request.getParentRankId());
-
-            if (!Boolean.TRUE.equals(parent.getIsActive())) {
+            parent = getRank(companyId, req.getParentRankId());
+            if (!parent.getIsActive()) {
                 throw new BusinessException("비활성 직급은 상위 직급으로 지정할 수 없습니다.");
             }
         }
 
-        // 비활성화 정책: 부여 인원 1명 이상이면 비활성 불가
-        if (Boolean.FALSE.equals(request.getIsActive())) {
-            long employeeCount = employeeRepository.countByCompanyIdAndRank_Id(companyId, rankId);
-            if (employeeCount > 0) {
-                throw new BusinessException("부여 인원이 있는 직급은 비활성화할 수 없습니다. (사용자에서 변경 후 가능)");
+        if (Boolean.FALSE.equals(req.getIsActive())) {
+            long count = employeeRepository.countByCompanyIdAndRank_Id(companyId, rankId);
+            if (count > 0) {
+                throw new BusinessException("부여 인원이 있는 직급은 비활성화할 수 없습니다.");
             }
         }
 
-        Boolean isActive = request.getIsActive() != null
-                ? request.getIsActive()
-                : rank.getIsActive();
-
-        rank.update(name, parent, isActive);
+        rank.update(name, parent,
+                req.getIsActive() != null ? req.getIsActive() : rank.getIsActive());
     }
+
 
     @Transactional
-    public void updateOrder(Long companyId, List<RankOrderUpdateReqDto> requests) {
+    public void updateOrder(Long companyId, List<RankOrderUpdateReqDto.OrderItem> orders) {
 
-        if (requests == null || requests.isEmpty()) {
-            throw new BusinessException("변경할 순서 정보가 없습니다.");
+        if (orders == null || orders.isEmpty()) {
+            throw new BusinessException("순서 정보가 비어 있습니다.");
         }
 
-        // 유효성: orderIndex 중복/누락은 프론트에서 보통 방지하지만, 최소 검증
-        requests.sort(Comparator.comparing(RankOrderUpdateReqDto::getOrderIndex));
+        long distinctCount = orders.stream()
+                .map(RankOrderUpdateReqDto.OrderItem::getId)
+                .distinct()
+                .count();
 
-        for (RankOrderUpdateReqDto req : requests) {
-            HrRank rank = getRankInCompanyOrThrow(companyId, req.getRankId());
-            rank.changeOrderIndex(req.getOrderIndex());
+        if (distinctCount != orders.size()) {
+            throw new BusinessException("중복된 직급 ID가 존재합니다.");
+        }
+
+        long activeCount = rankRepository.countByCompanyIdAndIsActiveTrue(companyId);
+        if (activeCount != orders.size()) {
+            throw new BusinessException("정렬 대상 개수가 일치하지 않습니다.");
+        }
+
+        // 1단계: 임시 orderIndex
+        int temp = -1;
+        for (var item : orders) {
+            HrRank rank = getRank(companyId, item.getId());
+            if (!rank.getIsActive()) {
+                throw new BusinessException("비활성 직급은 순서 변경 대상이 될 수 없습니다.");
+            }
+            rank.changeOrderIndex(temp--);
+        }
+
+        rankRepository.flush();
+
+        // 2단계: 최종 orderIndex
+        int index = 1;
+        for (var item : orders) {
+            HrRank rank = getRank(companyId, item.getId());
+            rank.changeOrderIndex(index++);
         }
     }
 
-    private HrRank getRankInCompanyOrThrow(Long companyId, Long rankId) {
+
+
+    private HrRank getRank(Long companyId, Long rankId) {
         HrRank rank = rankRepository.findById(rankId)
                 .orElseThrow(() -> new BusinessException("직급을 찾을 수 없습니다."));
-
-        if (!Objects.equals(rank.getCompany().getId(), companyId)) {
+        if (!rank.getCompany().getId().equals(companyId)) {
             throw new BusinessException("해당 회사의 직급이 아닙니다.");
         }
         return rank;
     }
 
-    private Integer calcNextOrderIndex(Long companyId) {
-        List<HrRank> ranks = rankRepository.findByCompanyIdOrderByOrderIndexAsc(companyId);
-        if (ranks.isEmpty()) return 1;
-        int max = ranks.stream()
+    private Integer calcNextOrder(Long companyId) {
+        return rankRepository.findByCompanyIdOrderByOrderIndexAsc(companyId)
+                .stream()
                 .map(HrRank::getOrderIndex)
-                .filter(Objects::nonNull)
                 .max(Integer::compareTo)
-                .orElse(0);
-        return max + 1;
-    }
-
-    private String normalizeName(String raw) {
-        return raw == null ? null : raw.trim();
-    }
-
-    private void validateNameNotEmpty(String name) {
-        if (name == null || name.isBlank()) {
-            throw new BusinessException("직급명은 필수입니다.");
-        }
-        if (name.length() > 50) {
-            throw new BusinessException("직급명은 50자 이하여야 합니다.");
-        }
+                .orElse(0) + 1;
     }
 }
