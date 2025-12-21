@@ -44,10 +44,26 @@ async function loadBoardCategories() {
         const accessibleData = await accessibleResponse.json();
         const orgData = await orgResponse.json();
 
-        accessibleBoards = accessibleData.data || [];
-        organizationBoards = orgData.data || [];
+        console.log('Accessible boards response:', accessibleData);
+        console.log('Organization boards response:', orgData);
+
+        // ResponseDto 구조에서 data 추출
+        accessibleBoards = accessibleData.data || (Array.isArray(accessibleData) ? accessibleData : []);
+        organizationBoards = orgData.data || (Array.isArray(orgData) ? orgData : []);
+
+        console.log('Loaded accessible boards:', accessibleBoards.length);
+        console.log('Loaded organization boards:', organizationBoards.length);
 
         renderSidebar();
+        
+        // 첫 번째 게시판 자동 선택
+        if (accessibleBoards.length > 0) {
+            const firstBoard = accessibleBoards[0];
+            selectBoard(firstBoard.id, firstBoard.boardName || firstBoard.name || '게시판');
+        } else if (organizationBoards.length > 0) {
+            const firstBoard = organizationBoards[0];
+            selectBoard(firstBoard.id, firstBoard.boardName || firstBoard.name || '게시판');
+        }
     } catch (error) {
         console.error('Error loading board categories:', error);
         if (error.message !== 'SESSION_EXPIRED') {
@@ -59,22 +75,35 @@ async function loadBoardCategories() {
 // 사이드바 렌더링
 function renderSidebar() {
     const sidebar = document.getElementById('boardSidebar');
-    if (!sidebar) return;
+    if (!sidebar) {
+        console.error('Sidebar element not found');
+        return;
+    }
 
     sidebar.innerHTML = '';
 
+    console.log('Rendering sidebar with', accessibleBoards.length, 'accessible boards and', organizationBoards.length, 'organization boards');
+
     // 일반 게시판 (권한이 있는 게시판)
     if (accessibleBoards.length > 0) {
-        accessibleBoards.forEach(board => {
-            const li = document.createElement('li');
-            li.className = 'sidebar-menu-item';
-            li.innerHTML = `
-                <a href="#" class="board-link" data-category-id="${board.id}" data-board-name="${escapeHTML(board.boardName)}">
-                    ${escapeHTML(board.boardName)}
-                </a>
-            `;
-            sidebar.appendChild(li);
-        });
+    accessibleBoards.forEach(board => {
+        const boardName = board.boardName || board.name || '게시판';
+        const boardId = board.id;
+        const isSelected = boardId === currentCategoryId;
+        
+        console.log('Adding accessible board:', boardName, boardId);
+        
+        const li = document.createElement('li');
+        li.className = 'sidebar-menu-item' + (isSelected ? ' selected' : '');
+        li.innerHTML = `
+            <a href="#" class="board-link${isSelected ? ' active' : ''}" data-category-id="${boardId}" data-board-name="${escapeHTML(boardName)}">
+                ${escapeHTML(boardName)}
+            </a>
+        `;
+        sidebar.appendChild(li);
+    });
+    } else {
+        console.warn('No accessible boards found');
     }
 
     // 조직 게시판
@@ -85,15 +114,23 @@ function renderSidebar() {
         sidebar.appendChild(orgHeader);
 
         organizationBoards.forEach(board => {
+            const boardName = board.boardName || board.name || '게시판';
+            const boardId = board.id;
+            const isSelected = boardId === currentCategoryId;
+            
+            console.log('Adding organization board:', boardName, boardId);
+            
             const li = document.createElement('li');
-            li.className = 'sidebar-menu-item';
+            li.className = 'sidebar-menu-item' + (isSelected ? ' selected' : '');
             li.innerHTML = `
-                <a href="#" class="board-link" data-category-id="${board.id}" data-board-name="${escapeHTML(board.boardName)}">
-                    - ${escapeHTML(board.boardName)}
+                <a href="#" class="board-link${isSelected ? ' active' : ''}" data-category-id="${boardId}" data-board-name="${escapeHTML(boardName)}">
+                    - ${escapeHTML(boardName)}
                 </a>
             `;
             sidebar.appendChild(li);
         });
+    } else {
+        console.warn('No organization boards found');
     }
 
     // 이벤트 리스너 추가
@@ -102,32 +139,49 @@ function renderSidebar() {
             e.preventDefault();
             const categoryId = parseInt(this.getAttribute('data-category-id'));
             const boardName = this.getAttribute('data-board-name');
+            console.log('Board selected:', categoryId, boardName);
             selectBoard(categoryId, boardName);
         });
     });
+    
+    console.log('Sidebar rendered with', document.querySelectorAll('.board-link').length, 'board links');
 }
 
 // 게시판 선택
 function selectBoard(categoryId, boardName) {
+    if (!categoryId) {
+        console.error('Invalid categoryId:', categoryId);
+        return;
+    }
+    
     currentCategoryId = categoryId;
     currentPage = 0;
 
+    console.log('Selecting board:', categoryId, boardName);
+
     // 사이드바 활성화 상태 업데이트
     document.querySelectorAll('.board-link').forEach(link => {
-        link.classList.remove('active');
-        if (parseInt(link.getAttribute('data-category-id')) === categoryId) {
-            link.classList.add('active');
-        }
+        const linkCategoryId = parseInt(link.getAttribute('data-category-id'));
+        const isSelected = linkCategoryId === categoryId;
+        
+        link.classList.toggle('active', isSelected);
+        link.parentElement.classList.toggle('selected', isSelected);
     });
 
     // 게시판 제목 업데이트
-    document.getElementById('boardTitle').textContent = boardName;
+    const titleElement = document.getElementById('boardTitle');
+    if (titleElement) {
+        titleElement.textContent = boardName || '게시판';
+    }
 
     // 글쓰기 버튼 표시
-    document.getElementById('writeBtn').style.display = 'block';
+    const writeBtn = document.getElementById('writeBtn');
+    if (writeBtn) {
+        writeBtn.style.display = 'block';
+    }
 
     // 게시글 목록 로드
-    loadBoardList();
+    loadBoardList(0);
 }
 
 // 게시글 목록 로드
@@ -179,11 +233,24 @@ async function loadBoardList(page = 0) {
         }
 
         const result = await response.json();
-        const boardList = result.data?.content || [];
-        totalPages = result.data?.totalPages || 1;
+        console.log('Board list response:', result);
+        
+        // ResponseDto 구조에서 data 추출
+        let boardData = result.data;
+        if (!boardData && result.content) {
+            boardData = result;
+        }
+        
+        // Page 객체에서 content 추출
+        const boardList = boardData?.content || boardData?.elements || (Array.isArray(boardData) ? boardData : []);
+        totalPages = boardData?.totalPages || boardData?.totalPageCount || 1;
+        currentPage = boardData?.number !== undefined ? boardData.number : page;
+
+        console.log('Loaded board list:', boardList.length, 'items');
+        console.log('Total pages:', totalPages, 'Current page:', currentPage);
 
         renderBoardTable(boardList);
-        renderPagination(page);
+        renderPagination(currentPage);
     } catch (error) {
         console.error('Error loading board list:', error);
         if (error.message !== 'SESSION_EXPIRED') {
@@ -205,18 +272,23 @@ function renderBoardTable(boards) {
     boards.forEach((board, index) => {
         const row = document.createElement('tr');
         const rowNumber = currentPage * 10 + index + 1;
-        const createdAt = formatDateTime(board.createdAt);
+        
+        // 필드명 매핑: boardTitle -> title, writer.name -> authorName
+        const title = board.boardTitle || board.title || '';
+        const authorName = board.writer?.name || board.authorName || '';
+        const createdAt = formatDateTime(board.createdAt || board.created_at);
+        const viewCount = board.viewCount || board.view_count || 0;
 
         row.innerHTML = `
             <td>${rowNumber}</td>
             <td>
                 <a href="#" class="board-title-link" onclick="viewBoard(${board.id}); return false;">
-                    ${escapeHTML(board.title)}
+                    ${escapeHTML(title)}
                 </a>
             </td>
-            <td>${escapeHTML(board.authorName || '')}</td>
+            <td>${escapeHTML(authorName)}</td>
             <td>${createdAt}</td>
-            <td>${board.viewCount || 0}</td>
+            <td>${viewCount}</td>
         `;
         tbody.appendChild(row);
     });
@@ -361,8 +433,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 게시글 상세 보기
 function viewBoard(boardId) {
-    // TODO: 게시글 상세 페이지로 이동
-    console.log('View board:', boardId);
+    if (!boardId) {
+        alert('게시글 ID가 없습니다.');
+        return;
+    }
+    // 게시글 상세 페이지로 이동
+    window.location.href = `/view/board/detail?boardId=${boardId}`;
 }
 
 // 글쓰기
@@ -371,8 +447,8 @@ function writePost() {
         alert('게시판을 선택해주세요.');
         return;
     }
-    // TODO: 글쓰기 페이지로 이동
-    console.log('Write post for category:', currentCategoryId);
+    // 글쓰기 페이지로 이동
+    window.location.href = `/view/board/write?categoryId=${currentCategoryId}`;
 }
 
 // 날짜 시간 포맷

@@ -25,4 +25,15 @@ public class BoardReqDto {
         // 첨부파일 ID (없으면 null)
         private Long fileId;
     }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    public static class Update {
+        @NotBlank
+        private String boardTitle;
+
+        @NotBlank
+        private String boardContent;
+    }
 }
