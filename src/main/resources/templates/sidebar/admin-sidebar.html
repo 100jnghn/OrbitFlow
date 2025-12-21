@@ -28,7 +28,7 @@
         <a th:href="@{/view/resource/admin/items}" class="sidebar-link">기타 자원 관리</a>
     </li>
     <li th:classappend="${currentMenu} == 'board' ? ' selected' : ''">
-        <a th:href="@{/view/admin/board}" class="sidebar-link">게시판 관리</a>
+        <a th:href="@{/admin/board}" class="sidebar-link">게시판 관리</a>
     </li>
     <li th:classappend="${currentMenu} == 'organization' ? ' selected' : ''">
         <a th:href="@{/admin/organization}" class="sidebar-link">인사 관리</a>
