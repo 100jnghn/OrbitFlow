@@ -947,18 +947,33 @@ VALUES (1, 2, '10:00:00', '19:00:00', 60, '개인 사유로 인한 유연 근무
 
 
 -- 3. attendance (근태 기록)
-INSERT INTO attendance (company_id, employee_id, work_date, commute_at, leave_at, status, applied_rule_id, is_corrected,
-                        correction_reason)
-VALUES (1, 2, CURDATE() - INTERVAL 2 DAY, CONCAT(CURDATE() - INTERVAL 2 DAY, ' 10:05:00'),
-        CONCAT(CURDATE() - INTERVAL 2 DAY, ' 19:00:00'), '지각', 1, FALSE, NULL),
-       (1, 3, CURDATE() - INTERVAL 2 DAY, CONCAT(CURDATE() - INTERVAL 2 DAY, ' 09:00:00'),
-        CONCAT(CURDATE() - INTERVAL 2 DAY, ' 18:00:00'), '정상근무', 1, FALSE, NULL),
-       (1, 2, CURDATE() - INTERVAL 1 DAY, CONCAT(CURDATE() - INTERVAL 1 DAY, ' 09:00:00'),
-        CONCAT(CURDATE() - INTERVAL 1 DAY, ' 18:00:00'), '정상근무', 1, FALSE, NULL),
-       (1, 3, CURDATE() - INTERVAL 1 DAY, CONCAT(CURDATE() - INTERVAL 1 DAY, ' 09:00:00'), NULL, '근무중', 1, FALSE, NULL),
-       (1, 2, CURDATE(), CONCAT(CURDATE(), ' 09:05:00'), CONCAT(CURDATE(), ' 18:00:00'), '지각', 1, FALSE, NULL),
-       (1, 3, CURDATE(), CONCAT(CURDATE(), ' 09:00:00'), CONCAT(CURDATE(), ' 17:50:00'), '조퇴', 1, TRUE, '퇴근 누락 정정');
+-- 기존 테스트 데이터와 충돌을 방지하려면 아래 주석을 해제하고 실행하세요.
+-- DELETE FROM attendances WHERE employee_id = 3 AND work_date BETWEEN '2025-12-01' AND '2025-12-20';
 
+INSERT INTO attendance
+(company_id, employee_id, work_date, commute_at, leave_at, status, is_corrected)
+VALUES
+    (1, 3, '2025-12-01', '2025-12-01 08:52:00', '2025-12-01 18:05:00', 'ON_TIME', 0),
+    (1, 3, '2025-12-02', '2025-12-02 09:15:00', '2025-12-02 18:10:00', 'LATE', 0),
+    (1, 3, '2025-12-03', '2025-12-03 08:45:00', '2025-12-03 18:00:00', 'ON_TIME', 0),
+    (1, 3, '2025-12-04', NULL, NULL, 'ABSENT', 0), -- 결근
+    (1, 3, '2025-12-05', '2025-12-05 08:58:00', '2025-12-05 18:30:00', 'ON_TIME', 0),
+    (1, 3, '2025-12-06', NULL, NULL, 'BEFORE_WORK', 0), -- 주말/출근 전
+    (1, 3, '2025-12-07', NULL, NULL, 'BEFORE_WORK', 0),
+    (1, 3, '2025-12-08', '2025-12-08 09:20:00', '2025-12-08 18:00:00', 'LATE', 0),
+    (1, 3, '2025-12-09', '2025-12-09 08:50:00', '2025-12-09 18:05:00', 'ON_TIME', 0),
+    (1, 3, '2025-12-10', '2025-12-10 08:59:00', '2025-12-10 18:15:00', 'ON_TIME', 0),
+-- 2페이지 데이터 (10개 단위 페이징 테스트용)
+    (1, 3, '2025-12-11', '2025-12-11 09:05:00', '2025-12-11 18:00:00', 'LATE', 0),
+    (1, 3, '2025-12-12', '2025-12-12 08:40:00', '2025-12-12 18:05:00', 'ON_TIME', 0),
+    (1, 3, '2025-12-13', NULL, NULL, 'ABSENT', 0),
+    (1, 3, '2025-12-14', NULL, NULL, 'ABSENT', 0),
+    (1, 3, '2025-12-15', '2025-12-15 08:50:00', '2025-12-15 18:10:00', 'ON_TIME', 0),
+    (1, 3, '2025-12-16', '2025-12-16 09:12:00', '2025-12-16 18:05:00', 'LATE', 0),
+    (1, 3, '2025-12-17', '2025-12-17 08:55:00', '2025-12-17 18:00:00', 'ON_TIME', 0),
+    (1, 3, '2025-12-18', NULL, NULL, 'ABSENT', 0),
+    (1, 3, '2025-12-19', '2025-12-19 08:58:00', '2025-12-19 18:05:00', 'ON_TIME', 0),
+    (1, 3, '2025-12-20', '2025-12-20 09:02:00', '2025-12-20 18:10:00', 'LATE', 0);
 
 -- 4. correction_history (근태 정정 이력)
 INSERT INTO correction_history (attendance_id, original_commute_at, original_leave_at, corrected_commute_at,

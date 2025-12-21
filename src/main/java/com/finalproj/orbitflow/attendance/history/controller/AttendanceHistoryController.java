@@ -1,9 +1,10 @@
 package com.finalproj.orbitflow.attendance.history.controller;
-
-import com.finalproj.orbitflow.attendance.history.dto.MonthlyAttHistoryResDto;
+import com.finalproj.orbitflow.attendance.history.dto.MonthlyHistoryResDto;
 import com.finalproj.orbitflow.attendance.history.service.AttendanceHistoryService;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,9 +13,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Please explain the class!!!
- *
- * @author : rlagkdus
+ * 실무형 페이징 및 필터링이 적용된 근태 이력 컨트롤러
+ * * @author : rlagkdus
  * @filename : AttendanceHistoryController
  * @since : 2025. 12. 21. 일요일
  */
@@ -26,21 +26,15 @@ public class AttendanceHistoryController {
 
     private final AttendanceHistoryService attendanceHistoryService;
 
-    /**
-     * 월별 근태 현황 조회
-     * GET /api/attendance/history/monthly?year=2025&month=12
-     */
     @GetMapping("/monthly")
-    public ResponseEntity<MonthlyAttHistoryResDto> getMonthlyHistory(
+    public ResponseEntity<MonthlyHistoryResDto> getMonthlyHistory(
             @AuthenticationPrincipal SecurityUser user,
-            @RequestParam int year,
-            @RequestParam int month) {
+            @RequestParam int year, @RequestParam int month,
+            @RequestParam(defaultValue = "ALL") String status,
+            @PageableDefault(size = 10) Pageable pageable) {
 
-        MonthlyAttHistoryResDto response = attendanceHistoryService.getMonthlyHistory(
-                user.getEmployeeId(),
-                year,
-                month
-        );
-        return ResponseEntity.ok(response);
+
+        return ResponseEntity.ok(attendanceHistoryService.getMonthlyHistoryData(
+                user.getEmployeeId(), year, month, status, pageable));
     }
 }

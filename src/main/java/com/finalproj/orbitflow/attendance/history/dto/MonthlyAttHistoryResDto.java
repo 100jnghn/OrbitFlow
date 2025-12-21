@@ -12,7 +12,8 @@ import java.util.List;
  * @filename : MonthlyAttHistoryResDto
  * @since : 2025. 12. 21. 일요일
  */
-@Getter @Builder
+@Getter
+@Builder
 public class MonthlyAttHistoryResDto {
     private long totalWorkHours;    // 총 근무 시간
     private long lateCount;         // 지각 횟수
