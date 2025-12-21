@@ -3,6 +3,7 @@ package com.finalproj.orbitflow.attendance.commute.repository;
 import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
@@ -15,5 +16,11 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
         return findByCompanyIdAndEmployeeIdAndWorkDate(companyId, employeeId, LocalDate.now());
     }
 
-    Optional<Attendance> findByEmployeeIdAndWorkDate(Long employeeId, LocalDate now);
+
+    List<Attendance> findByEmployeeIdAndWorkDateBetweenOrderByWorkDateAsc(
+            Long employeeId,
+            LocalDate startDate,
+            LocalDate endDate
+    );
+
 }

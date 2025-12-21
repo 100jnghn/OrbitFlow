@@ -51,7 +51,10 @@ public class SecurityConfig {
                                 "/images/**",
                                 "/view/**",
                                 "/api/**"
+
                         ).permitAll()
+
+
 
 //                        // ===== 인증 API =====
 //                        .requestMatchers(
