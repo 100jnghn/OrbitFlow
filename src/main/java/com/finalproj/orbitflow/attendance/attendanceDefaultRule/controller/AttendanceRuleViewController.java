@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.attendanceRule.controller;
+package com.finalproj.orbitflow.attendance.attendanceDefaultRule.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,14 +1,14 @@
-package com.finalproj.orbitflow.attendance.attendanceRule.service;
+package com.finalproj.orbitflow.attendance.attendanceDefaultRule.service;
 
-import com.finalproj.orbitflow.attendance.attendanceRule.dto.AttRuleResDto;
-import com.finalproj.orbitflow.attendance.attendanceRule.dto.AttRuleUpdateReqDto;
-import com.finalproj.orbitflow.attendance.employeeAttRule.dto.EmpAttRuleCreateReqDto;
-import com.finalproj.orbitflow.attendance.employeeAttRule.dto.EmpAttRuleResDto;
-import com.finalproj.orbitflow.attendance.employeeAttRule.dto.EmpAttRuleUpdateReqDto;
-import com.finalproj.orbitflow.attendance.attendanceRule.entity.AttendanceRule;
-import com.finalproj.orbitflow.attendance.employeeAttRule.entity.EmployeeAttRule;
-import com.finalproj.orbitflow.attendance.attendanceRule.repository.AttendanceRuleRepository;
-import com.finalproj.orbitflow.attendance.employeeAttRule.repository.EmployeeAttRuleRepository;
+import com.finalproj.orbitflow.attendance.attendanceDefaultRule.dto.AttRuleResDto;
+import com.finalproj.orbitflow.attendance.attendanceDefaultRule.dto.AttRuleUpdateReqDto;
+import com.finalproj.orbitflow.attendance.attendanceExceptionRule.dto.EmpAttRuleCreateReqDto;
+import com.finalproj.orbitflow.attendance.attendanceExceptionRule.dto.EmpAttRuleResDto;
+import com.finalproj.orbitflow.attendance.attendanceExceptionRule.dto.EmpAttRuleUpdateReqDto;
+import com.finalproj.orbitflow.attendance.attendanceDefaultRule.entity.AttendanceRule;
+import com.finalproj.orbitflow.attendance.attendanceExceptionRule.entity.EmployeeAttRule;
+import com.finalproj.orbitflow.attendance.attendanceDefaultRule.repository.AttendanceRuleRepository;
+import com.finalproj.orbitflow.attendance.attendanceExceptionRule.repository.EmployeeAttRuleRepository;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;

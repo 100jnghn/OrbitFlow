@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.attendanceRule.entity;
+package com.finalproj.orbitflow.attendance.attendanceDefaultRule.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

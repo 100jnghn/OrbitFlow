@@ -16,7 +16,6 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
         return findByCompanyIdAndEmployeeIdAndWorkDate(companyId, employeeId, LocalDate.now());
     }
 
-    Optional<Attendance> findByEmployeeIdAndWorkDate(Long employeeId, LocalDate now);
 
     List<Attendance> findByEmployeeIdAndWorkDateBetweenOrderByWorkDateAsc(
             Long employeeId,
@@ -24,5 +23,4 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
             LocalDate endDate
     );
 
-    List<Attendance> findByEmployeeIdAndWorkDateBetween(Long employeeId, LocalDate startDate, LocalDate endDate);
 }

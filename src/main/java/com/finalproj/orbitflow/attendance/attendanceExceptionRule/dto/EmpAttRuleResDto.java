@@ -1,6 +1,6 @@
-package com.finalproj.orbitflow.attendance.employeeAttRule.dto;
+package com.finalproj.orbitflow.attendance.attendanceExceptionRule.dto;
 
-import com.finalproj.orbitflow.attendance.employeeAttRule.entity.EmployeeAttRule;
+import com.finalproj.orbitflow.attendance.attendanceExceptionRule.entity.EmployeeAttRule;
 
 import java.time.LocalDate;
 import java.time.LocalTime;

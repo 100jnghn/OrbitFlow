@@ -1,6 +1,6 @@
-package com.finalproj.orbitflow.attendance.employeeAttRule.repository;
+package com.finalproj.orbitflow.attendance.attendanceExceptionRule.repository;
 
-import com.finalproj.orbitflow.attendance.employeeAttRule.entity.EmployeeAttRule;
+import com.finalproj.orbitflow.attendance.attendanceExceptionRule.entity.EmployeeAttRule;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

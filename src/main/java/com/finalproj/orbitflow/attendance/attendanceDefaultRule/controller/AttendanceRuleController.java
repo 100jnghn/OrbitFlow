@@ -1,11 +1,11 @@
-package com.finalproj.orbitflow.attendance.attendanceRule.controller;
+package com.finalproj.orbitflow.attendance.attendanceDefaultRule.controller;
 
-import com.finalproj.orbitflow.attendance.attendanceRule.dto.AttRuleResDto;
-import com.finalproj.orbitflow.attendance.attendanceRule.dto.AttRuleUpdateReqDto;
-import com.finalproj.orbitflow.attendance.employeeAttRule.dto.EmpAttRuleCreateReqDto;
-import com.finalproj.orbitflow.attendance.employeeAttRule.dto.EmpAttRuleResDto;
-import com.finalproj.orbitflow.attendance.employeeAttRule.dto.EmpAttRuleUpdateReqDto;
-import com.finalproj.orbitflow.attendance.attendanceRule.service.AttendanceRuleService;
+import com.finalproj.orbitflow.attendance.attendanceDefaultRule.dto.AttRuleResDto;
+import com.finalproj.orbitflow.attendance.attendanceDefaultRule.dto.AttRuleUpdateReqDto;
+import com.finalproj.orbitflow.attendance.attendanceExceptionRule.dto.EmpAttRuleCreateReqDto;
+import com.finalproj.orbitflow.attendance.attendanceExceptionRule.dto.EmpAttRuleResDto;
+import com.finalproj.orbitflow.attendance.attendanceExceptionRule.dto.EmpAttRuleUpdateReqDto;
+import com.finalproj.orbitflow.attendance.attendanceDefaultRule.service.AttendanceRuleService;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import com.finalproj.orbitflow.global.security.SecurityUtils;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
@@ -16,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Security;
 import java.util.List;
 import java.util.stream.Collectors;
 
