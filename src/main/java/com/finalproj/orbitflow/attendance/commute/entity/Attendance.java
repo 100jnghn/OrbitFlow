@@ -1,10 +1,9 @@
 package com.finalproj.orbitflow.attendance.commute.entity;
 
+import aQute.bnd.annotation.headers.BundleLicense;
 import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -15,6 +14,8 @@ import java.time.LocalDateTime;
 })
 @Getter
 @Setter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
 public class Attendance {
 

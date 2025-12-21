@@ -13,7 +13,8 @@ import java.time.LocalTime;
  * @filename : DailyAttRecordResDto
  * @since : 2025. 12. 21. 일요일
  */
-@Getter @Builder
+@Getter
+@Builder
 public class DailyAttRecordResDto {
     private String date;           // "12월 01일 (월)"
     private String commuteAt;      // "08:58"

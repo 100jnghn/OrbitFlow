@@ -5,14 +5,17 @@ import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
 import com.finalproj.orbitflow.attendance.commute.repository.AttendanceRepository;
 import com.finalproj.orbitflow.attendance.history.dto.DailyAttRecordResDto;
 import com.finalproj.orbitflow.attendance.history.dto.MonthlyAttHistoryResDto;
+import com.finalproj.orbitflow.attendance.history.dto.MonthlyHistoryResDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -21,80 +24,63 @@ public class AttendanceHistoryService {
 
     private final AttendanceRepository attendanceRepository;
 
-    public MonthlyAttHistoryResDto getMonthlyHistory(Long employeeId, int year, int month) {
-        // 1. 해당 월의 시작일과 마지막일 설정
+    /**
+     * 리팩토링 핵심: 컨트롤러를 위해 요약과 목록을 한 번에 준비하는 통합 메서드
+     */
+    public MonthlyHistoryResDto getMonthlyHistoryData(Long empId, int year, int month, String status, Pageable pageable) {
+        return MonthlyHistoryResDto.builder()
+                .summary(getMonthlySummary(empId, year, month))
+                .pagedData(getMonthlyHistoryPaged(empId, year, month, status, pageable))
+                .build();
+    }
+
+    // [내부 로직 1] 페이징 처리된 목록 조회
+    private Page<DailyAttRecordResDto> getMonthlyHistoryPaged(Long employeeId, int year, int month, String status, Pageable pageable) {
         LocalDate startDate = LocalDate.of(year, month, 1);
-        LocalDate lastDayOfMonth = startDate.withDayOfMonth(startDate.lengthOfMonth());
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
 
-        // 미래의 날짜까지 결근으로 나오지 않게 오늘까지만 데이터를 생성 (필요 시 lastDayOfMonth로 변경 가능)
-        LocalDate today = LocalDate.now();
-        LocalDate endLoopDate = (today.isBefore(lastDayOfMonth) && today.getMonthValue() == month) ? today : lastDayOfMonth;
+        AttendanceStatus attendanceStatus = (status == null || "ALL".equals(status)) ? null : AttendanceStatus.valueOf(status);
 
-        // 2. DB에서 해당 월의 모든 기록을 가져와 Map으로 변환 (날짜 찾기 최적화)
-        List<Attendance> records = attendanceRepository.findByEmployeeIdAndWorkDateBetweenOrderByWorkDateAsc(
-                employeeId, startDate, lastDayOfMonth);
-        Map<LocalDate, Attendance> attendanceMap = records.stream()
-                .collect(Collectors.toMap(Attendance::getWorkDate, a -> a));
+        return attendanceRepository.findHistoryWithPaging(employeeId, startDate, endDate, attendanceStatus, pageable)
+                .map(this::convertToDto);
+    }
 
-        long totalMinutes = 0;
-        long lateCount = 0;
-        long absentCount = 0;
-        List<DailyAttRecordResDto> dailyList = new ArrayList<>();
+    // [내부 로직 2] 상단 요약 정보 계산
+    private MonthlyAttHistoryResDto getMonthlySummary(Long employeeId, int year, int month) {
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
 
-        // 3. 1일부터 말일까지 루프를 돌며 데이터 생성
-        for (LocalDate date = startDate; !date.isAfter(endLoopDate); date = date.plusDays(1)) {
-            Attendance a = attendanceMap.get(date);
-            DayOfWeek dayOfWeek = date.getDayOfWeek();
-            boolean isWeekend = (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY);
+        List<Attendance> allRecords = attendanceRepository.findByEmployeeIdAndWorkDateBetweenOrderByWorkDateAsc(employeeId, startDate, endDate);
 
-            DailyAttRecordResDto.DailyAttRecordResDtoBuilder builder = DailyAttRecordResDto.builder()
-                    .date(date.format(DateTimeFormatter.ofPattern("MM월 dd일 (E)", Locale.KOREAN)));
+        long totalMinutes = 0, lateCount = 0, absentCount = 0;
 
-            if (a != null) {
-                // [Case 1] DB에 출퇴근 기록이 있는 경우
-                if (a.getStatus() == AttendanceStatus.LATE) lateCount++;
-
-                long diffMin = 0;
-                if (a.getCommuteAt() != null && a.getLeaveAt() != null) {
-                    diffMin = Duration.between(a.getCommuteAt(), a.getLeaveAt()).toMinutes();
-                    totalMinutes += diffMin;
-                }
-
-                builder.commuteAt(formatTime(a.getCommuteAt()))
-                        .leaveAt(formatTime(a.getLeaveAt()))
-                        .workingTime(formatDuration(diffMin))
-                        .statusName(a.getStatus().getDescription()) // Enum에서 "정상출근", "지각" 등을 가져옴
-                        .statusCode(a.getStatus().name());
-            } else {
-                // [Case 2] DB에 기록이 없는 경우
-                if (isWeekend) {
-                    // 주말인 경우
-                    builder.commuteAt("-").leaveAt("-").workingTime("-")
-                            .statusName("주말").statusCode("WEEKEND");
-                } else {
-                    // 평일인데 기록이 없는 경우 -> 결근
-                    absentCount++;
-                    builder.commuteAt("-").leaveAt("-").workingTime("0h 00m")
-                            .statusName("결근").statusCode("ABSENT");
-                }
+        for (Attendance a : allRecords) {
+            if (a.getStatus() == AttendanceStatus.LATE) lateCount++;
+            if (a.getStatus() == AttendanceStatus.ABSENT) absentCount++;
+            if (a.getCommuteAt() != null && a.getLeaveAt() != null) {
+                totalMinutes += Duration.between(a.getCommuteAt(), a.getLeaveAt()).toMinutes();
             }
-            dailyList.add(builder.build());
         }
 
         return MonthlyAttHistoryResDto.builder()
                 .totalWorkHours(totalMinutes / 60)
                 .lateCount(lateCount)
                 .leaveAbsentCount(absentCount)
-                .dailyRecords(dailyList)
                 .build();
     }
 
-    private String formatTime(LocalDateTime dt) {
-        return (dt != null) ? dt.format(DateTimeFormatter.ofPattern("HH:mm")) : "-";
+    private DailyAttRecordResDto convertToDto(Attendance a) {
+        long diffMin = 0;
+        if (a.getCommuteAt() != null && a.getLeaveAt() != null) {
+            diffMin = Duration.between(a.getCommuteAt(), a.getLeaveAt()).toMinutes();
+        }
+        return DailyAttRecordResDto.builder()
+                .date(a.getWorkDate().format(DateTimeFormatter.ofPattern("MM월 dd일 (E)", Locale.KOREAN)))
+                .commuteAt(formatTime(a.getCommuteAt())).leaveAt(formatTime(a.getLeaveAt()))
+                .workingTime(formatDuration(diffMin)).statusName(a.getStatus().getDescription())
+                .statusCode(a.getStatus().name()).build();
     }
 
-    private String formatDuration(long minutes) {
-        if (minutes <= 0) return "0h 00m";
-        return String.format("%dh %02dm", minutes / 60, minutes % 60);
-    }
+    private String formatTime(LocalDateTime dt) { return (dt != null) ? dt.format(DateTimeFormatter.ofPattern("HH:mm")) : "-"; }
+    private String formatDuration(long min) { return String.format("%dh %02dm", min / 60, min % 60); }
 }
