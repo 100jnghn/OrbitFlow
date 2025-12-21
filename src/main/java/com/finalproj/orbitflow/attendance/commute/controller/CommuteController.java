@@ -45,12 +45,19 @@ public class CommuteController {
      * 출근 처리
      * 결과: 정상출근(ON_TIME) 또는 지각(LATE) 판정
      */
+
     @PostMapping("/checkin")
-    public ResponseEntity<TodayAttResDto> checkIn(
-            @AuthenticationPrincipal SecurityUser user) {
+    public ResponseEntity<?> checkIn(@AuthenticationPrincipal SecurityUser user) {
+        // 1. user가 null인지 먼저 확인 (NPE 방지)
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 정보가 없습니다.");
+        }
+
+        // 2. 이후 로직 진행
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(commuteService.checkIn(user.getCompanyId(), user.getEmployeeId()));
     }
+
 
     /**
      * 퇴근 처리

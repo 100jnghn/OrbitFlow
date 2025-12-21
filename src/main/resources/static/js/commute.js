@@ -6,10 +6,15 @@ document.addEventListener('DOMContentLoaded', function() {
     updateClock();
     setInterval(updateClock, 1000);
 
-    loadActiveWorkHours(); // 사원별 맞춤 시간(기본/예외) 로드
-    loadTodayAttendance(); // 오늘 현황 및 Enum 상태 로드
+    loadActiveWorkHours(); // 사원별 맞춤 시간 로드
+    loadTodayAttendance(); // 오늘 현황 로드
     setupEventListeners();
 });
+
+// 공통 토큰 가져오기 함수
+function getAuthToken() {
+    return sessionStorage.getItem('accessToken');
+}
 
 // 실시간 시계
 function updateClock() {
@@ -22,127 +27,160 @@ function updateClock() {
     }
 }
 
-// 사원별 적용 시간 로드 (403 방지를 위해 사용자 API 호출)
-// commute.js
+// 1. 기준 근무 시간 로드 (관리자 예외 규칙 반영)
 async function loadActiveWorkHours() {
-    // 세션스토리지에서 JWT 토큰 추출
-    const token = sessionStorage.getItem('accessToken');
+    const token = getAuthToken();
     if (!token) return;
 
     try {
-        const response = await fetch('/api/attendance/active-rule', {
+        const response = await fetch(`${API_BASE_URL}/active-rule`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${token}`, // 인증 헤더 추가
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             }
         });
 
         if (response.ok) {
             const data = await response.json();
-            // 시간 포맷팅 (HH:mm:ss -> HH:mm)
             const start = data.startTime.substring(0, 5);
             const end = data.endTime.substring(0, 5);
-
-            // 화면의 '기준 근무 시간' 영역 업데이트
             document.getElementById('workHours').textContent = `${start} ~ ${end}`;
-
-            // 콘솔에서 예외 규칙이 적용되었는지 확인 (디버깅)
-            console.log(`[규칙 적용 상태] 타입: ${data.ruleType}, 시간: ${start}~${end}`);
+            console.log(`[규칙 적용] ${data.ruleType}: ${start}~${end}`);
         }
     } catch (error) {
         console.error('기준 시간 로드 실패:', error);
     }
 }
 
-// 오늘 근태 및 Enum 상태(statusName) 로드
+// 2. 오늘 현황 조회 및 화면 업데이트
 async function loadTodayAttendance() {
+    const token = getAuthToken();
+    if (!token) return;
+
     try {
-        const response = await fetch(`${API_BASE_URL}/today`);
-        if (!response.ok) throw new Error('데이터 로드 실패');
-
-        const data = await response.json();
-        currentAttendance = data;
-        isAway = data.isAway;
-
-        document.getElementById('commuteTime').textContent = formatTime(data.commuteAt);
-        document.getElementById('leaveTime').textContent = formatTime(data.leaveAt);
-
-        updateStatusUI(data);
-        updateButtonStates();
+        const response = await fetch(`${API_BASE_URL}/today`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+            currentAttendance = await response.json(); // TodayAttResDto 수신
+            isAway = currentAttendance.isAway;
+            updateUI(); // 수신한 데이터로 UI 전체 갱신
+        }
     } catch (error) {
-        console.error('현황 로드 오류:', error);
+        console.error('현황 조회 실패:', error);
     }
 }
 
-function updateStatusUI(data) {
-    const workStatusBadge = document.getElementById('workStatus');
-    const awayStatusBadge = document.getElementById('awayStatus');
-    const workStatusText = document.getElementById('workStatusText');
+// 3. UI 갱신 로직 (출근 시간 및 근무 상태 바인딩)
+// 3. UI 갱신 로직 (출근 시간 및 근무 상태 바인딩)
+function updateUI() {
+    if (!currentAttendance) return;
 
+    // 출퇴근 시각 표시 (HH:mm)
+    document.getElementById('commuteTime').textContent = formatTime(currentAttendance.commuteAt);
+    document.getElementById('leaveTime').textContent = formatTime(currentAttendance.leaveAt);
+
+    const workStatusBadge = document.getElementById('workStatus');   // "근무 중" 뱃지
+    const awayStatusBadge = document.getElementById('awayStatus');   // "자리비움" 뱃지
+    const workStatusText = document.getElementById('workStatusText'); // 텍스트 영역
+
+    // 초기화
     workStatusBadge.style.display = 'none';
     awayStatusBadge.style.display = 'none';
-    workStatusText.style.display = 'none';
+    workStatusText.textContent = ''; // 기존 텍스트 비우기
+    workStatusText.style.display = 'inline';
 
-    if (!data.commuteAt) {
-        workStatusText.textContent = data.statusName; // "근무예정"
-        workStatusText.style.display = 'inline';
-    } else if (!data.leaveAt) {
+    // 최종 근태 상태 설명 (정상출근, 지각 등)
+    const attendanceDesc = currentAttendance.statusName || "근무예정";
+
+    // 1. 실시간 근무 상태(WorkStatus)에 따른 레이아웃 결정
+    if (!currentAttendance.commuteAt) {
+        // 출근 전: 초기값 OFF_WORK 상태
+        workStatusText.textContent = `퇴근 (${attendanceDesc})`; // "퇴근 (근무예정)"
+    } else if (!currentAttendance.leaveAt) {
+        // 출근 후 + 퇴근 전: WORKING 또는 AWAY 상태
         if (isAway) {
             awayStatusBadge.style.display = 'inline-block';
+            workStatusText.textContent = ` (${attendanceDesc})`; // "자리비움 (지각)" 등
         } else {
             workStatusBadge.style.display = 'inline-block';
-            workStatusBadge.textContent = data.statusName; // "정상출근" 또는 "지각"
+            workStatusBadge.textContent = "근무 중";
+            workStatusText.textContent = ` (${attendanceDesc})`; // "근무 중 (정상출근)" 등
         }
     } else {
-        workStatusText.textContent = `퇴근 완료 (${data.statusName})`; // "퇴근 완료 (정상출근/조퇴)"
-        workStatusText.style.display = 'inline';
+        // 퇴근 완료: OFF_WORK 상태
+        workStatusText.textContent = `퇴근 완료 (${attendanceDesc})`; // "퇴근 완료 (조퇴)" 등
     }
+
+    updateButtonStates();
 }
 
-// POST 요청 처리 (CSRF 토큰 필수 포함)
+// 4. 출퇴근/자리비움 버튼 클릭 액션
 async function handleAction(endpoint, confirmMsg) {
     if (!confirm(confirmMsg)) return;
 
-    const token = document.querySelector('meta[name="_csrf"]')?.content;
-    const header = document.querySelector('meta[name="_csrf_header"]')?.content;
+    const token = getAuthToken();
+    if (!token) {
+        alert("로그인 정보가 없습니다.");
+        return;
+    }
 
     try {
         const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                [header]: token
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
         });
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.message || '요청 처리 실패');
+            throw new Error(errorData.message || '요청 실패');
         }
+
+        // 서버에서 상태(WorkStatus) 업데이트가 완료된 후, 최신 현황을 다시 불러와 화면 갱신
         await loadTodayAttendance();
+        alert("처리가 완료되었습니다.");
+
     } catch (error) {
         alert(error.message);
     }
 }
 
-// 시간 포맷팅 및 버튼 상태 제어 함수 생략 (기본 로직 유지)
+// 시간 포맷팅 함수
 function formatTime(isoString) {
     if (!isoString) return '미기록';
-    return new Date(isoString).toLocaleTimeString('ko-KR', { hour12: false, hour: '2-digit', minute: '2-digit' });
+    // 서버에서 받은 LocalDateTime을 HH:mm 형식으로 변환
+    const date = new Date(isoString);
+    return date.toLocaleTimeString('ko-KR', {
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 }
 
+// 버튼 활성/비활성 제어
 function updateButtonStates() {
     const btnIn = document.getElementById('checkInBtn');
     const btnOut = document.getElementById('checkOutBtn');
     const btnAway = document.getElementById('awayBtn');
+
     const hasIn = !!(currentAttendance && currentAttendance.commuteAt);
     const hasOut = !!(currentAttendance && currentAttendance.leaveAt);
+
     btnIn.disabled = hasIn;
     btnOut.disabled = !hasIn || hasOut;
     btnAway.disabled = !hasIn || hasOut;
-    if (isAway) { btnAway.classList.add('active'); btnAway.textContent = '자리비움 해제'; }
-    else { btnAway.classList.remove('active'); btnAway.textContent = '자리비움'; }
+
+    if (isAway) {
+        btnAway.classList.add('active');
+        btnAway.textContent = '자리비움 해제';
+    } else {
+        btnAway.classList.remove('active');
+        btnAway.textContent = '자리비움';
+    }
 }
 
 function setupEventListeners() {

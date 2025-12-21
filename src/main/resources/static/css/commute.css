@@ -198,3 +198,12 @@
     color: #333 !important;
 }
 
+.status-late {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.status-ontime {
+    color: #28a745;
+}
+

@@ -117,11 +117,9 @@ public class CommuteService {
 
         LocalTime endTimeThreshold = getApplicableEndTime(companyId, employeeId, today);
 
-        // 5. 퇴근 기록 및 조퇴(EARLY_LEAVE) 판정
+        // 5. 퇴근 기록 판정
         attendance.setLeaveAt(now);
-        if (now.toLocalTime().withNano(0).isBefore(endTimeThreshold)) {
-            attendance.setStatus(AttendanceStatus.EARLY_LEAVE);
-        }
+
 
         // 6. 사원의 실시간 상태 업데이트 -> OFF_WORK
         updateEmployeeWorkStatus(employeeId, WorkStatus.OFF_WORK);
