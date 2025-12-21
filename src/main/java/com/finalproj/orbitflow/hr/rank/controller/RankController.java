@@ -39,16 +39,13 @@ public class RankController {
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "false") boolean includeInactive
     ) {
-        Long companyId = SecurityUtils.getCompanyId();
-
         return ResponseEntity.ok(
                 new ResponseDto<>(
                         HttpStatus.OK,
                         "직급 목록 조회 성공",
-                        rankService.getRanks(companyId, keyword, includeInactive)
+                        rankService.getRanks(SecurityUtils.getCompanyId(), keyword, includeInactive)
                 )
         );
-
     }
 
     /**
@@ -58,16 +55,9 @@ public class RankController {
     public ResponseEntity<ResponseDto<Long>> createRank(
             @RequestBody @Valid RankCreateReqDto request
     ) {
-        Long companyId = SecurityUtils.getCompanyId();
-        Long createdId = rankService.createRank(companyId, request);
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(new ResponseDto<>(
-                        HttpStatus.CREATED,
-                        "직급 생성 성공 (id=" + createdId + ")",
-                        createdId
-                ));
+        Long id = rankService.createRank(SecurityUtils.getCompanyId(), request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ResponseDto<>(HttpStatus.CREATED, "직급 생성 성공", id));
     }
 
     /**
@@ -78,35 +68,23 @@ public class RankController {
             @PathVariable Long rankId,
             @RequestBody @Valid RankUpdateReqDto request
     ) {
-        Long companyId = SecurityUtils.getCompanyId();
-        rankService.updateRank(companyId, rankId, request);
-
-        return ResponseEntity.ok(
-                new ResponseDto<>(
-                        HttpStatus.OK,
-                        "직급 수정 성공",
-                        null
-                )
-        );
-
+        rankService.updateRank(SecurityUtils.getCompanyId(), rankId, request);
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "직급 수정 성공", null));
     }
+
 
     /**
      * 직급 순서 변경 저장 (드래그앤드롭)
      */
     @PutMapping("/order")
     public ResponseEntity<ResponseDto<Void>> updateOrder(
-            @RequestBody @Valid List<RankOrderUpdateReqDto> requests
+            @RequestBody @Valid RankOrderUpdateReqDto request
     ) {
         Long companyId = SecurityUtils.getCompanyId();
-        rankService.updateOrder(companyId, requests);
+        rankService.updateOrder(companyId, request.getOrders());
 
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(new ResponseDto<>(
-                        HttpStatus.OK,
-                        "직급 순서 변경 저장 성공",
-                        null
-                ));
+        return ResponseEntity.ok(
+                new ResponseDto<>(HttpStatus.OK, "직급 순서 변경 저장 성공", null)
+        );
     }
 }

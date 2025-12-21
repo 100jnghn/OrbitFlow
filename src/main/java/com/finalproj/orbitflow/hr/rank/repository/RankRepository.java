@@ -34,4 +34,6 @@ public interface RankRepository extends JpaRepository<HrRank, Long> {
 
     // 상위 직급 선택용(활성만, 자기 자신 제외)
     List<HrRank> findByCompanyIdAndIsActiveTrueAndIdNotOrderByOrderIndexAsc(Long companyId, Long id);
+
+    long countByCompanyIdAndIsActiveTrue(Long companyId);
 }

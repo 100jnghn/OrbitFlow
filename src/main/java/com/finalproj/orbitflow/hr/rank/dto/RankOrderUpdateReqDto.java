@@ -1,6 +1,10 @@
 package com.finalproj.orbitflow.hr.rank.dto;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+
+import java.util.List;
 
 /**
  * Please explain the class!!!
@@ -11,7 +15,12 @@ import lombok.Getter;
  */
 @Getter
 public class RankOrderUpdateReqDto {
-    private Long rankId;
-    private Integer orderIndex;
+    @NotEmpty
+    private List<OrderItem> orders;
 
+    @Getter
+    public static class OrderItem {
+        @NotNull
+        private Long id;
+    }
 }

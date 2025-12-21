@@ -1,5 +1,7 @@
 package com.finalproj.orbitflow.hr.rank.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 
 /**
@@ -11,6 +13,8 @@ import lombok.Getter;
  */
 @Getter
 public class RankCreateReqDto {
+    @NotBlank(message = "직급명은 필수입니다.")
+    @Size(max = 50, message = "직급명은 50자 이하여야 합니다.")
     private String name;
     private Long parentRankId; // nullable
 }

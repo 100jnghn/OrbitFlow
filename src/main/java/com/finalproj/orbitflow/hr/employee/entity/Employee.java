@@ -31,7 +31,7 @@ import java.time.LocalDate;
         uniqueConstraints = { // 엔티티의 무결성을 DB 레벨에서도 보장하기 위함
                 @UniqueConstraint(columnNames = {"company_id", "employee_no"}),
                 @UniqueConstraint(columnNames = {"email"}),
-                @UniqueConstraint(columnNames = {"company_id", "internalPhone"})
+                @UniqueConstraint(columnNames = {"company_id", "internal_phone"})
         }
 )
 public class Employee extends BaseEntity {
@@ -56,7 +56,7 @@ public class Employee extends BaseEntity {
     private Organization organization;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "rank_id")
+    @JoinColumn(name = "hr_rank_id")
     private HrRank rank;
 
     @ManyToOne(fetch = FetchType.LAZY)
