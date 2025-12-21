@@ -15,7 +15,7 @@ public class AttendanceRuleViewController {
     public String attendanceRulesPage(org.springframework.ui.Model model) {
         model.addAttribute("currentGNB", "admin");
         model.addAttribute("currentMenu", "attendance-rules");
-        return "attendance/admin-rule";
+        return "admin/admin-rule";
     }
 
 
