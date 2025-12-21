@@ -25,65 +25,60 @@ import java.util.List;
 @Transactional
 public class OrgCategoryService {
 
-    private final OrgCategoryRepository orgCategoryRepository;
+    private final OrgCategoryRepository repository;
     private final OrgRepository orgRepository;
 
-    /**
-     * 조직 카테고리 생성
-     */
-    public Long create(Long companyId, String name) {
-
-        if (orgCategoryRepository.existsByCompanyIdAndName(companyId, name)) {
-            throw new BusinessException("이미 존재하는 조직 카테고리입니다.");
-        }
-
-        Integer maxOrder =
-                orgCategoryRepository.findMaxOrderIndexByCompanyId(companyId);
-
-        int nextOrder = (maxOrder == null) ? 1 : maxOrder + 1;
-
-        OrgCategory category =
-                OrgCategory.create(companyId, name, nextOrder);
-
-        return orgCategoryRepository.save(category).getId();
-    }
-
-
-    /**
-     * 조직 카테고리 목록 조회
-     */
+    /* ================= 목록 (검색 포함) ================= */
     @Transactional(readOnly = true)
-    public List<OrgCategoryResDto> findAll(Long companyId) {
+    public List<OrgCategoryResDto> findAll(Long companyId, String keyword) {
 
-        return orgCategoryRepository
-                .findByCompanyIdAndIsActiveTrueOrderByOrderIndexAsc(companyId)
-                .stream()
+        List<OrgCategory> categories =
+                (keyword == null || keyword.isBlank())
+                        ? repository.findByCompanyIdAndIsActiveTrueOrderByOrderIndexAsc(companyId)
+                        : repository.findByCompanyIdAndIsActiveTrueAndNameContainingIgnoreCaseOrderByOrderIndexAsc(
+                        companyId, keyword.trim());
+
+        return categories.stream()
                 .map(OrgCategoryResDto::from)
                 .toList();
     }
 
-    /**
-     * 조직 카테고리 수정
-     */
-    public void update(Long companyId, Long categoryId, String name) {
+    /* ================= 생성 ================= */
+    public Long create(Long companyId, String rawName) {
 
-        OrgCategory category = orgCategoryRepository
-                .findByCompanyIdAndId(companyId, categoryId)
-                .orElseThrow(() -> new NotFoundException("조직 카테고리를 찾을 수 없습니다."));
+        String name = rawName.trim();
+
+        if (repository.existsByCompanyIdAndName(companyId, name)) {
+            throw new BusinessException("이미 존재하는 조직 카테고리입니다.");
+        }
+
+        Integer max = repository.findMaxOrderIndexByCompanyId(companyId);
+        int nextOrder = (max == null) ? 1 : max + 1;
+
+        return repository.save(
+                OrgCategory.create(companyId, name, nextOrder)
+        ).getId();
+    }
+
+    /* ================= 수정 ================= */
+    public void update(Long companyId, Long id, String rawName) {
+
+        OrgCategory category = get(companyId, id);
+        String name = rawName.trim();
+
+        if (repository.existsByCompanyIdAndNameAndIdNot(companyId, name, id)) {
+            throw new BusinessException("이미 존재하는 조직 카테고리입니다.");
+        }
 
         category.updateName(name);
     }
 
-    /**
-     * 조직 카테고리 비활성화
-     */
-    public void deactivate(Long companyId, Long categoryId) {
+    /* ================= 비활성화 ================= */
+    public void deactivate(Long companyId, Long id) {
 
-        OrgCategory category = orgCategoryRepository
-                .findByCompanyIdAndId(companyId, categoryId)
-                .orElseThrow(() -> new NotFoundException("조직 카테고리를 찾을 수 없습니다."));
+        OrgCategory category = get(companyId, id);
 
-        if (orgRepository.existsByCompanyIdAndCategoryIdAndIsActiveTrue(companyId, categoryId)) {
+        if (orgRepository.existsByCompanyIdAndCategoryIdAndIsActiveTrue(companyId, id)) {
             throw new InvalidStateException(
                     "해당 카테고리를 사용하는 조직이 존재하여 비활성화할 수 없습니다."
             );
@@ -92,53 +87,34 @@ public class OrgCategoryService {
         category.deactivate();
     }
 
-    @Transactional
+    /* ================= 순서 변경 ================= */
     public void updateOrder(Long companyId, List<OrgCategoryOrderUpdateReqDto.OrderItem> orders) {
 
         if (orders == null || orders.isEmpty()) {
             throw new InvalidRequestException("순서 정보가 비어 있습니다.");
         }
 
-        long distinctCount = orders.stream()
-                .map(OrgCategoryOrderUpdateReqDto.OrderItem::getId)
-                .distinct()
-                .count();
-
-        if (distinctCount != orders.size()) {
-            throw new InvalidRequestException("중복된 카테고리 ID가 존재합니다.");
-        }
-
-        long activeCount = orgCategoryRepository
-                .countByCompanyIdAndIsActiveTrue(companyId);
-
+        long activeCount = repository.countByCompanyIdAndIsActiveTrue(companyId);
         if (activeCount != orders.size()) {
             throw new InvalidStateException("정렬 대상 개수가 일치하지 않습니다.");
         }
 
-        // 임시 order_index 할당 (충돌 방지)
-        int tempIndex = -1;
-        for (OrgCategoryOrderUpdateReqDto.OrderItem item : orders) {
-            OrgCategory category = orgCategoryRepository
-                    .findByCompanyIdAndId(companyId, item.getId())
-                    .orElseThrow(() ->
-                            new ForbiddenException("해당 회사에 속하지 않은 조직 카테고리입니다.")
-                    );
-            category.updateOrderIndex(tempIndex--);
+        // 1단계: 임시 order_index (충돌 방지)
+        int temp = -1;
+        for (var item : orders) {
+            get(companyId, item.getId()).updateOrderIndex(temp--);
         }
+        repository.flush();
 
-        orgCategoryRepository.flush();
-
-        // 최종 order_index 재할당
-        int orderIndex = 1;
-        for (OrgCategoryOrderUpdateReqDto.OrderItem item : orders) {
-            OrgCategory category = orgCategoryRepository
-                    .findByCompanyIdAndId(companyId, item.getId())
-                    .orElseThrow(() ->
-                            new ForbiddenException("해당 회사에 속하지 않은 조직 카테고리입니다.")
-                    );
-            category.updateOrderIndex(orderIndex++);
+        // 2단계: 최종 order_index
+        int index = 1;
+        for (var item : orders) {
+            get(companyId, item.getId()).updateOrderIndex(index++);
         }
     }
 
-
+    private OrgCategory get(Long companyId, Long id) {
+        return repository.findByCompanyIdAndId(companyId, id)
+                .orElseThrow(() -> new NotFoundException("조직 카테고리를 찾을 수 없습니다."));
+    }
 }

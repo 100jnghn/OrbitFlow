@@ -39,4 +39,9 @@ public interface OrgCategoryRepository extends JpaRepository<OrgCategory, Long> 
     Integer findMaxOrderIndexByCompanyId(Long companyId);
 
     long countByCompanyIdAndIsActiveTrue(Long companyId);
+
+    List<OrgCategory> findByCompanyIdAndIsActiveTrueAndNameContainingIgnoreCaseOrderByOrderIndexAsc(
+            Long companyId, String keyword);
+
+    boolean existsByCompanyIdAndNameAndIdNot(Long companyId, String name, Long id);
 }

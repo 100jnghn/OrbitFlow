@@ -17,7 +17,13 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "org_category")
+@Table(
+        name = "org_category",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"company_id", "name"}),
+                @UniqueConstraint(columnNames = {"company_id", "order_index"})
+        }
+)
 public class OrgCategory extends BaseEntity {
 
     @Id
