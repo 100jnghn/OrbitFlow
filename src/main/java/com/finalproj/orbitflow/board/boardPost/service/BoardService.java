@@ -94,7 +94,6 @@ public class BoardService {
             BoardReqDto.Create request,
             List<MultipartFile> files
     ) {
-        // ✅ 여기! 빨간줄 뜨던 부분: 메서드명을 “존재하는 메서드”로!
         BoardCategory category = getVerifiedAccessibleCategory(
                 companyId,
                 organizationId,
@@ -160,5 +159,64 @@ public class BoardService {
     /** 실제 파일 시스템 저장 (예시) */
     private String saveFileToSystem(MultipartFile file) {
         return "/files/" + file.getOriginalFilename();
+    }
+
+    @Transactional
+    public BoardResDto.DetailInfo updateBoard(
+            Long companyId,
+            Long organizationId,
+            Long employeeId,
+            Long boardId,
+            BoardReqDto.Update request,
+            List<MultipartFile> files
+    ) {
+        Board board = boardRepository.findByIdAndDeletedAtIsNull(boardId)
+                .orElseThrow(() -> new NotFoundException("게시글이 존재하지 않습니다."));
+
+        BoardCategory category = board.getCategory();
+        validateCategoryAccess(companyId, organizationId, category);
+
+        // 작성자 본인 또는 관리자만 허용(관리자 정책은 네 role에 맞게 조정)
+        boolean isWriter = board.getWriter().getId().equals(employeeId);
+        if (!isWriter) {
+            throw new ForbiddenException("게시글 수정 권한이 없습니다.");
+        }
+
+        // 파일 처리(선택) - createBoard와 동일하게 저장 로직을 태우면 됨
+        List<File> attachedFiles = null;
+        if (files != null && !files.isEmpty()) {
+            attachedFiles = files.stream()
+                    .map(file -> File.builder()
+                            .originFile(file.getOriginalFilename())
+                            .sysFile(saveFileToSystem(file))
+                            .build())
+                    .toList();
+        }
+
+        board.update(request.getBoardTitle(), request.getBoardContent(), attachedFiles);
+
+        // Dirty checking으로 반영되므로 save() 없어도 됨.
+        return BoardResDto.DetailInfo.from(board);
+    }
+
+    @Transactional
+    public void deleteBoard(
+            Long companyId,
+            Long organizationId,
+            Long employeeId,
+            Long boardId
+    ) {
+        Board board = boardRepository.findByIdAndDeletedAtIsNull(boardId)
+                .orElseThrow(() -> new NotFoundException("게시글이 존재하지 않습니다."));
+
+        BoardCategory category = board.getCategory();
+        validateCategoryAccess(companyId, organizationId, category);
+
+        boolean isWriter = board.getWriter().getId().equals(employeeId);
+        if (!isWriter) {
+            throw new ForbiddenException("게시글 삭제 권한이 없습니다.");
+        }
+
+        board.softDelete(); // soft delete
     }
 }

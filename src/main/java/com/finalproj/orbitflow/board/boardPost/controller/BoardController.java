@@ -109,5 +109,39 @@ public class BoardController {
                         response
                 ));
     }
+
+    @PutMapping(value = "/{boardId}", consumes = "multipart/form-data")
+    public ResponseEntity<ResponseDto> updateBoard(
+            @AuthenticationPrincipal SecurityUser user,
+            @PathVariable Long boardId,
+            @RequestPart("request") @Valid BoardReqDto.Update request,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files
+    ) {
+        BoardResDto.DetailInfo result = boardService.updateBoard(
+                user.getCompanyId(),
+                user.getOrganizationId(),
+                user.getEmployeeId(),
+                boardId,
+                request,
+                files
+        );
+
+        return ResponseEntity.ok(new ResponseDto(HttpStatus.OK, "게시글 수정 성공", result));
+    }
+
+    @DeleteMapping("/{boardId}")
+    public ResponseEntity<ResponseDto> deleteBoard(
+            @AuthenticationPrincipal SecurityUser user,
+            @PathVariable Long boardId
+    ) {
+        boardService.deleteBoard(
+                user.getCompanyId(),
+                user.getOrganizationId(),
+                user.getEmployeeId(),
+                boardId
+        );
+
+        return ResponseEntity.ok(new ResponseDto(HttpStatus.OK, "게시글 삭제 성공", null));
+    }
 }
 

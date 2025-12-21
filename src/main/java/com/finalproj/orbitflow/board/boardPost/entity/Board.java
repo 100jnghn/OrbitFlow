@@ -52,14 +52,14 @@ public class Board extends BaseEntity {
     private LocalDateTime deletedAt; // 삭제 일시 (소프트 삭제)
 
     // 게시글 수정 메서드
-    public void update(String boardTitle, String boardContent, List<File> files) {
+    public void update(String boardTitle, String boardContent, List<File> newFiles) {
         this.boardTitle = boardTitle;
         this.boardContent = boardContent;
 
         // 파일 교체 (기존 제거 후 새로 설정)
-        this.files.clear();
-        if (files != null) {
-            this.files.addAll(files);
+        if (this.files != null) this.files.clear();
+        if (newFiles != null && !newFiles.isEmpty()) {
+            this.files = newFiles;
         }
     }
 
