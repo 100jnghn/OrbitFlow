@@ -50,9 +50,26 @@ public class BsnClient {
                         Map.class
                 );
 
-        List<Map<String, Object>> data =
-                (List<Map<String, Object>>) response.getBody().get("data");
+        // HTTP 상태 체크
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new RuntimeException("사업자 API 호출 실패");
+        }
 
-        return (String) data.get(0).get("b_stt"); // 계속사업자 / 휴업자 / 폐업자
+        // body / data 체크
+        if (response.getBody() == null || response.getBody().get("data") == null) {
+            throw new RuntimeException("사업자 API 응답 오류");
+        }
+
+        Object rawData = response.getBody().get("data");
+        if (!(rawData instanceof List<?> data) || data.isEmpty()) {
+            throw new RuntimeException("사업자 API data 형식 오류");
+        }
+
+        Object first = data.get(0);
+        if (!(first instanceof Map<?, ?> item) || item.get("b_stt") == null) {
+            throw new RuntimeException("사업자 상태 조회 실패");
+        }
+
+        return item.get("b_stt").toString(); // 계속사업자 / 휴업자 / 폐업자
     }
 }

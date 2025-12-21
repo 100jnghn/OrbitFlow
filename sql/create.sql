@@ -54,7 +54,12 @@ CREATE TABLE organization
     CONSTRAINT fk_org_category
         FOREIGN KEY (category_id) REFERENCES org_category (id),
     CONSTRAINT fk_org_parent
-        FOREIGN KEY (parent_org_id) REFERENCES organization (id)
+        FOREIGN KEY (parent_org_id) REFERENCES organization (id),
+
+    CONSTRAINT uk_org_sibling_order -- 형제 단위 정렬 충돌 방지
+        UNIQUE (company_id, parent_org_id, order_index),
+    CONSTRAINT uk_org_sibling_name -- 형제 단위 이름 중복 방지
+        UNIQUE (company_id, parent_org_id, name)
 ) ENGINE = InnoDB;
 
 CREATE TABLE hr_rank

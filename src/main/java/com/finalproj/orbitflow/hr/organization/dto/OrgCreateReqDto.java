@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.hr.organization.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 
 /**
@@ -20,6 +21,7 @@ public class OrgCreateReqDto {
     private Long parentOrgId;
 
     @NotBlank
+    @Size(max = 100)
     private String name;
 
 }
