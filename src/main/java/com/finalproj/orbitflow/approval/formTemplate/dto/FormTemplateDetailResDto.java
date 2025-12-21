@@ -50,5 +50,4 @@ public class FormTemplateDetailResDto {
             throw new RuntimeException("FormTemplate JSON 파싱 실패", e);
         }
     }
-
 }

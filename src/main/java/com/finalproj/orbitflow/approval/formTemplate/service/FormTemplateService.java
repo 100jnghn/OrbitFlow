@@ -1,15 +1,11 @@
 package com.finalproj.orbitflow.approval.formTemplate.service;
 
-import com.finalproj.orbitflow.approval.formTemplate.dto.FormTemplateActiveListResDto;
-import com.finalproj.orbitflow.approval.formTemplate.dto.FormTemplateAllListResDto;
-import com.finalproj.orbitflow.approval.formTemplate.dto.FormTemplateDetailResDto;
-import com.finalproj.orbitflow.approval.formTemplate.dto.FormTemplateUpdateReqDto;
+import com.finalproj.orbitflow.approval.formTemplate.dto.*;
 import com.finalproj.orbitflow.approval.formTemplate.entity.FormTemplate;
 import com.finalproj.orbitflow.approval.formTemplate.enums.AffectTag;
 import com.finalproj.orbitflow.approval.formTemplate.enums.FormTemplateStatus;
-import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateAllListView;
-import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateListView;
 import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateRepository;
+import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
 import com.finalproj.orbitflow.approval.formTemplateGroup.entity.FormTemplateGroup;
 import com.finalproj.orbitflow.approval.formTemplateGroup.repository.FormTemplateGroupRepository;
 import com.finalproj.orbitflow.approval.templateCategory.entity.TemplateCategory;
@@ -31,6 +27,7 @@ import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -63,11 +60,19 @@ import java.util.Optional;
 @Slf4j
 public class FormTemplateService {
 
+    /* =====================================================
+     * Dependencies
+     * ===================================================== */
+
+    private final SampleDataGenerator sampleDataGenerator;
     private final FormTemplateRepository formTemplateRepository;
     private final FormTemplateGroupRepository formTemplateGroupRepository;
     private final TemplateCategoryRepository templateCategoryRepository;
     private final ObjectMapper objectMapper;
 
+    /* =====================================================
+     * Business Logic
+     * ===================================================== */
 
     @Transactional
     public Long saveFormTemplate(
@@ -98,58 +103,18 @@ public class FormTemplateService {
                 .map(FormTemplate::getVersion)
                 .orElse(1);
 
-        String initialTemplateJson = buildInitialTemplateJson();
-        String initialApprovalRuleJson = buildInitialApprovalRuleJson();
-
         return createDraftTemplate(
                 group,
                 baseVersion,
                 category,
-                initialTemplateJson,
-                initialApprovalRuleJson,
+                buildInitialTemplateJson(),
+                buildInitialApprovalRuleJson(),
                 null
         );
     }
 
-
-    private String buildInitialTemplateJson() {
-        ObjectNode root = objectMapper.createObjectNode();
-        ArrayNode fields = root.putArray("fields");
-
-        ObjectNode titleField = objectMapper.createObjectNode();
-        titleField.put("fieldId", "document-title");
-        titleField.put("fieldType", "document-title");
-        titleField.put("label", "문서 제목");
-        titleField.put("required", true);
-        titleField.put("order", 1);
-
-        ObjectNode meta = titleField.putObject("meta");
-        meta.put("placeholder", "문서 제목을 입력하세요.");
-        meta.put("maxLength", 100);
-
-        fields.add(titleField);
-
-        return root.toString();
-    }
-
-
-    private String buildInitialApprovalRuleJson() {
-        ArrayNode rootArray = objectMapper.createArrayNode();
-
-        ObjectNode firstStep = objectMapper.createObjectNode();
-        firstStep.put("step", 1);
-        firstStep.putNull("organizationId");
-        firstStep.putNull("positionCategoryId");
-
-        rootArray.add(firstStep);
-
-        return rootArray.toString();
-    }
-
-
     @Transactional
     public Long reviseFormTemplateByTemplateGroup(Long templateGroupId, Long companyId) {
-
         FormTemplateGroup group = findGroupAndCheckCompany(templateGroupId, companyId);
 
         Optional<FormTemplate> existingDraft =
@@ -167,15 +132,13 @@ public class FormTemplateService {
                         templateGroupId,
                         FormTemplateStatus.ACTIVE
                 )
-                .orElseThrow(() -> new NotFoundException(
-                        "ACTIVE 상태의 양식을 찾을 수 없습니다."
-                ));
-
-        int baseVersion = active.getVersion();
+                .orElseThrow(() ->
+                        new NotFoundException("ACTIVE 상태의 양식을 찾을 수 없습니다.")
+                );
 
         return createDraftTemplate(
                 group,
-                baseVersion,
+                active.getVersion(),
                 active.getTemplateCategory(),
                 active.getTemplateJson(),
                 active.getApprovalRuleJson(),
@@ -184,18 +147,178 @@ public class FormTemplateService {
     }
 
 
-    private FormTemplateGroup findGroupAndCheckCompany(Long templateGroupId, Long companyId) {
-        FormTemplateGroup group = formTemplateGroupRepository.findById(templateGroupId)
-                .orElseThrow(() -> new NotFoundException(
-                        "양식 그룹을 찾을 수 없습니다."
-                ));
+    @Transactional
+    public void updateStructure(
+            Long formTemplateId,
+            Long companyId,
+            FormTemplateUpdateReqDto reqDto
+    ) {
+        FormTemplate formTemplate = findFormTemplate(formTemplateId);
+        checkCompany(companyId, formTemplate);
 
-        if (!group.getCompany().getId().equals(companyId)) {
-            throw new ForbiddenException(
-                    "해당 회사의 양식 그룹이 아닙니다."
+        if (reqDto.getCategoryCode() != null) {
+            TemplateCategory category = templateCategoryRepository
+                    .findByCode(reqDto.getCategoryCode())
+                    .orElseThrow(() ->
+                            new NotFoundException("양식 카테고리를 찾을 수 없습니다.")
+                    );
+            formTemplate.changeCategory(category);
+        }
+
+        if (reqDto.getTemplateJson() != null) {
+            formTemplate.updateTemplateJson(
+                    objectMapper.writeValueAsString(reqDto.getTemplateJson())
             );
         }
+
+        if (reqDto.getAffectTags() != null) {
+            formTemplate.updateAffectTags(reqDto.getAffectTags());
+        }
+    }
+
+    @Transactional
+    public void updateApprovalRule(
+            Long formTemplateId,
+            Long companyId,
+            FormTemplateUpdateReqDto reqDto
+    ) {
+        FormTemplate formTemplate = findFormTemplate(formTemplateId);
+        checkCompany(companyId, formTemplate);
+
+        if (reqDto.getApprovalRuleJson() != null) {
+            formTemplate.updateApprovalRuleJson(
+                    objectMapper.writeValueAsString(reqDto.getApprovalRuleJson())
+            );
+        }
+    }
+
+
+    @Transactional
+    public void publishFormTemplate(Long formTemplateId, Long companyId) {
+        FormTemplate draft = findFormTemplate(formTemplateId);
+        checkCompany(companyId, draft);
+
+        if (draft.getStatus() != FormTemplateStatus.DRAFT) {
+            throw new InvalidRequestException(
+                    "DRAFT 상태의 결재 양식만 활성화할 수 있습니다."
+            );
+        }
+
+        int nextVersion =
+                calculateNextActiveVersion(draft.getTemplateGroup().getId());
+
+        formTemplateRepository
+                .findTopByTemplateGroup_IdAndStatusOrderByVersionDesc(
+                        draft.getTemplateGroup().getId(),
+                        FormTemplateStatus.ACTIVE
+                )
+                .ifPresent(active -> {
+                    active.updateStatus(FormTemplateStatus.INACTIVE);
+                    formTemplateRepository.flush();
+                });
+
+        draft.updateVersion(nextVersion);
+        draft.updateStatus(FormTemplateStatus.ACTIVE);
+    }
+
+
+    public List<FormTemplateActiveListResDto> getActiveFormTemplates(
+            Long companyId,
+            String keyword
+    ) {
+        String searchKeyword = keyword == null ? "" : keyword;
+
+        return formTemplateRepository
+                .findWithActiveTemplateAndCompanyAndKeyword(companyId, searchKeyword)
+                .stream()
+                .map(v ->
+                        new FormTemplateActiveListResDto(
+                                v.getId(),
+                                v.getVersion(),
+                                v.getGroupId(),
+                                v.getName()
+                        )
+                )
+                .toList();
+    }
+
+    public FormTemplateDetailResDto getDetailFormTemplate(
+            Long formTemplateId,
+            Long companyId
+    ) {
+        FormTemplate formTemplate = findFormTemplate(formTemplateId);
+        checkCompany(companyId, formTemplate);
+
+        return FormTemplateDetailResDto.from(formTemplate, objectMapper);
+    }
+
+    public Page<FormTemplateAllListResDto> allFormTemplate(
+            Long companyId,
+            int size,
+            int offset,
+            String keyword,
+            FormTemplateStatus status
+    ) {
+        Pageable pageable =
+                PageRequest.of(offset, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
+
+        return formTemplateRepository
+                .findAllWithDocumentCount(companyId, keyword, status, pageable)
+                .map(FormTemplateAllListResDto::from);
+    }
+
+
+    public FormTemplatePreviewResDto getPreviewFormTemplate(
+            Long companyId,
+            Long formTemplateId
+    ) {
+        FormTemplate formTemplate = findFormTemplate(formTemplateId);
+        checkCompany(companyId, formTemplate);
+
+        FormTemplateSchema schema =
+                parseSchema(formTemplate.getTemplateJson());
+
+        Map<String, Object> previewData =
+                sampleDataGenerator.generate(schema);
+
+        FormTemplateMetaDto meta =
+                FormTemplateMetaDto.from(formTemplate);
+
+        return FormTemplatePreviewResDto.from(meta, schema, previewData);
+    }
+
+    /* =====================================================
+     * Private helpers
+     * ===================================================== */
+
+    private FormTemplate findFormTemplate(Long formTemplateId) {
+        return formTemplateRepository.findById(formTemplateId)
+                .orElseThrow(() ->
+                        new NotFoundException("결재 양식을 찾을 수 없습니다.")
+                );
+    }
+
+    private FormTemplateGroup findGroupAndCheckCompany(
+            Long templateGroupId,
+            Long companyId
+    ) {
+        FormTemplateGroup group = formTemplateGroupRepository.findById(templateGroupId)
+                .orElseThrow(() ->
+                        new NotFoundException("양식 그룹을 찾을 수 없습니다.")
+                );
+
+        if (!group.getCompany().getId().equals(companyId)) {
+            throw new ForbiddenException("해당 회사의 양식 그룹이 아닙니다.");
+        }
         return group;
+    }
+
+    private static void checkCompany(Long companyId, FormTemplate formTemplate) {
+        if (!formTemplate.getCompany().getId().equals(companyId)) {
+            throw new ForbiddenException(
+                    "사용자의 소속(회사)와 문서 양식의 회사가 일치하지 않습니다."
+            );
+        }
     }
 
     private int calculateNextActiveVersion(Long templateGroupId) {
@@ -203,7 +326,6 @@ public class FormTemplateService {
                 .findMaxVersionByTemplateGroupId(templateGroupId)
                 .orElse(0) + 1;
     }
-
 
     private Long createDraftTemplate(
             FormTemplateGroup group,
@@ -228,117 +350,42 @@ public class FormTemplateService {
         return template.getId();
     }
 
+    private String buildInitialTemplateJson() {
+        ObjectNode root = objectMapper.createObjectNode();
+        ArrayNode fields = root.putArray("fields");
 
-    @Transactional
-    public void updateStructure(Long formTemplateId, Long companyId, FormTemplateUpdateReqDto reqDto) {
-        FormTemplate formTemplate = findFormTemplate(formTemplateId);
+        ObjectNode titleField = objectMapper.createObjectNode();
+        titleField.put("fieldId", "document-title");
+        titleField.put("fieldType", "document-title");
+        titleField.put("label", "문서 제목");
+        titleField.put("required", true);
+        titleField.put("order", 1);
 
-        checkCompany(companyId, formTemplate);
+        ObjectNode meta = titleField.putObject("meta");
+        meta.put("placeholder", "문서 제목을 입력하세요.");
+        meta.put("maxLength", 100);
 
-        if (reqDto.getCategoryCode() != null) {
-            TemplateCategory category = templateCategoryRepository
-                    .findByCode(reqDto.getCategoryCode())
-                    .orElseThrow(() -> new NotFoundException(
-                            "양식 카테고리를 찾을 수 없습니다."
-                    ));
-
-            formTemplate.changeCategory(category);
-        }
-
-        if (reqDto.getTemplateJson() != null) {
-
-            formTemplate.updateTemplateJson(objectMapper.writeValueAsString(reqDto.getTemplateJson()));
-        }
-
-        if (reqDto.getAffectTags() != null) {
-            formTemplate.updateAffectTags(reqDto.getAffectTags());
-        }
+        fields.add(titleField);
+        return root.toString();
     }
 
-    @Transactional
-    public void updateApprovalRule(Long formTemplateId, Long companyId, FormTemplateUpdateReqDto reqDto) {
+    private String buildInitialApprovalRuleJson() {
+        ArrayNode rootArray = objectMapper.createArrayNode();
 
-        FormTemplate formTemplate = findFormTemplate(formTemplateId);
+        ObjectNode firstStep = objectMapper.createObjectNode();
+        firstStep.put("step", 1);
+        firstStep.putNull("organizationId");
+        firstStep.putNull("positionCategoryId");
 
-        checkCompany(companyId, formTemplate);
-
-        if (reqDto.getApprovalRuleJson() != null) {
-            formTemplate.updateApprovalRuleJson(objectMapper.writeValueAsString(reqDto.getApprovalRuleJson()));
-        }
+        rootArray.add(firstStep);
+        return rootArray.toString();
     }
 
-    @Transactional
-    public void publishFormTemplate(Long formTemplateId, Long companyId) {
-
-        FormTemplate draft = findFormTemplate(formTemplateId);
-        checkCompany(companyId, draft);
-
-        if (draft.getStatus() != FormTemplateStatus.DRAFT) {
-            throw new InvalidRequestException(
-                    "DRAFT 상태의 결재 양식만 활성화할 수 있습니다."
-            );
-        }
-
-        int nextVersion = calculateNextActiveVersion(
-                draft.getTemplateGroup().getId()
-        );
-
-
-        formTemplateRepository
-                .findTopByTemplateGroup_IdAndStatusOrderByVersionDesc(
-                        draft.getTemplateGroup().getId(),
-                        FormTemplateStatus.ACTIVE
-                )
-                .ifPresent(active -> {
-                    active.updateStatus(FormTemplateStatus.INACTIVE);
-                    formTemplateRepository.flush(); // 🔥 핵심
-                });
-
-        draft.updateVersion(nextVersion);
-        draft.updateStatus(FormTemplateStatus.ACTIVE);
-    }
-
-
-    private FormTemplate findFormTemplate(Long formTemplateId) {
-        return formTemplateRepository.findById(formTemplateId)
-                .orElseThrow(() -> new NotFoundException(
-                        "결재 양식을 찾을 수 없습니다."
-                ));
-    }
-
-
-    private static void checkCompany(Long companyId, FormTemplate formTemplate) {
-        if (!formTemplate.getCompany().getId().equals(companyId)) {
-            throw new ForbiddenException("사용자의 소속(회사) 와 문서 양식의 주인(회사)가 일치하지 않습니다.");
+    private FormTemplateSchema parseSchema(String templateJson) {
+        try {
+            return objectMapper.readValue(templateJson, FormTemplateSchema.class);
+        } catch (Exception e) {
+            throw new IllegalStateException("template_json 파싱 실패", e);
         }
     }
-
-    public List<FormTemplateActiveListResDto> getActiveFormTemplates(Long companyId, String keyword) {
-        String searchKeyword = (keyword == null) ? "" : keyword;
-
-
-        List<FormTemplateListView> views = formTemplateRepository.findWithActiveTemplateAndCompanyAndKeyword(companyId, searchKeyword);
-        return views.stream()
-                .map(v -> new FormTemplateActiveListResDto(v.getId(), v.getVersion(), v.getGroupId(), v.getName()))
-                .toList();
-    }
-
-    public FormTemplateDetailResDto getDetailFormTemplate(Long formTemplateId, Long companyId) {
-        FormTemplate formTemplate = findFormTemplate(formTemplateId);
-
-        checkCompany(companyId, formTemplate);
-
-        return FormTemplateDetailResDto.from(formTemplate, objectMapper);
-    }
-
-    public Page<FormTemplateAllListResDto> allFormTemplate(Long companyId, int size, int offset, String keyword, FormTemplateStatus status) {
-        Pageable pageable = PageRequest.of(offset, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
-
-
-        Page<FormTemplateAllListView> page = formTemplateRepository.findAllWithDocumentCount(companyId, keyword, status, pageable);
-
-
-        return page.map(FormTemplateAllListResDto::from);
-    }
-
 }
