@@ -116,11 +116,29 @@ CREATE TABLE position
     category_id        BIGINT      NOT NULL,
     parent_position_id BIGINT      NULL,
     name               VARCHAR(50) NOT NULL,
-    order_index        INT         NOT NULL,
+    order_index        INT,
     is_active          BOOLEAN     NOT NULL DEFAULT TRUE,
+
+    -- 활성 상태에서만 정렬 유니크를 적용하기 위한 가상 컬럼
+    active_order_index INT
+                       GENERATED ALWAYS AS (
+                           CASE
+                               WHEN is_active = TRUE THEN order_index
+                               ELSE NULL
+                               END
+                           ) STORED,
+
     created_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
+
+    -- 회사 내 직책명 중복 방지 (정책 유지)
+    CONSTRAINT uk_position_company_name
+        UNIQUE (company_id, name),
+    -- 활성 상태에서만 정렬 순서 유니크 보장
+    CONSTRAINT uk_position_company_active_order
+        UNIQUE (company_id, category_id, active_order_index),
+
     CONSTRAINT fk_position_company
         FOREIGN KEY (company_id) REFERENCES company (id),
     CONSTRAINT fk_position_category

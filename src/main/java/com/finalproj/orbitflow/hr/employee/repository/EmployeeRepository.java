@@ -66,4 +66,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     long countByCompanyIdAndRank_Id(Long companyId, Long rankId);
 
     List<Employee> findAllByStatus(String active);
+
+    boolean existsByCompanyIdAndPositionId(Long companyId, Long positionId);
 }
