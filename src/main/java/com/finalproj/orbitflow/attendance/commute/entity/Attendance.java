@@ -62,16 +62,6 @@ public class Attendance {
         this.markAsCorrected(); // 상태 변경 시 자동으로 정정 여부 체크
     }
 
-    /**
-     * 출근 시각을 수동으로 업데이트하는 메서드
-     */
-    public void updateCommuteTime(LocalDateTime commuteAt) {
-        this.commuteAt = commuteAt;
-    }
-
-    /**
-     * 정정 여부를 참(true)으로 변경하는 메서드
-     */
     public void markAsCorrected() {
         this.isCorrected = true;
     }

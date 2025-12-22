@@ -1,7 +1,7 @@
 package com.finalproj.orbitflow.attendance.dashboard.controller;
 
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -13,11 +13,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
  * @since : 2025. 12. 19. 금요일
  */
 @Controller
-@RequestMapping("/view")
+@RequestMapping("/view/admin/attendance")
 public class AttendanceDashboardViewController {
 
-    @GetMapping("/admin/attendance")
-    public String attendanceDashboardPage() {
-        return "admin/admin-dashboard";
+    @GetMapping("/rules")
+    public String attendanceRulesPage(Model model) {
+        model.addAttribute("currentGNB", "admin");
+        model.addAttribute("currentMenu", "attendance-rules"); // 규칙 관리 활성화
+        return "admin/admin-rule";
     }
+
+
+
+
 }
