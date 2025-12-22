@@ -943,7 +943,6 @@ CREATE TABLE meetingroom
     position           VARCHAR(50) NOT NULL,
     description        VARCHAR(255),
     resource_status_id BIGINT,
-    uploader_id        BIGINT,
     created_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at         TIMESTAMP            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_meetingroom_company
@@ -953,10 +952,6 @@ CREATE TABLE meetingroom
     CONSTRAINT fk_meetingroom_resource_status
         FOREIGN KEY (resource_status_id)
             REFERENCES resource_status (id)
-            ON DELETE SET NULL,
-    CONSTRAINT fk_meetingroom_uploader
-        FOREIGN KEY (uploader_id)
-            REFERENCES employee (id)
             ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
@@ -971,7 +966,6 @@ CREATE TABLE car
     description        VARCHAR(255),
     resource_status_id BIGINT,
     file_id            BIGINT,
-    uploader_id        BIGINT,
     created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
@@ -983,9 +977,6 @@ CREATE TABLE car
             ON DELETE SET NULL,
     CONSTRAINT fk_car_file
         FOREIGN KEY (file_id) REFERENCES file (id)
-            ON DELETE SET NULL,
-    CONSTRAINT fk_car_uploader
-        FOREIGN KEY (uploader_id) REFERENCES employee (id)
             ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
@@ -1014,7 +1005,6 @@ CREATE TABLE item
     description        VARCHAR(255),
     resource_status_id BIGINT,
     file_id            BIGINT,
-    uploader_id        BIGINT,
     created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
@@ -1029,9 +1019,6 @@ CREATE TABLE item
             ON DELETE SET NULL,
     CONSTRAINT fk_item_file
         FOREIGN KEY (file_id) REFERENCES file (id)
-            ON DELETE SET NULL,
-    CONSTRAINT fk_item_uploader
-        FOREIGN KEY (uploader_id) REFERENCES employee (id)
             ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
