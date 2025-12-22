@@ -2,10 +2,11 @@ package com.finalproj.orbitflow.resource.car.repository;
 
 import com.finalproj.orbitflow.resource.car.entity.Car;
 import com.finalproj.orbitflow.resource.enums.ResourceStatusCode;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -23,7 +24,7 @@ public interface CarRepository extends JpaRepository<Car, Long> {
                 where c.company.id = :companyId
                 and c.resourceStatus.resourceStatusCode != 'DELETED'
             """)
-    Collection<Car> findAllByCompany_Id(Long companyId);
+    Page<Car> findAllByCompany_Id(Long companyId, Pageable pageable);
 
     @Query("""
                 select c 
