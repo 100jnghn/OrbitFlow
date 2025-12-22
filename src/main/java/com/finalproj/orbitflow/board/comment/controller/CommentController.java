@@ -78,4 +78,21 @@ public class CommentController {
                 new ResponseDto<>(HttpStatus.OK, "댓글이 수정되었습니다.", result)
         );
     }
+
+    /** [사용자용] 댓글 삭제 */
+    @DeleteMapping("/comments/{commentId}")
+    public ResponseEntity<ResponseDto<Void>> deleteComment(
+            @AuthenticationPrincipal SecurityUser user,
+            @PathVariable Long commentId
+    ) {
+        commentService.deleteComment(
+                user.getCompanyId(),
+                user.getEmployeeId(),
+                commentId
+        );
+
+        return ResponseEntity.ok(
+                new ResponseDto<>(HttpStatus.OK, "댓글이 삭제되었습니다.", null)
+        );
+    }
 }

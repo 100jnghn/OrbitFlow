@@ -113,4 +113,25 @@ public class CommentService {
 
         return CommentResDto.DetailInfo.from(comment);
     }
+
+    /** 댓글 삭제 */
+    @Transactional
+    public void deleteComment(
+            Long companyId,
+            Long employeeId,
+            Long commentId
+    ) {
+        Comment comment = commentRepository.findByIdAndDeletedAtIsNull(commentId)
+                .orElseThrow(() -> new NotFoundException("댓글이 존재하지 않습니다."));
+
+        if (!comment.getBoard().getCategory().getCompany().getId().equals(companyId)) {
+            throw new ForbiddenException("삭제 권한이 없습니다.");
+        }
+
+        if (!comment.getWriter().getId().equals(employeeId)) {
+            throw new ForbiddenException("본인이 작성한 댓글만 삭제할 수 있습니다.");
+        }
+
+        comment.softDelete(); // deletedAt 처리
+    }
 }
