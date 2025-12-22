@@ -55,4 +55,24 @@ public class Attendance {
 
     @Column(name = "correction_reason", length = 255)
     private String correctionReason; // 정정 사유 (관리자 최종 사유)
+
+    public void updateStatus(AttendanceStatus status, String correctionReason) {
+        this.status = status;
+        this.correctionReason = correctionReason;
+        this.markAsCorrected(); // 상태 변경 시 자동으로 정정 여부 체크
+    }
+
+    /**
+     * 출근 시각을 수동으로 업데이트하는 메서드
+     */
+    public void updateCommuteTime(LocalDateTime commuteAt) {
+        this.commuteAt = commuteAt;
+    }
+
+    /**
+     * 정정 여부를 참(true)으로 변경하는 메서드
+     */
+    public void markAsCorrected() {
+        this.isCorrected = true;
+    }
 }
