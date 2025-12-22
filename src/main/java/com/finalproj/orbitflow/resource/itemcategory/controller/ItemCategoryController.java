@@ -4,7 +4,6 @@ import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import com.finalproj.orbitflow.resource.itemcategory.dto.ItemCategoryDto;
 import com.finalproj.orbitflow.resource.itemcategory.service.ItemCategoryService;
-import com.finalproj.orbitflow.global.exception.ConfirmRequiredException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -79,6 +78,7 @@ public class ItemCategoryController {
                 new ResponseDto(HttpStatus.OK, "자원 카테고리 수정 성공", null)
         );
     }
+
     // 기타 자원 카테고리 삭제
     @DeleteMapping("/admin/item-categories/{itemCategoryId}")
     public ResponseEntity<ResponseDto> deleteItemCategory(
@@ -86,17 +86,11 @@ public class ItemCategoryController {
             @RequestParam(value = "force", defaultValue = "false") boolean force
     ) {
 
-        try {
-            itemCategoryService.deleteItemCategory(itemCategoryId, force);
+        itemCategoryService.deleteItemCategory(itemCategoryId);
 
-            return ResponseEntity.ok().body(
-                    new ResponseDto(HttpStatus.OK, "카테고리 및 하위 자원 삭제 완료", null)
-            );
-        } catch (ConfirmRequiredException e) {
-            // 하위 자원 삭제 경고가 필요한 경우 -> 409 error
-            // 프론트에서 confirm 창을 띄우고 확인 -> force = true로 재요청
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, "카테고리 및 하위 자원 삭제 완료", null)
+        );
 
-            throw new ConfirmRequiredException("확인이 필요합니다");
-        }
     }
 }
