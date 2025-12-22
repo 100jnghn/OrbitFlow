@@ -33,8 +33,8 @@ document.addEventListener('DOMContentLoaded', function() {
 async function loadBoardList(page = 0) {
     try {
         // Spring Data의 sort 파라미터 형식: sort=createdAt,desc (방향 포함)
-        // 페이지 크기를 10으로 늘려서 더 많은 게시판을 한 번에 표시
-        const response = await apiFetch(`${API_BASE_URL}?organizationOnly=false&page=${page}&size=10&sort=createdAt,desc`, {
+        // 페이지 크기를 5로 설정하여 부서 게시판과 동일하게 페이징 처리
+        const response = await apiFetch(`${API_BASE_URL}?organizationOnly=false&page=${page}&size=5&sort=createdAt,desc`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -129,7 +129,7 @@ function renderBoardTable(boards) {
 
     boards.forEach((board, index) => {
         const row = document.createElement('tr');
-        const rowNumber = currentBoardPage * 10 + index + 1;
+        const rowNumber = currentBoardPage * 5 + index + 1;
         
         const createdAt = new Date(board.createdAt).toLocaleString('ko-KR', {
             year: 'numeric',
@@ -158,26 +158,9 @@ function renderBoardPagination() {
     const pagination = document.getElementById('boardPagination');
     pagination.innerHTML = '';
 
-    // 기존 페이지네이션 정보 제거
-    const existingInfo = pagination.parentElement.querySelector('.pagination-info');
-    if (existingInfo) {
-        existingInfo.remove();
-    }
-    
-    // 페이지네이션 정보 표시
-    const pageInfo = document.createElement('div');
-    pageInfo.className = 'pagination-info';
-    pageInfo.textContent = `전체 ${totalBoardPages}페이지 중 ${currentBoardPage + 1}페이지`;
-    pageInfo.style.cssText = 'margin-bottom: 10px; color: #666; font-size: 14px; text-align: center;';
-    pagination.parentElement.insertBefore(pageInfo, pagination);
-    
     if (totalBoardPages <= 1) {
-        // 페이지가 1개뿐이면 페이지네이션 숨기기
-        pagination.style.display = 'none';
         return;
     }
-    
-    pagination.style.display = 'flex';
 
     // 이전 버튼
     const prevBtn = document.createElement('button');

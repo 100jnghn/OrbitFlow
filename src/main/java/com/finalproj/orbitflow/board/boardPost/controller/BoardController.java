@@ -110,11 +110,12 @@ public class BoardController {
                 ));
     }
 
+    /** [사용자용] 게시글 수정 */
     @PutMapping(value = "/{boardId}", consumes = "multipart/form-data")
     public ResponseEntity<ResponseDto> updateBoard(
             @AuthenticationPrincipal SecurityUser user,
             @PathVariable Long boardId,
-            @RequestPart("request") @Valid BoardReqDto.Update request,
+            @Valid @ModelAttribute BoardReqDto.Update request,
             @RequestPart(value = "files", required = false) List<MultipartFile> files
     ) {
         BoardResDto.DetailInfo result = boardService.updateBoard(
@@ -129,6 +130,7 @@ public class BoardController {
         return ResponseEntity.ok(new ResponseDto(HttpStatus.OK, "게시글 수정 성공", result));
     }
 
+    /** [사용자용] 게시글 삭제 */
     @DeleteMapping("/{boardId}")
     public ResponseEntity<ResponseDto> deleteBoard(
             @AuthenticationPrincipal SecurityUser user,
