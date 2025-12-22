@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.resource.car.service;
 
+import com.finalproj.orbitflow.global.exception.DuplicateCarNumberException;
 import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
@@ -12,6 +13,8 @@ import com.finalproj.orbitflow.resource.status.entity.ResourceStatus;
 import com.finalproj.orbitflow.resource.status.repository.ResourceStatusRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,12 +38,12 @@ public class CarService {
     private final ResourceStatusRepository resourceStatusRepository;
 
     @Transactional(readOnly = true)
-    public List<CarResDto> getCars(Long companyId) {
+    public Page<CarResDto> getCars(Long companyId, Pageable pageable) {
 
-        return carRepository.findAllByCompany_Id(companyId).stream()
-                .map(this::convertToResDto)
-                .collect(Collectors.toList());
+        return carRepository.findAllByCompany_Id(companyId, pageable)
+                .map(this::convertToResDto);
     }
+
 
     @Transactional(readOnly = true)
     public List<CarResDto> getAvailableCars(Long companyId) {
@@ -63,12 +66,18 @@ public class CarService {
         Company company = companyRepository.getReferenceById(companyId);
         ResourceStatus resourceStatus = findResourceStatus(dto.getStatusId());
 
+        // 차량 번호 unique하게 (공백 제거)
+        String number = dto.getNumber().replace(" ", "");
+
+        if (carRepository.existsByNumber(number)) {
+            throw new DuplicateCarNumberException("이미 존재하는 차량 번호입니다");
+        }
 
         // todo - 이미지 파일 저장 기능 추가
 
         Car car = Car.builder()
                 .company(company)
-                .number(dto.getNumber())
+                .number(number)
                 .name(dto.getName())
                 .driverAge(dto.getDriverAge())
                 .description(dto.getDescription())
@@ -91,8 +100,15 @@ public class CarService {
         // todo - 이미지 수정 로직 추가
         File imgFile = car.getFile();
 
+        // 차량 번호 unique하게 (공백 제거)
+        String number = dto.getNumber().replace(" ", "");
+
+        if (carRepository.existsByNumber(number)) {
+            throw new DuplicateCarNumberException("이미 존재하는 차량 번호입니다");
+        }
+
         car.update(
-                dto.getNumber(),
+                number,
                 dto.getName(),
                 dto.getDriverAge(),
                 dto.getDescription(),
@@ -131,9 +147,12 @@ public class CarService {
             objectKey = car.getFile().getObjectKey();
         }
 
+        String number = car.getNumber();
+        number = number.replaceAll("([가-힣])", "$1 ");
+
         return CarResDto.builder()
                 .carId(car.getId())
-                .number(car.getNumber())
+                .number(number)
                 .name(car.getName())
                 .driverAge(car.getDriverAge())
                 .description(car.getDescription())

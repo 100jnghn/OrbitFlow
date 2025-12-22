@@ -65,7 +65,7 @@ function initEventListeners() {
  */
 function handleImageSelect(event) {
     const file = event.target.files[0];
-    
+
     if (!file) return;
 
     // 파일 타입 검증
@@ -102,7 +102,7 @@ function displayImagePreview(imageUrl) {
         previewImage.src = imageUrl;
         previewImage.style.display = 'block';
         placeholder.style.display = 'none';
-        
+
         if (removeBtn) {
             removeBtn.style.display = 'inline-flex';
         }
@@ -114,7 +114,7 @@ function displayImagePreview(imageUrl) {
  */
 function handleImageRemove() {
     selectedImageFile = null;
-    
+
     const previewImage = document.getElementById('preview-image');
     const placeholder = document.getElementById('upload-placeholder');
     const removeBtn = document.getElementById('btn-remove');
@@ -124,15 +124,15 @@ function handleImageRemove() {
         previewImage.src = '';
         previewImage.style.display = 'none';
     }
-    
+
     if (placeholder) {
         placeholder.style.display = 'flex';
     }
-    
+
     if (removeBtn) {
         removeBtn.style.display = 'none';
     }
-    
+
     if (imageInput) {
         imageInput.value = '';
     }
@@ -195,17 +195,22 @@ async function handleSave() {
             }
         );
 
-        if (!response.ok) {
-            throw new Error('차량 등록 실패');
-        }
+        console.log(response);
 
-        alert('차량이 등록되었습니다.');
-        // 관리자 차량 목록 화면으로 이동
-        window.location.href = '/view/resource/admin/cars';
+        if (response.ok) {
+            alert('차량이 등록되었습니다.');
+
+            // 관리자 차량 목록 화면으로 이동
+            window.location.href = '/view/resource/admin/cars';
+
+        } else {
+            const result = await response.json();
+            alert(result.message)
+        }
 
     } catch (error) {
         console.error(error);
-        alert('차량 등록에 실패했습니다.');
+        alert(error.message);
     }
 }
 
@@ -225,9 +230,9 @@ async function loadStatusOptions() {
     try {
         const response = await apiFetch(
             '/api/admin/resource-status',
-            { method: 'GET' }
+            {method: 'GET'}
         );
-        
+
         if (!response.ok) throw new Error();
 
         const result = await response.json();

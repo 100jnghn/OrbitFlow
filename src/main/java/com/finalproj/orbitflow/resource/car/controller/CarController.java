@@ -6,6 +6,10 @@ import com.finalproj.orbitflow.resource.car.dto.CarReqDto;
 import com.finalproj.orbitflow.resource.car.dto.CarResDto;
 import com.finalproj.orbitflow.resource.car.service.CarService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,15 +33,24 @@ public class CarController {
 
     // 관리자 - 차량 리스트 조회
     @GetMapping("/admin/cars")
-    public ResponseEntity<ResponseDto> getCars(@AuthenticationPrincipal SecurityUser user) {
-
+    public ResponseEntity<ResponseDto> getCars(
+            @AuthenticationPrincipal SecurityUser user,
+            @PageableDefault(
+                    page = 0,
+                    size = 10,
+                    sort = "id",
+                    direction = Sort.Direction.ASC
+            ) Pageable pageable
+    ) {
         Long companyId = user.getCompanyId();
-        List<CarResDto> cars = carService.getCars(companyId);
 
-        return ResponseEntity.ok().body(
+        Page<CarResDto> cars = carService.getCars(companyId, pageable);
+
+        return ResponseEntity.ok(
                 new ResponseDto(HttpStatus.OK, "차량 목록 조회 성공", cars)
         );
     }
+
 
     // 사용자 - 차량 리스트 조회
     @GetMapping("/cars")

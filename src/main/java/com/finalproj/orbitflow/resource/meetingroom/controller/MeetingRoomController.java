@@ -6,6 +6,10 @@ import com.finalproj.orbitflow.resource.meetingroom.dto.MeetingroomReqDto;
 import com.finalproj.orbitflow.resource.meetingroom.dto.MeetingroomResDto;
 import com.finalproj.orbitflow.resource.meetingroom.service.MeetingroomService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,14 +33,25 @@ public class MeetingRoomController {
 
     // 관리자 - 회의실 리스트 조회
     @GetMapping("/admin/meetingrooms")
-    public ResponseEntity<ResponseDto> getMeetingrooms(@AuthenticationPrincipal SecurityUser user) {
-
+    public ResponseEntity<ResponseDto> getMeetingrooms(
+            @AuthenticationPrincipal SecurityUser user,
+            @PageableDefault(
+                    page = 0,
+                    size = 10,
+                    sort = "id",
+                    direction = Sort.Direction.ASC
+            ) Pageable pageable
+    ) {
         Long companyId = user.getCompanyId();
-        List<MeetingroomResDto> meetingrooms = meetingroomService.getMeetingrooms(companyId);
 
-        return ResponseEntity.ok()
-                .body(new ResponseDto(HttpStatus.OK, "회의실 목록 조회 성공", meetingrooms));
+        Page<MeetingroomResDto> meetingrooms =
+                meetingroomService.getMeetingrooms(companyId, pageable);
+
+        return ResponseEntity.ok(
+                new ResponseDto(HttpStatus.OK, "회의실 목록 조회 성공", meetingrooms)
+        );
     }
+
 
     // 사용자 - 회의실 조회 (상태가 AVAILABLE인 회의실만 조회)
     @GetMapping("/meetingrooms")

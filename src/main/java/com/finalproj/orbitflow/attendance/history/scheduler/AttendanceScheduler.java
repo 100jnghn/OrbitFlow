@@ -5,6 +5,7 @@ import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
 import com.finalproj.orbitflow.attendance.commute.repository.AttendanceRepository;
 
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
+import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +44,7 @@ public class AttendanceScheduler {
         log.info("{} 결근 처리 스케줄러 가동", yesterday);
 
         // 2. 현재 재직 중인 모든 사원 조회
-        List<Employee> allEmployees = employeeRepository.findAllByStatus("ACTIVE");
+        List<Employee> allEmployees = employeeRepository.findAllByStatus(EmployeeStatus.ACTIVE);
 
         for (Employee emp : allEmployees) {
             // 3. 해당 사원이 어제 출근 기록이 있는지 확인

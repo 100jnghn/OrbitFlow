@@ -1,0 +1,280 @@
+/* =========================
+   Page Header
+========================= */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.page-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #222;
+    letter-spacing: -1px;
+}
+
+/* =========================
+   Buttons
+========================= */
+.btn-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    background: #4a69bd;
+    color: #fff;
+    border: none;
+
+    /* 🔥 크기 통일 */
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: 600;
+
+    border-radius: 8px; /* manage 버튼과 동일 */
+    cursor: pointer;
+    transition: background 0.2s;
+
+    margin-left: auto;
+}
+
+.btn-add:hover {
+    background: #3a5aa0;
+}
+
+/* =========================
+   Category Filter Section
+========================= */
+.category-section {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 20px 24px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.category-select-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 0 0 20%;
+}
+
+.category-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+}
+
+.category-select {
+    padding: 12px 14px;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.category-select:hover {
+    border-color: #4a69bd;
+}
+
+.category-select:focus {
+    outline: none;
+    border-color: #4a69bd;
+    box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.1);
+}
+
+.btn-category-manage {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    background: #6c757d;
+    color: #fff;
+    transition: all 0.2s;
+}
+
+.btn-category-manage:hover {
+    background: #5a6268;
+}
+
+/* =========================
+   Table Container
+========================= */
+.table-container {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* =========================
+   Resource Table (Base)
+========================= */
+.resource-table {
+    width: 100%;
+    margin-top: 16px;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.resource-table thead {
+    background: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.resource-table th,
+.resource-table td {
+    padding: 14px 16px;
+    font-size: 14px;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+
+    /* 한 줄 유지 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    position: relative;
+}
+
+.resource-table th {
+    font-weight: 600;
+    color: #495057;
+}
+
+.resource-table td {
+    color: #555;
+}
+
+.resource-table td:first-child {
+    text-align: center;
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.resource-table tbody tr {
+    transition: background 0.2s;
+}
+
+.resource-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.resource-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* =========================
+   Tooltip Base (공통 디자인)
+========================= */
+.tooltip,
+.resource-table td[data-fulltext]:hover::after {
+    max-width: 400px;
+    padding: 6px 10px;
+
+    background: rgba(33, 37, 41, 0.95);
+    color: #fff;
+    font-size: 13px;
+    line-height: 1.4;
+
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+
+    white-space: normal;
+    font-family: 'Noto Sans KR', system-ui, sans-serif;
+}
+
+/* =========================
+   JS Tooltip (position: fixed)
+========================= */
+.tooltip {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+}
+
+/* =========================
+   CSS Hover Tooltip (Column 5 - 비고)
+========================= */
+.resource-table td:nth-child(5) {
+    cursor: help;
+}
+
+.resource-table td:nth-child(5):hover::after {
+    content: attr(data-fulltext);
+
+    position: absolute;
+    left: 0;
+    top: 100%;
+    z-index: 1000;
+}
+
+/* =========================
+   Action Buttons
+========================= */
+.action-btns {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-edit,
+.btn-delete {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-edit {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.btn-edit:hover {
+    background: #bbdefb;
+}
+
+.btn-delete {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.btn-delete:hover {
+    background: #ffcdd2;
+}
+
+/* =========================
+   Empty State
+========================= */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+}
+
+.empty-state i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+}
+
+.app-content {
+    flex: 1;
+    padding: 24px 40px 16px;
+    overflow-y: auto;
+}

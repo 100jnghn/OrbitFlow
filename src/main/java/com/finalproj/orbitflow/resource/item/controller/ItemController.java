@@ -6,6 +6,10 @@ import com.finalproj.orbitflow.resource.item.dto.ItemReqDto;
 import com.finalproj.orbitflow.resource.item.dto.ItemResDto;
 import com.finalproj.orbitflow.resource.item.service.ItemService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -31,15 +35,24 @@ public class ItemController {
     // 관리자 - 기타 자원 리스트 조회
     @GetMapping("/admin/items")
     public ResponseEntity<ResponseDto> getItems(
-            @AuthenticationPrincipal SecurityUser user
+            @AuthenticationPrincipal SecurityUser user,
+            @PageableDefault(
+                    page = 0,
+                    size = 10,
+                    sort = "id",
+                    direction = Sort.Direction.ASC
+            ) Pageable pageable
     ) {
         Long companyId = user.getCompanyId();
-        List<ItemResDto> items = itemService.getItems(companyId);
 
-        return ResponseEntity.ok().body(
+        Page<ItemResDto> items =
+                itemService.getItems(companyId, pageable);
+
+        return ResponseEntity.ok(
                 new ResponseDto(HttpStatus.OK, "자원 리스트 조회 성공", items)
         );
     }
+
 
     // 사용자 - 기타 자원 리스트 조회
     @GetMapping("items")
@@ -106,6 +119,7 @@ public class ItemController {
         );
     }
 
+    // 관리자 - 자원 수정
     @PutMapping("/admin/items/{itemId}")
     public ResponseEntity<ResponseDto> updateItem(
             @PathVariable Long itemId,
@@ -117,6 +131,7 @@ public class ItemController {
         );
     }
 
+    // 관리자 - 자원 삭제
     @PatchMapping("/admin/items/{itemId}/delete")
     public ResponseEntity<ResponseDto> deleteItem(
             @PathVariable Long itemId

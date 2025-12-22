@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.attendance.attendanceDefaultRule.controller;
 
 import com.finalproj.orbitflow.attendance.attendanceDefaultRule.dto.AttRuleResDto;
 import com.finalproj.orbitflow.attendance.attendanceDefaultRule.dto.AttRuleUpdateReqDto;
+import com.finalproj.orbitflow.attendance.attendanceDefaultRule.dto.EmployeeSearchDto;
 import com.finalproj.orbitflow.attendance.attendanceExceptionRule.dto.EmpAttRuleCreateReqDto;
 import com.finalproj.orbitflow.attendance.attendanceExceptionRule.dto.EmpAttRuleResDto;
 import com.finalproj.orbitflow.attendance.attendanceExceptionRule.dto.EmpAttRuleUpdateReqDto;
@@ -25,33 +26,22 @@ import java.util.stream.Collectors;
 public class AttendanceRuleController {
 
     private final AttendanceRuleService attendanceRuleService;
-    private final EmployeeRepository employeeRepository;
 
     // =======================================================
-    // I. 회사 기본 규칙 (Default Rule) 관리 API
+    // I. 회사 기본 규칙 (Default Rule)
     // =======================================================
 
-    /**
-     * 1. 기본 규칙 조회 (GET /api/admin/rules/default)
-     */
     @GetMapping("/default")
     public ResponseEntity<AttRuleResDto> getDefaultRule(
-            @AuthenticationPrincipal SecurityUser admin) { // 관리자 세션 정보 주입
-
-        AttRuleResDto rule = attendanceRuleService.getDefaultRule(admin.getCompanyId());
-        return ResponseEntity.ok(rule);
+            @AuthenticationPrincipal SecurityUser admin) {
+        return ResponseEntity.ok(attendanceRuleService.getDefaultRule(admin.getCompanyId()));
     }
 
-    /**
-     * 2. 기본 규칙 수정 (PUT /api/admin/rules/default)
-     */
     @PutMapping("/default")
     public ResponseEntity<AttRuleResDto> updateDefaultRule(
             @AuthenticationPrincipal SecurityUser admin,
             @RequestBody AttRuleUpdateReqDto request) {
-
-        AttRuleResDto updatedRule = attendanceRuleService.updateDefaultRule(admin.getCompanyId(), request);
-        return ResponseEntity.ok(updatedRule);
+        return ResponseEntity.ok(attendanceRuleService.updateDefaultRule(admin.getCompanyId(), request));
     }
 
 
@@ -59,108 +49,46 @@ public class AttendanceRuleController {
     // II. 사원별 예외 규칙 (Exception Rule) 관리 API
     // =======================================================
 
-    /**
-     * 3. 예외 규칙 목록 조회 (GET /api/admin/rules/exception)
-     */
     @GetMapping("/exception")
     public ResponseEntity<List<EmpAttRuleResDto>> getExceptionRules(
-            @AuthenticationPrincipal SecurityUser admin) { // 관리자 세션 정보 주입
-
-        // 관리자 소속 회사의 예외 규칙만 조회
-        List<EmpAttRuleResDto> rules = attendanceRuleService.getExceptionRules(admin.getCompanyId());
-        return ResponseEntity.ok(rules);
+            @AuthenticationPrincipal SecurityUser admin) {
+        return ResponseEntity.ok(attendanceRuleService.getExceptionRules(admin.getCompanyId()));
     }
 
-    /**
-     * 4. 예외 규칙 상세 조회 (GET /api/admin/rules/exception/{ruleId})
-     */
     @GetMapping("/exception/{ruleId}")
     public ResponseEntity<EmpAttRuleResDto> getExceptionRuleDetail(
             @AuthenticationPrincipal SecurityUser admin,
             @PathVariable Long ruleId) {
-
-        // 상세 조회 시에도 해당 규칙이 관리자의 회사 소속인지 확인
-        EmpAttRuleResDto rule = attendanceRuleService.getExceptionRuleDetail(admin.getCompanyId(), ruleId);
-        return ResponseEntity.ok(rule);
+        return ResponseEntity.ok(attendanceRuleService.getExceptionRuleDetail(admin.getCompanyId(), ruleId));
     }
-
-    /**
-     * 5. 예외 규칙 추가 (POST /api/admin/rules/exception)
-     */
 
     @PostMapping("/exception")
     public ResponseEntity<EmpAttRuleResDto> createExceptionRule(
-            @AuthenticationPrincipal SecurityUser admin, // 세션에서 관리자 정보 주입
+            @AuthenticationPrincipal SecurityUser admin,
             @RequestBody EmpAttRuleCreateReqDto request) {
-
-        // 서비스 호출 시 admin 객체를 함께 전달
-        EmpAttRuleResDto createdRule = attendanceRuleService.createExceptionRule(admin, request);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdRule);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(attendanceRuleService.createExceptionRule(admin, request));
     }
 
-    /**
-     * 6. 예외 규칙 수정 (PUT /api/admin/rules/exception/{ruleId})
-     */
     @PutMapping("/exception/{ruleId}")
     public ResponseEntity<EmpAttRuleResDto> updateExceptionRule(
-            //@AuthenticationPrincipal SecurityUser admin,
             @PathVariable Long ruleId,
             @RequestBody EmpAttRuleUpdateReqDto request) {
-
-        // 서비스 호출 시 관리자의 정보(admin)를 함께 넘겨주어 본인 회사의 데이터인지 확인하게 합니다.
-        EmpAttRuleResDto updatedRule = attendanceRuleService.updateExceptionRule(SecurityUtils.getCompanyId(), ruleId, request);
-
-        return ResponseEntity.ok(updatedRule);
+        return ResponseEntity.ok(attendanceRuleService.updateExceptionRule(SecurityUtils.getCompanyId(), ruleId, request));
     }
 
-    /**
-     * 7. 예외 규칙 삭제 (DELETE /api/admin/rules/exception/{ruleId})
-     */
     @DeleteMapping("/exception/{ruleId}")
-    public ResponseEntity<String> deleteExceptionRule(
+    public ResponseEntity<Void> deleteExceptionRule(
             @AuthenticationPrincipal SecurityUser admin,
             @PathVariable Long ruleId) {
-
-        // 서비스에서 삭제 로직 수행
         attendanceRuleService.deleteExceptionRule(admin, ruleId);
-
-        // 포스트맨 Body에 띄울 메시지 반환
-        return ResponseEntity.ok("성공적으로 삭제되었습니다. (규칙 ID: " + ruleId + ")");
+        return ResponseEntity.noContent().build();
     }
 
-    /**
-     * 8. 사원 검색 (이름 또는 사번으로 검색)
-     */
     @GetMapping("/employees/search")
     public ResponseEntity<List<EmployeeSearchDto>> searchEmployees(
             @AuthenticationPrincipal SecurityUser admin,
             @RequestParam String keyword) {
-
-        List<Employee> employees = employeeRepository
-                .searchByCompanyIdAndKeyword(admin.getCompanyId(), keyword);
-
-        List<EmployeeSearchDto> result = employees.stream()
-                .map(emp -> new EmployeeSearchDto(
-                        emp.getId(),
-                        emp.getName(),
-                        emp.getEmployeeNo(),
-                        emp.getOrganization() != null ? emp.getOrganization().getName() : "",
-                        emp.getPosition() != null ? emp.getPosition().getName() : ""
-                ))
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(attendanceRuleService.searchEmployees(admin.getCompanyId(), keyword));
     }
-
-    /**
-     * 사원 검색 결과 DTO
-     */
-    public record EmployeeSearchDto(
-            Long id,
-            String name,
-            String employeeNo,
-            String organizationName,
-            String positionName
-    ) {}
 }

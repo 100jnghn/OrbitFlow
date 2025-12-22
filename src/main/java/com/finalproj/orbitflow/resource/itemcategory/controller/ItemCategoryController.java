@@ -53,6 +53,20 @@ public class ItemCategoryController {
         );
     }
 
+    // 기타 자원 카테고리 추가
+    @PostMapping("/admin/item-categories")
+    public ResponseEntity<ResponseDto> insertItemCategory(
+            @AuthenticationPrincipal SecurityUser user,
+            @RequestBody ItemCategoryDto itemCategoryDto
+    ) {
+        Long companyId = user.getCompanyId();
+        itemCategoryService.insertItemCategory(companyId, itemCategoryDto);
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, "자원 카테고리 추가 성공", null)
+        );
+    }
+
     // 기타 자원 카테고리 정보 수정
     @PutMapping("/admin/item-categories/{itemCategoryId}")
     public ResponseEntity<ResponseDto> updateItemCategory(
@@ -65,7 +79,6 @@ public class ItemCategoryController {
                 new ResponseDto(HttpStatus.OK, "자원 카테고리 수정 성공", null)
         );
     }
-
     // 기타 자원 카테고리 삭제
     @DeleteMapping("/admin/item-categories/{itemCategoryId}")
     public ResponseEntity<ResponseDto> deleteItemCategory(

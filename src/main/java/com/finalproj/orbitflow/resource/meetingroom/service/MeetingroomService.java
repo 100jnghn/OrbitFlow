@@ -11,6 +11,8 @@ import com.finalproj.orbitflow.resource.status.entity.ResourceStatus;
 import com.finalproj.orbitflow.resource.status.repository.ResourceStatusRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,14 +35,16 @@ public class MeetingroomService {
     private final CompanyRepository companyRepository;
     private final ResourceStatusRepository resourceStatusRepository;
 
-    @Transactional(readOnly = true) // 읽기 전용 트랜잭션 (성능 향상)
-    public List<MeetingroomResDto> getMeetingrooms(Long companyId) {
-
-        // DELETED는 가져오지 않음
-        return meetingroomRepository.findAllByCompany_Id(companyId).stream()
-                .map(this::convertToResDto)
-                .collect(Collectors.toList());
+    @Transactional(readOnly = true)
+    public Page<MeetingroomResDto> getMeetingrooms(
+            Long companyId,
+            Pageable pageable
+    ) {
+        return meetingroomRepository
+                .findAllByCompany_Id(companyId, pageable)
+                .map(this::convertToResDto);
     }
+
 
     public List<MeetingroomResDto> getAvailableMeetingrooms(Long companyId) {
 
