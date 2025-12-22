@@ -13,6 +13,8 @@ import com.finalproj.orbitflow.resource.status.entity.ResourceStatus;
 import com.finalproj.orbitflow.resource.status.repository.ResourceStatusRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,12 +38,12 @@ public class CarService {
     private final ResourceStatusRepository resourceStatusRepository;
 
     @Transactional(readOnly = true)
-    public List<CarResDto> getCars(Long companyId) {
+    public Page<CarResDto> getCars(Long companyId, Pageable pageable) {
 
-        return carRepository.findAllByCompany_Id(companyId).stream()
-                .map(this::convertToResDto)
-                .collect(Collectors.toList());
+        return carRepository.findAllByCompany_Id(companyId, pageable)
+                .map(this::convertToResDto);
     }
+
 
     @Transactional(readOnly = true)
     public List<CarResDto> getAvailableCars(Long companyId) {

@@ -185,16 +185,22 @@ async function handleEdit() {
             }
         );
 
-        if (!response.ok) {
-            throw new Error('차량 수정 실패');
-        }
+        console.log(response);
 
-        // ✅ 관리자 차량 목록 화면으로 이동
-        window.location.href = '/view/resource/admin/cars';
+        if (response.ok) {
+            alert('차량이 수정되었습니다.');
+
+            // 관리자 차량 목록 화면으로 이동
+            window.location.href = '/view/resource/admin/cars';
+
+        } else {
+            const result = await response.json();
+            alert(result.message)
+        }
 
     } catch (error) {
         console.error(error);
-        alert('차량 수정에 실패했습니다.');
+        alert(error.message);
     }
 }
 

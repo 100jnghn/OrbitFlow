@@ -13,6 +13,8 @@ import com.finalproj.orbitflow.resource.status.entity.ResourceStatus;
 import com.finalproj.orbitflow.resource.status.repository.ResourceStatusRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,10 +41,13 @@ public class ItemService {
 
     // companyId
     @Transactional(readOnly = true)
-    public List<ItemResDto> getItems(Long companyId) {
-        return itemRepository.getAllByCompanyId(companyId, ResourceStatusCode.DELETED).stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+    public Page<ItemResDto> getItems(
+            Long companyId,
+            Pageable pageable
+    ) {
+        return itemRepository
+                .getAllByCompanyId(companyId, ResourceStatusCode.DELETED, pageable)
+                .map(this::convertToDto);
     }
 
     // companyId
