@@ -89,12 +89,12 @@ CREATE TABLE position_category
     is_active          BOOLEAN     NOT NULL DEFAULT TRUE,
     -- 활성일 때만 정렬 유니크를 적용하기 위한 가상 컬럼
     active_order_index INT
-                       GENERATED ALWAYS AS (
-                           CASE
-                               WHEN is_active = TRUE THEN order_index
-                               ELSE NULL
-                               END
-                           ) STORED,
+        GENERATED ALWAYS AS (
+            CASE
+                WHEN is_active = TRUE THEN order_index
+                ELSE NULL
+                END
+            ) STORED,
     created_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
@@ -328,12 +328,12 @@ CREATE TABLE form_template
 
     -- ✅ ACTIVE 상태에서만 version을 유니크하게 만들기 위한 컬럼
     active_version       INT
-                         GENERATED ALWAYS AS (
-                             CASE
-                                 WHEN status = 'ACTIVE' THEN version
-                                 ELSE NULL
-                                 END
-                             ) STORED,
+        GENERATED ALWAYS AS (
+            CASE
+                WHEN status = 'ACTIVE' THEN version
+                ELSE NULL
+                END
+            ) STORED,
 
     -- ===============================
     -- CONSTRAINTS
@@ -722,12 +722,12 @@ CREATE TABLE employee_signature
 
     -- 활성 서명만 UNIQUE 제약을 걸기 위한 가상 컬럼
     active_flag TINYINT
-                GENERATED ALWAYS AS (
-                    CASE
-                        WHEN is_active = TRUE THEN 1
-                        ELSE NULL
-                        END
-                    ),
+        GENERATED ALWAYS AS (
+            CASE
+                WHEN is_active = TRUE THEN 1
+                ELSE NULL
+                END
+            ),
 
     created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -925,6 +925,7 @@ CREATE TABLE meetingroom
     position           VARCHAR(50) NOT NULL,
     description        VARCHAR(255),
     resource_status_id BIGINT,
+    uploader_id        BIGINT,
     created_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at         TIMESTAMP            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_meetingroom_company
@@ -934,6 +935,10 @@ CREATE TABLE meetingroom
     CONSTRAINT fk_meetingroom_resource_status
         FOREIGN KEY (resource_status_id)
             REFERENCES resource_status (id)
+            ON DELETE SET NULL,
+    CONSTRAINT fk_meetingroom_uploader
+        FOREIGN KEY (uploader_id)
+            REFERENCES employee (id)
             ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
@@ -948,6 +953,7 @@ CREATE TABLE car
     description        VARCHAR(255),
     resource_status_id BIGINT,
     file_id            BIGINT,
+    uploader_id        BIGINT,
     created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
@@ -959,9 +965,13 @@ CREATE TABLE car
             ON DELETE SET NULL,
     CONSTRAINT fk_car_file
         FOREIGN KEY (file_id) REFERENCES file (id)
+            ON DELETE SET NULL,
+    CONSTRAINT fk_car_uploader
+        FOREIGN KEY (uploader_id) REFERENCES employee (id)
             ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
+
 -- 4. 아이템 카테고리
 CREATE TABLE item_category
 (
@@ -986,6 +996,7 @@ CREATE TABLE item
     description        VARCHAR(255),
     resource_status_id BIGINT,
     file_id            BIGINT,
+    uploader_id        BIGINT,
     created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
@@ -1000,9 +1011,13 @@ CREATE TABLE item
             ON DELETE SET NULL,
     CONSTRAINT fk_item_file
         FOREIGN KEY (file_id) REFERENCES file (id)
+            ON DELETE SET NULL,
+    CONSTRAINT fk_item_uploader
+        FOREIGN KEY (uploader_id) REFERENCES employee (id)
             ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
+
 -- 6. 예약 상태
 CREATE TABLE reservation_status
 (
