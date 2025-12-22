@@ -1,0 +1,106 @@
+/* ===============================
+   공통 헤더 스타일
+================================ */
+.header-bar {
+    background-color: #ffffff;
+    height: 56px;
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* ===============================
+   GNB
+================================ */
+.gnb {
+    display: flex;
+    flex: 1;
+    gap: 28px;
+}
+
+.gnb a {
+    position: relative;
+    text-decoration: none;
+    color: #111827;
+    font-weight: 500;
+    line-height: 56px;
+    font-size: 15px;
+    padding: 0 4px;
+    transition: color 0.15s ease;
+}
+
+.gnb a:hover {
+    color: #2563eb;
+}
+
+/* 선택된 메뉴 (사용자/관리자 공통) */
+.gnb a.selected {
+    color: #111827;
+    font-weight: 700;
+}
+
+.gnb a.selected::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: #111827;
+    border-radius: 2px;
+}
+
+/* ===============================
+   우측 프로필 영역
+================================ */
+.header-bar .profile {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 14px;
+    color: #374151;
+}
+
+/* 아이콘 그룹 */
+.header-bar .profile .icon-group {
+    display: flex;
+    gap: 18px;
+    color: #6b7280;
+}
+
+.header-bar .profile .icon-group i {
+    cursor: pointer;
+    font-size: 17px;
+    transition: color 0.15s ease;
+}
+
+.header-bar .profile .icon-group i:hover {
+    color: #111827;
+}
+
+/* 사용자 정보 */
+.header-bar .profile .user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 12px;
+    border-left: 1px solid #e5e7eb;
+}
+
+.header-bar .profile .user {
+    font-weight: 600;
+    color: #111827;
+}
+
+.header-bar .profile .logout {
+    font-size: 13px;
+    color: #9ca3af;
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+.header-bar .profile .logout:hover {
+    color: #ef4444;
+}
+

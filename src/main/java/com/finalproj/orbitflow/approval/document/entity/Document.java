@@ -1,0 +1,60 @@
+package com.finalproj.orbitflow.approval.document.entity;
+
+/*
+ * Please explain the class!!!
+ *
+ * @filename    : Document
+ * @author      : Choi MinHyeok
+ * @since       : 25. 12. 15. 월요일
+ */
+
+
+import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
+import com.finalproj.orbitflow.approval.formTemplateGroup.entity.FormTemplateGroup;
+import com.finalproj.orbitflow.global.common.BaseEntity;
+import com.finalproj.orbitflow.hr.company.entity.Company;
+import com.finalproj.orbitflow.hr.employee.entity.Employee;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+
+@Entity
+@Table(name = "document")
+@Getter
+@NoArgsConstructor
+public class Document extends BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "template_group_id", nullable = false)
+    private FormTemplateGroup templateGroup;
+
+    @Column(name = "template_version", nullable = false)
+    private int templateVersion;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "writer_id")
+    private Employee writer;
+
+    @Column(nullable = false, length = 255)
+    private String title;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private DocumentStatus status;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "before_document_id")
+    private Document beforeDocument;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted = false;
+}

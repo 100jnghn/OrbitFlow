@@ -1,0 +1,177 @@
+/* ================================
+   Global
+================================ */
+body {
+    margin: 0;
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #f9fafb;
+    color: #111827;
+}
+
+/* ================================
+   App Layout
+================================ */
+.app-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.app-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* ================================
+   Header (공통)
+================================ */
+.header-bar {
+    background-color: #ffffff;
+    height: 56px;
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* GNB */
+.gnb {
+    display: flex;
+    flex: 1;
+    gap: 28px;
+}
+
+.gnb a {
+    position: relative;
+    text-decoration: none;
+    color: #111827;
+    font-weight: 500;
+    line-height: 56px;
+    font-size: 15px;
+    padding: 0 4px;
+}
+
+.gnb a:hover {
+    color: #2563eb;
+}
+
+.gnb a.selected {
+    font-weight: 700;
+}
+
+.gnb a.selected::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: #111827;
+    border-radius: 2px;
+}
+
+/* Header Profile */
+.profile {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 14px;
+}
+
+.profile .icon-group {
+    display: flex;
+    gap: 18px;
+    color: #6b7280;
+}
+
+.profile .icon-group i {
+    cursor: pointer;
+    font-size: 17px;
+}
+
+.profile .icon-group i:hover {
+    color: #111827;
+}
+
+.profile .user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 12px;
+    border-left: 1px solid #e5e7eb;
+}
+
+.profile .user {
+    font-weight: 600;
+}
+
+.profile .logout {
+    font-size: 13px;
+    color: #9ca3af;
+    cursor: pointer;
+}
+
+.profile .logout:hover {
+    color: #ef4444;
+}
+
+/* ================================
+   Sidebar (공통 베이스)
+================================ */
+.sidebar {
+    width: 250px;
+    background: #23273c;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-inner {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding-top: 24px;
+}
+
+.sidebar-title {
+    padding: 0 0 16px 36px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.sidebar-logo-icon {
+    margin-right: 8px;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0 0 16px 36px;
+    margin: 0;
+}
+
+.sidebar-menu li {
+    margin: 6px 0;
+}
+
+.sidebar-link {
+    color: #c9ccdd;
+    text-decoration: none;
+    font-size: 15px;
+}
+
+.sidebar-menu li.selected {
+    background: rgba(255, 255, 255, 0.1);
+    margin-left: -36px;
+    padding: 8px 36px;
+    border-left: 4px solid #4a69bd;
+}
+
+/* ================================
+   Content
+================================ */
+.app-content {
+    flex: 1;
+    padding: 24px 40px 16px;
+    overflow-y: auto;
+}

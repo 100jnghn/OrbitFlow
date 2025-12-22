@@ -1,0 +1,282 @@
+/* ===============================
+   전체 컨테이너
+   - viewport 기준 높이 제한
+   - 내부에서만 스크롤
+================================ */
+.approval-rule-container {
+    max-width: 960px;
+    max-height: calc(100vh - 120px); /* 헤더/사이드바 고려 */
+    margin: 0 auto;
+    padding: 28px;
+
+    background-color: #f4f6f9;
+    border-radius: 10px;
+
+    display: flex;
+    flex-direction: column;
+
+    box-sizing: border-box;
+    overflow: hidden; /* 내부 스크롤만 허용 */
+}
+
+/* ===============================
+   제목
+================================ */
+.approval-rule-container h2 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #2b2f33;
+
+    flex-shrink: 0;
+}
+
+/* ===============================
+   form 레이아웃
+================================ */
+#approvalRuleForm {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0; /* ⭐ 내부 스크롤 필수 */
+}
+
+/* ===============================
+   Step 스크롤 영역 (여기만 스크롤)
+================================ */
+.approval-steps-wrapper {
+    flex: 1;
+    min-height: 0; /* ⭐ 중요 */
+    overflow-y: auto;
+    padding-right: 6px;
+
+    display: flex;
+    flex-direction: column;
+}
+
+/* Step 리스트 */
+#approvalStepsContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ===============================
+   Step 박스
+================================ */
+.approval-step {
+    display: grid;
+    grid-template-columns: 120px 1fr 48px;
+    column-gap: 20px;
+    align-items: center;
+
+    background-color: #ffffff;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+
+    border: 1px solid #e1e4e8;
+    border-radius: 8px;
+}
+
+/* 첫 Step 강조 */
+.approval-step:first-child {
+    background-color: #eef3ff;
+    border-left: 4px solid #4a6cf7;
+}
+
+/* ===============================
+   Step 라벨
+================================ */
+.approval-step-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #253858;
+}
+
+/* ===============================
+   Select 그룹
+================================ */
+.approval-select-group {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+/* ===============================
+   Select 공통
+================================ */
+.select-org,
+.select-pos,
+.select-employee {
+    width: 190px;
+    height: 34px;
+
+    padding: 0 10px;
+    font-size: 13.5px;
+
+    border: 1px solid #cfd4dc;
+    border-radius: 6px;
+
+    background-color: #ffffff;
+    color: #333;
+    outline: none;
+}
+
+.select-org:focus,
+.select-pos:focus,
+.select-employee:focus {
+    border-color: #4a6cf7;
+}
+
+.select-pos:disabled,
+.select-employee:disabled {
+    background-color: #f2f4f7;
+    color: #9aa0a6;
+    cursor: not-allowed;
+}
+
+/* ===============================
+   삭제 버튼
+================================ */
+.remove-step-btn {
+    justify-self: end;
+
+    width: 32px;
+    height: 32px;
+
+    background: none;
+    border: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 0;
+    color: #9aa0a6;
+    cursor: pointer;
+}
+
+.remove-step-btn::before {
+    content: "✕";
+    font-size: 16px;
+}
+
+.remove-step-btn:hover {
+    color: #e5533d;
+    background-color: #fbeaea;
+    border-radius: 50%;
+}
+
+/* 첫 Step 삭제 버튼 숨김 */
+.approval-step:first-child .remove-step-btn {
+    visibility: hidden;
+}
+
+/* ===============================
+   Step 추가 버튼
+================================ */
+.add-step-btn {
+    margin: 12px 0 16px 0;
+    padding: 10px 14px;
+
+    font-size: 14px;
+    background-color: #ffffff;
+    color: #333;
+
+    border: 1px dashed #aeb4bc;
+    border-radius: 6px;
+    cursor: pointer;
+
+    flex-shrink: 0;
+}
+
+.add-step-btn:hover {
+    background-color: #f2f4f7;
+}
+
+/* ===============================
+   하단 버튼 영역 (이전 / 활성 / 저장)
+================================ */
+.footer-btns {
+    padding-top: 16px;
+    border-top: 1px solid #e1e4e8;
+    background-color: #f4f6f9;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    flex-shrink: 0;
+}
+
+/* 좌측 영역 */
+.footer-left {
+    display: flex;
+    align-items: center;
+}
+
+/* 우측 영역 */
+.footer-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* ===============================
+   이전 버튼
+================================ */
+.prev-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+
+    background-color: #ffffff;
+    color: #333;
+
+    border: 1px solid #cfd4dc;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.prev-btn:hover {
+    background-color: #f2f4f7;
+}
+
+/* ===============================
+   활성 버튼
+================================ */
+.activate-btn {
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 600;
+
+    background-color: #ffffff;
+    color: #4a6cf7;
+
+    border: 1px solid #4a6cf7;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.activate-btn:hover {
+    background-color: #eef3ff;
+}
+
+/* ===============================
+   저장 버튼
+================================ */
+.save-btn {
+    padding: 10px 28px;
+    font-size: 14px;
+    font-weight: 600;
+
+    background-color: #4a6cf7;
+    color: #ffffff;
+
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.save-btn:hover {
+    background-color: #3f5edc;
+}

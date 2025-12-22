@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-user :: layout(
+          ~{::content},
+          ~{fragments/header :: header},
+          ~{sidebar/attendance-sidebar :: menu},
+          ~{::pageCss},
+          ~{::pageScript}
+      )}">
+<head>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+    <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/commute.css}">
+    </th:block>
+</head>
+<body>
+<div th:fragment="content">
+    <div style="padding: 24px 40px;">
+        <h1 class="page-title">출퇴근 기록</h1>
+
+        <div class="main-action-card">
+            <div class="time-info">
+                <div class="time-section">
+                    <div class="time-label">현재 시각</div>
+                    <div class="current-time" id="currentTime">00:00:00</div>
+                </div>
+                <div class="time-section">
+                    <div class="time-label">기준 근무 시간</div>
+                    <div class="work-hours" id="workHours">조회 중...</div>
+                </div>
+            </div>
+            <div class="button-group">
+                <button type="button" id="checkInBtn" class="btn-checkin">출근</button>
+                <button type="button" id="awayBtn" class="btn-away">자리비움</button>
+                <button type="button" id="checkOutBtn" class="btn-checkout">퇴근</button>
+            </div>
+        </div>
+
+        <div class="record-section">
+            <h2 class="section-title">오늘의 기록</h2>
+            <div class="record-item">
+                <span class="record-label">출근 시각:</span>
+                <span class="record-value" id="commuteTime">미기록</span>
+            </div>
+            <div class="record-item">
+                <span class="record-label">퇴근 시각:</span>
+                <span class="record-value" id="leaveTime">미기록</span>
+            </div>
+            <div class="record-item">
+                <span class="record-label">근무 상태:</span>
+                <span id="workStatusContainer">
+                    <span class="status-badge" id="workStatus" style="display: none;">근무 중</span>
+                    <span class="status-badge away-badge" id="awayStatus" style="display: none; background: #ffc107; color: #333;">자리비움</span>
+                    <span class="record-value" id="workStatusText">-</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="pageScript">
+        <script th:src="@{/js/commute.js}"></script>
+    </th:block>
+</div>
+</body>
+</html>

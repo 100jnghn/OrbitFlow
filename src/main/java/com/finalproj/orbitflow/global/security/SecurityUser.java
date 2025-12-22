@@ -1,6 +1,8 @@
 package com.finalproj.orbitflow.global.security;
 
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
+import com.finalproj.orbitflow.hr.employee.enums.EmployeeRole;
+import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -10,7 +12,9 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Please explain the class!!!
+ * Spring Security 인증 객체로 사용되는 사용자 정보 클래스.
+ * Employee 엔티티를 기반으로 인증에 필요한 정보만 분리하여 보관하며,
+ * Auditing 연동을 위해 employeeId를 포함한다.
  *
  * @author : seunga03
  * @filename : SecurityUser
@@ -20,30 +24,38 @@ import java.util.List;
 public class SecurityUser implements UserDetails {
 
     private final Long employeeId;
-    private final String employeeNo;
+    private final Long companyId;
+    private final String name;
+    private final String email;
     private final String password;
+    private final EmployeeStatus status;
+    private final EmployeeRole role;
+    private final Long organizationId;  // 조직 정보
 
     public SecurityUser(Employee employee) {
-        this.employeeId = employee.getEmployeeId();
-        this.employeeNo = employee.getEmail();
+        this.employeeId = employee.getId();
+        this.companyId = employee.getCompany().getId();
+        this.name = employee.getName();
+        this.email = employee.getEmail();
         this.password = employee.getPassword();
+        this.status = employee.getStatus();
+        this.role = employee.getRole();
+        this.organizationId =
+                employee.getOrganization() != null
+                        ? employee.getOrganization().getId()
+                        : null;          // 안전 처리
     }
-
-    // 권한
-//    @Override
-//    public Collection<? extends GrantedAuthority> getAuthorities() {
-//        return List.of(new SimpleGrantedAuthority(role));
-//    }
 
     // 로그인 ID
     @Override
     public String getUsername() {
-        return employeeNo;
+        return email;
     }
 
+    // 권한
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override
@@ -51,7 +63,6 @@ public class SecurityUser implements UserDetails {
         return password;
     }
 
-    // 계정 상태 제어
     @Override
     public boolean isAccountNonExpired() {
         return true;
@@ -59,13 +70,9 @@ public class SecurityUser implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return UserDetails.super.isAccountNonLocked();
+        // 정지 계정 잠금
+        return status != EmployeeStatus.SUSPENDED;
     }
-
-//    @Override
-//    public boolean isAccountNonLocked() {
-//        return !"SUSPENDED".equals(status);
-//    }
 
     @Override
     public boolean isCredentialsNonExpired() {
@@ -74,11 +81,7 @@ public class SecurityUser implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return UserDetails.super.isEnabled();
+        // 퇴사 계정 비활성
+        return status == EmployeeStatus.ACTIVE;
     }
-
-//    @Override
-//    public boolean isEnabled() {
-//        return "ACTIVE".equals(status);
-//    }
 }

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- 관리자 영역 전용 사이드바 메뉴 -->
+<ul th:fragment="menu">
+    <li th:classappend="${currentMenu} == 'employee' ? ' selected' : ''">
+        <a th:href="@{/admin/employee}" class="sidebar-link">사원 관리</a>
+    </li>
+    <li th:classappend="${currentMenu} == 'approval' ? ' selected' : ''">
+        <a th:href="@{/view/admin/approval}" class="sidebar-link">결재 관리</a>
+    </li>
+    <li th:classappend="${currentMenu} == 'attendance-rules' ? ' selected' : ''">
+        <a th:href="@{/view/admin/attendance-rules}" class="sidebar-link">근태 관리</a>
+    </li>
+    <li th:classappend="${currentMenu} == 'schedule' ? ' selected' : ''">
+        <a th:href="@{/admin/schedule}" class="sidebar-link">일정 관리</a>
+    </li>
+    <li th:classappend="${currentMenu} == 'reservation' ? ' selected' : ''">
+        <a th:href="@{/admin/reservation}" class="sidebar-link">예약 관리</a>
+    </li>
+    <li th:classappend="${currentMenu} == 'meetingroom' ? ' selected' : ''">
+        <a th:href="@{/view/resource/admin/meetingrooms}" class="sidebar-link">회의실 관리</a>
+    </li>
+    <li th:classappend="${currentMenu} == 'car' ? ' selected' : ''">
+        <a th:href="@{/view/resource/admin/cars}" class="sidebar-link">차량 관리</a>
+    </li>
+    <li th:classappend="${currentMenu} == 'item' ? ' selected' : ''">
+        <a th:href="@{/view/resource/admin/items}" class="sidebar-link">기타 자원 관리</a>
+    </li>
+    <li th:classappend="${currentMenu} == 'board' ? ' selected' : ''">
+        <a th:href="@{/admin/board}" class="sidebar-link">게시판 관리</a>
+    </li>
+    <li th:classappend="${currentMenu} == 'organization' ? ' selected' : ''">
+        <a th:href="@{/admin/organization}" class="sidebar-link">인사 관리</a>
+    </li>
+    <li th:classappend="${currentMenu} == 'chatbot' ? ' selected' : ''">
+        <a th:href="@{/view/admin/chatbot}" class="sidebar-link">챗봇 매뉴얼 관리</a>
+    </li>
+</ul>
+</body>
+</html>
+
+
