@@ -58,7 +58,7 @@ CREATE TABLE organization
 
     CONSTRAINT uk_org_sibling_order -- 형제 단위 정렬 충돌 방지
         UNIQUE (company_id, parent_org_id, order_index),
-    CONSTRAINT uk_org_sibling_name -- 형제 단위 이름 중복 방지
+    CONSTRAINT uk_org_sibling_name  -- 형제 단위 이름 중복 방지
         UNIQUE (company_id, parent_org_id, name)
 ) ENGINE = InnoDB;
 
@@ -82,14 +82,29 @@ CREATE TABLE hr_rank
 
 CREATE TABLE position_category
 (
-    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    company_id  BIGINT      NOT NULL,
-    name        VARCHAR(50) NOT NULL,
-    order_index INT         NOT NULL,
-    is_active   BOOLEAN     NOT NULL DEFAULT TRUE,
-    created_at  TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id         BIGINT      NOT NULL,
+    name               VARCHAR(50) NOT NULL,
+    order_index        INT, -- 비활성 항목 때문에 NULL 허용
+    is_active          BOOLEAN     NOT NULL DEFAULT TRUE,
+    -- 활성일 때만 정렬 유니크를 적용하기 위한 가상 컬럼
+    active_order_index INT
+                       GENERATED ALWAYS AS (
+                           CASE
+                               WHEN is_active = TRUE THEN order_index
+                               ELSE NULL
+                               END
+                           ) STORED,
+    created_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT uk_pos_cat_company_name
+        UNIQUE (company_id, name),
+
+    -- 활성 상태에서만 orderIndex 유니크 보장
+    CONSTRAINT uk_pos_cat_company_active_order
+        UNIQUE (company_id, active_order_index),
+
     CONSTRAINT fk_pos_cat_company
         FOREIGN KEY (company_id) REFERENCES company (id)
 ) ENGINE = InnoDB;
@@ -210,7 +225,7 @@ CREATE TABLE refresh_token
     id          BIGINT AUTO_INCREMENT PRIMARY KEY,
     company_id  BIGINT       NOT NULL,
     employee_id BIGINT       NOT NULL,
-    token       VARCHAR(500) NOT NULL UNIQUE ,
+    token       VARCHAR(500) NOT NULL UNIQUE,
     expires_at  TIMESTAMP    NOT NULL,
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_refresh_employee
@@ -313,12 +328,12 @@ CREATE TABLE form_template
 
     -- ✅ ACTIVE 상태에서만 version을 유니크하게 만들기 위한 컬럼
     active_version       INT
-        GENERATED ALWAYS AS (
-            CASE
-                WHEN status = 'ACTIVE' THEN version
-                ELSE NULL
-                END
-            ) STORED,
+                         GENERATED ALWAYS AS (
+                             CASE
+                                 WHEN status = 'ACTIVE' THEN version
+                                 ELSE NULL
+                                 END
+                             ) STORED,
 
     -- ===============================
     -- CONSTRAINTS
