@@ -69,8 +69,6 @@ public class ItemCategoryService {
     @Transactional
     public void deleteItemCategory(Long itemCategoryId) {
 
-        // todo - 카테고리 하위 자원들이 삭제됩니다 confirm 예외 전송 후 확인이 오면 삭제 진행
-
         ItemCategory itemCategory = itemCategoryRepository.findById(itemCategoryId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리"));
 
