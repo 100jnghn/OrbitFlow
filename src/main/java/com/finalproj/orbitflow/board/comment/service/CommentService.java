@@ -25,7 +25,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final EmployeeRepository employeeRepository;
 
-    // 댓글 목록 조회
+    /** 댓글 목록 조회 */
     public Page<CommentResDto.ListInfo> getCommentList(
             Long companyId,
             Long organizationId,
@@ -44,6 +44,7 @@ public class CommentService {
                 .map(CommentResDto.ListInfo::from);
     }
 
+    /** 게시판 접근 검증 */
     private void validateBoardAccess(Long companyId, Long organizationId, Board board) {
         BoardCategory category = board.getCategory();
 
@@ -85,5 +86,31 @@ public class CommentService {
                 .build();
 
         return CommentResDto.DetailInfo.from(commentRepository.save(comment));
+    }
+
+    /** 댓글 수정 */
+    @Transactional
+    public CommentResDto.DetailInfo updateComment(
+            Long companyId,
+            Long employeeId,
+            Long commentId,
+            CommentReqDto.Update request
+    ) {
+        Comment comment = commentRepository.findByIdAndDeletedAtIsNull(commentId)
+                .orElseThrow(() -> new NotFoundException("댓글이 존재하지 않습니다."));
+
+        // 회사 검증
+        if (!comment.getBoard().getCategory().getCompany().getId().equals(companyId)) {
+            throw new ForbiddenException("수정 권한이 없습니다.");
+        }
+
+        // 작성자 검증
+        if (!comment.getWriter().getId().equals(employeeId)) {
+            throw new ForbiddenException("본인이 작성한 댓글만 수정할 수 있습니다.");
+        }
+
+        comment.updateContent(request.getCommentContent());
+
+        return CommentResDto.DetailInfo.from(comment);
     }
 }
