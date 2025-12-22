@@ -15,4 +15,6 @@ import java.util.List;
 public interface PositionRepository extends JpaRepository<Position, Long> {
 
     List<Position> findByCompanyIdAndIsActiveTrue(Long companyId);
+
+    boolean existsByCompanyIdAndCategoryIdAndIsActiveTrue(Long companyId, Long categoryId);
 }
