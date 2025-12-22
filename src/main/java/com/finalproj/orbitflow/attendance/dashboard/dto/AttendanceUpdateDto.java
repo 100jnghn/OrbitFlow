@@ -14,9 +14,9 @@ import org.springframework.stereotype.Service;
 @Getter
 @Setter
 public class AttendanceUpdateDto {
-
-    private String status;           // 변경할 상태 (ON_TIME, LATE 등)
-    private String commuteAt;        // 수정할 출근 시각 (선택 사항)
-    private String leaveAt;          // 수정할 퇴근 시각 (선택 사항)
-    private String correctionReason; // 수정 사유 (필수 입력 권장)
+    private Long employeeId;      // 기록 누락자 신규 생성 시 필수
+    private String status;        // ON_TIME, LATE, ABSENT 등
+    private String correctionReason;
+    private String commuteAt;     // "09:00:00" 형식 (선택)
+    private String leaveAt;       // "18:00:00" 형식 (선택)
 }

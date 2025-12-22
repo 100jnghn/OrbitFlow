@@ -40,22 +40,23 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     // 스케줄러용 기록 존재 여부 확인
     boolean existsByEmployeeIdAndWorkDate(Long employeeId, LocalDate workDate);
 
-    // [관리자] 전사 근태 목록 조회 (날짜 범위 및 상태 필터링)
-    // 수정 포인트: 반환 타입을 Page<Attendance>로 변경하여 서비스의 map 로직과 연결
-    @Query("SELECT a FROM Attendance a WHERE a.companyId = :companyId " +
-            "AND (:start IS NULL OR a.workDate >= CAST(:start AS localdate)) " +
-            "AND (:end IS NULL OR a.workDate <= CAST(:end AS localdate)) " +
-            "AND (:status IS NULL OR CAST(a.status AS string) = :status)")
-    Page<Attendance> findAllByCompanyIdAndFilters(
+    /**
+     * [핵심] 전 사원 목록을 불러오면서 특정 날짜의 근태 기록을 Left Join
+     */
+    @Query("SELECT e, a FROM Employee e " +
+            "LEFT JOIN Attendance a ON e.id = a.employeeId AND a.workDate = :targetDate " +
+            "WHERE e.company.id = :companyId " +
+            "AND e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE " +
+            "AND (:status IS NULL OR a.status = :status OR (a.status IS NULL AND :status = 'ABSENT'))")
+    Page<Object[]> findAllEmployeesWithAttendance(
             @Param("companyId") Long companyId,
-            @Param("start") String start,
-            @Param("end") String end,
-            @Param("status") String status,
+            @Param("targetDate") LocalDate targetDate,
+            @Param("status") AttendanceStatus status,
             Pageable pageable);
 
-    // [관리자] 특정 상태 인원 카운트 (상단 요약용)
+    // 상단 통계용
     int countByCompanyIdAndWorkDateAndStatus(Long companyId, LocalDate workDate, AttendanceStatus status);
 
-    // [관리자] 퇴근 미처리 인원 카운트
+    // 퇴근 미처리 카운트
     int countByCompanyIdAndWorkDateAndLeaveAtIsNull(Long companyId, LocalDate workDate);
 }

@@ -1,6 +1,7 @@
 package com.finalproj.orbitflow.attendance.dashboard.controller;
 
 import com.finalproj.orbitflow.attendance.dashboard.dto.AttendanceUpdateDto;
+import com.finalproj.orbitflow.attendance.dashboard.dto.AdminSummaryResDto;
 import com.finalproj.orbitflow.attendance.dashboard.service.AttendanceDashboardService;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import lombok.RequiredArgsConstructor;
@@ -10,14 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Please explain the class!!!
- *
- * @author : rlagkdus
- * @filename : AttendanceDashboardViewController
- * @since : 2025. 12. 19. 금요일
- */
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/attendance")
@@ -25,9 +18,6 @@ public class AttendanceDashboardController {
 
     private final AttendanceDashboardService attendanceDashboardService;
 
-    /**
-     * 전사 직원 근태 현황 조회 (페이징 및 필터)
-     */
     @GetMapping("/list")
     public ResponseEntity<?> getAllEmployeeAttendance(
             @AuthenticationPrincipal SecurityUser admin,
@@ -40,15 +30,21 @@ public class AttendanceDashboardController {
                 admin.getCompanyId(), startDate, endDate, status, pageable));
     }
 
-    /**
-     * 직원 근태 기록 수정
-     */
-    @PatchMapping("/update/{attendanceId}")
-    public ResponseEntity<?> updateAttendance(
-            @PathVariable Long attendanceId,
-            @RequestBody AttendanceUpdateDto updateDto) {
+    @GetMapping("/summary")
+    public ResponseEntity<AdminSummaryResDto> getTodaySummary(
+            @AuthenticationPrincipal SecurityUser admin) {
 
-        attendanceDashboardService.updateAttendanceRecord(attendanceId, updateDto);
+        return ResponseEntity.ok(attendanceDashboardService.getTodaySummary(admin.getCompanyId()));
+    }
+
+
+    @PatchMapping("/update/{id}")
+    public ResponseEntity<?> updateAttendance(
+            @AuthenticationPrincipal SecurityUser admin,
+            @PathVariable(value = "id", required = false) Long id,
+            @RequestBody AttendanceUpdateDto dto) {
+
+        attendanceDashboardService.updateAttendanceRecord(id, admin.getCompanyId(), dto);
         return ResponseEntity.ok().build();
     }
 }
