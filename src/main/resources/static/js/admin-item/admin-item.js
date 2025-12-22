@@ -315,6 +315,10 @@ async function loadItemDetail() {
         document.getElementById('item-name').value = data.name ?? '';
         document.getElementById('item-description').value = data.description ?? '';
 
+        // 등록자 정보 표시
+        document.getElementById('uploader-name').textContent = data.uploaderName ?? '-';
+        document.getElementById('created-at').textContent = formatDate(data.createdAt);
+
         // 비품 이미지 표시
         displayItemImage(data.fileUrl);
 
@@ -325,6 +329,16 @@ async function loadItemDetail() {
         console.error(error);
         showError();
     }
+}
+
+/**
+ * 날짜 포맷팅
+ */
+function formatDate(localDateString) {
+    if (!localDateString) return '-';
+
+    // LocalDate는 이미 YYYY-MM-DD 형식
+    return localDateString;
 }
 
 /**
@@ -363,6 +377,8 @@ function displayItemImage(imageUrl) {
 function showError() {
     document.getElementById('item-name').value = '';
     document.getElementById('item-description').value = '비품 정보를 불러올 수 없습니다.';
+    document.getElementById('uploader-name').textContent = '-';
+    document.getElementById('created-at').textContent = '-';
     
     // 이미지도 초기화
     displayItemImage(null);

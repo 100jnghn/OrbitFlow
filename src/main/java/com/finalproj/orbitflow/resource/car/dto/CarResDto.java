@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 /**
  * Please explain the class!!!
  *
@@ -30,7 +32,10 @@ public class CarResDto {
 
     // 이미지 파일 정보 (없으면 null)
     private String objectKey;
-    private String originFile;
+
+    private String uploaderName;
+    private LocalDate createdAt;
+
 
 
     // Entity -> DTO 변환 편의 메서드

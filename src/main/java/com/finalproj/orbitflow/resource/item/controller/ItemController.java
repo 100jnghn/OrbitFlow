@@ -70,10 +70,16 @@ public class ItemController {
     @GetMapping("/admin/categories/{categoryId}/items")
     public ResponseEntity<ResponseDto> getItemsByCategory(
             @AuthenticationPrincipal SecurityUser user,
-            @PathVariable Long categoryId
+            @PathVariable Long categoryId,
+            @PageableDefault(
+                    page = 0,
+                    size = 10,
+                    sort = "id",
+                    direction = Sort.Direction.ASC
+            ) Pageable pageable
     ) {
         Long companyId = user.getCompanyId();
-        List<ItemResDto> items = itemService.getItemsByCategory(companyId, categoryId);
+        Page<ItemResDto> items = itemService.getItemsByCategory(companyId, categoryId, pageable);
 
         return ResponseEntity.ok().body(
                 new ResponseDto(HttpStatus.OK, "카테고리 자원 리스트 조회 성공", items)

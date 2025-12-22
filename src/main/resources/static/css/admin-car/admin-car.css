@@ -299,6 +299,20 @@
 
 
 /* =========================
+   Info Text (read-only display)
+========================= */
+.info-text {
+    padding: 12px 14px;
+    font-size: 14px;
+    color: #333;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    font-weight: 500;
+    width: 80%;
+}
+
+/* =========================
    Form Inputs
 ========================= */
 .info-input,
@@ -316,6 +330,42 @@
     border-radius: 8px;
     border: 1px solid #ddd;
     resize: vertical;
+}
+
+/* =========================
+   Creator Info
+========================= */
+.creator-info {
+    display: flex;
+    gap: 24px;
+    margin-top: 24px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.creator-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #666;
+}
+
+.creator-item i {
+    color: #4a69bd;
+    font-size: 14px;
+}
+
+.creator-label {
+    font-weight: 600;
+    color: #555;
+}
+
+.creator-value {
+    color: #333;
+    font-weight: 500;
 }
 
 .app-content {
