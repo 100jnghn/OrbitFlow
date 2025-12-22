@@ -9,8 +9,8 @@
     <li th:classappend="${currentMenu} == 'approval' ? ' selected' : ''">
         <a th:href="@{/view/admin/approval}" class="sidebar-link">결재 관리</a>
     </li>
-    <li th:classappend="${currentMenu} == 'attendance-rules' ? ' selected' : ''">
-        <a th:href="@{/view/admin/attendance-rules}" class="sidebar-link">근태 관리</a>
+    <li th:classappend="${currentMenu} == 'attendance-dashboard' ? ' selected' : ''">
+        <a th:href="@{/view/admin/attendance/dashboard}" class="sidebar-link">근태 관리</a>
     </li>
     <li th:classappend="${currentMenu} == 'schedule' ? ' selected' : ''">
         <a th:href="@{/admin/schedule}" class="sidebar-link">일정 관리</a>
