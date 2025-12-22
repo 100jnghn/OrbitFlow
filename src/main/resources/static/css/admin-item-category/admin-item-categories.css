@@ -5,7 +5,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 32px;
 }
 
 .page-title {
@@ -13,30 +13,28 @@
     font-weight: 700;
     color: #222;
     letter-spacing: -1px;
+    margin: 0;
 }
 
-/* =========================
-   Buttons
-========================= */
-.btn-add {
+/* 뒤로가기 버튼 */
+.btn-back {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-
-    background: #4a69bd;
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
+    background: #fff;
+    color: #555;
+    border: 1px solid #ddd;
+    padding: 10px 16px;
     border-radius: 6px;
-
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s;
 }
 
-.btn-add:hover {
-    background: #3a5aa0;
+.btn-back:hover {
+    background: #f8f9fa;
+    border-color: #bbb;
 }
 
 /* =========================
@@ -50,105 +48,69 @@
 }
 
 /* =========================
-   Resource Table (Base)
+   Category Table
 ========================= */
-.resource-table {
+.category-table {
     width: 100%;
-    margin-top: 16px;
     border-collapse: collapse;
     table-layout: fixed;
 }
 
-.resource-table thead {
+.category-table thead {
     background: #f8f9fa;
     border-bottom: 2px solid #e9ecef;
 }
 
-.resource-table th,
-.resource-table td {
+.category-table th,
+.category-table td {
     padding: 14px 16px;
     font-size: 14px;
     text-align: left;
     border-bottom: 1px solid #f0f0f0;
-
-    /* 한 줄 유지 */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    position: relative;
 }
 
-.resource-table th {
+.category-table th {
     font-weight: 600;
     color: #495057;
 }
 
-.resource-table td {
+.category-table td {
     color: #555;
 }
 
-.resource-table td:first-child {
+.category-table td:first-child {
     text-align: center;
     font-weight: 600;
     color: #6c757d;
 }
 
-.resource-table tbody tr {
+.category-table tbody tr {
     transition: background 0.2s;
 }
 
-.resource-table tbody tr:hover {
+.category-table tbody tr:hover {
     background: #f8f9fa;
 }
 
-.resource-table tbody tr:last-child td {
+.category-table tbody tr:last-child td {
     border-bottom: none;
 }
 
-/* =========================
-   Tooltip Base (공통 디자인)
-========================= */
-.tooltip,
-.resource-table td[data-fulltext]:hover::after {
-    max-width: 400px;
-    padding: 6px 10px;
-
-    background: rgba(33, 37, 41, 0.95);
-    color: #fff;
-    font-size: 13px;
-    line-height: 1.4;
-
-    border-radius: 4px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-
-    white-space: normal;
-    font-family: 'Noto Sans KR', system-ui, sans-serif;
+/* 카테고리명 입력 필드 */
+.category-name-input {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    transition: all 0.2s;
+    background: #fff;
 }
 
-/* =========================
-   JS Tooltip (position: fixed)
-========================= */
-.tooltip {
-    position: fixed;
-    z-index: 9999;
-    pointer-events: none;
-}
-
-/* =========================
-   CSS Hover Tooltip (Columns 3, 4)
-========================= */
-.resource-table td:nth-child(4) {
-    cursor: help;
-}
-
-.resource-table td:nth-child(4):hover::after {
-    content: attr(data-fulltext);
-
-    position: absolute;
-    left: 0;
-    top: 100%;
-    z-index: 1000;
+.category-name-input:focus {
+    outline: none;
+    border-color: #4a69bd;
+    box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.1);
 }
 
 /* =========================
@@ -160,7 +122,8 @@
 }
 
 .btn-edit,
-.btn-delete {
+.btn-delete,
+.btn-add-row {
     padding: 6px 12px;
     border-radius: 4px;
     font-size: 13px;
@@ -187,6 +150,18 @@
     background: #ffcdd2;
 }
 
+.btn-add-row {
+    background: #4a69bd;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-add-row:hover {
+    background: #3a5aa0;
+}
+
 /* =========================
    Empty State
 ========================= */
@@ -202,8 +177,14 @@
     opacity: 0.3;
 }
 
+.empty-state p {
+    margin: 0;
+    font-size: 14px;
+}
+
 .app-content {
     flex: 1;
     padding: 24px 40px 16px;
     overflow-y: auto;
 }
+

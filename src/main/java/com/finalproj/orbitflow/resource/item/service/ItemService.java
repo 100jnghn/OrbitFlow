@@ -83,7 +83,8 @@ public class ItemService {
     @Transactional
     public void insertItem(Long companyId, ItemReqDto dto) {
         log.info("insert item");
-        log.info("dto " + dto.getStatusId());
+        log.info("dto status id" + dto.getStatusId());
+        log.info("dto category id" + dto.getItemCategoryId());
 
         Company company = companyRepository.getReferenceById(companyId);
         ResourceStatus resourceStatus = findResourceStatus(dto.getStatusId());
@@ -145,6 +146,7 @@ public class ItemService {
                 .itemCategoryId(item.getItemCategory().getId())
                 .itemCategoryName(item.getItemCategory().getName())
                 .name(item.getName())
+                .description(item.getDescription())
                 .statusId(statusId)
                 .statusCode(code)
                 .statusName(name)

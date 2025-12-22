@@ -1,10 +1,12 @@
 package com.finalproj.orbitflow.resource.itemcategory.service;
 
+import com.finalproj.orbitflow.global.exception.ConfirmRequiredException;
+import com.finalproj.orbitflow.hr.company.entity.Company;
+import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.resource.item.repository.ItemRepository;
 import com.finalproj.orbitflow.resource.itemcategory.dto.ItemCategoryDto;
 import com.finalproj.orbitflow.resource.itemcategory.entity.ItemCategory;
 import com.finalproj.orbitflow.resource.itemcategory.repository.ItemCategoryRepository;
-import com.finalproj.orbitflow.global.exception.ConfirmRequiredException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,7 @@ public class ItemCategoryService {
 
     private final ItemCategoryRepository itemCategoryRepository;
     private final ItemRepository itemRepository;
+    private final CompanyRepository companyRepository;
 
     @Transactional(readOnly = true)
     public List<ItemCategoryDto> getItemCategories(Long companyId) {
@@ -39,6 +42,18 @@ public class ItemCategoryService {
     @Transactional(readOnly = true)
     public ItemCategoryDto getItemCategory(Long itemCategoryId) {
         return convertToDto(itemCategoryRepository.findById(itemCategoryId).get());
+    }
+
+    @Transactional
+    public void insertItemCategory(Long companyId, ItemCategoryDto itemCategoryDto) {
+        Company company = companyRepository.findById(companyId).get();
+
+        ItemCategory newItemCategory = ItemCategory.builder()
+                .company(company)
+                .name(itemCategoryDto.getName())
+                .build();
+
+        itemCategoryRepository.save(newItemCategory);
     }
 
     @Transactional

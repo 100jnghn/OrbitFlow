@@ -22,6 +22,7 @@ public class ItemResDto {
     private Long itemCategoryId;
     private String itemCategoryName;
     private String name;
+    private String description;
 
     private Long statusId;
     private String statusCode;

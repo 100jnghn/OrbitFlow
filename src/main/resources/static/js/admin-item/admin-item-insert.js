@@ -1,5 +1,5 @@
 /**
- * 관리자 - 차량 추가 페이지
+ * 관리자 - 비품 추가 페이지
  */
 
 // 선택된 이미지 파일
@@ -7,8 +7,9 @@ let selectedImageFile = null;
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', () => {
-    // 상태 목록만 로드 (초기값 없음)
+    // 상태 목록과 카테고리 목록 로드
     loadStatusOptions();
+    loadCategoryOptions();
     initEventListeners();
 });
 
@@ -27,17 +28,9 @@ function initEventListeners() {
     }
 
     // 이미지 업로드 관련
-    const imageInput = document.getElementById('car-image-input');
-    const uploadBtn = document.getElementById('btn-upload');
+    const imageInput = document.getElementById('item-image-input');
     const removeBtn = document.getElementById('btn-remove');
-    const previewArea = document.getElementById('car-image-preview');
-
-    // 업로드 버튼 클릭
-    if (uploadBtn) {
-        uploadBtn.addEventListener('click', () => {
-            imageInput.click();
-        });
-    }
+    const previewArea = document.getElementById('item-image-preview');
 
     // 미리보기 영역 클릭
     if (previewArea) {
@@ -65,7 +58,7 @@ function initEventListeners() {
  */
 function handleImageSelect(event) {
     const file = event.target.files[0];
-
+    
     if (!file) return;
 
     // 파일 타입 검증
@@ -102,7 +95,7 @@ function displayImagePreview(imageUrl) {
         previewImage.src = imageUrl;
         previewImage.style.display = 'block';
         placeholder.style.display = 'none';
-
+        
         if (removeBtn) {
             removeBtn.style.display = 'inline-flex';
         }
@@ -114,25 +107,25 @@ function displayImagePreview(imageUrl) {
  */
 function handleImageRemove() {
     selectedImageFile = null;
-
+    
     const previewImage = document.getElementById('preview-image');
     const placeholder = document.getElementById('upload-placeholder');
     const removeBtn = document.getElementById('btn-remove');
-    const imageInput = document.getElementById('car-image-input');
+    const imageInput = document.getElementById('item-image-input');
 
     if (previewImage) {
         previewImage.src = '';
         previewImage.style.display = 'none';
     }
-
+    
     if (placeholder) {
         placeholder.style.display = 'flex';
     }
-
+    
     if (removeBtn) {
         removeBtn.style.display = 'none';
     }
-
+    
     if (imageInput) {
         imageInput.value = '';
     }
@@ -143,41 +136,35 @@ function handleImageRemove() {
  */
 async function handleSave() {
     // 입력값 검증
-    const number = document.getElementById('car-number').value.trim();
-    const model = document.getElementById('car-model').value.trim();
-    const age = document.getElementById('car-age').value.trim();
-    const statusValue = document.getElementById('car-status').value;
-    const description = document.getElementById('car-description').value.trim();
+    const name = document.getElementById('item-name').value.trim();
+    const categoryValue = document.getElementById('item-category').value;
+    const statusValue = document.getElementById('item-status').value;
+    const description = document.getElementById('item-description').value.trim();
 
-    if (!number) {
-        alert('차량 번호를 입력해주세요.');
-        document.getElementById('car-number').focus();
+
+    if (!name) {
+        alert('비품명을 입력해주세요.');
+        document.getElementById('item-name').focus();
         return;
     }
 
-    if (!model) {
-        alert('차종을 입력해주세요.');
-        document.getElementById('car-model').focus();
-        return;
-    }
-
-    if (!age || age < 18) {
-        alert('운전 가능 나이를 올바르게 입력해주세요. (최소 18세)');
-        document.getElementById('car-age').focus();
+    if (!categoryValue) {
+        alert('카테고리를 선택해주세요.');
+        document.getElementById('item-category').focus();
         return;
     }
 
     if (!statusValue) {
         alert('상태를 선택해주세요.');
-        document.getElementById('car-status').focus();
+        document.getElementById('item-status').focus();
         return;
     }
 
     // FormData 생성 (파일 업로드를 위해)
     const formData = new FormData();
-    formData.append('number', number);
-    formData.append('name', model);
-    formData.append('driverAge', age);
+
+    formData.append('name', name);
+    formData.append('itemCategoryId', categoryValue);
     formData.append('description', description);
     formData.append('statusId', statusValue);
 
@@ -188,29 +175,24 @@ async function handleSave() {
 
     try {
         const response = await apiFetch(
-            '/api/admin/cars',
+            '/api/admin/items',
             {
                 method: 'POST',
                 body: formData
             }
         );
 
-        console.log(response);
-
-        if (response.ok) {
-            alert('차량이 등록되었습니다.');
-
-            // 관리자 차량 목록 화면으로 이동
-            window.location.href = '/view/resource/admin/cars';
-
-        } else {
-            const result = await response.json();
-            alert(result.message)
+        if (!response.ok) {
+            throw new Error('비품 등록 실패');
         }
+
+        alert('비품이 등록되었습니다.');
+        // 관리자 비품 목록 화면으로 이동
+        window.location.href = '/view/resource/admin/items';
 
     } catch (error) {
         console.error(error);
-        alert(error.message);
+        alert('비품 등록에 실패했습니다.');
     }
 }
 
@@ -219,26 +201,26 @@ async function handleSave() {
  */
 function handleCancel() {
     if (confirm('작성 중인 내용이 저장되지 않습니다. 취소하시겠습니까?')) {
-        window.location.href = '/view/resource/admin/cars';
+        window.location.href = '/view/resource/admin/items';
     }
 }
 
 /**
- * 상태 목록 로드 (초기값 없음)
+ * 상태 목록 로드
  */
 async function loadStatusOptions() {
     try {
         const response = await apiFetch(
             '/api/admin/resource-status',
-            {method: 'GET'}
+            { method: 'GET' }
         );
-
+        
         if (!response.ok) throw new Error();
 
         const result = await response.json();
         const statuses = result.data;
 
-        const select = document.getElementById('car-status');
+        const select = document.getElementById('item-status');
         select.innerHTML = '<option value="">상태 선택</option>';
 
         statuses.forEach(status => {
@@ -251,6 +233,37 @@ async function loadStatusOptions() {
     } catch (e) {
         console.error(e);
         alert('상태 목록을 불러오지 못했습니다.');
+    }
+}
+
+/**
+ * 카테고리 목록 로드
+ */
+async function loadCategoryOptions() {
+    try {
+        const response = await apiFetch(
+            '/api/item-categories',
+            { method: 'GET' }
+        );
+        
+        if (!response.ok) throw new Error();
+
+        const result = await response.json();
+        const categories = result.data;
+
+        const select = document.getElementById('item-category');
+        select.innerHTML = '<option value="">카테고리 선택</option>';
+
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.id;
+            option.textContent = category.name;
+            select.appendChild(option);
+        });
+
+    } catch (e) {
+        console.error(e);
+        alert('카테고리 목록을 불러오지 못했습니다.');
     }
 }
 

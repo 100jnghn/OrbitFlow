@@ -26,17 +26,88 @@
     background: #4a69bd;
     color: #fff;
     border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
 
+    /* 🔥 크기 통일 */
+    padding: 12px 18px;
     font-size: 14px;
     font-weight: 600;
+
+    border-radius: 8px; /* manage 버튼과 동일 */
     cursor: pointer;
     transition: background 0.2s;
+
+    margin-left: auto;
 }
 
 .btn-add:hover {
     background: #3a5aa0;
+}
+
+/* =========================
+   Category Filter Section
+========================= */
+.category-section {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 20px 24px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.category-select-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 0 0 20%;
+}
+
+.category-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+}
+
+.category-select {
+    padding: 12px 14px;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.category-select:hover {
+    border-color: #4a69bd;
+}
+
+.category-select:focus {
+    outline: none;
+    border-color: #4a69bd;
+    box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.1);
+}
+
+.btn-category-manage {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    background: #6c757d;
+    color: #fff;
+    transition: all 0.2s;
+}
+
+.btn-category-manage:hover {
+    background: #5a6268;
 }
 
 /* =========================
@@ -136,13 +207,13 @@
 }
 
 /* =========================
-   CSS Hover Tooltip (Columns 3, 4)
+   CSS Hover Tooltip (Column 5 - 비고)
 ========================= */
-.resource-table td:nth-child(4) {
+.resource-table td:nth-child(5) {
     cursor: help;
 }
 
-.resource-table td:nth-child(4):hover::after {
+.resource-table td:nth-child(5):hover::after {
     content: attr(data-fulltext);
 
     position: absolute;

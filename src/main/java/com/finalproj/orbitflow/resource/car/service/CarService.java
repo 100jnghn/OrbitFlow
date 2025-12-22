@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.resource.car.service;
 
+import com.finalproj.orbitflow.global.exception.DuplicateCarNumberException;
 import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
@@ -63,12 +64,18 @@ public class CarService {
         Company company = companyRepository.getReferenceById(companyId);
         ResourceStatus resourceStatus = findResourceStatus(dto.getStatusId());
 
+        // 차량 번호 unique하게 (공백 제거)
+        String number = dto.getNumber().replace(" ", "");
+
+        if (carRepository.existsByNumber(number)) {
+            throw new DuplicateCarNumberException("이미 존재하는 차량 번호입니다");
+        }
 
         // todo - 이미지 파일 저장 기능 추가
 
         Car car = Car.builder()
                 .company(company)
-                .number(dto.getNumber())
+                .number(number)
                 .name(dto.getName())
                 .driverAge(dto.getDriverAge())
                 .description(dto.getDescription())
@@ -91,8 +98,15 @@ public class CarService {
         // todo - 이미지 수정 로직 추가
         File imgFile = car.getFile();
 
+        // 차량 번호 unique하게 (공백 제거)
+        String number = dto.getNumber().replace(" ", "");
+
+        if (carRepository.existsByNumber(number)) {
+            throw new DuplicateCarNumberException("이미 존재하는 차량 번호입니다");
+        }
+
         car.update(
-                dto.getNumber(),
+                number,
                 dto.getName(),
                 dto.getDriverAge(),
                 dto.getDescription(),
@@ -131,9 +145,12 @@ public class CarService {
             objectKey = car.getFile().getObjectKey();
         }
 
+        String number = car.getNumber();
+        number = number.replaceAll("([가-힣])", "$1 ");
+
         return CarResDto.builder()
                 .carId(car.getId())
-                .number(car.getNumber())
+                .number(number)
                 .name(car.getName())
                 .driverAge(car.getDriverAge())
                 .description(car.getDescription())
