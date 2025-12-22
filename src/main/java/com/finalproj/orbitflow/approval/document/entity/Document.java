@@ -15,6 +15,8 @@ import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -22,7 +24,9 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "document")
 @Getter
+@AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Document extends BaseEntity {
 
     @Id

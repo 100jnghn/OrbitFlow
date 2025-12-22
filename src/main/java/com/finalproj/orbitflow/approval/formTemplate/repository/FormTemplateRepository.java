@@ -79,7 +79,7 @@ public interface FormTemplateRepository extends JpaRepository<FormTemplate, Long
     );
 
 
-
+    Optional<FormTemplate> findByIdAndCompany_id(Long id, Long id1);
 }
 
 
