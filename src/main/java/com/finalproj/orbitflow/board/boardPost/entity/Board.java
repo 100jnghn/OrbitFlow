@@ -10,7 +10,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Entity
@@ -49,7 +49,7 @@ public class Board extends BaseEntity {
     private List<File> files; // 첨부파일 (FK) (Nullable)
 
     @Column(name = "deleted_at")
-    private LocalDateTime deletedAt; // 삭제 일시 (소프트 삭제)
+    private Instant deletedAt; // 삭제 일시 (소프트 삭제)
 
     // 게시글 수정 메서드
     public void update(String boardTitle, String boardContent, List<File> newFiles) {
@@ -70,7 +70,7 @@ public class Board extends BaseEntity {
 
     // 소프트 삭제 처리
     public void softDelete() {
-        this.deletedAt = LocalDateTime.now();
+        this.deletedAt = Instant.now();
     }
 
     public static Board create(

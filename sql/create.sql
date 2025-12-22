@@ -960,7 +960,7 @@ CREATE TABLE car
 (
     id                 BIGINT AUTO_INCREMENT,
     company_id         BIGINT      NOT NULL,
-    number             VARCHAR(15) NOT NULL,
+    number             VARCHAR(15) NOT NULL UNIQUE,
     name               VARCHAR(50) NOT NULL,
     driver_age         INT         NOT NULL,
     description        VARCHAR(255),

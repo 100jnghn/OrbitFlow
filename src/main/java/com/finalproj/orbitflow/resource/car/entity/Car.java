@@ -3,7 +3,6 @@ package com.finalproj.orbitflow.resource.car.entity;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.hr.company.entity.Company;
-import com.finalproj.orbitflow.resource.meetingroom.entity.Meetingroom;
 import com.finalproj.orbitflow.resource.status.entity.ResourceStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -32,7 +31,7 @@ public class Car extends BaseEntity {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @Column(nullable = false, length = 15)
+    @Column(nullable = false, length = 15, unique = true)
     private String number;
 
     @Column(nullable = false, length = 50)
