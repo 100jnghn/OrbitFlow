@@ -1,6 +1,5 @@
 package com.finalproj.orbitflow.resource.itemcategory.service;
 
-import com.finalproj.orbitflow.global.exception.ConfirmRequiredException;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.resource.item.repository.ItemRepository;
@@ -68,7 +67,7 @@ public class ItemCategoryService {
     }
 
     @Transactional
-    public void deleteItemCategory(Long itemCategoryId, boolean force) {
+    public void deleteItemCategory(Long itemCategoryId) {
 
         // todo - 카테고리 하위 자원들이 삭제됩니다 confirm 예외 전송 후 확인이 오면 삭제 진행
 
@@ -77,11 +76,6 @@ public class ItemCategoryService {
 
         int size = itemRepository.countByItemCategory(itemCategory);
         log.info("해당 카테고리에 아이템 " + size + "개 있음");
-
-        if (size > 0 && !force) {
-            throw new ConfirmRequiredException("해당 카테고리의 " + size + "개의 자원이 삭제됩니다");
-        }
-
 
         itemCategoryRepository.deleteById(itemCategoryId);
     }

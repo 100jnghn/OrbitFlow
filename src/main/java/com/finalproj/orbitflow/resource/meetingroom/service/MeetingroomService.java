@@ -2,6 +2,8 @@ package com.finalproj.orbitflow.resource.meetingroom.service;
 
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
+import com.finalproj.orbitflow.hr.employee.entity.Employee;
+import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import com.finalproj.orbitflow.resource.enums.ResourceStatusCode;
 import com.finalproj.orbitflow.resource.meetingroom.dto.MeetingroomReqDto;
 import com.finalproj.orbitflow.resource.meetingroom.dto.MeetingroomResDto;
@@ -16,6 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,6 +36,7 @@ import java.util.stream.Collectors;
 public class MeetingroomService {
 
     private final MeetingroomRepository meetingroomRepository;
+    private final EmployeeRepository employeeRepository;
     private final CompanyRepository companyRepository;
     private final ResourceStatusRepository resourceStatusRepository;
 
@@ -117,6 +122,12 @@ public class MeetingroomService {
             name = meetingroom.getResourceStatus().getResourceStatusCode().getDescription();
         }
 
+        Employee uploader = employeeRepository.getReferenceById(meetingroom.getCreatedBy());
+        String uploaderName = uploader.getName();
+
+        LocalDate createdAt = meetingroom.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDate();
+
+
         return MeetingroomResDto.builder()
                 .meetingroomId(meetingroom.getId())
                 .name(meetingroom.getName())
@@ -125,6 +136,8 @@ public class MeetingroomService {
                 .statusId(statusId)
                 .statusCode(code)
                 .statusName(name)
+                .uploaderName(uploaderName)
+                .createdAt(createdAt)
                 .build();
     }
 
