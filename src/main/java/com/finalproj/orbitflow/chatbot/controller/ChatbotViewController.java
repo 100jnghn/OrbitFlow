@@ -16,7 +16,7 @@ public class ChatbotViewController {
     public String chatbotManualPage(Model model) {
         model.addAttribute("currentGNB", "admin");
         model.addAttribute("currentMenu", "chatbot");
-        return "/admin/admin-chatbot-manual";
+        return "admin/admin-chatbot-manual";
     }
 }
 
