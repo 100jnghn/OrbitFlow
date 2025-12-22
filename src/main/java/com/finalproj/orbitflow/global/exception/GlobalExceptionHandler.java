@@ -1,6 +1,7 @@
 package com.finalproj.orbitflow.global.exception;
 
 import com.finalproj.orbitflow.global.common.ResponseDto;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  * @since : 2025-12-18 목요일
  */
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
 
@@ -86,6 +88,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DuplicateCarNumberException.class)
     public ResponseEntity<ResponseDto> handleDuplicateCarNumber(DuplicateCarNumberException e) {
+        log.info(e.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ResponseDto(HttpStatus.CONFLICT, e.getMessage(), null));
     }

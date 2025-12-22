@@ -64,11 +64,7 @@ public class CarService {
         Company company = companyRepository.getReferenceById(companyId);
         ResourceStatus resourceStatus = findResourceStatus(dto.getStatusId());
 
-        // todo - 차량 번호 unique하게
-        // 1. 입력에서 공백 제거
-        // 2. db에 공백 없이 저장 (77가8888)
-        // 3. ResDto로 전달할 때 8888 앞에 공백 하나 주기
-
+        // 차량 번호 unique하게 (공백 제거)
         String number = dto.getNumber().replace(" ", "");
 
         if (carRepository.existsByNumber(number)) {
@@ -102,8 +98,15 @@ public class CarService {
         // todo - 이미지 수정 로직 추가
         File imgFile = car.getFile();
 
+        // 차량 번호 unique하게 (공백 제거)
+        String number = dto.getNumber().replace(" ", "");
+
+        if (carRepository.existsByNumber(number)) {
+            throw new DuplicateCarNumberException("이미 존재하는 차량 번호입니다");
+        }
+
         car.update(
-                dto.getNumber(),
+                number,
                 dto.getName(),
                 dto.getDriverAge(),
                 dto.getDescription(),
