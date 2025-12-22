@@ -112,7 +112,7 @@ async function loadItems(categoryId = null) {
                 createCell(item.name),
                 createCell(item.description, true),
                 createCell(item.statusName),
-                createActionCell(item.id)
+                createActionCell(item.itemId)
             );
             tbody.appendChild(tr);
         });

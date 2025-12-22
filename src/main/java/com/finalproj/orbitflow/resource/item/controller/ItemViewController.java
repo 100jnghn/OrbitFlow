@@ -22,7 +22,7 @@ public class ItemViewController {
         return "admin-item/admin-items";
     }
 
-    @GetMapping("/admin/item/detail")
+    @GetMapping("/admin/items/detail")
     public String getItemPage(
             Model model,
             @RequestParam Long id
