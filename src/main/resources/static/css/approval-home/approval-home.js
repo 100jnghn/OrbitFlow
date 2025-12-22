@@ -61,13 +61,21 @@ function renderTableRows(docs) {
         if (!isDraft) tr.classList.add('row-disabled');
 
         tr.addEventListener('click', () => {
+            const templateId = doc.formTemplateId;
+
+            if (!templateId) return;
+
             if (isDraft) {
+                // 임시 저장 → 편집
                 window.location.href =
-                    `/view/admin/create-template?templateId=${doc.formTemplateId}`;
+                    `/view/admin/create-template?templateId=${templateId}`;
             } else {
-                alert('임시 저장 상태의 문서만 수정할 수 있습니다.');
+                // 활성 / 비활성 → 미리보기
+                window.location.href =
+                    `/view/admin/preview-template/${templateId}`;
             }
         });
+
 
         tr.innerHTML = `
         <td class="col-title">

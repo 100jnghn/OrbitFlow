@@ -1260,6 +1260,23 @@ function bindStepNavigationButtons() {
 }
 
 
+function bindPreviewButton() {
+    const previewBtn = document.querySelector('.preview-btn');
+    if (!previewBtn) return;
+
+    previewBtn.addEventListener('click', () => {
+        if (typeof templateId === "undefined" || !templateId) {
+            alert("템플릿 ID가 없어 미리보기를 열 수 없습니다.");
+            return;
+        }
+
+        // 같은 탭 이동
+        window.location.href = `/view/admin/preview-template/${templateId}`;
+
+    });
+}
+
+
 // ===============================
 // 초기화
 // ===============================
@@ -1327,6 +1344,9 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // 이전 / 다음 버튼 바인딩
     bindStepNavigationButtons();
+
+    // 미리보기 버튼 바인딩
+    bindPreviewButton();
 
     // 컴포넌트 버튼 높이 정렬 (UI 보조)
     observeComponentButtonHeight();
