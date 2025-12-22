@@ -1,0 +1,185 @@
+/* =========================
+   Page Header
+========================= */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.page-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #222;
+    letter-spacing: -1px;
+    margin: 0;
+}
+
+/* 뒤로가기 버튼 */
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff;
+    color: #555;
+    border: 1px solid #ddd;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-back:hover {
+    background: #f8f9fa;
+    border-color: #bbb;
+}
+
+/* =========================
+   Table Container
+========================= */
+.table-container {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* =========================
+   Category Table
+========================= */
+.category-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.category-table thead {
+    background: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.category-table th,
+.category-table td {
+    padding: 14px 16px;
+    font-size: 14px;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.category-table th {
+    font-weight: 600;
+    color: #495057;
+}
+
+.category-table td {
+    color: #555;
+}
+
+.category-table td:first-child {
+    text-align: center;
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.category-table tbody tr {
+    transition: background 0.2s;
+}
+
+.category-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.category-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* 카테고리명 입력 필드 */
+.category-name-input {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    transition: all 0.2s;
+    background: #fff;
+}
+
+.category-name-input:focus {
+    outline: none;
+    border-color: #4a69bd;
+    box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.1);
+}
+
+/* =========================
+   Action Buttons
+========================= */
+.action-btns {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-edit,
+.btn-delete,
+.btn-add-row {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-edit {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.btn-edit:hover {
+    background: #bbdefb;
+}
+
+.btn-delete {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.btn-delete:hover {
+    background: #ffcdd2;
+}
+
+.btn-add-row {
+    background: #4a69bd;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-add-row:hover {
+    background: #3a5aa0;
+}
+
+/* =========================
+   Empty State
+========================= */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+}
+
+.empty-state i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 14px;
+}
+
+
