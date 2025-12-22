@@ -145,6 +145,7 @@ public class ItemService {
                 .itemCategoryId(item.getItemCategory().getId())
                 .itemCategoryName(item.getItemCategory().getName())
                 .name(item.getName())
+                .description(item.getDescription())
                 .statusId(statusId)
                 .statusCode(code)
                 .statusName(name)
