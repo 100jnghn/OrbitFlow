@@ -158,6 +158,7 @@ async function loadCategories() {
 
 /* ==========================
    Actions
+   수정 버튼 (상세 조회)
 ========================== */
 function editItem(id) {
     // 비품 상세 조회 페이지로 이동

@@ -35,7 +35,7 @@ public class CarViewController {
     }
 
     @GetMapping("/admin/cars/insert")
-    public String insertCarPage() {
+    public String getInsertCarPage() {
         return "admin-car/admin-car-insert";
     }
 

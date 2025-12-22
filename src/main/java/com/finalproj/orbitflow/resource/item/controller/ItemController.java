@@ -106,6 +106,7 @@ public class ItemController {
         );
     }
 
+    // 관리자 - 자원 수정
     @PutMapping("/admin/items/{itemId}")
     public ResponseEntity<ResponseDto> updateItem(
             @PathVariable Long itemId,
@@ -117,6 +118,7 @@ public class ItemController {
         );
     }
 
+    // 관리자 - 자원 삭제
     @PatchMapping("/admin/items/{itemId}/delete")
     public ResponseEntity<ResponseDto> deleteItem(
             @PathVariable Long itemId
