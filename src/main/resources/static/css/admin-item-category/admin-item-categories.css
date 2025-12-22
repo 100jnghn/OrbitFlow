@@ -182,4 +182,9 @@
     font-size: 14px;
 }
 
+.app-content {
+    flex: 1;
+    padding: 24px 40px 16px;
+    overflow-y: auto;
+}
 

@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.resource.car.service;
 
+import com.finalproj.orbitflow.global.exception.DuplicateCarNumberException;
 import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
@@ -63,12 +64,22 @@ public class CarService {
         Company company = companyRepository.getReferenceById(companyId);
         ResourceStatus resourceStatus = findResourceStatus(dto.getStatusId());
 
+        // todo - 차량 번호 unique하게
+        // 1. 입력에서 공백 제거
+        // 2. db에 공백 없이 저장 (77가8888)
+        // 3. ResDto로 전달할 때 8888 앞에 공백 하나 주기
+
+        String number = dto.getNumber().replace(" ", "");
+
+        if (carRepository.existsByNumber(number)) {
+            throw new DuplicateCarNumberException("이미 존재하는 차량 번호입니다");
+        }
 
         // todo - 이미지 파일 저장 기능 추가
 
         Car car = Car.builder()
                 .company(company)
-                .number(dto.getNumber())
+                .number(number)
                 .name(dto.getName())
                 .driverAge(dto.getDriverAge())
                 .description(dto.getDescription())
@@ -131,9 +142,12 @@ public class CarService {
             objectKey = car.getFile().getObjectKey();
         }
 
+        String number = car.getNumber();
+        number = number.replaceAll("([가-힣])", "$1 ");
+
         return CarResDto.builder()
                 .carId(car.getId())
-                .number(car.getNumber())
+                .number(number)
                 .name(car.getName())
                 .driverAge(car.getDriverAge())
                 .description(car.getDescription())

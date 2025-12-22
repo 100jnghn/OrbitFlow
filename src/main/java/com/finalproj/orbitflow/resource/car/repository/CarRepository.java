@@ -32,4 +32,6 @@ public interface CarRepository extends JpaRepository<Car, Long> {
                     and c.resourceStatus.resourceStatusCode = :resourceStatusCode
             """)
     List<Car> findAllByCompanyIdAndStatus(Long companyId, ResourceStatusCode resourceStatusCode);
+
+    boolean existsByNumber(String number);
 }

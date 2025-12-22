@@ -84,4 +84,10 @@ public class GlobalExceptionHandler {
                 .body(new ResponseDto(HttpStatus.CONFLICT, e.getMessage(), null));
     }
 
+    @ExceptionHandler(DuplicateCarNumberException.class)
+    public ResponseEntity<ResponseDto> handleDuplicateCarNumber(DuplicateCarNumberException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ResponseDto(HttpStatus.CONFLICT, e.getMessage(), null));
+    }
+
 }
