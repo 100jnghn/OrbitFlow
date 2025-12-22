@@ -22,14 +22,11 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
         return findByCompanyIdAndEmployeeIdAndWorkDate(companyId, employeeId, LocalDate.now());
     }
 
-
+    // 월별 근태 이력 조회 (요약용)
     List<Attendance> findByEmployeeIdAndWorkDateBetweenOrderByWorkDateAsc(
-            Long employeeId,
-            LocalDate startDate,
-            LocalDate endDate
-    );
+            Long employeeId, LocalDate startDate, LocalDate endDate);
 
-    // 서버 사이드 페이징 + 필터링 (상태값이 ALL이 아닐 때 조건 적용)
+    // [사원용] 서버 사이드 페이징 + 필터링
     @Query("SELECT a FROM Attendance a WHERE a.employeeId = :empId " +
             "AND a.workDate BETWEEN :start AND :end " +
             "AND (:status IS NULL OR a.status = :status)")
@@ -40,5 +37,26 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
             @Param("status") AttendanceStatus status,
             Pageable pageable);
 
-    boolean existsByEmployeeIdAndWorkDate(Long id, LocalDate yesterday);
+    // 스케줄러용 기록 존재 여부 확인
+    boolean existsByEmployeeIdAndWorkDate(Long employeeId, LocalDate workDate);
+
+    /**
+     * [핵심] 전 사원 목록을 불러오면서 특정 날짜의 근태 기록을 Left Join
+     */
+    @Query("SELECT e, a FROM Employee e " +
+            "LEFT JOIN Attendance a ON e.id = a.employeeId AND a.workDate = :targetDate " +
+            "WHERE e.company.id = :companyId " +
+            "AND e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE " +
+            "AND (:status IS NULL OR a.status = :status OR (a.status IS NULL AND :status = 'ABSENT'))")
+    Page<Object[]> findAllEmployeesWithAttendance(
+            @Param("companyId") Long companyId,
+            @Param("targetDate") LocalDate targetDate,
+            @Param("status") AttendanceStatus status,
+            Pageable pageable);
+
+    // 상단 통계용
+    int countByCompanyIdAndWorkDateAndStatus(Long companyId, LocalDate workDate, AttendanceStatus status);
+
+    // 퇴근 미처리 카운트
+    int countByCompanyIdAndWorkDateAndLeaveAtIsNull(Long companyId, LocalDate workDate);
 }

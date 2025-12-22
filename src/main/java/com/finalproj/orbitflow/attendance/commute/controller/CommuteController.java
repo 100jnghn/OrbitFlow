@@ -25,7 +25,6 @@ public class CommuteController {
     public ResponseEntity<?> getActiveRule(@AuthenticationPrincipal SecurityUser user) {
         if (user == null) return ResponseEntity.status(401).build();
 
-        // 서비스 호출 시 반드시 user.getEmployeeId()를 넘겨야 사원별 예외를 찾을 수 있습니다.
         ActiveRuleResDto rule = commuteService.getActiveRule(user.getCompanyId(), user.getEmployeeId());
         return ResponseEntity.ok(rule);
     }
@@ -48,12 +47,10 @@ public class CommuteController {
 
     @PostMapping("/checkin")
     public ResponseEntity<?> checkIn(@AuthenticationPrincipal SecurityUser user) {
-        // 1. user가 null인지 먼저 확인 (NPE 방지)
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 정보가 없습니다.");
         }
 
-        // 2. 이후 로직 진행
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(commuteService.checkIn(user.getCompanyId(), user.getEmployeeId()));
     }
@@ -77,7 +74,6 @@ public class CommuteController {
     public ResponseEntity<TodayAttResDto> startAway(
             @AuthenticationPrincipal SecurityUser user) {
         commuteService.startAway(user.getCompanyId(), user.getEmployeeId());
-        // 상태 변경 후 최신 상태를 다시 조회하여 반환
         return ResponseEntity.ok(commuteService.getTodayAttendance(user.getCompanyId(), user.getEmployeeId()));
     }
 
@@ -89,7 +85,6 @@ public class CommuteController {
     public ResponseEntity<TodayAttResDto> endAway(
             @AuthenticationPrincipal SecurityUser user) {
         commuteService.endAway(user.getCompanyId(), user.getEmployeeId());
-        // 상태 변경 후 최신 상태를 다시 조회하여 반환
         return ResponseEntity.ok(commuteService.getTodayAttendance(user.getCompanyId(), user.getEmployeeId()));
     }
 }
