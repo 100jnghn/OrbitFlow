@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.approval.document.controller;
 
+import com.finalproj.orbitflow.approval.document.dto.DocumentCreateResDto;
 import com.finalproj.orbitflow.approval.document.dto.DocumentListReqDto;
 import com.finalproj.orbitflow.approval.document.dto.DocumentListResDto;
 import com.finalproj.orbitflow.approval.document.service.DocumentService;
@@ -41,9 +42,10 @@ public class DocumentController {
 
     @PostMapping("/draft/{formTemplateId}")
     public ResponseEntity<ResponseDto> createDocument(
-        @PathVariable Long formTemplateId
+        @PathVariable Long formTemplateId,
+        @RequestParam String documentTitle
     ) {
-        documentService.createDraft(SecurityUtils.getCompanyId(), formTemplateId);
-        return null;
+        DocumentCreateResDto result = documentService.createDraft(SecurityUtils.getCompanyId(), formTemplateId, documentTitle);
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.CREATED, "결재 문서 초안 생성 성공", result));
     }
 }
