@@ -7,7 +7,7 @@
 
 /* ================================
    Admin Sidebar
-================================ */
+=============================== */
 .admin-sidebar {
     background: #1f2636;
 }
@@ -20,22 +20,73 @@
     color: #5dade2;
 }
 
+/* ❌ [수정] 기존 li.selected의 마진/패딩 간섭 제거 */
 .admin-sidebar .sidebar-menu li.selected {
-    background: rgba(93, 173, 226, 0.2);
-    margin-left: -36px;
-    padding: 8px 36px;
-    border-left: 4px solid #5dade2;
+    background: transparent; /* 배경색 제거 */
+    margin-left: 0;
+    padding: 0;
+    border-left: none;
 }
 
-.admin-sidebar .sidebar-menu li.selected .sidebar-link {
-    color: #fff;
+/* ✅ [추가] 대분류 클릭 시 활성화 스타일 */
+.admin-sidebar .sidebar-menu li.active .menu-title {
+    color: #fff !important;
     font-weight: 600;
+}
+
+/* ✅ [추가] 소분류 선택 시 스타일 */
+.admin-sidebar .sub-menu li.selected a {
+    color: #fff !important;
+    font-weight: 600;
+    background: rgba(93, 173, 226, 0.2);
+    display: block;
+    padding-left: 10px;
+    border-left: 3px solid #5dade2;
 }
 
 .admin-sidebar .sidebar-footer {
     background: #1b2030;
     color: #aaa;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ================================
+   Admin Sidebar Toggle 핵심 CSS
+================================ */
+
+/* 1. 소분류 기본 숨김 */
+.sidebar-menu .sub-menu {
+    display: none !important;
+    list-style: none;
+    padding: 5px 0 10px 20px;
+    margin: 0;
+}
+
+/* 2. active 클래스가 있을 때만 소분류 표시 */
+.sidebar-menu .menu-item.active .sub-menu {
+    display: block !important;
+}
+
+/* 3. 대분류 타이틀 영역 */
+.menu-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    cursor: pointer !important; /* 클릭 가능 표시 */
+    color: #c9ccdd;
+    user-select: none;
+}
+
+/* 4. 화살표 애니메이션 */
+.arrow {
+    transition: transform 0.3s ease;
+    margin-right: 15px;
+    pointer-events: none; /* 아이콘 클릭 간섭 방지 */
+}
+
+.menu-item.active .arrow {
+    transform: rotate(180deg);
 }
 
 /* ================================

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-user :: layout(
+          ~{::content},
+          ~{fragments/header :: header},
+          ~{sidebar/attendance/user-attendance-sidebar :: menu},
+          ~{::pageCss},
+          ~{::pageScript}
+      )}">
+<head>
+    <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/my-leave.css}">
+        <style>
+            /* 헤더/사이드바와 어울리도록 컨테이너 여백 조정 */
+            .leave-container {
+                padding: 30px;
+                background-color: #f8f9fa;
+                min-height: calc(100vh - 60px); /* 헤더 높이 제외 */
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+
+<div th:fragment="content" class="leave-container">
+    <div class="page-header" style="margin-bottom: 25px;">
+        <h2 class="page-title" style="font-size: 24px; font-weight: 700; color: #333;">내 연차 현황</h2>
+        <p class="base-date" style="color: #666;">2025년 기준 <span class="date-detail" style="font-size: 0.9em;">(회계연도 1월 1일)</span></p>
+    </div>
+
+    <div class="leave-summary" style="display: flex; background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 30px; padding: 25px 0;">
+        <div class="summary-card" style="flex: 1; text-align: center;">
+            <span class="card-label" style="display: block; font-size: 14px; color: #888; margin-bottom: 10px;">총 연차 발생 일수</span>
+            <div class="card-value">
+                <span class="value-num" style="font-size: 28px; font-weight: 700;">15.0</span> <span class="unit">일</span>
+            </div>
+        </div>
+        <div class="summary-card" style="flex: 1; text-align: center; border-left: 1px solid #eee; border-right: 1px solid #eee;">
+            <span class="card-label" style="display: block; font-size: 14px; color: #888; margin-bottom: 10px;">사용 일수</span>
+            <div class="card-value" style="color: #ff6b6b;">
+                <span class="value-num" style="font-size: 28px; font-weight: 700;">3.5</span> <span class="unit">일</span>
+            </div>
+        </div>
+        <div class="summary-card" style="flex: 1; text-align: center;">
+            <span class="card-label" style="display: block; font-size: 14px; color: #888; margin-bottom: 10px;">잔여 연차 일수</span>
+            <div class="card-value" style="color: #339af0;">
+                <span class="value-num" style="font-size: 28px; font-weight: 700;">11.5</span> <span class="unit">일</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="leave-detail" style="background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+        <div class="detail-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 class="detail-title" style="font-size: 18px; font-weight: 600;">상세 사용 및 발생 내역</h3>
+        </div>
+
+        <table class="leave-table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+            <tr style="background: #f8f9fa;">
+                <th style="padding: 12px; border-bottom: 2px solid #dee2e6; text-align: center;">구분</th>
+                <th style="padding: 12px; border-bottom: 2px solid #dee2e6; text-align: center;">신청일</th>
+                <th style="padding: 12px; border-bottom: 2px solid #dee2e6; text-align: center;">휴가 기간</th>
+                <th style="padding: 12px; border-bottom: 2px solid #dee2e6; text-align: center;">사용 일수</th>
+                <th style="padding: 12px; border-bottom: 2px solid #dee2e6; text-align: center;">상태</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 15px; text-align: center; color: #40c057; font-weight: 600;">발생 (정기부여)</td>
+                <td style="padding: 15px; text-align: center;">2025-01-01</td>
+                <td style="padding: 15px; text-align: center;">-</td>
+                <td style="padding: 15px; text-align: center; color: #40c057;">+15.0</td>
+                <td style="padding: 15px; text-align: center;">완료</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 15px; text-align: center;">연차 휴가</td>
+                <td style="padding: 15px; text-align: center;">2025-03-10</td>
+                <td style="padding: 15px; text-align: center;">2025-04-05 ~ 04-06</td>
+                <td style="padding: 15px; text-align: center; color: #ff6b6b;">-2.0</td>
+                <td style="padding: 15px; text-align: center;">승인</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination" style="display: flex; justify-content: center; margin-top: 25px; gap: 5px;">
+        <button style="padding: 5px 10px; border: 1px solid #ddd; background: #fff; cursor: pointer;">&lt;</button>
+        <button style="padding: 5px 10px; border: 1px solid #339af0; background: #339af0; color: #fff; cursor: pointer;">1</button>
+        <button style="padding: 5px 10px; border: 1px solid #ddd; background: #fff; cursor: pointer;">&gt;</button>
+    </div>
+</div>
+
+<th:block th:fragment="pageScript">
+    <script>
+        console.log("내 연차 조회 페이지 로드 완료");
+    </script>
+</th:block>
+
+</body>
+</html>

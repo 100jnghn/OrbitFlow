@@ -144,3 +144,15 @@ async function loadMe() {
 }
 
 document.addEventListener('DOMContentLoaded', loadMe);
+
+/** 관리자 사이드바 토글 함수 통합 */
+function toggleAdminMenu(element) {
+    const menuItem = element.closest('.menu-item');
+    if (!menuItem) return;
+
+    document.querySelectorAll('.sidebar-menu .menu-item').forEach(item => {
+        if (item !== menuItem) item.classList.remove('active');
+    });
+
+    menuItem.classList.toggle('active');
+}

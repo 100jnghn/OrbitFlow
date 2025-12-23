@@ -20,19 +20,21 @@
     </div>
 
     <div class="summary-section">
-        <h2 class="section-title" id="todayLabel">금일 요약 현황 (2025.12.12)</h2>
+        <h2 class="section-title" id="todayLabel">금일 요약 현황 (로드 중...)</h2>
         <div class="summary-cards">
             <div class="summary-card card-green">
                 <span class="card-label">출근 완료 인원</span>
-                <div class="card-value"><span id="onTimeCount">0</span> / <span id="totalEmployees">0</span></div>
+                <div class="card-value">
+                    <span id="onTimeCount">0</span> <small>/ <span id="totalEmployees">0</span></small>
+                </div>
             </div>
             <div class="summary-card card-orange">
                 <span class="card-label">금일 지각 인원</span>
-                <div class="card-value"><span id="lateCount">0</span> 명</div>
+                <div class="card-value"><span id="lateCount">0</span> <small>명</small></div>
             </div>
             <div class="summary-card card-red">
                 <span class="card-label">퇴근 미처리 (근무중)</span>
-                <div class="card-value"><span id="notLeavingCount">0</span> 명</div>
+                <div class="card-value"><span id="notLeavingCount">0</span> <small>명</small></div>
             </div>
         </div>
     </div>
@@ -41,15 +43,20 @@
         <h2 class="section-title">상세 검색 및 필터</h2>
         <div class="filter-row">
             <div class="filter-group">
-                <label>조회 기간</label>
+                <label for="searchKeyword">사원 검색</label>
+                <input type="text" id="searchKeyword" class="form-input" placeholder="이름 또는 사번 입력"
+                       onkeyup="if(window.event.keyCode==13){handleSearch()}">
+            </div>
+            <div class="filter-group">
+                <label for="startDate">조회 기간</label>
                 <div class="date-inputs">
                     <input type="date" id="startDate" class="form-input">
-                    <span>~</span>
+                    <span class="date-separator">~</span>
                     <input type="date" id="endDate" class="form-input">
                 </div>
             </div>
             <div class="filter-group">
-                <label>근무 상태</label>
+                <label for="statusFilter">근무 상태</label>
                 <select id="statusFilter" class="form-select">
                     <option value="ALL">전체 상태 ▼</option>
                     <option value="ON_TIME">정상</option>
@@ -57,12 +64,17 @@
                     <option value="ABSENT">결근</option>
                 </select>
             </div>
-            <button class="btn-search" onclick="handleSearch()">검색</button>
+            <button class="btn-search" onclick="handleSearch()">
+                <i class="fas fa-search"></i> 검색
+            </button>
         </div>
     </div>
 
     <div class="list-container">
-        <h2 class="section-title">직원별 근태 상세 목록</h2>
+        <div class="section-header-flex">
+            <h2 class="section-title">직원별 근태 상세 목록</h2>
+            <span class="info-text">* 최근 기록이 상단에 표시됩니다.</span>
+        </div>
         <table class="admin-history-table" id="attendanceTable">
             <thead>
             <tr>
@@ -87,27 +99,28 @@
     <div id="correctionModal" class="modal-overlay" style="display: none;">
         <div class="modal-window">
             <div class="modal-header">
-                <h3>근태 정정 처리</h3>
+                <h3>근태 기록 정정</h3>
                 <button class="close-btn" onclick="closeModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="targetAttendanceId">
                 <div class="form-item">
-                    <label>상태 변경</label>
+                    <label>변경할 상태</label>
                     <select id="modalStatus" class="form-select">
-                        <option value="ON_TIME">정상</option>
+                        <option value="ON_TIME">정상 출근</option>
                         <option value="LATE">지각</option>
                         <option value="ABSENT">결근</option>
                     </select>
                 </div>
                 <div class="form-item">
-                    <label>정정 사유</label>
-                    <textarea id="modalReason" class="form-textarea" placeholder="정정 사유를 입력해주세요."></textarea>
+                    <label>정정 사유 <small class="text-danger">*</small></label>
+                    <textarea id="modalReason" class="form-textarea"
+                              placeholder="사유를 입력하세요 (예: 단말기 오류, 외근 후 퇴근 등)"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-cancel" onclick="closeModal()">취소</button>
-                <button class="btn-save" onclick="submitCorrection()">저장</button>
+                <button class="btn-cancel" onclick="closeModal()">닫기</button>
+                <button class="btn-save" onclick="submitCorrection()">저장하기</button>
             </div>
         </div>
     </div>

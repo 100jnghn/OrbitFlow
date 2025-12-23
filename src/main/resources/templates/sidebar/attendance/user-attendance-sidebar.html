@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-<!-- 출석(근태) 영역 전용 사이드바 메뉴: 디자인은 sidebar-shell 에서 관리 -->
 <ul th:fragment="menu">
     <li class="sidebar-section-title">MY 근태</li>
     <li th:classappend="${currentMenu} == 'commute' ? ' selected' : ''">
@@ -11,7 +10,7 @@
         <a th:href="@{/view/attendance/monthly}" class="sidebar-link">월별 근태 조회</a>
     </li>
     <li th:classappend="${currentMenu} == 'annual-leave' ? ' selected' : ''">
-        <a th:href="@{/attendance/annual-leave}" class="sidebar-link">내 연차 조회</a>
+        <a th:href="@{/view/attendance/annual-leave}" class="sidebar-link">내 연차 조회</a>
     </li>
 
     <li class="sidebar-section-title">휴가 신청</li>
