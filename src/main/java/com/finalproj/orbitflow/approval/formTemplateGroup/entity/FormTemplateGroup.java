@@ -38,10 +38,10 @@ public class FormTemplateGroup extends BaseEntity {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false, length = 50)
     private String name;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT") //TODO VARCHAR(200)으로 변경 필요
     private String description;
 
     @Column(nullable = false)

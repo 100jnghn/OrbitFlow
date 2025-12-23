@@ -99,7 +99,7 @@
     background: #fff;
     border-radius: 15px;
     box-shadow: 0 6px 30px rgba(31, 36, 73, 0.17);
-    padding: 34px 32px 26px 32px;
+    padding: 36px 32px 32px;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -131,6 +131,7 @@
     padding: 9px 13px;
     background: #fafbff;
     resize: vertical;
+    min-height: 120px;
 }
 .modal-actions {
     margin-top: 15px;
@@ -169,7 +170,7 @@
     border-radius: 7px;
     background: #fff;
     margin-top: 10px;
-    min-height: 46px;
+    min-height: 120px;
     box-shadow: 0 3px 18px rgba(80,87,149,0.11);
 }
 .update-desc-title {
@@ -179,12 +180,15 @@
     color: #242c5e;
     padding: 12px 16px 3px 16px;
 }
+
 .update-desc-text {
-    padding: 4px 16px 13px 16px;
-    font-size: 1.07rem;
-    color: #294d91;
-    min-height: 22px;
+    padding: 8px 18px 16px 18px; /* 기존보다 상/좌우 여유 */
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-y: auto;
 }
+
 
 /* ----- 드롭다운 for 업데이트 팝업 ----- */
 .dropdown-group {
@@ -274,7 +278,28 @@
 .approval-table tbody tr:hover {
     background: #f2f7fe;
 }
-.col-title    { width: 24%; }
+
+.col-title {
+    width: 24%;
+    white-space: normal; /* td는 기본 흐름 유지 */
+}
+
+/* 내부에서만 flex 사용 */
+.title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0; /* ⭐️ 중요 (ellipsis 필수 조건) */
+}
+
+.title-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
 .col-version  { width: 8%; }
 .col-usedoc   { width: 12%; }
 .col-updated  { width: 20%; }
@@ -360,16 +385,26 @@
     position: relative;
 }
 
-.edit-icon {
-    margin-left: 6px;
+.action-icon {
+    opacity: 0;
     font-size: 14px;
     cursor: pointer;
-    vertical-align: middle;
+    flex-shrink: 0;
+    transition: opacity 0.12s ease;
 }
 
-.row-disabled .edit-icon {
-    display: none;
+.approval-table tbody tr:hover .action-icon {
+    opacity: 1;
 }
+
+.row-draft .action-icon {
+    color: #1e88e5; /* 편집 */
+}
+
+.row-view-only .action-icon {
+    color: #616161; /* 상세보기 */
+}
+
 
 /* 상태별 행 텍스트 색상 */
 .row-active {
@@ -388,4 +423,24 @@
 .hint {
     font-size: 12px;
     margin-top: 6px;
+}
+
+.search-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.header-right .search-group .hint {
+    position: absolute;
+    top: 100%; /* input 바로 아래 */
+    left: 0;
+
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.2;
+    white-space: nowrap;
+
+    /* 레이아웃 영향 제거 */
+    pointer-events: none;
 }

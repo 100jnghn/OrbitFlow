@@ -15,6 +15,13 @@ let approvalState = {
 
 let lastSelectedUpdateTemplateId = null;
 
+const LIST_TITLE_MAX = 30; // 또는 35
+
+
+const TEMPLATE_NAME_MAX = 50;
+const TEMPLATE_DESC_MAX = 200;
+const UPDATE_SEARCH_MAX = TEMPLATE_NAME_MAX;
+
 
 // fetch -> apiFetch 치환
 async function fetchApprovalDocs({ status, keyword, page, pageSize }) {
@@ -57,8 +64,11 @@ function renderTableRows(docs) {
 
         const isDraft = doc.formTemplateStatus === 'DRAFT';
 
-        tr.style.cursor = isDraft ? 'pointer' : 'not-allowed';
-        if (!isDraft) tr.classList.add('row-disabled');
+        tr.style.cursor = 'pointer';
+
+        if (!isDraft) {
+            tr.classList.add('row-view-only');
+        }
 
         tr.addEventListener('click', () => {
             const templateId = doc.formTemplateId;
@@ -78,10 +88,17 @@ function renderTableRows(docs) {
 
 
         tr.innerHTML = `
-        <td class="col-title">
-            ${escapeHTML(doc.formTemplateGroupName)}
-            ${renderEditIcon(doc.formTemplateStatus)}
+        <td class="col-title" title="${escapeHTML(doc.formTemplateGroupName)}">
+            <div class="title-wrap">
+            <span class="title-text">
+                ${escapeHTML(truncateText(doc.formTemplateGroupName, LIST_TITLE_MAX))}
+            </span>
+            ${renderActionIcon(doc.formTemplateStatus)}
+            </div>
+        
         </td>
+
+
         <td class="col-version">${doc.formTemplateVersion}</td>
         <td class="col-usedoc">${doc.useDocument || 0}</td>
         <td class="col-updated">${formatDate(doc.updatedAt)}</td>
@@ -99,12 +116,37 @@ function renderTableRows(docs) {
 const popupTemplateName = document.getElementById('popupTemplateName');
 const popupTemplateDesc = document.getElementById('popupTemplateDesc');
 const popupCreateBtn = document.getElementById('popupCreateBtn');
+const updateTemplateSearch = document.getElementById('updateTemplateSearch');
+const keywordInput = document.getElementById('keywordInput');
 
+/* maxlength 설정 */
+popupTemplateName.setAttribute('maxlength', TEMPLATE_NAME_MAX);
+popupTemplateDesc.setAttribute('maxlength', TEMPLATE_DESC_MAX);
+
+/* ===== hint elements ===== */
+
+// 생성 팝업
 const popupTemplateNameMsg =
     popupTemplateName.closest('.modal-form-group').querySelector('.hint');
 
 const popupTemplateDescMsg =
     popupTemplateDesc.closest('.modal-form-group').querySelector('.hint');
+
+// 업데이트 팝업
+const updateTemplateSearchMsg =
+    document.getElementById('updateTemplateSearchHint');
+
+// 메인 검색
+const keywordInputMsg =
+    keywordInput.closest('.search-group').querySelector('.hint');
+
+
+function renderActionIcon(status) {
+    if (status === 'DRAFT') {
+        return `<span class="action-icon edit-icon" title="편집">✏️</span>`;
+    }
+    return `<span class="action-icon view-icon" title="상세 보기">🔍</span>`;
+}
 
 
 function renderAttend(tags) {
@@ -186,15 +228,23 @@ function hideCreatePopup() {
     document.getElementById('createPopup').style.display = 'none';
 }
 
-function renderEditIcon(status) {
-    if (status !== 'DRAFT') return '';
-    return `<span class="edit-icon" title="수정 가능">✏️</span>`;
-}
 
 function showMsg(el, message, type) {
+    if (!el) return;
     el.textContent = message;
-    el.className = 'hint ' + type; // hint success / hint error
+    el.className = 'hint ' + type;
 }
+
+function truncateText(text, max) {
+    if (!text) return '';
+    if (text.length <= max) return text;
+    return text.slice(0, max) + '…';
+}
+
+function clearHint(el) {
+    if (el) el.textContent = '';
+}
+
 
 /**
  * 선택한 양식 그룹(groupId)을 기반으로 결재 양식 임시 저장 생성
@@ -250,10 +300,10 @@ function validateTemplateName() {
         return false;
     }
 
-    if (v.length > 100) {
+    if (v.length > TEMPLATE_NAME_MAX) {
         showMsg(
             popupTemplateNameMsg,
-            `양식명은 100자 이내여야 합니다. (${v.length}/100)`,
+            `양식명은 ${TEMPLATE_NAME_MAX}자 이내여야 합니다. (${v.length}/${TEMPLATE_NAME_MAX})`,
             'error'
         );
         return false;
@@ -261,11 +311,12 @@ function validateTemplateName() {
 
     showMsg(
         popupTemplateNameMsg,
-        `사용 가능한 양식명입니다. (${v.length}/100)`,
+        `사용 가능한 양식명입니다. (${v.length}/${TEMPLATE_NAME_MAX})`,
         'success'
     );
     return true;
 }
+
 
 function validateTemplateDesc() {
     const v = popupTemplateDesc.value.trim();
@@ -275,10 +326,10 @@ function validateTemplateDesc() {
         return false;
     }
 
-    if (v.length > 255) {
+    if (v.length > TEMPLATE_DESC_MAX) {
         showMsg(
             popupTemplateDescMsg,
-            `설명은 255자 이내여야 합니다. (${v.length}/255)`,
+            `설명은 ${TEMPLATE_DESC_MAX}자 이내여야 합니다. (${v.length}/${TEMPLATE_DESC_MAX})`,
             'error'
         );
         return false;
@@ -286,51 +337,124 @@ function validateTemplateDesc() {
 
     showMsg(
         popupTemplateDescMsg,
-        `입력됨 (${v.length}/255)`,
+        `입력됨 (${v.length}/${TEMPLATE_DESC_MAX})`,
         'success'
     );
     return true;
 }
 
-function updateCreateButtonState() {
-    popupCreateBtn.disabled = !(
-        validateTemplateName() &&
-        validateTemplateDesc()
+
+function validateUpdateTemplateSearch() {
+    const v = updateTemplateSearch.value.trim();
+
+    if (!v) {
+        updateTemplateSearchMsg.textContent = '';
+        return false;
+    }
+
+    if (v.length > UPDATE_SEARCH_MAX) {
+        showMsg(
+            updateTemplateSearchMsg,
+            `양식명은 ${UPDATE_SEARCH_MAX}자 이내여야 합니다. (${v.length}/${UPDATE_SEARCH_MAX})`,
+            'error'
+        );
+        return false;
+    }
+
+    showMsg(
+        updateTemplateSearchMsg,
+        `검색어 입력됨 (${v.length}/${UPDATE_SEARCH_MAX})`,
+        'success'
     );
+    return true;
+}
+
+function validateKeywordSearch() {
+    const v = keywordInput.value.trim();
+
+    if (!v) {
+        keywordInputMsg.textContent = '';
+        return false;
+    }
+
+    if (v.length > TEMPLATE_NAME_MAX) {
+        showMsg(
+            keywordInputMsg,
+            `검색어는 ${TEMPLATE_NAME_MAX}자 이내여야 합니다. (${v.length}/${TEMPLATE_NAME_MAX})`,
+            'error'
+        );
+        return false;
+    }
+
+    showMsg(
+        keywordInputMsg,
+        `검색어 입력됨 (${v.length}/${TEMPLATE_NAME_MAX})`,
+        'success'
+    );
+    return true;
 }
 
 
+function enforceMaxLength(inputEl, max) {
+    if (inputEl.value.length > max) {
+        inputEl.value = inputEl.value.slice(0, max);
+    }
+}
+
+
+function updateCreateButtonState() {
+    const isNameValid = popupTemplateName.value.trim().length > 0 &&
+        popupTemplateName.value.length <= TEMPLATE_NAME_MAX;
+
+    const isDescValid = popupTemplateDesc.value.trim().length > 0 &&
+        popupTemplateDesc.value.length <= TEMPLATE_DESC_MAX;
+
+    popupCreateBtn.disabled = !(isNameValid && isDescValid);
+}
 
 
 function bindEventHandlers() {
     popupTemplateName.addEventListener('input', () => {
+        enforceMaxLength(popupTemplateName, TEMPLATE_NAME_MAX);
         validateTemplateName();
         updateCreateButtonState();
     });
 
     popupTemplateDesc.addEventListener('input', () => {
+        enforceMaxLength(popupTemplateDesc, TEMPLATE_DESC_MAX);
         validateTemplateDesc();
         updateCreateButtonState();
     });
+
+    keywordInput.addEventListener('input', () => {
+        enforceMaxLength(keywordInput, TEMPLATE_NAME_MAX);
+        validateKeywordSearch();
+    });
+
 
     document.getElementById('statusFilter').addEventListener('change', function () {
         approvalState.status = this.value;
         approvalState.page = 0;
         loadAndRender({ status: this.value, page: 0 });
     });
-    const keywordInput = document.getElementById('keywordInput');
     document.getElementById('searchBtn').addEventListener('click', function () {
+        if (!validateKeywordSearch() && keywordInput.value.trim()) return;
         approvalState.keyword = keywordInput.value;
         approvalState.page = 0;
-        loadAndRender({ keyword: keywordInput.value, page: 0 });
+        loadAndRender({keyword: keywordInput.value, page: 0});
+        clearHint(keywordInputMsg);
     });
+
     keywordInput.addEventListener('keyup', function (e) {
         if (e.key === 'Enter') {
+            if (!validateKeywordSearch() && this.value.trim()) return;
             approvalState.keyword = this.value;
             approvalState.page = 0;
-            loadAndRender({ keyword: this.value, page: 0 });
+            loadAndRender({keyword: this.value, page: 0});
+            clearHint(keywordInputMsg);
         }
     });
+
     document.getElementById('prevPageBtn').addEventListener('click', function () {
         if (approvalState.page > 0) {
             approvalState.page -= 1;
@@ -417,6 +541,7 @@ function showUpdatePopup() {
     document.getElementById('updateTemplateSearch').value = '';
     document.getElementById('updateSelectedDescText').textContent = '';
     document.getElementById('updateDropdown').style.display = 'none';
+    updateTemplateSearch.focus();
 }
 
 function hideUpdatePopup() {
@@ -470,26 +595,29 @@ function renderUpdateDropdown(items, inputValue) {
         const groupId = item.formTemplateGroupId || item.groupId;
         const templateId = item.formTemplateId || item.templateId;
 
-        div.textContent = name;
+        div.textContent = truncateText(name, TEMPLATE_NAME_MAX);
+        div.title = name;
+
 
         div.addEventListener('mousedown', function () {
-            document.getElementById('updateTemplateSearch').value = name;
+            updateTemplateSearch.value = name;
+
             lastSelectedUpdateId = groupId;
-            lastSelectedUpdateTemplateId = templateId; // ⭐️ 핵심
+            lastSelectedUpdateTemplateId = templateId;
+
             dropdown.style.display = 'none';
             showSelectedUpdateDescription(groupId);
+            showMsg(
+                updateTemplateSearchMsg,
+                `선택됨 (${name.length}/${UPDATE_SEARCH_MAX})`,
+                'success'
+            );
         });
+
 
         dropdown.appendChild(div);
     });
 
-
-// 입력에 일치하는 값이 있으면 description 즉시 요청/출력
-    const autoId = lastUpdateDropdownIdMap[inputValue];
-    if (autoId) {
-        lastSelectedUpdateId = autoId;
-        showSelectedUpdateDescription(autoId);
-    }
     dropdown.style.display = 'block';
 }
 
@@ -515,7 +643,6 @@ async function showSelectedUpdateDescription(groupId) {
 }
 
 function bindUpdatePopupEvents() {
-    const popup = document.getElementById('updatePopup');
     const input = document.getElementById('updateTemplateSearch');
     const dropdown = document.getElementById('updateDropdown');
     const cancelBtn = document.getElementById('popupUpdateCancelBtn');
@@ -528,18 +655,18 @@ function bindUpdatePopupEvents() {
     // 취소
     cancelBtn.addEventListener('click', hideUpdatePopup);
 
-    // 팝업 바깥 클릭 시 닫기
-    popup.addEventListener('click', e => {
-        if (e.target === popup) hideUpdatePopup();
-    });
 
     // 검색 입력
     input.addEventListener('input', () => {
+        enforceMaxLength(input, UPDATE_SEARCH_MAX);
+        validateUpdateTemplateSearch();
+
         clearTimeout(updatePopupDebounce);
         const keyword = input.value.trim();
 
         if (!keyword) {
             dropdown.style.display = 'none';
+            updateTemplateSearchMsg.textContent = '';
             document.getElementById('updateSelectedDescText').textContent = '';
             return;
         }
@@ -549,6 +676,7 @@ function bindUpdatePopupEvents() {
             renderUpdateDropdown(items);
         }, 400);
     });
+
 
     input.addEventListener('blur', () => {
         setTimeout(() => dropdown.style.display = 'none', 150);
