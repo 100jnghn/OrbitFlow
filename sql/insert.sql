@@ -3,11 +3,11 @@ use orbitflow;
 /* =====================================================
    COMPANY (2개 회사)
 ===================================================== */
-INSERT INTO company
-(name, business_number, address, representative_name, representative_contact)
-VALUES ('OrbitFlow', '1234567890', '서울 강남구 테헤란로 123', '홍대표', '01011112222'),
-       ('NovaWorks', '9876543210', '서울 서초구 서초대로 77', '김대표', '01022223333');
-
+-- 회사 데이터 삽입 (ID 1, 2, 3)
+INSERT INTO company (id, name, business_number, address, representative_name, representative_contact, created_at, updated_at) VALUES
+                                                                                                                                  (1, 'OrbitFlow 본사', '123-45-67890', '서울특별시 강남구 테헤란로 123', '김도윤', '010-1111-0001', NOW(), NOW()),
+                                                                                                                                  (2, 'TechSolution 테크솔루션', '234-56-78901', '경기도 판교역로 456', '강태양', '010-2222-0001', NOW(), NOW()),
+                                                                                                                                  (3, 'GlobalService 글로벌서비스', '345-67-89012', '부산광역시 해운대구 센텀로 789', '신유진', '010-3333-0001', NOW(), NOW());
 
 /* =====================================================
    ORG_CATEGORY (조직 유형)
