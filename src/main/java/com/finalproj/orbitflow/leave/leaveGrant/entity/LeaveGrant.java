@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.leave.grantHistory.entity;
+package com.finalproj.orbitflow.leave.leaveGrant.entity;
 
 
 import com.finalproj.orbitflow.global.common.BaseEntity;
@@ -14,7 +14,7 @@ import java.time.LocalDate;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "grant_history")
-public class GrantHistory extends BaseEntity {
+public class LeaveGrant extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
