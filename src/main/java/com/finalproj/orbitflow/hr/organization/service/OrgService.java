@@ -86,9 +86,9 @@ public class OrgService {
 
     /* ================= 수정 ================= */
     public void update(Long companyId, Long organizationId, OrgUpdateReqDto request) {
-        String oldName = org.getName();
 
         Organization org = getOrgInCompanyOrThrow(companyId, organizationId);
+        String oldName = org.getName();
 
         Long newParentId = request.getParentOrgId();
         String newName = normalizeNameOrThrow(request.getName());
