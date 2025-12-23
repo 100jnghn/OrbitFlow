@@ -4,7 +4,7 @@
    - 내부에서만 스크롤
 ================================ */
 .approval-rule-container {
-    max-width: 960px;
+    max-width: 1200px;
     max-height: calc(100vh - 120px); /* 헤더/사이드바 고려 */
     margin: 0 auto;
     padding: 28px;
@@ -105,6 +105,7 @@
    Select 공통
 ================================ */
 .select-org,
+.select-org-category,
 .select-pos,
 .select-employee {
     width: 190px;
@@ -122,11 +123,13 @@
 }
 
 .select-org:focus,
+.select-org-category:focus,
 .select-pos:focus,
 .select-employee:focus {
     border-color: #4a6cf7;
 }
 
+.select-org-category:disabled,
 .select-pos:disabled,
 .select-employee:disabled {
     background-color: #f2f4f7;
