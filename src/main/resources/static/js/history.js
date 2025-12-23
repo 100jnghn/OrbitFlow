@@ -1,195 +1,151 @@
-// 1. 전역 변수: 현재 조회 중인 상태 보존
 let currentParams = { page: 0, size: 10, status: 'ALL' };
 
 document.addEventListener('DOMContentLoaded', function() {
     const dropdown = document.getElementById('monthDropdown');
     const monthList = document.getElementById('monthList');
     const selectedText = document.getElementById('selectedMonthText');
-    const statusFilter = document.getElementById('statusFilter');
+    const searchType = document.getElementById('searchType');
 
-    // 2. 커스텀 드롭다운 목록 생성 및 초기 데이터 로드
-    initCustomMonthSelector(monthList, selectedText);
+    // 1. 방식 전환 (월별 vs 기간설정)
+    searchType.addEventListener('change', function(e) {
+        const isRange = e.target.value === 'RANGE';
+        document.getElementById('monthPickerWrapper').style.display = isRange ? 'none' : 'block';
+        // flex로 변경하여 내부 요소(input, button) 정렬 유지
+        document.getElementById('rangePickerWrapper').style.display = isRange ? 'flex' : 'none';
 
-    // 3. 드롭다운 열기/닫기 토글
-    if (dropdown) {
-        dropdown.addEventListener('click', (e) => {
-            dropdown.classList.toggle('show');
-            e.stopPropagation(); // 클릭 이벤트 전파 방지
-        });
-    }
-
-    // 화면 다른 곳 클릭 시 드롭다운 닫기
-    document.addEventListener('click', () => {
-        if (dropdown) dropdown.classList.remove('show');
+        // 모드 전환 시 첫 페이지부터 다시 조회 (원하는 경우 유지해도 됨)
+        currentParams.page = 0;
+        executeSearch();
     });
 
-    // 4. 상태 필터(전체, 지각 등) 변경 이벤트
-    if (statusFilter) {
-        statusFilter.addEventListener('change', (e) => {
-            currentParams.status = e.target.value;
-            currentParams.page = 0; // 필터 변경 시 1페이지부터
+    // 2. 월 선택 초기화 및 데이터 로드
+    initCustomMonthSelector(monthList, selectedText);
 
-            // 현재 선택된 월 정보 가져오기
-            const hiddenInput = document.getElementById('monthSelect');
-            const [y, m] = hiddenInput.value.split('-');
-            loadMonthlyHistory(y, m);
-        });
-    }
+    // 3. 드롭다운 토글
+    dropdown.addEventListener('click', (e) => {
+        dropdown.classList.toggle('show');
+        e.stopPropagation();
+    });
+    document.addEventListener('click', () => dropdown.classList.remove('show'));
+
+    // 4. 필터 및 버튼 이벤트
+    document.getElementById('statusFilter').addEventListener('change', (e) => {
+        // ✅ 핵심: 선택값을 currentParams에 반영해야 필터링이 됨
+        currentParams.status = e.target.value;
+        currentParams.page = 0;
+        executeSearch();
+    });
+
+    document.getElementById('rangeSearchBtn').addEventListener('click', () => {
+        currentParams.page = 0;
+        executeSearch();
+    });
 });
 
-/**
- * 36개월 목록 생성 및 클릭 이벤트 바인딩
- */
-function initCustomMonthSelector(listElement, textElement) {
-    if (!listElement) return;
-
+/** 36개월 선택기 로직 및 데이터 매핑 (기존 유지) */
+function initCustomMonthSelector(list, text) {
     const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
-    const hiddenInput = document.getElementById('monthSelect');
-
-    listElement.innerHTML = '';
-    const fragment = document.createDocumentFragment();
+    const hidden = document.getElementById('monthSelect');
+    const dropdown = document.getElementById('monthDropdown');
 
     for (let i = 0; i < 36; i++) {
-        const targetDate = new Date(currentYear, currentMonth - i, 1);
-        const year = targetDate.getFullYear();
-        const month = targetDate.getMonth() + 1;
-
-        const valMonth = month < 10 ? `0${month}` : month;
-        const value = `${year}-${valMonth}`;
-        const text = `${year}년 ${month}월`;
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const y = d.getFullYear(), m = d.getMonth() + 1;
+        const val = `${y}-${m < 10 ? '0' + m : m}`, txt = `${y}년 ${m}월`;
 
         const li = document.createElement('li');
-        li.textContent = text;
-        li.dataset.value = value;
+        li.textContent = txt;
 
-        // 초기 설정: 현재 월 선택 상태로 시작
         if (i === 0) {
             li.classList.add('active');
-            textElement.textContent = text;
-            if (hiddenInput) hiddenInput.value = value;
-            // 페이지 로드 시 첫 번째 데이터 불러오기 호출
-            loadMonthlyHistory(year, valMonth);
+            text.textContent = txt;
+            hidden.value = val;
+            executeSearch();
         }
 
-        // 목록 클릭 시 기능 작동 핵심 로직
-        li.addEventListener('click', function(e) {
-            e.stopPropagation(); // 드롭다운 닫히기 전 클릭 처리
-
-            // UI 변경
-            listElement.querySelectorAll('li').forEach(item => item.classList.remove('active'));
-            this.classList.add('active');
-            textElement.textContent = text;
-            if (hiddenInput) hiddenInput.value = value;
-
-            // 드롭다운 닫기
-            document.getElementById('monthDropdown').classList.remove('show');
-
-            // [핵심] 실제 데이터 로드 함수 호출
-            currentParams.page = 0; // 월 변경 시 1페이지부터
-            loadMonthlyHistory(year, valMonth);
-        });
-
-        fragment.appendChild(li);
+        li.onclick = () => {
+            list.querySelectorAll('li').forEach(el => el.classList.remove('active'));
+            li.classList.add('active');
+            text.textContent = txt;
+            hidden.value = val;
+            dropdown.classList.remove('show');
+            currentParams.page = 0;
+            executeSearch();
+        };
+        list.appendChild(li);
     }
-    listElement.appendChild(fragment);
 }
 
-/**
- * 서버 API 호출 및 화면 업데이트
- */
-async function loadMonthlyHistory(year, month) {
-    const token = sessionStorage.getItem('accessToken');
+function executeSearch() {
+    const mode = document.getElementById('searchType').value;
+    if (mode === 'RANGE') {
+        const start = document.getElementById('startDate').value;
+        const end = document.getElementById('endDate').value;
+        if (!start || !end) return;
+        loadAttendanceData(null, null, start, end);
+    } else {
+        const val = document.getElementById('monthSelect').value;
+        if(!val) return;
+        const [y, m] = val.split('-');
+        loadAttendanceData(y, m);
+    }
+}
+
+async function loadAttendanceData(year, month, start = null, end = null) {
     const { page, size, status } = currentParams;
 
-    // API 경로 및 파라미터 확인
-    const url = `/api/attendance/history/monthly?year=${year}&month=${month}&status=${status}&page=${page}&size=${size}&sort=workDate,desc`;
+    let url = `/api/attendance/history/monthly?status=${status}&page=${page}&size=${size}`;
+    if (start && end) url += `&startDate=${start}&endDate=${end}`;
+    else url += `&year=${year}&month=${month}`;
 
-    try {
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Authorization': token ? `Bearer ${token}` : '',
-                'Content-Type': 'application/json'
-            }
-        });
+    const response = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${sessionStorage.getItem('accessToken')}` }
+    });
 
-        if (response.ok) {
-            const res = await response.json();
-            const result = res.data; // ResponseDto의 data 필드
+    const res = await response.json();
+    const data = res.data;
 
-            if (result) {
-                // 상단 요약 카드 업데이트
-                updateSummaryUI(result);
-                // 테이블 목록 업데이트
-                renderHistoryTable(result.attendanceList || []);
-                // 하단 페이지네이션 업데이트
-                renderPagination(result.pageInfo);
-            }
-        } else {
-            console.error("서버 응답 에러:", response.status);
-        }
-    } catch (error) {
-        console.error("네트워크 에러:", error);
+    if (data) {
+        document.getElementById('totalWorkHours').innerText = data.summary.totalWorkTimeDisplay || '0h 00m';
+        document.getElementById('lateCount').innerText = data.summary.lateCount || 0;
+        document.getElementById('absentCount').innerText = data.summary.leaveAbsentCount || 0;
+        renderTable(data.pagedData.content);
+        renderPagination(data.pagedData);
     }
 }
 
-// 요약 카드 업데이트
-function updateSummaryUI(data) {
-    // 서버 응답 필드명에 맞춰 수정 (totalWorkHours, lateCount 등)
-    document.getElementById('totalWorkHours').innerText = data.totalWorkHours || 0;
-    document.getElementById('lateCount').innerText = data.lateCount || 0;
-    document.getElementById('absentCount').innerText = data.leaveAbsentCount || 0;
-}
-
-// 테이블 렌더링
-function renderHistoryTable(records) {
-    const tbody = document.querySelector('#attendanceTable tbody');
-    if (!tbody) return;
-
-    if (records.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 50px;">기록이 없습니다.</td></tr>';
+function renderTable(recs) {
+    const tb = document.querySelector('#attendanceTable tbody');
+    if (!recs || recs.length === 0) {
+        tb.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 100px; color:#999; font-size:15px;">조회된 기록이 없습니다.</td></tr>';
         return;
     }
-
-    tbody.innerHTML = records.map(record => `
+    tb.innerHTML = recs.map(r => `
         <tr>
-            <td>${record.workDate}</td>
-            <td>${record.commuteAt || '-'}</td>
-            <td>${record.leaveAt || '-'}</td>
-            <td>${record.workingTime || '0'}</td>
-            <td><span class="status-badge ${getBadgeClass(record.statusCode)}">${record.statusName}</span></td>
-        </tr>
-    `).join('');
+            <td style="font-weight:600;">${r.date}</td>
+            <td>${r.checkInTime || '-'}</td>
+            <td>${r.checkOutTime || '-'}</td>
+            <td>${r.workingTime || '0'}</td>
+            <td><span class="status-badge ${getBadgeClass(r.statusCode)}">${r.statusName}</span></td>
+        </tr>`).join('');
 }
 
-function getBadgeClass(code) {
-    switch(code) {
-        case 'LATE': return 'badge-late';
-        case 'ABSENT': return 'badge-absent';
-        case 'BEFORE_WORK': return 'badge-before';
-        default: return 'badge-normal';
-    }
+function getBadgeClass(c) {
+    if (c === 'LATE') return 'badge-late';
+    if (c === 'ABSENT') return 'badge-absent';
+    return 'badge-normal';
 }
 
-// 페이지네이션 렌더링
 function renderPagination(pageInfo) {
     const container = document.getElementById('pagination');
-    if (!container || !pageInfo) return;
-
     container.innerHTML = '';
+    if (pageInfo.totalPages <= 1) return;
 
     for (let i = 0; i < pageInfo.totalPages; i++) {
         const btn = document.createElement('button');
         btn.innerText = i + 1;
-        btn.className = `page-btn ${i === pageInfo.currentPage ? 'active' : ''}`;
-        btn.onclick = () => {
-            currentParams.page = i;
-            const hiddenInput = document.getElementById('monthSelect');
-            const [y, m] = hiddenInput.value.split('-');
-            loadMonthlyHistory(y, m);
-        };
+        btn.className = `page-btn ${i === pageInfo.number ? 'active' : ''}`;
+        btn.onclick = () => { currentParams.page = i; executeSearch(); };
         container.appendChild(btn);
     }
 }
