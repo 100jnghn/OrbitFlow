@@ -24,7 +24,7 @@ public record EmployeeSearchDto(
                 emp.getName(),
                 emp.getEmployeeNo(),
                 emp.getOrganization() != null ? emp.getOrganization().getName() : "",
-                emp.getPosition() != null ? emp.getPosition().getName() : ""
+                emp.getPositionCategory() != null ? emp.getPositionCategory().getName() : ""
         );
     }
 }
