@@ -1,0 +1,57 @@
+/* user-sidebar.css */
+
+/* 사이드바 메뉴 컨테이너 */
+.sidebar-menu {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    background-color: #1f2636;
+}
+
+/* 섹션 타이틀 (인사/근태, 휴가/연차 등) */
+.sidebar-section-title {
+    padding: 28px 24px 10px 24px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.1em; /* 자간을 넓혀 시각적 구분감 부여 */
+    user-select: none;
+}
+
+/* 메뉴 항목 */
+.sidebar-menu li {
+    list-style: none;
+    margin: 2px 0;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    padding: 11px 24px;
+    color: #cbd5e1;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 400;
+    letter-spacing: -0.02em; /* 한글 가독성을 위한 미세 자간 조정 */
+    transition: all 0.2s ease-in-out;
+}
+
+/* 호버 효과 */
+.sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+    padding-left: 28px;
+}
+
+/* ✅ 활성화 상태 (Selected) */
+.sidebar-menu li.selected {
+    background-color: rgba(93, 173, 226, 0.12);
+}
+
+.sidebar-menu li.selected .sidebar-link {
+    color: #5dade2;
+    font-weight: 600;
+    border-left: 4px solid #5dade2;
+    padding-left: 20px; /* border 두께만큼 조정 */
+}

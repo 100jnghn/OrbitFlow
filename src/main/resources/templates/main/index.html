@@ -1,30 +1,50 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>Orbit Flow</title>
 
-    <!-- 공통 JS (인증/갱신/로그아웃 담당) -->
+    <link rel="stylesheet" href="/css/header.css">
+<!--    -->
+<!--    <link rel="stylesheet"-->
+<!--          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">-->
+
     <script src="/js/common.js" defer></script>
 </head>
 <body>
 
-<h2>메인 페이지</h2>
+<!-- ✅ header fragment (경로 중요) -->
+<div th:replace="~{fragments/header :: header}"></div>
 
-<!-- 세션 만료 모달 -->
-<div id="sessionModal"
-     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4)">
-    <div style="background:#fff; padding:20px; margin:200px auto; width:300px;">
-        <p>세션이 만료되었습니다. 다시 로그인해주세요.</p>
-        <button onclick="confirmSessionExpired()">확인</button>
+<div class="main-content" style="padding: 20px;">
+
+    <h2>메인 페이지</h2>
+
+    <!-- 세션 만료 모달 -->
+    <div id="sessionModal"
+         style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:9999;">
+        <div style="
+            background:#fff;
+            padding:20px;
+            margin:200px auto;
+            width:300px;
+            text-align:center;
+            border-radius:8px;
+        ">
+            <p>
+                세션이 만료되었습니다.<br>
+                다시 로그인해주세요.
+            </p>
+            <button onclick="confirmSessionExpired()"
+                    style="padding:8px 16px; cursor:pointer;">
+                확인
+            </button>
+        </div>
     </div>
+
+    사용자 메인 페이지
+
 </div>
-
-<p>
-    환영합니다, <strong><span id="userName"></span></strong>
-</p>
-
-<button onclick="logout()">로그아웃</button>
 
 </body>
 </html>
