@@ -3,14 +3,17 @@ package com.finalproj.orbitflow.hr.orgPositionUsage.entity;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.organization.entity.Organization;
-import com.finalproj.orbitflow.hr.position.entity.Position;
+import com.finalproj.orbitflow.hr.positionCategory.entity.PositionCategory;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Please explain the class!!!
+ * 조직별 직책 사용 정책 (화이트리스트)
+ *
+ * - 레코드 존재 = 해당 조직에서 해당 직책 사용 가능
+ * - 레코드 없음 = 사용 불가
  *
  * @author : seunga03
  * @filename : OrgPositionUsage
@@ -22,7 +25,7 @@ import lombok.NoArgsConstructor;
 @Table(
         name = "org_position_usage",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"company_id", "org_id", "position_id"})
+                @UniqueConstraint(columnNames = {"company_id", "org_id", "position_category_id"})
         }
 )
 public class OrgPositionUsage extends BaseEntity {
@@ -40,9 +43,19 @@ public class OrgPositionUsage extends BaseEntity {
     private Organization organization;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "position_id", nullable = false)
-    private Position position;
+    @JoinColumn(name = "position_category_id", nullable = false)
+    private PositionCategory positionCategory;
 
-    @Column(name = "is_enabled", nullable = false)
-    private Boolean isEnabled;
+    /* ========= Factory ========= */
+    public static OrgPositionUsage create(
+            Company company,
+            Organization organization,
+            PositionCategory positionCategory
+    ) {
+        OrgPositionUsage usage = new OrgPositionUsage();
+        usage.company = company;
+        usage.organization = organization;
+        usage.positionCategory = positionCategory;
+        return usage;
+    }
 }

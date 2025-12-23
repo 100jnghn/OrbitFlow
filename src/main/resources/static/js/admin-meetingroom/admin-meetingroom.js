@@ -157,6 +157,10 @@ async function loadRoomDetail() {
         document.getElementById('room-position').value = data.position ?? '';
         document.getElementById('room-description').value = data.description ?? '';
 
+        // 등록자 정보 표시
+        document.getElementById('uploader-name').textContent = data.uploaderName ?? '-';
+        document.getElementById('created-at').textContent = formatDate(data.createdAt);
+
         // 🔥 resourceStatusId 기준
         await loadStatusOptions(data.statusId);
 
@@ -164,6 +168,16 @@ async function loadRoomDetail() {
         console.error(error);
         showError();
     }
+}
+
+/**
+ * 날짜 포맷팅
+ */
+function formatDate(localDateString) {
+    if (!localDateString) return '-';
+
+    // LocalDate는 이미 YYYY-MM-DD 형식
+    return localDateString;
 }
 
 /**
@@ -175,4 +189,6 @@ function showError() {
     document.getElementById('room-status').textContent = '정보 없음';
     document.getElementById('room-description').textContent =
         '회의실 정보를 불러올 수 없습니다.';
+    document.getElementById('uploader-name').textContent = '-';
+    document.getElementById('created-at').textContent = '-';
 }

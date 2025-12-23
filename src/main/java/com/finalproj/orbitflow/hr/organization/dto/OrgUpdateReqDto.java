@@ -1,7 +1,6 @@
 package com.finalproj.orbitflow.hr.organization.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 
@@ -14,9 +13,6 @@ import lombok.Getter;
  */
 @Getter
 public class OrgUpdateReqDto {
-
-    @NotNull
-    private Long categoryId;
 
     private Long parentOrgId;
 

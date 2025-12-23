@@ -4,6 +4,8 @@ import com.finalproj.orbitflow.board.boardCategory.entity.BoardCategory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -26,7 +28,13 @@ public interface BoardCategoryRepository extends JpaRepository<BoardCategory, Lo
     );
 
     /** [사용자용] 권한이 부여된 활성 일반 게시판 목록 조회 */
-    List<BoardCategory> findByBoardPermissions_Employee_IdAndIsActivatedTrueAndDeletedAtIsNull(Long employeeId);
+    @Query("SELECT DISTINCT bc FROM BoardCategory bc " +
+           "INNER JOIN bc.boardPermissions bp " +
+           "WHERE bp.employee.id = :employeeId " +
+           "AND bc.isActivated = true " +
+           "AND bc.deletedAt IS NULL " +
+           "AND bc.organization IS NULL")
+    List<BoardCategory> findByBoardPermissions_Employee_IdAndIsActivatedTrueAndDeletedAtIsNull(@Param("employeeId") Long employeeId);
 
 
     // =========================================================================
@@ -42,5 +50,12 @@ public interface BoardCategoryRepository extends JpaRepository<BoardCategory, Lo
 
     /** [사용자용] 본인 소속 조직 게시판 조회 (활성화된 게시판만) */
     List<BoardCategory> findByOrganization_IdAndIsActivatedTrueAndDeletedAtIsNull(Long orgId);
+
+
+    /** [관리자용] 조직게시판 자동생성  */
+    boolean existsByCompany_IdAndOrganization_IdAndDeletedAtIsNull(Long companyId, Long organizationId);
+
+    Optional<BoardCategory> findByOrganization_IdAndDeletedAtIsNull(Long organizationId);
+
 
 }

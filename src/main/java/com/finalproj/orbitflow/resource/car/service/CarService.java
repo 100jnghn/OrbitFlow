@@ -4,6 +4,8 @@ import com.finalproj.orbitflow.global.exception.DuplicateCarNumberException;
 import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
+import com.finalproj.orbitflow.hr.employee.entity.Employee;
+import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import com.finalproj.orbitflow.resource.car.dto.CarReqDto;
 import com.finalproj.orbitflow.resource.car.dto.CarResDto;
 import com.finalproj.orbitflow.resource.car.entity.Car;
@@ -18,6 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,6 +40,7 @@ public class CarService {
     private final CarRepository carRepository;
     private final CompanyRepository companyRepository;
     private final ResourceStatusRepository resourceStatusRepository;
+    private final EmployeeRepository employeeRepository;
 
     @Transactional(readOnly = true)
     public Page<CarResDto> getCars(Long companyId, Pageable pageable) {
@@ -103,10 +108,6 @@ public class CarService {
         // 차량 번호 unique하게 (공백 제거)
         String number = dto.getNumber().replace(" ", "");
 
-        if (carRepository.existsByNumber(number)) {
-            throw new DuplicateCarNumberException("이미 존재하는 차량 번호입니다");
-        }
-
         car.update(
                 number,
                 dto.getName(),
@@ -139,16 +140,19 @@ public class CarService {
             name = car.getResourceStatus().getResourceStatusCode().getDescription();
         }
 
-        String fileName = null;
         String objectKey = null;
 
         if (car.getFile() != null) {
-            fileName = car.getFile().getOriginFile();
             objectKey = car.getFile().getObjectKey();
         }
 
         String number = car.getNumber();
         number = number.replaceAll("([가-힣])", "$1 ");
+
+        Employee uploader = employeeRepository.getReferenceById(car.getCreatedBy());
+        String uploaderName = uploader.getName();
+
+        LocalDate createdAt = car.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDate();
 
         return CarResDto.builder()
                 .carId(car.getId())
@@ -160,7 +164,8 @@ public class CarService {
                 .statusCode(code)
                 .statusName(name)
                 .objectKey(objectKey)
-                .originFile(fileName)
+                .uploaderName(uploaderName)
+                .createdAt(createdAt)
                 .build();
     }
 

@@ -6,7 +6,9 @@ import com.finalproj.orbitflow.global.exception.InvalidStateException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
-import com.finalproj.orbitflow.hr.position.repository.PositionRepository;
+import com.finalproj.orbitflow.hr.orgCategory.entity.OrgCategory;
+import com.finalproj.orbitflow.hr.orgCategory.repository.OrgCategoryRepository;
+import com.finalproj.orbitflow.hr.orgPositionUsage.repository.OrgPositionUsageRepository;
 import com.finalproj.orbitflow.hr.positionCategory.dto.PositionCategoryOrderUpdateReqDto;
 import com.finalproj.orbitflow.hr.positionCategory.dto.PositionCategoryReqDto;
 import com.finalproj.orbitflow.hr.positionCategory.dto.PositionCategoryResDto;
@@ -32,8 +34,9 @@ import java.util.List;
 public class PositionCategoryService {
 
     private final PositionCategoryRepository positionCategoryRepository;
-    private final PositionRepository positionRepository;
     private final CompanyRepository companyRepository;
+    private final OrgCategoryRepository orgCategoryRepository;
+    private final OrgPositionUsageRepository orgPositionUsageRepository;
 
     /* ================= 생성 ================= */
     public Long create(Long companyId, PositionCategoryReqDto request) {
@@ -45,14 +48,23 @@ public class PositionCategoryService {
             throw new InvalidStateException("이미 존재하는 직책 카테고리명입니다.");
         }
 
+        OrgCategory orgCategory = orgCategoryRepository.findById(request.getOrgCategoryId())
+                .orElseThrow(() -> new NotFoundException("조직 카테고리를 찾을 수 없습니다."));
+
+        if (!orgCategory.getCompanyId().equals(companyId)) {
+            throw new ForbiddenException("해당 회사의 조직 카테고리가 아닙니다.");
+        }
+
         Integer maxOrder =
                 positionCategoryRepository.findMaxActiveOrderIndexByCompanyId(companyId);
 
         int nextOrder = maxOrder == null ? 1 : maxOrder + 1;
 
 
+        String name = normalizeNameOrThrow(request.getName());
+
         PositionCategory category =
-                PositionCategory.create(company, request.getName(), nextOrder);
+                PositionCategory.create(company, orgCategory, name, nextOrder);
 
         return positionCategoryRepository.save(category).getId();
     }
@@ -81,6 +93,12 @@ public class PositionCategoryService {
     ) {
         PositionCategory category = getCategoryInCompany(companyId, categoryId);
 
+        // orgCategory 변경 불가
+        if (request.getOrgCategoryId() != null &&
+                !request.getOrgCategoryId().equals(category.getOrgCategory().getId())) {
+            throw new InvalidStateException("직책의 조직 유형은 변경할 수 없습니다.");
+        } // --> 아직 상태 변경 전 (name / isActive 처리 전에 정책적 금지 사항을 먼저 차단)
+
         boolean wasInactive = !category.getIsActive();
         boolean willActivate = Boolean.TRUE.equals(request.getIsActive());
 
@@ -91,24 +109,24 @@ public class PositionCategoryService {
             category.updateOrderIndex(maxOrder == null ? 1 : maxOrder + 1);
         }
 
-        // 비활성화 시 직책 사용 여부 검증
+        // 비활성화 검증 (조직에서 사용 중인지)
         if (Boolean.FALSE.equals(request.getIsActive())) {
             boolean used =
-                    positionRepository.existsByCompanyIdAndCategoryIdAndIsActiveTrue(
-                            companyId,
-                            categoryId
-                    );
+                    orgPositionUsageRepository
+                            .existsByCompany_IdAndPositionCategory_Id(companyId, categoryId);
+
 
             if (used) {
                 throw new InvalidStateException(
-                        "해당 카테고리를 사용하는 직책이 존재하여 비활성화할 수 없습니다."
+                        "해당 직책 카테고리를 사용하는 조직이 존재하여 비활성화할 수 없습니다."
                 );
             }
 
             category.updateOrderIndex(null);
         }
 
-        category.update(request.getName(), request.getIsActive());
+        String name = normalizeNameOrThrow(request.getName());
+        category.update(name, request.getIsActive());
     }
 
     /* ================= 정렬 ================= */
@@ -160,4 +178,19 @@ public class PositionCategoryService {
 
         return category;
     }
+
+    private String normalizeNameOrThrow(String raw) {
+        if (raw == null) {
+            throw new InvalidRequestException("직책명은 필수입니다.");
+        }
+        String name = raw.trim();
+        if (name.isBlank()) {
+            throw new InvalidRequestException("직책명은 필수입니다.");
+        }
+        if (name.length() > 50) {
+            throw new InvalidRequestException("직책명은 50자 이하여야 합니다.");
+        }
+        return name;
+    }
+
 }

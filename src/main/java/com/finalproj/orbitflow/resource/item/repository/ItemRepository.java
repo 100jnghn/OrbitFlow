@@ -37,12 +37,12 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query("""
                 SELECT i
                 FROM Item i
-                JOIN FETCH i.resourceStatus rs 
+                JOIN i.resourceStatus rs 
                 WHERE i.company.id = :companyId
                     AND i.itemCategory.id = :categoryId
                     AND rs.resourceStatusCode != :deletedStatus
             """)
-    List<Item> getAllByCompanyIdAndItemCategoryId(Long companyId, Long categoryId, ResourceStatusCode deletedStatus);
+    Page<Item> getAllByCompanyIdAndItemCategoryId(Long companyId, Long categoryId, ResourceStatusCode deletedStatus, Pageable pageable);
 
     @Query("""
                 SELECT i
