@@ -27,7 +27,7 @@ function updateClock() {
     }
 }
 
-// 1. 기준 근무 시간 로드 (관리자 예외 규칙 반영)
+// 1. 기준 근무 시간 로드
 async function loadActiveWorkHours() {
     const token = getAuthToken();
     if (!token) return;
@@ -46,7 +46,6 @@ async function loadActiveWorkHours() {
             const start = data.startTime.substring(0, 5);
             const end = data.endTime.substring(0, 5);
             document.getElementById('workHours').textContent = `${start} ~ ${end}`;
-            console.log(`[규칙 적용] ${data.ruleType}: ${start}~${end}`);
         }
     } catch (error) {
         console.error('기준 시간 로드 실패:', error);
@@ -63,60 +62,52 @@ async function loadTodayAttendance() {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
-            currentAttendance = await response.json(); // TodayAttResDto 수신
+            currentAttendance = await response.json();
             isAway = currentAttendance.isAway;
-            updateUI(); // 수신한 데이터로 UI 전체 갱신
+            updateUI();
         }
     } catch (error) {
         console.error('현황 조회 실패:', error);
     }
 }
 
-// 3. UI 갱신 로직 (출근 시간 및 근무 상태 바인딩)
-// 3. UI 갱신 로직 (출근 시간 및 근무 상태 바인딩)
+// 3. UI 갱신 로직
 function updateUI() {
     if (!currentAttendance) return;
 
-    // 출퇴근 시각 표시 (HH:mm)
     document.getElementById('commuteTime').textContent = formatTime(currentAttendance.commuteAt);
     document.getElementById('leaveTime').textContent = formatTime(currentAttendance.leaveAt);
 
-    const workStatusBadge = document.getElementById('workStatus');   // "근무 중" 뱃지
-    const awayStatusBadge = document.getElementById('awayStatus');   // "자리비움" 뱃지
-    const workStatusText = document.getElementById('workStatusText'); // 텍스트 영역
+    const workStatusBadge = document.getElementById('workStatus');
+    const awayStatusBadge = document.getElementById('awayStatus');
+    const workStatusText = document.getElementById('workStatusText');
 
-    // 초기화
     workStatusBadge.style.display = 'none';
     awayStatusBadge.style.display = 'none';
-    workStatusText.textContent = ''; // 기존 텍스트 비우기
+    workStatusText.textContent = '';
     workStatusText.style.display = 'inline';
 
-    // 최종 근태 상태 설명 (정상출근, 지각 등)
     const attendanceDesc = currentAttendance.statusName || "근무예정";
 
-    // 1. 실시간 근무 상태(WorkStatus)에 따른 레이아웃 결정
     if (!currentAttendance.commuteAt) {
-        // 출근 전: 초기값 OFF_WORK 상태
-        workStatusText.textContent = `퇴근 (${attendanceDesc})`; // "퇴근 (근무예정)"
+        workStatusText.textContent = `퇴근 (${attendanceDesc})`;
     } else if (!currentAttendance.leaveAt) {
-        // 출근 후 + 퇴근 전: WORKING 또는 AWAY 상태
         if (isAway) {
             awayStatusBadge.style.display = 'inline-block';
-            workStatusText.textContent = ` (${attendanceDesc})`; // "자리비움 (지각)" 등
+            workStatusText.textContent = ` (${attendanceDesc})`;
         } else {
             workStatusBadge.style.display = 'inline-block';
             workStatusBadge.textContent = "근무 중";
-            workStatusText.textContent = ` (${attendanceDesc})`; // "근무 중 (정상출근)" 등
+            workStatusText.textContent = ` (${attendanceDesc})`;
         }
     } else {
-        // 퇴근 완료: OFF_WORK 상태
-        workStatusText.textContent = `퇴근 완료 (${attendanceDesc})`; // "퇴근 완료 (조퇴)" 등
+        workStatusText.textContent = `퇴근 완료 (${attendanceDesc})`;
     }
 
     updateButtonStates();
 }
 
-// 4. 출퇴근/자리비움 버튼 클릭 액션
+// 4. 출퇴근/자리비움 버튼 클릭 액션 (알림 로직 추가)
 async function handleAction(endpoint, confirmMsg) {
     if (!confirm(confirmMsg)) return;
 
@@ -135,24 +126,27 @@ async function handleAction(endpoint, confirmMsg) {
             }
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || '요청 실패');
+            // [중요] 퇴근 시간 이전인 경우 백엔드에서 에러 메시지를 수신하여 경고창 표시
+            alert(data.message || "요청을 처리할 수 없습니다.");
+            return; // 이후 로직 중단
         }
 
-        // 서버에서 상태(WorkStatus) 업데이트가 완료된 후, 최신 현황을 다시 불러와 화면 갱신
+        // 성공 시 최신 현황 로드
         await loadTodayAttendance();
         alert("처리가 완료되었습니다.");
 
     } catch (error) {
-        alert(error.message);
+        console.error("액션 처리 중 오류:", error);
+        alert("시스템 오류가 발생했습니다.");
     }
 }
 
 // 시간 포맷팅 함수
 function formatTime(isoString) {
     if (!isoString) return '미기록';
-    // 서버에서 받은 LocalDateTime을 HH:mm 형식으로 변환
     const date = new Date(isoString);
     return date.toLocaleTimeString('ko-KR', {
         hour12: false,
