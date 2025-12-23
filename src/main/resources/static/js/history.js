@@ -1,4 +1,4 @@
-let currentParams = { page: 0, size: 10, status: 'ALL' };
+let currentParams = { page: 0, size: 10, status: 'ON_TIME' }; // ✅ 기본값 변경
 
 document.addEventListener('DOMContentLoaded', function() {
     const dropdown = document.getElementById('monthDropdown');
@@ -15,6 +15,12 @@ document.addEventListener('DOMContentLoaded', function() {
         currentParams.page = 0;
         executeSearch();
     });
+
+    // ✅ statusFilter 초기값을 currentParams에 동기화
+    const statusFilter = document.getElementById('statusFilter');
+    if (statusFilter && statusFilter.value) {
+        currentParams.status = statusFilter.value;
+    }
 
     // 2. 월 선택 초기화 및 데이터 로드
     initCustomMonthSelector(monthList, selectedText);
@@ -112,12 +118,6 @@ async function loadAttendanceData(year, month, start = null, end = null) {
     }
 }
 
-/**
- * ✅ 핵심 수정:
- * - 백엔드 DTO는 commuteAt / leaveAt 인데
- * - 기존 프론트는 checkInTime / checkOutTime 을 보고 있어서 값이 안 나왔음
- * - commuteAt / leaveAt 으로 맞춰서 출력
- */
 function renderTable(recs) {
     const tb = document.querySelector('#attendanceTable tbody');
     if (!recs || recs.length === 0) {
@@ -138,6 +138,7 @@ function renderTable(recs) {
 function getBadgeClass(c) {
     if (c === 'LATE') return 'badge-late';
     if (c === 'ABSENT') return 'badge-absent';
+    // ✅ 휴가 뱃지 스타일이 없으면 일단 normal로
     return 'badge-normal';
 }
 
