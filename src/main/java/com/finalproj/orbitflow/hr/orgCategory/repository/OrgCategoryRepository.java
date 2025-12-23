@@ -20,6 +20,7 @@ public interface OrgCategoryRepository extends JpaRepository<OrgCategory, Long> 
      * 회사별 조직 카테고리 전체 조회 (정렬 포함)
      */
     List<OrgCategory> findByCompanyIdAndIsActiveTrueOrderByOrderIndexAsc(Long companyId);
+    List<OrgCategory> findByCompanyIdOrderByIsActiveDescOrderIndexAscCreatedAtDesc(Long companyId);
 
     /**
      * 회사별 특정 조직 카테고리 조회
@@ -32,11 +33,12 @@ public interface OrgCategoryRepository extends JpaRepository<OrgCategory, Long> 
     boolean existsByCompanyIdAndName(Long companyId, String name);
 
     @Query("""
-                select max(o.orderIndex)
-                from OrgCategory o
-                where o.companyId = :companyId
-            """)
-    Integer findMaxOrderIndexByCompanyId(Long companyId);
+    select max(o.orderIndex)
+    from OrgCategory o
+    where o.companyId = :companyId
+      and o.isActive = true
+""")
+    Integer findMaxActiveOrderIndexByCompanyId(Long companyId);
 
     long countByCompanyIdAndIsActiveTrue(Long companyId);
 

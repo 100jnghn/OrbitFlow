@@ -21,8 +21,17 @@ CREATE TABLE org_category
     id          BIGINT AUTO_INCREMENT PRIMARY KEY,
     company_id  BIGINT      NOT NULL,
     name        VARCHAR(50) NOT NULL,
-    order_index INT         NOT NULL,
+    order_index INT,  -- NULL 허용
     is_active   BOOLEAN     NOT NULL DEFAULT TRUE,
+
+    active_order_index INT
+        GENERATED ALWAYS AS (
+                    CASE
+                        WHEN is_active = TRUE THEN order_index
+                        ELSE NULL
+                        END
+                    ) STORED,
+
     created_at  TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
@@ -30,8 +39,8 @@ CREATE TABLE org_category
     CONSTRAINT uk_org_category_company_name
         UNIQUE (company_id, name),
 
-    CONSTRAINT uk_org_category_company_order -- orderIndex 유니크 제약 추가
-        UNIQUE (company_id, order_index),
+    CONSTRAINT uk_org_category_company_active_order
+        UNIQUE (company_id, active_order_index),
 
     CONSTRAINT fk_org_category_company
         FOREIGN KEY (company_id) REFERENCES company (id)
