@@ -2,8 +2,8 @@ package com.finalproj.orbitflow.reservation.controller;
 
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUser;
+import com.finalproj.orbitflow.reservation.dto.ReservationReqDto;
 import com.finalproj.orbitflow.reservation.dto.ReservationResDto;
-import com.finalproj.orbitflow.reservation.repository.ReservationRepository;
 import com.finalproj.orbitflow.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -38,7 +38,7 @@ public class ReservationController {
             @RequestParam(required = false) String typeCode,
             Pageable pageable
     ) {
-        Page<ReservationResDto> result = reservationService.searchMyReservations(
+        Page<ReservationResDto> result = reservationService.getMyReservations(
                 user.getEmployeeId(),
                 showPast,
                 statusId,
@@ -51,6 +51,38 @@ public class ReservationController {
         );
     }
 
+    // 예약 상세 조회
+    @GetMapping("/reservations/me/{reservationId}")
+    public ResponseEntity<ResponseDto> getMyReservation(
+            @PathVariable Long reservationId,
+            @AuthenticationPrincipal SecurityUser user
+    ) {
+        ReservationResDto reservation = reservationService.getMyReservation(reservationId);
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, "예약 세부 조회 성공", reservation)
+        );
+    }
+
+    // 내 예약 생성 (MEETING, CAR, ITEM)
+    @PostMapping("/reservations/me")
+    public ResponseEntity<ResponseDto> insertReservation(
+            @AuthenticationPrincipal SecurityUser user,
+            @RequestBody ReservationReqDto reservation
+    ) {
+        Long companyId = user.getCompanyId();
+        Long userId = user.getEmployeeId();
+
+        reservationService.insertReservation(companyId, userId, reservation);
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, "예약 등록됨", null)
+        );
+    }
+
+    //
+
+    // 내 예약 취소
     @PatchMapping("/reservations/{reservationId}/cancel")
     public ResponseEntity<ResponseDto> cancelReservation(
             @PathVariable Long reservationId

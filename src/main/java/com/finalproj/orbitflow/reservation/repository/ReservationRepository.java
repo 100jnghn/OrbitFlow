@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 /**
  * Please explain the class!!!
@@ -42,7 +43,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                         or r.typeCode = :type
                   )
             """)
-    Page<Reservation> searchMyReservations(
+    Page<Reservation> getMyReservations(
             @Param("employeeId") Long employeeId,
             @Param("showPast") boolean showPast,
             @Param("today") LocalDate today,
@@ -53,4 +54,5 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     );
 
 
+    Optional<Reservation> findById(Long reservationId);
 }
