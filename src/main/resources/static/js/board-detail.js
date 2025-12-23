@@ -8,6 +8,8 @@ let boardId = null;
 let categoryId = null;
 let currentUserId = null;
 let editingCommentId = null;
+let currentCommentPage = 0;
+let totalCommentPages = 1;
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', async function() {
@@ -154,7 +156,7 @@ async function loadBoardDetail() {
         if (board) {
             categoryId = board.categoryId || board.category?.id;
             renderBoardDetail(board);
-            loadComments();
+            loadComments(currentCommentPage);
         } else {
             showError('게시글 데이터가 없습니다.');
         }
@@ -363,11 +365,11 @@ function escapeHTML(str) {
 }
 
 // 댓글 목록 로드
-async function loadComments() {
+async function loadComments(page = 0) {
     if (!boardId) return;
 
     try {
-        const response = await apiFetch(`${COMMENT_API}/boards/${boardId}/comments?size=100`, {
+        const response = await apiFetch(`${COMMENT_API}/boards/${boardId}/comments?page=${page}&size=5&sort=createdAt,asc`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -386,8 +388,14 @@ async function loadComments() {
         const result = await response.json();
         const commentData = result.data;
         const comments = commentData?.content || commentData || [];
+        const totalPages = commentData?.totalPages || 1;
+        const currentPage = commentData?.number !== undefined ? commentData.number : page;
+
+        currentCommentPage = currentPage;
+        totalCommentPages = totalPages;
 
         renderComments(comments);
+        renderCommentPagination();
     } catch (error) {
         console.error('Error loading comments:', error);
         const commentList = document.getElementById('commentList');
@@ -489,7 +497,7 @@ async function submitComment() {
         }
 
         commentInput.value = '';
-        loadComments();
+        loadComments(currentCommentPage);
     } catch (error) {
         console.error('Error submitting comment:', error);
         alert(error.message || '댓글 작성에 실패했습니다.');
@@ -563,7 +571,7 @@ async function saveComment(commentId) {
         }
 
         editingCommentId = null;
-        loadComments();
+        loadComments(currentCommentPage);
     } catch (error) {
         console.error('Error saving comment:', error);
         alert(error.message || '댓글 수정에 실패했습니다.');
@@ -593,7 +601,7 @@ async function deleteComment(commentId) {
             throw new Error(errorData.message || '댓글 삭제에 실패했습니다.');
         }
 
-        loadComments();
+        loadComments(currentCommentPage);
     } catch (error) {
         console.error('Error deleting comment:', error);
         alert(error.message || '댓글 삭제에 실패했습니다.');
@@ -606,5 +614,94 @@ function handleCommentKeydown(event) {
         event.preventDefault();
         submitComment();
     }
+}
+
+// 댓글 페이지네이션 렌더링
+function renderCommentPagination() {
+    // 기존 페이지네이션 제거
+    const existingPagination = document.getElementById('commentPagination');
+    if (existingPagination) {
+        existingPagination.remove();
+    }
+
+    // 댓글이 5개 이하면 페이지네이션 표시 안 함
+    if (totalCommentPages <= 1) {
+        return;
+    }
+
+    const commentSection = document.querySelector('.comment-section');
+    if (!commentSection) return;
+
+    const pagination = document.createElement('div');
+    pagination.id = 'commentPagination';
+    pagination.className = 'comment-pagination';
+
+    // 이전 버튼
+    const prevBtn = document.createElement('button');
+    prevBtn.textContent = '‹';
+    prevBtn.className = 'page-btn';
+    prevBtn.disabled = currentCommentPage === 0;
+    prevBtn.addEventListener('click', () => {
+        if (currentCommentPage > 0) loadComments(currentCommentPage - 1);
+    });
+    pagination.appendChild(prevBtn);
+
+    // 페이지 번호
+    const maxVisible = 5;
+    let startPage = Math.max(0, currentCommentPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalCommentPages - 1, startPage + maxVisible - 1);
+
+    if (endPage - startPage < maxVisible - 1) {
+        startPage = Math.max(0, endPage - maxVisible + 1);
+    }
+
+    if (startPage > 0) {
+        const firstBtn = document.createElement('span');
+        firstBtn.className = 'page-number';
+        firstBtn.textContent = '1';
+        firstBtn.addEventListener('click', () => loadComments(0));
+        pagination.appendChild(firstBtn);
+
+        if (startPage > 1) {
+            const ellipsis = document.createElement('span');
+            ellipsis.className = 'ellipsis';
+            ellipsis.textContent = '...';
+            pagination.appendChild(ellipsis);
+        }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        const pageBtn = document.createElement('span');
+        pageBtn.className = 'page-number' + (i === currentCommentPage ? ' active' : '');
+        pageBtn.textContent = i + 1;
+        pageBtn.addEventListener('click', () => loadComments(i));
+        pagination.appendChild(pageBtn);
+    }
+
+    if (endPage < totalCommentPages - 1) {
+        if (endPage < totalCommentPages - 2) {
+            const ellipsis = document.createElement('span');
+            ellipsis.className = 'ellipsis';
+            ellipsis.textContent = '...';
+            pagination.appendChild(ellipsis);
+        }
+        const lastBtn = document.createElement('span');
+        lastBtn.className = 'page-number';
+        lastBtn.textContent = totalCommentPages;
+        lastBtn.addEventListener('click', () => loadComments(totalCommentPages - 1));
+        pagination.appendChild(lastBtn);
+    }
+
+    // 다음 버튼
+    const nextBtn = document.createElement('button');
+    nextBtn.textContent = '›';
+    nextBtn.className = 'page-btn';
+    nextBtn.disabled = currentCommentPage >= totalCommentPages - 1;
+    nextBtn.addEventListener('click', () => {
+        if (currentCommentPage < totalCommentPages - 1) loadComments(currentCommentPage + 1);
+    });
+    pagination.appendChild(nextBtn);
+
+    commentSection.appendChild(pagination);
 }
 

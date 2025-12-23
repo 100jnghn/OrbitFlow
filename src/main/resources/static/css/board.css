@@ -33,6 +33,7 @@
 /* 게시판 헤더 */
 .board-header {
     margin-bottom: 28px;
+    text-align: center;
 }
 
 .board-header h1 {
@@ -165,11 +166,19 @@
     width: 80px;
 }
 
-.board-table th:nth-child(3),
-.board-table th:nth-child(4),
+.board-table th:nth-child(3) {
+    text-align: left;
+    width: 150px;
+}
+
+.board-table th:nth-child(4) {
+    text-align: left;
+    width: 180px;
+}
+
 .board-table th:nth-child(5) {
     text-align: center;
-    width: 120px;
+    width: 100px;
 }
 
 .board-table td {
@@ -186,11 +195,22 @@
     font-weight: 500;
 }
 
-.board-table td:nth-child(3),
-.board-table td:nth-child(4),
+.board-table td:nth-child(3) {
+    text-align: left;
+    color: var(--neutral-700);
+    width: 150px;
+}
+
+.board-table td:nth-child(4) {
+    text-align: left;
+    color: var(--neutral-600);
+    width: 180px;
+}
+
 .board-table td:nth-child(5) {
     text-align: center;
     color: var(--neutral-600);
+    width: 100px;
 }
 
 .board-table tbody tr {
@@ -823,6 +843,18 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
+    margin-bottom: 24px;
+}
+
+/* 댓글 페이지네이션 */
+.comment-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--neutral-200);
 }
 
 .no-comments {
@@ -858,6 +890,28 @@
     margin-bottom: 14px;
     white-space: pre-wrap;
     word-wrap: break-word;
+    max-height: calc(1.7em * 5); /* 5줄 높이 */
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+}
+
+.comment-text::-webkit-scrollbar {
+    width: 6px;
+}
+
+.comment-text::-webkit-scrollbar-track {
+    background: var(--neutral-100);
+    border-radius: 3px;
+}
+
+.comment-text::-webkit-scrollbar-thumb {
+    background: var(--neutral-300);
+    border-radius: 3px;
+}
+
+.comment-text::-webkit-scrollbar-thumb:hover {
+    background: var(--neutral-400);
 }
 
 .comment-meta {
