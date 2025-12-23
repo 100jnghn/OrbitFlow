@@ -41,18 +41,31 @@ async function loadBoardCategories() {
             throw new Error('게시판 목록을 불러오는데 실패했습니다.');
         }
 
-        const accessibleData = await accessibleResponse.json();
-        const orgData = await orgResponse.json();
+        const accessibleResult = await accessibleResponse.json();
+        const orgResult = await orgResponse.json();
 
-        console.log('Accessible boards response:', accessibleData);
-        console.log('Organization boards response:', orgData);
+        console.log('Accessible boards response:', accessibleResult);
+        console.log('Organization boards response:', orgResult);
 
         // ResponseDto 구조에서 data 추출
-        accessibleBoards = accessibleData.data || (Array.isArray(accessibleData) ? accessibleData : []);
-        organizationBoards = orgData.data || (Array.isArray(orgData) ? orgData : []);
+        // ResponseDto는 { status, message, data } 형태
+        let accessibleData = accessibleResult.data;
+        let orgData = orgResult.data;
+        
+        // data가 없으면 result 자체가 배열일 수 있음
+        if (!accessibleData && Array.isArray(accessibleResult)) {
+            accessibleData = accessibleResult;
+        }
+        if (!orgData && Array.isArray(orgResult)) {
+            orgData = orgResult;
+        }
+        
+        // 최종적으로 배열인지 확인
+        accessibleBoards = Array.isArray(accessibleData) ? accessibleData : [];
+        organizationBoards = Array.isArray(orgData) ? orgData : [];
 
-        console.log('Loaded accessible boards:', accessibleBoards.length);
-        console.log('Loaded organization boards:', organizationBoards.length);
+        console.log('Loaded accessible boards:', accessibleBoards.length, accessibleBoards);
+        console.log('Loaded organization boards:', organizationBoards.length, organizationBoards);
 
         renderSidebar();
         
@@ -85,40 +98,52 @@ function renderSidebar() {
     console.log('Rendering sidebar with', accessibleBoards.length, 'accessible boards and', organizationBoards.length, 'organization boards');
 
     // 일반 게시판 (권한이 있는 게시판)
-    if (accessibleBoards.length > 0) {
-    accessibleBoards.forEach(board => {
-        const boardName = board.boardName || board.name || '게시판';
-        const boardId = board.id;
-        const isSelected = boardId === currentCategoryId;
-        
-        console.log('Adding accessible board:', boardName, boardId);
-        
-        const li = document.createElement('li');
-        li.className = 'sidebar-menu-item' + (isSelected ? ' selected' : '');
-        li.innerHTML = `
-            <a href="#" class="board-link${isSelected ? ' active' : ''}" data-category-id="${boardId}" data-board-name="${escapeHTML(boardName)}">
-                ${escapeHTML(boardName)}
-            </a>
-        `;
-        sidebar.appendChild(li);
-    });
+    if (accessibleBoards && accessibleBoards.length > 0) {
+        accessibleBoards.forEach((board, index) => {
+            const boardName = board.boardName || board.name || '게시판';
+            const boardId = board.id;
+            
+            if (!boardId) {
+                console.warn('Board without ID found:', board);
+                return;
+            }
+            
+            const isSelected = boardId === currentCategoryId;
+            
+            console.log(`Adding accessible board ${index + 1}:`, boardName, boardId);
+            
+            const li = document.createElement('li');
+            li.className = 'sidebar-menu-item' + (isSelected ? ' selected' : '');
+            li.innerHTML = `
+                <a href="#" class="board-link${isSelected ? ' active' : ''}" data-category-id="${boardId}" data-board-name="${escapeHTML(boardName)}">
+                    ${escapeHTML(boardName)}
+                </a>
+            `;
+            sidebar.appendChild(li);
+        });
     } else {
-        console.warn('No accessible boards found');
+        console.warn('No accessible boards found. accessibleBoards:', accessibleBoards);
     }
 
     // 조직 게시판
-    if (organizationBoards.length > 0) {
+    if (organizationBoards && organizationBoards.length > 0) {
         const orgHeader = document.createElement('li');
         orgHeader.className = 'sidebar-menu-item sidebar-menu-header';
         orgHeader.innerHTML = '<span class="sidebar-menu-header-text">부서게시판</span>';
         sidebar.appendChild(orgHeader);
 
-        organizationBoards.forEach(board => {
+        organizationBoards.forEach((board, index) => {
             const boardName = board.boardName || board.name || '게시판';
             const boardId = board.id;
+            
+            if (!boardId) {
+                console.warn('Organization board without ID found:', board);
+                return;
+            }
+            
             const isSelected = boardId === currentCategoryId;
             
-            console.log('Adding organization board:', boardName, boardId);
+            console.log(`Adding organization board ${index + 1}:`, boardName, boardId);
             
             const li = document.createElement('li');
             li.className = 'sidebar-menu-item' + (isSelected ? ' selected' : '');
@@ -130,7 +155,7 @@ function renderSidebar() {
             sidebar.appendChild(li);
         });
     } else {
-        console.warn('No organization boards found');
+        console.warn('No organization boards found. organizationBoards:', organizationBoards);
     }
 
     // 이벤트 리스너 추가

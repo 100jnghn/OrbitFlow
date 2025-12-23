@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.hr.organization.service;
 
+import com.finalproj.orbitflow.board.boardCategory.service.OrganizationBoardCategorySyncService;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.InvalidStateException;
@@ -35,6 +36,7 @@ public class OrgService {
     private final OrgRepository orgRepository;
     private final EmployeeRepository employeeRepository;
     private final OrgCategoryRepository orgCategoryRepository;
+    private final OrganizationBoardCategorySyncService organizationBoardCategorySyncService;
 
     /* ================= 생성 ================= */
     public Long create(Long companyId, OrgCreateReqDto request) {
@@ -61,7 +63,12 @@ public class OrgService {
         int nextOrderIndex = (int) orgRepository.countByCompanyIdAndParentOrgIdAndIsActiveTrue(companyId, parentOrgId) + 1;
 
         Organization org = Organization.create(companyId, categoryId, parentOrgId, name, nextOrderIndex);
-        return orgRepository.save(org).getId();
+        Organization saved = orgRepository.save(org);
+
+        // 조직 게시판 카테고리 자동 생성
+        organizationBoardCategorySyncService.createIfAbsent(companyId, saved.getId(), saved.getName());
+
+        return saved.getId();
     }
 
     /* ================= 조회 ================= */
@@ -83,6 +90,8 @@ public class OrgService {
         Long newParentId = request.getParentOrgId();
         Long newCategoryId = request.getCategoryId();
         String newName = normalizeNameOrThrow(request.getName());
+
+        String oldName = org.getName();
 
         // 카테고리 검증
         validateCategoryActiveInCompany(companyId, newCategoryId);
@@ -116,6 +125,11 @@ public class OrgService {
         }
 
         org.update(newCategoryId, newParentId, newName);
+
+        // 이름이 바뀐 경우에만 게시판 카테고리명 동기화 (정책 선택)
+        if (!oldName.equals(newName)) {
+            organizationBoardCategorySyncService.syncBoardName(companyId, organizationId, newName);
+        }
     }
 
     /* ================= 비활성화 ================= */
@@ -138,6 +152,9 @@ public class OrgService {
         }
 
         org.deactivate();
+
+        // 조직 게시판도 비활성화(삭제 대신)
+        organizationBoardCategorySyncService.deactivateBoard(companyId, organizationId);
     }
 
 
