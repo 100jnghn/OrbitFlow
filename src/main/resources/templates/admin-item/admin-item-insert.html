@@ -75,11 +75,13 @@
 
                         <!-- 비품명 -->
                         <div class="info-item">
-                            <label class="info-label">비품명</label>
+                            <label class="info-label">비품명 <span class="required">*</span></label>
                             <input type="text"
                                    class="info-input"
                                    id="item-name"
-                                   placeholder="비품명을 입력하세요"/>
+                                   placeholder="비품명을 입력하세요"
+                                   maxlength="50"/>
+                            <span class="hint" id="item-name-msg"></span>
                         </div>
 
                         <!-- 비품 이미지 업로드 -->
@@ -106,10 +108,11 @@
 
                         <!-- 카테고리 -->
                         <div class="info-item">
-                            <label class="info-label">카테고리</label>
+                            <label class="info-label">카테고리 <span class="required">*</span></label>
                             <select class="info-select" id="item-category">
                                 <option value="">카테고리 선택</option>
                             </select>
+                            <span class="hint" id="item-category-msg"></span>
                         </div>
 
                         <div class="upload-actions">
@@ -121,10 +124,11 @@
 
                         <!-- 상태 -->
                         <div class="info-item">
-                            <label class="info-label">상태</label>
+                            <label class="info-label">상태 <span class="required">*</span></label>
                             <select class="info-select" id="item-status">
                                 <option value="">상태 선택</option>
                             </select>
+                            <span class="hint" id="item-status-msg"></span>
                         </div>
                     </div>
 
@@ -134,7 +138,9 @@
                         <input type="text"
                                class="info-textarea"
                                id="item-description"
-                               placeholder="비고 내용을 입력하세요"/>
+                               placeholder="비고 내용을 입력하세요 (선택)"
+                               maxlength="50"/>
+                        <span class="hint" id="item-description-msg"></span>
                     </div>
                 </div>
             </section>

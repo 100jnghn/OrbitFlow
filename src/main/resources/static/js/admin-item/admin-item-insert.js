@@ -5,19 +5,107 @@
 // 선택된 이미지 파일
 let selectedImageFile = null;
 
+// DOM 요소
+let itemName, itemCategory, itemStatus, itemDescription;
+let itemNameMsg, itemCategoryMsg, itemStatusMsg, itemDescriptionMsg;
+let saveBtn;
+
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', () => {
+    // DOM 요소 초기화
+    itemName = document.getElementById('item-name');
+    itemCategory = document.getElementById('item-category');
+    itemStatus = document.getElementById('item-status');
+    itemDescription = document.getElementById('item-description');
+
+    itemNameMsg = document.getElementById('item-name-msg');
+    itemCategoryMsg = document.getElementById('item-category-msg');
+    itemStatusMsg = document.getElementById('item-status-msg');
+    itemDescriptionMsg = document.getElementById('item-description-msg');
+
+    saveBtn = document.getElementById('btn-save');
+
     // 상태 목록과 카테고리 목록 로드
     loadStatusOptions();
     loadCategoryOptions();
     initEventListeners();
 });
 
+/* ======================
+   공통 메시지
+====================== */
+function showMsg(el, message, type) {
+    el.textContent = message;
+    el.className = 'hint ' + type;
+}
+
+/* ======================
+   버튼 상태
+====================== */
+function updateSaveButtonState() {
+    saveBtn.disabled = !(
+        validateItemName() &&
+        validateItemCategory() &&
+        validateItemStatus()
+    );
+}
+
+/* ======================
+   비품명 검증 (최대 50자, not null)
+====================== */
+function validateItemName() {
+    const v = itemName.value.trim();
+    if (!v) {
+        showMsg(itemNameMsg, '비품명을 입력해주세요. (0/50)', 'error');
+        return false;
+    }
+    showMsg(itemNameMsg, `입력됨 (${v.length}/50)`, 'success');
+    return true;
+}
+
+/* ======================
+   카테고리 검증 (필수 선택)
+====================== */
+function validateItemCategory() {
+    const v = itemCategory.value;
+    if (!v) {
+        showMsg(itemCategoryMsg, '카테고리를 선택해주세요.', 'error');
+        return false;
+    }
+    showMsg(itemCategoryMsg, '선택됨', 'success');
+    return true;
+}
+
+/* ======================
+   상태 검증 (필수 선택)
+====================== */
+function validateItemStatus() {
+    const v = itemStatus.value;
+    if (!v) {
+        showMsg(itemStatusMsg, '상태를 선택해주세요.', 'error');
+        return false;
+    }
+    showMsg(itemStatusMsg, '선택됨', 'success');
+    return true;
+}
+
+/* ======================
+   비고 검증 (최대 50자, nullable)
+====================== */
+function validateItemDescription() {
+    const v = itemDescription.value.trim();
+    if (v) {
+        showMsg(itemDescriptionMsg, `입력됨 (${v.length}/50)`, 'success');
+    } else {
+        itemDescriptionMsg.textContent = '';
+    }
+    return true; // nullable이므로 항상 true
+}
+
 /**
  * 이벤트 리스너 초기화
  */
 function initEventListeners() {
-    const saveBtn = document.getElementById('btn-save');
     if (saveBtn) {
         saveBtn.addEventListener('click', handleSave);
     }
@@ -26,6 +114,26 @@ function initEventListeners() {
     if (cancelBtn) {
         cancelBtn.addEventListener('click', handleCancel);
     }
+
+    // 실시간 검증
+    itemName.addEventListener('input', () => {
+        validateItemName();
+        updateSaveButtonState();
+    });
+
+    itemCategory.addEventListener('change', () => {
+        validateItemCategory();
+        updateSaveButtonState();
+    });
+
+    itemStatus.addEventListener('change', () => {
+        validateItemStatus();
+        updateSaveButtonState();
+    });
+
+    itemDescription.addEventListener('input', () => {
+        validateItemDescription();
+    });
 
     // 이미지 업로드 관련
     const imageInput = document.getElementById('item-image-input');
@@ -51,6 +159,9 @@ function initEventListeners() {
             handleImageRemove();
         });
     }
+
+    // 초기 버튼 상태 업데이트
+    updateSaveButtonState();
 }
 
 /**
@@ -135,30 +246,16 @@ function handleImageRemove() {
  * 등록 버튼 핸들러
  */
 async function handleSave() {
-    // 입력값 검증
-    const name = document.getElementById('item-name').value.trim();
-    const categoryValue = document.getElementById('item-category').value;
-    const statusValue = document.getElementById('item-status').value;
-    const description = document.getElementById('item-description').value.trim();
-
-
-    if (!name) {
-        alert('비품명을 입력해주세요.');
-        document.getElementById('item-name').focus();
+    // validation 검증
+    if (!validateItemName() || !validateItemCategory() || !validateItemStatus()) {
+        alert('입력 항목을 확인해주세요.');
         return;
     }
 
-    if (!categoryValue) {
-        alert('카테고리를 선택해주세요.');
-        document.getElementById('item-category').focus();
-        return;
-    }
-
-    if (!statusValue) {
-        alert('상태를 선택해주세요.');
-        document.getElementById('item-status').focus();
-        return;
-    }
+    const name = itemName.value.trim();
+    const categoryValue = itemCategory.value;
+    const statusValue = itemStatus.value;
+    const description = itemDescription.value.trim();
 
     // FormData 생성 (파일 업로드를 위해)
     const formData = new FormData();
