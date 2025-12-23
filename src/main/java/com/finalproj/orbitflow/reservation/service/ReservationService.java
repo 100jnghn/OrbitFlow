@@ -13,6 +13,7 @@ import com.finalproj.orbitflow.reservation.enums.ReservationTypeCode;
 import com.finalproj.orbitflow.reservation.repository.ReservationRepository;
 import com.finalproj.orbitflow.reservation.repository.ReservationStatusRepository;
 import com.finalproj.orbitflow.resource.car.repository.CarRepository;
+import com.finalproj.orbitflow.resource.item.repository.ItemRepository;
 import com.finalproj.orbitflow.resource.itemcategory.entity.ItemCategory;
 import com.finalproj.orbitflow.resource.itemcategory.repository.ItemCategoryRepository;
 import com.finalproj.orbitflow.resource.meetingroom.repository.MeetingroomRepository;
@@ -44,6 +45,7 @@ public class ReservationService {
     private final ItemCategoryRepository itemCategoryRepository;
     private final MeetingroomRepository meetingroomRepository;
     private final CarRepository carRepository;
+    private final ItemRepository itemRepository;
 
 
     @Transactional(readOnly = true)
@@ -179,7 +181,8 @@ public class ReservationService {
             resourceName = carRepository.findById(reservation.getResourceId()).get().getName();
         }
         else if (reservation.getTypeCode() ==  ReservationTypeCode.ITEM) {
-            resourceName = itemCategoryRepository.findById(reservation.getResourceId()).get().getName();
+            typeName = itemCategoryRepository.findById(itemCategoryId).get().getName();
+            resourceName = itemRepository.findById(reservation.getResourceId()).get().getName();
         }
 
         return ReservationResDto.builder()

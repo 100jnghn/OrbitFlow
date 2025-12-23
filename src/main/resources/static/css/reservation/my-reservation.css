@@ -223,13 +223,36 @@
    Category Badge
 ========================= */
 .category-badge {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 8px;
+    display: inline-flex;        /* 중앙 정렬을 더 안정적으로 */
+    align-items: center;
+    justify-content: center;
+
+    width: 100px;                 /* 모든 badge 동일한 너비 */
+    height: 30px;                /* 동일한 높이 */
+
+    border-radius: 13px;
     font-size: 12px;
     font-weight: 600;
-    background: #e3f2fd;
-    color: #1976d2;
+
+    white-space: nowrap;         /* 줄바꿈 방지 */
+}
+
+/* 하늘색 */
+.badge-meeting {
+    background-color: #e3f2fd;
+    color: #1e88e5;
+}
+
+/* 연두색 */
+.badge-car {
+    background-color: #e8f5e9;
+    color: #43a047;
+}
+
+/* 연노랑 */
+.badge-etc {
+    background-color: #fff8e1;
+    color: #f9a825;
 }
 
 /* =========================

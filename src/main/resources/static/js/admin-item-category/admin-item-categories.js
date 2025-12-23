@@ -12,7 +12,7 @@ function validateCategoryName(input, msgElement) {
         input.classList.add('error');
         input.classList.remove('success');
         if (msgElement) {
-            msgElement.textContent = '카테고리명을 입력해주세요. (0/50)';
+            msgElement.textContent = '카테고리명을 입력해주세요. (0/10)';
             msgElement.className = 'validation-msg error';
         }
         return false;
@@ -21,7 +21,7 @@ function validateCategoryName(input, msgElement) {
     input.classList.remove('error');
     input.classList.add('success');
     if (msgElement) {
-        msgElement.textContent = `입력됨 (${value.length}/50)`;
+        msgElement.textContent = `입력됨 (${value.length}/10)`;
         msgElement.className = 'validation-msg success';
     }
     return true;
@@ -132,7 +132,7 @@ function createCategoryCell(id, value) {
     input.type = 'text';
     input.className = 'category-name-input';
     input.value = value ?? '';
-    input.maxLength = 50;
+    input.maxLength = 10;
     input.dataset.categoryId = id;
     input.dataset.originalValue = value ?? ''; // 초기값 저장
     
@@ -182,7 +182,7 @@ function createNewCategoryRow(rowNumber) {
     input.className = 'category-name-input';
     input.id = 'new-category-input';
     input.placeholder = '새 카테고리 입력';
-    input.maxLength = 50;
+    input.maxLength = 10;
     
     // 추가 버튼
     const addBtn = document.createElement('button');

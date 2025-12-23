@@ -24,10 +24,21 @@ function createCell(value = '-') {
     return td;
 }
 
-function createCategoryCell(typeName) {
+function createCategoryCell(typeCode, typeName) {
     const td = document.createElement('td');
     const badge = document.createElement('span');
+
     badge.className = 'category-badge';
+
+    // typeCode에 따른 색상 분기
+    if (typeCode === 'MEETING') {
+        badge.classList.add('badge-meeting');
+    } else if (typeCode === 'CAR') {
+        badge.classList.add('badge-car');
+    } else {
+        badge.classList.add('badge-etc');
+    }
+
     badge.textContent = typeName;
     td.appendChild(badge);
     return td;
@@ -147,7 +158,7 @@ async function loadReservations(page = 0) {
             const tr = document.createElement('tr');
             tr.append(
                 createCell(startNumber + i + 1),
-                createCategoryCell(r.typeName),
+                createCategoryCell(r.typeCode, r.typeName),
                 createCell(r.resourceName),
                 createCell(r.reservationReason),
                 createCell(formatDate(r.reservationDate)),
