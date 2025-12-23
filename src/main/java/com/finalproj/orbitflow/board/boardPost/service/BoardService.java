@@ -50,7 +50,14 @@ public class BoardService {
         BoardCategory category = getVerifiedAccessibleCategory(companyId, organizationId, categoryId);
 
         // 2) searchType 파싱
-        BoardSearchType searchType = BoardSearchType.from(searchTypeStr);
+        BoardSearchType searchType;
+        try {
+            searchType = (searchTypeStr == null || searchTypeStr.isBlank())
+                    ? BoardSearchType.ALL
+                    : BoardSearchType.from(searchTypeStr);
+        } catch (Exception e) {
+            searchType = BoardSearchType.ALL;
+        }
 
         // 3) 기간 조건(LocalDate -> Instant 범위)
         ZoneId zoneId = ZoneId.systemDefault();

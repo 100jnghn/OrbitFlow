@@ -4,6 +4,7 @@ import com.finalproj.orbitflow.board.boardCategory.dto.BoardCategoryReqDto;
 import com.finalproj.orbitflow.board.boardCategory.dto.BoardCategoryResDto;
 import com.finalproj.orbitflow.board.boardCategory.entity.BoardCategory;
 import com.finalproj.orbitflow.board.boardCategory.repository.BoardCategoryRepository;
+import com.finalproj.orbitflow.board.boardPermission.repository.BoardPermissionRepository;
 import com.finalproj.orbitflow.global.exception.BusinessException;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
@@ -26,7 +27,7 @@ public class AdminBoardCategoryService {
     private final BoardCategoryRepository boardCategoryRepository;
     private final CompanyRepository companyRepository;
     private final OrgRepository orgRepository;
-
+    private final BoardPermissionRepository boardPermissionRepository;
 
     // =========================================================================
     // 1. 일반 카테고리 관리
@@ -115,9 +116,9 @@ public class AdminBoardCategoryService {
 
         BoardCategory category = getVerifiedCategory(companyId, categoryId);
 
-        if ("NOTICE".equals(category.getBoardType())) {
-            throw new BusinessException("공지사항 게시판은 삭제할 수 없습니다.");
-        }
+//        if ("NOTICE".equals(category.getBoardType())) {
+//            throw new BusinessException("공지사항 게시판은 삭제할 수 없습니다.");
+//        }
 
         if (category.isDeleted()) {
             throw new BusinessException("이미 삭제된 게시판입니다.");
@@ -177,5 +178,38 @@ public class AdminBoardCategoryService {
         }
 
         return category;
+    }
+
+    // BoardsService (또는 BoardService) 안의 카테고리 접근 검증 로직 예시
+
+    private void validateCategoryAccess(BoardCategory category, Long employeeId) {
+        // 1) 활성화/삭제 체크 (공용/조직 공통)
+        if (!category.isActive()) {
+            throw new ForbiddenException("비활성화된 게시판입니다.");
+        }
+
+        // 2) 조직 게시판이면: (기존 정책대로) permission 체크 또는 org 소속 체크
+        if (category.getOrganization() != null) {
+            boolean hasPermission = boardPermissionRepository
+                    .findByEmployee_IdAndBoardCategory_Id(employeeId, category.getId())
+                    .isPresent();
+            if (!hasPermission) {
+                throw new ForbiddenException("해당 게시판 접근 권한이 없습니다.");
+            }
+            return;
+        }
+
+        // 3) 공용 게시판이면(A안):
+        //    - 해당 게시판에 permission이 하나도 없으면 공개
+        //    - permission이 하나라도 있으면, 권한 있는 사람만 접근 가능
+        boolean hasAnyPermission = boardPermissionRepository.existsByBoardCategory_Id(category.getId());
+        if (!hasAnyPermission) return; // 공개
+
+        boolean hasPermission = boardPermissionRepository
+                .findByEmployee_IdAndBoardCategory_Id(employeeId, category.getId())
+                .isPresent();
+        if (!hasPermission) {
+            throw new ForbiddenException("해당 게시판 접근 권한이 없습니다.");
+        }
     }
 }

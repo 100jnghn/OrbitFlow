@@ -20,10 +20,12 @@ public class BoardCategoryService {
 
     /**
      * [사용자용] 권한이 부여된 활성 일반 게시판 목록 조회
+     * - 권한(permissions)이 하나도 없는 일반 게시판 = 전 직원에게 노출(공용)
+     * - 권한(permissions)이 존재하는 일반 게시판 = 권한 있는 직원에게만 노출(제한)
      */
-    public List<BoardCategoryResDto.Category> getAccessibleBoards(Long employeeId) {
+    public List<BoardCategoryResDto.Category> getAccessibleBoards(Long companyId, Long employeeId) {
         return boardCategoryRepository
-                .findByBoardPermissions_Employee_IdAndIsActivatedTrueAndDeletedAtIsNull(employeeId)
+                .findAccessiblePublicBoards(companyId, employeeId)
                 .stream()
                 .map(BoardCategoryResDto.Category::from)
                 .toList();

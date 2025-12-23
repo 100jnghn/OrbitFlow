@@ -529,7 +529,12 @@ async function openEditBoardModal(boardId) {
                     'Content-Type': 'application/json'
                 }
             }),
-            Promise.resolve(null) // 권한 API는 아직 구현되지 않음
+            apiFetch(`/api/admin/board-permissions/board-categories/${boardId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
         ]);
 
         if (!boardResponse.ok) {
@@ -547,16 +552,29 @@ async function openEditBoardModal(boardId) {
         editingBoardId = boardId;
         selectedEmployees = [];
         
-        // 권한 정보 로드 (API가 구현되면 활성화)
-        // if (permissionResponse && permissionResponse.ok) {
-        //     const permissionResult = await permissionResponse.json();
-        //     const permissions = permissionResult.data || [];
-        //     selectedEmployees = permissions.map(p => ({
-        //         id: p.employeeInfo.employeeId,
-        //         name: p.employeeInfo.name,
-        //         rankName: p.employeeInfo.rankName
-        //     }));
-        // }
+        // 권한 정보 로드
+        if (permissionResponse && permissionResponse.ok) {
+            try {
+                const permissionResult = await permissionResponse.json();
+                const permissions = permissionResult.data || [];
+                console.log('Loaded permissions:', permissions);
+                selectedEmployees = permissions.map(p => ({
+                    id: p.employeeInfo.employeeId,
+                    name: p.employeeInfo.name,
+                    employeeNo: p.employeeInfo.employeeNumber,
+                    rankName: p.employeeInfo.rankName,
+                    departmentName: p.employeeInfo.departmentName,
+                    permissionId: p.permissionId // 권한 제거를 위한 ID 저장
+                }));
+                console.log('Mapped selectedEmployees:', selectedEmployees);
+            } catch (error) {
+                console.error('Error parsing permission response:', error);
+                selectedEmployees = [];
+            }
+        } else {
+            console.warn('Permission response not OK:', permissionResponse?.status);
+            selectedEmployees = [];
+        }
 
         document.getElementById('modalTitle').textContent = '게시판 수정';
         document.getElementById('submitBtn').textContent = '수정';
@@ -720,26 +738,139 @@ function displayEmployeeSearchResults(employees) {
 }
 
 // 사원 선택
-function selectEmployee(employee) {
+async function selectEmployee(employee) {
     if (selectedEmployees.some(se => se.id === employee.id)) {
         return; // 이미 선택된 사원
     }
 
-    selectedEmployees.push({
-        id: employee.id,
-        name: employee.name,
-        rankName: employee.positionName || ''
-    });
+    // 수정 모드이고 게시판 ID가 있는 경우 즉시 권한 부여
+    if (isEditMode && editingBoardId) {
+        try {
+            const response = await apiFetch('/api/admin/board-permissions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    boardCategoryId: editingBoardId,
+                    employeeIds: [employee.id]
+                })
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    location.href = '/login';
+                    return;
+                }
+                const errorText = await response.text();
+                console.error('Permission grant failed:', response.status, errorText);
+                alert('권한 부여에 실패했습니다.');
+                return;
+            }
+
+            const result = await response.json();
+            const permissions = result.data || [];
+            
+            // 권한이 성공적으로 부여된 경우
+            if (permissions.length > 0) {
+                const permission = permissions[0];
+                selectedEmployees.push({
+                    id: employee.id,
+                    name: employee.name,
+                    employeeNo: employee.employeeNo,
+                    rankName: employee.positionName || '',
+                    departmentName: employee.organizationName || '',
+                    permissionId: permission.permissionId // 권한 ID 저장
+                });
+                console.log('Permission granted successfully:', permission);
+            } else {
+                // 권한이 이미 있는 경우 (중복 방지로 인해 반환되지 않음)
+                selectedEmployees.push({
+                    id: employee.id,
+                    name: employee.name,
+                    employeeNo: employee.employeeNo,
+                    rankName: employee.positionName || '',
+                    departmentName: employee.organizationName || '',
+                    permissionId: null
+                });
+            }
+        } catch (error) {
+            console.error('Error granting permission:', error);
+            alert('권한 부여에 실패했습니다: ' + (error.message || '알 수 없는 오류'));
+            return;
+        }
+    } else {
+        // 추가 모드이거나 수정 모드가 아닌 경우
+        selectedEmployees.push({
+            id: employee.id,
+            name: employee.name,
+            employeeNo: employee.employeeNo,
+            rankName: employee.positionName || '',
+            departmentName: employee.organizationName || '',
+            permissionId: null
+        });
+    }
 
     renderSelectedEmployees();
     document.getElementById('employeeSearchInput').value = '';
     document.getElementById('employeeSearchResults').innerHTML = '';
 }
 
-// 선택된 사원 제거
-function removeEmployee(employeeId) {
-    selectedEmployees = selectedEmployees.filter(se => se.id !== employeeId);
-    renderSelectedEmployees();
+// 선택된 사원 제거 (전역 함수로 선언)
+window.removeEmployee = async function(employeeId, permissionId) {
+    console.log('removeEmployee called:', { employeeId, permissionId, isEditMode });
+    
+    // permissionId가 문자열 'null'이거나 null/undefined인 경우 처리
+    if (permissionId === 'null' || permissionId === null || permissionId === undefined) {
+        permissionId = null;
+    } else {
+        permissionId = parseInt(permissionId);
+        if (isNaN(permissionId)) {
+            permissionId = null;
+        }
+    }
+    
+    // 수정 모드이고 권한이 이미 부여된 사원인 경우 (permissionId가 있음)
+    if (isEditMode && permissionId) {
+        if (!confirm('이 사원의 게시판 권한을 제거하시겠습니까?')) {
+            return;
+        }
+
+        try {
+            console.log('Deleting permission:', permissionId);
+            const response = await apiFetch(`/api/admin/board-permissions/${permissionId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    location.href = '/login';
+                    return;
+                }
+                const errorText = await response.text();
+                console.error('Permission delete failed:', response.status, errorText);
+                throw new Error('권한 제거에 실패했습니다.');
+            }
+
+            // 목록에서 제거
+            selectedEmployees = selectedEmployees.filter(se => se.id !== employeeId);
+            renderSelectedEmployees();
+            console.log('Permission removed successfully');
+        } catch (error) {
+            console.error('Error removing permission:', error);
+            if (error.message !== 'SESSION_EXPIRED') {
+                alert('권한 제거에 실패했습니다: ' + (error.message || '알 수 없는 오류'));
+            }
+        }
+    } else {
+        // 추가 모드이거나 아직 권한이 부여되지 않은 사원인 경우
+        console.log('Removing employee from list (not a permission):', employeeId);
+        selectedEmployees = selectedEmployees.filter(se => se.id !== employeeId);
+        renderSelectedEmployees();
+    }
 }
 
 // 선택된 사원 목록 렌더링
@@ -747,13 +878,29 @@ function renderSelectedEmployees() {
     const container = document.getElementById('selectedEmployees');
     container.innerHTML = '';
 
+    if (selectedEmployees.length === 0) {
+        container.innerHTML = '<div class="no-selected-employees">권한이 부여된 사원이 없습니다.</div>';
+        return;
+    }
+
     selectedEmployees.forEach(emp => {
         const div = document.createElement('div');
         div.className = 'selected-employee';
+        const permissionIdValue = emp.permissionId ? emp.permissionId : 'null';
+        console.log('Rendering employee:', emp.name, 'permissionId:', permissionIdValue, 'isEditMode:', isEditMode);
+        
+        // 사원 정보를 한 줄로 표시: 이름 | 사번 | 부서 | 직급
+        const employeeInfoText = [
+            escapeHTML(emp.name || ''),
+            escapeHTML(emp.employeeNo || ''),
+            escapeHTML(emp.departmentName || ''),
+            escapeHTML(emp.rankName || '')
+        ].filter(item => item).join(' | ');
+        
+        // 모든 사원에 대해 항상 X 버튼 표시
         div.innerHTML = `
-            <i class="fas fa-user employee-icon"></i>
-            <span class="employee-name">${escapeHTML(emp.name)} ${escapeHTML(emp.rankName || '')}</span>
-            <button type="button" class="remove-btn" onclick="removeEmployee(${emp.id})" title="제거">
+            <span class="employee-info">${employeeInfoText}</span>
+            <button type="button" class="remove-btn" onclick="removeEmployee(${emp.id}, ${permissionIdValue})" title="권한 제거">
                 <i class="fas fa-times"></i>
             </button>
         `;
@@ -761,30 +908,45 @@ function renderSelectedEmployees() {
     });
 }
 
-// 게시판 권한 저장 (API가 구현되면 활성화)
+// 게시판 권한 저장 (게시판 생성 시 사용)
 async function saveBoardPermissions(boardCategoryId) {
-    // TODO: 게시판 권한 API 구현 필요
-    // try {
-    //     const employeeIds = selectedEmployees.map(se => se.id);
-    //     
-    //     const response = await apiFetch('/api/admin/board-permissions', {
-    //         method: 'POST',
-    //         headers: {
-    //             'Content-Type': 'application/json'
-    //         },
-    //         body: JSON.stringify({
-    //             boardCategoryId: boardCategoryId,
-    //             employeeIds: employeeIds
-    //         })
-    //     });
-    //
-    //     if (!response.ok) {
-    //         console.warn('권한 저장에 실패했습니다:', await response.text());
-    //     }
-    // } catch (error) {
-    //     console.error('Error saving permissions:', error);
-    // }
-    console.log('권한 저장 기능은 아직 구현되지 않았습니다.');
+    try {
+        // permissionId가 없는 사원들만 권한 부여 (이미 권한이 있는 사원은 제외)
+        const employeesToGrant = selectedEmployees.filter(se => !se.permissionId);
+        
+        if (employeesToGrant.length === 0) {
+            console.log('No new permissions to grant');
+            return;
+        }
+        
+        const employeeIds = employeesToGrant.map(se => se.id);
+        
+        const response = await apiFetch('/api/admin/board-permissions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                boardCategoryId: boardCategoryId,
+                employeeIds: employeeIds
+            })
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                location.href = '/login';
+                return;
+            }
+            const errorText = await response.text();
+            console.warn('권한 저장에 실패했습니다:', response.status, errorText);
+            throw new Error('권한 저장에 실패했습니다.');
+        }
+        
+        console.log('Permissions saved successfully');
+    } catch (error) {
+        console.error('Error saving permissions:', error);
+        throw error; // 상위로 에러 전달
+    }
 }
 
 // 게시판 삭제
