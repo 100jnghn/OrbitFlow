@@ -188,3 +188,36 @@
     overflow-y: auto;
 }
 
+/* =========================
+   Validation
+========================= */
+.category-name-input.error {
+    border-color: #dc3545;
+    background: #fff5f5;
+}
+
+.category-name-input.success {
+    border-color: #28a745;
+}
+
+.validation-msg {
+    font-size: 11px;
+    margin-top: 4px;
+    display: block;
+}
+
+.validation-msg.error {
+    color: #dc3545;
+}
+
+.validation-msg.success {
+    color: #28a745;
+}
+
+.btn-edit:disabled,
+.btn-add-row:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+

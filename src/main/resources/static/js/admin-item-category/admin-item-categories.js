@@ -3,6 +3,75 @@
  */
 
 /* ==========================
+   Validation
+========================== */
+function validateCategoryName(input, msgElement) {
+    const value = input.value.trim();
+    
+    if (!value) {
+        input.classList.add('error');
+        input.classList.remove('success');
+        if (msgElement) {
+            msgElement.textContent = '카테고리명을 입력해주세요. (0/50)';
+            msgElement.className = 'validation-msg error';
+        }
+        return false;
+    }
+    
+    input.classList.remove('error');
+    input.classList.add('success');
+    if (msgElement) {
+        msgElement.textContent = `입력됨 (${value.length}/50)`;
+        msgElement.className = 'validation-msg success';
+    }
+    return true;
+}
+
+function attachValidationToInput(input, button) {
+    // validation 메시지 요소 생성
+    const msgElement = document.createElement('span');
+    msgElement.className = 'validation-msg';
+    input.parentElement.appendChild(msgElement);
+    
+    // 실시간 검증
+    input.addEventListener('input', () => {
+        const isValid = validateCategoryName(input, msgElement);
+        if (button) {
+            button.disabled = !isValid;
+        }
+    });
+    
+    // 초기 검증
+    validateCategoryName(input, msgElement);
+}
+
+function attachValidationToInputForEdit(input, button) {
+    // validation 메시지 요소 생성
+    const msgElement = document.createElement('span');
+    msgElement.className = 'validation-msg';
+    input.parentElement.appendChild(msgElement);
+    
+    // 실시간 검증
+    input.addEventListener('input', () => {
+        const isValid = validateCategoryName(input, msgElement);
+        const originalValue = input.dataset.originalValue || '';
+        const currentValue = input.value.trim();
+        const isChanged = currentValue !== originalValue;
+        
+        // validation이 통과하고 값이 변경된 경우에만 버튼 활성화
+        if (button) {
+            button.disabled = !(isValid && isChanged);
+        }
+    });
+    
+    // 초기 검증 및 버튼 상태 설정
+    validateCategoryName(input, msgElement);
+    if (button) {
+        button.disabled = true; // 초기에는 비활성화
+    }
+}
+
+/* ==========================
    Data Load
 ========================== */
 async function loadCategories() {
@@ -60,7 +129,15 @@ function createNameInputCell(id, value) {
     input.value = value ?? '';
     input.maxLength = 50;
     input.dataset.categoryId = id;
+    input.dataset.originalValue = value ?? ''; // 초기값 저장
     td.appendChild(input);
+    
+    // validation 추가 (나중에 버튼과 연결)
+    setTimeout(() => {
+        const editButton = input.closest('tr').querySelector('.btn-edit');
+        attachValidationToInputForEdit(input, editButton);
+    }, 0);
+    
     return td;
 }
 
@@ -102,7 +179,7 @@ function createNewCategoryRow(rowNumber) {
     
     // Enter 키로 추가
     input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' && !addBtn.disabled) {
             addNewCategory();
         }
     });
@@ -115,9 +192,14 @@ function createNewCategoryRow(rowNumber) {
     addBtn.className = 'btn-add-row';
     addBtn.innerHTML = '<i class="fas fa-plus"></i> 카테고리 추가';
     addBtn.onclick = () => addNewCategory();
+    addBtn.disabled = true; // 초기에는 비활성화
     actionCell.appendChild(addBtn);
 
     tr.append(numberCell, inputCell, actionCell);
+    
+    // validation 추가
+    attachValidationToInput(input, addBtn);
+    
     return tr;
 }
 
@@ -126,13 +208,16 @@ function createNewCategoryRow(rowNumber) {
 ========================== */
 async function addNewCategory() {
     const input = document.getElementById('new-category-input');
-    const name = input.value.trim();
-
-    if (!name) {
+    const msgElement = input.parentElement.querySelector('.validation-msg');
+    
+    // validation 확인
+    if (!validateCategoryName(input, msgElement)) {
         alert('카테고리명을 입력해주세요.');
         input.focus();
         return;
     }
+    
+    const name = input.value.trim();
 
     try {
         const res = await apiFetch(
@@ -157,13 +242,16 @@ async function addNewCategory() {
 
 async function updateCategory(id) {
     const input = document.querySelector(`input[data-category-id="${id}"]`);
-    const name = input.value.trim();
-
-    if (!name) {
+    const msgElement = input.parentElement.querySelector('.validation-msg');
+    
+    // validation 확인
+    if (!validateCategoryName(input, msgElement)) {
         alert('카테고리명을 입력해주세요.');
         input.focus();
         return;
     }
+    
+    const name = input.value.trim();
 
     try {
         const res = await apiFetch(
