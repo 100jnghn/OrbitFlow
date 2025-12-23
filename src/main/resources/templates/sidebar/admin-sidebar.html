@@ -100,6 +100,9 @@
             <i class="fas fa-chevron-down arrow"></i>
         </div>
         <ul class="sub-menu">
+            <li th:classappend="${currentMenu == 'org-category'} ? 'selected' : ''">
+                <a th:href="@{/view/admin/org-categories}">조직 카테고리 관리</a>
+            </li>
             <li th:classappend="${currentMenu} == 'organization' ? 'selected' : ''">
                 <a th:href="@{/admin/organization}">조직 구조 관리</a>
             </li>
