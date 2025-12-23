@@ -12,8 +12,10 @@ import com.finalproj.orbitflow.reservation.enums.ReservationStatusCode;
 import com.finalproj.orbitflow.reservation.enums.ReservationTypeCode;
 import com.finalproj.orbitflow.reservation.repository.ReservationRepository;
 import com.finalproj.orbitflow.reservation.repository.ReservationStatusRepository;
+import com.finalproj.orbitflow.resource.car.repository.CarRepository;
 import com.finalproj.orbitflow.resource.itemcategory.entity.ItemCategory;
 import com.finalproj.orbitflow.resource.itemcategory.repository.ItemCategoryRepository;
+import com.finalproj.orbitflow.resource.meetingroom.repository.MeetingroomRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -40,6 +42,8 @@ public class ReservationService {
     private final CompanyRepository companyRepository;
     private final EmployeeRepository employeeRepository;
     private final ItemCategoryRepository itemCategoryRepository;
+    private final MeetingroomRepository meetingroomRepository;
+    private final CarRepository carRepository;
 
 
     @Transactional(readOnly = true)
@@ -164,15 +168,30 @@ public class ReservationService {
         ReservationStatus reservationStatus = reservation.getReservationStatus();
         Long reservationStatusId = reservationStatus.getId();
         String reservationStatusName = reservationStatus.getStatusName();
+        String typeName = reservation.getTypeCode().getDescription();
+
+        String resourceName = "";
+
+        if(reservation.getTypeCode() == ReservationTypeCode.MEETING) {
+            resourceName = meetingroomRepository.findById(reservation.getResourceId()).get().getName();
+        }
+        else if (reservation.getTypeCode() == ReservationTypeCode.CAR) {
+            resourceName = carRepository.findById(reservation.getResourceId()).get().getName();
+        }
+        else if (reservation.getTypeCode() ==  ReservationTypeCode.ITEM) {
+            resourceName = itemCategoryRepository.findById(reservation.getResourceId()).get().getName();
+        }
 
         return ReservationResDto.builder()
                 .reservationId(reservation.getId())
                 .employeeName(employee.getName())
                 .organizationName(employee.getOrganization().getName())
                 .typeCode(reservation.getTypeCode())
+                .typeName(typeName)
                 .itemCategoryId(itemCategoryId)
                 .itemCategoryName(itemCategoryName)
                 .resourceId(reservation.getResourceId())
+                .resourceName(resourceName)
                 .reservationDate(reservation.getReservationDate())
                 .startTime(reservation.getStartTime())
                 .endTime(reservation.getEndTime())
