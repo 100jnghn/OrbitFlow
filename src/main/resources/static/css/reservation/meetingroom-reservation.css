@@ -100,9 +100,11 @@
 }
 
 .room-column-header {
-    width: 105px;
-    min-width: 105px;
-    padding: 12px;
+    display: flex;
+
+    /*width: 150px;*/
+    min-width: 150px;
+    padding: 12px 8px;
     background: #f8f9fa;
     border: 1px solid #e9ecef;
     font-weight: 600;
@@ -112,44 +114,10 @@
     border-radius: 8px 0 0 0;
 }
 
-.times-header {
-    display: flex;
-    flex: 1;
-}
-
-.time-header {
-    flex: 1;
-    min-width: 56px;
-    padding: 8px;
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-left: none;
-    font-weight: 600;
-    font-size: 12px;
-    color: #495057;
-    text-align: center;
-    white-space: nowrap;
-}
-
-.time-header:last-child {
-    border-radius: 0 8px 0 0;
-}
-
-/* =========================
-   Grid Body
-========================= */
-.grid-body {
-    display: flex;
-    flex-direction: column;
-}
-
-.grid-row {
-    display: flex;
-}
-
 .room-name-cell {
-    width: 105px;
-    min-width: 105px;
+    display: flex;
+    /*width: 150px;*/
+    min-width: 150px;
     padding: 12px 8px;
     background: #f8f9fa;
     border: 1px solid #e9ecef;
@@ -163,8 +131,25 @@
     text-overflow: ellipsis;
 }
 
-.grid-row:last-child .room-name-cell {
-    border-radius: 0 0 0 8px;
+
+
+.times-header {
+    display: flex;
+    flex: 1;
+}
+
+.time-header {
+    flex: 1;
+    min-width: 40px;
+    padding: 8px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-left: none;
+    font-weight: 600;
+    font-size: 12px;
+    color: #495057;
+    text-align: center;
+    white-space: nowrap;
 }
 
 .time-cells {
@@ -185,6 +170,27 @@
     transition: all 0.2s;
     position: relative;
 }
+
+.time-header:last-child {
+    border-radius: 0 8px 0 0;
+}
+
+/* =========================
+   Grid Body
+========================= */
+.grid-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.grid-row {
+    display: flex;
+}
+
+.grid-row:last-child .room-name-cell {
+    border-radius: 0 0 0 8px;
+}
+
 
 .grid-row:last-child .time-cell:last-child {
     border-radius: 0 0 8px 0;

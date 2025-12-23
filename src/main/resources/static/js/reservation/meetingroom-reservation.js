@@ -399,19 +399,11 @@ async function submitReservation() {
    Event Listeners
 ========================== */
 function initEventListeners() {
-    // 날짜 선택
+    // 날짜 선택 시 자동 조회
     const dateSelect = document.getElementById('reservation-date-select');
     if (dateSelect) {
         dateSelect.addEventListener('change', (e) => {
             selectedDate = e.target.value;
-            clearSelection();
-        });
-    }
-    
-    // 조회 버튼
-    const searchBtn = document.getElementById('btn-search');
-    if (searchBtn) {
-        searchBtn.addEventListener('click', () => {
             clearSelection();
             loadReservations(selectedDate);
         });
