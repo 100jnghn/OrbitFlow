@@ -27,14 +27,32 @@ public interface BoardCategoryRepository extends JpaRepository<BoardCategory, Lo
             Pageable pageable
     );
 
-    /** [사용자용] 권한이 부여된 활성 일반 게시판 목록 조회 */
-    @Query("SELECT DISTINCT bc FROM BoardCategory bc " +
-           "INNER JOIN bc.boardPermissions bp " +
-           "WHERE bp.employee.id = :employeeId " +
-           "AND bc.isActivated = true " +
-           "AND bc.deletedAt IS NULL " +
-           "AND bc.organization IS NULL")
-    List<BoardCategory> findByBoardPermissions_Employee_IdAndIsActivatedTrueAndDeletedAtIsNull(@Param("employeeId") Long employeeId);
+    /** [사용자용][A안]
+     *  - 권한(permissions)이 하나도 없는 일반 게시판 = 전 직원에게 노출(공용)
+     *  - 권한(permissions)이 존재하는 일반 게시판 = 권한 있는 직원에게만 노출(제한)
+     */
+    @Query("""
+    SELECT DISTINCT bc
+    FROM BoardCategory bc
+    LEFT JOIN bc.boardPermissions bp
+        ON bp.employee.id = :employeeId
+    WHERE bc.company.id = :companyId
+      AND bc.isActivated = true
+      AND bc.deletedAt IS NULL
+      AND bc.organization IS NULL
+      AND (
+            bp.id IS NOT NULL
+            OR NOT EXISTS (
+                SELECT 1
+                FROM BoardPermission bp2
+                WHERE bp2.boardCategory = bc
+            )
+          )
+""")
+    List<BoardCategory> findAccessiblePublicBoards(
+            @Param("companyId") Long companyId,
+            @Param("employeeId") Long employeeId
+    );
 
 
     // =========================================================================

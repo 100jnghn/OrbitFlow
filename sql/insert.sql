@@ -580,21 +580,21 @@ INSERT INTO board_category
 (company_id, organization_id, board_name, board_type, is_activated, comment_activated)
 VALUES
     -- 회사 1 : 공용 게시판
-    (1, NULL, '전사 공지사항', 'NOTICE', 1, 1),
+    (1, NULL, '전사 공지사항', 'FREE', 1, 1),
     (1, NULL, '자유 게시판', 'FREE', 1, 1),
     (1, NULL, '전사 자료실', 'FREE', 1, 0),
     (1, NULL, '주간 업무 공유', 'FREE', 1, 1),
-    (1, NULL, '경조사 게시판', 'NOTICE', 1, 1),
+    (1, NULL, '경조사 게시판', 'FREE', 1, 1),
     -- 회사 1 : 조직 게시판
     (1, 8, '인사팀 게시판', 'FREE', 1, 1),
     (1, 6, '백엔드팀 게시판', 'FREE', 1, 1),
 
     -- 회사 2 : 공용 게시판
-    (2, NULL, '전사 공지사항', 'NOTICE', 1, 1),
+    (2, NULL, '전사 공지사항', 'FREE', 1, 1),
     (2, NULL, '전사 건의 게시판', 'FREE', 1, 0),
     (2, NULL, '기술 Q&A', 'FREE', 1, 1),
-    (2, NULL, '운영 매뉴얼', 'NOTICE', 1, 0),
-    (2, NULL, '전사 자료실', 'NOTICE', 1, 0),
+    (2, NULL, '운영 매뉴얼', 'FREE', 1, 0),
+    (2, NULL, '전사 자료실', 'FREE', 1, 0),
     -- 회사 2 : 조직 게시판
     (2, 12, 'AI팀 게시판', 'FREE', 1, 1),
     (2, 11, '플랫폼부 게시판', 'FREE', 1, 1);
@@ -626,20 +626,20 @@ VALUES
     (14, 5, '서버 증설 계획', '트래픽 증가 대응 서버 증설 계획', 110, NULL),
     (14, 5, '장애 대응 프로세스', '플랫폼 장애 대응 절차 정리', 70, NULL);
 
--- board_permission
-INSERT INTO board_permission
-    (employee_id, board_category_id)
-VALUES (2, 1),
-       (1, 3),
-       (3, 2),
-       (1, 4),
-       (2, 5),
-
-       (4, 6),
-       (5, 7),
-       (4, 8),
-       (5, 9),
-       (4, 10);
+# -- board_permission
+# INSERT INTO board_permission
+#     (employee_id, board_category_id)
+# VALUES (2, 1),
+#        (1, 3),
+#        (3, 2),
+#        (1, 4),
+#        (2, 5),
+#
+#        (4, 6),
+#        (5, 7),
+#        (4, 8),
+#        (5, 9),
+#        (4, 10);
 
 -- comment
 INSERT INTO message

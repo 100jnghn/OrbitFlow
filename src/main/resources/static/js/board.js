@@ -44,19 +44,24 @@ async function loadBoardCategories() {
         const accessibleResult = await accessibleResponse.json();
         const orgResult = await orgResponse.json();
 
-        console.log('Accessible boards response:', accessibleResult);
-        console.log('Organization boards response:', orgResult);
+        console.log('[게시판 목록] 전체 응답 - Accessible:', accessibleResult);
+        console.log('[게시판 목록] 전체 응답 - Organization:', orgResult);
 
         // ResponseDto 구조에서 data 추출
         // ResponseDto는 { status, message, data } 형태
         let accessibleData = accessibleResult.data;
         let orgData = orgResult.data;
         
+        console.log('[게시판 목록] 추출된 data - Accessible:', accessibleData);
+        console.log('[게시판 목록] 추출된 data - Organization:', orgData);
+        
         // data가 없으면 result 자체가 배열일 수 있음
         if (!accessibleData && Array.isArray(accessibleResult)) {
+            console.log('[게시판 목록] accessibleResult가 배열이므로 직접 사용');
             accessibleData = accessibleResult;
         }
         if (!orgData && Array.isArray(orgResult)) {
+            console.log('[게시판 목록] orgResult가 배열이므로 직접 사용');
             orgData = orgResult;
         }
         
@@ -64,8 +69,8 @@ async function loadBoardCategories() {
         accessibleBoards = Array.isArray(accessibleData) ? accessibleData : [];
         organizationBoards = Array.isArray(orgData) ? orgData : [];
 
-        console.log('Loaded accessible boards:', accessibleBoards.length, accessibleBoards);
-        console.log('Loaded organization boards:', organizationBoards.length, organizationBoards);
+        console.log('[게시판 목록] 최종 파싱 결과 - Accessible boards:', accessibleBoards.length, '개', accessibleBoards);
+        console.log('[게시판 목록] 최종 파싱 결과 - Organization boards:', organizationBoards.length, '개', organizationBoards);
 
         renderSidebar();
         
