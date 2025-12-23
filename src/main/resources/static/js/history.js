@@ -10,10 +10,8 @@ document.addEventListener('DOMContentLoaded', function() {
     searchType.addEventListener('change', function(e) {
         const isRange = e.target.value === 'RANGE';
         document.getElementById('monthPickerWrapper').style.display = isRange ? 'none' : 'block';
-        // flex로 변경하여 내부 요소(input, button) 정렬 유지
         document.getElementById('rangePickerWrapper').style.display = isRange ? 'flex' : 'none';
 
-        // 모드 전환 시 첫 페이지부터 다시 조회 (원하는 경우 유지해도 됨)
         currentParams.page = 0;
         executeSearch();
     });
@@ -28,21 +26,21 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     document.addEventListener('click', () => dropdown.classList.remove('show'));
 
-    // 4. 필터 및 버튼 이벤트
+    // 4. 상태 필터 이벤트
     document.getElementById('statusFilter').addEventListener('change', (e) => {
-        // ✅ 핵심: 선택값을 currentParams에 반영해야 필터링이 됨
         currentParams.status = e.target.value;
         currentParams.page = 0;
         executeSearch();
     });
 
+    // 5. 기간 조회 버튼
     document.getElementById('rangeSearchBtn').addEventListener('click', () => {
         currentParams.page = 0;
         executeSearch();
     });
 });
 
-/** 36개월 선택기 로직 및 데이터 매핑 (기존 유지) */
+/** 36개월 선택기 로직 및 데이터 매핑 */
 function initCustomMonthSelector(list, text) {
     const now = new Date();
     const hidden = document.getElementById('monthSelect');
@@ -114,18 +112,25 @@ async function loadAttendanceData(year, month, start = null, end = null) {
     }
 }
 
+/**
+ * ✅ 핵심 수정:
+ * - 백엔드 DTO는 commuteAt / leaveAt 인데
+ * - 기존 프론트는 checkInTime / checkOutTime 을 보고 있어서 값이 안 나왔음
+ * - commuteAt / leaveAt 으로 맞춰서 출력
+ */
 function renderTable(recs) {
     const tb = document.querySelector('#attendanceTable tbody');
     if (!recs || recs.length === 0) {
         tb.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 100px; color:#999; font-size:15px;">조회된 기록이 없습니다.</td></tr>';
         return;
     }
+
     tb.innerHTML = recs.map(r => `
         <tr>
             <td style="font-weight:600;">${r.date}</td>
-            <td>${r.checkInTime || '-'}</td>
-            <td>${r.checkOutTime || '-'}</td>
-            <td>${r.workingTime || '0'}</td>
+            <td>${r.commuteAt || '-'}</td>
+            <td>${r.leaveAt || '-'}</td>
+            <td>${r.workingTime || '0h 00m'}</td>
             <td><span class="status-badge ${getBadgeClass(r.statusCode)}">${r.statusName}</span></td>
         </tr>`).join('');
 }
