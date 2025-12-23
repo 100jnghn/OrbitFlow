@@ -1,15 +1,15 @@
-package com.finalproj.orbitflow.attendance.attendanceDefaultRule.service;
+package com.finalproj.orbitflow.attendance.default_rule.service;
 
-import com.finalproj.orbitflow.attendance.attendanceDefaultRule.dto.AttRuleResDto;
-import com.finalproj.orbitflow.attendance.attendanceDefaultRule.dto.AttRuleUpdateReqDto;
-import com.finalproj.orbitflow.attendance.attendanceDefaultRule.dto.EmployeeSearchDto;
-import com.finalproj.orbitflow.attendance.attendanceExceptionRule.dto.EmpAttRuleCreateReqDto;
-import com.finalproj.orbitflow.attendance.attendanceExceptionRule.dto.EmpAttRuleResDto;
-import com.finalproj.orbitflow.attendance.attendanceExceptionRule.dto.EmpAttRuleUpdateReqDto;
-import com.finalproj.orbitflow.attendance.attendanceDefaultRule.entity.AttendanceRule;
-import com.finalproj.orbitflow.attendance.attendanceExceptionRule.entity.EmployeeAttRule;
-import com.finalproj.orbitflow.attendance.attendanceDefaultRule.repository.AttendanceRuleRepository;
-import com.finalproj.orbitflow.attendance.attendanceExceptionRule.repository.EmployeeAttRuleRepository;
+import com.finalproj.orbitflow.attendance.default_rule.dto.AttRuleResDto;
+import com.finalproj.orbitflow.attendance.default_rule.dto.AttRuleUpdateReqDto;
+import com.finalproj.orbitflow.attendance.default_rule.dto.EmployeeSearchDto;
+import com.finalproj.orbitflow.attendance.exception_rule.dto.EmpAttRuleCreateReqDto;
+import com.finalproj.orbitflow.attendance.exception_rule.dto.EmpAttRuleResDto;
+import com.finalproj.orbitflow.attendance.exception_rule.dto.EmpAttRuleUpdateReqDto;
+import com.finalproj.orbitflow.attendance.default_rule.entity.AttendanceRule;
+import com.finalproj.orbitflow.attendance.exception_rule.entity.EmployeeAttRule;
+import com.finalproj.orbitflow.attendance.default_rule.repository.AttendanceRuleRepository;
+import com.finalproj.orbitflow.attendance.exception_rule.repository.EmployeeAttRuleRepository;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;

@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.attendanceDefaultRule.dto;
+package com.finalproj.orbitflow.attendance.default_rule.dto;
 
 import java.time.LocalTime;
 

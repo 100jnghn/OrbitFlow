@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.attendanceDefaultRule.controller;
+package com.finalproj.orbitflow.attendance.default_rule.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,7 +17,7 @@ public class AttendanceRuleViewController {
     public String attendanceDashboard(Model model) {
         model.addAttribute("currentGNB", "admin");
         model.addAttribute("currentMenu", "attendance-dashboard"); // 대시보드 활성화
-        return "admin/admin-dashboard"; // 대시보드 HTML 파일명
+        return "admin/admin-dashboard";
     }
 
 
