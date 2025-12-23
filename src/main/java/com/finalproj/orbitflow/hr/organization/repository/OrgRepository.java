@@ -51,4 +51,9 @@ public interface OrgRepository extends JpaRepository<Organization, Long> {
             String name,
             Long id
     );
+
+    /**
+     * 특정 카테고리의 모든 조직 조회
+     */
+    List<Organization> findByCompanyIdAndCategoryIdAndIsActiveTrueOrderByOrderIndexAsc(Long companyId, Long categoryId);
 }

@@ -215,6 +215,17 @@ public class OrgService {
         }
     }
 
+    // 특정 조직 카테고리에 해당하는 조직들 조회
+    @Transactional(readOnly = true)
+    public List<OrgResDto> findByCategory(Long companyId, Long categoryId) {
+        return orgRepository
+                .findByCompanyIdAndCategoryIdAndIsActiveTrueOrderByOrderIndexAsc(companyId, categoryId)
+                .stream()
+                .map(OrgResDto::from)
+                .toList();
+    }
+
+
     /* ================= 내부 메서드들 ================= */
     private Organization getOrgInCompanyOrThrow(Long companyId, Long orgId) {
         return orgRepository.findByCompanyIdAndId(companyId, orgId)

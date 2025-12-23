@@ -87,6 +87,21 @@ public class OrgController {
         Long companyId = SecurityUtils.getCompanyId();
         orgService.deactivate(companyId, id);
         return ResponseEntity.ok(
-        new ResponseDto<>(HttpStatus.OK, "조직 비활성화 완료", null));
+                new ResponseDto<>(HttpStatus.OK, "조직 비활성화 완료", null));
     }
+
+    // 특정 조직 카테고리에 해당하는 조직들 조회
+    @GetMapping("/by-category/{categoryId}")
+    public ResponseEntity<ResponseDto<List<OrgResDto>>> listByCategory(
+            @PathVariable Long categoryId
+    ) {
+        return ResponseEntity.ok(
+                new ResponseDto<>(
+                        HttpStatus.OK,
+                        "조직 카테고리별 조직 조회 성공",
+                        orgService.findByCategory(SecurityUtils.getCompanyId(), categoryId)
+                )
+        );
+    }
+
 }
