@@ -1,9 +1,13 @@
 package com.finalproj.orbitflow.hr.orgCategory.service;
 
 
-import com.finalproj.orbitflow.global.exception.*;
+import com.finalproj.orbitflow.global.exception.BusinessException;
+import com.finalproj.orbitflow.global.exception.InvalidRequestException;
+import com.finalproj.orbitflow.global.exception.InvalidStateException;
+import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryOrderUpdateReqDto;
 import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryResDto;
+import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryUpdateReqDto;
 import com.finalproj.orbitflow.hr.orgCategory.entity.OrgCategory;
 import com.finalproj.orbitflow.hr.orgCategory.repository.OrgCategoryRepository;
 import com.finalproj.orbitflow.hr.organization.repository.OrgRepository;
@@ -30,13 +34,19 @@ public class OrgCategoryService {
 
     /* ================= 목록 (검색 포함) ================= */
     @Transactional(readOnly = true)
-    public List<OrgCategoryResDto> findAll(Long companyId, String keyword) {
+    public List<OrgCategoryResDto> findAll(Long companyId, String keyword, boolean includeInactive) {
 
-        List<OrgCategory> categories =
-                (keyword == null || keyword.isBlank())
-                        ? repository.findByCompanyIdAndIsActiveTrueOrderByOrderIndexAsc(companyId)
-                        : repository.findByCompanyIdAndIsActiveTrueAndNameContainingIgnoreCaseOrderByOrderIndexAsc(
-                        companyId, keyword.trim());
+        List<OrgCategory> categories;
+
+        if (includeInactive) {
+            categories = repository.findByCompanyIdOrderByIsActiveDescOrderIndexAscCreatedAtDesc(companyId);
+        } else {
+            categories =
+                    (keyword == null || keyword.isBlank())
+                            ? repository.findByCompanyIdAndIsActiveTrueOrderByOrderIndexAsc(companyId)
+                            : repository.findByCompanyIdAndIsActiveTrueAndNameContainingIgnoreCaseOrderByOrderIndexAsc(
+                            companyId, keyword.trim());
+        }
 
         return categories.stream()
                 .map(OrgCategoryResDto::from)
@@ -52,7 +62,7 @@ public class OrgCategoryService {
             throw new BusinessException("이미 존재하는 조직 카테고리입니다.");
         }
 
-        Integer max = repository.findMaxOrderIndexByCompanyId(companyId);
+        Integer max = repository.findMaxActiveOrderIndexByCompanyId(companyId);
         int nextOrder = (max == null) ? 1 : max + 1;
 
         return repository.save(
@@ -60,31 +70,36 @@ public class OrgCategoryService {
         ).getId();
     }
 
-    /* ================= 수정 ================= */
-    public void update(Long companyId, Long id, String rawName) {
-
+    /* ================= 수정 (이름 + 활성/비활성/재활성화) ================= */
+    public void update(Long companyId, Long id, OrgCategoryUpdateReqDto request) {
         OrgCategory category = get(companyId, id);
-        String name = rawName.trim();
 
+        String name = request.getName().trim();
         if (repository.existsByCompanyIdAndNameAndIdNot(companyId, name, id)) {
             throw new BusinessException("이미 존재하는 조직 카테고리입니다.");
         }
 
-        category.updateName(name);
-    }
+        boolean wasInactive = !category.getIsActive();
+        boolean willActivate = Boolean.TRUE.equals(request.getIsActive());
+        boolean willDeactivate = Boolean.FALSE.equals(request.getIsActive());
 
-    /* ================= 비활성화 ================= */
-    public void deactivate(Long companyId, Long id) {
-
-        OrgCategory category = get(companyId, id);
-
-        if (orgRepository.existsByCompanyIdAndCategoryIdAndIsActiveTrue(companyId, id)) {
-            throw new InvalidStateException(
-                    "해당 카테고리를 사용하는 조직이 존재하여 비활성화할 수 없습니다."
-            );
+        // 재활성화
+        if (wasInactive && willActivate) {
+            Integer max = repository.findMaxActiveOrderIndexByCompanyId(companyId);
+            category.activate(max == null ? 1 : max + 1);
         }
 
-        category.deactivate();
+        // 비활성화
+        if (willDeactivate) {
+            if (orgRepository.existsByCompanyIdAndCategoryIdAndIsActiveTrue(companyId, id)) {
+                throw new InvalidStateException(
+                        "해당 카테고리를 사용하는 조직이 존재하여 비활성화할 수 없습니다."
+                );
+            }
+            category.deactivate(); // 내부에서 orderIndex = null 처리
+        }
+
+        category.updateName(name);
     }
 
     /* ================= 순서 변경 ================= */

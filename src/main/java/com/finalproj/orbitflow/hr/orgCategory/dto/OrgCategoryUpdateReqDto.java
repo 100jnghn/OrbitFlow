@@ -14,8 +14,11 @@ import lombok.Getter;
 @Getter
 public class OrgCategoryUpdateReqDto {
 
+    // 이름 수정, 비활성화, 재활성화 가능
+
     @NotBlank
     @Size(max = 50)
     private String name;
 
+    private Boolean isActive;
 }

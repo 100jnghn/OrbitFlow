@@ -165,6 +165,8 @@ public class ItemService {
                 .statusCode(code)
                 .statusName(name)
                 // todo - 이미지 파일 추가
+                .uploaderName(uploaderName)
+                .createdAt(createdAt)
                 .build();
     }
 

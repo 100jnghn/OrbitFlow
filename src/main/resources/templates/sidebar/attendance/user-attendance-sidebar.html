@@ -1,27 +1,28 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" href="/css/user-sidebar.css">
+</head>
 <body>
-<ul th:fragment="menu">
-    <li class="sidebar-section-title">MY 근태</li>
-    <li th:classappend="${currentMenu} == 'commute' ? ' selected' : ''">
-        <a th:href="@{/view/attendance/commute}" class="sidebar-link">출퇴근</a>
+<ul th:fragment="menu" class="sidebar-menu">
+    <li class="sidebar-section-title">근태 관리</li>
+    <li th:classappend="${currentMenu == 'commute'} ? 'selected' : ''">
+        <a th:href="@{/view/attendance/commute}" class="sidebar-link">근태 기록 관리</a>
     </li>
-    <li th:classappend="${currentMenu} == 'monthly' ? ' selected' : ''">
-        <a th:href="@{/view/attendance/monthly}" class="sidebar-link">월별 근태 조회</a>
+    <li th:classappend="${currentMenu == 'monthly'} ? 'selected' : ''">
+        <a th:href="@{/view/attendance/monthly}" class="sidebar-link">월별 근태 현황</a>
     </li>
-    <li th:classappend="${currentMenu} == 'annual-leave' ? ' selected' : ''">
-        <a th:href="@{/view/attendance/annual-leave}" class="sidebar-link">내 연차 조회</a>
+    <li th:classappend="${currentMenu == 'annual-leave'} ? 'selected' : ''">
+        <a th:href="@{/view/attendance/annual-leave}" class="sidebar-link">연차 발생/사용 현황</a>
     </li>
 
-    <li class="sidebar-section-title">휴가 신청</li>
-    <li th:classappend="${currentMenu} == 'vacation-apply' ? ' selected' : ''">
-        <a th:href="@{/attendance/vacation/apply}" class="sidebar-link">휴가 신청서 작성</a>
+    <li class="sidebar-section-title">휴가/신청 관리</li>
+    <li th:classappend="${currentMenu == 'vacation-apply'} ? 'selected' : ''">
+        <a th:href="@{/attendance/vacation/apply}" class="sidebar-link">휴가/신청서 작성</a>
     </li>
-    <li th:classappend="${currentMenu} == 'vacation-status' ? ' selected' : ''">
-        <a th:href="@{/attendance/vacation/status}" class="sidebar-link">휴가 신청 현황</a>
+    <li th:classappend="${currentMenu == 'vacation-status'} ? 'selected' : ''">
+        <a th:href="@{/attendance/vacation/status}" class="sidebar-link">결재 진행 현황</a>
     </li>
 </ul>
 </body>
 </html>
-
-

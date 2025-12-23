@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.hr.orgPositionUsage.repository;
 
 import com.finalproj.orbitflow.hr.orgPositionUsage.entity.OrgPositionUsage;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
@@ -25,4 +26,13 @@ public interface OrgPositionUsageRepository extends JpaRepository<OrgPositionUsa
 
     /* 조직 정책 전체 삭제 (덮어쓰기 방식) */
     void deleteByCompany_IdAndOrganization_Id(Long companyId, Long organizationId);
+
+    @Query("""
+    select opp
+    from OrgPositionUsage opp
+    join fetch opp.positionCategory pc
+    where opp.organization.id = :orgId
+""")
+    List<OrgPositionUsage> findAllUsagesByOrgId(Long orgId);
+
 }

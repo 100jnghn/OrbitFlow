@@ -17,11 +17,13 @@ public class OrgPositionUsageResDto {
 
     private Long positionCategoryId;
     private String positionCategoryName;
+    private boolean isHead;
 
     public static OrgPositionUsageResDto from(OrgPositionUsage entity) {
         return new OrgPositionUsageResDto(
                 entity.getPositionCategory().getId(),
-                entity.getPositionCategory().getName()
+                entity.getPositionCategory().getName(),
+                entity.getPositionCategory().getIsHead()
         );
     }
 }

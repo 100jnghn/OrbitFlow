@@ -96,9 +96,16 @@
     border-bottom: none;
 }
 
+/* 카테고리 행 컨테이너 */
+.category-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 /* 카테고리명 입력 필드 */
 .category-name-input {
-    width: 100%;
+    flex: 1;
     padding: 8px 12px;
     font-size: 14px;
     border: 1px solid #ddd;
@@ -186,5 +193,38 @@
     flex: 1;
     padding: 24px 40px 16px;
     overflow-y: auto;
+}
+
+/* =========================
+   Validation
+========================= */
+.category-name-input.error {
+    border-color: #dc3545;
+    background: #fff5f5;
+}
+
+.category-name-input.success {
+    border-color: #28a745;
+}
+
+.validation-msg {
+    font-size: 11px;
+    margin-top: 4px;
+    display: block;
+}
+
+.validation-msg.error {
+    color: #dc3545;
+}
+
+.validation-msg.success {
+    color: #28a745;
+}
+
+.btn-edit:disabled,
+.btn-add-row:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
 }
 

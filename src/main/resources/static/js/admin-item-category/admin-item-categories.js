@@ -3,6 +3,75 @@
  */
 
 /* ==========================
+   Validation
+========================== */
+function validateCategoryName(input, msgElement) {
+    const value = input.value.trim();
+    
+    if (!value) {
+        input.classList.add('error');
+        input.classList.remove('success');
+        if (msgElement) {
+            msgElement.textContent = '카테고리명을 입력해주세요. (0/10)';
+            msgElement.className = 'validation-msg error';
+        }
+        return false;
+    }
+    
+    input.classList.remove('error');
+    input.classList.add('success');
+    if (msgElement) {
+        msgElement.textContent = `입력됨 (${value.length}/10)`;
+        msgElement.className = 'validation-msg success';
+    }
+    return true;
+}
+
+function attachValidationToInput(input, button, container) {
+    // validation 메시지 요소 생성 (container에 추가)
+    const msgElement = document.createElement('span');
+    msgElement.className = 'validation-msg';
+    container.appendChild(msgElement);
+    
+    // 실시간 검증
+    input.addEventListener('input', () => {
+        const isValid = validateCategoryName(input, msgElement);
+        if (button) {
+            button.disabled = !isValid;
+        }
+    });
+    
+    // 초기 검증
+    validateCategoryName(input, msgElement);
+}
+
+function attachValidationToInputForEdit(input, button, container) {
+    // validation 메시지 요소 생성 (container에 추가)
+    const msgElement = document.createElement('span');
+    msgElement.className = 'validation-msg';
+    container.appendChild(msgElement);
+    
+    // 실시간 검증
+    input.addEventListener('input', () => {
+        const isValid = validateCategoryName(input, msgElement);
+        const originalValue = input.dataset.originalValue || '';
+        const currentValue = input.value.trim();
+        const isChanged = currentValue !== originalValue;
+        
+        // validation이 통과하고 값이 변경된 경우에만 버튼 활성화
+        if (button) {
+            button.disabled = !(isValid && isChanged);
+        }
+    });
+    
+    // 초기 검증 및 버튼 상태 설정
+    validateCategoryName(input, msgElement);
+    if (button) {
+        button.disabled = true; // 초기에는 비활성화
+    }
+}
+
+/* ==========================
    Data Load
 ========================== */
 async function loadCategories() {
@@ -28,8 +97,7 @@ async function loadCategories() {
             const tr = document.createElement('tr');
             tr.append(
                 createCell(i + 1),
-                createNameInputCell(category.id, category.name),
-                createActionCell(category.id)
+                createCategoryCell(category.id, category.name)
             );
             tbody.appendChild(tr);
         });
@@ -52,22 +120,25 @@ function createCell(value) {
     return td;
 }
 
-function createNameInputCell(id, value) {
+function createCategoryCell(id, value) {
     const td = document.createElement('td');
+    
+    // 수평 정렬을 위한 컨테이너
+    const rowContainer = document.createElement('div');
+    rowContainer.className = 'category-row';
+    
+    // 입력 필드
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'category-name-input';
     input.value = value ?? '';
-    input.maxLength = 50;
+    input.maxLength = 10;
     input.dataset.categoryId = id;
-    td.appendChild(input);
-    return td;
-}
-
-function createActionCell(id) {
-    const td = document.createElement('td');
-    const box = document.createElement('div');
-    box.className = 'action-btns';
+    input.dataset.originalValue = value ?? ''; // 초기값 저장
+    
+    // 버튼 그룹
+    const actionBox = document.createElement('div');
+    actionBox.className = 'action-btns';
 
     const edit = document.createElement('button');
     edit.className = 'btn-edit';
@@ -79,8 +150,15 @@ function createActionCell(id) {
     del.textContent = '삭제';
     del.onclick = () => deleteCategory(id);
 
-    box.append(edit, del);
-    td.appendChild(box);
+    actionBox.append(edit, del);
+    rowContainer.append(input, actionBox);
+    td.appendChild(rowContainer);
+    
+    // validation 추가
+    setTimeout(() => {
+        attachValidationToInputForEdit(input, edit, td);
+    }, 0);
+    
     return td;
 }
 
@@ -91,33 +169,43 @@ function createNewCategoryRow(rowNumber) {
     // 번호
     const numberCell = createCell(rowNumber);
 
-    // 빈 입력 필드
-    const inputCell = document.createElement('td');
+    // 카테고리 셀
+    const categoryCell = document.createElement('td');
+    
+    // 수평 정렬을 위한 컨테이너
+    const rowContainer = document.createElement('div');
+    rowContainer.className = 'category-row';
+    
+    // 입력 필드
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'category-name-input';
     input.id = 'new-category-input';
     input.placeholder = '새 카테고리 입력';
-    input.maxLength = 50;
+    input.maxLength = 10;
     
-    // Enter 키로 추가
-    input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            addNewCategory();
-        }
-    });
-    
-    inputCell.appendChild(input);
-
     // 추가 버튼
-    const actionCell = document.createElement('td');
     const addBtn = document.createElement('button');
     addBtn.className = 'btn-add-row';
     addBtn.innerHTML = '<i class="fas fa-plus"></i> 카테고리 추가';
     addBtn.onclick = () => addNewCategory();
-    actionCell.appendChild(addBtn);
+    addBtn.disabled = true; // 초기에는 비활성화
+    
+    // Enter 키로 추가
+    input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !addBtn.disabled) {
+            addNewCategory();
+        }
+    });
+    
+    rowContainer.append(input, addBtn);
+    categoryCell.appendChild(rowContainer);
 
-    tr.append(numberCell, inputCell, actionCell);
+    tr.append(numberCell, categoryCell);
+    
+    // validation 추가
+    attachValidationToInput(input, addBtn, categoryCell);
+    
     return tr;
 }
 
@@ -126,13 +214,16 @@ function createNewCategoryRow(rowNumber) {
 ========================== */
 async function addNewCategory() {
     const input = document.getElementById('new-category-input');
-    const name = input.value.trim();
-
-    if (!name) {
+    const msgElement = input.closest('td').querySelector('.validation-msg');
+    
+    // validation 확인
+    if (!validateCategoryName(input, msgElement)) {
         alert('카테고리명을 입력해주세요.');
         input.focus();
         return;
     }
+    
+    const name = input.value.trim();
 
     try {
         const res = await apiFetch(
@@ -157,13 +248,16 @@ async function addNewCategory() {
 
 async function updateCategory(id) {
     const input = document.querySelector(`input[data-category-id="${id}"]`);
-    const name = input.value.trim();
-
-    if (!name) {
+    const msgElement = input.closest('td').querySelector('.validation-msg');
+    
+    // validation 확인
+    if (!validateCategoryName(input, msgElement)) {
         alert('카테고리명을 입력해주세요.');
         input.focus();
         return;
     }
+    
+    const name = input.value.trim();
 
     try {
         const res = await apiFetch(

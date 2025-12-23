@@ -63,8 +63,26 @@ public class PositionCategoryService {
 
         String name = normalizeNameOrThrow(request.getName());
 
+        boolean isHead = request.getIsHead();
+
+        if (isHead) {
+            boolean exists =
+                    positionCategoryRepository
+                            .existsByCompanyIdAndOrgCategoryIdAndIsHeadTrue(
+                                    companyId,
+                                    orgCategory.getId()
+                            );
+
+            if (exists) {
+                throw new InvalidStateException(
+                        "해당 조직 유형에는 이미 HEAD 직책이 존재합니다."
+                );
+            }
+        }
+
+
         PositionCategory category =
-                PositionCategory.create(company, orgCategory, name, nextOrder);
+                PositionCategory.create(company, orgCategory, name, nextOrder, isHead);
 
         return positionCategoryRepository.save(category).getId();
     }

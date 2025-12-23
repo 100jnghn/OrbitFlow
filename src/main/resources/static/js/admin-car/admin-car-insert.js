@@ -5,18 +5,127 @@
 // 선택된 이미지 파일
 let selectedImageFile = null;
 
+// DOM 요소
+let carNumber, carModel, carAge, carStatus, carDescription;
+let carNumberMsg, carModelMsg, carAgeMsg, carStatusMsg, carDescriptionMsg;
+let saveBtn;
+
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', () => {
+    // DOM 요소 초기화
+    carNumber = document.getElementById('car-number');
+    carModel = document.getElementById('car-model');
+    carAge = document.getElementById('car-age');
+    carStatus = document.getElementById('car-status');
+    carDescription = document.getElementById('car-description');
+
+    carNumberMsg = document.getElementById('car-number-msg');
+    carModelMsg = document.getElementById('car-model-msg');
+    carAgeMsg = document.getElementById('car-age-msg');
+    carStatusMsg = document.getElementById('car-status-msg');
+    carDescriptionMsg = document.getElementById('car-description-msg');
+
+    saveBtn = document.getElementById('btn-save');
+
     // 상태 목록만 로드 (초기값 없음)
     loadStatusOptions();
     initEventListeners();
 });
 
+/* ======================
+   공통 메시지
+====================== */
+function showMsg(el, message, type) {
+    el.textContent = message;
+    el.className = 'hint ' + type;
+}
+
+/* ======================
+   버튼 상태
+====================== */
+function updateSaveButtonState() {
+    saveBtn.disabled = !(
+        validateCarNumber() &&
+        validateCarModel() &&
+        validateCarAge() &&
+        validateCarStatus()
+    );
+}
+
+/* ======================
+   차량 번호 검증 (최대 15자, not null)
+====================== */
+function validateCarNumber() {
+    const v = carNumber.value.trim();
+    if (!v) {
+        showMsg(carNumberMsg, '차량 번호를 입력해주세요. (0/15)', 'error');
+        return false;
+    }
+    showMsg(carNumberMsg, `입력됨 (${v.length}/15)`, 'success');
+    return true;
+}
+
+/* ======================
+   차종 검증 (최대 50자, not null)
+====================== */
+function validateCarModel() {
+    const v = carModel.value.trim();
+    if (!v) {
+        showMsg(carModelMsg, '차종을 입력해주세요. (0/50)', 'error');
+        return false;
+    }
+    showMsg(carModelMsg, `입력됨 (${v.length}/50)`, 'success');
+    return true;
+}
+
+/* ======================
+   운전 가능 나이 검증 (0 이상, not null)
+====================== */
+function validateCarAge() {
+    const v = carAge.value.trim();
+    if (!v) {
+        showMsg(carAgeMsg, '운전 가능 나이를 입력해주세요.', 'error');
+        return false;
+    }
+    const age = parseInt(v);
+    if (isNaN(age) || age < 0) {
+        showMsg(carAgeMsg, '0 이상의 나이를 입력해주세요.', 'error');
+        return false;
+    }
+    showMsg(carAgeMsg, '입력됨', 'success');
+    return true;
+}
+
+/* ======================
+   상태 검증 (not null)
+====================== */
+function validateCarStatus() {
+    const v = carStatus.value;
+    if (!v) {
+        showMsg(carStatusMsg, '상태를 선택해주세요.', 'error');
+        return false;
+    }
+    showMsg(carStatusMsg, '선택됨', 'success');
+    return true;
+}
+
+/* ======================
+   비고 검증 (최대 255자, nullable)
+====================== */
+function validateCarDescription() {
+    const v = carDescription.value.trim();
+    if (v) {
+        showMsg(carDescriptionMsg, `입력됨 (${v.length}/255)`, 'success');
+    } else {
+        carDescriptionMsg.textContent = '';
+    }
+    return true; // nullable이므로 항상 true
+}
+
 /**
  * 이벤트 리스너 초기화
  */
 function initEventListeners() {
-    const saveBtn = document.getElementById('btn-save');
     if (saveBtn) {
         saveBtn.addEventListener('click', handleSave);
     }
@@ -25,6 +134,31 @@ function initEventListeners() {
     if (cancelBtn) {
         cancelBtn.addEventListener('click', handleCancel);
     }
+
+    // 실시간 검증
+    carNumber.addEventListener('input', () => {
+        validateCarNumber();
+        updateSaveButtonState();
+    });
+
+    carModel.addEventListener('input', () => {
+        validateCarModel();
+        updateSaveButtonState();
+    });
+
+    carAge.addEventListener('input', () => {
+        validateCarAge();
+        updateSaveButtonState();
+    });
+
+    carStatus.addEventListener('change', () => {
+        validateCarStatus();
+        updateSaveButtonState();
+    });
+
+    carDescription.addEventListener('input', () => {
+        validateCarDescription();
+    });
 
     // 이미지 업로드 관련
     const imageInput = document.getElementById('car-image-input');
@@ -58,6 +192,9 @@ function initEventListeners() {
             handleImageRemove();
         });
     }
+
+    // 초기 버튼 상태 업데이트
+    updateSaveButtonState();
 }
 
 /**
@@ -142,36 +279,17 @@ function handleImageRemove() {
  * 등록 버튼 핸들러
  */
 async function handleSave() {
-    // 입력값 검증
-    const number = document.getElementById('car-number').value.trim();
-    const model = document.getElementById('car-model').value.trim();
-    const age = document.getElementById('car-age').value.trim();
-    const statusValue = document.getElementById('car-status').value;
-    const description = document.getElementById('car-description').value.trim();
-
-    if (!number) {
-        alert('차량 번호를 입력해주세요.');
-        document.getElementById('car-number').focus();
+    // validation 검증
+    if (!validateCarNumber() || !validateCarModel() || !validateCarAge() || !validateCarStatus()) {
+        alert('입력 항목을 확인해주세요.');
         return;
     }
 
-    if (!model) {
-        alert('차종을 입력해주세요.');
-        document.getElementById('car-model').focus();
-        return;
-    }
-
-    if (!age || age < 18) {
-        alert('운전 가능 나이를 올바르게 입력해주세요. (최소 18세)');
-        document.getElementById('car-age').focus();
-        return;
-    }
-
-    if (!statusValue) {
-        alert('상태를 선택해주세요.');
-        document.getElementById('car-status').focus();
-        return;
-    }
+    const number = carNumber.value.trim();
+    const model = carModel.value.trim();
+    const age = carAge.value.trim();
+    const statusValue = carStatus.value;
+    const description = carDescription.value.trim();
 
     // FormData 생성 (파일 업로드를 위해)
     const formData = new FormData();
