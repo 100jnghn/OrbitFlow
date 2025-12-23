@@ -61,4 +61,12 @@ public class Document extends BaseEntity {
 
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
+
+    public void updateTitle(String title) {
+        this.title = title;
+    }
+
+    public void updateStatus(DocumentStatus status) {
+        this.status = status;
+    }
 }

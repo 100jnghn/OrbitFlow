@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-admin :: layout(
+        ~{::content},
+        ~{fragments/header :: header},
+        ~{sidebar/admin-sidebar :: menu},
+        ~{::pageCss},
+        ~{::pageScript}
+      )}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>기안함</title>
+
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- 페이지별 CSS -->
+    <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/my-documents/my-documents.css}">
+    </th:block>
+
+    <!-- 페이지별 JS -->
+    <th:block th:fragment="pageScript">
+        <script th:src="@{/css/my-documents/my-documents.js}"></script>
+    </th:block>
+</head>
+
+<body>
+
+<div th:fragment="content" class="my-documents-page">
+
+    <!-- 검색 + 상태 필터 (한 줄) -->
+    <div class="search-area">
+
+        <!-- 상태 드롭다운 -->
+        <select id="statusFilter">
+            <option value="ALL">전체</option>
+            <option value="DRAFT">작성중</option>
+            <option value="IN_PROGRESS">결재중</option>
+            <option value="APPROVED">승인완료</option>
+            <option value="REJECTED">반려</option>
+        </select>
+
+        <!-- 검색 타입 -->
+        <select id="searchType">
+            <option value="date">기간</option>
+            <option value="formName">양식명</option>
+            <option value="title">문서 제목</option>
+        </select>
+
+        <!-- 검색 입력 -->
+        <div id="searchInputs"></div>
+
+        <button id="searchBtn">검색</button>
+    </div>
+
+    <!-- 문서 목록 -->
+    <table class="document-table">
+        <thead>
+        <tr>
+            <th>문서 제목</th>
+            <th>양식명</th>
+            <th>작성자</th>
+            <th>작성일</th>
+            <th>상태</th>
+            <th>현재 결재자</th>
+        </tr>
+        </thead>
+        <tbody id="mydocTbody"></tbody>
+    </table>
+
+    <div id="nodataMsg" class="nodata" style="display:none;">
+        조회된 문서가 없습니다.
+    </div>
+
+    <div id="pagination" class="pagination"></div>
+</div>
+
+</body>
+</html>

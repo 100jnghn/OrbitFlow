@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.approval.document.repository;
 
 import com.finalproj.orbitflow.approval.document.dto.DocumentListReqDto;
 import com.finalproj.orbitflow.approval.document.dto.DocumentListResDto;
+import com.finalproj.orbitflow.approval.document.dto.DocumentMyApprovalListResDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -15,10 +16,12 @@ import org.springframework.data.domain.Pageable;
 
 
 public interface DocumentRepositoryCustom {
-    Page<DocumentListResDto> findMyDocuments(
+    Page<DocumentListResDto> findMyWrittenDocuments(
             Long companyId,
             Long employeeId,
             DocumentListReqDto reqDto,
             Pageable pageable
     );
+
+    Page<DocumentMyApprovalListResDto> findMyApprovalDocuments(Long companyId, Long employeeId, DocumentListReqDto reqDto, Pageable pageable);
 }

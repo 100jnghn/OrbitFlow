@@ -1,8 +1,10 @@
 package com.finalproj.orbitflow.approval.document.dto;
 
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
@@ -17,6 +19,8 @@ import java.time.Instant;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class DocumentListResDto {
     private String title;
     private String templateGroupName;
@@ -27,21 +31,5 @@ public class DocumentListResDto {
     private Integer currentOrderNo;
 
 
-    public DocumentListResDto(
-            String title,
-            String templateGroupName,
-            int templateVersion,
-            Instant createdAt,
-            DocumentStatus status,
-            String approvalName,
-            Integer currentOrderNo
-    ) {
-        this.title = title;
-        this.templateGroupName = templateGroupName;
-        this.templateVersion = templateVersion;
-        this.createdAt = createdAt;
-        this.status = status;
-        this.approvalName = approvalName;
-        this.currentOrderNo = currentOrderNo;
-    }
+
 }

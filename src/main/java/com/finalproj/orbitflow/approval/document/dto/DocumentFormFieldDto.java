@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.approval.document.dto;
 
+import com.finalproj.orbitflow.approval.document.enums.FieldType;
 import com.finalproj.orbitflow.approval.formTemplate.schema.FormFieldSchema;
 import lombok.Builder;
 import lombok.Data;
@@ -27,6 +28,9 @@ public class DocumentFormFieldDto {
     private boolean editable;
 
     public static DocumentFormFieldDto from(FormFieldSchema formFieldSchema) {
+
+        FieldType fieldType = FieldType.from(formFieldSchema.getFieldType());
+
         return DocumentFormFieldDto.builder()
                 .fieldId(formFieldSchema.getFieldId())
                 .fieldType(formFieldSchema.getFieldType())
@@ -35,7 +39,7 @@ public class DocumentFormFieldDto {
                 .order(formFieldSchema.getOrder())
                 .meta(formFieldSchema.getMeta())
                 .value(null)
-                .editable(true)
+                .editable(fieldType.isEditable())
                 .build();
     }
 }

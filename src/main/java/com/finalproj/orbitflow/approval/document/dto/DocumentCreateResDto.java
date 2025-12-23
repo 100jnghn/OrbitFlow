@@ -18,16 +18,14 @@ import java.util.List;
 @Builder
 public class DocumentCreateResDto {
     private Long documentId;
-    private String title;
     private DocumentStatus status;
     private List<DocumentFormFieldDto> fields;
 
     public static DocumentCreateResDto from(
-            Long documentId, String title, DocumentStatus status, List<DocumentFormFieldDto> fields
+            Long documentId, DocumentStatus status, List<DocumentFormFieldDto> fields
     ) {
         return DocumentCreateResDto.builder()
                 .documentId(documentId)
-                .title(title)
                 .status(status)
                 .fields(fields)
                 .build();
