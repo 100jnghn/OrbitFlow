@@ -1,0 +1,376 @@
+/* =========================
+   Page Header
+========================= */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.page-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #222;
+    letter-spacing: -1px;
+}
+
+/* =========================
+   Filter Section
+========================= */
+.filter-section {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 20px 24px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 0 0 20%;
+}
+
+.filter-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+}
+
+.filter-select {
+    padding: 12px 14px;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-select:hover {
+    border-color: #4a69bd;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #4a69bd;
+    box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.1);
+}
+
+/* =========================
+   Toggle Switch
+========================= */
+.toggle-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+    cursor: pointer;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    border-radius: 28px;
+    transition: 0.3s;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: #4a69bd;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(22px);
+}
+
+.toggle-switch:hover .toggle-slider {
+    box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.1);
+}
+
+/* =========================
+   Table Container
+========================= */
+.table-container {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* =========================
+   Resource Table (Base)
+========================= */
+.resource-table {
+    width: 100%;
+    margin-top: 16px;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.resource-table thead {
+    background: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.resource-table th,
+.resource-table td {
+    padding: 14px 16px;
+    font-size: 14px;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+
+    /* 한 줄 유지 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    position: relative;
+}
+
+.resource-table th {
+    font-weight: 600;
+    color: #495057;
+}
+
+.resource-table td {
+    color: #555;
+}
+
+/* 번호 열 - 중앙 정렬 */
+.resource-table th:first-child,
+.resource-table td:first-child {
+    text-align: center;
+    font-weight: 600;
+    color: #6c757d;
+}
+
+/* 카테고리 열 - 중앙 정렬 */
+.resource-table th:nth-child(2),
+.resource-table td:nth-child(2) {
+    text-align: center;
+}
+
+/* 예약일, 시작시간, 종료시간 - 중앙 정렬 */
+.resource-table th:nth-child(5),
+.resource-table td:nth-child(5),
+.resource-table th:nth-child(6),
+.resource-table td:nth-child(6),
+.resource-table th:nth-child(7),
+.resource-table td:nth-child(7) {
+    text-align: center;
+}
+
+/* 상태 열 - 중앙 정렬 */
+.resource-table th:nth-child(8),
+.resource-table td:nth-child(8) {
+    text-align: center;
+}
+
+/* 취소 열 - 중앙 정렬 */
+.resource-table th:nth-child(9),
+.resource-table td:nth-child(9) {
+    text-align: center;
+}
+
+.resource-table tbody tr {
+    transition: background 0.2s;
+}
+
+.resource-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.resource-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* =========================
+   Category Badge
+========================= */
+.category-badge {
+    display: inline-flex;        /* 중앙 정렬을 더 안정적으로 */
+    align-items: center;
+    justify-content: center;
+
+    width: 100px;                 /* 모든 badge 동일한 너비 */
+    height: 30px;                /* 동일한 높이 */
+
+    border-radius: 13px;
+    font-size: 12px;
+    font-weight: 600;
+
+    white-space: nowrap;         /* 줄바꿈 방지 */
+}
+
+/* 하늘색 */
+.badge-meeting {
+    background-color: #e3f2fd;
+    color: #1e88e5;
+}
+
+/* 연두색 */
+.badge-car {
+    background-color: #e8f5e9;
+    color: #43a047;
+}
+
+/* 연노랑 */
+.badge-etc {
+    background-color: #fff8e1;
+    color: #f9a825;
+}
+
+/* =========================
+   Status Badge
+========================= */
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    background: #d4edda;
+    color: #155724;
+}
+
+/* =========================
+   Action Buttons
+========================= */
+.action-btns {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-cancel {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+    background: #ffebee;
+    color: #c62828;
+}
+
+.btn-cancel:hover {
+    background: #ffcdd2;
+}
+
+.btn-cancel:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* =========================
+   Empty State
+========================= */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+}
+
+.empty-state i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+}
+
+.app-content {
+    flex: 1;
+    padding: 24px 40px 16px;
+    overflow-y: auto;
+}
+
+/* =========================
+   Pagination
+========================= */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.pagination {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.pagination button {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #555;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination button:hover:not(:disabled) {
+    background: #f8f9fa;
+    border-color: #4a69bd;
+    color: #4a69bd;
+}
+
+.pagination button.active {
+    background: #4a69bd;
+    color: #fff;
+    border-color: #4a69bd;
+}
+
+.pagination button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.pagination-info {
+    font-size: 13px;
+    color: #666;
+    margin: 0 16px;
+}

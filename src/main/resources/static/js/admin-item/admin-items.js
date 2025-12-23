@@ -140,7 +140,7 @@ async function loadItems(categoryId = null, page = 0) {
                 createCell(item.name),
                 createCell(item.description, true),
                 createCell(item.statusName),
-                createActionCell(item.id)
+                createActionCell(item.itemId)
             );
             tbody.appendChild(tr);
         });
@@ -229,6 +229,7 @@ async function loadCategories() {
 ========================== */
 function editItem(id) {
     // 비품 상세 조회 페이지로 이동
+    console.log(id)
     window.location.href = `/view/resource/admin/items/detail?id=${id}`;
 }
 

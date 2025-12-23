@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.resource.item.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  */
 @RequestMapping("/view/resource")
 @Controller
+@Slf4j
 public class ItemViewController {
 
     @GetMapping("/admin/items")
@@ -27,6 +29,7 @@ public class ItemViewController {
             Model model,
             @RequestParam Long id
     ) {
+        log.info("아이디 : " + id);
         model.addAttribute("itemId", id);
         return "admin-item/admin-item";
     }

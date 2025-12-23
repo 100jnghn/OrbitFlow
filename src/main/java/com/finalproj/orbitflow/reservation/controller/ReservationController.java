@@ -8,6 +8,8 @@ import com.finalproj.orbitflow.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.SortDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -36,7 +38,10 @@ public class ReservationController {
             @RequestParam(defaultValue = "false") boolean showPast,
             @RequestParam(required = false) Long statusId,
             @RequestParam(required = false) String typeCode,
-            Pageable pageable
+            @SortDefault.SortDefaults({
+                    @SortDefault(sort = "reservationDate", direction = Sort.Direction.ASC),
+                    @SortDefault(sort = "startTime", direction = Sort.Direction.ASC)
+            }) Pageable pageable
     ) {
         Page<ReservationResDto> result = reservationService.getMyReservations(
                 user.getEmployeeId(),
@@ -93,4 +98,5 @@ public class ReservationController {
                 new ResponseDto(HttpStatus.OK, "예약 취소 성공", null)
         );
     }
+
 }

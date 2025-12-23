@@ -74,28 +74,33 @@
                     <div class="info-grid">
                         <!-- 회의실명 -->
                         <div class="info-item">
-                            <label class="info-label">회의실명</label>
+                            <label class="info-label">회의실명 <span class="required">*</span></label>
                             <input type="text"
                                    class="info-input"
                                    id="room-name"
-                                   placeholder="회의실명을 입력하세요"/>
+                                   placeholder="회의실명을 입력하세요"
+                                   maxlength="30"/>
+                            <span class="hint" id="room-name-msg"></span>
                         </div>
 
                         <!-- 위치 -->
                         <div class="info-item">
-                            <label class="info-label">위치</label>
+                            <label class="info-label">위치 <span class="required">*</span></label>
                             <input type="text"
                                    class="info-input"
                                    id="room-position"
-                                   placeholder="위치를 입력하세요"/>
+                                   placeholder="위치를 입력하세요"
+                                   maxlength="50"/>
+                            <span class="hint" id="room-position-msg"></span>
                         </div>
 
                         <!-- 상태 -->
                         <div class="info-item">
-                            <label class="info-label">상태</label>
+                            <label class="info-label">상태 <span class="required">*</span></label>
                             <select class="info-select" id="room-status">
                                 <option value="">상태 선택</option>
                             </select>
+                            <span class="hint" id="room-status-msg"></span>
                         </div>
                     </div>
 
@@ -105,7 +110,9 @@
                         <input type="text"
                                class="info-textarea"
                                id="room-description"
-                               placeholder="비고 내용을 입력하세요"/>
+                               placeholder="비고 내용을 입력하세요 (선택)"
+                               maxlength="250"/>
+                        <span class="hint" id="room-description-msg"></span>
                     </div>
                 </div>
             </section>

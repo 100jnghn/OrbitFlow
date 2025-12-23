@@ -373,3 +373,32 @@
     padding: 24px 40px 16px;
     overflow-y: auto;
 }
+
+/* =========================
+   Validation
+========================= */
+.required {
+    color: #dc3545;
+    margin-left: 4px;
+}
+
+.hint {
+    font-size: 12px;
+    margin-top: 4px;
+    display: block;
+    min-height: 18px;
+}
+
+.hint.success {
+    color: #28a745;
+}
+
+.hint.error {
+    color: #dc3545;
+}
+
+.btn-primary:disabled {
+    background: #adb5bd;
+    cursor: not-allowed;
+    opacity: 0.6;
+}

@@ -26,11 +26,13 @@ public class ReservationResDto {
 
     // MEETING // CAR // ITEM
     private ReservationTypeCode typeCode;
+    private String typeName;
 
     private Long itemCategoryId;    // item 예약일 때만 사용
     private String itemCategoryName;
 
     private Long resourceId;        // MEETINGROOM // CAR // ITEM의 PK
+    private String resourceName;
 
     private LocalDate reservationDate;  // 예약날짜
     private int startTime;

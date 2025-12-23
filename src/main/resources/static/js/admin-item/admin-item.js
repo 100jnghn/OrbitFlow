@@ -8,8 +8,26 @@ let currentItemId = null;
 // 선택된 이미지 파일 (새로 업로드하는 경우)
 let selectedImageFile = null;
 
+// DOM 요소
+let itemName, itemCategory, itemStatus, itemDescription;
+let itemNameMsg, itemCategoryMsg, itemStatusMsg, itemDescriptionMsg;
+let editBtn;
+
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', () => {
+    // DOM 요소 초기화
+    itemName = document.getElementById('item-name');
+    itemCategory = document.getElementById('item-category');
+    itemStatus = document.getElementById('item-status');
+    itemDescription = document.getElementById('item-description');
+
+    itemNameMsg = document.getElementById('item-name-msg');
+    itemCategoryMsg = document.getElementById('item-category-msg');
+    itemStatusMsg = document.getElementById('item-status-msg');
+    itemDescriptionMsg = document.getElementById('item-description-msg');
+
+    editBtn = document.getElementById('btn-edit');
+
     currentItemId = getItemId();
 
     if (!currentItemId) {
@@ -30,12 +48,81 @@ function getItemId() {
     return new URLSearchParams(window.location.search).get('id');
 }
 
+/* ======================
+   공통 메시지
+====================== */
+function showMsg(el, message, type) {
+    el.textContent = message;
+    el.className = 'hint ' + type;
+}
+
+/* ======================
+   버튼 상태
+====================== */
+function updateEditButtonState() {
+    editBtn.disabled = !(
+        validateItemName() &&
+        validateItemCategory() &&
+        validateItemStatus()
+    );
+}
+
+/* ======================
+   비품명 검증 (최대 50자, not null)
+====================== */
+function validateItemName() {
+    const v = itemName.value.trim();
+    if (!v) {
+        showMsg(itemNameMsg, '비품명을 입력해주세요. (0/50)', 'error');
+        return false;
+    }
+    showMsg(itemNameMsg, `입력됨 (${v.length}/50)`, 'success');
+    return true;
+}
+
+/* ======================
+   카테고리 검증 (필수 선택)
+====================== */
+function validateItemCategory() {
+    const v = itemCategory.value;
+    if (!v) {
+        showMsg(itemCategoryMsg, '카테고리를 선택해주세요.', 'error');
+        return false;
+    }
+    showMsg(itemCategoryMsg, '선택됨', 'success');
+    return true;
+}
+
+/* ======================
+   상태 검증 (필수 선택)
+====================== */
+function validateItemStatus() {
+    const v = itemStatus.value;
+    if (!v) {
+        showMsg(itemStatusMsg, '상태를 선택해주세요.', 'error');
+        return false;
+    }
+    showMsg(itemStatusMsg, '선택됨', 'success');
+    return true;
+}
+
+/* ======================
+   비고 검증 (최대 50자, nullable)
+====================== */
+function validateItemDescription() {
+    const v = itemDescription.value.trim();
+    if (v) {
+        showMsg(itemDescriptionMsg, `입력됨 (${v.length}/50)`, 'success');
+    } else {
+        itemDescriptionMsg.textContent = '';
+    }
+    return true; // nullable이므로 항상 true
+}
 
 /**
  * 이벤트 리스너 초기화
  */
 function initEventListeners() {
-    const editBtn = document.getElementById('btn-edit');
     if (editBtn) {
         editBtn.addEventListener('click', handleEdit);
     }
@@ -44,6 +131,26 @@ function initEventListeners() {
     if (deleteBtn) {
         deleteBtn.addEventListener('click', handleDelete);
     }
+
+    // 실시간 검증
+    itemName.addEventListener('input', () => {
+        validateItemName();
+        updateEditButtonState();
+    });
+
+    itemCategory.addEventListener('change', () => {
+        validateItemCategory();
+        updateEditButtonState();
+    });
+
+    itemStatus.addEventListener('change', () => {
+        validateItemStatus();
+        updateEditButtonState();
+    });
+
+    itemDescription.addEventListener('input', () => {
+        validateItemDescription();
+    });
 
     // 이미지 업로드 관련
     const imageInput = document.getElementById('item-image-input');
@@ -153,29 +260,17 @@ function handleImageRemove() {
  * 수정 버튼
  */
 async function handleEdit() {
-
-    const statusValue = document.getElementById('item-status').value;
-    const categoryValue = document.getElementById('item-category').value;
-
-    console.log("수정 " + currentItemId)
-    console.log("상태값 " + statusValue)
-    console.log("카테고리값 " + categoryValue)
-
-    if (!statusValue) {
-        alert('비품 상태를 선택해주세요.');
-        return;
-    }
-
-    if (!categoryValue) {
-        alert('카테고리를 선택해주세요.');
+    // validation 검증
+    if (!validateItemName() || !validateItemCategory() || !validateItemStatus()) {
+        alert('입력 항목을 확인해주세요.');
         return;
     }
 
     const formData = new FormData();
-    formData.append('name', document.getElementById('item-name').value);
-    formData.append('itemCategoryId', categoryValue);
-    formData.append('description', document.getElementById('item-description').value);
-    formData.append('statusId', statusValue);
+    formData.append('name', itemName.value.trim());
+    formData.append('itemCategoryId', itemCategory.value);
+    formData.append('description', itemDescription.value.trim());
+    formData.append('statusId', itemStatus.value);
 
     // 이미지 파일이 새로 선택된 경우 추가
     if (selectedImageFile) {
@@ -312,8 +407,8 @@ async function loadItemDetail() {
         const result = await response.json();
         const data = result.data;
 
-        document.getElementById('item-name').value = data.name ?? '';
-        document.getElementById('item-description').value = data.description ?? '';
+        itemName.value = data.name ?? '';
+        itemDescription.value = data.description ?? '';
 
         // 등록자 정보 표시
         document.getElementById('uploader-name').textContent = data.uploaderName ?? '-';
@@ -324,6 +419,13 @@ async function loadItemDetail() {
 
         await loadStatusOptions(data.statusId);
         await loadCategoryOptions(data.itemCategoryId);
+
+        // 초기 validation
+        validateItemName();
+        validateItemCategory();
+        validateItemStatus();
+        validateItemDescription();
+        updateEditButtonState();
 
     } catch (error) {
         console.error(error);
