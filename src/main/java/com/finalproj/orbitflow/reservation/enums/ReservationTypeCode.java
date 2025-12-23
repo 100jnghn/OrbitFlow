@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 public enum ReservationTypeCode {
     MEETING("회의실"),
     CAR("차량"),
-    ITEM("비품");
+    ITEM("자원");
 
     private final String description;
 }

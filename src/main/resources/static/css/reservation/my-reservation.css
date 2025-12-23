@@ -63,24 +63,63 @@
     box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.1);
 }
 
-.btn-search {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 12px 18px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    background: #4a69bd;
-    color: #fff;
-    transition: all 0.2s;
-    margin-left: auto;
+/* =========================
+   Toggle Switch
+========================= */
+.toggle-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 0 0 auto;
 }
 
-.btn-search:hover {
-    background: #3a5aa0;
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+    cursor: pointer;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    border-radius: 28px;
+    transition: 0.3s;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: #4a69bd;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(22px);
+}
+
+.toggle-switch:hover .toggle-slider {
+    box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.1);
 }
 
 /* =========================

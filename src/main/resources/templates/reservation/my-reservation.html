@@ -36,27 +36,30 @@
             <label class="filter-label">리소스 카테고리</label>
             <select class="filter-select" id="resource-category-filter">
                 <option value="">전체</option>
-                <option value="MEETING_ROOM">회의실</option>
-                <option value="ITEM">비품</option>
+                <option value="MEETING">회의실</option>
                 <option value="CAR">차량</option>
+                <option value="ITEM">기타 자원</option>
+
             </select>
         </div>
 
         <div class="filter-item">
             <label class="filter-label">상태</label>
-            <select class="filter-select" id="status-filter">
-                <option value="">전체</option>
-                <option value="APPROVED">승인</option>
-                <option value="PENDING">대기</option>
-                <option value="REJECTED">거절</option>
-                <option value="CANCELLED">취소</option>
-            </select>
+            <select class="filter-select" id="status-filter"></select>
         </div>
 
-        <button type="button" class="btn-search" id="btn-search">
-            <i class="fas fa-search"></i>
-            검색
-        </button>
+        <div class="filter-item toggle-wrapper">
+            <label class="filter-label">지난 예약 보기</label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="past-reservations-toggle">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <!--        <button type="button" class="btn-search" id="btn-search">-->
+        <!--            <i class="fas fa-search"></i>-->
+        <!--            검색-->
+        <!--        </button>-->
     </div>
 
     <!-- Table Container -->
@@ -99,7 +102,7 @@
 <!-- User Sidebar Menu -->
 <ul th:fragment="user-sidebar-menu" class="sidebar-menu">
     <li class="selected">
-        <a th:href="@{/view/resource/my-reservations}" class="sidebar-link">
+        <a th:href="@{/view/reservation/me}" class="sidebar-link">
             내 예약 현황
         </a>
     </li>

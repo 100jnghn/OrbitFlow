@@ -60,36 +60,72 @@ function createActionCell(reservation) {
 }
 
 /* ==========================
-   Pagination State
+   Pagination State & Filters
 ========================== */
 let currentPage = 0;
 let totalPages = 0;
 let pageSize = 10;
+let currentFilters = {
+    showPast: false,
+    statusId: null,
+    typeCode: null
+};
 
 /* ==========================
    Data Load
 ========================== */
+async function loadStatuses() {
+    try {
+        const res = await apiFetch(
+            '/api/reservation/status',
+            {method: 'GET'}
+        );
+
+        if(!res.ok) throw new Error();
+
+        const {data} = await res.json();
+        const select = document.getElementById("status-filter")
+
+        select.innerHTML = '<option value="">전체</option>';
+
+        data.forEach(status => {
+            const option = document.createElement('option');
+            option.value = status.id;
+            option.textContent = status.statusName;
+            select.appendChild(option);
+        });
+    } catch(e) {
+        console.error(e);
+        alert("상태 목록 조회 실패");
+    }
+}
+
 async function loadReservations(page = 0) {
     try {
         const params = new URLSearchParams({
-            page,
+            page: page,
             size: pageSize
         });
 
-        const res = await apiFetch(`/api/reservations/me?${params}`, {
+        params.append('showPast', currentFilters.showPast);
+
+        if (currentFilters.statusId !== null) {
+            params.append('statusId', currentFilters.statusId);
+        }
+
+        if (currentFilters.typeCode !== null) {
+            params.append('typeCode', currentFilters.typeCode);
+        }
+
+        const res = await apiFetch(`/api/reservations/me?${params.toString()}`, {
             method: 'GET'
         });
 
         if (!res.ok) throw new Error();
 
-        const json = await res.json();
-        const data = json.data;
-
+        const {data} = await res.json();
         const tbody = document.querySelector('.resource-table tbody');
         tbody.innerHTML = '';
-
-        currentPage = data.number;
-        totalPages = data.totalPages;
 
         if (!data.content || data.content.length === 0) {
             tbody.innerHTML = `
@@ -99,10 +135,13 @@ async function loadReservations(page = 0) {
                     </td>
                 </tr>
             `;
+            document.getElementById('pagination-container').style.display = 'none';
             return;
         }
 
-        const startNumber = currentPage * pageSize;
+        document.getElementById('pagination-container').style.display = 'flex';
+
+        const startNumber = data.number * pageSize;
 
         data.content.forEach((r, i) => {
             const tr = document.createElement('tr');
@@ -116,8 +155,7 @@ async function loadReservations(page = 0) {
                 createCell(formatHour(r.endTime)),
                 createStatusCell(r.reservationStatusName),
                 createActionCell(r)
-            )
-            ;
+            );
             tbody.appendChild(tr);
         });
 
@@ -128,6 +166,7 @@ async function loadReservations(page = 0) {
         alert('예약 목록을 불러오지 못했습니다.');
     }
 }
+
 
 /* ==========================
    Pagination Render
@@ -182,8 +221,54 @@ async function cancelReservation(id) {
 }
 
 /* ==========================
+   Filter Functions
+========================== */
+function applyFilters() {
+    const typeSelect = document.getElementById('resource-category-filter');
+    const statusSelect = document.getElementById('status-filter');
+    const pastToggle = document.getElementById('past-reservations-toggle');
+
+    currentFilters.typeCode = typeSelect?.value || null;
+
+    currentFilters.statusId = statusSelect?.value
+        ? Number(statusSelect.value)
+        : null;
+
+    currentFilters.showPast = pastToggle?.checked ?? false;
+
+    // 필터 변경 시 항상 첫 페이지부터
+    loadReservations(0);
+}
+
+/* ==========================
+   Event Listeners
+========================== */
+function initFilters() {
+    const typeSelect = document.getElementById('resource-category-filter');
+    const statusSelect = document.getElementById('status-filter');
+    const pastToggle = document.getElementById('past-reservations-toggle');
+
+    // 자원 타입 변경 시 자동 검색
+    if (typeSelect) {
+        typeSelect.addEventListener('change', applyFilters);
+    }
+
+    // 상태 변경 시 자동 검색
+    if (statusSelect) {
+        statusSelect.addEventListener('change', applyFilters);
+    }
+
+    // 과거 예약 토글 변경 시 자동 검색
+    if (pastToggle) {
+        pastToggle.addEventListener('change', applyFilters);
+    }
+}
+
+/* ==========================
    Init
 ========================== */
 document.addEventListener('DOMContentLoaded', () => {
+    initFilters();
     loadReservations();
+    loadStatuses();
 });

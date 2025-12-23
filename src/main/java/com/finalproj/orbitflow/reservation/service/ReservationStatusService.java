@@ -1,9 +1,14 @@
 package com.finalproj.orbitflow.reservation.service;
 
+import com.finalproj.orbitflow.reservation.dto.ReservationStatusResDto;
 import com.finalproj.orbitflow.reservation.repository.ReservationStatusRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Please explain the class!!!
@@ -18,4 +23,14 @@ import org.springframework.stereotype.Service;
 public class ReservationStatusService {
 
     private final ReservationStatusRepository reservationStatusRepository;
+
+    @Transactional(readOnly = true)
+    public List<ReservationStatusResDto> getReservationStatuses() {
+
+        return reservationStatusRepository.findAll()
+                .stream()
+                .map(ReservationStatusResDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+
 }
