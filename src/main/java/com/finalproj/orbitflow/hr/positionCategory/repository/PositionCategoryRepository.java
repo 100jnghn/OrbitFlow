@@ -34,4 +34,5 @@ public interface PositionCategoryRepository extends JpaRepository<PositionCatego
 
     List<PositionCategory> findByCompanyIdOrderByIsActiveDescOrderIndexAscCreatedAtDesc(Long companyId);
 
+    boolean existsByCompanyIdAndOrgCategoryIdAndIsHeadTrue(Long companyId, Long id);
 }

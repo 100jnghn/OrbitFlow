@@ -47,7 +47,7 @@ public class OrgPositionUsageService {
 
         Organization org = getActiveOrg(companyId, orgId);
 
-        return repository.findByOrganization_Id(org.getId())
+        return repository.findAllUsagesByOrgId(org.getId())
                 .stream()
                 .map(OrgPositionUsageResDto::from)
                 .toList();
