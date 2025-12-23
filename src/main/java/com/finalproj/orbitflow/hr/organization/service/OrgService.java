@@ -15,10 +15,12 @@ import com.finalproj.orbitflow.hr.organization.dto.OrgResDto;
 import com.finalproj.orbitflow.hr.organization.dto.OrgUpdateReqDto;
 import com.finalproj.orbitflow.hr.organization.entity.Organization;
 import com.finalproj.orbitflow.hr.organization.repository.OrgRepository;
+import com.finalproj.orbitflow.hr.organization.repository.OrgResView;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -273,4 +275,24 @@ public class OrgService {
         if (name.length() > 100) throw new InvalidRequestException("조직명은 100자 이하여야 합니다.");
         return name;
     }
+
+
+
+    public List<OrgResDto> findOrgsByEmployeeId(Long orgId) {
+
+        List<OrgResView> hierarchy = orgRepository.findHierarchy(orgId);
+
+        return hierarchy.stream()
+                .sorted(Comparator.comparing(OrgResView::getOrderIndex))
+                .map(v -> new OrgResDto(
+                        v.getId(),
+                        v.getCategoryId(),
+                        v.getParentOrgId(),
+                        v.getName(),
+                        v.getOrderIndex(),
+                        v.getIsActive() != null && v.getIsActive() == 1
+                ))
+                .toList();
+    }
+
 }

@@ -104,4 +104,15 @@ public class OrgController {
         );
     }
 
+
+    @GetMapping("/include-orgs")
+    public ResponseEntity<ResponseDto> listByIncludeOrgs() {
+
+        List<OrgResDto> orgsByEmployeeId = orgService.findOrgsByEmployeeId(SecurityUtils.getCurrentUser().getOrganizationId());
+
+        return ResponseEntity.ok(
+                new ResponseDto<>(HttpStatus.OK, "소속 조직도 조회 성공", orgsByEmployeeId)
+        );
+    }
 }
+

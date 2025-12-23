@@ -540,7 +540,7 @@ CREATE TABLE approval_line
     company_id  BIGINT                                                         NOT NULL,
     approver_id BIGINT                                                         NULL,
     order_no    INT                                                            NOT NULL,
-    status      ENUM ('DRAFT','SUBMITTED','IN_PROGRESS','APPROVED','REJECTED') NOT NULL,
+    status      ENUM ('WAITING','APPROVED','REJECTED') NOT NULL,
     comment     TEXT,
     decided_at  TIMESTAMP,
     CONSTRAINT uk_al_document_order

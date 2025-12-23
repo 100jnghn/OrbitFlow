@@ -1,0 +1,139 @@
+/* ===============================
+   페이지 래퍼
+   =============================== */
+
+.my-documents-page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+/* ===============================
+   검색 + 상태 필터 (한 줄)
+   =============================== */
+
+.search-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: #f7f9fc;
+    border-radius: 8px;
+    flex-wrap: wrap; /* 화면 작을 때 줄바꿈 */
+}
+
+.search-area select,
+.search-area input[type="text"],
+.search-area input[type="date"] {
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid #d0d7e2;
+    border-radius: 4px;
+    font-size: 13px;
+    background: #fff;
+}
+
+#searchInputs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#searchBtn {
+    height: 32px;
+    padding: 0 14px;
+    background: #2f6fed;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+#searchBtn:hover {
+    background: #255ad6;
+}
+
+/* ===============================
+   문서 테이블
+   =============================== */
+
+.document-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+.document-table th {
+    background: #f2f4f8;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px;
+    border-bottom: 1px solid #e2e6ed;
+    text-align: center;
+}
+
+.document-table td {
+    font-size: 13px;
+    padding: 10px;
+    border-bottom: 1px solid #e2e6ed;
+    text-align: center;
+}
+
+.document-table tbody tr:hover {
+    background: #f9fbff;
+}
+
+.document-table a.doc-link {
+    color: #2f6fed;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.document-table a.doc-link:hover {
+    text-decoration: underline;
+}
+
+/* ===============================
+   No Data
+   =============================== */
+
+.nodata {
+    padding: 40px 0;
+    text-align: center;
+    font-size: 14px;
+    color: #888;
+}
+
+/* ===============================
+   페이지네이션
+   =============================== */
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.pagination button {
+    min-width: 32px;
+    height: 32px;
+    border: 1px solid #d0d7e2;
+    background: #fff;
+    border-radius: 4px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.pagination button.active {
+    background: #2f6fed;
+    border-color: #2f6fed;
+    color: #fff;
+}
+
+.pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

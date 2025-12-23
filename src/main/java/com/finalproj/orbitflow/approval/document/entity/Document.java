@@ -15,6 +15,8 @@ import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -22,7 +24,9 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "document")
 @Getter
+@AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Document extends BaseEntity {
 
     @Id
@@ -57,4 +61,12 @@ public class Document extends BaseEntity {
 
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
+
+    public void updateTitle(String title) {
+        this.title = title;
+    }
+
+    public void updateStatus(DocumentStatus status) {
+        this.status = status;
+    }
 }

@@ -1,0 +1,53 @@
+<div th:fragment="content">
+    <!-- 상태 필터 -->
+    <div class="mydoc-filters">
+        <div class="status-filters">
+            <button class="status-btn active" data-status="ALL">전체</button>
+            <button class="status-btn" data-status="DRAFT">작성중</button>
+            <button class="status-btn" data-status="WAITING">결재중</button>
+            <button class="status-btn" data-status="APPROVED">승인완료</button>
+            <button class="status-btn" data-status="REJECTED">반려</button>
+        </div>
+        <!-- 검색 영역 -->
+        <div class="search-bar">
+            <select id="searchType">
+                <option value="date">기간</option>
+                <option value="formName">양식명</option>
+                <option value="title">문서 제목</option>
+            </select>
+            <span id="searchInputs">
+                <!-- 동적 입력 영역 -->
+                <input type="date" id="startDate"> ~ <input type="date" id="endDate">
+            </span>
+            <button id="searchBtn" type="button">검색</button>
+        </div>
+    </div>
+
+    <!-- 문서 목록 테이블 -->
+    <div class="table-wrap">
+        <table class="mydoc-table">
+            <thead>
+                <tr>
+                    <th>문서 제목</th>
+                    <th>양식명</th>
+                    <th>작성자</th>
+                    <th>작성일</th>
+                    <th>결재 상태</th>
+                    <th>현재 결재자</th>
+                </tr>
+            </thead>
+            <tbody id="mydocTbody">
+                <!-- JS로 동적 렌더링 -->
+            </tbody>
+        </table>
+        <div class="nodata-msg" id="nodataMsg" style="display: none;">
+            조회된 문서가 없습니다.
+        </div>
+    </div>
+
+    <!-- 페이지네이션 -->
+    <div class="pagination" id="pagination">
+        <!-- JS로 동적 렌더링 -->
+    </div>
+</div>
+

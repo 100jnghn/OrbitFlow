@@ -1,130 +1,135 @@
 document.addEventListener('DOMContentLoaded', async () => {
 
     /* ===============================
-       DOM 존재 여부 가드
+       DOM Guard
     ================================ */
     const form = document.getElementById('approvalRuleForm');
     const approvalStepsContainer = document.getElementById('approvalStepsContainer');
     const addStepBtn = document.getElementById('addStepBtn');
-    const prevBtn = document.querySelector('.prev-btn');          // ⭐ 추가
-    const activateBtn = document.querySelector('.activate-btn');  // ⭐ 추가
+    const prevBtn = document.querySelector('.prev-btn');
+    const activateBtn = document.querySelector('.activate-btn');
 
-    if (!form || !approvalStepsContainer) {
-        return;
-    }
+    if (!form || !approvalStepsContainer) return;
 
     /* ===============================
-       상태 변수
+       State
     ================================ */
     let steps = [];
-    let organizations = [];
+    let organizations = []; // 조직 카테고리
 
     const positionsByOrg = new Map();
     const employeesByKey = new Map();
 
     /* ===============================
-       API 호출
+       API
     ================================ */
 
+    // 조직 카테고리
     async function fetchOrganizations() {
         try {
             const res = await apiFetch('/api/admin/org-categories');
             if (!res.ok) return [];
-
             const result = await res.json();
-            const list = result?.data;
-
-            if (!Array.isArray(list)) return [];
-
-            return list
+            return (result?.data || [])
                 .filter(o => o.isActive)
                 .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
                 .map(o => ({id: o.id, name: o.name}));
-
         } catch {
             return [];
         }
     }
 
-    async function fetchPositionsByOrg(orgId) {
-        if (!orgId) return [];
-        if (positionsByOrg.has(orgId)) return positionsByOrg.get(orgId);
-
-        const list = [
-            {id: 1, name: '사원'},
-            {id: 2, name: '대리'},
-            {id: 3, name: '과장'}
-        ];
-
-        positionsByOrg.set(orgId, list);
-        return list;
+    // 카테고리 → 조직
+    async function fetchOrganizationsByCategory(categoryId) {
+        if (!categoryId) return [];
+        const res = await apiFetch(`/api/admin/organizations/by-category/${categoryId}`);
+        if (!res.ok) return [];
+        const result = await res.json();
+        return Array.isArray(result?.data) ? result.data : [];
     }
 
+    // 조직 → 직책
+    async function fetchPositionsByOrg(orgCategoryId) {
+        if (!orgCategoryId) return [];
+
+        // 캐시 체크
+        if (positionsByOrg.has(orgCategoryId)) {
+            return positionsByOrg.get(orgCategoryId);
+        }
+
+        try {
+            const res = await apiFetch(
+                `/api/admin/org-position-policies/${orgCategoryId}`
+            );
+
+            if (!res.ok) {
+                console.warn('fetchPositionsByOrg failed', res.status);
+                return [];
+            }
+
+            const result = await res.json();
+            const list = Array.isArray(result?.data)
+                ? result.data.map(p => ({
+                    id: p.positionCategoryId,
+                    name: p.positionCategoryName
+                }))
+                : [];
+
+            // 캐싱
+            positionsByOrg.set(orgCategoryId, list);
+            return list;
+
+        } catch (e) {
+            console.error('fetchPositionsByOrg error', e);
+            return [];
+        }
+    }
+
+
+    // 조직 + 직책 → 사원
     async function fetchEmployees(orgId, positionId) {
         if (!orgId || !positionId) return [];
-
         const key = `${orgId}_${positionId}`;
         if (employeesByKey.has(key)) return employeesByKey.get(key);
 
+        // TODO 실제 API로 교체
         const list = [
             {id: 101, name: '김철수'},
             {id: 102, name: '이영희'}
         ];
-
         employeesByKey.set(key, list);
         return list;
     }
 
+    // 기존 결재선 조회
     async function fetchApprovalRuleDetail() {
         const templateId = form.dataset.templateId;
         if (!templateId) return null;
 
         try {
             const res = await apiFetch(`/api/form-templates/${templateId}`);
+            if (!res.ok) return null;
 
-            // ⭐ 1. 응답 OK 여부
-            if (!res.ok) {
-                console.warn('template fetch failed', res.status);
-                return null;
-            }
-
-            // ⭐ 2. body 존재 여부 확인
             const text = await res.text();
-            if (!text) {
-                console.warn('empty response body');
-                return null;
-            }
+            if (!text) return null;
 
-            // ⭐ 3. JSON 파싱
             const result = JSON.parse(text);
-
-            console.log('[form template response]', result);
-
-            const template = result.data;
-            if (!template) return null;
-
-            let rule = template.approvalRuleJson ?? template.approvalRule;
-            console.log('[approval rule raw]', rule);
+            let rule =
+                result?.data?.approvalRuleJson ??
+                result?.data?.approvalRule;
 
             if (!rule) return null;
-
-            if (typeof rule === 'string') {
-                rule = JSON.parse(rule);
-            }
-
+            if (typeof rule === 'string') rule = JSON.parse(rule);
             if (!Array.isArray(rule)) return null;
 
             return rule.sort((a, b) => a.step - b.step);
-
-        } catch (e) {
-            console.error('fetchApprovalRuleDetail error', e);
+        } catch {
             return null;
         }
     }
 
-
     /* ===============================
-       렌더링
+       Render
     ================================ */
 
     function renderSteps() {
@@ -133,7 +138,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         steps.forEach((step, idx) => {
             const isFirst = idx === 0;
 
-            const orgOptions = organizations.map(
+            const categoryOptions = organizations.map(
+                c => `<option value="${c.id}" ${step.organizationCategoryId === c.id ? 'selected' : ''}>${c.name}</option>`
+            ).join('');
+
+            const orgOptions = (step.organizations || []).map(
                 o => `<option value="${o.id}" ${step.organizationId === o.id ? 'selected' : ''}>${o.name}</option>`
             ).join('');
 
@@ -150,22 +159,32 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="approval-step-label">Step ${idx + 1}</div>
 
                     <div class="approval-select-group">
-                        <select class="select-org" data-idx="${idx}">
-                            <option value="">조직 지정 *</option>
-                            ${orgOptions}
-                        </select>
-
                         ${!isFirst ? `
+                            <select class="select-org-category" data-idx="${idx}">
+                                <option value="">조직 카테고리 *</option>
+                                ${categoryOptions}
+                            </select>
+
+                            <select class="select-org" data-idx="${idx}" ${!step.organizations.length ? 'disabled' : ''}>
+                                <option value="">조직 *</option>
+                                ${orgOptions}
+                            </select>
+
                             <select class="select-pos" data-idx="${idx}" ${!step.positions.length ? 'disabled' : ''}>
-                                <option value="">직책 지정 *</option>
+                                <option value="">직책 *</option>
                                 ${posOptions}
                             </select>
 
                             <select class="select-employee" data-idx="${idx}" ${!step.positionId ? 'disabled' : ''}>
-                                <option value="">사원 지정 (선택)</option>
+                                <option value="">사원 (선택)</option>
                                 ${empOptions}
                             </select>
-                        ` : ''}
+                        ` : `
+                            <select class="select-org-category" data-idx="${idx}">
+                                <option value="">조직 카테고리 *</option>
+                                ${categoryOptions}
+                            </select>
+                        `}
                     </div>
 
                     ${!isFirst ? `<button class="remove-step-btn" data-idx="${idx}"></button>` : `<div></div>`}
@@ -179,23 +198,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     /* ===============================
-       이벤트 바인딩
+       Events
     ================================ */
 
     function bindEvents() {
+
+        // 조직 카테고리
+        document.querySelectorAll('.select-org-category').forEach(sel => {
+            sel.onchange = async e => {
+                const i = +e.target.dataset.idx;
+                const categoryId = +e.target.value || null;
+
+                steps[i] = {
+                    ...steps[i],
+                    organizationCategoryId: categoryId,
+                    organizationId: null,
+                    positionId: null,
+                    employeeId: null,
+                    organizations: [],
+                    positions: [],
+                    employees: []
+                };
+
+                if (categoryId) {
+                    steps[i].organizations = await fetchOrganizationsByCategory(categoryId);
+                }
+
+                renderSteps();
+            };
+        });
+
+        // 조직
         document.querySelectorAll('.select-org').forEach(sel => {
             sel.onchange = async e => {
                 const i = +e.target.dataset.idx;
                 const orgId = +e.target.value || null;
 
-                steps[i] = {
-                    ...steps[i],
-                    organizationId: orgId,
-                    positionId: null,
-                    employeeId: null,
-                    positions: [],
-                    employees: []
-                };
+                steps[i].organizationId = orgId;
+                steps[i].positionId = null;
+                steps[i].employeeId = null;
+                steps[i].positions = [];
+                steps[i].employees = [];
 
                 if (orgId) {
                     steps[i].positions = await fetchPositionsByOrg(orgId);
@@ -205,6 +248,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             };
         });
 
+        // 직책
         document.querySelectorAll('.select-pos').forEach(sel => {
             sel.onchange = async e => {
                 const i = +e.target.dataset.idx;
@@ -225,6 +269,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             };
         });
 
+        // 사원
         document.querySelectorAll('.select-employee').forEach(sel => {
             sel.onchange = e => {
                 const i = +e.target.dataset.idx;
@@ -232,6 +277,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             };
         });
 
+        // step 삭제
         document.querySelectorAll('.remove-step-btn').forEach(btn => {
             btn.onclick = e => {
                 const i = +e.target.dataset.idx;
@@ -242,14 +288,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     /* ===============================
-       Step 추가
+       Step Add
     ================================ */
     if (addStepBtn) {
         addStepBtn.onclick = () => {
             steps.push({
+                organizationCategoryId: null,
                 organizationId: null,
                 positionId: null,
                 employeeId: null,
+                organizations: [],
                 positions: [],
                 employees: []
             });
@@ -258,8 +306,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     /* ===============================
-       이전 / 활성 버튼
+       Prev / Activate
     ================================ */
+
     if (prevBtn) {
         prevBtn.onclick = () => history.back();
     }
@@ -267,77 +316,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (activateBtn) {
         activateBtn.onclick = async () => {
             const formTemplateId = form.dataset.templateId;
+            if (!formTemplateId) return;
 
-            if (!formTemplateId) {
-                alert('양식 ID가 없습니다.');
+            if (!confirm('이 결재 양식을 활성화하시겠습니까?')) return;
+
+            const res = await apiFetch(
+                `/api/admin/form-templates/${formTemplateId}/publish`,
+                {method: 'POST'}
+            );
+
+            if (!res.ok) {
+                alert('결재 양식 활성화에 실패했습니다.');
                 return;
             }
 
-            // 사용자 확인 (권장 UX)
-            const confirmed = confirm('이 결재 양식을 활성화하시겠습니까?');
-            if (!confirmed) return;
-
-            try {
-                const res = await apiFetch(
-                    `/api/admin/form-templates/${formTemplateId}/publish`,
-                    {
-                        method: 'POST'
-                    }
-                );
-
-                if (!res.ok) {
-                    // body가 없을 수도 있으니 text로 안전 처리
-                    const text = await res.text();
-                    console.error('publish failed:', text);
-                    alert('결재 양식 활성화에 실패했습니다.');
-                    return;
-                }
-
-                // 성공 응답 처리
-                let message = '결재 양식이 활성화되었습니다.';
-                try {
-                    const text = await res.text();
-                    if (text) {
-                        const result = JSON.parse(text);
-                        message = result?.message || message;
-                    }
-                } catch {
-                    // JSON 파싱 실패해도 무시
-                }
-
-                alert(message);
-
-                // ✅ 성공 시 목록 페이지로 이동
-                window.location.href = '/view/admin/approval';
-
-            } catch (error) {
-                console.error('publish error', error);
-                alert('서버 통신 중 오류가 발생했습니다.');
-            }
+            alert('결재 양식이 활성화되었습니다.');
+            window.location.href = '/view/admin/approval';
         };
     }
 
-
     /* ===============================
-       저장
+       Save
     ================================ */
-    form.onsubmit = async (e) => {
+    form.onsubmit = async e => {
         e.preventDefault();
 
         const formTemplateId = form.dataset.templateId;
-        if (!formTemplateId) {
-            alert('양식 ID가 없습니다.');
-            return;
-        }
+        if (!formTemplateId) return;
 
         for (let i = 0; i < steps.length; i++) {
             const s = steps[i];
 
-            if (!s.organizationId) {
+            if (!s.organizationCategoryId) {
+                alert(`Step ${i + 1}의 조직 카테고리를 선택해주세요.`);
+                return;
+            }
+            if (i > 0 && !s.organizationId) {
                 alert(`Step ${i + 1}의 조직을 선택해주세요.`);
                 return;
             }
-
             if (i > 0 && !s.positionId) {
                 alert(`Step ${i + 1}의 직책을 선택해주세요.`);
                 return;
@@ -346,85 +363,68 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const approvalRuleJson = steps.map((s, idx) => ({
             step: idx + 1,
+            organizationCategoryId: s.organizationCategoryId,
             organizationId: s.organizationId,
             positionId: idx === 0 ? null : s.positionId,
             employeeId: idx === 0 ? null : s.employeeId
         }));
 
-        try {
-            const res = await apiFetch(
-                `/api/admin/form-templates/${formTemplateId}/approval-rule`,
-                {
-                    method: 'PATCH',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({approvalRuleJson})
-                }
-            );
-
-            if (!res.ok) {
-                const err = await res.json();
-                alert(err?.message || '결재선 저장에 실패했습니다.');
-                return;
+        await apiFetch(
+            `/api/admin/form-templates/${formTemplateId}/approval-rule`,
+            {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({approvalRuleJson})
             }
+        );
 
-            alert('결재선 규칙이 저장되었습니다.');
-
-        } catch (err) {
-            console.error(err);
-            alert('서버 통신 중 오류가 발생했습니다.');
-        }
+        alert('결재선 규칙이 저장되었습니다.');
     };
 
     /* ===============================
-       초기화
+       Init
     ================================ */
 
     async function init() {
-        // 1️⃣ 조직 목록 먼저 로드
         organizations = await fetchOrganizations();
-
-        // 2️⃣ templateId 기반 기존 결재선 조회
         const detail = await fetchApprovalRuleDetail();
 
-        if (detail && detail.length) {
-            steps = [];
-
+        if (detail?.length) {
             for (const s of detail) {
                 const step = {
+                    organizationCategoryId: s.organizationCategoryId ?? null,
                     organizationId: s.organizationId ?? null,
                     positionId: s.positionId ?? null,
                     employeeId: s.employeeId ?? null,
+                    organizations: [],
                     positions: [],
                     employees: []
                 };
 
-                // 3️⃣ 조직이 있으면 직책 목록 로드
+                if (step.organizationCategoryId) {
+                    step.organizations = await fetchOrganizationsByCategory(step.organizationCategoryId);
+                }
                 if (step.organizationId) {
                     step.positions = await fetchPositionsByOrg(step.organizationId);
                 }
-
-                // 4️⃣ 직책이 있으면 사원 목록 로드
                 if (step.organizationId && step.positionId) {
-                    step.employees = await fetchEmployees(
-                        step.organizationId,
-                        step.positionId
-                    );
+                    step.employees = await fetchEmployees(step.organizationId, step.positionId);
                 }
 
                 steps.push(step);
             }
         } else {
-            // 5️⃣ 기존 결재선이 없을 경우 기본 step
             steps = [{
+                organizationCategoryId: null,
                 organizationId: null,
                 positionId: null,
                 employeeId: null,
+                organizations: [],
                 positions: [],
                 employees: []
             }];
         }
 
-        // 6️⃣ 화면 렌더링
         renderSteps();
     }
 

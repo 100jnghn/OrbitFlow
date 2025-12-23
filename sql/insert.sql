@@ -436,17 +436,17 @@ VALUES (1, JSON_OBJECT('start_date', '2025-01-05', 'end_date', '2025-01-07')),
  * ========================================================= */
 INSERT INTO approval_line
     (document_id, company_id, approver_id, order_no, status)
-VALUES (1, 1, 1, 1, 'IN_PROGRESS'),
-       (1, 1, 1, 2, 'DRAFT'),
-       (2, 1, 1, 1, 'IN_PROGRESS'),
+VALUES (1, 1, 1, 1, 'WAITING'),
+       (1, 1, 1, 2, 'WAITING'),
+       (2, 1, 1, 1, 'WAITING'),
        (3, 1, 1, 1, 'APPROVED'),
-       (4, 1, 1, 1, 'DRAFT'),
+       (4, 1, 1, 1, 'WAITING'),
 
-       (6, 2, 4, 1, 'IN_PROGRESS'),
-       (6, 2, 4, 2, 'DRAFT'),
-       (7, 2, 4, 1, 'IN_PROGRESS'),
+       (6, 2, 4, 1, 'WAITING'),
+       (6, 2, 4, 2, 'WAITING'),
+       (7, 2, 4, 1, 'WAITING'),
        (8, 2, 4, 1, 'APPROVED'),
-       (9, 2, 4, 1, 'DRAFT');
+       (9, 2, 4, 1, 'WAITING');
 
 
 /* =========================================================
