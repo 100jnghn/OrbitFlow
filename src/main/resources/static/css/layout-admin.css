@@ -1,125 +1,118 @@
-/* ================================
-   Admin Layout Override
-================================ */
-.admin-wrapper {
-    background: #f4f5fb;
-}
-
-/* ================================
-   Admin Sidebar
-=============================== */
+/* =========================
+   Sidebar Base
+========================= */
 .admin-sidebar {
-    background: #1f2636;
+    width: 250px;
+    background: #0b1220;
+    color: #cbd5e1;
 }
 
-.admin-sidebar .sidebar-title {
-    color: #d1d5f0;
+/* =========================
+   Menu Wrapper
+========================= */
+.sidebar-menu {
+    padding: 8px 0;
 }
 
-.admin-sidebar .sidebar-logo-icon {
-    color: #5dade2;
-}
-
-/* ❌ [수정] 기존 li.selected의 마진/패딩 간섭 제거 */
-.admin-sidebar .sidebar-menu li.selected {
-    background: transparent; /* 배경색 제거 */
-    margin-left: 0;
-    padding: 0;
-    border-left: none;
-}
-
-/* ✅ [추가] 대분류 클릭 시 활성화 스타일 */
-.admin-sidebar .sidebar-menu li.active .menu-title {
-    color: #fff !important;
-    font-weight: 600;
-}
-
-/* ✅ [추가] 소분류 선택 시 스타일 */
-.admin-sidebar .sub-menu li.selected a {
-    color: #fff !important;
-    font-weight: 600;
-    background: rgba(93, 173, 226, 0.2);
-    display: block;
-    padding-left: 10px;
-    border-left: 3px solid #5dade2;
-}
-
-.admin-sidebar .sidebar-footer {
-    background: #1b2030;
-    color: #aaa;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-/* ================================
-   Admin Sidebar Toggle 핵심 CSS
-================================ */
-
-/* 1. 소분류 기본 숨김 */
-.sidebar-menu .sub-menu {
-    display: none !important;
-    list-style: none;
-    padding: 5px 0 10px 20px;
+/* =========================
+   Menu Item (대분류)
+========================= */
+.sidebar-menu .menu-item {
     margin: 0;
 }
 
-/* 2. active 클래스가 있을 때만 소분류 표시 */
-.sidebar-menu .menu-item.active .sub-menu {
-    display: block !important;
-}
-
-/* 3. 대분류 타이틀 영역 */
+/* 대분류 버튼 */
 .menu-title {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 12px 0;
-    cursor: pointer !important; /* 클릭 가능 표시 */
-    color: #c9ccdd;
-    user-select: none;
+    justify-content: space-between;
+    padding: 12px 18px 12px 16px; /* 왼쪽 여백 살짝 줄임 */
+    font-size: 14px;
+    font-weight: 500;
+    color: #cbd5e1;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.15s ease, color 0.15s ease;
 }
 
-/* 4. 화살표 애니메이션 */
+/* hover */
+.menu-title:hover {
+    background: rgba(255,255,255,0.04);
+    color: #ffffff;
+}
+
+/* =========================
+   Active 대분류
+========================= */
+.menu-item.active .menu-title {
+    background: rgba(255,255,255,0.06);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* 왼쪽 강조 라인 */
+.menu-item.active .menu-title::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: #3b82f6; /* 차분한 블루 */
+    border-radius: 1px;
+}
+
+/* =========================
+   Arrow
+========================= */
 .arrow {
-    transition: transform 0.3s ease;
-    margin-right: 15px;
-    pointer-events: none; /* 아이콘 클릭 간섭 방지 */
+    font-size: 11px;
+    opacity: 0.5;
+    transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 .menu-item.active .arrow {
     transform: rotate(180deg);
+    opacity: 0.9;
 }
 
-/* ================================
-   Admin Content
-================================ */
-.admin-content {
-    background: #f4f5fb;
+/* =========================
+   Sub Menu
+========================= */
+.sub-menu {
+    display: none;
+    padding: 4px 0;
 }
 
-.admin-content .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
+.menu-item.active .sub-menu {
+    display: block;
 }
 
-.admin-content .page-title {
-    font-size: 24px;
-    font-weight: bold;
-    color: #1f2933;
+/* 소분류 */
+.sub-menu li a {
+    display: block;
+    padding: 8px 18px 8px 42px;
+    font-size: 13px;
+    color: #94a3b8;
+    transition: color 0.15s ease;
 }
 
-.admin-content .btn-add {
-    background: #2563eb;
-    border: none;
-    color: #fff;
-    padding: 10px 18px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
+/* 소분류 hover */
+.sub-menu li a:hover {
+    color: #ffffff;
 }
 
-.admin-content .btn-add:hover {
-    background: #1d4ed8;
+/* =========================
+   no-sub 메뉴
+========================= */
+.menu-item.no-sub .menu-title {
+    font-weight: 500;
+}
+
+/* =========================
+   Focus (접근성)
+========================= */
+.menu-title:focus {
+    outline: none;
+    background: rgba(255,255,255,0.06);
 }
