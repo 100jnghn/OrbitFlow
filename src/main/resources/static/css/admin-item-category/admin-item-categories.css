@@ -96,9 +96,16 @@
     border-bottom: none;
 }
 
+/* 카테고리 행 컨테이너 */
+.category-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 /* 카테고리명 입력 필드 */
 .category-name-input {
-    width: 100%;
+    flex: 1;
     padding: 8px 12px;
     font-size: 14px;
     border: 1px solid #ddd;

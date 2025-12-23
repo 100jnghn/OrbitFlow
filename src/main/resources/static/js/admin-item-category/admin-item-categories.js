@@ -27,11 +27,11 @@ function validateCategoryName(input, msgElement) {
     return true;
 }
 
-function attachValidationToInput(input, button) {
-    // validation 메시지 요소 생성
+function attachValidationToInput(input, button, container) {
+    // validation 메시지 요소 생성 (container에 추가)
     const msgElement = document.createElement('span');
     msgElement.className = 'validation-msg';
-    input.parentElement.appendChild(msgElement);
+    container.appendChild(msgElement);
     
     // 실시간 검증
     input.addEventListener('input', () => {
@@ -45,11 +45,11 @@ function attachValidationToInput(input, button) {
     validateCategoryName(input, msgElement);
 }
 
-function attachValidationToInputForEdit(input, button) {
-    // validation 메시지 요소 생성
+function attachValidationToInputForEdit(input, button, container) {
+    // validation 메시지 요소 생성 (container에 추가)
     const msgElement = document.createElement('span');
     msgElement.className = 'validation-msg';
-    input.parentElement.appendChild(msgElement);
+    container.appendChild(msgElement);
     
     // 실시간 검증
     input.addEventListener('input', () => {
@@ -97,8 +97,7 @@ async function loadCategories() {
             const tr = document.createElement('tr');
             tr.append(
                 createCell(i + 1),
-                createNameInputCell(category.id, category.name),
-                createActionCell(category.id)
+                createCategoryCell(category.id, category.name)
             );
             tbody.appendChild(tr);
         });
@@ -121,8 +120,14 @@ function createCell(value) {
     return td;
 }
 
-function createNameInputCell(id, value) {
+function createCategoryCell(id, value) {
     const td = document.createElement('td');
+    
+    // 수평 정렬을 위한 컨테이너
+    const rowContainer = document.createElement('div');
+    rowContainer.className = 'category-row';
+    
+    // 입력 필드
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'category-name-input';
@@ -130,21 +135,10 @@ function createNameInputCell(id, value) {
     input.maxLength = 50;
     input.dataset.categoryId = id;
     input.dataset.originalValue = value ?? ''; // 초기값 저장
-    td.appendChild(input);
     
-    // validation 추가 (나중에 버튼과 연결)
-    setTimeout(() => {
-        const editButton = input.closest('tr').querySelector('.btn-edit');
-        attachValidationToInputForEdit(input, editButton);
-    }, 0);
-    
-    return td;
-}
-
-function createActionCell(id) {
-    const td = document.createElement('td');
-    const box = document.createElement('div');
-    box.className = 'action-btns';
+    // 버튼 그룹
+    const actionBox = document.createElement('div');
+    actionBox.className = 'action-btns';
 
     const edit = document.createElement('button');
     edit.className = 'btn-edit';
@@ -156,8 +150,15 @@ function createActionCell(id) {
     del.textContent = '삭제';
     del.onclick = () => deleteCategory(id);
 
-    box.append(edit, del);
-    td.appendChild(box);
+    actionBox.append(edit, del);
+    rowContainer.append(input, actionBox);
+    td.appendChild(rowContainer);
+    
+    // validation 추가
+    setTimeout(() => {
+        attachValidationToInputForEdit(input, edit, td);
+    }, 0);
+    
     return td;
 }
 
@@ -168,14 +169,27 @@ function createNewCategoryRow(rowNumber) {
     // 번호
     const numberCell = createCell(rowNumber);
 
-    // 빈 입력 필드
-    const inputCell = document.createElement('td');
+    // 카테고리 셀
+    const categoryCell = document.createElement('td');
+    
+    // 수평 정렬을 위한 컨테이너
+    const rowContainer = document.createElement('div');
+    rowContainer.className = 'category-row';
+    
+    // 입력 필드
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'category-name-input';
     input.id = 'new-category-input';
     input.placeholder = '새 카테고리 입력';
     input.maxLength = 50;
+    
+    // 추가 버튼
+    const addBtn = document.createElement('button');
+    addBtn.className = 'btn-add-row';
+    addBtn.innerHTML = '<i class="fas fa-plus"></i> 카테고리 추가';
+    addBtn.onclick = () => addNewCategory();
+    addBtn.disabled = true; // 초기에는 비활성화
     
     // Enter 키로 추가
     input.addEventListener('keypress', (e) => {
@@ -184,21 +198,13 @@ function createNewCategoryRow(rowNumber) {
         }
     });
     
-    inputCell.appendChild(input);
+    rowContainer.append(input, addBtn);
+    categoryCell.appendChild(rowContainer);
 
-    // 추가 버튼
-    const actionCell = document.createElement('td');
-    const addBtn = document.createElement('button');
-    addBtn.className = 'btn-add-row';
-    addBtn.innerHTML = '<i class="fas fa-plus"></i> 카테고리 추가';
-    addBtn.onclick = () => addNewCategory();
-    addBtn.disabled = true; // 초기에는 비활성화
-    actionCell.appendChild(addBtn);
-
-    tr.append(numberCell, inputCell, actionCell);
+    tr.append(numberCell, categoryCell);
     
     // validation 추가
-    attachValidationToInput(input, addBtn);
+    attachValidationToInput(input, addBtn, categoryCell);
     
     return tr;
 }
@@ -208,7 +214,7 @@ function createNewCategoryRow(rowNumber) {
 ========================== */
 async function addNewCategory() {
     const input = document.getElementById('new-category-input');
-    const msgElement = input.parentElement.querySelector('.validation-msg');
+    const msgElement = input.closest('td').querySelector('.validation-msg');
     
     // validation 확인
     if (!validateCategoryName(input, msgElement)) {
@@ -242,7 +248,7 @@ async function addNewCategory() {
 
 async function updateCategory(id) {
     const input = document.querySelector(`input[data-category-id="${id}"]`);
-    const msgElement = input.parentElement.querySelector('.validation-msg');
+    const msgElement = input.closest('td').querySelector('.validation-msg');
     
     // validation 확인
     if (!validateCategoryName(input, msgElement)) {
