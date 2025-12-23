@@ -1,10 +1,7 @@
-package com.finalproj.orbitflow.attendance.history.dto;
+package com.finalproj.orbitflow.attendance.monthly_history.dto;
 
 import lombok.Builder;
 import lombok.Getter;
-
-import java.time.LocalDate;
-import java.time.LocalTime;
 
 /**
  * Please explain the class!!!

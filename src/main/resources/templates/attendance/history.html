@@ -17,12 +17,16 @@
     <h1 class="page-title">월별 근태 조회</h1>
 
     <div class="search-section">
-        <label for="monthSelect">조회 월:</label>
-        <select id="monthSelect" class="form-select-sm">
-            <option value="2025-12">2025년 12월</option>
-            <option value="2025-11">2025년 11월</option>
-            <option value="2025-10">2025년 10월</option>
-        </select>
+        <label>조회 월:</label>
+        <div class="custom-dropdown" id="monthDropdown">
+            <div class="dropdown-selected">
+                <span id="selectedMonthText">연도 선택</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <ul class="dropdown-list" id="monthList">
+            </ul>
+        </div>
+        <input type="hidden" id="monthSelect" value="">
     </div>
 
     <div class="summary-container">
@@ -60,7 +64,7 @@
                 <option value="ON_TIME">정상출근</option>
                 <option value="LATE">지각</option>
                 <option value="ABSENT">결근</option>
-                <option value="BEFORE_WORK">출근전</option>
+                <option value="BEFORE_WORK">휴가</option>
             </select>
         </div>
         <table class="history-table" id="attendanceTable">

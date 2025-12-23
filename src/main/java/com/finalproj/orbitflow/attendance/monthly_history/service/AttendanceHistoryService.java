@@ -1,11 +1,11 @@
-package com.finalproj.orbitflow.attendance.history.service;
+package com.finalproj.orbitflow.attendance.monthly_history.service;
 
 import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
 import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
 import com.finalproj.orbitflow.attendance.commute.repository.AttendanceRepository;
-import com.finalproj.orbitflow.attendance.history.dto.DailyAttRecordResDto;
-import com.finalproj.orbitflow.attendance.history.dto.MonthlyAttHistoryResDto;
-import com.finalproj.orbitflow.attendance.history.dto.MonthlyHistoryResDto;
+import com.finalproj.orbitflow.attendance.monthly_history.dto.DailyAttRecordResDto;
+import com.finalproj.orbitflow.attendance.monthly_history.dto.MonthlyAttHistoryResDto;
+import com.finalproj.orbitflow.attendance.monthly_history.dto.MonthlyHistoryResDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,9 +24,6 @@ public class AttendanceHistoryService {
 
     private final AttendanceRepository attendanceRepository;
 
-    /**
-     * 리팩토링 핵심: 컨트롤러를 위해 요약과 목록을 한 번에 준비하는 통합 메서드
-     */
     public MonthlyHistoryResDto getMonthlyHistoryData(Long empId, int year, int month, String status, Pageable pageable) {
         return MonthlyHistoryResDto.builder()
                 .summary(getMonthlySummary(empId, year, month))
@@ -34,7 +31,7 @@ public class AttendanceHistoryService {
                 .build();
     }
 
-    // [내부 로직 1] 페이징 처리된 목록 조회
+
     private Page<DailyAttRecordResDto> getMonthlyHistoryPaged(Long employeeId, int year, int month, String status, Pageable pageable) {
         LocalDate startDate = LocalDate.of(year, month, 1);
         LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
@@ -45,7 +42,7 @@ public class AttendanceHistoryService {
                 .map(this::convertToDto);
     }
 
-    // [내부 로직 2] 상단 요약 정보 계산
+    // 상단 요약 정보 계산(총 근무시간/지각횟수 /휴가/결근일수)
     private MonthlyAttHistoryResDto getMonthlySummary(Long employeeId, int year, int month) {
         LocalDate startDate = LocalDate.of(year, month, 1);
         LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
@@ -68,6 +65,8 @@ public class AttendanceHistoryService {
                 .leaveAbsentCount(absentCount)
                 .build();
     }
+
+
 
     private DailyAttRecordResDto convertToDto(Attendance a) {
         long diffMin = 0;

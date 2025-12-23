@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.history.scheduler;
+package com.finalproj.orbitflow.attendance.monthly_history.scheduler;
 
 import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
 import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;

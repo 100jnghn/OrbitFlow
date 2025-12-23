@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.history.dto;
+package com.finalproj.orbitflow.attendance.monthly_history.dto;
 
 import lombok.Builder;
 import lombok.Getter;

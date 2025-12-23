@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.history.controller;
+package com.finalproj.orbitflow.attendance.monthly_history.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
