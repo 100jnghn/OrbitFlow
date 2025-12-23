@@ -1,14 +1,36 @@
-/* 게시판 관리자 페이지 스타일 */
+/* 게시판 관리자 페이지 스타일 - 통일된 디자인 시스템 */
+
+/* 컬러 팔레트 */
+:root {
+    --primary-color: #4F46E5;
+    --primary-hover: #4338CA;
+    --secondary-color: #6366F1;
+    --success-color: #10B981;
+    --danger-color: #EF4444;
+    --danger-hover: #DC2626;
+    --warning-color: #F59E0B;
+    --neutral-50: #F9FAFB;
+    --neutral-100: #F3F4F6;
+    --neutral-200: #E5E7EB;
+    --neutral-300: #D1D5DB;
+    --neutral-400: #9CA3AF;
+    --neutral-500: #6B7280;
+    --neutral-600: #4B5563;
+    --neutral-700: #374151;
+    --neutral-800: #1F2937;
+    --neutral-900: #111827;
+}
 
 .board-admin-container {
     max-width: 1400px;
     margin: 0 auto;
+    padding: 24px;
 }
 
 .admin-section {
     background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     padding: 32px;
     margin-bottom: 32px;
 }
@@ -21,39 +43,47 @@
 }
 
 .section-title {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 600;
-    color: #1e3a5f;
+    color: var(--neutral-800);
     margin: 0;
+    letter-spacing: -0.02em;
 }
 
 .btn-add {
-    background: #2563eb;
+    background: var(--primary-color);
     border: none;
     color: #fff;
-    padding: 10px 18px;
-    border-radius: 6px;
+    padding: 10px 20px;
+    border-radius: 8px;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
 }
 
 .btn-add:hover {
-    background: #1d4ed8;
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 
 .btn-add i {
-    font-size: 12px;
+    font-size: 13px;
 }
 
 /* 테이블 스타일 */
 .table-container {
-    overflow-x: auto;
     margin-bottom: 24px;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--neutral-200);
 }
 
 .admin-table {
@@ -63,27 +93,53 @@
 }
 
 .admin-table thead {
-    background: #f9fafb;
+    background: var(--neutral-50);
 }
 
 .admin-table th {
-    padding: 12px 16px;
+    padding: 14px 16px;
     text-align: left;
     font-weight: 600;
     font-size: 14px;
-    color: #374151;
-    border-bottom: 2px solid #e5e7eb;
+    color: var(--neutral-700);
+    border-bottom: 2px solid var(--neutral-200);
+    white-space: nowrap;
+}
+
+.admin-table th:first-child {
+    text-align: center;
+    width: 80px;
+}
+
+.admin-table th:last-child {
+    text-align: center;
+    width: 200px;
 }
 
 .admin-table td {
     padding: 16px;
     font-size: 14px;
-    color: #111827;
-    border-bottom: 1px solid #e5e7eb;
+    color: var(--neutral-800);
+    border-bottom: 1px solid var(--neutral-200);
+    vertical-align: middle;
+}
+
+.admin-table td:first-child {
+    text-align: center;
+    color: var(--neutral-500);
+    font-weight: 500;
+}
+
+.admin-table td:last-child {
+    text-align: center;
+}
+
+.admin-table tbody tr {
+    transition: background-color 0.15s ease;
 }
 
 .admin-table tbody tr:hover {
-    background: #f9fafb;
+    background: var(--neutral-50);
 }
 
 .admin-table tbody tr:last-child td {
@@ -92,32 +148,40 @@
 
 /* 버튼 스타일 */
 .btn-action {
-    padding: 6px 12px;
+    padding: 8px 16px;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
-    margin-right: 8px;
+    transition: all 0.2s ease;
+    margin: 0 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
 }
 
 .btn-modify {
-    background: #2563eb;
+    background: var(--primary-color);
     color: #fff;
 }
 
 .btn-modify:hover {
-    background: #1d4ed8;
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
 }
 
 .btn-delete {
-    background: #ef4444;
+    background: var(--danger-color);
     color: #fff;
 }
 
 .btn-delete:hover {
-    background: #dc2626;
+    background: var(--danger-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
 }
 
 /* 토글 스위치 스타일 */
@@ -141,7 +205,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc;
+    background-color: var(--neutral-300);
     transition: 0.3s;
     border-radius: 26px;
 }
@@ -156,10 +220,11 @@
     background-color: white;
     transition: 0.3s;
     border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .toggle-switch input:checked + .toggle-slider {
-    background-color: #2563eb;
+    background-color: var(--primary-color);
 }
 
 .toggle-switch input:checked + .toggle-slider:before {
@@ -169,22 +234,34 @@
 .toggle-label {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 12px;
 }
 
 .toggle-label span {
     font-size: 14px;
-    color: #6b7280;
+    color: var(--neutral-600);
     min-width: 60px;
+    text-align: center;
 }
 
 .toggle-label .status-active {
-    color: #2563eb;
-    font-weight: 500;
+    color: var(--primary-color);
+    font-weight: 600;
 }
 
 .toggle-label .status-inactive {
-    color: #9ca3af;
+    color: var(--neutral-400);
+    font-weight: 500;
+}
+
+/* 비활성화 상태일 때 토글 슬라이더 색상 변경 */
+.toggle-switch input:not(:checked) + .toggle-slider {
+    background-color: var(--neutral-300);
+}
+
+.toggle-switch input:not(:checked) + .toggle-slider:before {
+    background-color: white;
 }
 
 /* 페이지네이션 스타일 */
@@ -198,27 +275,29 @@
 
 .pagination button,
 .pagination span {
-    padding: 8px 12px;
-    border: 1px solid #e5e7eb;
+    padding: 10px 14px;
+    border: 1px solid var(--neutral-300);
     background: #fff;
-    color: #374151;
-    border-radius: 4px;
+    color: var(--neutral-700);
+    border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
-    transition: all 0.2s;
-    min-width: 36px;
+    transition: all 0.2s ease;
+    min-width: 40px;
     text-align: center;
+    font-weight: 500;
 }
 
 .pagination button:hover:not(:disabled) {
-    background: #f9fafb;
-    border-color: #2563eb;
-    color: #2563eb;
+    background: var(--neutral-50);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 .pagination button:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
+    background: var(--neutral-100);
 }
 
 .pagination .page-number {
@@ -226,21 +305,23 @@
 }
 
 .pagination .page-number.active {
-    background: #2563eb;
+    background: var(--primary-color);
     color: #fff;
-    border-color: #2563eb;
+    border-color: var(--primary-color);
+    font-weight: 600;
 }
 
 .pagination .page-number:hover:not(.active) {
-    background: #f9fafb;
-    border-color: #2563eb;
-    color: #2563eb;
+    background: var(--neutral-50);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 .pagination .ellipsis {
     cursor: default;
     border: none;
     background: transparent;
+    color: var(--neutral-400);
 }
 
 /* 모달 스타일 */
@@ -252,124 +333,157 @@
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.6);
+    background-color: rgba(0, 0, 0, 0.5);
     overflow: auto;
+    backdrop-filter: blur(2px);
 }
 
 .modal-content {
     background-color: #fff;
     margin: 5% auto;
     padding: 0;
-    border-radius: 8px;
+    border-radius: 12px;
     width: 90%;
-    max-width: 500px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    max-width: 600px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    animation: modalFadeIn 0.2s ease;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px 24px;
-    border-bottom: 1px solid #e5e7eb;
+    padding: 24px 28px;
+    border-bottom: 1px solid var(--neutral-200);
 }
 
 .modal-header h3 {
     margin: 0;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 600;
-    color: #1e3a5f;
+    color: var(--neutral-800);
+    letter-spacing: -0.02em;
 }
 
 .close {
-    color: #9ca3af;
+    color: var(--neutral-400);
     font-size: 28px;
     font-weight: 300;
     cursor: pointer;
     line-height: 1;
-    transition: color 0.2s;
+    transition: color 0.2s ease;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
 }
 
 .close:hover {
-    color: #111827;
+    color: var(--neutral-800);
+    background: var(--neutral-100);
 }
 
 .modal-body {
-    padding: 24px;
+    padding: 28px;
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     font-size: 14px;
-    font-weight: 500;
-    color: #374151;
+    font-weight: 600;
+    color: var(--neutral-700);
 }
 
 .form-group input,
 .form-group textarea {
     width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
+    padding: 12px 16px;
+    border: 1px solid var(--neutral-300);
+    border-radius: 8px;
     font-size: 14px;
     font-family: inherit;
-    transition: border-color 0.2s;
+    transition: all 0.2s ease;
     box-sizing: border-box;
+    color: var(--neutral-800);
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #2563eb;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
 .form-group textarea {
     resize: vertical;
+    min-height: 120px;
 }
 
 .modal-actions {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    margin-top: 24px;
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid var(--neutral-200);
 }
 
 .btn-cancel {
-    padding: 10px 20px;
-    border: 1px solid #d1d5db;
+    padding: 12px 24px;
+    border: 1px solid var(--neutral-300);
     background: #fff;
-    color: #374151;
-    border-radius: 6px;
+    color: var(--neutral-700);
+    border-radius: 8px;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
 }
 
 .btn-cancel:hover {
-    background: #f9fafb;
-    border-color: #9ca3af;
+    background: var(--neutral-50);
+    border-color: var(--neutral-400);
+    color: var(--neutral-800);
 }
 
 .btn-submit {
-    padding: 10px 20px;
+    padding: 12px 24px;
     border: none;
-    background: #2563eb;
+    background: var(--primary-color);
     color: #fff;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
 }
 
 .btn-submit:hover {
-    background: #1d4ed8;
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 
 /* 게시판 모달 추가 스타일 */
@@ -379,40 +493,42 @@
 
 .form-label {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     font-size: 14px;
     font-weight: 600;
-    color: #374151;
+    color: var(--neutral-700);
 }
 
 .form-input {
     width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
+    padding: 12px 16px;
+    border: 1px solid var(--neutral-300);
+    border-radius: 8px;
     font-size: 14px;
     font-family: inherit;
-    transition: border-color 0.2s;
+    transition: all 0.2s ease;
     box-sizing: border-box;
+    color: var(--neutral-800);
 }
 
 .form-input:focus {
     outline: none;
-    border-color: #2563eb;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
 /* 권한 섹션 */
 .permission-section {
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    padding: 16px;
-    background: #f9fafb;
+    border: 1px solid var(--neutral-200);
+    border-radius: 8px;
+    padding: 20px;
+    background: var(--neutral-50);
 }
 
 .permission-search {
     display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
+    gap: 10px;
+    margin-bottom: 20px;
 }
 
 .permission-search .form-input {
@@ -420,31 +536,35 @@
 }
 
 .btn-search {
-    padding: 10px 16px;
-    background: #2563eb;
+    padding: 12px 20px;
+    background: var(--primary-color);
     color: #fff;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
-    transition: background 0.2s;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
 .btn-search:hover {
-    background: #1d4ed8;
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 
 .employee-search-results {
-    max-height: 200px;
+    max-height: 240px;
     overflow-y: auto;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
+    border: 1px solid var(--neutral-200);
+    border-radius: 8px;
     background: #fff;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
 .employee-list {
@@ -454,14 +574,14 @@
 }
 
 .employee-item {
-    padding: 12px 16px;
-    border-bottom: 1px solid #e5e7eb;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--neutral-200);
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.15s ease;
 }
 
 .employee-item:hover {
-    background: #f3f4f6;
+    background: var(--neutral-50);
 }
 
 .employee-item:last-child {
@@ -469,43 +589,44 @@
 }
 
 .employee-name {
-    font-weight: 500;
-    color: #111827;
-    margin-bottom: 4px;
+    font-weight: 600;
+    color: var(--neutral-800);
+    margin-bottom: 6px;
+    font-size: 14px;
 }
 
 .employee-details {
-    font-size: 12px;
-    color: #6b7280;
+    font-size: 13px;
+    color: var(--neutral-500);
 }
 
 .no-results {
-    padding: 16px;
+    padding: 24px;
     text-align: center;
-    color: #9ca3af;
+    color: var(--neutral-400);
     font-size: 14px;
 }
 
 .selected-employees {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px;
 }
 
 .selected-employee {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 12px;
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    border-radius: 6px;
+    padding: 10px 14px;
+    background: #EEF2FF;
+    border: 1px solid #C7D2FE;
+    border-radius: 8px;
     font-size: 14px;
 }
 
 .selected-employee .employee-info {
     display: inline;
-    color: #1e40af;
+    color: var(--primary-color);
     font-weight: 500;
     white-space: nowrap;
 }
@@ -513,7 +634,7 @@
 .selected-employee .remove-btn {
     background: transparent;
     border: none;
-    color: #ef4444;
+    color: var(--danger-color);
     cursor: pointer;
     padding: 0;
     line-height: 1;
@@ -524,7 +645,7 @@
     height: 18px;
     border-radius: 3px;
     flex-shrink: 0;
-    transition: background 0.2s;
+    transition: background 0.2s ease;
     margin-left: 6px;
     min-width: 18px;
     min-height: 18px;
@@ -535,32 +656,32 @@
     font-size: 12px;
     display: inline-block;
     line-height: 1;
-    color: #ef4444;
+    color: var(--danger-color);
     font-weight: bold;
 }
 
 .selected-employee .remove-btn:hover {
-    background: #e5e7eb;
+    background: var(--neutral-200);
 }
 
 .selected-employee .remove-btn:hover i {
-    color: #dc2626;
+    color: var(--danger-hover);
 }
 
 /* 게시판 기능 */
 .board-features {
     display: flex;
-    gap: 24px;
-    margin-bottom: 12px;
+    gap: 32px;
+    margin-bottom: 16px;
 }
 
 .feature-option {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     cursor: pointer;
     font-size: 14px;
-    color: #374151;
+    color: var(--neutral-700);
 }
 
 .feature-option input[type="radio"],
@@ -568,37 +689,41 @@
     width: 18px;
     height: 18px;
     cursor: pointer;
+    accent-color: var(--primary-color);
 }
 
 .feature-option span {
     user-select: none;
+    font-weight: 500;
 }
 
 /* 삭제 모달 */
 .delete-modal-content {
-    max-width: 400px;
+    max-width: 420px;
 }
 
 .delete-message {
-    color: #6b7280;
-    font-size: 14px;
+    color: var(--neutral-600);
+    font-size: 15px;
     line-height: 1.6;
-    margin-bottom: 24px;
+    margin-bottom: 28px;
+    text-align: center;
 }
 
 .btn-delete-confirm {
-    padding: 10px 20px;
+    padding: 12px 24px;
     border: none;
-    background: #ef4444;
+    background: var(--danger-color);
     color: #fff;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
 }
 
 .btn-delete-confirm:hover {
-    background: #dc2626;
+    background: var(--danger-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
-
