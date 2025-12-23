@@ -44,6 +44,10 @@ public class PositionCategory extends BaseEntity {
     @Column(name = "order_index")
     private Integer orderIndex;
 
+    @Getter
+    @Column(name = "is_head", nullable = false)
+    private Boolean isHead;
+
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
 
@@ -52,13 +56,15 @@ public class PositionCategory extends BaseEntity {
             Company company,
             OrgCategory orgCategory,
             String name,
-            int orderIndex
+            int orderIndex,
+            boolean isHead
     ) {
         PositionCategory category = new PositionCategory();
         category.company = company;
         category.orgCategory = orgCategory;
         category.name = name;
         category.orderIndex = orderIndex;
+        category.isHead = isHead;
         category.isActive = true;
         return category;
     }

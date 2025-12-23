@@ -15,5 +15,6 @@ import lombok.NoArgsConstructor;
 public class PositionCategoryReqDto {
     private String name;
     private Long orgCategoryId;
+    private Boolean isHead;
     private Boolean isActive;
 }
