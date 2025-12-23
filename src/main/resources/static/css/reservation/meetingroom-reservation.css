@@ -87,6 +87,8 @@
    Grid Container
 ========================= */
 .grid-container {
+    max-width: 1200px;     /* 원하는 최대 폭 */
+    margin: 0 auto;        /* 가운데 정렬 핵심 */
     background: #fff;
     border-radius: 12px;
     padding: 24px;
@@ -139,15 +141,14 @@
 }
 
 .time-header {
-    flex: 1;
-    min-width: 40px;
+    flex: 0 0 56px;     /* 고정 폭 */
+    min-width: 56px;
     padding: 8px;
     background: #f8f9fa;
     border: 1px solid #e9ecef;
     border-left: none;
     font-weight: 600;
     font-size: 12px;
-    color: #495057;
     text-align: center;
     white-space: nowrap;
 }
@@ -158,7 +159,7 @@
 }
 
 .time-cell {
-    flex: 1;
+    flex: 0 0 56px;     /* ⭐ shrink 방지 */
     min-width: 56px;
     padding: 12px 8px;
     border: 1px solid #e9ecef;
@@ -168,7 +169,6 @@
     font-size: 12px;
     cursor: pointer;
     transition: all 0.2s;
-    position: relative;
 }
 
 .time-header:last-child {
