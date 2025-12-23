@@ -1,7 +1,10 @@
 package com.finalproj.orbitflow.reservation.repository;
 
 import com.finalproj.orbitflow.reservation.entity.ReservationStatus;
+import com.finalproj.orbitflow.reservation.enums.ReservationStatusCode;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
 
 /**
  * Please explain the class!!!
@@ -12,4 +15,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface ReservationStatusRepository extends JpaRepository<ReservationStatus, Long> {
 
+    ReservationStatus findByStatusCode(ReservationStatusCode reservationStatusCode);
 }
