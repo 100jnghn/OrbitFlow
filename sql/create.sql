@@ -91,13 +91,12 @@ CREATE TABLE position_category
     is_active          BOOLEAN     NOT NULL DEFAULT TRUE,
     -- 활성일 때만 정렬 유니크를 적용하기 위한 가상 컬럼
     active_order_index INT
-                       GENERATED ALWAYS AS (
-                           CASE
-                               WHEN is_active = TRUE THEN order_index
-                               ELSE NULL
-                               END
-                           ) STORED,
-
+        GENERATED ALWAYS AS (
+            CASE
+                WHEN is_active = TRUE THEN order_index
+                ELSE NULL
+                END
+            ) STORED,
     created_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
@@ -358,12 +357,12 @@ CREATE TABLE form_template
 
     -- ✅ ACTIVE 상태에서만 version을 유니크하게 만들기 위한 컬럼
     active_version       INT
-                         GENERATED ALWAYS AS (
-                             CASE
-                                 WHEN status = 'ACTIVE' THEN version
-                                 ELSE NULL
-                                 END
-                             ) STORED,
+        GENERATED ALWAYS AS (
+            CASE
+                WHEN status = 'ACTIVE' THEN version
+                ELSE NULL
+                END
+            ) STORED,
 
     -- ===============================
     -- CONSTRAINTS
@@ -752,12 +751,12 @@ CREATE TABLE employee_signature
 
     -- 활성 서명만 UNIQUE 제약을 걸기 위한 가상 컬럼
     active_flag TINYINT
-                GENERATED ALWAYS AS (
-                    CASE
-                        WHEN is_active = TRUE THEN 1
-                        ELSE NULL
-                        END
-                    ),
+        GENERATED ALWAYS AS (
+            CASE
+                WHEN is_active = TRUE THEN 1
+                ELSE NULL
+                END
+            ),
 
     created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -992,6 +991,7 @@ CREATE TABLE car
             ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
+
 -- 4. 아이템 카테고리
 CREATE TABLE item_category
 (
@@ -1033,6 +1033,7 @@ CREATE TABLE item
             ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
+
 -- 6. 예약 상태
 CREATE TABLE reservation_status
 (

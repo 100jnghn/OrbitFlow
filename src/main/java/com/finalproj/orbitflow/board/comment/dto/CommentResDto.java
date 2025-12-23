@@ -17,6 +17,7 @@ public class CommentResDto {
         private String writerName;
         private String content;
         private Instant createdAt;
+        private Instant updatedAt;
 
         public static ListInfo from(Comment comment) {
             return ListInfo.builder()
@@ -25,6 +26,7 @@ public class CommentResDto {
                     .writerName(comment.getWriter().getName())
                     .content(comment.getCommentContent())
                     .createdAt(comment.getCreatedAt())
+                    .updatedAt(comment.getUpdatedAt())
                     .build();
         }
     }

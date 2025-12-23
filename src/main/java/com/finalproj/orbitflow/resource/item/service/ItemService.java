@@ -2,6 +2,8 @@ package com.finalproj.orbitflow.resource.item.service;
 
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
+import com.finalproj.orbitflow.hr.employee.entity.Employee;
+import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import com.finalproj.orbitflow.resource.enums.ResourceStatusCode;
 import com.finalproj.orbitflow.resource.item.dto.ItemReqDto;
 import com.finalproj.orbitflow.resource.item.dto.ItemResDto;
@@ -13,9 +15,13 @@ import com.finalproj.orbitflow.resource.status.entity.ResourceStatus;
 import com.finalproj.orbitflow.resource.status.repository.ResourceStatusRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,15 +40,19 @@ public class ItemService {
 
     private final ItemRepository itemRepository;
     private final CompanyRepository companyRepository;
+    private final EmployeeRepository employeeRepository;
     private final ResourceStatusRepository resourceStatusRepository;
     private final ItemCategoryRepository itemCategoryRepository;
 
     // companyId
     @Transactional(readOnly = true)
-    public List<ItemResDto> getItems(Long companyId) {
-        return itemRepository.getAllByCompanyId(companyId, ResourceStatusCode.DELETED).stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+    public Page<ItemResDto> getItems(
+            Long companyId,
+            Pageable pageable
+    ) {
+        return itemRepository
+                .getAllByCompanyId(companyId, ResourceStatusCode.DELETED, pageable)
+                .map(this::convertToDto);
     }
 
     // companyId
@@ -58,10 +68,9 @@ public class ItemService {
     // status != DELETED
     // categoryId
     @Transactional(readOnly = true)
-    public List<ItemResDto> getItemsByCategory(Long companyId, Long categoryId) {
-        return itemRepository.getAllByCompanyIdAndItemCategoryId(companyId, categoryId, ResourceStatusCode.DELETED).stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+    public Page<ItemResDto> getItemsByCategory(Long companyId, Long categoryId, Pageable pageable) {
+        return itemRepository.getAllByCompanyIdAndItemCategoryId(companyId, categoryId, ResourceStatusCode.DELETED, pageable)
+                .map(this::convertToDto);
     }
 
     // companyId
@@ -140,6 +149,11 @@ public class ItemService {
             code = item.getResourceStatus().getResourceStatusCode().name();
             name = item.getResourceStatus().getResourceStatusCode().getDescription();
         }
+
+        Employee uploader = employeeRepository.getReferenceById(item.getCreatedBy());
+        String uploaderName = uploader.getName();
+
+        LocalDate createdAt = item.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDate();
 
         return ItemResDto.builder()
                 .itemId(item.getId())

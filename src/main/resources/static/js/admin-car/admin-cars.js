@@ -73,12 +73,19 @@ function createActionCell(id) {
 }
 
 /* ==========================
+   Pagination State
+========================== */
+let currentPage = 0;
+let totalPages = 0;
+let pageSize = 10;
+
+/* ==========================
    Data Load
 ========================== */
-async function loadCars() {
+async function loadCars(page = 0) {
     try {
         const res = await apiFetch(
-            `/api/admin/cars`,
+            `/api/admin/cars?page=${page}&size=${pageSize}&sort=id,asc`,
             { method: 'GET' }
         );
 
@@ -88,7 +95,13 @@ async function loadCars() {
         const tbody = document.querySelector('.resource-table tbody');
         tbody.innerHTML = '';
 
-        if (!data?.length) {
+        // Pagination 정보 업데이트
+        currentPage = data.number;
+        totalPages = data.totalPages;
+
+        const content = data.content;
+
+        if (!content?.length) {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="6">
@@ -98,13 +111,21 @@ async function loadCars() {
                         </div>
                     </td>
                 </tr>`;
+            // 페이지네이션 숨김
+            document.getElementById('pagination-container').style.display = 'none';
             return;
         }
 
-        data.forEach((car, i) => {
+        // 페이지네이션 표시
+        document.getElementById('pagination-container').style.display = 'flex';
+
+        // 번호는 전체 목록 기준으로 계산
+        const startNumber = currentPage * pageSize;
+
+        content.forEach((car, i) => {
             const tr = document.createElement('tr');
             tr.append(
-                createCell(i + 1),
+                createCell(startNumber + i + 1),
                 createCell(car.number),
                 createCell(car.name),
                 createCell(car.description, true),
@@ -114,10 +135,49 @@ async function loadCars() {
             tbody.appendChild(tr);
         });
 
+        // 페이지네이션 렌더링
+        renderPagination(data);
+
     } catch (e) {
         console.error(e);
         alert('차량 목록을 불러오지 못했습니다.');
     }
+}
+
+/* ==========================
+   Pagination Render
+========================== */
+function renderPagination(pageData) {
+    const container = document.querySelector('.pagination');
+    container.innerHTML = '';
+
+    const { number, totalPages, first, last } = pageData;
+
+    // 이전 버튼
+    const prevBtn = document.createElement('button');
+    prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prevBtn.disabled = first;
+    prevBtn.onclick = () => loadCars(number - 1);
+    container.appendChild(prevBtn);
+
+    // 페이지 번호 버튼
+    const startPage = Math.floor(number / 5) * 5;
+    const endPage = Math.min(startPage + 5, totalPages);
+
+    for (let i = startPage; i < endPage; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.textContent = i + 1;
+        pageBtn.className = i === number ? 'active' : '';
+        pageBtn.onclick = () => loadCars(i);
+        container.appendChild(pageBtn);
+    }
+
+    // 다음 버튼
+    const nextBtn = document.createElement('button');
+    nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    nextBtn.disabled = last;
+    nextBtn.onclick = () => loadCars(number + 1);
+    container.appendChild(nextBtn);
 }
 
 /* ==========================
@@ -140,7 +200,8 @@ async function deleteCar(id) {
         if (!res.ok) throw new Error();
 
         alert('차량이 삭제되었습니다.');
-        loadCars();
+        // 현재 페이지 유지하며 다시 로드
+        loadCars(currentPage);
 
     } catch (e) {
         console.error(e);

@@ -165,7 +165,8 @@ async function handleEdit() {
     }
 
     const formData = new FormData();
-    formData.append('number', document.getElementById('car-number').value);
+    // 차량 번호는 이제 읽기 전용이므로 textContent로 가져옴
+    formData.append('number', document.getElementById('car-number').textContent);
     formData.append('name', document.getElementById('car-model').value);
     formData.append('driverAge', document.getElementById('car-age').value);
     formData.append('description', document.getElementById('car-description').value);
@@ -185,16 +186,22 @@ async function handleEdit() {
             }
         );
 
-        if (!response.ok) {
-            throw new Error('차량 수정 실패');
-        }
+        console.log(response);
 
-        // ✅ 관리자 차량 목록 화면으로 이동
-        window.location.href = '/view/resource/admin/cars';
+        if (response.ok) {
+            alert('차량이 수정되었습니다.');
+
+            // 관리자 차량 목록 화면으로 이동
+            window.location.href = '/view/resource/admin/cars';
+
+        } else {
+            const result = await response.json();
+            alert(result.message)
+        }
 
     } catch (error) {
         console.error(error);
-        alert('차량 수정에 실패했습니다.');
+        alert(error.message);
     }
 }
 
@@ -273,10 +280,15 @@ async function loadCarDetail() {
         const result = await response.json();
         const data = result.data;
 
-        document.getElementById('car-number').value = data.number ?? '';
+        // 차량 번호는 이제 text로 표시
+        document.getElementById('car-number').textContent = data.number ?? '-';
         document.getElementById('car-model').value = data.name ?? '';
         document.getElementById('car-age').value = data.driverAge ?? '';
         document.getElementById('car-description').value = data.description ?? '';
+
+        // 등록자 정보 표시
+        document.getElementById('uploader-name').textContent = data.uploaderName ?? '-';
+        document.getElementById('created-at').textContent = formatDate(data.createdAt);
 
         // 차량 이미지 표시
         displayCarImage(data.fileUrl);
@@ -287,6 +299,16 @@ async function loadCarDetail() {
         console.error(error);
         showError();
     }
+}
+
+/**
+ * 날짜 포맷팅
+ */
+function formatDate(localDateString) {
+    if (!localDateString) return '-';
+
+    // LocalDate는 이미 YYYY-MM-DD 형식
+    return localDateString;
 }
 
 /**
@@ -323,10 +345,12 @@ function displayCarImage(imageUrl) {
  * 에러 처리
  */
 function showError() {
-    document.getElementById('car-number').value = '';
+    document.getElementById('car-number').textContent = '-';
     document.getElementById('car-model').value = '';
     document.getElementById('car-age').value = '';
     document.getElementById('car-description').value = '차량 정보를 불러올 수 없습니다.';
+    document.getElementById('uploader-name').textContent = '-';
+    document.getElementById('created-at').textContent = '-';
     
     // 이미지도 초기화
     displayCarImage(null);

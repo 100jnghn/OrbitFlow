@@ -2,10 +2,12 @@
 
 const BOARD_API = '/api/boards';
 const BOARD_CATEGORY_API = '/api/board-categories';
+const COMMENT_API = '/api';
 
 let boardId = null;
 let categoryId = null;
 let currentUserId = null;
+let editingCommentId = null;
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', async function() {
@@ -152,6 +154,7 @@ async function loadBoardDetail() {
         if (board) {
             categoryId = board.categoryId || board.category?.id;
             renderBoardDetail(board);
+            loadComments();
         } else {
             showError('게시글 데이터가 없습니다.');
         }
@@ -238,6 +241,26 @@ function renderBoardDetail(board) {
                         <i class="fas fa-trash"></i> 삭제
                     </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- 댓글 섹션 -->
+        <div class="comment-section">
+            <h3 class="comment-section-title">댓글</h3>
+            
+            <!-- 댓글 작성 영역 -->
+            <div class="comment-write-area">
+                <textarea id="commentInput" class="comment-input" placeholder="댓글을 입력하세요..." rows="3" onkeydown="handleCommentKeydown(event)"></textarea>
+                <div class="comment-write-actions">
+                    <button type="button" class="btn-comment-submit" onclick="submitComment()">
+                        등록
+                    </button>
+                </div>
+            </div>
+
+            <!-- 댓글 목록 -->
+            <div class="comment-list" id="commentList">
+                <div class="loading-message">댓글을 불러오는 중...</div>
             </div>
         </div>
     `;
@@ -337,5 +360,251 @@ function escapeHTML(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+}
+
+// 댓글 목록 로드
+async function loadComments() {
+    if (!boardId) return;
+
+    try {
+        const response = await apiFetch(`${COMMENT_API}/boards/${boardId}/comments?size=100`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                location.href = '/login';
+                return;
+            }
+            console.error('댓글 목록을 불러오는데 실패했습니다.');
+            return;
+        }
+
+        const result = await response.json();
+        const commentData = result.data;
+        const comments = commentData?.content || commentData || [];
+
+        renderComments(comments);
+    } catch (error) {
+        console.error('Error loading comments:', error);
+        const commentList = document.getElementById('commentList');
+        if (commentList) {
+            commentList.innerHTML = '<div class="error-message">댓글을 불러오는데 실패했습니다.</div>';
+        }
+    }
+}
+
+// 댓글 목록 렌더링
+function renderComments(comments) {
+    const commentList = document.getElementById('commentList');
+    if (!commentList) return;
+
+    if (comments.length === 0) {
+        commentList.innerHTML = '<div class="no-comments">댓글이 없습니다.</div>';
+        return;
+    }
+
+    commentList.innerHTML = comments.map(comment => {
+        const commentId = comment.commentId || comment.id;
+        const writerId = comment.writerId || comment.writer?.id;
+        const writerName = comment.writerName || comment.writer?.name || '';
+        const content = comment.content || comment.commentContent || '';
+        const createdAt = comment.createdAt || comment.created_at;
+        const updatedAt = comment.updatedAt || comment.updated_at;
+        
+        // 수정 여부 확인 (updatedAt이 createdAt보다 나중이면 수정됨)
+        let isModified = false;
+        if (updatedAt && createdAt) {
+            const created = new Date(createdAt).getTime();
+            const updated = new Date(updatedAt).getTime();
+            // 1초 이상 차이나면 수정된 것으로 간주 (DB 업데이트 시간 차이 고려)
+            isModified = (updated - created) > 1000;
+        }
+        const displayDate = isModified ? formatDateTime(updatedAt) + ' (수정됨)' : formatDateTime(createdAt);
+        
+        // 작성자 본인인지 확인
+        const isWriter = currentUserId && writerId && currentUserId === writerId;
+        const showEditDelete = isWriter ? '' : 'style="display: none;"';
+
+        return `
+            <div class="comment-item" id="comment-${commentId}">
+                <div class="comment-content-wrapper">
+                    <div class="comment-content-display" id="comment-content-display-${commentId}">
+                        <div class="comment-text">${escapeHTML(content).replace(/\n/g, '<br>')}</div>
+                        <div class="comment-meta">
+                            <span class="comment-writer">${escapeHTML(writerName)}</span>
+                            <span class="comment-date">${displayDate}</span>
+                        </div>
+                    </div>
+                    <div class="comment-content-edit" id="comment-content-edit-${commentId}" style="display: none;">
+                        <textarea class="comment-edit-input" id="comment-edit-input-${commentId}" rows="3">${escapeHTML(content)}</textarea>
+                        <div class="comment-edit-actions">
+                            <button type="button" class="btn-comment-save" onclick="saveComment(${commentId})">저장</button>
+                            <button type="button" class="btn-comment-cancel" onclick="cancelEditComment(${commentId})">취소</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="comment-actions" ${showEditDelete}>
+                    <button type="button" class="btn-comment-edit" onclick="editComment(${commentId})">수정</button>
+                    <button type="button" class="btn-comment-delete" onclick="deleteComment(${commentId})">삭제</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// 댓글 작성
+async function submitComment() {
+    if (!boardId) return;
+
+    const commentInput = document.getElementById('commentInput');
+    const content = commentInput?.value.trim();
+
+    if (!content) {
+        alert('댓글 내용을 입력해주세요.');
+        return;
+    }
+
+    try {
+        const response = await apiFetch(`${COMMENT_API}/boards/${boardId}/comments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                commentContent: content
+            })
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                location.href = '/login';
+                return;
+            }
+            const errorData = await response.json();
+            throw new Error(errorData.message || '댓글 작성에 실패했습니다.');
+        }
+
+        commentInput.value = '';
+        loadComments();
+    } catch (error) {
+        console.error('Error submitting comment:', error);
+        alert(error.message || '댓글 작성에 실패했습니다.');
+    }
+}
+
+// 댓글 수정 모드로 전환
+function editComment(commentId) {
+    // 다른 댓글의 수정 모드 취소
+    if (editingCommentId && editingCommentId !== commentId) {
+        cancelEditComment(editingCommentId);
+    }
+
+    const displayDiv = document.getElementById(`comment-content-display-${commentId}`);
+    const editDiv = document.getElementById(`comment-content-edit-${commentId}`);
+    
+    if (displayDiv && editDiv) {
+        displayDiv.style.display = 'none';
+        editDiv.style.display = 'block';
+        editingCommentId = commentId;
+        
+        // 텍스트 영역에 포커스
+        const textarea = document.getElementById(`comment-edit-input-${commentId}`);
+        if (textarea) {
+            textarea.focus();
+            textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+        }
+    }
+}
+
+// 댓글 수정 취소
+function cancelEditComment(commentId) {
+    const displayDiv = document.getElementById(`comment-content-display-${commentId}`);
+    const editDiv = document.getElementById(`comment-content-edit-${commentId}`);
+    
+    if (displayDiv && editDiv) {
+        displayDiv.style.display = 'block';
+        editDiv.style.display = 'none';
+        editingCommentId = null;
+    }
+}
+
+// 댓글 수정 저장
+async function saveComment(commentId) {
+    const textarea = document.getElementById(`comment-edit-input-${commentId}`);
+    const content = textarea?.value.trim();
+
+    if (!content) {
+        alert('댓글 내용을 입력해주세요.');
+        return;
+    }
+
+    try {
+        const response = await apiFetch(`${COMMENT_API}/comments/${commentId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                commentContent: content
+            })
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                location.href = '/login';
+                return;
+            }
+            const errorData = await response.json();
+            throw new Error(errorData.message || '댓글 수정에 실패했습니다.');
+        }
+
+        editingCommentId = null;
+        loadComments();
+    } catch (error) {
+        console.error('Error saving comment:', error);
+        alert(error.message || '댓글 수정에 실패했습니다.');
+    }
+}
+
+// 댓글 삭제
+async function deleteComment(commentId) {
+    if (!confirm('정말 삭제하시겠습니까?')) {
+        return;
+    }
+
+    try {
+        const response = await apiFetch(`${COMMENT_API}/comments/${commentId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                location.href = '/login';
+                return;
+            }
+            const errorData = await response.json();
+            throw new Error(errorData.message || '댓글 삭제에 실패했습니다.');
+        }
+
+        loadComments();
+    } catch (error) {
+        console.error('Error deleting comment:', error);
+        alert(error.message || '댓글 삭제에 실패했습니다.');
+    }
+}
+
+// 댓글 입력 키보드 이벤트 처리 (Ctrl+Enter로 등록)
+function handleCommentKeydown(event) {
+    if (event.ctrlKey && event.key === 'Enter') {
+        event.preventDefault();
+        submitComment();
+    }
 }
 

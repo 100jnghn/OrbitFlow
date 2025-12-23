@@ -2,6 +2,8 @@ package com.finalproj.orbitflow.resource.meetingroom.service;
 
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
+import com.finalproj.orbitflow.hr.employee.entity.Employee;
+import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import com.finalproj.orbitflow.resource.enums.ResourceStatusCode;
 import com.finalproj.orbitflow.resource.meetingroom.dto.MeetingroomReqDto;
 import com.finalproj.orbitflow.resource.meetingroom.dto.MeetingroomResDto;
@@ -11,9 +13,13 @@ import com.finalproj.orbitflow.resource.status.entity.ResourceStatus;
 import com.finalproj.orbitflow.resource.status.repository.ResourceStatusRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,17 +36,20 @@ import java.util.stream.Collectors;
 public class MeetingroomService {
 
     private final MeetingroomRepository meetingroomRepository;
+    private final EmployeeRepository employeeRepository;
     private final CompanyRepository companyRepository;
     private final ResourceStatusRepository resourceStatusRepository;
 
-    @Transactional(readOnly = true) // 읽기 전용 트랜잭션 (성능 향상)
-    public List<MeetingroomResDto> getMeetingrooms(Long companyId) {
-
-        // DELETED는 가져오지 않음
-        return meetingroomRepository.findAllByCompany_Id(companyId).stream()
-                .map(this::convertToResDto)
-                .collect(Collectors.toList());
+    @Transactional(readOnly = true)
+    public Page<MeetingroomResDto> getMeetingrooms(
+            Long companyId,
+            Pageable pageable
+    ) {
+        return meetingroomRepository
+                .findAllByCompany_Id(companyId, pageable)
+                .map(this::convertToResDto);
     }
+
 
     public List<MeetingroomResDto> getAvailableMeetingrooms(Long companyId) {
 
@@ -113,6 +122,12 @@ public class MeetingroomService {
             name = meetingroom.getResourceStatus().getResourceStatusCode().getDescription();
         }
 
+        Employee uploader = employeeRepository.getReferenceById(meetingroom.getCreatedBy());
+        String uploaderName = uploader.getName();
+
+        LocalDate createdAt = meetingroom.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDate();
+
+
         return MeetingroomResDto.builder()
                 .meetingroomId(meetingroom.getId())
                 .name(meetingroom.getName())
@@ -121,6 +136,8 @@ public class MeetingroomService {
                 .statusId(statusId)
                 .statusCode(code)
                 .statusName(name)
+                .uploaderName(uploaderName)
+                .createdAt(createdAt)
                 .build();
     }
 
