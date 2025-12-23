@@ -105,27 +105,27 @@ function renderSidebar() {
     // 일반 게시판 (권한이 있는 게시판)
     if (accessibleBoards && accessibleBoards.length > 0) {
         accessibleBoards.forEach((board, index) => {
-            const boardName = board.boardName || board.name || '게시판';
-            const boardId = board.id;
+        const boardName = board.boardName || board.name || '게시판';
+        const boardId = board.id;
             
             if (!boardId) {
                 console.warn('Board without ID found:', board);
                 return;
             }
             
-            const isSelected = boardId === currentCategoryId;
-            
+        const isSelected = boardId === currentCategoryId;
+        
             console.log(`Adding accessible board ${index + 1}:`, boardName, boardId);
-            
-            const li = document.createElement('li');
-            li.className = 'sidebar-menu-item' + (isSelected ? ' selected' : '');
-            li.innerHTML = `
-                <a href="#" class="board-link${isSelected ? ' active' : ''}" data-category-id="${boardId}" data-board-name="${escapeHTML(boardName)}">
-                    ${escapeHTML(boardName)}
-                </a>
-            `;
-            sidebar.appendChild(li);
-        });
+        
+        const li = document.createElement('li');
+        li.className = 'sidebar-menu-item' + (isSelected ? ' selected' : '');
+        li.innerHTML = `
+            <a href="#" class="board-link${isSelected ? ' active' : ''}" data-category-id="${boardId}" data-board-name="${escapeHTML(boardName)}">
+                ${escapeHTML(boardName)}
+            </a>
+        `;
+        sidebar.appendChild(li);
+    });
     } else {
         console.warn('No accessible boards found. accessibleBoards:', accessibleBoards);
     }

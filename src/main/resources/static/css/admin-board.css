@@ -90,6 +90,7 @@
     width: 100%;
     border-collapse: collapse;
     background: #fff;
+    table-layout: fixed;
 }
 
 .admin-table thead {
@@ -98,7 +99,7 @@
 
 .admin-table th {
     padding: 14px 16px;
-    text-align: left;
+    text-align: center;
     font-weight: 600;
     font-size: 14px;
     color: var(--neutral-700);
@@ -109,6 +110,10 @@
 .admin-table th:first-child {
     text-align: center;
     width: 80px;
+}
+
+.admin-table th:not(:first-child):not(:last-child) {
+    text-align: center;
 }
 
 .admin-table th:last-child {
@@ -122,12 +127,19 @@
     color: var(--neutral-800);
     border-bottom: 1px solid var(--neutral-200);
     vertical-align: middle;
+    text-align: center;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .admin-table td:first-child {
     text-align: center;
     color: var(--neutral-500);
     font-weight: 500;
+}
+
+.admin-table td:not(:first-child):not(:last-child) {
+    text-align: center;
 }
 
 .admin-table td:last-child {
