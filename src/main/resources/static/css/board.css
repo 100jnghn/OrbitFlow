@@ -26,14 +26,14 @@
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     padding: 24px;
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
 }
 
 /* 게시판 헤더 */
 .board-header {
     margin-bottom: 28px;
-    text-align: center;
+    text-align: left;
 }
 
 .board-header h1 {
@@ -146,6 +146,7 @@
 .board-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
 }
 
 .board-table thead {
@@ -154,63 +155,69 @@
 
 .board-table th {
     padding: 14px 16px;
-    text-align: left;
     font-weight: 600;
     font-size: 14px;
     color: var(--neutral-700);
     border-bottom: 2px solid var(--neutral-200);
 }
 
-.board-table th:first-child {
-    text-align: center;
-    width: 80px;
+.board-table th:nth-child(1) {
+    width: 70px;
+    text-align: center !important;
+}
+
+.board-table th:nth-child(2) {
+    width: auto;
+    min-width: 350px;
+    text-align: left !important;
 }
 
 .board-table th:nth-child(3) {
-    text-align: left;
-    width: 150px;
+    width: 120px;
+    text-align: center !important;
 }
 
 .board-table th:nth-child(4) {
-    text-align: left;
-    width: 180px;
+    width: 170px;
+    text-align: center !important;
 }
 
 .board-table th:nth-child(5) {
-    text-align: center;
     width: 100px;
+    text-align: center !important;
 }
 
 .board-table td {
-    padding: 16px;
+    padding: 14px 16px;
     border-bottom: 1px solid var(--neutral-200);
     font-size: 14px;
     color: var(--neutral-800);
     vertical-align: middle;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    height: 48px;
+    box-sizing: border-box;
 }
 
-.board-table td:first-child {
+.board-table td:nth-child(1) {
     text-align: center;
     color: var(--neutral-500);
     font-weight: 500;
 }
 
+.board-table td:nth-child(2) {
+    text-align: left;
+}
+
 .board-table td:nth-child(3) {
-    text-align: left;
-    color: var(--neutral-700);
-    width: 150px;
-}
-
-.board-table td:nth-child(4) {
-    text-align: left;
-    color: var(--neutral-600);
-    width: 180px;
-}
-
-.board-table td:nth-child(5) {
     text-align: center;
     color: var(--neutral-600);
-    width: 100px;
+}
+
+.board-table td:nth-child(4),
+.board-table td:nth-child(5) {
+    text-align: center !important;
+    color: var(--neutral-600);
 }
 
 .board-table tbody tr {
@@ -230,6 +237,10 @@
     text-decoration: none;
     font-weight: 500;
     transition: color 0.2s ease;
+    display: block;
+    text-align: left;
+    width: 100%;
+    padding-left: 4px;
 }
 
 .board-title-link:hover {
@@ -333,6 +344,7 @@
     border-left: 3px solid transparent;
     font-size: 14px;
     font-weight: 500;
+    text-align: left;
 }
 
 /* 선택된 항목 스타일 */
@@ -573,6 +585,8 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     border: 1px solid var(--neutral-200);
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 .loading-message,
