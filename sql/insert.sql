@@ -65,95 +65,99 @@ VALUES (1, NULL, '사원', 1),
 
 
 /* =====================================================
-   POSITION_CATEGORY (직책 카테고리 = 직책 레벨)
+   POSITION_CATEGORY
 ===================================================== */
-INSERT INTO position_category (company_id, name, order_index)
+INSERT INTO position_category
+(company_id, org_category_id, name, order_index, is_head)
 VALUES
 -- OrbitFlow
-(1, '본부장', 1),
-(1, '부장', 2),
-(1, '팀장', 3),
-(1, '팀원', 4),
+(1, 1, '사장',   1, TRUE),
+(1, 2, '본부장', 2, TRUE),
+(1, 3, '부장',   3, TRUE),
+(1, 4, '팀장',   4, TRUE),
+(1, 4, '팀원',   5, FALSE),
 
 -- NovaWorks
-(2, '본부장', 1),
-(2, '부장', 2),
-(2, '팀장', 3),
-(2, '팀원', 4);
+(2, 5, '사장',   1, TRUE),
+(2, 6, '본부장', 2, TRUE),
+(2, 7, '부장',   3, TRUE),
+(2, 8, '팀장',   4, TRUE),
+(2, 8, '팀원',   5, FALSE);
+
+
+
+
 
 
 /* =====================================================
-   POSITION (조직 맥락 포함 직책)
-===================================================== */
-INSERT INTO position
-    (company_id, category_id, parent_position_id, name, order_index)
-VALUES
--- OrbitFlow
-(1, 1, NULL, '플랫폼본부장', 1),
-(1, 2, NULL, '개발부장', 2),
-(1, 2, NULL, '인사부장', 3),
-(1, 3, NULL, '백엔드팀장', 4),
-(1, 3, NULL, '프론트엔드팀장', 5),
-(1, 3, NULL, '인사팀장', 6),
-(1, 4, NULL, '백엔드팀원', 7),
-(1, 4, NULL, '프론트엔드팀원', 8),
-(1, 4, NULL, '인사팀원', 9),
-
--- NovaWorks
-(2, 5, NULL, '기술본부장', 1),
-(2, 6, NULL, '플랫폼부장', 2),
-(2, 7, NULL, 'AI팀장', 3),
-(2, 8, NULL, 'AI팀원', 4);
-
-
-/* =====================================================
-   ORG_POSITION_USAGE (조직-직책 정책)
+   ORG_POSITION_USAGE
 ===================================================== */
 INSERT INTO org_position_usage
-    (company_id, org_id, position_id, is_enabled)
+(company_id, org_id, position_category_id)
 VALUES
--- OrbitFlow (company_id = 1)
-(1, 2, 1, TRUE),   -- 플랫폼본부 → 플랫폼본부장
-(1, 4, 2, TRUE),   -- 개발부 → 개발부장
-(1, 5, 3, TRUE),   -- 인사부 → 인사부장
-(1, 6, 4, TRUE),   -- 백엔드팀 → 백엔드팀장
-(1, 6, 7, TRUE),   -- 백엔드팀 → 백엔드팀원
-(1, 7, 5, TRUE),   -- 프론트엔드팀 → 프론트엔드팀장
-(1, 7, 8, TRUE),   -- 프론트엔드팀 → 프론트엔드팀원
-(1, 8, 6, TRUE),   -- 인사팀 → 인사팀장
-(1, 8, 9, TRUE),   -- 인사팀 → 인사팀원
+-- OrbitFlow
+(1, 1, 1), -- 회사 → 사장
+(1, 2, 2), -- 본부 → 본부장
+(1, 3, 2),
+(1, 4, 3), -- 개발부 → 부장
+(1, 5, 3), -- 인사부 → 부장
+(1, 6, 4), -- 백엔드팀 → 팀장
+(1, 6, 5), -- 백엔드팀 → 팀원
+(1, 7, 4),
+(1, 7, 5),
+(1, 8, 4),
+(1, 8, 5),
 
--- NovaWorks (company_id = 2)
-(2, 10, 10, TRUE), -- 기술본부 → 기술본부장
-(2, 11, 11, TRUE), -- 플랫폼부 → 플랫폼부장
-(2, 12, 12, TRUE), -- AI팀 → AI팀장
-(2, 12, 13, TRUE);
--- AI팀 → AI팀원
+-- NovaWorks
+(2, 9, 6),
+(2,10, 7),
+(2,11, 8),
+(2,11, 9);
+
 
 
 /* =====================================================
-   EMPLOYEE (사원)
+   EMPLOYEE
 ===================================================== */
 INSERT INTO employee
-(company_id, employee_no, internal_phone, phone, org_id, hr_rank_id, position_id,
- name, email, password, gender, birth_date, employment_type, status, work_status, role)
+(company_id, employee_no, internal_phone, phone,
+ org_id, hr_rank_id, position_category_id,
+ name, email, password,
+ gender, birth_date, employment_type,
+ status, work_status, role)
 VALUES
 -- OrbitFlow
-(1, 'OF-001', '1001', '01012345678', 6, 5, 4, '홍길동', 'test1@test.com',
- '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK', 'MALE', '1990-01-01', 'REGULAR', 'ACTIVE', 'WORKING', 'COMPANY_ADMIN'),
+(1, 'OF-001', '1001', '01012345678',
+ 6, 5, 4, '홍길동', 'test1@test.com',
+ '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK',
+ 'MALE', '1990-01-01', 'REGULAR',
+ 'ACTIVE', 'WORKING', 'COMPANY_ADMIN'),
 
-(1, 'OF-002', '1002', '01074108529', 6, 2, 7, '김철수', 'test2@test.com',
- '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK', 'MALE', '1996-03-03', 'REGULAR', 'ACTIVE', 'AWAY', 'ADMIN'),
+(1, 'OF-002', '1002', '01074108529',
+ 6, 2, 5, '김철수', 'test2@test.com',
+ '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK',
+ 'MALE', '1996-03-03', 'REGULAR',
+ 'ACTIVE', 'AWAY', 'ADMIN'),
 
-(1, 'OF-003', '1003', '01098765432', 8, 3, 6, '이영희', 'test3@test.com',
- '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK', 'FEMALE', '1994-06-06', 'REGULAR', 'ACTIVE', 'ON_LEAVE', 'EMPLOYEE'),
+(1, 'OF-003', '1003', '01098765432',
+ 8, 3, 4, '이영희', 'test3@test.com',
+ '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK',
+ 'FEMALE', '1994-06-06', 'REGULAR',
+ 'ACTIVE', 'ON_LEAVE', 'EMPLOYEE'),
 
 -- NovaWorks
-(2, 'NW-001', '2001', '01055555555', 12, 7, 12, '박민수', 'test4@test.com',
- '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK', 'MALE', '1992-02-02', 'REGULAR', 'ACTIVE', 'WORKING', 'COMPANY_ADMIN'),
+(2, 'NW-001', '2001', '01055555555',
+ 12, 7, 8, '박민수', 'test4@test.com',
+ '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK',
+ 'MALE', '1992-02-02', 'REGULAR',
+ 'ACTIVE', 'WORKING', 'COMPANY_ADMIN'),
 
-(2, 'NW-002', '2002', '01099999999', 12, 6, 13, '정수빈', 'test5@test.com',
- '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK', 'FEMALE', '1999-09-09', 'NON_REGULAR', 'TEMP', 'OFF_WORK', 'ADMIN');
+(2, 'NW-002', '2002', '01099999999',
+ 12, 6, 9, '정수빈', 'test5@test.com',
+ '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK',
+ 'FEMALE', '1999-09-09', 'NON_REGULAR',
+ 'TEMP', 'OFF_WORK', 'ADMIN');
+
 
 
 /* =====================================================

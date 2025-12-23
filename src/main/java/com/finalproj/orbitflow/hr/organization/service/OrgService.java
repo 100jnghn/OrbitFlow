@@ -7,6 +7,7 @@ import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import com.finalproj.orbitflow.hr.orgCategory.repository.OrgCategoryRepository;
+import com.finalproj.orbitflow.hr.orgPositionUsage.repository.OrgPositionUsageRepository;
 import com.finalproj.orbitflow.hr.organization.dto.OrgCreateReqDto;
 import com.finalproj.orbitflow.hr.organization.dto.OrgOrderUpdateReqDto;
 import com.finalproj.orbitflow.hr.organization.dto.OrgResDto;
@@ -35,6 +36,7 @@ public class OrgService {
     private final OrgRepository orgRepository;
     private final EmployeeRepository employeeRepository;
     private final OrgCategoryRepository orgCategoryRepository;
+    private final OrgPositionUsageRepository orgPositionUsageRepository;
 
     /* ================= 생성 ================= */
     public Long create(Long companyId, OrgCreateReqDto request) {
@@ -81,11 +83,7 @@ public class OrgService {
         Organization org = getOrgInCompanyOrThrow(companyId, organizationId);
 
         Long newParentId = request.getParentOrgId();
-        Long newCategoryId = request.getCategoryId();
         String newName = normalizeNameOrThrow(request.getName());
-
-        // 카테고리 검증
-        validateCategoryActiveInCompany(companyId, newCategoryId);
 
         // 자기 자신을 상위로 금지
         if (newParentId != null && Objects.equals(newParentId, organizationId)) {
@@ -115,7 +113,7 @@ public class OrgService {
             org.updateOrderIndex(nextOrderIndex);
         }
 
-        org.update(newCategoryId, newParentId, newName);
+        org.update(newParentId, newName); // categoryId는 변경 불가이므로 기존 값 유지
     }
 
     /* ================= 비활성화 ================= */
@@ -136,6 +134,8 @@ public class OrgService {
         )) {
             throw new InvalidStateException("해당 조직에 소속된 재직 중인 사원이 존재하여 비활성화할 수 없습니다.");
         }
+
+        orgPositionUsageRepository.deleteByCompany_IdAndOrganization_Id(companyId, organizationId);
 
         org.deactivate();
     }
@@ -199,6 +199,7 @@ public class OrgService {
         }
     }
 
+    /* ================= 내부 메서드들 ================= */
     private Organization getOrgInCompanyOrThrow(Long companyId, Long orgId) {
         return orgRepository.findByCompanyIdAndId(companyId, orgId)
                 .orElseThrow(() -> new NotFoundException("조직을 찾을 수 없습니다."));

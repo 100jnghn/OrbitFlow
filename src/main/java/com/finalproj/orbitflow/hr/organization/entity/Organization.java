@@ -75,8 +75,7 @@ public class Organization extends BaseEntity {
         return org;
     }
 
-    public void update(Long categoryId, Long parentOrgId, String name) {
-        this.categoryId = categoryId;
+    public void update(Long parentOrgId, String name) {
         this.parentOrgId = parentOrgId;
         this.name = name;
     }

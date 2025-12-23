@@ -84,8 +84,10 @@ CREATE TABLE position_category
 (
     id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
     company_id         BIGINT      NOT NULL,
-    name               VARCHAR(50) NOT NULL,
-    order_index        INT, -- 비활성 항목 때문에 NULL 허용
+    org_category_id    BIGINT      NOT NULL, -- 조직 카테고리 귀속
+    name               VARCHAR(50) NOT NULL, -- 사장 / 본부장 / 부장 / 팀장
+    order_index        INT,                  -- 비활성 항목 때문에 NULL 허용
+    is_head            BOOLEAN     NOT NULL DEFAULT FALSE,
     is_active          BOOLEAN     NOT NULL DEFAULT TRUE,
     -- 활성일 때만 정렬 유니크를 적용하기 위한 가상 컬럼
     active_order_index INT
@@ -95,20 +97,25 @@ CREATE TABLE position_category
                                ELSE NULL
                                END
                            ) STORED,
+
     created_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT uk_pos_cat_company_name
-        UNIQUE (company_id, name),
 
-    -- 활성 상태에서만 orderIndex 유니크 보장
+    CONSTRAINT uk_pos_cat_company_org_name
+        UNIQUE (company_id, org_category_id, name),
+
     CONSTRAINT uk_pos_cat_company_active_order
         UNIQUE (company_id, active_order_index),
 
     CONSTRAINT fk_pos_cat_company
-        FOREIGN KEY (company_id) REFERENCES company (id)
+        FOREIGN KEY (company_id) REFERENCES company (id),
+
+    CONSTRAINT fk_pos_cat_org_category
+        FOREIGN KEY (org_category_id) REFERENCES org_category (id)
 ) ENGINE = InnoDB;
 
+/*
 CREATE TABLE position
 (
     id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -146,50 +153,51 @@ CREATE TABLE position
     CONSTRAINT fk_position_parent
         FOREIGN KEY (parent_position_id) REFERENCES position (id)
 ) ENGINE = InnoDB;
-
+*/
 CREATE TABLE org_position_usage
 (
-    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    company_id  BIGINT    NOT NULL,
-    org_id      BIGINT    NOT NULL,
-    position_id BIGINT    NOT NULL,
-    is_enabled  BOOLEAN   NOT NULL DEFAULT TRUE,
-    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id                   BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id           BIGINT    NOT NULL,
+    org_id               BIGINT    NOT NULL,
+    position_category_id BIGINT    NOT NULL,
+    created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT uk_org_pos_usage
+        UNIQUE (company_id, org_id, position_category_id),
     CONSTRAINT fk_usage_company
         FOREIGN KEY (company_id) REFERENCES company (id),
     CONSTRAINT fk_usage_org
         FOREIGN KEY (org_id) REFERENCES organization (id),
-    CONSTRAINT fk_usage_position
-        FOREIGN KEY (position_id) REFERENCES position (id)
+    CONSTRAINT fk_usage_pos_category
+        FOREIGN KEY (position_category_id) REFERENCES position_category (id)
 ) ENGINE = InnoDB;
 
 CREATE TABLE employee
 (
-    id              BIGINT AUTO_INCREMENT PRIMARY KEY,                                                   -- 사원 아이디
-    company_id      BIGINT                                           NOT NULL,                           -- 회사 아이디 (fk)
-    employee_no     VARCHAR(20)                                      NOT NULL,                           -- 사번
-    internal_phone  VARCHAR(20),                                                                         -- 내선번호
-    phone           VARCHAR(20),                                                                         -- 전화번호
-    org_id          BIGINT                                           NOT NULL,                           -- 조직 아이디 (fk)
-    hr_rank_id      BIGINT                                           NULL,                               -- 직급 아이디 (fk)
-    position_id     BIGINT                                           NULL,                               -- 직책 아이디 (fk)
+    id                   BIGINT AUTO_INCREMENT PRIMARY KEY,                                                   -- 사원 아이디
+    company_id           BIGINT                                           NOT NULL,                           -- 회사 아이디 (fk)
+    employee_no          VARCHAR(20)                                      NOT NULL,                           -- 사번
+    internal_phone       VARCHAR(20),                                                                         -- 내선번호
+    phone                VARCHAR(20),                                                                         -- 전화번호
+    org_id               BIGINT                                           NOT NULL,                           -- 조직 아이디 (fk)
+    hr_rank_id           BIGINT                                           NULL,                               -- 직급 아이디 (fk)
+    position_category_id BIGINT                                           NULL,                               -- 직책 카테고리 아이디 (fk)
 
-    name            VARCHAR(50)                                      NOT NULL,                           -- 이름
-    email           VARCHAR(100)                                     NOT NULL,                           -- 이메일 (로그인 id)
-    password        VARCHAR(255)                                     NOT NULL,                           -- 비밀번호
-    role            ENUM ('COMPANY_ADMIN', 'ADMIN', 'EMPLOYEE')      NOT NULL DEFAULT 'EMPLOYEE',
-    gender          ENUM ('MALE', 'FEMALE')                          NOT NULL,                           -- 성별
-    birth_date      DATE,                                                                                -- 생년월일
-    employment_type ENUM ('REGULAR', 'NON_REGULAR')                  NOT NULL,                           -- 고용 형태
-    status          ENUM ('TEMP', 'ACTIVE', 'SUSPENDED', 'RESIGNED') NOT NULL,                           -- 재직 상태
+    name                 VARCHAR(50)                                      NOT NULL,                           -- 이름
+    email                VARCHAR(100)                                     NOT NULL,                           -- 이메일 (로그인 id)
+    password             VARCHAR(255)                                     NOT NULL,                           -- 비밀번호
+    role                 ENUM ('COMPANY_ADMIN', 'ADMIN', 'EMPLOYEE')      NOT NULL DEFAULT 'EMPLOYEE',
+    gender               ENUM ('MALE', 'FEMALE')                          NOT NULL,                           -- 성별
+    birth_date           DATE,                                                                                -- 생년월일
+    employment_type      ENUM ('REGULAR', 'NON_REGULAR')                  NOT NULL,                           -- 고용 형태
+    status               ENUM ('TEMP', 'ACTIVE', 'SUSPENDED', 'RESIGNED') NOT NULL,                           -- 재직 상태
 
-    work_status     ENUM ('WORKING', 'AWAY', 'ON_LEAVE', 'OFF_WORK')
-                                                                     NOT NULL DEFAULT 'OFF_WORK',        -- 근무 상태
+    work_status          ENUM ('WORKING', 'AWAY', 'ON_LEAVE', 'OFF_WORK')
+                                                                          NOT NULL DEFAULT 'OFF_WORK',        -- 근무 상태
 
-    created_at      TIMESTAMP                                        NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 생성일시
-    updated_at      TIMESTAMP                                        NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at           TIMESTAMP                                        NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 생성일시
+    updated_at           TIMESTAMP                                        NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
 
     UNIQUE KEY uk_employee_company_no (company_id, employee_no),
@@ -197,12 +205,16 @@ CREATE TABLE employee
 
     CONSTRAINT fk_emp_company
         FOREIGN KEY (company_id) REFERENCES company (id),
+
     CONSTRAINT fk_emp_org
         FOREIGN KEY (org_id) REFERENCES organization (id),
+
     CONSTRAINT fk_emp_hr_rank
         FOREIGN KEY (hr_rank_id) REFERENCES hr_rank (id),
-    CONSTRAINT fk_emp_position
-        FOREIGN KEY (position_id) REFERENCES position (id)
+
+    CONSTRAINT fk_emp_position_category
+        FOREIGN KEY (position_category_id)
+            REFERENCES position_category (id)
 ) ENGINE = InnoDB;
 
 

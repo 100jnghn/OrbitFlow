@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.hr.positionCategory.entity;
 
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
+import com.finalproj.orbitflow.hr.orgCategory.entity.OrgCategory;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -33,6 +34,10 @@ public class PositionCategory extends BaseEntity {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "org_category_id", nullable = false)
+    private OrgCategory orgCategory;
+
     @Column(nullable = false, length = 50)
     private String name; // 본부장 / 팀장 등
 
@@ -45,11 +50,13 @@ public class PositionCategory extends BaseEntity {
     /* ========= 생성 ========= */
     public static PositionCategory create(
             Company company,
+            OrgCategory orgCategory,
             String name,
             int orderIndex
     ) {
         PositionCategory category = new PositionCategory();
         category.company = company;
+        category.orgCategory = orgCategory;
         category.name = name;
         category.orderIndex = orderIndex;
         category.isActive = true;
