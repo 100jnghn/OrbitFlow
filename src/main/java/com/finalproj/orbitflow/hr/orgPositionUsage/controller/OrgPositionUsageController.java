@@ -30,7 +30,10 @@ public class OrgPositionUsageController {
     public ResponseEntity<ResponseDto<?>> getPolicy(
             @PathVariable Long orgId
     ) {
-        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "조직별 직책 정책 조회 성공", service.findByOrg(SecurityUtils.getCompanyId(), orgId))
+        return ResponseEntity.ok(new ResponseDto<>(
+                HttpStatus.OK,
+                "조직별 직책 정책 조회 성공",
+                service.findByOrg(SecurityUtils.getCompanyId(), orgId))
         );
     }
 
