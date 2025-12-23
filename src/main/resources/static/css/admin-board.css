@@ -493,7 +493,7 @@
 }
 
 .selected-employee {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 8px;
     padding: 8px 12px;
@@ -503,27 +503,47 @@
     font-size: 14px;
 }
 
-.selected-employee .employee-icon {
-    color: #2563eb;
-}
-
-.selected-employee .employee-name {
+.selected-employee .employee-info {
+    display: inline;
     color: #1e40af;
     font-weight: 500;
+    white-space: nowrap;
 }
 
 .selected-employee .remove-btn {
-    background: none;
+    background: transparent;
     border: none;
     color: #ef4444;
     cursor: pointer;
     padding: 0;
-    font-size: 16px;
     line-height: 1;
-    margin-left: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    transition: background 0.2s;
+    margin-left: 6px;
+    min-width: 18px;
+    min-height: 18px;
+    vertical-align: middle;
+}
+
+.selected-employee .remove-btn i {
+    font-size: 12px;
+    display: inline-block;
+    line-height: 1;
+    color: #ef4444;
+    font-weight: bold;
 }
 
 .selected-employee .remove-btn:hover {
+    background: #e5e7eb;
+}
+
+.selected-employee .remove-btn:hover i {
     color: #dc2626;
 }
 

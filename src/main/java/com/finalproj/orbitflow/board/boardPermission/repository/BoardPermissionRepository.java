@@ -31,4 +31,8 @@ public interface BoardPermissionRepository extends JpaRepository<BoardPermission
      * @return BoardPermission 엔티티
      */
     Optional<BoardPermission> findByEmployee_IdAndBoardCategory_Id(Long employeeId, Long boardCategoryId);
+
+
+
+    boolean existsByBoardCategory_Id(Long boardCategoryId);
 }
