@@ -57,7 +57,7 @@ public String yourPage(Model model, @AuthenticationPrincipal SecurityUser user) 
     // 필수: 사이드바 프래그먼트
     model.addAttribute("sidebarFragment", "sidebar/admin-sidebar :: menu");
     // 또는
-    // model.addAttribute("sidebarFragment", "sidebar/attendance-sidebar :: menu");
+    // model.addAttribute("sidebarFragment", "sidebar/attendance-sidebar.css :: menu");
     
     // 선택: 현재 활성 메뉴 (GNB, 사이드바 하이라이트용)
     model.addAttribute("currentGNB", "admin");  // 또는 "work", "approval" 등
@@ -137,7 +137,7 @@ public String userPage(Model model, @AuthenticationPrincipal SecurityUser user) 
     model.addAttribute("userName", user != null ? user.getUsername() : "사용자");
     model.addAttribute("pageTitle", "사용자 페이지");
     model.addAttribute("headerFragment", "fragments/user-header :: header");
-    model.addAttribute("sidebarFragment", "sidebar/attendance-sidebar :: menu");
+    model.addAttribute("sidebarFragment", "sidebar/attendance-sidebar.css :: menu");
     model.addAttribute("currentGNB", "work");
     model.addAttribute("currentMenu", "your-menu");
     return "work/your-page";
