@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      th:fragment="layout(content, headerFragment, sidebarFragment, pageCss, pageScript)"> <head>
+      th:fragment="layout(content, headerFragment, sidebarFragment, pageCss)">
+<head>
     <meta charset="UTF-8">
     <title th:text="${pageTitle} ?: 'OrbitFlow'">OrbitFlow</title>
-
+    
+    <!-- Font 및 아이콘 -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-
-    <link rel="icon" href="/images/favicon.png" type="image/png">
+    
+    <!-- 공통 CSS -->
     <link rel="stylesheet" th:href="@{/css/layout.css}">
     <link rel="stylesheet" th:href="@{/css/layout-user.css}">
 
+    <!-- 페이지별 CSS 삽입 위치 -->
     <th:block th:replace="${pageCss}"></th:block>
 
 </head>
@@ -29,7 +32,6 @@
 
 <script th:src="@{/js/common.js}"></script>
 
-<th:block th:if="${pageScript}" th:replace="${pageScript}"></th:block>
 
 </body>
 </html>
