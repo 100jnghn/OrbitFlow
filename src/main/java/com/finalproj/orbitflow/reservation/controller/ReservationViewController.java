@@ -49,4 +49,15 @@ public class ReservationViewController {
         return "reservation/car-reservation";
     }
 
+    /**
+     * 기타 자원 예약 페이지
+     */
+    @GetMapping("/item")
+    public String getItemReservationPage(Model model) {
+        model.addAttribute("pageTitle", "기타 자원 예약");
+        model.addAttribute("currentGNB", "reservation");
+        model.addAttribute("currentMenu", "item-reservation");
+        return "reservation/item-reservation";
+    }
+
 }
