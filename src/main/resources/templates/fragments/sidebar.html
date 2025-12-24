@@ -10,7 +10,7 @@
 
         <div class="sidebar-menu-wrapper">
             <!-- 각 팀/도메인에서 정의한 메뉴 fragment 가 이 안으로 주입됨 -->
-            <ul class="sidebar-menu" th:replace="${sidebarFragment}"></ul>
+            <th:block th:insert="${sidebarFragment}"></th:block>
         </div>
 
         <div class="sidebar-footer">

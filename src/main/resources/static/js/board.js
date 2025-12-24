@@ -118,13 +118,13 @@ async function loadBoardCategories() {
                 }
             }
         } else {
-            // 첫 번째 게시판 자동 선택
-            if (accessibleBoards.length > 0) {
-                const firstBoard = accessibleBoards[0];
-                selectBoard(firstBoard.id, firstBoard.boardName || firstBoard.name || '게시판');
-            } else if (organizationBoards.length > 0) {
-                const firstBoard = organizationBoards[0];
-                selectBoard(firstBoard.id, firstBoard.boardName || firstBoard.name || '게시판');
+        // 첫 번째 게시판 자동 선택
+        if (accessibleBoards.length > 0) {
+            const firstBoard = accessibleBoards[0];
+            selectBoard(firstBoard.id, firstBoard.boardName || firstBoard.name || '게시판');
+        } else if (organizationBoards.length > 0) {
+            const firstBoard = organizationBoards[0];
+            selectBoard(firstBoard.id, firstBoard.boardName || firstBoard.name || '게시판');
             }
         }
     } catch (error) {
@@ -150,27 +150,27 @@ function renderSidebar() {
     // 일반 게시판 (권한이 있는 게시판) - 단일 항목으로 표시
     if (accessibleBoards && accessibleBoards.length > 0) {
         accessibleBoards.forEach((board, index) => {
-            const boardName = board.boardName || board.name || '게시판';
-            const boardId = board.id;
+        const boardName = board.boardName || board.name || '게시판';
+        const boardId = board.id;
             
             if (!boardId) {
                 console.warn('Board without ID found:', board);
                 return;
             }
             
-            const isSelected = boardId === currentCategoryId;
-            
+        const isSelected = boardId === currentCategoryId;
+        
             console.log(`Adding accessible board ${index + 1}:`, boardName, boardId);
-            
-            const li = document.createElement('li');
+        
+        const li = document.createElement('li');
             li.className = 'menu-item no-sub' + (isSelected ? ' selected' : '');
-            li.innerHTML = `
+        li.innerHTML = `
                 <a href="#" class="board-link" data-category-id="${boardId}" data-board-name="${escapeHTML(boardName)}">
                     <span>${escapeHTML(boardName)}</span>
-                </a>
-            `;
-            sidebar.appendChild(li);
-        });
+            </a>
+        `;
+        sidebar.appendChild(li);
+    });
     } else {
         console.warn('No accessible boards found. accessibleBoards:', accessibleBoards);
     }
@@ -190,21 +190,21 @@ function renderSidebar() {
             </div>
             <ul class="sub-menu">
                 ${organizationBoards.map(board => {
-                    const boardName = board.boardName || board.name || '게시판';
-                    const boardId = board.id;
+            const boardName = board.boardName || board.name || '게시판';
+            const boardId = board.id;
                     if (!boardId) return '';
                     
-                    const isSelected = boardId === currentCategoryId;
+            const isSelected = boardId === currentCategoryId;
                     return `
                         <li class="${isSelected ? 'selected' : ''}">
                             <a href="#" class="board-link" data-category-id="${boardId}" data-board-name="${escapeHTML(boardName)}">
                                 ${escapeHTML(boardName)}
-                            </a>
+                </a>
                         </li>
                     `;
                 }).join('')}
             </ul>
-        `;
+            `;
         sidebar.appendChild(orgMenuItem);
     } else {
         console.warn('No organization boards found. organizationBoards:', organizationBoards);
@@ -564,7 +564,7 @@ function viewBoard(boardId) {
     if (currentCategoryId) {
         window.location.href = `/view/board/detail?boardId=${boardId}&categoryId=${currentCategoryId}`;
     } else {
-        window.location.href = `/view/board/detail?boardId=${boardId}`;
+    window.location.href = `/view/board/detail?boardId=${boardId}`;
     }
 }
 

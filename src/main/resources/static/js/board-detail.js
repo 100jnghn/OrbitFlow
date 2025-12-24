@@ -114,17 +114,17 @@ function renderSidebar(accessibleBoards, organizationBoards) {
 
     // 일반 게시판 (권한이 있는 게시판) - 단일 항목으로 표시
     if (accessibleBoards && accessibleBoards.length > 0) {
-        accessibleBoards.forEach(board => {
+    accessibleBoards.forEach(board => {
             const isSelected = board.id === categoryId;
-            const li = document.createElement('li');
+        const li = document.createElement('li');
             li.className = 'menu-item no-sub' + (isSelected ? ' selected' : '');
-            li.innerHTML = `
+        li.innerHTML = `
                 <a href="/view/board?categoryId=${board.id}" class="board-link">
                     <span>${escapeHTML(board.boardName || board.name || '게시판')}</span>
-                </a>
-            `;
-            sidebar.appendChild(li);
-        });
+            </a>
+        `;
+        sidebar.appendChild(li);
+    });
     }
 
     // 조직 게시판 - 아코디언 구조로 표시 (기본적으로 펼쳐진 상태)
@@ -139,7 +139,7 @@ function renderSidebar(accessibleBoards, organizationBoards) {
             </div>
             <ul class="sub-menu">
                 ${organizationBoards.map(board => {
-                    const isSelected = board.id === categoryId;
+            const isSelected = board.id === categoryId;
                     return `
                         <li class="${isSelected ? 'selected' : ''}">
                             <a href="/view/board?categoryId=${board.id}" class="board-link">
@@ -300,6 +300,12 @@ function renderBoardDetail(board) {
     const createdAt = formatDateTime(board.createdAt || board.created_at);
     const updatedAt = formatDateTime(board.updatedAt || board.updated_at);
     const files = board.files || [];
+
+    // 게시판 이름 표시
+    const categoryNameElement = document.getElementById('boardCategoryName');
+    if (categoryNameElement && categoryName) {
+        categoryNameElement.textContent = categoryName;
+    }
 
     // 작성자 본인인지 확인
     const isAuthor = currentUserId && writerId && currentUserId === writerId;
