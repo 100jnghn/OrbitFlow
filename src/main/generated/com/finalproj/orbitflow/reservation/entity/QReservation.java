@@ -34,6 +34,8 @@ public class QReservation extends EntityPathBase<Reservation> {
 
     public final com.finalproj.orbitflow.hr.employee.entity.QEmployee employee;
 
+    public final DatePath<java.time.LocalDate> endDate = createDate("endDate", java.time.LocalDate.class);
+
     public final NumberPath<Integer> endTime = createNumber("endTime", Integer.class);
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
