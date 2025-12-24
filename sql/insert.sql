@@ -1847,6 +1847,12 @@ VALUES
  (SELECT id FROM reservation_status WHERE status_code = 'CONFIRM'));
 
 
+INSERT INTO template_category (code, name)
+VALUES ('ATTENDANCE', '근태'),
+       ('SCHEDULE', '일정'),
+       ('GENERAL', '일반');
+
+
 
 INSERT INTO leave_type (type_name, is_countable, description) VALUES
                                                                   ('연차', true, '법정 유급 연차 휴가'),
@@ -1879,7 +1885,7 @@ INSERT INTO leave_balance (company_id, employee_id, year, total_granted, remaini
 
                                                                                              (1, 15, 2025, 11.0, 10.5), -- 신입사원 (매달 1개씩 총 11개 부여됨)
 
-                                                                                             (1, 16, 2025, 15.0, 13.0)  -- 15개 중 2개 사용
+                                                                                             (1, 16, 2025, 15.0, 13.0);  -- 15개 중 2개 사용
 
 -- 실제 휴가 사용 기록 (결재 완료 건들)
 INSERT INTO attendance_record (employee_id, company_id, start_date, end_date, days, type_id, status, approved_at, created_at) VALUES

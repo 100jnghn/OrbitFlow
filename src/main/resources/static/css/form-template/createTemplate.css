@@ -157,6 +157,21 @@ html, body {
     background: #fff2f2;
 }
 
+
+.hint.active {
+    color: #e44;
+}
+
+.invalid-focus {
+    outline: none;
+    border-color: #e44 !important;
+    box-shadow: 0 0 0 2px rgba(228, 68, 68, 0.15);
+}
+
+#component-setting-content.invalid-focus {
+    box-shadow: inset 0 0 0 2px rgba(228, 68, 68, 0.35);
+}
+
 /* Drag 상태 */
 .form-comp-row.drag-hover {
     background: #eaf4ff;
@@ -191,9 +206,7 @@ html, body {
 }
 
 
-.required {
-    color: #e22719;
-}
+
 
 .comp-label.required::after,
 .doc-title-label.required::after {
@@ -541,4 +554,97 @@ html, body {
     .form-editor-container {
         flex-direction: column;
     }
+}
+
+
+.schedule-comp {
+    display: grid;
+    grid-template-columns: 140px 1fr; /* ⬅️ 라벨 컬럼 고정 */
+    column-gap: 12px;
+
+    padding: 10px 12px;
+    border: 1.5px solid #2f6fff;
+    border-radius: 6px;
+    background: #f4f8ff;
+}
+
+
+/* 좌측 라벨 */
+.schedule-label {
+    font-weight: 600;
+    color: #1f3a8a;
+
+    display: flex;
+    align-items: center; /* 🔑 세로 중앙 */
+    justify-content: flex-start;
+
+    white-space: nowrap;
+}
+
+
+/* 우측 영역 */
+.schedule-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* 날짜 범위 */
+.schedule-range {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.schedule-range input {
+    height: 28px;
+    padding: 0 6px;
+    border: 1px solid #ccd5ff;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.range-sep {
+    color: #666;
+    font-size: 0.9em;
+}
+
+/* 일정 설명 */
+.schedule-desc {
+    resize: none;
+    min-height: 44px;
+    padding: 6px 8px;
+    border: 1px solid #ccd5ff;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 0.95em;
+}
+
+/* ======================================================
+   휴가 사유 컴포넌트
+   ====================================================== */
+
+.leave-reason-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.leave-reason-body select {
+    height: 30px;
+    padding: 0 6px;
+    border: 1px solid #ccd5ff;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.leave-reason-textarea {
+    resize: none;
+    min-height: 44px;
+    padding: 6px 8px;
+    border: 1px solid #ccd5ff;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 0.95em;
 }
