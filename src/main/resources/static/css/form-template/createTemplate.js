@@ -1,12 +1,14 @@
-// ===============================
-// 전자결재 문서 양식: 필수 컴포넌트 타입 정의 + 기본 스키마/메타 설계
-// ===============================
+// ===========================================================
+// [전자결재 문서 양식 생성/수정 스크립트]
+//   - 주요 상수/스키마, 컴포넌트 렌더링, 유틸 함수, 이벤트 바인딩 등
+//   - 주석 그룹 순서: 상수/스키마 > 전역변수 > 유틸 > 검증 > 컴포넌트 관리 > 렌더링 > 패널 > 데이터 변환 > 그룹정보 > 바인딩 > 초기화
+// ===========================================================
 
-// ===============================
-// 상수 정의
-// ===============================
+// ===========================
+// 1. 상수/타입/스키마 정의
+// ===========================
 
-// 1. 컴포넌트 타입 상수: 주요 타입 나열 (확장 가능)
+// -- 주요 컴포넌트 타입 상수 (확장 가능)
 const FORM_COMPONENT_TYPES = [
     "text",
     "textarea",
@@ -28,7 +30,7 @@ const FORM_COMPONENT_TYPES = [
     "department-search"
 ];
 
-// 2. 각 타입별 기본 스키마: 확장성 있는 구조(공통 필드 + meta)
+// -- 타입별 기본 스키마: 공통필드+meta
 const FORM_COMPONENT_SCHEMAS = {
     text: {
         type: "text",
@@ -130,6 +132,18 @@ const FORM_COMPONENT_SCHEMAS = {
             endLabel: ""
         }
     },
+    "leave-reason":{
+        type: "leave-reason",
+        label: "휴가 사유",
+        required: true,
+        meta: {
+            vacationTypeCode: null,     // 선택된 대분류 코드
+            vacationTypeName: null,     // 표시용
+            deductAttendance: null,     // ⭐ 서버 기준값
+            detailReason: "",           // 사용자 입력
+            options: []                 // 드롭다운 목록 (API)
+        }
+    },
     notice: {
         type: "notice",
         label: "안내 문구",
@@ -139,14 +153,8 @@ const FORM_COMPONENT_SCHEMAS = {
             style: "info" // "info", "warning", "danger"
         }
     },
-    // table column schema
-    // {
-    //   id: string,
-    //   label: string,
-    //   type: "text" | "number" | "currency",
-    //   required: boolean,
-    //   meta: {}
-    // }
+    // table column schema 예시
+    // { id, label, type: "text"|"number"|"currency", required, meta }
     table: {
         type: "table",
         label: "테이블",
@@ -205,7 +213,7 @@ const FORM_COMPONENT_SCHEMAS = {
     }
 };
 
-// 3. 고정(문서 정보) 컴포넌트 예시: 별도 타입으로 구성(향후 확장 고려)
+// -- 문서정보용 고정형 컴포넌트 예시
 const FIXED_COMPONENTS = [
     {
         id: 'document-title',
@@ -215,7 +223,6 @@ const FIXED_COMPONENTS = [
         fixed: true,
         meta: {
             placeholder: "문서 제목을 입력하세요.",
-            maxLength: 100,
             value: ""
         }
     },
@@ -231,31 +238,36 @@ const FIXED_COMPONENTS = [
     }
 ];
 
-// ===============================
-// 전역 변수
-// ===============================
+// =====================================
+// 2. 전역 변수 (폼 상태 & 상수 값 등)
+// =====================================
 
-// formComponents: 필드 구조만 정의 - 문서 구조의 일관성 보장
+// -- 폼 컴포넌트(양식요소) 목록
 let formComponents = [
     {...FIXED_COMPONENTS[0], id: 'document-title'},
     {...FIXED_COMPONENTS[1], id: 'document-meta'}
 ];
 
-// 선택된 컴포넌트 id (동작용, 데이터 설계와 무관)
-let selectedComponentId = null;
-
-// 드래그 상태 변수
-let dragSrcIdx = null;
-
-// 문서 설정 전역 옵션
-let documentSettings = {
+// -- 기타 전역 및 상수
+let selectedComponentId = null;            // 선택중인 컴포넌트 id(UI 상태)
+let dragSrcIdx = null;                    // 드래그 상태 index
+let documentSettings = {                  // 문서 전역 설정
     autoReflectAttendance: false,
     autoReflectSchedule: false
 };
 
-// ===============================
-// 유틸리티 함수
-// ===============================
+// -- 입력 제한/정책 상수
+const DOCUMENT_TITLE_MAX = 50;
+const COMPONENT_LABEL_MAX = 20;
+const NOTICE_MESSAGE_MAX = 200;
+const TABLE_ROW_MIN = 1;
+const TABLE_ROW_MAX = 10;
+const TABLE_COLUMN_MAX = 10;
+let dragBlockSize = 1;
+
+// =====================
+// 3. 유틸리티 함수
+// =====================
 
 function deepCopy(obj) {
     if (obj === null || typeof obj !== "object") return obj;
@@ -277,6 +289,36 @@ function generateOptionId() {
     return 'opt_' + Math.random().toString(36).substr(2, 4) + '_' + Date.now();
 }
 
+function enforceMaxLength(inputEl, max) {
+    if (inputEl.value.length > max) {
+        inputEl.value = inputEl.value.slice(0, max);
+    }
+}
+
+function showMsg(el, message, type) {
+    if (!el) return;
+    el.textContent = message;
+    el.className = 'hint ' + type;
+}
+
+function highlightComponent(componentId) {
+    // 기존 invalid 제거
+    document
+        .querySelectorAll('.form-comp-row.invalid')
+        .forEach(el => el.classList.remove('invalid'));
+    const target = document.querySelector(
+        `.form-comp-row[data-comp-id="${componentId}"]`
+    );
+    if (target) {
+        target.classList.add('invalid');
+        // 화면 중앙으로 스크롤
+        target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+    }
+}
+
 function removeComponent(componentId) {
     const idx = formComponents.findIndex(c => c.id === componentId);
     if (idx === -1) return;
@@ -284,8 +326,27 @@ function removeComponent(componentId) {
     const comp = formComponents[idx];
     if (comp.fixed) return;
 
-    formComponents.splice(idx, 1);
+    // 🚫 휴가 사유는 단독 삭제 불가
+    if (comp.type === "leave-reason") {
+        alert("휴가 사유는 휴가 일정과 함께 삭제됩니다.");
+        return;
+    }
 
+    // ✅ 휴가 일정 삭제 시 → 바로 뒤 휴가 사유도 같이 삭제
+    if (comp.type === "leave-date-range") {
+        const next = formComponents[idx + 1];
+        if (next && next.type === "leave-reason") {
+            formComponents.splice(idx, 2); // 두 개 같이 제거
+        } else {
+            // 이론상 없어야 하지만, 안전장치
+            formComponents.splice(idx, 1);
+        }
+    } else {
+        // 일반 컴포넌트
+        formComponents.splice(idx, 1);
+    }
+
+    // 선택 상태 정리
     if (selectedComponentId === componentId) {
         selectedComponentId = null;
         const panel = document.getElementById('component-setting-content');
@@ -298,16 +359,307 @@ function removeComponent(componentId) {
 }
 
 
-// ===============================
-// 컴포넌트 관리 함수
-// ===============================
+// =====================
+// 4. 검증/Validation 함수
+// =====================
+
+// -- hint 관련 함수
+function showHint(id, message) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = message;
+    el.classList.add('active');
+}
+function clearHint(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = '';
+    el.classList.remove('active');
+}
+
+// -- 문서 설정 패널 검증
+function validateDocumentSettingPanel() {
+    let valid = true;
+    const titleInput = document.getElementById('form-title-input');
+    const categorySelect = document.getElementById('form-category-input');
+    const title = titleInput?.value.trim() ?? '';
+    const category = categorySelect?.value ?? '';
+    // 제목
+    if (!title) {
+        showHint('title-hint', '문서 제목은 필수입니다.');
+        valid = false;
+    } else if (title.length > DOCUMENT_TITLE_MAX) {
+        showHint(
+            'title-hint',
+            `문서 제목은 ${DOCUMENT_TITLE_MAX}자 이하로 입력하세요.`
+        );
+        valid = false;
+    } else {
+        clearHint('title-hint');
+    }
+    // 카테고리
+    if (!category) {
+        showHint('category-hint', '카테고리를 선택하세요.');
+        valid = false;
+    } else {
+        clearHint('category-hint');
+    }
+    return valid;
+}
+
+function validateDocumentTitle() {
+    const titleInput = document.getElementById('form-title-input');
+    const titleHint = document.getElementById('title-hint');
+    const v = titleInput.value.trim();
+    if (!v) {
+        titleHint.textContent = '';
+        return false;
+    }
+    if (v.length > DOCUMENT_TITLE_MAX) {
+        showMsg(
+            titleHint,
+            `문서 제목은 ${DOCUMENT_TITLE_MAX}자 이내여야 합니다. (${v.length}/${DOCUMENT_TITLE_MAX})`,
+            'error'
+        );
+        return false;
+    }
+    showMsg(
+        titleHint,
+        `입력됨 (${v.length}/${DOCUMENT_TITLE_MAX})`,
+        'success'
+    );
+    return true;
+}
+
+function validateComponentLabel(inputEl, hintEl) {
+    const v = inputEl.value.trim();
+    if (!v) {
+        hintEl.textContent = '';
+        return false;
+    }
+    if (v.length > COMPONENT_LABEL_MAX) {
+        showMsg(
+            hintEl,
+            `이름은 ${COMPONENT_LABEL_MAX}자 이내여야 합니다. (${v.length}/${COMPONENT_LABEL_MAX})`,
+            'error'
+        );
+        return false;
+    }
+    showMsg(
+        hintEl,
+        `입력됨 (${v.length}/${COMPONENT_LABEL_MAX})`,
+        'success'
+    );
+    return true;
+}
+
+function validateAllComponentLabels() {
+    for (const comp of formComponents) {
+        if (comp.fixed) continue;
+        const label = comp.label?.trim() ?? '';
+        if (!label) {
+            highlightComponent(comp.id);
+            selectedComponentId = comp.id;
+            showComponentSettingPanel(comp.id);
+            alert('이름이 비어있는 컴포넌트가 있습니다.');
+            return false;
+        }
+        if (label.length > COMPONENT_LABEL_MAX) {
+            highlightComponent(comp.id);
+            selectedComponentId = comp.id;
+            showComponentSettingPanel(comp.id);
+            alert(
+                `"${label}" 컴포넌트 이름은 ${COMPONENT_LABEL_MAX}자 이내여야 합니다.`
+            );
+            return false;
+        }
+    }
+    return true;
+}
+
+function validateOptionComponent(comp) {
+    const options = comp.meta?.options ?? [];
+    const compLabel = comp.label?.trim() || '(이름 없음)';
+    if (options.length === 0) {
+        highlightComponent(comp.id);
+        showComponentSettingPanel(comp.id);
+        alert(`컴포넌트 "${compLabel}"에는 옵션이 최소 1개 이상 필요합니다.`);
+        return false;
+    }
+    for (let i = 0; i < options.length; i++) {
+        const label = options[i].label?.trim() ?? '';
+        if (!label) {
+            highlightComponent(comp.id);
+            showComponentSettingPanel(comp.id);
+            alert(`컴포넌트 "${compLabel}"의 옵션 ${i + 1} 이름이 비어 있습니다.`);
+            return false;
+        }
+        if (label.length > COMPONENT_LABEL_MAX) {
+            highlightComponent(comp.id);
+            showComponentSettingPanel(comp.id);
+            alert(
+                `컴포넌트 "${compLabel}"의 옵션 "${label}"은 ` +
+                `${COMPONENT_LABEL_MAX}자 이내여야 합니다.`
+            );
+            return false;
+        }
+    }
+    return true;
+}
+
+function validateTableComponent(comp) {
+    const columns = comp.meta?.columns ?? [];
+    if (columns.length === 0) {
+        highlightComponent(comp.id);
+        showComponentSettingPanel(comp.id);
+        alert('테이블에는 최소 1개 이상의 컬럼이 필요합니다.');
+        return false;
+    }
+    for (let i = 0; i < columns.length; i++) {
+        const col = columns[i];
+        const label = col.label?.trim() ?? '';
+        if (!label) {
+            highlightComponent(comp.id);
+            showComponentSettingPanel(comp.id);
+            alert(`컬럼 ${i + 1}의 이름이 비어 있습니다.`);
+            return false;
+        }
+    }
+    const {min, max} = comp.meta?.rowPolicy ?? {};
+    if (max !== undefined && min > max) {
+        highlightComponent(comp.id);
+        showComponentSettingPanel(comp.id);
+        alert('최대 행 수는 최소 행 수보다 작을 수 없습니다.');
+        return false;
+    }
+    return true;
+}
+
+function validateAllComponents() {
+    if (!validateAllComponentLabels()) return false;
+    for (const comp of formComponents) {
+        if (comp.fixed) continue;
+        switch (comp.type) {
+            case 'radio':
+            case 'checkbox':
+                if (!validateOptionComponent(comp)) return false;
+                break;
+            case 'table':
+                if (!validateTableComponent(comp)) return false;
+                break;
+            case 'notice':
+                const msg = comp.meta?.message?.trim() ?? '';
+                if (!msg) {
+                    highlightComponent(comp.id);
+                    showComponentSettingPanel(comp.id);
+                    alert(`안내 문구가 비어 있는 컴포넌트가 있습니다.`);
+                    return false;
+                }
+                if (msg.length > NOTICE_MESSAGE_MAX) {
+                    highlightComponent(comp.id);
+                    showComponentSettingPanel(comp.id);
+                    alert(`안내 문구는 ${NOTICE_MESSAGE_MAX}자 이내여야 합니다.`);
+                    return false;
+                }
+                break;
+        }
+    }
+    return true;
+}
+
+function validateOptionLabel(inputEl, hintEl) {
+    const v = inputEl.value.trim();
+    if (!v) {
+        hintEl.textContent = '';
+        return false;
+    }
+    if (v.length > COMPONENT_LABEL_MAX) {
+        showMsg(
+            hintEl,
+            `옵션 이름은 ${COMPONENT_LABEL_MAX}자 이내 (${v.length}/${COMPONENT_LABEL_MAX})`,
+            'error'
+        );
+        return false;
+    }
+    showMsg(
+        hintEl,
+        `입력됨 (${v.length}/${COMPONENT_LABEL_MAX})`,
+        'success'
+    );
+    return true;
+}
+
+function validateNoticeMessage(inputEl, hintEl) {
+    const v = inputEl.value;
+    if (!v.trim()) {
+        hintEl.textContent = '';
+        return false;
+    }
+    if (v.length > NOTICE_MESSAGE_MAX) {
+        showMsg(
+            hintEl,
+            `안내 문구는 ${NOTICE_MESSAGE_MAX}자 이내여야 합니다. (${v.length}/${NOTICE_MESSAGE_MAX})`,
+            'error'
+        );
+        return false;
+    }
+    showMsg(
+        hintEl,
+        `입력됨 (${v.length}/${NOTICE_MESSAGE_MAX})`,
+        'success'
+    );
+    return true;
+}
+
+function bindDocumentTitleValidation() {
+    const titleInput = document.getElementById('form-title-input');
+    if (!titleInput) return;
+    titleInput.addEventListener('input', () => {
+        enforceMaxLength(titleInput, DOCUMENT_TITLE_MAX);
+        validateDocumentTitle();
+    });
+}
+
+function hasLeaveComponent() {
+    return formComponents.some(comp => comp.type === "leave-date-range");
+}
+
+function validateDocumentGlobalRules() {
+
+    // 🔴 근태 자동 반영 ON → 휴가 컴포넌트 필수
+    if (documentSettings.autoReflectAttendance) {
+        const hasLeave = hasLeaveComponent();
+
+        if (!hasLeave) {
+            alert(
+                "‘최종 승인 시 근태 자동 반영’을 사용하려면\n" +
+                "문서에 ‘휴가 일정’ 컴포넌트를 추가해야 합니다."
+            );
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+// ========================
+// 5. 컴포넌트 관리 관련 함수
+// ========================
 
 function addComponentByType(type) {
     if (!FORM_COMPONENT_SCHEMAS.hasOwnProperty(type)) {
+
         console.warn(`[FormTemplateBuilder] 컴포넌트 타입 '${type}'는 스키마에 정의되어 있지 않습니다. 추가 중단.`);
         return;
     }
+    if (type === "leave-date-range") {
+        addLeaveDateRangeWithReason();
+        return;
+    }
+
     const schema = FORM_COMPONENT_SCHEMAS[type];
+
     const metaCopy = deepCopy(schema.meta);
 
     if ((type === "radio" || type === "checkbox")) {
@@ -333,6 +685,49 @@ function addComponentByType(type) {
     showComponentSettingPanel(component.id);
 }
 
+function addLeaveDateRangeWithReason() {
+    const groupId = generateId();
+
+    const leaveDateComp = {
+        id: generateId(),
+        type: "leave-date-range",
+        label: "휴가 일정",
+        required: true,
+        fixed: false,
+        meta: {
+            startLabel: "시작일",
+            endLabel: "종료일"
+        },
+        _groupId: groupId
+    };
+
+    const leaveReasonComp = {
+        id: generateId(),
+        type: "leave-reason",
+        label: "휴가 사유",
+        required: true,
+        fixed: false,
+        meta: {
+            vacationTypeCode: null,
+            vacationTypeName: null,
+            deductAttendance: null,
+            detailReason: "",
+            options: []
+        },
+        _groupId: groupId,
+        _linkedTo: leaveDateComp.id
+    };
+
+    // document-meta 앞에 세트 삽입
+    const insertIdx = formComponents.length - 1;
+    formComponents.splice(insertIdx, 0, leaveDateComp, leaveReasonComp);
+
+    selectedComponentId = leaveDateComp.id;
+    renderFormComponents();
+    showComponentSettingPanel(leaveDateComp.id);
+}
+
+
 function initComponentListPanel() {
     const listContainer = document.getElementById("component-btn-list");
     if (!listContainer) return;
@@ -354,9 +749,9 @@ function initComponentListPanel() {
     });
 }
 
-// ===============================
-// 렌더링 함수
-// ===============================
+// ============================
+// 6. 렌더링 함수 (폼 미리보기 등)
+// ============================
 
 function renderFormComponents() {
     const container = document.getElementById("form-edit-area");
@@ -367,16 +762,37 @@ function renderFormComponents() {
     const fixedFirstIdx = 0;
     const fixedLastIdx = formComponents.length - 1;
 
-    formComponents.forEach(function (comp, idx) {
+    formComponents.forEach((comp, idx) => {
         const row = document.createElement("div");
         row.className = "form-comp-row";
-        row.setAttribute("data-comp-id", comp.id);
+        row.dataset.compId = comp.id;
 
-        // Drag & Drop 속성 및 핸들링
+        // 상태 class
+        if (comp.fixed) row.classList.add("fixed");
+        if (comp.id === selectedComponentId) row.classList.add("selected");
+
+        // Drag & Drop
         if (!comp.fixed) {
-            row.setAttribute("draggable", "true");
-            row.addEventListener("dragstart", function (e) {
+
+            // 🚫 휴가 사유는 단독 드래그 불가
+            if (comp.type === "leave-reason") {
+                row.draggable = false;
+            } else {
+                row.draggable = true;
+            }
+
+            row.addEventListener("dragstart", e => {
                 dragSrcIdx = idx;
+                dragBlockSize = 1;
+
+                // ✅ 휴가 일정이면 + 휴가 사유까지 같이 이동
+                if (comp.type === "leave-date-range") {
+                    const next = formComponents[idx + 1];
+                    if (next && next.type === "leave-reason") {
+                        dragBlockSize = 2;
+                    }
+                }
+
                 row.classList.add("dragging");
                 e.dataTransfer.effectAllowed = "move";
                 try {
@@ -384,302 +800,296 @@ function renderFormComponents() {
                 } catch {
                 }
             });
-            row.addEventListener("dragend", function () {
+
+            row.addEventListener("dragend", () => {
                 row.classList.remove("dragging");
                 dragSrcIdx = null;
+                dragBlockSize = 1;
             });
-        } else {
-            row.setAttribute("draggable", "false");
         }
+        row.addEventListener("dragover", e => {
+            if (
+                dragSrcIdx === null ||
+                comp.fixed ||
+                idx === fixedFirstIdx ||
+                idx === fixedLastIdx ||
+                dragSrcIdx === idx
+            ) return;
+            e.preventDefault();
+            row.classList.add("drag-hover");
+        });
+        row.addEventListener("dragleave", () => {
+            row.classList.remove("drag-hover");
+        });
+        row.addEventListener("drop", e => {
+            if (
+                dragSrcIdx === null ||
+                comp.fixed ||
+                idx === fixedFirstIdx ||
+                idx === fixedLastIdx
+            ) return;
 
-        row.addEventListener("dragover", function (e) {
-            if (dragSrcIdx === null) return;
-            if (comp.fixed) return;
-            if (idx === fixedFirstIdx || idx === fixedLastIdx) return;
-            if (dragSrcIdx === idx) return;
             e.preventDefault();
-            row.style.backgroundColor = "#eaf4ff";
-        });
-        row.addEventListener("dragleave", function () {
-            row.style.backgroundColor = (comp.id === selectedComponentId) ? "#eef5ff" : (comp.fixed ? "#f5f7fa" : "#fff");
-        });
-        row.addEventListener("drop", function (e) {
-            if (dragSrcIdx === null) return;
-            if (comp.fixed) return;
-            if (idx === fixedFirstIdx || idx === fixedLastIdx) return;
-            if (dragSrcIdx === idx) return;
-            e.preventDefault();
-            row.style.backgroundColor = "";
-            const dragged = formComponents[dragSrcIdx];
-            if (dragged.fixed) return;
+            row.classList.remove("drag-hover");
+
+            // 🚫 휴가 사유 앞에 drop 금지
+            if (formComponents[idx]?.type === "leave-reason") {
+                return;
+            }
+
+            // 🔹 이동할 블록 추출
+            const draggedBlock = formComponents.splice(dragSrcIdx, dragBlockSize);
+
+            // 🔹 삽입 위치 계산
+            let insertIdx = idx;
             if (dragSrcIdx < idx) {
-                formComponents.splice(idx + 1, 0, dragged);
-                formComponents.splice(dragSrcIdx, 1);
-            } else {
-                formComponents.splice(dragSrcIdx, 1);
-                formComponents.splice(idx, 0, dragged);
+                insertIdx = idx - dragBlockSize + 1;
             }
-            if (formComponents[0].type !== "document-title") {
-                const firstFixed = formComponents.find(fc => fc.type === "document-title");
-                if (firstFixed) {
-                    formComponents = [firstFixed, ...formComponents.filter(fc => fc !== firstFixed)];
-                }
-            }
-            if (formComponents[formComponents.length - 1].type !== "document-meta") {
-                const lastFixed = formComponents.find(fc => fc.type === "document-meta");
-                if (lastFixed) {
-                    formComponents = [...formComponents.filter(fc => fc !== lastFixed), lastFixed];
-                }
-            }
+
+            formComponents.splice(insertIdx, 0, ...draggedBlock);
+
+            // 🔹 fixed 컴포넌트 재정렬
+            const firstFixed = formComponents.find(c => c.type === "document-title");
+            const lastFixed = formComponents.find(c => c.type === "document-meta");
+
+            formComponents = [
+                firstFixed,
+                ...formComponents.filter(c => !c.fixed),
+                lastFixed
+            ];
+
             renderFormComponents();
-            selectedComponentId = dragged.id;
-            showComponentSettingPanel(selectedComponentId);
+
+            selectedComponentId = draggedBlock[0].id;
+            showComponentSettingPanel(draggedBlock[0].id);
+
             dragSrcIdx = null;
+            dragBlockSize = 1;
         });
 
-        if (comp.fixed) {
-            row.style.background = "#f5f7fa";
-            row.style.border = "1px solid #e0e0ec";
-        } else {
-            if (comp.id === selectedComponentId) {
-                row.style.border = "2px solid #196de7";
-                row.style.background = "#eef5ff";
-            } else {
-                row.style.border = "1px solid #dedede";
-                row.style.background = "#fff";
-            }
-            row.style.cursor = "pointer";
-            row.addEventListener("click", function () {
+
+        // 클릭 선택
+        if (!comp.fixed) {
+            row.addEventListener("click", () => {
                 selectedComponentId = comp.id;
                 renderFormComponents();
                 showComponentSettingPanel(comp.id);
             });
         }
 
-        row.style.padding = "10px 14px";
-        row.style.marginBottom = "6px";
-
-
-        // 타입별 미리보기 렌더링
+        // 타입별 미리보기
         if (comp.fixed) {
-            if (comp.type === 'document-title') {
+            if (comp.type === "document-title") {
                 row.innerHTML = `
-                                    <strong style="font-size:1.15em;">${comp.label}</strong>
-                                    <input
-                                        type="text"
-                                        disabled
-                                        value="${comp.meta?.value ?? ""}"
-                                        placeholder="${comp.meta?.placeholder ?? ""}"
-                                        style="width:66%;margin-left:7px;background:#f7f8fa;"
-                                    />
-                                `;
-            } else if (comp.type === 'document-meta') {
-                row.innerHTML = `<span style="color:#789;">${comp.label}</span>
-                    <span style="margin-left:10px;color:#bbb;">자동입력</span>`;
-            } else {
-                row.innerHTML = `<span><strong>${comp.label}</strong></span>`;
-            }
-            if (comp.required) {
-                row.innerHTML += `<span style="color:#e22719;font-size:0.95em;margin-left:7px;">*</span>`;
+                    <strong class="doc-title-label">${comp.label}</strong>
+                    <input
+                        type="text"
+                        disabled
+                        value="${comp.meta?.value ?? ""}"
+                        placeholder="${comp.meta?.placeholder ?? ""}"
+                        class="doc-title-input"
+                    />
+                `;
+            } else if (comp.type === "document-meta") {
+                row.innerHTML = `
+                    <span class="doc-meta-label">${comp.label}</span>
+                    <span class="doc-meta-auto">자동입력</span>
+                `;
             }
         } else {
-            let inputHtml = "";
-            let labelHtml = `<span>${comp.label || ""}</span>`;
-            if (comp.required)
-                labelHtml += `<span style="color:#e22719;font-size:0.95em;margin-left:7px;">*</span>`;
+            let labelHtml = `
+<span class="comp-label ${comp.required ? 'is-required' : ''}">
+    ${comp.label || ""}
+  </span>
+`;
 
-            if (["date-range", "time-range", "leave-date-range"].includes(comp.type)) {
-                let leftLabel = "", rightLabel = "";
-                if (comp.meta) {
-                    leftLabel = comp.meta.startLabel || ((comp.type === "date-range" || comp.type === "leave-date-range") ? "시작" : "시작");
-                    rightLabel = comp.meta.endLabel || ((comp.type === "date-range" || comp.type === "leave-date-range") ? "종료" : "종료");
-                }
-                if (comp.type === "date-range" || comp.type === "leave-date-range") {
-                    inputHtml = `
-                        <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
-                            <input type="date" disabled style="flex:1;min-width:120px;" placeholder="${leftLabel}">
-                            <span style="margin:0 8px;">~</span>
-                            <input type="date" disabled style="flex:1;min-width:120px;" placeholder="${rightLabel}">
-                        </div>
-                    `;
-                } else if (comp.type === "time-range") {
-                    inputHtml = `
-                        <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
-                            <input type="time" disabled style="flex:1;min-width:110px;" placeholder="${leftLabel}">
-                            <span style="margin:0 8px;">~</span>
-                            <input type="time" disabled style="flex:1;min-width:110px;" placeholder="${rightLabel}">
-                        </div>
-                    `;
-                }
-                row.innerHTML = labelHtml + inputHtml;
-            } else if (["text", "number", "currency"].includes(comp.type)) {
-                let inputType = comp.type === "number" ? "number" : "text";
-                let placeholder = (comp.meta && comp.meta.placeholder) ? comp.meta.placeholder : "";
-                let unit = (comp.type === "currency" && comp.meta && comp.meta.unit) ? ` <span style="font-size:90%;color:#888;margin-left:3px;">${comp.meta.unit}</span>` : '';
-                inputHtml = `<input type="${inputType}" disabled style="width:60%;margin-left:12px;" placeholder="${placeholder}" />${unit}`;
-                row.innerHTML = labelHtml + inputHtml;
+            let inputHtml = "";
+            if (["text", "number", "currency"].includes(comp.type)) {
+                inputHtml = `
+                    <input
+                        type="${comp.type === "number" ? "number" : "text"}"
+                        disabled
+                        class="preview-input"
+                        placeholder="${comp.meta?.placeholder ?? ""}"
+                    />
+                    ${comp.type === "currency"
+                    ? `<span class="unit">${comp.meta?.unit ?? ""}</span>`
+                    : ""}
+                `;
             } else if (comp.type === "textarea") {
-                let placeholder = (comp.meta && comp.meta.placeholder) ? comp.meta.placeholder : "";
-                inputHtml = `<textarea disabled placeholder="${placeholder}" style="margin-left:9px;min-width:170px;min-height:32px;vertical-align:middle;"></textarea>`;
-                row.innerHTML = labelHtml + inputHtml;
+                inputHtml = `
+                    <textarea
+                        disabled
+                        class="preview-textarea"
+                        placeholder="${comp.meta?.placeholder ?? ""}">
+                    </textarea>
+                `;
             } else if (comp.type === "radio" || comp.type === "checkbox") {
-                let options =
-                    (comp.meta && Array.isArray(comp.meta.options) && comp.meta.options.length > 0)
-                        ? comp.meta.options
-                        : [{id: "opt1", label: comp.type === "radio" ? "항목 1" : "항목 1"}];
-                let inputType = comp.type;
-                inputHtml =
-                    `<div style="margin-left:12px;display:flex;flex-direction:column;gap:2px;">` +
-                    options.map(function (opt, i) {
-                        const label = (typeof opt === "string" ? opt : (opt.label ?? `옵션${i + 1}`));
-                        return `<label style="margin-bottom:2px;display:flex;align-items:center;">
-                            <input type="${inputType}" disabled style="margin-right:7px;">${label}
-                        </label>`;
-                    }).join("") +
-                    `</div>`;
-                row.innerHTML = labelHtml + inputHtml;
-            } else if (comp.type === "time") {
-                inputHtml = `<input type="time" disabled style="width:160px;margin-left:12px;">`;
-                row.innerHTML = labelHtml + inputHtml;
+                inputHtml = `
+                    <div class="option-preview">
+                        ${(comp.meta?.options ?? []).map(opt => `
+                            <label>
+                                <input type="${comp.type}" disabled />
+                                ${opt.label}
+                            </label>
+                        `).join("")}
+                    </div>
+                `;
             } else if (comp.type === "date") {
-                inputHtml = `<input type="date" disabled style="width:160px;margin-left:12px;">`;
-                row.innerHTML = labelHtml + inputHtml;
+                inputHtml = `<input type="date" disabled class="preview-input" />`;
+            } else if (comp.type === "time") {
+                inputHtml = `<input type="time" disabled class="preview-input" />`;
+            } else if (["date-range", "leave-date-range"].includes(comp.type)) {
+                const left = comp.meta?.startLabel || "시작";
+                const right = comp.meta?.endLabel || "종료";
+                inputHtml = `
+                    <div class="range-preview">
+                        <input type="date" disabled placeholder="${left}" />
+                        <span class="range-sep">~</span>
+                        <input type="date" disabled placeholder="${right}" />
+                    </div>
+                `;
+            } else if (comp.type === "time-range") {
+                const left = comp.meta?.startLabel || "시작";
+                const right = comp.meta?.endLabel || "종료";
+                inputHtml = `
+                    <div class="range-preview">
+                        <input type="time" disabled placeholder="${left}" />
+                        <span class="range-sep">~</span>
+                        <input type="time" disabled placeholder="${right}" />
+                    </div>
+                `;
             } else if (comp.type === "divider") {
                 row.innerHTML = `
-                                    <div class="divider-preview">
-                                        <span></span>
-                                        <em>구분선</em>
-                                        <span></span>
-                                    </div>
-                                `;
+                    <div class="divider-preview">
+                        <span></span>
+                        <em>구분선</em>
+                        <span></span>
+                    </div>
+                `;
             } else if (comp.type === "notice") {
-                let message = comp.meta && typeof comp.meta.message === "string" && comp.meta.message.length > 0
-                    ? comp.meta.message
-                    : "안내 문구 예시";
-                let styleType = comp.meta && comp.meta.style ? comp.meta.style : "info";
-                let color = styleType === "danger" ? "#e74c3c" : (styleType === "warning" ? "#f39c12" : "#1976d2");
-                let bgColor = styleType === "danger" ? "#feeeef" : (styleType === "warning" ? "#fff8e5" : "#eaf3fc");
-                row.innerHTML = `<div style="padding:8px 13px;border-radius:6px;border:1.5px solid ${color};background:${bgColor};color:${color};font-size:1em;">
-                    <span style="font-weight:500;"><i class="ico-info" style="margin-right:6px;"></i>${labelHtml}</span>
-                    <div style="margin-top:4px;font-size:0.98em;color:#595b60;">${message.replace(/\n/g, "<br>")}</div>
-                </div>`;
-            } else if (comp.type === "table") {
-                const cols = Array.isArray(comp.meta.columns) ? comp.meta.columns : [];
-                const minRows = Math.max(1, comp.meta?.rowPolicy?.min ?? 1);
+                const message =
+                    (comp.meta?.message ?? "안내 문구 예시")
+                        .replace(/\n/g, "<br>");
 
                 inputHtml = `
-                            <table style="width:100%;border-collapse:collapse;margin-top:6px;">
-                              <thead>
-                                <tr>
-                                  ${cols.map(col => `
-                                    <th style="border:1px solid #ddd;padding:6px;background:#f7f8fa;">
-                                      ${col.label || ""}
-                                      ${col.required ? "<span style='color:#e22719'>*</span>" : ""}
+<div class="notice-message-box ${comp.meta?.style ?? "info"}">${message}</div>
+`;//화면에서의 공백 문제때문에 일부러 들여쓰기 X
+            } else
+        if (comp.type === "leave-reason") {
+
+            const options = comp.meta?.options ?? [];
+            const selectedCode = comp.meta?.vacationTypeCode;
+
+            inputHtml = `
+        <div class="leave-reason-preview">
+            <select disabled class="leave-type-select">
+                <option value="">휴가 유형 선택</option>
+                ${options.map(opt => `
+                    <option value="${opt.code}"
+                        ${opt.code === selectedCode ? "selected" : ""}>
+                        ${opt.name}
+                    </option>
+                `).join("")}
+            </select>
+
+            <textarea
+                disabled
+                class="leave-reason-textarea"
+                placeholder="상세 휴가 사유를 입력하세요.">
+            </textarea>
+        </div>
+    `;
+        } else if (comp.type === "table") {
+                const cols = comp.meta?.columns ?? [];
+                const minRows = Math.max(1, comp.meta?.rowPolicy?.min ?? 1);
+                inputHtml = `
+                    <table class="table-preview">
+                        <thead>
+                            <tr>
+                                ${cols.map(col => `
+                                    <th class="${col.required ? 'is-required' : ''}">
+                                      ${col.label}
                                     </th>
-                                  `).join("")}
-                                </tr>
-                              </thead>
-                              <tbody>
-                                ${Array.from({length: minRows}).map(() => `
-                                  <tr>
-                                    ${cols.map(() => `
-                                      <td style="border:1px solid #ddd;padding:6px;">
-                                        <input disabled style="width:100%">
-                                      </td>
-                                    `).join("")}
-                                  </tr>
                                 `).join("")}
-                              </tbody>
-                            </table>
-                            `;
-                row.innerHTML = labelHtml + inputHtml;
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Array.from({length: minRows}).map(() => `
+                                <tr>
+                                    ${cols.map(() => `
+                                        <td><input disabled /></td>
+                                    `).join("")}
+                                </tr>
+                            `).join("")}
+                        </tbody>
+                    </table>
+                `;
             } else if (comp.type === "image") {
-                const src = comp.meta && comp.meta.src;
-                const alt = comp.meta && comp.meta.alt ? comp.meta.alt : "이미지 미리보기";
-                inputHtml = `<div style="display:inline-block;margin-left:12px;">
-                                <div style="width:120px;height:64px;border:1.5px dotted #c6cbe7;background:#f4f4fa;display:flex;align-items:center;justify-content:center;border-radius:8px;">
-                                    ${src ? `<img src="${src}" alt="${alt}" style="max-width:110px;max-height:60px;" />` : `<span style="color:#aaa;font-size:16px;">이미지</span>`}
-                                </div>
-                            </div>`;
-                row.innerHTML = labelHtml + inputHtml;
+                const src = comp.meta?.src;
+                const alt = comp.meta?.alt || "이미지 미리보기";
+                inputHtml = `
+                    <div class="image-preview-box">
+                        ${src
+                    ? `<img src="${src}" alt="${alt}" />`
+                    : `<span class="image-placeholder">이미지</span>`
+                }
+                    </div>
+                `;
             } else if (comp.type === "file") {
-                inputHtml = `<button type="button" disabled style="margin-left:14px;border:1px solid #bbb;padding:4px 10px;border-radius:5px;background:#f4f6fb;color:#888;">파일 선택</button>`;
-                row.innerHTML = labelHtml + inputHtml;
+                inputHtml = `
+                    <button type="button" class="file-preview-btn" disabled>
+                        파일 선택
+                    </button>
+                `;
             } else if (comp.type === "address") {
-                row.innerHTML = `
-                                    ${labelHtml}
-                                    <input
-                                        type="text"
-                                        disabled
-                                        placeholder="주소 입력 (형식 검증)"
-                                        style="width:65%;margin-left:12px;background:#f7f8fa;"
-                                    />
-                                `;
+                inputHtml = `
+                    <input
+                        type="text"
+                        disabled
+                        class="preview-input wide"
+                        placeholder="주소 입력 (형식 검증)"
+                    />
+                `;
             } else if (comp.type === "employee-search") {
-                row.innerHTML = `
-                                    ${labelHtml}
-                                    <input
-                                        type="text"
-                                        disabled
-                                        placeholder="사원 검색"
-                                        style="width:60%;margin-left:12px;background:#f7f8fa;"
-                                    />
-                                `;
+                inputHtml = `
+                    <input
+                        type="text"
+                        disabled
+                        class="preview-input"
+                        placeholder="사원 검색"
+                    />
+                `;
             } else if (comp.type === "department-search") {
+                inputHtml = `
+                    <input
+                        type="text"
+                        disabled
+                        class="preview-input"
+                        placeholder="부서 검색"
+                    />
+                `;
+            }
+            if (!["divider"].includes(comp.type)) {
                 row.innerHTML = `
-                                    ${labelHtml}
-                                    <input
-                                        type="text"
-                                        disabled
-                                        placeholder="부서 검색"
-                                        style="width:60%;margin-left:12px;background:#f7f8fa;"
-                                    />
-                                `;
-            } else {
-                row.innerHTML = labelHtml;
+                    <div class="preview-row">
+                        ${labelHtml}
+                        ${inputHtml}
+                    </div>
+                `;
             }
         }
 
-
-        // 삭제 버튼 (fixed 제외)
+        // 삭제 버튼 (고정형 제외)
         if (!comp.fixed) {
-            row.style.position = "relative"; // 필수
-
             const deleteBtn = document.createElement("button");
+            deleteBtn.className = "delete-btn";
             deleteBtn.type = "button";
             deleteBtn.innerHTML = "🗑️";
             deleteBtn.title = "컴포넌트 삭제";
 
-            deleteBtn.style.cssText = `
-                position: absolute;
-                right: 10px;
-                top: 50%;
-                transform: translateY(-50%);
-                border: none;
-                background: transparent;
-                cursor: pointer;
-                font-size: 16px;
-                color: #c33;
-                opacity: 0;
-             `;
-
-            // 기본은 숨김
-            deleteBtn.style.opacity = "0";
-            deleteBtn.style.transition = "opacity 0.15s ease";
-
-            // hover 시 표시
-            row.addEventListener("mouseenter", () => {
-                deleteBtn.style.opacity = "1";
-            });
-
-            row.addEventListener("mouseleave", () => {
-                deleteBtn.style.opacity = "0";
-            });
-
-
-            deleteBtn.addEventListener("click", function (e) {
-                e.stopPropagation();   // 선택 방지
-                e.preventDefault();    // drag 방지
+            deleteBtn.addEventListener("click", e => {
+                e.stopPropagation();
                 if (confirm("이 컴포넌트를 삭제하시겠습니까?")) {
                     removeComponent(comp.id);
                 }
@@ -687,96 +1097,78 @@ function renderFormComponents() {
 
             row.appendChild(deleteBtn);
         }
-
-
-        if (row.getAttribute("draggable") === "true") {
-            row.addEventListener("dragenter", function () {
-                if (dragSrcIdx !== null && !comp.fixed && idx !== fixedFirstIdx && idx !== fixedLastIdx && dragSrcIdx !== idx) {
-                    row.classList.add("drag-hover");
-                }
-            });
-            row.addEventListener("dragleave", function () {
-                row.classList.remove("drag-hover");
-            });
-        }
-
         container.appendChild(row);
     });
 }
 
-// ===============================
-// 컴포넌트 설정 패널
-// ===============================
+// ================================
+// 7. 컴포넌트 설정 패널(사이드)
+// ================================
 
 function showComponentSettingPanel(componentId) {
     const comp = formComponents.find(c => c.id === componentId);
     const panel = document.getElementById('component-setting-content');
-
     if (!comp) {
         panel.innerHTML = `<span style="color:#9ab;">컴포넌트를 선택하세요.</span>`;
         return;
     }
-
     const isFixed = !!comp.fixed;
+    // -- 공통 정보 영역
     let html = `
-        <div style="margin-bottom:11px;">
-            <div style="font-weight:600;margin-bottom:4px;">${comp.label || ''}</div>
-            <div style="color:#888;font-size:0.97em;">타입: ${comp.type}</div>
-        </div>
-
-        <div class="setting-row" style="margin-bottom:10px;display:flex;">
-            <label style="min-width:54px;">이름</label>
-            <input type="text" id="input-comp-label"
-                value="${(comp.label || '').replace(/"/g, '&quot;')}"
-                ${isFixed ? 'disabled' : ''}
-                style="flex:1;margin-left:6px;">
-        </div>
+    <div style="margin-bottom:11px;">
+        <div style="font-weight:600;margin-bottom:4px;">${comp.label || ''}</div>
+        <div style="color:#888;font-size:0.97em;">타입: ${comp.type}</div>
+    </div>
+    <div class="setting-row" style="display:flex;flex-direction:column;">
+        <label style="margin-bottom:4px;">이름</label>
+        <input
+            type="text"
+            id="input-comp-label"
+            value="${(comp.label || '').replace(/"/g, '&quot;')}"
+            ${isFixed ? 'disabled' : ''}
+        >
+        <div class="hint" id="component-label-hint"></div>
+    </div>
     `;
-
     if (!isFixed) {
         html += `
-        <div class="setting-row" style="margin-bottom:12px;display:flex;">
+        <div class="setting-row" style="margin-top:8px;">
             <label style="flex:1;">필수 입력</label>
             <input type="checkbox" id="toggle-required" ${comp.required ? "checked" : ""}>
         </div>`;
     }
-
-    /* ===== notice ===== */
+    // -- notice
     if (comp.type === "notice") {
         html += `
-        <div class="setting-row">
-            <label>안내 문구</label>
-            <textarea id="input-notice-message"
-                style="width:100%;min-height:50px;">${comp.meta?.message ?? ""}</textarea>
+        <div class="setting-row" style="margin-top:14px;display:flex;flex-direction:column;">
+            <label style="margin-bottom:4px;">안내 문구</label>
+            <textarea
+                id="input-notice-message"
+                style="width:100%;min-height:60px;"
+            >${comp.meta?.message ?? ""}</textarea>
+            <div class="hint" id="notice-message-hint"></div>
         </div>`;
     }
-
-    /* ===== radio / checkbox ===== */
+    // -- radio/checkbox 옵션 관리
     if (comp.type === "radio" || comp.type === "checkbox") {
-        if (!Array.isArray(comp.meta.options)) {
-            comp.meta.options = [{id: generateOptionId(), label: "옵션 1"}];
-        }
-
+        comp.meta.options ??= [{id: generateOptionId(), label: "옵션 1"}];
         html += `
-        <div class="setting-row">
+        <div class="setting-row" style="margin-top:14px;">
             <div style="font-weight:600;">옵션 목록</div>
             <div id="option-list-pane"></div>
             <button type="button" id="add-option-btn">옵션 추가</button>
         </div>`;
     }
-
-    /* ===== table ===== */
+    // -- table 컬럼 관리
     if (comp.type === "table") {
         comp.meta.columns ??= [];
         comp.meta.rowPolicy ??= {min: 1, max: undefined, addable: true, removable: true};
-
         html += `
         <div class="setting-row" style="margin-top:14px;">
             <div style="font-weight:600;">컬럼 목록</div>
             <div id="table-column-list"></div>
             <button type="button" id="add-table-column-btn">+ 컬럼 추가</button>
         </div>
-
         <div class="setting-row" style="margin-top:14px;">
             <div style="font-weight:600;">행 설정</div>
             <label>최소 행 <input type="number" id="table-row-min" value="${comp.meta.rowPolicy.min}"></label><br>
@@ -785,54 +1177,61 @@ function showComponentSettingPanel(componentId) {
             <label><input type="checkbox" id="table-row-removable" ${comp.meta.rowPolicy.removable ? "checked" : ""}> 행 삭제 가능</label>
         </div>`;
     }
-
-    /* ===== DOM 반영 (딱 1번) ===== */
     panel.innerHTML = html;
 
-    /* ======================
-       공통 이벤트 바인딩
-       ====================== */
+    // -- 공통 이벤트
     if (!isFixed) {
-        document.getElementById("input-comp-label").oninput =
-            e => {
-                comp.label = e.target.value;
-                renderFormComponents();
-            };
-
-        document.getElementById("toggle-required")?.addEventListener("change",
-            e => {
+        const labelInput = document.getElementById("input-comp-label");
+        const labelHint = document.getElementById("component-label-hint");
+        labelInput.addEventListener("input", () => {
+            enforceMaxLength(labelInput, COMPONENT_LABEL_MAX);
+            comp.label = labelInput.value;
+            validateComponentLabel(labelInput, labelHint);
+            renderFormComponents();
+        });
+        document.getElementById("toggle-required")
+            ?.addEventListener("change", e => {
                 comp.required = e.target.checked;
                 renderFormComponents();
             });
     }
-
+    // -- notice 이벤트
     if (comp.type === "notice") {
-        document.getElementById("input-notice-message").oninput =
-            e => {
-                comp.meta.message = e.target.value;
-                renderFormComponents();
-            };
+        const textarea = document.getElementById("input-notice-message");
+        const hint = document.getElementById("notice-message-hint");
+        textarea.addEventListener("input", () => {
+            enforceMaxLength(textarea, NOTICE_MESSAGE_MAX);
+            comp.meta.message = textarea.value;
+            validateNoticeMessage(textarea, hint);
+            renderFormComponents();
+        });
     }
-
-    /* ======================
-       radio / checkbox 옵션
-       ====================== */
+    // -- radio/checkbox 옵션 목록 관리
     if (comp.type === "radio" || comp.type === "checkbox") {
         const pane = document.getElementById("option-list-pane");
-
         const renderOptions = () => {
             pane.innerHTML = "";
             comp.meta.options.forEach((opt, idx) => {
                 const row = document.createElement("div");
                 row.innerHTML = `
-                    <input value="${opt.label}">
-                    <button>🗑️</button>
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                    <div style="display:flex;gap:6px;">
+                        <input value="${opt.label}" style="flex:1;">
+                        <button type="button">🗑️</button>
+                    </div>
+                    <div class="hint option-hint"></div>
+                </div>
                 `;
-                row.querySelector("input").oninput = e => {
-                    opt.label = e.target.value;
+                const input = row.querySelector("input");
+                const hint = row.querySelector(".option-hint");
+                const del = row.querySelector("button");
+                input.addEventListener("input", () => {
+                    enforceMaxLength(input, COMPONENT_LABEL_MAX);
+                    opt.label = input.value;
+                    validateOptionLabel(input, hint);
                     renderFormComponents();
-                };
-                row.querySelector("button").onclick = () => {
+                });
+                del.onclick = () => {
                     if (comp.meta.options.length > 1) {
                         comp.meta.options.splice(idx, 1);
                         renderOptions();
@@ -842,46 +1241,50 @@ function showComponentSettingPanel(componentId) {
                 pane.appendChild(row);
             });
         };
-
         renderOptions();
-
         document.getElementById("add-option-btn").onclick = () => {
             comp.meta.options.push({id: generateOptionId(), label: "옵션"});
             renderOptions();
             renderFormComponents();
         };
     }
-
-    /* ======================
-       table 설정
-       ====================== */
+    // -- table 컬럼 관리
     if (comp.type === "table") {
         const list = document.getElementById("table-column-list");
-
         const renderColumns = () => {
             list.innerHTML = "";
             comp.meta.columns.forEach((col, idx) => {
                 const row = document.createElement("div");
                 row.innerHTML = `
-                    <input value="${col.label}">
-                    <select>
-                        ${["text", "number", "currency"].map(t =>
-                    `<option value="${t}" ${t === col.type ? "selected" : ""}>${t}</option>`).join("")}
-                    </select>
-                    <input type="checkbox" ${col.required ? "checked" : ""}>
-                    <button>🗑️</button>
+                <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:6px;">
+                    <div style="display:flex;gap:6px;">
+                        <input value="${col.label}" style="flex:1;">
+                        <select>
+                            ${["text", "number", "currency"].map(t =>
+                    `<option value="${t}" ${t === col.type ? "selected" : ""}>${t}</option>`
+                ).join("")}
+                        </select>
+                        <input type="checkbox" ${col.required ? "checked" : ""}>
+                        <button type="button">🗑️</button>
+                    </div>
+                    <div class="hint column-hint"></div>
+                </div>
                 `;
-                const [label, type, req, del] = row.children;
-                label.oninput = e => {
-                    col.label = e.target.value;
+                const label = row.querySelector("input");
+                const hint = row.querySelector(".column-hint");
+                const type = row.querySelector("select");
+                const req = row.querySelector('input[type="checkbox"]');
+                const del = row.querySelector("button");
+                label.addEventListener("input", () => {
+                    enforceMaxLength(label, COMPONENT_LABEL_MAX);
+                    col.label = label.value;
+                    validateComponentLabel(label, hint);
                     renderFormComponents();
-                };
-
+                });
                 type.onchange = e => {
                     col.type = e.target.value;
                     renderFormComponents();
                 };
-
                 req.onchange = e => {
                     col.required = e.target.checked;
                     renderFormComponents();
@@ -894,12 +1297,14 @@ function showComponentSettingPanel(componentId) {
                 list.appendChild(row);
             });
         };
-
         renderColumns();
-
         document.getElementById("add-table-column-btn").onclick = () => {
+            if (comp.meta.columns.length >= TABLE_COLUMN_MAX) {
+                alert(`컬럼은 최대 ${TABLE_COLUMN_MAX}개까지 추가할 수 있습니다.`);
+                return;
+            }
             comp.meta.columns.push({
-                id: "col_" + Math.random().toString(36).slice(2, 6),
+                id: generateId(),
                 label: "컬럼",
                 type: "text",
                 required: false,
@@ -908,37 +1313,58 @@ function showComponentSettingPanel(componentId) {
             renderColumns();
             renderFormComponents();
         };
-
         document.getElementById("table-row-min").oninput = e => {
-            comp.meta.rowPolicy.min = Math.max(1, Number(e.target.value) || 1);
+            let v = Number(e.target.value);
+            if (!v || v < TABLE_ROW_MIN) v = TABLE_ROW_MIN;
+            if (v > TABLE_ROW_MAX) v = TABLE_ROW_MAX;
+            e.target.value = v;
+            comp.meta.rowPolicy.min = v;
+            if (
+                comp.meta.rowPolicy.max !== undefined &&
+                comp.meta.rowPolicy.max < v
+            ) {
+                comp.meta.rowPolicy.max = v;
+                const maxInput = document.getElementById("table-row-max");
+                if (maxInput) maxInput.value = v;
+            }
             renderFormComponents();
         };
-
-        document.getElementById("table-row-max").oninput =
-            e => comp.meta.rowPolicy.max = e.target.value ? Number(e.target.value) : undefined;
-
+        document.getElementById("table-row-max").oninput = e => {
+            let max = Number(e.target.value);
+            if (e.target.value === "") {
+                comp.meta.rowPolicy.max = undefined;
+                renderFormComponents();
+                return;
+            }
+            if (isNaN(max)) {
+                e.target.value = "";
+                comp.meta.rowPolicy.max = undefined;
+                renderFormComponents();
+                return;
+            }
+            max = Math.min(TABLE_ROW_MAX, Math.max(TABLE_ROW_MIN, max));
+            if (max < comp.meta.rowPolicy.min) {
+                max = comp.meta.rowPolicy.min;
+            }
+            comp.meta.rowPolicy.max = max;
+            e.target.value = max;
+            renderFormComponents();
+        };
         document.getElementById("table-row-addable").onchange =
             e => comp.meta.rowPolicy.addable = e.target.checked;
-
         document.getElementById("table-row-removable").onchange =
             e => comp.meta.rowPolicy.removable = e.target.checked;
     }
 }
 
-// ===============================
-// 데이터 변환 함수
-// ===============================
+// ============================
+// 8. 데이터 변환(저장/로드) 함수
+// ============================
 
 function buildAffectTags(settings) {
     const tags = [];
-
-    if (settings.autoReflectAttendance) {
-        tags.push("ATTENDANCE");
-    }
-    if (settings.autoReflectSchedule) {
-        tags.push("SCHEDULE");
-    }
-
+    if (settings.autoReflectAttendance) tags.push("ATTENDANCE");
+    if (settings.autoReflectSchedule) tags.push("SCHEDULE");
     return tags;
 }
 
@@ -957,15 +1383,11 @@ function loadTemplateJsonToFormComponents(templateJson) {
     if (!templateJson || !Array.isArray(templateJson.fields)) {
         return;
     }
-
     const fields = [...templateJson.fields]
         .sort((a, b) => a.order - b.order);
-
     const components = [];
-
     fields.forEach(field => {
         const isFixed = field.fieldType === "document-title";
-
         components.push({
             id: field.fieldId,
             type: field.fieldType,
@@ -975,26 +1397,27 @@ function loadTemplateJsonToFormComponents(templateJson) {
             meta: field.meta ?? {}
         });
     });
-
     // document-meta는 항상 마지막에 자동 추가
     components.push({
         ...FIXED_COMPONENTS.find(c => c.type === "document-meta")
     });
-
     formComponents = components;
 }
 
-// ===============================
-// 저장/로드 함수
-// ===============================
+// ================================
+// 9. 저장/로드 및 그룹정보 함수
+// ================================
 
 async function saveFormTemplateStructure(templateId) {
     if (!templateId) {
         alert('저장할 문서 양식 ID(templateId)가 존재하지 않습니다.');
-        return;
+        return false;
     }
+    // 검증
+    if (!validateDocumentSettingPanel()) return false;
+    if (!validateAllComponents()) return false;
+    if (!validateDocumentGlobalRules()) return false;
 
-    // fixed / 불필요 필드 제거
     const filteredComponents = formComponents
         .filter(fc => fc.type !== 'document-meta')
         .map(fc => {
@@ -1005,16 +1428,11 @@ async function saveFormTemplateStructure(templateId) {
         });
 
     const categoryCode = document.getElementById('form-category-input')?.value;
-
     if (!categoryCode) {
         alert('카테고리를 선택해주세요.');
-        return;
+        return false;
     }
-
-    // affectTags 생성
     const affectTags = buildAffectTags(documentSettings);
-
-    // 서버 계약에 맞는 payload 구성
     const payload = {
         categoryCode,
         affectTags,
@@ -1022,65 +1440,55 @@ async function saveFormTemplateStructure(templateId) {
             fields: convertComponentsToFields(filteredComponents)
         }
     };
-
     try {
-        const res = await apiFetch(`/api/admin/form-templates/${templateId}/structure`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-
+        const res = await apiFetch(
+            `/api/admin/form-templates/${templateId}/structure`,
+            {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            }
+        );
         if (!res.ok) {
             const err = await res.json().catch(() => ({}));
             throw new Error(err?.message || '문서 양식 저장에 실패했습니다.');
         }
-
         alert('문서 양식이 저장되었습니다.');
-
+        return true;
     } catch (e) {
         console.error('[FormTemplate SAVE ERROR]', e);
         alert(e.message || '문서 양식 저장 중 오류가 발생했습니다.');
+        return false;
     }
 }
 
 async function loadFormTemplateGroupInfo(groupId) {
     if (!groupId) return;
-
     try {
         const res = await apiFetch(`/api/form-template-groups/${groupId}`);
         if (!res.ok) return;
-
         const result = await res.json();
         const group = result?.data;
         if (!group) return;
-
         renderFormTemplateGroupInfo(group);
-
     } catch (e) {
         console.warn('[FormTemplateGroup] 그룹 정보 조회 실패', e);
     }
 }
 
-
 function renderFormTemplateGroupInfo(group) {
     const panel = document.getElementById('form-setting-panel');
     if (!panel) return;
-
     const blockId = 'form-template-group-info';
     if (document.getElementById(blockId)) return;
-
     const html = `
         <div id="${blockId}" style="margin-bottom:16px;padding:10px 12px;border:1px solid #dde1f0;border-radius:6px;background:#f7f8fc;">
             <div style="font-weight:600;margin-bottom:6px;">문서 양식 그룹 정보</div>
-
             <div style="display:flex;align-items:center;margin-bottom:6px;">
                 <label style="min-width:70px;color:#666;">그룹명</label>
                 <input type="text" value="${group.name ?? ''}" disabled
                     style="flex:1;padding:4px 7px;border:1px solid #ccd;background:#f2f4f8;color:#555;">
             </div>
-
             <div style="display:flex;align-items:flex-start;">
                 <label style="min-width:70px;color:#666;margin-top:4px;">설명</label>
                 <textarea disabled
@@ -1089,21 +1497,20 @@ function renderFormTemplateGroupInfo(group) {
             </div>
         </div>
     `;
-
     panel.insertAdjacentHTML('afterbegin', html);
 }
 
-// ===============================
-// 이벤트 바인딩 함수
-// ===============================
+// ============================
+// 10. 이벤트 바인딩 관련 함수
+// ============================
 
 function bindDocumentSettingsPanel() {
     const panel = document.getElementById('form-setting-panel');
     if (!panel) return;
-
     const insertedId = "document-global-toggles";
     if (document.getElementById(insertedId)) return;
 
+    // -- 자동반영 토글 UI 추가
     const settingTogglesHTML = `
       <div class="setting-row" style="margin-bottom:5px;align-items:center;display:flex;">
         <label for="toggle-auto-attendance" style="flex:1;">
@@ -1116,7 +1523,6 @@ function bindDocumentSettingsPanel() {
           style="transform:scale(1.15);margin-left:7px;cursor:pointer;"
         >
       </div>
-
       <div class="setting-row" style="margin-bottom:5px;align-items:center;display:flex;">
         <label for="toggle-auto-schedule" style="flex:1;">
           최종 승인 시 일정 자동 반영
@@ -1129,23 +1535,17 @@ function bindDocumentSettingsPanel() {
         >
       </div>
     `;
-
     const wrapper = document.createElement('div');
     wrapper.id = insertedId;
     wrapper.innerHTML = settingTogglesHTML;
-
-    // ✅ 핵심 수정: 버튼 묶음(.form-action-buttons) 기준으로 삽입
+    // 주요 버튼 전 위치에 삽입
     const actionButtons = panel.querySelector('.form-action-buttons');
     if (actionButtons) {
         panel.insertBefore(wrapper, actionButtons);
     } else {
         panel.appendChild(wrapper);
     }
-
-    /* ======================
-       기존 이벤트 바인딩 (그대로 유지)
-       ====================== */
-
+    // -- 기존 바인딩 (참조문서/첨부파일 등)
     const refToggle = document.getElementById('toggle-reference-document');
     if (refToggle) {
         refToggle.checked = documentSettings.allowReferenceDocument;
@@ -1154,7 +1554,6 @@ function bindDocumentSettingsPanel() {
             console.log('[documentSettings]', documentSettings);
         });
     }
-
     const attToggle = document.getElementById('toggle-attachment');
     if (attToggle) {
         attToggle.checked = documentSettings.allowAttachment;
@@ -1163,7 +1562,6 @@ function bindDocumentSettingsPanel() {
             console.log('[documentSettings]', documentSettings);
         });
     }
-
     const autoAttendanceToggle = document.getElementById('toggle-auto-attendance');
     if (autoAttendanceToggle) {
         autoAttendanceToggle.checked = documentSettings.autoReflectAttendance;
@@ -1172,7 +1570,6 @@ function bindDocumentSettingsPanel() {
             console.log('[documentSettings]', documentSettings);
         });
     }
-
     const autoScheduleToggle = document.getElementById('toggle-auto-schedule');
     if (autoScheduleToggle) {
         autoScheduleToggle.checked = documentSettings.autoReflectSchedule;
@@ -1181,14 +1578,13 @@ function bindDocumentSettingsPanel() {
             console.log('[documentSettings]', documentSettings);
         });
     }
-
+    // -- 문서 제목 실시간 동기화
     const titleInput = document.getElementById("form-title-input");
     if (titleInput) {
         const titleComp = formComponents.find(c => c.type === "document-title");
         if (titleComp?.meta?.value !== undefined) {
             titleInput.value = titleComp.meta.value;
         }
-
         titleInput.addEventListener("input", e => {
             const titleComp = formComponents.find(c => c.type === "document-title");
             if (!titleComp) return;
@@ -1196,16 +1592,20 @@ function bindDocumentSettingsPanel() {
             renderFormComponents();
         });
     }
+    bindDocumentTitleValidation();
 }
 
 function bindSaveFormButton() {
     const saveBtn = document.getElementById('save-form-btn');
     if (!saveBtn) return;
-
     saveBtn.addEventListener('click', async function () {
+        if (!validateDocumentSettingPanel()) return;
+        if (!validateAllComponents()) return;
         saveBtn.disabled = true;
         try {
-            await saveFormTemplateStructure(typeof templateId !== "undefined" ? templateId : undefined);
+            await saveFormTemplateStructure(
+                typeof templateId !== "undefined" ? templateId : undefined
+            );
         } finally {
             saveBtn.disabled = false;
         }
@@ -1215,7 +1615,6 @@ function bindSaveFormButton() {
 function observeComponentButtonHeight() {
     const list = document.getElementById('component-btn-list');
     if (!list) return;
-
     const equalizeHeights = () => {
         const btns = list.querySelectorAll('.component-btn');
         let maxH = 0;
@@ -1225,66 +1624,56 @@ function observeComponentButtonHeight() {
         });
         btns.forEach(b => b.style.height = maxH + 'px');
     };
-
     new MutationObserver(equalizeHeights)
         .observe(list, {childList: true});
-
     equalizeHeights();
 }
 
 function bindStepNavigationButtons() {
     const prevBtn = document.getElementById('before-form-btn');
     const nextBtn = document.getElementById('next-form-btn');
-
-    /* ===== 이전 ===== */
+    // 이전
     if (prevBtn) {
         prevBtn.addEventListener('click', () => {
-            // 가장 직관적인 방식
             window.history.back();
         });
     }
-
-    /* ===== 다음 ===== */
+    // 다음
     if (nextBtn) {
-        nextBtn.addEventListener('click', () => {
-            if (typeof templateId === "undefined" || !templateId) {
+        nextBtn.addEventListener('click', async () => {
+            if (!templateId) {
                 alert("템플릿 ID가 없어 다음 단계로 이동할 수 없습니다.");
                 return;
             }
-
-            // Spring MVC @GetMapping("/admin/approval-rule")
-            const url = `/view/admin/approval-rule?templateId=${templateId}`;
-            window.location.href = url;
+            nextBtn.disabled = true;
+            // 저장+검증
+            const saved = await saveFormTemplateStructure(templateId);
+            nextBtn.disabled = false;
+            if (!saved) return;
+            window.location.href =
+                `/view/admin/approval-rule?templateId=${templateId}`;
         });
     }
 }
 
-
 function bindPreviewButton() {
     const previewBtn = document.querySelector('.preview-btn');
     if (!previewBtn) return;
-
     previewBtn.addEventListener('click', () => {
         if (typeof templateId === "undefined" || !templateId) {
             alert("템플릿 ID가 없어 미리보기를 열 수 없습니다.");
             return;
         }
-
-        // 같은 탭 이동
         window.location.href = `/view/admin/preview-template/${templateId}`;
-
     });
 }
 
-
-// ===============================
-// 초기화
-// ===============================
+// =======================
+// 11. 초기화(로드 진입점)
+// =======================
 
 document.addEventListener('DOMContentLoaded', async function () {
-
     let resolvedGroupId = null;
-
     // templateId가 있으면 수정/복제/최신버전 로드
     if (typeof templateId !== "undefined" && templateId) {
         try {
@@ -1292,27 +1681,21 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (res.ok) {
                 const result = await res.json();
                 const data = result?.data;
-
                 if (data?.templateJson) {
                     loadTemplateJsonToFormComponents(data.templateJson);
                 }
-
-                // ✅ groupId 확보
+                // groupId 확보
                 resolvedGroupId = data?.templateGroupId ?? null;
-
                 // 카테고리 반영
                 const categorySelect = document.getElementById('form-category-input');
                 if (categorySelect && data?.templateCategoryCode) {
                     categorySelect.value = data.templateCategoryCode;
                 }
-
                 // affectTags → documentSettings 변환
                 documentSettings.autoReflectAttendance =
                     Array.isArray(data.affectTags) && data.affectTags.includes("ATTENDANCE");
-
                 documentSettings.autoReflectSchedule =
                     Array.isArray(data.affectTags) && data.affectTags.includes("SCHEDULE");
-
                 // 문서 제목 input 초기 동기화
                 const titleComp = formComponents.find(c => c.type === "document-title");
                 const titleInput = document.getElementById("form-title-input");
@@ -1324,31 +1707,23 @@ document.addEventListener('DOMContentLoaded', async function () {
             console.warn('[FormTemplate] 상세 로드 실패', e);
         }
     }
-
-    // ✅ groupId가 있을 때만 그룹 정보 로드
+    // groupId 있으면 그룹 info 로드
     if (resolvedGroupId && typeof loadFormTemplateGroupInfo === 'function') {
         await loadFormTemplateGroupInfo(resolvedGroupId);
     }
-
-    // 컴포넌트 목록 초기화
+    // 컴포넌트 목록 UI
     initComponentListPanel();
-
-    // 문서 전역 설정 토글 바인딩
+    // 설정패널 전역 옵션 바인딩
     bindDocumentSettingsPanel();
-
-    // 문서 렌더링
+    // 구성 요소 렌더링
     renderFormComponents();
-
     // 저장 버튼 바인딩
     bindSaveFormButton();
-
-    // 이전 / 다음 버튼 바인딩
+    // 이전/다음 버튼 바인딩
     bindStepNavigationButtons();
-
     // 미리보기 버튼 바인딩
     bindPreviewButton();
-
-    // 컴포넌트 버튼 높이 정렬 (UI 보조)
+    // 컴포넌트 버튼 높이 정렬
     observeComponentButtonHeight();
 });
 

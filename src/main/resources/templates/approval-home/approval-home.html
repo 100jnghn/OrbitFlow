@@ -48,7 +48,15 @@
                     <option value="ACTIVE">활성</option>
                     <option value="INACTIVE">비활성</option>
                 </select>
-                <input type="text" id="keywordInput" placeholder="양식명으로 검색" class="search-input"/>
+                <div class="search-group">
+                    <input
+                            type="text"
+                            id="keywordInput"
+                            class="search-input"
+                            placeholder="양식명으로 검색"
+                    />
+                    <div class="hint"></div>
+                </div>
                 <button type="button" id="searchBtn" class="search-btn">검색</button>
             </div>
         </section>
@@ -60,11 +68,15 @@
                 <div class="modal-form-group">
                     <label for="popupTemplateName">문서 양식 이름</label>
                     <input type="text" id="popupTemplateName" class="modal-input"/>
+                    <div class="hint"></div>
                 </div>
+
                 <div class="modal-form-group">
                     <label for="popupTemplateDesc">설명</label>
                     <textarea id="popupTemplateDesc" class="modal-textarea"></textarea>
+                    <div class="hint"></div>
                 </div>
+
                 <div class="modal-actions">
                     <button type="button" class="modal-cancel-btn" id="popupCancelBtn">취소</button>
                     <button type="button" class="modal-create-btn" id="popupCreateBtn">작성</button>
@@ -79,12 +91,19 @@
                 <div class="modal-form-group">
                     <label for="updateTemplateSearch">검색할 양식 이름</label>
                     <input type="text" id="updateTemplateSearch" class="modal-input"/>
+                    <div class="hint" id="updateTemplateSearchHint"></div>
                     <div id="updateDropdown" class="modal-dropdown-list"></div>
-                    <div id="updateSelectedDesc" class="update-descbox">
-                        <strong>양식 설명</strong>
-                        <span id="updateSelectedDescText"></span>
+                </div>
+
+                <div class="modal-form-group">
+                    <label>양식 설명</label>
+                    <div class="update-descbox">
+                        <div class="update-desc-text" id="updateSelectedDescText">
+                            선택된 양식의 설명이 표시됩니다.
+                        </div>
                     </div>
                 </div>
+
                 <div class="modal-actions">
                     <button type="button" class="modal-cancel-btn" id="popupUpdateCancelBtn">닫기</button>
                     <button type="button" class="modal-create-btn" id="popupUpdateOkBtn">업데이트</button>

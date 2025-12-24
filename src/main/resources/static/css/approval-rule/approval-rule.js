@@ -128,6 +128,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    function validateSteps({showAlert = false} = {}) {
+        for (let i = 0; i < steps.length; i++) {
+            const s = steps[i];
+
+            if (!s.organizationCategoryId) {
+                if (showAlert) {
+                    alert(`Step ${i + 1}의 조직 카테고리를 선택해주세요.`);
+                }
+                return false;
+            }
+
+            // 첫 Step 제외
+            if (i > 0) {
+                if (!s.organizationId) {
+                    if (showAlert) {
+                        alert(`Step ${i + 1}의 조직을 선택해주세요.`);
+                    }
+                    return false;
+                }
+
+                if (!s.positionId) {
+                    if (showAlert) {
+                        alert(`Step ${i + 1}의 직책을 선택해주세요.`);
+                    }
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+
     /* ===============================
        Render
     ================================ */
@@ -292,6 +324,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     ================================ */
     if (addStepBtn) {
         addStepBtn.onclick = () => {
+            if (!validateSteps({showAlert: true})) return;
+
             steps.push({
                 organizationCategoryId: null,
                 organizationId: null,
@@ -301,8 +335,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 positions: [],
                 employees: []
             });
+
             renderSteps();
         };
+
     }
 
     /* ===============================
@@ -320,6 +356,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (!confirm('이 결재 양식을 활성화하시겠습니까?')) return;
 
+            const saved = await saveApprovalRule();
+            if (!saved) return;
+
             const res = await apiFetch(
                 `/api/admin/form-templates/${formTemplateId}/publish`,
                 {method: 'POST'}
@@ -335,31 +374,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
 
+
     /* ===============================
        Save
     ================================ */
-    form.onsubmit = async e => {
-        e.preventDefault();
 
+    async function saveApprovalRule() {
         const formTemplateId = form.dataset.templateId;
-        if (!formTemplateId) return;
+        if (!formTemplateId) return false;
 
-        for (let i = 0; i < steps.length; i++) {
-            const s = steps[i];
-
-            if (!s.organizationCategoryId) {
-                alert(`Step ${i + 1}의 조직 카테고리를 선택해주세요.`);
-                return;
-            }
-            if (i > 0 && !s.organizationId) {
-                alert(`Step ${i + 1}의 조직을 선택해주세요.`);
-                return;
-            }
-            if (i > 0 && !s.positionId) {
-                alert(`Step ${i + 1}의 직책을 선택해주세요.`);
-                return;
-            }
-        }
+        if (!validateSteps({showAlert: true})) return false;
 
         const approvalRuleJson = steps.map((s, idx) => ({
             step: idx + 1,
@@ -369,7 +393,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             employeeId: idx === 0 ? null : s.employeeId
         }));
 
-        await apiFetch(
+        const res = await apiFetch(
             `/api/admin/form-templates/${formTemplateId}/approval-rule`,
             {
                 method: 'PATCH',
@@ -378,8 +402,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         );
 
+        if (!res.ok) {
+            alert('결재선 규칙 저장에 실패했습니다.');
+            return false;
+        }
+
+        return true;
+    }
+
+
+    form.onsubmit = async e => {
+        e.preventDefault();
+
+        const saved = await saveApprovalRule();
+        if (!saved) return;
+
         alert('결재선 규칙이 저장되었습니다.');
     };
+
 
     /* ===============================
        Init
