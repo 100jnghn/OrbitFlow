@@ -16,6 +16,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * Please explain the class!!!
  *
@@ -66,6 +68,26 @@ public class ReservationController {
 
         return ResponseEntity.ok().body(
                 new ResponseDto(HttpStatus.OK, "예약 세부 조회 성공", reservation)
+        );
+    }
+
+    // 해당 날짜 예약 조회
+    @GetMapping("/reservations/date")
+    public ResponseEntity<ResponseDto> getMyReservationByDate(
+            @AuthenticationPrincipal SecurityUser user,
+            @RequestParam String date,
+            @RequestParam String typeCode
+    ) {
+        Long companyId =  user.getCompanyId();
+
+        List<ReservationResDto> reservations = reservationService.getReservationsByDate(
+                companyId,
+                date,
+                typeCode
+        );
+
+        return  ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, date + "일 예약 조회 성공", reservations)
         );
     }
 

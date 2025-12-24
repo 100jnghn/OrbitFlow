@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Please explain the class!!!
@@ -152,6 +153,19 @@ public class ReservationService {
 
         // 취소 상태로 변경
         reservation.changeStatus(canceledStatus);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ReservationResDto> getReservationsByDate(Long companyId, String date, String typeCode) {
+
+        LocalDate targetDate = LocalDate.parse(date);
+        ReservationTypeCode type = ReservationTypeCode.valueOf(typeCode.toUpperCase());
+
+        return reservationRepository.findByCompanyAndDateAndType(
+                companyId,
+                targetDate,
+                type
+        ).stream().map(this::convertToDto).toList();
     }
 
     // Entity -> Dto
