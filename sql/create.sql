@@ -927,6 +927,7 @@ CREATE TABLE meetingroom
     resource_status_id BIGINT,
     created_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at         TIMESTAMP            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by         BIGINT,
     CONSTRAINT fk_meetingroom_company
         FOREIGN KEY (company_id)
             REFERENCES company (id)
@@ -950,6 +951,7 @@ CREATE TABLE car
     file_id            BIGINT,
     created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by         BIGINT,
     PRIMARY KEY (id),
     CONSTRAINT fk_car_company
         FOREIGN KEY (company_id) REFERENCES company (id)
@@ -989,6 +991,7 @@ CREATE TABLE item
     file_id            BIGINT,
     created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by         BIGINT,
     PRIMARY KEY (id),
     CONSTRAINT fk_item_company
         FOREIGN KEY (company_id) REFERENCES company (id)
