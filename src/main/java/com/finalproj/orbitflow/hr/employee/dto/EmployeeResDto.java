@@ -15,6 +15,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class EmployeeResDto {
 
+    // 일단 결재선 기준으로 작성됨
     // 현재는 누군지 식별 + 화면 표시용 수준으로 구현해놓음
 
     private Long id;

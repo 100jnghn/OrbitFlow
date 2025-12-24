@@ -36,8 +36,6 @@ import java.time.LocalDate;
 )
 public class Employee extends BaseEntity {
 
-    // TODO: nullable 넣을지 고민 필요
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -113,6 +111,9 @@ public class Employee extends BaseEntity {
     @Column(name = "work_status", nullable = false, length = 20)
     private WorkStatus workStatus;
 
+    @Column(name = "hire_date", nullable = false)
+    private LocalDate hireDate; // 입사일
+
     /* ==============================
        역할
        ============================== */
@@ -143,7 +144,7 @@ public class Employee extends BaseEntity {
         employee.employmentType = EmploymentType.REGULAR;
         employee.status = EmployeeStatus.ACTIVE;
         employee.workStatus = WorkStatus.OFF_WORK;
-
+        employee.hireDate = LocalDate.now();
         employee.role = EmployeeRole.COMPANY_ADMIN;
 
         return employee;
