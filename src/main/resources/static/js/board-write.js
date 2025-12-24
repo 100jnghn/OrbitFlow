@@ -31,6 +31,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // 게시판 목록 로드 (사이드바용)
     loadBoardCategories();
+    
+    // 게시판 이름 표시
+    updateBoardCategoryName();
 });
 
 // 게시판 카테고리 목록 로드 (사이드바용)
@@ -69,6 +72,9 @@ async function loadBoardCategories() {
         cachedOrganizationBoards = orgData.data || [];
 
         renderSidebar(cachedAccessibleBoards, cachedOrganizationBoards);
+        
+        // 게시판 이름 업데이트
+        updateBoardCategoryName();
     } catch (error) {
         console.error('Error loading board categories:', error);
     }
@@ -190,11 +196,8 @@ async function loadBoardDetail() {
                 renderSidebar(cachedAccessibleBoards, cachedOrganizationBoards);
             }
 
-            // 제목 업데이트
-            const titleElement = document.getElementById('boardTitle');
-            if (titleElement) {
-                titleElement.textContent = '글수정';
-            }
+            // 게시판 이름 표시
+            updateBoardCategoryName();
             const submitBtn = document.getElementById('submitBtn');
             if (submitBtn) {
                 submitBtn.textContent = '수정';
@@ -239,6 +242,50 @@ function addFileToList(fileName, fileId, isExisting) {
         </button>
     `;
     fileList.appendChild(fileItem);
+}
+
+// 게시판 이름 업데이트
+function updateBoardCategoryName() {
+    const categoryNameElement = document.getElementById('boardCategoryName');
+    if (!categoryNameElement) return;
+    
+    if (categoryId) {
+        // 캐시된 게시판 목록에서 찾기
+        const allBoards = [...cachedAccessibleBoards, ...cachedOrganizationBoards];
+        const board = allBoards.find(b => b.id === categoryId);
+        
+        if (board) {
+            categoryNameElement.textContent = board.boardName || board.name || '게시판';
+        } else {
+            // 캐시에 없으면 API로 가져오기
+            loadBoardCategoryName(categoryId);
+        }
+    } else {
+        categoryNameElement.textContent = '게시판';
+    }
+}
+
+// 게시판 이름 로드
+async function loadBoardCategoryName(catId) {
+    try {
+        const response = await apiFetch(`${BOARD_CATEGORY_API}/${catId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            const board = result.data;
+            const categoryNameElement = document.getElementById('boardCategoryName');
+            if (categoryNameElement && board) {
+                categoryNameElement.textContent = board.boardName || board.name || '게시판';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading board category name:', error);
+    }
 }
 
 // 파일 제거
@@ -350,10 +397,20 @@ async function handleSubmit(e) {
 // 취소
 function cancelWrite() {
     if (confirm('작성 중인 내용이 사라집니다. 정말 취소하시겠습니까?')) {
-        if (categoryId) {
-            window.location.href = `/view/board?categoryId=${categoryId}`;
+        // 수정 모드일 때는 게시글 상세 페이지로 이동
+        if (boardId) {
+            if (categoryId) {
+                window.location.href = `/view/board/detail?boardId=${boardId}&categoryId=${categoryId}`;
+            } else {
+                window.location.href = `/view/board/detail?boardId=${boardId}`;
+            }
         } else {
-            window.location.href = '/view/board';
+            // 작성 모드일 때는 게시판 목록으로 이동
+            if (categoryId) {
+                window.location.href = `/view/board?categoryId=${categoryId}`;
+            } else {
+                window.location.href = '/view/board';
+            }
         }
     }
 }
