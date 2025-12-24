@@ -28,6 +28,9 @@
     padding: 24px;
     max-width: 1400px;
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 200px);
 }
 
 /* 게시판 헤더 */
@@ -141,12 +144,17 @@
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--neutral-200);
+    min-height: 550px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .board-table {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
+    height: 100%;
 }
 
 .board-table thead {
@@ -259,44 +267,52 @@
 
 .page-btn,
 .page-number {
-    padding: 10px 14px;
-    border: 1px solid var(--neutral-300);
-    background: white;
+    min-width: 32px;
+    height: 36px;
+    padding: 0 8px;
+    border: 1px solid #ddd;
+    background: #fff;
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
-    color: var(--neutral-700);
-    min-width: 40px;
+    color: #555;
     text-align: center;
     font-weight: 500;
-    transition: all 0.2s ease;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .page-btn:hover:not(:disabled),
 .page-number:hover:not(.active) {
-    background: var(--neutral-50);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    background: #f8f9fa;
+    border-color: #4a69bd;
+    color: #4a69bd;
 }
 
 .page-btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
-    background: var(--neutral-100);
 }
 
 .page-number.active {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-    font-weight: 600;
+    background: #4a69bd;
+    color: #fff;
+    border-color: #4a69bd;
+    font-weight: 500;
 }
 
 .ellipsis {
-    padding: 10px 4px;
+    min-width: 32px;
+    height: 36px;
+    padding: 0 4px;
     color: var(--neutral-400);
     border: none;
     background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* 글쓰기 버튼 */
@@ -307,12 +323,12 @@
 }
 
 .btn-write {
-    padding: 12px 24px;
+    padding: 10px 20px;
     background: var(--primary-color);
     color: white;
     border: none;
     border-radius: 8px;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 500;
     cursor: pointer;
     display: inline-flex;
