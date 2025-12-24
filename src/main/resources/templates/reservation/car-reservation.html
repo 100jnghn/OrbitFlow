@@ -40,20 +40,25 @@
         </div>
     </div>
 
-    <!-- Reservation Grid -->
-    <div class="grid-container">
-        <div class="grid-inner">
-            <div class="grid-header">
-                <div class="car-column-header"></div>
-                <div class="times-header" id="times-header">
-                    <!-- JavaScript로 시간 헤더 생성 -->
+    <!-- Reservation Grid and Image -->
+    <div class="grid-image-wrapper">
+        <div class="grid-container">
+            <div class="grid-inner">
+                <div class="grid-header">
+                    <div class="car-column-header"></div>
+                    <div class="times-header" id="times-header">
+                        <!-- JavaScript로 시간 헤더 생성 -->
+                    </div>
+                </div>
+                <div class="grid-body-wrapper">
+                    <div class="grid-body" id="grid-body">
+                        <!-- JavaScript로 그리드 생성 -->
+                    </div>
                 </div>
             </div>
-            <div class="grid-body-wrapper">
-                <div class="grid-body" id="grid-body">
-                    <!-- JavaScript로 그리드 생성 -->
-                </div>
-            </div>
+        </div>
+        <div class="car-image-section">
+            <img id="selected-car-image" src="" alt="차량 이미지" class="car-image">
         </div>
     </div>
 
@@ -101,7 +106,8 @@
                        class="form-input"
                        id="reservation-reason"
                        placeholder="신청 사유를 입력하세요"
-                       maxlength="255">
+                       maxlength="200">
+                <div id="reservation-reason-msg" class="hint"></div>
             </div>
             <button type="button" class="btn-submit" id="btn-submit">
                 <i class="fas fa-check"></i>

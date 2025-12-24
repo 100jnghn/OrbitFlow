@@ -66,25 +66,43 @@
 /* =========================
    Grid Container
 ========================= */
+.grid-image-wrapper {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 24px;
+    align-items: flex-start;
+}
+
 .grid-container {
-    margin: 0 auto;
+    flex: 0 0 auto;
     background: #fff;
     border-radius: 12px;
     padding: 24px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-
-    /* ⭐ 가운데 정렬 핵심 */
-    display: flex;
-    justify-content: center; /* 좌우 */
-    align-items: center;     /* 상하 */
-
-    /* 중요 */
-    min-height: 400px;       /* 최소 높이 지정 (없으면 상하 중앙 안 보임) */
     overflow-x: auto;
 }
 
 .grid-inner {
     display: inline-block; /* 내용 크기만큼 */
+}
+
+.car-image-section {
+    flex: 1;
+    padding: 20px 24px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+}
+
+.car-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
 }
 
 .grid-header {
@@ -131,8 +149,8 @@
 }
 
 .time-header {
-    flex: 0 0 80px; /* 고정 폭 */
-    min-width: 80px;
+    flex: 0 0 70px; /* 고정 폭 */
+    min-width: 70px;
     padding: 8px;
     background: #f8f9fa;
     border: 1px solid #e9ecef;
@@ -151,8 +169,8 @@
 }
 
 .time-cell {
-    flex: 0 0 80px;
-    min-width: 80px;
+    flex: 0 0 70px;
+    min-width: 70px;
     padding: 12px 8px;
     border: 1px solid #e9ecef;
     border-left: none;
@@ -345,6 +363,24 @@
 .btn-submit:disabled {
     background: #adb5bd;
     cursor: not-allowed;
+}
+
+/* =========================
+   Validation Hint
+========================= */
+.hint {
+    font-size: 12px;
+    margin-top: 4px;
+    display: block;
+    min-height: 18px;
+}
+
+.hint.success {
+    color: #28a745;
+}
+
+.hint.error {
+    color: #dc3545;
 }
 
 /* =========================
