@@ -7,7 +7,7 @@ let currentSearchParams = {
     startDate: '',
     endDate: '',
     status: 'ALL',
-    keyword: '' // 사원명/사번 검색 필드 추가
+    keyword: ''
 };
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -46,9 +46,8 @@ async function loadSummaryData() {
         console.error("통계 데이터 로드 실패:", error);
     }
 }
-
 /**
- * 근태 목록 데이터 로드
+ * 근태 목록 데이터 로드 (정렬 로직 제거 버전)
  */
 async function loadAttendanceList() {
     const { page, size, startDate, endDate, status, keyword } = currentSearchParams;
@@ -59,7 +58,7 @@ async function loadAttendanceList() {
         startDate: startDate,
         endDate: endDate,
         status: status,
-        keyword: keyword // 검색 키워드 포함
+        keyword: keyword
     });
 
     try {
@@ -69,23 +68,15 @@ async function loadAttendanceList() {
 
         if (response.ok) {
             const data = await response.json();
-            // 서버 응답 구조(Page 객체 vs Array)에 따른 유연한 대처
-            let list = data.content || (Array.isArray(data) ? data : []);
+            // 서버에서 이미 정렬되어 오므로 content를 그대로 사용합니다.
+            const list = data.content || (Array.isArray(data) ? data : []);
 
-            // 클라이언트 사이드 최신순 정렬 (commuteAt 기준)
-            if (list.length > 0) {
-                list.sort((a, b) => {
-                    const dateA = a.commuteAt ? new Date(a.commuteAt) : new Date(0);
-                    const dateB = b.commuteAt ? new Date(b.commuteAt) : new Date(0);
-                    return dateB - dateA; // 내림차순
-                });
-            }
 
             renderAttendanceTable(list);
             renderPagination(data);
         } else {
             const tbody = document.querySelector('#attendanceTable tbody');
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="color:red;">데이터를 불러오지 못했습니다. (Error: ' + response.status + ')</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="color:red;">데이터 로드 실패</td></tr>';
         }
     } catch (error) {
         console.error("목록 로드 실패:", error);
@@ -93,29 +84,36 @@ async function loadAttendanceList() {
 }
 
 /**
- * 테이블 렌더링
+ * 테이블 렌더링 (보완된 근무 중 로직 포함)
  */
 function renderAttendanceTable(list) {
     const tbody = document.querySelector('#attendanceTable tbody');
     if (!tbody) return;
 
     if (!list || list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center">조회된 데이터가 없습니다.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center">조회된 데이터가 없습니다.</td></tr>';
         return;
     }
 
     tbody.innerHTML = list.map(item => {
         const commuteStyle = item.statusCode === 'LATE' ? 'color: #ff9800; font-weight: bold;' : '';
-        // 출근은 했으나 퇴근 안 한 경우 "근무 중" 표시
-        const leaveTime = item.leaveAt ? item.leaveAt : '<span style="color: #2196F3;">근무 중</span>';
+
+        // 출근 기록이 있을 때만 "근무 중" 여부 판단 로직
+        let leaveTimeDisplay = item.leaveAt || '-';
+        if (item.commuteAt && item.commuteAt !== '-' && (!item.leaveAt || item.leaveAt === '-')) {
+            leaveTimeDisplay = '<span style="color: #2196F3; font-weight: bold;">근무 중</span>';
+        } else if (!item.commuteAt || item.commuteAt === '-') {
+            leaveTimeDisplay = '-';
+        }
 
         return `
             <tr>
                 <td><strong>${item.employeeName}</strong><br><small>${item.employeeNum}</small></td>
                 <td style="${commuteStyle}">${item.commuteAt || '-'}</td>
-                <td>${leaveTime}</td>
+                <td>${leaveTimeDisplay}</td>
                 <td>${item.workingTime || '-'}</td>
                 <td><span class="status-badge ${item.statusCode}">${item.statusName}</span></td>
+                <td>${item.workDate || '-'}</td>
                 <td>
                     <button class="btn-table-action" onclick="openCorrectionModal(${item.attendanceId}, '${item.statusCode}')">
                         ${item.isCorrected ? '수정됨' : '정정'}
@@ -125,6 +123,7 @@ function renderAttendanceTable(list) {
         `;
     }).join('');
 }
+
 
 /**
  * 검색 처리
@@ -137,7 +136,7 @@ function handleSearch() {
     currentSearchParams.page = 0;
 
     const tbody = document.querySelector('#attendanceTable tbody');
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center">데이터를 검색 중입니다...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center">데이터를 검색 중입니다...</td></tr>';
 
     loadAttendanceList();
 }

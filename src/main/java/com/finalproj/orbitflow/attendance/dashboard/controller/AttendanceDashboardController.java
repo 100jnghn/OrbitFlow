@@ -24,10 +24,11 @@ public class AttendanceDashboardController {
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String keyword,
             @PageableDefault(size = 10) Pageable pageable) {
 
         return ResponseEntity.ok(attendanceDashboardService.getCompanyAttendanceList(
-                admin.getCompanyId(), startDate, endDate, status, pageable));
+                admin.getCompanyId(), startDate, endDate, status, keyword, pageable));
     }
 
     @GetMapping("/summary")

@@ -10,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.*;
+import java.time.*; // Duration, LocalDate 등을 위해 반드시 필요
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
@@ -22,26 +22,27 @@ public class AttendanceHistoryService {
 
     private final AttendanceRepository attendanceRepository;
 
+    /**
+     * [사원/관리자 공통] 월별 근태 데이터 조회 메인 로직
+     */
     public MonthlyHistoryResDto getMonthlyHistoryData(Long empId, Integer year, Integer month,
                                                       LocalDate startDate, LocalDate endDate,
                                                       String status, Pageable pageable) {
 
-        // 1. 조회 기간 확정 로직 (파라미터 우선순위 적용)
         LocalDate finalStart;
         LocalDate finalEnd;
 
+        // 기간 우선순위 결정
         if (startDate != null && endDate != null) {
             finalStart = startDate;
             finalEnd = endDate;
         } else {
-            // 연/월이 없으면 현재 날짜 기준
             int y = (year != null) ? year : LocalDate.now().getYear();
             int m = (month != null) ? month : LocalDate.now().getMonthValue();
             finalStart = LocalDate.of(y, m, 1);
             finalEnd = finalStart.withDayOfMonth(finalStart.lengthOfMonth());
         }
 
-        // 2. 데이터 조회 및 DTO 조립
         return MonthlyHistoryResDto.builder()
                 .searchPeriod(finalStart + " ~ " + finalEnd)
                 .summary(getMonthlySummary(empId, finalStart, finalEnd))
@@ -50,8 +51,16 @@ public class AttendanceHistoryService {
     }
 
     private Page<DailyAttRecordResDto> getMonthlyHistoryPaged(Long empId, LocalDate start, LocalDate end, String status, Pageable pageable) {
-        AttendanceStatus attStatus = (status == null || "ALL".equals(status)) ? null : AttendanceStatus.valueOf(status);
-        // Repository 메서드명이 findHistoryWithPaging 인지 확인 필요
+        AttendanceStatus attStatus = null;
+        try {
+            if (status != null && !"ALL".equals(status)) {
+                attStatus = AttendanceStatus.valueOf(status);
+            }
+        } catch (IllegalArgumentException e) {
+            attStatus = null;
+        }
+
+        // Repository에 추가한 findHistoryWithPaging 호출
         return attendanceRepository.findHistoryWithPaging(empId, start, end, attStatus, pageable)
                 .map(this::convertToDto);
     }
@@ -63,7 +72,8 @@ public class AttendanceHistoryService {
         for (Attendance a : records) {
             if (a.getStatus() == AttendanceStatus.LATE) lateCount++;
             if (a.getStatus() == AttendanceStatus.ABSENT) absentCount++;
-            // 근무 시간 계산: 입근/퇴근 시간이 모두 있어야 함
+
+            // 출퇴근 기록이 모두 있을 때만 근무 시간 합산
             if (a.getCommuteAt() != null && a.getLeaveAt() != null) {
                 totalMin += Duration.between(a.getCommuteAt(), a.getLeaveAt()).toMinutes();
             }
