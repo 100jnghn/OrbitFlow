@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- 세션 연장 모달 -->
+<div id="extendSessionModal"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:9999;">
+  <div style="
+        background:#fff;
+        padding:24px;
+        margin:200px auto;
+        width:360px;
+        text-align:center;
+        border-radius:12px;
+    ">
+    <h3>세션 만료 예정</h3>
+    <p>
+      세션이 곧 만료됩니다.<br>
+      계속 사용하시겠습니까?
+    </p>
+
+    <p id="sessionCountdown"
+       style="font-weight:bold; margin:12px 0;">
+      00:00
+    </p>
+
+    <div style="display:flex; gap:8px; justify-content:center;">
+      <button onclick="extendSession()">연장</button>
+      <button onclick="confirmSessionExpired()">로그아웃</button>
+    </div>
+  </div>
+</div>
+
+<!-- 세션 만료 모달 -->
+<div id="sessionModal"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:9999;">
+  <div style="
+        background:#fff;
+        padding:20px;
+        margin:200px auto;
+        width:300px;
+        text-align:center;
+        border-radius:8px;
+    ">
+    <p>
+      세션이 만료되었습니다.<br>
+      다시 로그인해주세요.
+    </p>
+    <button onclick="confirmSessionExpired()">확인</button>
+  </div>
+</div>
+
+</body>
+</html>

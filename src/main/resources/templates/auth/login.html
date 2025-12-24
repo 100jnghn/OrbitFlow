@@ -167,6 +167,12 @@
 
       const me = (await meRes.json()).data;
 
+      /* refresh 만료 시각 저장 */
+      sessionStorage.setItem(
+              'refreshExpiresAt',
+              new Date(result.data.refreshExpiresAt).getTime()
+      );
+
       /* 역할별 이동 */
       location.href =
               (me.role === 'ADMIN' || me.role === 'COMPANY_ADMIN')
