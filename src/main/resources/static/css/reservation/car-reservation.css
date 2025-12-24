@@ -70,7 +70,7 @@
     display: flex;
     gap: 24px;
     margin-bottom: 24px;
-    align-items: flex-start;
+    align-items: stretch;
 }
 
 .grid-container {
@@ -95,7 +95,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 400px;
 }
 
 .car-image {

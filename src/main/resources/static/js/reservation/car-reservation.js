@@ -44,20 +44,20 @@ function formatTimeRange(hour) {
 function initDateSelector() {
     const select = document.getElementById('reservation-date-select');
     const today = new Date();
-    
+
     for (let i = 0; i < 14; i++) {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
-        
+
         const option = document.createElement('option');
         option.value = formatDate(date);
         option.textContent = formatDateKorean(formatDate(date));
-        
+
         if (i === 0) {
             option.selected = true;
             selectedDate = option.value;
         }
-        
+
         select.appendChild(option);
     }
 }
@@ -68,14 +68,14 @@ function initDateSelector() {
 async function loadCars() {
     try {
         const res = await apiFetch('/api/cars', { method: 'GET' });
-        
+
         if (!res.ok) throw new Error();
-        
+
         const { data } = await res.json();
         cars = data || [];
-        
+
         renderTimeHeaders();
-        
+
     } catch (e) {
         console.error(e);
         alert('차량 목록을 불러오지 못했습니다.');
@@ -91,18 +91,18 @@ async function loadReservations(date) {
             date: date,
             typeCode: 'CAR'
         });
-        
+
         const res = await apiFetch(`/api/reservations/date?${params.toString()}`, {
             method: 'GET'
         });
-        
+
         if (!res.ok) throw new Error();
-        
+
         const { data } = await res.json();
         reservations = data || [];
-        
+
         renderGrid();
-        
+
     } catch (e) {
         console.error(e);
         alert('예약 정보를 불러오지 못했습니다.');
@@ -116,7 +116,7 @@ async function loadReservations(date) {
 function renderTimeHeaders() {
     const container = document.getElementById('times-header');
     container.innerHTML = '';
-    
+
     HOURS.forEach(hour => {
         const header = document.createElement('div');
         header.className = 'time-header';
@@ -131,7 +131,7 @@ function renderTimeHeaders() {
 function renderGrid() {
     const container = document.getElementById('grid-body');
     container.innerHTML = '';
-    
+
     if (cars.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
@@ -141,22 +141,22 @@ function renderGrid() {
         `;
         return;
     }
-    
+
     cars.forEach(car => {
         const row = document.createElement('div');
         row.className = 'grid-row';
-        
+
         // 차량 이름 셀
         const carNameCell = document.createElement('div');
         carNameCell.className = 'car-name-cell';
         carNameCell.textContent = car.name;
         carNameCell.title = car.name;
         row.appendChild(carNameCell);
-        
+
         // 시간대 셀들
         const timeCells = document.createElement('div');
         timeCells.className = 'time-cells';
-        
+
         HOURS.forEach(hour => {
             const cell = document.createElement('div');
             cell.className = 'time-cell';
@@ -166,10 +166,10 @@ function renderGrid() {
             cell.dataset.carDriverAge = car.driverAge || '-';
             cell.dataset.carDescription = car.description || '-';
             cell.dataset.hour = hour;
-            
+
             // 예약 여부 확인
             const isReserved = checkReservation(car.carId, hour);
-            
+
             if (isReserved) {
                 if (isReserved.isMine) {
                     cell.className += ' my-reservation';
@@ -183,10 +183,10 @@ function renderGrid() {
                 // cell.textContent = '예약 가능';
                 cell.addEventListener('click', (e) => handleCellClick(e.currentTarget, car, hour));
             }
-            
+
             timeCells.appendChild(cell);
         });
-        
+
         row.appendChild(timeCells);
         container.appendChild(row);
     });
@@ -196,20 +196,20 @@ function renderGrid() {
    Check Reservation
 ========================== */
 function checkReservation(carId, hour) {
-    const reservation = reservations.find(r => 
-        r.resourceId === carId && 
-        r.startTime <= hour && 
+    const reservation = reservations.find(r =>
+        r.resourceId === carId &&
+        r.startTime <= hour &&
         r.endTime > hour &&
         (r.reservationStatusId === 1 || r.reservationStatusId === 2) // 대기 or 확정
     );
-    
+
     if (reservation) {
         return {
             isMine: reservation.isMine || false,
             reservation: reservation
         };
     }
-    
+
     return null;
 }
 
@@ -218,14 +218,14 @@ function checkReservation(carId, hour) {
 ========================== */
 function handleCellClick(cell, car, hour) {
     const carId = parseInt(cell.dataset.carId);
-    
+
     // 다른 차량을 클릭하면 초기화
     if (selectedCar && selectedCar.carId !== carId) {
         clearSelection();
     }
-    
+
     selectedCar = car;
-    
+
     // 첫 번째 클릭 (시작 시간)
     if (!selectedStartHour) {
         selectedStartHour = hour;
@@ -234,7 +234,7 @@ function handleCellClick(cell, car, hour) {
         updateReservationForm();
         return;
     }
-    
+
     // 두 번째 클릭 (종료 시간)
     if (hour < selectedStartHour) {
         // 시작 시간보다 이전을 클릭하면 새로운 시작 시간으로
@@ -244,7 +244,7 @@ function handleCellClick(cell, car, hour) {
         // 종료 시간 설정 (클릭한 시간 +1)
         selectedEndHour = hour + 1;
     }
-    
+
     // 선택한 범위에 예약 불가능한 시간이 있는지 확인
     if (!isRangeAvailable(carId, selectedStartHour, selectedEndHour)) {
         alert('선택한 시간 범위에 예약 불가능한 시간이 포함되어 있습니다.');
@@ -253,7 +253,7 @@ function handleCellClick(cell, car, hour) {
         selectedStartHour = hour;
         selectedEndHour = hour + 1;
     }
-    
+
     updateSelection();
     updateReservationForm();
 }
@@ -272,12 +272,12 @@ function clearSelection() {
     selectedCar = null;
     selectedStartHour = null;
     selectedEndHour = null;
-    
+
     // 모든 선택 해제
     document.querySelectorAll('.time-cell.selected').forEach(cell => {
         cell.classList.remove('selected');
     });
-    
+
     updateReservationForm();
 }
 
@@ -286,15 +286,15 @@ function updateSelection() {
     document.querySelectorAll('.time-cell.selected').forEach(cell => {
         cell.classList.remove('selected');
     });
-    
+
     // 해당 차량의 시간 범위 선택
     if (selectedCar && selectedStartHour !== null && selectedEndHour !== null) {
         document.querySelectorAll('.time-cell').forEach(cell => {
             const cellCarId = parseInt(cell.dataset.carId);
             const cellHour = parseInt(cell.dataset.hour);
-            
-            if (cellCarId === selectedCar.carId && 
-                cellHour >= selectedStartHour && 
+
+            if (cellCarId === selectedCar.carId &&
+                cellHour >= selectedStartHour &&
                 cellHour < selectedEndHour) {
                 cell.classList.add('selected');
             }
@@ -305,38 +305,54 @@ function updateSelection() {
 function updateReservationForm() {
     // 신청자 (현재 사용자 정보 - 추후 API에서 가져오기)
     document.getElementById('applicant-name').textContent = '사용자'; // TODO: 실제 사용자 정보
-    
+
     // 차량 정보
+    const carImage = document.getElementById('selected-car-image');
     if (selectedCar) {
         document.getElementById('selected-car-name').textContent = selectedCar.name;
         document.getElementById('selected-car-number').textContent = selectedCar.number || '-';
         document.getElementById('selected-car-driver-age').textContent = selectedCar.driverAge ? `${selectedCar.driverAge}세 이상` : '-';
         document.getElementById('selected-car-description').textContent = selectedCar.description || '-';
+
+        // 차량 이미지 업데이트
+        if (selectedCar.objectKey) {
+            carImage.src = `/api/files/${selectedCar.objectKey}`;
+            carImage.style.display = 'block';
+            // carImage.alt = '';
+        } else {
+            carImage.src = '';
+            carImage.style.display = 'block';
+        }
     } else {
         document.getElementById('selected-car-name').textContent = '-';
         document.getElementById('selected-car-number').textContent = '-';
         document.getElementById('selected-car-driver-age').textContent = '-';
         document.getElementById('selected-car-description').textContent = '-';
+
+        // 차량 이미지 숨기기
+        carImage.src = '';
+        carImage.style.display = 'none';
     }
-    
+
+
     // 날짜
     document.getElementById('selected-date').textContent = selectedDate ? formatDateKorean(selectedDate) : '-';
-    
+
     // 시작/종료 시간
     if (selectedStartHour !== null) {
-        document.getElementById('selected-start-time').textContent = 
+        document.getElementById('selected-start-time').textContent =
             `${String(selectedStartHour).padStart(2, '0')}:00`;
     } else {
         document.getElementById('selected-start-time').textContent = '-';
     }
-    
+
     if (selectedEndHour !== null) {
-        document.getElementById('selected-end-time').textContent = 
+        document.getElementById('selected-end-time').textContent =
             `${String(selectedEndHour).padStart(2, '0')}:00`;
     } else {
         document.getElementById('selected-end-time').textContent = '-';
     }
-    
+
     // 신청 버튼 활성화/비활성화
     updateSubmitButtonState();
 }
@@ -353,7 +369,7 @@ function validateReservationReason(showEmptyMessage = true) {
     const reasonInput = document.getElementById('reservation-reason');
     const reasonMsg = document.getElementById('reservation-reason-msg');
     const v = reasonInput.value.trim();
-    
+
     if (!v) {
         if (showEmptyMessage) {
             showMsg(reasonMsg, '신청 사유를 입력해주세요.', 'error');
@@ -363,20 +379,20 @@ function validateReservationReason(showEmptyMessage = true) {
         }
         return false;
     }
-    
+
     if (v.length > 200) {
         showMsg(reasonMsg, `최대 200자까지 입력 가능합니다. (${v.length}/200)`, 'error');
         return false;
     }
-    
+
     showMsg(reasonMsg, `${v.length}/200`, 'success');
     return true;
 }
 
 function updateSubmitButtonState() {
     const submitBtn = document.getElementById('btn-submit');
-    const isValid = selectedCar && 
-                    selectedStartHour !== null && 
+    const isValid = selectedCar &&
+                    selectedStartHour !== null &&
                     selectedEndHour !== null &&
                     validateReservationReason(false);
     submitBtn.disabled = !isValid;
@@ -390,13 +406,13 @@ async function submitReservation() {
         alert('차량과 시간을 선택해주세요.');
         return;
     }
-    
+
     const reason = document.getElementById('reservation-reason').value.trim();
-    
+
     if (!validateReservationReason()) {
         return;
     }
-    
+
     try {
         const payload = {
             typeCode: 'CAR',
@@ -406,7 +422,7 @@ async function submitReservation() {
             endTime: selectedEndHour,
             reservationReason: reason
         };
-        
+
         const res = await apiFetch('/api/reservations/me', {
             method: 'POST',
             headers: {
@@ -414,14 +430,14 @@ async function submitReservation() {
             },
             body: JSON.stringify(payload)
         });
-        
+
         if (!res.ok) {
             const error = await res.json();
             throw new Error(error.message || '예약에 실패했습니다.');
         }
-        
+
         alert('예약이 완료되었습니다.');
-        
+
         // 입력 초기화
         document.getElementById('reservation-reason').value = '';
         const reasonMsg = document.getElementById('reservation-reason-msg');
@@ -431,7 +447,7 @@ async function submitReservation() {
         }
         clearSelection();
         loadReservations(selectedDate);
-        
+
     } catch (e) {
         console.error(e);
         alert(e.message || '예약 중 오류가 발생했습니다.');
@@ -451,14 +467,14 @@ function initEventListeners() {
             loadReservations(selectedDate);
         });
     }
-    
+
     // 신청 버튼
     const btnSubmit = document.getElementById('btn-submit');
     if (btnSubmit) {
         btnSubmit.addEventListener('click', submitReservation);
         btnSubmit.disabled = true;
     }
-    
+
     // 신청 사유 입력 필드
     const reasonInput = document.getElementById('reservation-reason');
     if (reasonInput) {
@@ -466,7 +482,7 @@ function initEventListeners() {
             validateReservationReason();
             updateSubmitButtonState();
         });
-        
+
         reasonInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !btnSubmit.disabled) {
                 submitReservation();
@@ -482,7 +498,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initDateSelector();
     initEventListeners();
     updateReservationForm();
-    
+
     await loadCars();
     await loadReservations(selectedDate);
 });
