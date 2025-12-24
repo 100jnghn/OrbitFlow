@@ -11,6 +11,16 @@ let organizationBoards = []; // 조직 게시판
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', function() {
+    // URL 파라미터에서 categoryId 가져오기
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlCategoryId = urlParams.get('categoryId');
+    
+    if (urlCategoryId) {
+        const categoryId = parseInt(urlCategoryId);
+        // categoryId가 있으면 해당 게시판을 선택하기 위해 저장
+        window.selectedCategoryId = categoryId;
+    }
+    
     loadBoardCategories();
 });
 
@@ -74,13 +84,48 @@ async function loadBoardCategories() {
 
         renderSidebar();
         
-        // 첫 번째 게시판 자동 선택
-        if (accessibleBoards.length > 0) {
-            const firstBoard = accessibleBoards[0];
-            selectBoard(firstBoard.id, firstBoard.boardName || firstBoard.name || '게시판');
-        } else if (organizationBoards.length > 0) {
-            const firstBoard = organizationBoards[0];
-            selectBoard(firstBoard.id, firstBoard.boardName || firstBoard.name || '게시판');
+        // URL에서 categoryId가 있으면 해당 게시판 선택, 없으면 첫 번째 게시판 선택
+        if (window.selectedCategoryId) {
+            // URL에서 받은 categoryId로 게시판 찾기
+            let targetBoard = null;
+            let targetBoardName = '';
+            
+            // 일반 게시판에서 찾기
+            targetBoard = accessibleBoards.find(board => board.id === window.selectedCategoryId);
+            if (targetBoard) {
+                targetBoardName = targetBoard.boardName || targetBoard.name || '게시판';
+            } else {
+                // 조직 게시판에서 찾기
+                targetBoard = organizationBoards.find(board => board.id === window.selectedCategoryId);
+                if (targetBoard) {
+                    targetBoardName = targetBoard.boardName || targetBoard.name || '게시판';
+                }
+            }
+            
+            if (targetBoard && targetBoardName) {
+                console.log('[게시판 목록] URL의 categoryId로 게시판 선택:', window.selectedCategoryId, targetBoardName);
+                selectBoard(window.selectedCategoryId, targetBoardName);
+                window.selectedCategoryId = null; // 사용 후 초기화
+            } else {
+                console.warn('[게시판 목록] URL의 categoryId로 게시판을 찾을 수 없음:', window.selectedCategoryId);
+                // 게시판을 찾을 수 없으면 첫 번째 게시판 선택
+                if (accessibleBoards.length > 0) {
+                    const firstBoard = accessibleBoards[0];
+                    selectBoard(firstBoard.id, firstBoard.boardName || firstBoard.name || '게시판');
+                } else if (organizationBoards.length > 0) {
+                    const firstBoard = organizationBoards[0];
+                    selectBoard(firstBoard.id, firstBoard.boardName || firstBoard.name || '게시판');
+                }
+            }
+        } else {
+            // 첫 번째 게시판 자동 선택
+            if (accessibleBoards.length > 0) {
+                const firstBoard = accessibleBoards[0];
+                selectBoard(firstBoard.id, firstBoard.boardName || firstBoard.name || '게시판');
+            } else if (organizationBoards.length > 0) {
+                const firstBoard = organizationBoards[0];
+                selectBoard(firstBoard.id, firstBoard.boardName || firstBoard.name || '게시판');
+            }
         }
     } catch (error) {
         console.error('Error loading board categories:', error);
@@ -130,16 +175,16 @@ function renderSidebar() {
         console.warn('No accessible boards found. accessibleBoards:', accessibleBoards);
     }
 
-    // 조직 게시판 - 아코디언 구조로 표시
+    // 조직 게시판 - 아코디언 구조로 표시 (기본적으로 펼쳐진 상태)
     if (organizationBoards && organizationBoards.length > 0) {
         // 부서게시판이 현재 선택되어 있는지 확인
         const hasSelectedOrgBoard = organizationBoards.some(board => board.id === currentCategoryId);
         
         const orgMenuItem = document.createElement('li');
-        orgMenuItem.className = 'menu-item' + (hasSelectedOrgBoard ? ' active' : '');
-        const orgMenuTitle = hasSelectedOrgBoard ? 'aria-expanded="true"' : '';
+        // 기본적으로 active 클래스를 추가하여 펼쳐진 상태로 시작
+        orgMenuItem.className = 'menu-item active';
         orgMenuItem.innerHTML = `
-            <div class="menu-title" role="button" onclick="toggleBoardMenu(this)" ${orgMenuTitle}>
+            <div class="menu-title" role="button" onclick="toggleBoardMenu(this)" aria-expanded="true">
                 <span>부서게시판</span>
                 <i class="fas fa-chevron-down arrow"></i>
             </div>
@@ -515,8 +560,12 @@ function viewBoard(boardId) {
         alert('게시글 ID가 없습니다.');
         return;
     }
-    // 게시글 상세 페이지로 이동
-    window.location.href = `/view/board/detail?boardId=${boardId}`;
+    // 게시글 상세 페이지로 이동 (categoryId 포함)
+    if (currentCategoryId) {
+        window.location.href = `/view/board/detail?boardId=${boardId}&categoryId=${currentCategoryId}`;
+    } else {
+        window.location.href = `/view/board/detail?boardId=${boardId}`;
+    }
 }
 
 // 글쓰기

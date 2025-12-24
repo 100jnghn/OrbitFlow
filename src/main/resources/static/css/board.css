@@ -331,7 +331,7 @@
 /* 사이드바 메뉴 스타일 - sidebar.css 아코디언 디자인 적용 */
 .sidebar {
     width: 250px;
-    background: #0f1729 !important;
+    background: #0b1220 !important;
     color: #fff;
     display: flex;
     flex-direction: column;
