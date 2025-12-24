@@ -40,19 +40,17 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // ===== 정적 리소스 =====
                         .requestMatchers(
-                                "/",
-                                "/companies/signup",
+                                "/api/auth/**",
                                 "/login",
-                                "/favicon.ico",
+                                "/companies/signup",
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",
                                 "/view/**",
-                                "/api/**"
-
-                        ).permitAll()
+                                "/favicon.ico"
+                                ).permitAll()
+                        .anyRequest().authenticated()
 
 
 

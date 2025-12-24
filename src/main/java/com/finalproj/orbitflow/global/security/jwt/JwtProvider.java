@@ -6,7 +6,6 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 import java.util.Map;
@@ -57,8 +56,10 @@ public class JwtProvider {
         try {
             parse(token);
             return true;
+        } catch (ExpiredJwtException e) {
+            return false; // 만료
         } catch (JwtException | IllegalArgumentException e) {
-            return false;
+            return false; // 위조/형식 오류
         }
     }
 
