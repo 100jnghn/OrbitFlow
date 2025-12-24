@@ -18,22 +18,22 @@ CREATE TABLE company
 
 CREATE TABLE org_category
 (
-    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    company_id  BIGINT      NOT NULL,
-    name        VARCHAR(50) NOT NULL,
-    order_index INT,  -- NULL 허용
-    is_active   BOOLEAN     NOT NULL DEFAULT TRUE,
+    id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id         BIGINT      NOT NULL,
+    name               VARCHAR(50) NOT NULL,
+    order_index        INT, -- NULL 허용
+    is_active          BOOLEAN     NOT NULL DEFAULT TRUE,
 
     active_order_index INT
-        GENERATED ALWAYS AS (
-                    CASE
-                        WHEN is_active = TRUE THEN order_index
-                        ELSE NULL
-                        END
-                    ) STORED,
+                       GENERATED ALWAYS AS (
+                           CASE
+                               WHEN is_active = TRUE THEN order_index
+                               ELSE NULL
+                               END
+                           ) STORED,
 
-    created_at  TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
 
     CONSTRAINT uk_org_category_company_name
@@ -100,12 +100,12 @@ CREATE TABLE position_category
     is_active          BOOLEAN     NOT NULL DEFAULT TRUE,
     -- 활성일 때만 정렬 유니크를 적용하기 위한 가상 컬럼
     active_order_index INT
-        GENERATED ALWAYS AS (
-            CASE
-                WHEN is_active = TRUE THEN order_index
-                ELSE NULL
-                END
-            ) STORED,
+                       GENERATED ALWAYS AS (
+                           CASE
+                               WHEN is_active = TRUE THEN order_index
+                               ELSE NULL
+                               END
+                           ) STORED,
     created_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
@@ -123,45 +123,7 @@ CREATE TABLE position_category
         FOREIGN KEY (org_category_id) REFERENCES org_category (id)
 ) ENGINE = InnoDB;
 
-/*
-CREATE TABLE position
-(
-    id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
-    company_id         BIGINT      NOT NULL,
-    category_id        BIGINT      NOT NULL,
-    parent_position_id BIGINT      NULL,
-    name               VARCHAR(50) NOT NULL,
-    order_index        INT,
-    is_active          BOOLEAN     NOT NULL DEFAULT TRUE,
 
-    -- 활성 상태에서만 정렬 유니크를 적용하기 위한 가상 컬럼
-    active_order_index INT
-                       GENERATED ALWAYS AS (
-                           CASE
-                               WHEN is_active = TRUE THEN order_index
-                               ELSE NULL
-                               END
-                           ) STORED,
-
-    created_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP,
-
-    -- 회사 내 직책명 중복 방지 (정책 유지)
-    CONSTRAINT uk_position_company_name
-        UNIQUE (company_id, name),
-    -- 활성 상태에서만 정렬 순서 유니크 보장
-    CONSTRAINT uk_position_company_active_order
-        UNIQUE (company_id, category_id, active_order_index),
-
-    CONSTRAINT fk_position_company
-        FOREIGN KEY (company_id) REFERENCES company (id),
-    CONSTRAINT fk_position_category
-        FOREIGN KEY (category_id) REFERENCES position_category (id),
-    CONSTRAINT fk_position_parent
-        FOREIGN KEY (parent_position_id) REFERENCES position (id)
-) ENGINE = InnoDB;
-*/
 CREATE TABLE org_position_usage
 (
     id                   BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -203,7 +165,7 @@ CREATE TABLE employee
 
     work_status          ENUM ('WORKING', 'AWAY', 'ON_LEAVE', 'OFF_WORK')
                                                                           NOT NULL DEFAULT 'OFF_WORK',        -- 근무 상태
-
+    hire_date            DATE                                             NOT NULL,
     created_at           TIMESTAMP                                        NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 생성일시
     updated_at           TIMESTAMP                                        NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
@@ -366,12 +328,12 @@ CREATE TABLE form_template
 
     -- ✅ ACTIVE 상태에서만 version을 유니크하게 만들기 위한 컬럼
     active_version       INT
-        GENERATED ALWAYS AS (
-            CASE
-                WHEN status = 'ACTIVE' THEN version
-                ELSE NULL
-                END
-            ) STORED,
+                         GENERATED ALWAYS AS (
+                             CASE
+                                 WHEN status = 'ACTIVE' THEN version
+                                 ELSE NULL
+                                 END
+                             ) STORED,
 
     -- ===============================
     -- CONSTRAINTS
@@ -545,10 +507,10 @@ CREATE TABLE document_content
 CREATE TABLE approval_line
 (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    document_id BIGINT                                                         NOT NULL,
-    company_id  BIGINT                                                         NOT NULL,
-    approver_id BIGINT                                                         NULL,
-    order_no    INT                                                            NOT NULL,
+    document_id BIGINT                                 NOT NULL,
+    company_id  BIGINT                                 NOT NULL,
+    approver_id BIGINT                                 NULL,
+    order_no    INT                                    NOT NULL,
     status      ENUM ('WAITING','APPROVED','REJECTED') NOT NULL,
     comment     TEXT,
     decided_at  TIMESTAMP,
@@ -760,12 +722,12 @@ CREATE TABLE employee_signature
 
     -- 활성 서명만 UNIQUE 제약을 걸기 위한 가상 컬럼
     active_flag TINYINT
-        GENERATED ALWAYS AS (
-            CASE
-                WHEN is_active = TRUE THEN 1
-                ELSE NULL
-                END
-            ),
+                GENERATED ALWAYS AS (
+                    CASE
+                        WHEN is_active = TRUE THEN 1
+                        ELSE NULL
+                        END
+                    ),
 
     created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
