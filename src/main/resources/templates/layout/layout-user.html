@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      th:fragment="layout(content, headerFragment, sidebarFragment, pageCss)">
+      th:fragment="layout(content, headerFragment, sidebarFragment, pageCss, pageScript)">
 <head>
     <meta charset="UTF-8">
     <title th:text="${pageTitle} ?: 'OrbitFlow'">OrbitFlow</title>
@@ -35,6 +35,8 @@
 
 <script th:src="@{/js/common.js}"></script>
 
+<!-- 페이지별 JS 삽입 위치 -->
+<th:block th:if="${pageScript}" th:replace="${pageScript}"></th:block>
 
 </body>
 </html>
