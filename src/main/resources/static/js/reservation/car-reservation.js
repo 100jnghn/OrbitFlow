@@ -307,30 +307,16 @@ function updateReservationForm() {
     document.getElementById('applicant-name').textContent = '사용자'; // TODO: 실제 사용자 정보
     
     // 차량 정보
-    const carImage = document.getElementById('selected-car-image');
     if (selectedCar) {
         document.getElementById('selected-car-name').textContent = selectedCar.name;
         document.getElementById('selected-car-number').textContent = selectedCar.number || '-';
         document.getElementById('selected-car-driver-age').textContent = selectedCar.driverAge ? `${selectedCar.driverAge}세 이상` : '-';
         document.getElementById('selected-car-description').textContent = selectedCar.description || '-';
-        
-        // 차량 이미지 업데이트
-        if (selectedCar.objectKey) {
-            carImage.src = `/api/files/${selectedCar.objectKey}`;
-            carImage.style.display = 'block';
-        } else {
-            carImage.src = '';
-            carImage.style.display = 'none';
-        }
     } else {
         document.getElementById('selected-car-name').textContent = '-';
         document.getElementById('selected-car-number').textContent = '-';
         document.getElementById('selected-car-driver-age').textContent = '-';
         document.getElementById('selected-car-description').textContent = '-';
-        
-        // 차량 이미지 숨기기
-        carImage.src = '';
-        carImage.style.display = 'none';
     }
     
     // 날짜
