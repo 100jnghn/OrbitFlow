@@ -4,6 +4,7 @@ import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
+import com.finalproj.orbitflow.reservation.dto.ReservationRejectReqDto;
 import com.finalproj.orbitflow.reservation.dto.ReservationReqDto;
 import com.finalproj.orbitflow.reservation.dto.ReservationResDto;
 import com.finalproj.orbitflow.reservation.entity.Reservation;
@@ -108,7 +109,7 @@ public class ReservationService {
         if (typeCode.equals("MEETING")) {
             reservationTypeCode = ReservationTypeCode.MEETING;
             reservationStatus = reservationStatusRepository.getReferenceById(2L);   // 2 = 예약 확정
-        } 
+        }
         // 차량 예약
         else if (typeCode.equals("CAR")) {
             reservationTypeCode = ReservationTypeCode.CAR;
@@ -116,7 +117,7 @@ public class ReservationService {
 
             // 차량 예약은 endDate가 따로 있음
             endDate = reservation.getEndDate();
-        } 
+        }
         // 기타 자원 예약
         else {
             reservationTypeCode = ReservationTypeCode.ITEM;
@@ -175,6 +176,61 @@ public class ReservationService {
         ).stream().map(this::convertToDto).toList();
     }
 
+
+    @Transactional(readOnly = true)
+    public Page<ReservationResDto> getReservations(
+            Long companyId,
+            boolean showPast,
+            Long statusId,
+            String typeCode,
+            Pageable pageable
+    ) {
+        // typeCode -> Enum 변환
+        ReservationTypeCode type = null;
+        if (typeCode != null) {
+
+            type = ReservationTypeCode.valueOf(typeCode.toUpperCase());
+            log.info("예약 상태 : " + type);
+        }
+
+        Long status = null;
+        if (statusId != null) {
+            status = statusId;
+        }
+
+        LocalDate today = LocalDate.now();
+
+        // showPast = true  -> 과거 예약
+        // showPast = false -> 오늘 이후 예약
+        return reservationRepository.getReservations(
+                companyId,
+                showPast,
+                today,
+                status,
+                type,
+                ReservationStatusCode.DELETED,
+                pageable
+        ).map(this::convertToDto);
+    }
+
+    @Transactional
+    public void approveReservation(Long reservationId) {
+
+        ReservationStatus confirmStatus = reservationStatusRepository.findByStatusCode(ReservationStatusCode.CONFIRM);
+        reservationRepository.approveReservation(reservationId, confirmStatus);
+    }
+
+    @Transactional
+    public void rejectReservation(Long reservationId, ReservationRejectReqDto rejectReqDto) {
+
+        String rejectReason = rejectReqDto.getRejectReason();
+
+        ReservationStatus rejectStatus = reservationStatusRepository.findByStatusCode(ReservationStatusCode.REJECT);
+        reservationRepository.rejectReservation(reservationId, rejectReason, rejectStatus);
+    }
+
+
+
     // Entity -> Dto
     private ReservationResDto convertToDto(Reservation reservation) {
 
@@ -195,13 +251,11 @@ public class ReservationService {
 
         String resourceName = "";
 
-        if(reservation.getTypeCode() == ReservationTypeCode.MEETING) {
+        if (reservation.getTypeCode() == ReservationTypeCode.MEETING) {
             resourceName = meetingroomRepository.findById(reservation.getResourceId()).get().getName();
-        }
-        else if (reservation.getTypeCode() == ReservationTypeCode.CAR) {
+        } else if (reservation.getTypeCode() == ReservationTypeCode.CAR) {
             resourceName = carRepository.findById(reservation.getResourceId()).get().getName();
-        }
-        else if (reservation.getTypeCode() ==  ReservationTypeCode.ITEM) {
+        } else if (reservation.getTypeCode() == ReservationTypeCode.ITEM) {
             typeName = itemCategoryRepository.findById(itemCategoryId).get().getName();
             resourceName = itemRepository.findById(reservation.getResourceId()).get().getName();
         }
@@ -226,5 +280,6 @@ public class ReservationService {
                 .reservationStatusName(reservationStatusName)
                 .build();
     }
+
 
 }
