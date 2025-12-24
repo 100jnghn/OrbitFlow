@@ -59,9 +59,15 @@ public class CommuteController {
     }
 
     @PostMapping("/checkout")
-    public ResponseEntity<TodayAttResDto> checkOut(
-            @AuthenticationPrincipal SecurityUser user) {
-        return ResponseEntity.ok(commuteService.checkOut(user.getCompanyId(), user.getEmployeeId()));
+    public ResponseEntity<?> checkOut(@AuthenticationPrincipal SecurityUser user) {
+        TodayAttResDto result = commuteService.checkOut(user.getCompanyId(), user.getEmployeeId());
+
+        ResponseDto<TodayAttResDto> response = new ResponseDto<>(
+                HttpStatus.OK,
+                "퇴근 처리가 완료되었습니다.",
+                result
+        );
+        return ResponseEntity.ok(response);
     }
 
 

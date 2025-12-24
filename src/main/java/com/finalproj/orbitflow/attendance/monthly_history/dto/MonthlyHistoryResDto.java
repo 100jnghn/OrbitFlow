@@ -15,6 +15,8 @@ import org.springframework.data.domain.Page;
 @Getter
 @Builder
 public class MonthlyHistoryResDto {
+
+    private String searchPeriod;
     private MonthlyAttHistoryResDto summary;
     private Page<DailyAttRecordResDto> pagedData;
 }
