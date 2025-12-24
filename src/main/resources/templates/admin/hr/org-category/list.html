@@ -16,18 +16,20 @@
 <!-- ================= 메인 컨텐츠 ================= -->
 <th:block th:fragment="content">
 
-  <div class="orgcat-page">
 
-    <!-- 상단 타이틀 -->
-    <div class="orgcat-title-row">
-      <h1 class="orgcat-title">조직 카테고리 관리</h1>
-    </div>
+  <!-- 상단 타이틀 -->
+  <div class="orgcat-title-row">
+    <h1 class="orgcat-title">조직 카테고리 관리</h1>
+  </div>
 
-    <!-- 메인 카드 -->
-    <section class="orgcat-card">
+  <!-- 메인 카드 -->
+  <section class="orgcat-card">
 
-      <!-- 상단 유틸: 검색 + 추가 버튼 -->
-      <div class="orgcat-toolbar">
+    <!-- 상단 유틸: 검색 + 추가 버튼 -->
+    <div class="orgcat-toolbar">
+
+      <!-- 왼쪽: 검색 / 필터 -->
+      <div class="toolbar-left">
         <div class="orgcat-search">
           <i class="fa-solid fa-magnifying-glass"></i>
           <input id="searchKeyword"
@@ -36,52 +38,57 @@
                  autocomplete="off">
         </div>
 
+        <button class="btn btn-outline" id="btnSearch" type="button">
+          검색
+        </button>
+
         <label class="inactive-toggle">
           <input type="checkbox" id="includeInactive">
           <span>비활성 포함</span>
-          <small style="margin-left:6px; color:#98a2b3;">
-            (정렬 제외)
-          </small>
+          <small>(정렬 제외)</small>
         </label>
+      </div>
 
-
+      <!-- 오른쪽: 주요 액션 -->
+      <div class="toolbar-right">
         <button class="btn btn-primary" id="btnOpenCreate" type="button">
-          <i class="fa-solid fa-plus"></i>
-          <span>카테고리 추가</span>
+          카테고리 추가
         </button>
       </div>
 
+    </div>
 
-      <!-- 테이블 -->
-      <div class="orgcat-table-wrap">
-        <table class="orgcat-table">
-          <thead>
-          <tr>
-            <th class="col-order">순서</th>
-            <th class="col-name">카테고리명</th>
-            <th class="col-status">상태</th>
-            <th class="col-action">관리</th>
-          </tr>
-          </thead>
-          <tbody id="categoryTableBody">
-          <!-- JS 렌더링 -->
-          </tbody>
-        </table>
+
+
+    <!-- 테이블 -->
+    <div class="orgcat-table-wrap">
+      <table class="orgcat-table">
+        <thead>
+        <tr>
+          <th class="col-order">순서</th>
+          <th class="col-name">카테고리명</th>
+          <th class="col-status">상태</th>
+          <th class="col-action">관리</th>
+        </tr>
+        </thead>
+        <tbody id="categoryTableBody">
+        <!-- JS 렌더링 -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 하단: 안내 + 저장 버튼 -->
+    <div class="orgcat-footer">
+      <div class="orgcat-hint" id="orderHint">
+        드래그앤드롭으로 순서를 변경할 수 있습니다.
       </div>
 
-      <!-- 하단: 안내 + 저장 버튼 -->
-      <div class="orgcat-footer">
-        <div class="orgcat-hint" id="orderHint">
-          드래그앤드롭으로 순서를 변경할 수 있습니다.
-        </div>
+      <button class="btn btn-outline" id="btnSaveOrder" type="button" disabled>
+        변경사항저장
+      </button>
+    </div>
 
-        <button class="btn btn-outline" id="btnSaveOrder" type="button" disabled>
-          변경사항저장
-        </button>
-      </div>
-
-    </section>
-  </div>
+  </section>
 
   <!-- ================= 모달 ================= -->
   <div id="categoryModal" class="modal hidden" aria-hidden="true">
