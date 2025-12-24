@@ -95,9 +95,9 @@ public class AdminBoardCategoryService {
     ) {
         BoardCategory category = getVerifiedCategory(companyId, categoryId);
 
-        if ("NOTICE".equals(category.getBoardType())) {
-            throw new BusinessException("공지사항 게시판은 수정할 수 없습니다.");
-        }
+//        if ("NOTICE".equals(category.getBoardType())) {
+//            throw new BusinessException("공지사항 게시판은 수정할 수 없습니다.");
+//        }
 
         category.update(
                 dto.getBoardName(),
