@@ -4,7 +4,8 @@
 let cars = [];
 let reservations = [];
 let selectedCar = null;
-let selectedDate = null;
+let selectedStartDate = null;
+let selectedEndDate = null;
 let dates = []; // 오늘부터 14일 후까지의 날짜 배열
 
 /* ==========================
@@ -237,15 +238,64 @@ function handleCellClick(cell, car, dateString) {
     }
 
     selectedCar = car;
-    selectedDate = dateString;
+
+    // 날짜 인덱스 찾기
+    const clickedDateIndex = dates.findIndex(d => d.dateString === dateString);
+    if (clickedDateIndex === -1) return;
+
+    // 첫 번째 클릭 (시작 날짜)
+    if (selectedStartDate === null) {
+        selectedStartDate = dateString;
+        selectedEndDate = dateString;
+        updateSelection();
+        updateReservationForm();
+        return;
+    }
+
+    // 두 번째 클릭 (종료 날짜)
+    const startDateIndex = dates.findIndex(d => d.dateString === selectedStartDate);
+    if (clickedDateIndex < startDateIndex) {
+        // 시작 날짜보다 이전을 클릭하면 새로운 시작 날짜로
+        selectedStartDate = dateString;
+        selectedEndDate = dateString;
+    } else {
+        // 종료 날짜 설정
+        selectedEndDate = dateString;
+    }
+
+    // 선택한 범위에 예약 불가능한 날짜가 있는지 확인
+    if (!isRangeAvailable(carId, selectedStartDate, selectedEndDate)) {
+        alert('선택한 날짜 범위에 예약 불가능한 날짜가 포함되어 있습니다.');
+        clearSelection();
+        selectedCar = car;
+        selectedStartDate = dateString;
+        selectedEndDate = dateString;
+    }
 
     updateSelection();
     updateReservationForm();
 }
 
+function isRangeAvailable(carId, startDate, endDate) {
+    const startIndex = dates.findIndex(d => d.dateString === startDate);
+    const endIndex = dates.findIndex(d => d.dateString === endDate);
+    
+    if (startIndex === -1 || endIndex === -1) return false;
+
+    for (let i = startIndex; i <= endIndex; i++) {
+        const dateObj = dates[i];
+        const isReserved = checkReservation(carId, dateObj.dateString);
+        if (isReserved) {
+            return false;
+        }
+    }
+    return true;
+}
+
 function clearSelection() {
     selectedCar = null;
-    selectedDate = null;
+    selectedStartDate = null;
+    selectedEndDate = null;
 
     // 모든 선택 해제
     document.querySelectorAll('.date-cell.selected').forEach(cell => {
@@ -261,16 +311,27 @@ function updateSelection() {
         cell.classList.remove('selected');
     });
 
-    // 해당 차량의 날짜 선택
-    if (selectedCar && selectedDate) {
-        document.querySelectorAll('.date-cell').forEach(cell => {
-            const cellCarId = parseInt(cell.dataset.carId);
-            const cellDate = cell.dataset.date;
+    // 해당 차량의 날짜 범위 선택
+    if (selectedCar && selectedStartDate !== null && selectedEndDate !== null) {
+        const startIndex = dates.findIndex(d => d.dateString === selectedStartDate);
+        const endIndex = dates.findIndex(d => d.dateString === selectedEndDate);
+        
+        if (startIndex !== -1 && endIndex !== -1) {
+            const minIndex = Math.min(startIndex, endIndex);
+            const maxIndex = Math.max(startIndex, endIndex);
 
-            if (cellCarId === selectedCar.carId && cellDate === selectedDate) {
-                cell.classList.add('selected');
-            }
-        });
+            document.querySelectorAll('.date-cell').forEach(cell => {
+                const cellCarId = parseInt(cell.dataset.carId);
+                const cellDate = cell.dataset.date;
+
+                if (cellCarId === selectedCar.carId) {
+                    const cellDateIndex = dates.findIndex(d => d.dateString === cellDate);
+                    if (cellDateIndex >= minIndex && cellDateIndex <= maxIndex) {
+                        cell.classList.add('selected');
+                    }
+                }
+            });
+        }
     }
 }
 
@@ -307,8 +368,11 @@ function updateReservationForm() {
     }
 
 
-    // 날짜
-    document.getElementById('selected-date').textContent = selectedDate ? formatDateKorean(selectedDate) : '-';
+    // 시작 날짜
+    document.getElementById('selected-start-date').textContent = selectedStartDate ? formatDateKorean(selectedStartDate) : '-';
+    
+    // 종료 날짜
+    document.getElementById('selected-end-date').textContent = selectedEndDate ? formatDateKorean(selectedEndDate) : '-';
 
     // 신청 버튼 활성화/비활성화
     updateSubmitButtonState();
@@ -349,7 +413,8 @@ function validateReservationReason(showEmptyMessage = true) {
 function updateSubmitButtonState() {
     const submitBtn = document.getElementById('btn-submit');
     const isValid = selectedCar &&
-                    selectedDate !== null &&
+                    selectedStartDate !== null &&
+                    selectedEndDate !== null &&
                     validateReservationReason(false);
     submitBtn.disabled = !isValid;
 }
@@ -358,8 +423,8 @@ function updateSubmitButtonState() {
    Submit Reservation
 ========================== */
 async function submitReservation() {
-    if (!selectedCar || !selectedDate) {
-        alert('차량과 날짜를 선택해주세요.');
+    if (!selectedCar || !selectedStartDate || !selectedEndDate) {
+        alert('차량과 날짜 범위를 선택해주세요.');
         return;
     }
 
@@ -370,26 +435,35 @@ async function submitReservation() {
     }
 
     try {
-        const payload = {
-            typeCode: 'CAR',
-            resourceId: selectedCar.carId,
-            reservationDate: selectedDate,
-            startTime: 0, // 하루 종일 예약
-            endTime: 24,
-            reservationReason: reason
-        };
+        // 시작 날짜부터 종료 날짜까지 각 날짜별로 예약 생성
+        const startIndex = dates.findIndex(d => d.dateString === selectedStartDate);
+        const endIndex = dates.findIndex(d => d.dateString === selectedEndDate);
+        const minIndex = Math.min(startIndex, endIndex);
+        const maxIndex = Math.max(startIndex, endIndex);
 
-        const res = await apiFetch('/api/reservations/me', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
+        for (let i = minIndex; i <= maxIndex; i++) {
+            const dateObj = dates[i];
+            const payload = {
+                typeCode: 'CAR',
+                resourceId: selectedCar.carId,
+                reservationDate: dateObj.dateString,
+                startTime: 0, // 하루 종일 예약
+                endTime: 24,
+                reservationReason: reason
+            };
 
-        if (!res.ok) {
-            const error = await res.json();
-            throw new Error(error.message || '예약에 실패했습니다.');
+            const res = await apiFetch('/api/reservations/me', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.message || '예약에 실패했습니다.');
+            }
         }
 
         alert('예약이 완료되었습니다.');
