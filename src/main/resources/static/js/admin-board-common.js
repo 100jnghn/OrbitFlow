@@ -619,9 +619,11 @@ function renderSelectedEmployees() {
         // 모든 사원에 대해 항상 X 버튼 표시
         div.innerHTML = `
             <span class="employee-info">${employeeInfoText}</span>
-            <button type="button" class="remove-btn" onclick="removeEmployee(${emp.id}, ${permissionIdValue})" title="권한 제거">
-                <i class="fas fa-times"></i>
-            </button>
+            <button type="button"
+        class="remove-btn"
+        onclick="removeEmployee(${emp.id}, ${permissionIdValue})"
+        title="권한 제거">
+</button>
         `;
         container.appendChild(div);
     });

@@ -263,8 +263,8 @@
 }
 
 .toggle-label .status-inactive {
-    color: var(--neutral-400);
-    font-weight: 500;
+    color: var(--neutral-400);     /* 옅은 회색 */
+    font-weight: 400;              /* 덜 강조 */
 }
 
 /* 비활성화 상태일 때 토글 슬라이더 색상 변경 */
@@ -334,6 +334,25 @@
     border: none;
     background: transparent;
     color: var(--neutral-400);
+}
+
+/* 부서 게시판 활성화 테이블 전용 - 페이지네이션 중앙과 부서명 열 정렬 맞추기 */
+.admin-section:has(#organizationTableBody) .admin-table th:first-child {
+    width: 60px;
+}
+
+.admin-section:has(#organizationTableBody) .admin-table th:nth-child(2) {
+    text-align: center;
+    padding-left: 80px; /* 부서명 열을 오른쪽으로 이동 */
+}
+
+.admin-section:has(#organizationTableBody) .admin-table th:last-child {
+    width: 280px;
+}
+
+.admin-section:has(#organizationTableBody) .admin-table td:nth-child(2) {
+    text-align: center;
+    padding-left: 80px; /* 부서명 열을 오른쪽으로 이동 */
 }
 
 /* 모달 스타일 */
@@ -643,41 +662,55 @@
     white-space: nowrap;
 }
 
+/* 권한 삭제 X 버튼 (CSS로 직접 그림) */
 .selected-employee .remove-btn {
-    background: transparent;
-    border: none;
-    color: var(--danger-color);
-    cursor: pointer;
-    padding: 0;
-    line-height: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    position: relative;
+
     width: 18px;
     height: 18px;
-    border-radius: 3px;
-    flex-shrink: 0;
-    transition: background 0.2s ease;
-    margin-left: 6px;
     min-width: 18px;
     min-height: 18px;
-    vertical-align: middle;
+
+    margin-left: 6px;
+    padding: 0;
+
+    background: none;
+    border: none;
+    cursor: pointer;
 }
 
-.selected-employee .remove-btn i {
-    font-size: 12px;
-    display: inline-block;
-    line-height: 1;
-    color: var(--danger-color);
-    font-weight: bold;
+/* X 선 2개 */
+.selected-employee .remove-btn::before,
+.selected-employee .remove-btn::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+
+    width: 14px;
+    height: 2px;
+
+    background-color: var(--danger-color);
+    transform-origin: center;
 }
 
-.selected-employee .remove-btn:hover {
-    background: var(--neutral-200);
+/* / 방향 */
+.selected-employee .remove-btn::before {
+    transform: translate(-50%, -50%) rotate(45deg);
+    pointer-events: none;
 }
 
-.selected-employee .remove-btn:hover i {
-    color: var(--danger-hover);
+/* \ 방향 */
+.selected-employee .remove-btn::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+    pointer-events: none;
+}
+
+/* hover 시 색만 진해짐 */
+.selected-employee .remove-btn:hover::before,
+.selected-employee .remove-btn:hover::after {
+    background-color: var(--danger-hover);
+    height: 3px;
 }
 
 /* 게시판 기능 */

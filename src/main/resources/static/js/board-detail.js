@@ -13,9 +13,16 @@ let totalCommentPages = 1;
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', async function() {
-    // URL 파라미터에서 boardId 가져오기
+    // URL 파라미터에서 boardId와 categoryId 가져오기
     const urlParams = new URLSearchParams(window.location.search);
     boardId = urlParams.get('boardId') || document.getElementById('boardId')?.value;
+    const urlCategoryId = urlParams.get('categoryId');
+    
+    // URL에서 categoryId가 있으면 먼저 설정
+    if (urlCategoryId) {
+        categoryId = parseInt(urlCategoryId);
+        console.log('[페이지 로드] URL에서 categoryId 읽음:', categoryId);
+    }
 
     if (boardId) {
         boardId = parseInt(boardId);
@@ -50,6 +57,9 @@ async function loadCurrentUser() {
 }
 
 // 게시판 카테고리 목록 로드 (사이드바용)
+let cachedAccessibleBoards = [];
+let cachedOrganizationBoards = [];
+
 async function loadBoardCategories() {
     try {
         const [accessibleResponse, orgResponse] = await Promise.all([
@@ -78,51 +88,137 @@ async function loadBoardCategories() {
         const accessibleData = await accessibleResponse.json();
         const orgData = await orgResponse.json();
 
-        const accessibleBoards = accessibleData.data || [];
-        const organizationBoards = orgData.data || [];
+        cachedAccessibleBoards = accessibleData.data || [];
+        cachedOrganizationBoards = orgData.data || [];
 
-        renderSidebar(accessibleBoards, organizationBoards);
+        renderSidebar(cachedAccessibleBoards, cachedOrganizationBoards);
+        
+        // categoryId가 이미 설정되어 있으면 사이드바 선택 효과 적용
+        if (categoryId) {
+            // 사이드바 렌더링이 완료된 후 선택 효과 적용
+            setTimeout(() => {
+                updateSidebarSelection(categoryId);
+            }, 100);
+        }
     } catch (error) {
         console.error('Error loading board categories:', error);
     }
 }
 
-// 사이드바 렌더링
+// 사이드바 렌더링 (아코디언 구조)
 function renderSidebar(accessibleBoards, organizationBoards) {
     const sidebar = document.getElementById('boardSidebar');
     if (!sidebar) return;
 
     sidebar.innerHTML = '';
 
-    accessibleBoards.forEach(board => {
-        const li = document.createElement('li');
-        const isSelected = board.id === categoryId;
-        li.className = 'sidebar-menu-item' + (isSelected ? ' selected' : '');
-        li.innerHTML = `
-            <a href="/view/board?categoryId=${board.id}" class="board-link${isSelected ? ' active' : ''}">
-                ${escapeHTML(board.boardName || board.name || '게시판')}
-            </a>
-        `;
-        sidebar.appendChild(li);
-    });
-
-    if (organizationBoards.length > 0) {
-        const orgHeader = document.createElement('li');
-        orgHeader.className = 'sidebar-menu-item sidebar-menu-header';
-        orgHeader.innerHTML = '<span class="sidebar-menu-header-text">부서게시판</span>';
-        sidebar.appendChild(orgHeader);
-
-        organizationBoards.forEach(board => {
-            const li = document.createElement('li');
+    // 일반 게시판 (권한이 있는 게시판) - 단일 항목으로 표시
+    if (accessibleBoards && accessibleBoards.length > 0) {
+        accessibleBoards.forEach(board => {
             const isSelected = board.id === categoryId;
-            li.className = 'sidebar-menu-item' + (isSelected ? ' selected' : '');
+            const li = document.createElement('li');
+            li.className = 'menu-item no-sub' + (isSelected ? ' selected' : '');
             li.innerHTML = `
-                <a href="/view/board?categoryId=${board.id}" class="board-link${isSelected ? ' active' : ''}">
-                    - ${escapeHTML(board.boardName || board.name || '게시판')}
+                <a href="/view/board?categoryId=${board.id}" class="board-link">
+                    <span>${escapeHTML(board.boardName || board.name || '게시판')}</span>
                 </a>
             `;
             sidebar.appendChild(li);
         });
+    }
+
+    // 조직 게시판 - 아코디언 구조로 표시 (기본적으로 펼쳐진 상태)
+    if (organizationBoards && organizationBoards.length > 0) {
+        const hasSelectedOrgBoard = organizationBoards.some(board => board.id === categoryId);
+        const orgMenuItem = document.createElement('li');
+        orgMenuItem.className = 'menu-item active';
+        orgMenuItem.innerHTML = `
+            <div class="menu-title" role="button" onclick="toggleBoardMenu(this)" aria-expanded="true">
+                <span>부서게시판</span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </div>
+            <ul class="sub-menu">
+                ${organizationBoards.map(board => {
+                    const isSelected = board.id === categoryId;
+                    return `
+                        <li class="${isSelected ? 'selected' : ''}">
+                            <a href="/view/board?categoryId=${board.id}" class="board-link">
+                                ${escapeHTML(board.boardName || board.name || '게시판')}
+                            </a>
+                        </li>
+                    `;
+                }).join('')}
+            </ul>
+        `;
+        sidebar.appendChild(orgMenuItem);
+    }
+}
+
+// 사이드바 선택 효과 업데이트
+function updateSidebarSelection(selectedCategoryId) {
+    if (!selectedCategoryId) return;
+    
+    console.log('[사이드바 선택 효과] categoryId:', selectedCategoryId);
+    
+    // 모든 선택 상태 초기화
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    document.querySelectorAll('.sub-menu li').forEach(item => {
+        item.classList.remove('selected');
+    });
+    
+    // 선택된 항목 찾아서 표시
+    document.querySelectorAll('.board-link').forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && href.includes(`categoryId=${selectedCategoryId}`)) {
+            const menuItem = link.closest('.menu-item');
+            const subMenuItem = link.closest('.sub-menu li');
+            
+            if (subMenuItem) {
+                // 부서게시판인 경우
+                subMenuItem.classList.add('selected');
+                const parentMenuItem = subMenuItem.closest('.menu-item');
+                if (parentMenuItem) {
+                    parentMenuItem.classList.add('active'); // 아코디언 열기
+                    const menuTitle = parentMenuItem.querySelector('.menu-title');
+                    if (menuTitle) {
+                        menuTitle.setAttribute('aria-expanded', 'true');
+                    }
+                }
+                console.log('[사이드바 선택 효과] 부서게시판 선택:', selectedCategoryId);
+            } else if (menuItem) {
+                // 일반 게시판인 경우
+                menuItem.classList.add('selected');
+                console.log('[사이드바 선택 효과] 일반 게시판 선택:', selectedCategoryId);
+            }
+        }
+    });
+}
+
+// 부서게시판 아코디언 토글 함수
+function toggleBoardMenu(element) {
+    const menuItem = element.closest('.menu-item');
+    if (!menuItem) return;
+
+    const isOpen = menuItem.classList.contains('active');
+
+    // 다른 메뉴 닫기
+    document.querySelectorAll('.sidebar-menu .menu-item').forEach(item => {
+        if (item !== menuItem) {
+            item.classList.remove('active');
+            const title = item.querySelector('.menu-title');
+            if (title) title.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    // 현재 메뉴 토글
+    if (isOpen) {
+        menuItem.classList.remove('active');
+        element.setAttribute('aria-expanded', 'false');
+    } else {
+        menuItem.classList.add('active');
+        element.setAttribute('aria-expanded', 'true');
     }
 }
 
@@ -154,7 +250,30 @@ async function loadBoardDetail() {
         const board = result.data;
 
         if (board) {
-            categoryId = board.categoryId || board.category?.id;
+            // URL에서 categoryId가 없으면 게시글에서 가져오기 (무조건 설정)
+            const boardCategoryId = board.categoryId || board.category?.id;
+            if (boardCategoryId) {
+                // URL에 categoryId가 없거나, 게시글의 categoryId가 다르면 게시글의 categoryId 사용
+                if (!categoryId || categoryId !== parseInt(boardCategoryId)) {
+                    categoryId = parseInt(boardCategoryId);
+                    console.log('[게시글 상세] categoryId 설정:', categoryId);
+                }
+            }
+            // categoryId 설정 후 사이드바 선택 효과 업데이트
+            // 게시판 목록이 이미 로드되어 있으면 사이드바 다시 렌더링 후 선택 효과 적용
+            if (categoryId) {
+                if (cachedAccessibleBoards.length > 0 || cachedOrganizationBoards.length > 0) {
+                    // 캐시된 게시판 목록으로 사이드바 다시 렌더링
+                    renderSidebar(cachedAccessibleBoards, cachedOrganizationBoards);
+                    // 렌더링 후 선택 효과 적용
+                    setTimeout(() => {
+                        updateSidebarSelection(categoryId);
+                    }, 100);
+                } else {
+                    // 게시판 목록이 아직 로드되지 않았으면 로드 후 선택 효과 적용됨
+                    console.log('[게시글 상세] 게시판 목록 로드 중...');
+                }
+            }
             renderBoardDetail(board);
             loadComments(currentCommentPage);
         } else {
@@ -270,9 +389,11 @@ function renderBoardDetail(board) {
 
 // 목록으로 돌아가기
 function goBack() {
+    console.log('[목록으로 돌아가기] categoryId:', categoryId);
     if (categoryId) {
         window.location.href = `/view/board?categoryId=${categoryId}`;
     } else {
+        console.warn('[목록으로 돌아가기] categoryId가 없어 기본 페이지로 이동');
         window.location.href = '/view/board';
     }
 }
@@ -314,7 +435,15 @@ async function deleteBoard() {
         }
 
         alert('게시글이 삭제되었습니다.');
-        goBack();
+        // categoryId를 사용하여 해당 게시판 목록으로 이동
+        console.log('[게시글 삭제] categoryId:', categoryId);
+        if (categoryId) {
+            console.log('[게시글 삭제] 게시판 목록으로 이동:', categoryId);
+            window.location.href = `/view/board?categoryId=${categoryId}`;
+        } else {
+            console.warn('[게시글 삭제] categoryId가 없어 기본 페이지로 이동');
+            window.location.href = '/view/board';
+        }
     } catch (error) {
         console.error('Error deleting board:', error);
         alert(error.message || '게시글 삭제에 실패했습니다.');
