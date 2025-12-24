@@ -35,8 +35,9 @@ public class ReservationResDto {
     private String resourceName;
 
     private LocalDate reservationDate;  // 예약날짜
-    private int startTime;
-    private int endTime;
+    private LocalDate endDate;          // 종료 날짜 (차량 예약 때 사용)
+    private Integer startTime;
+    private Integer endTime;
 
     private String reservationReason;
     private String rejectReason;

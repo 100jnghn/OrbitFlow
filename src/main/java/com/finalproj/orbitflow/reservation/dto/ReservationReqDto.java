@@ -22,7 +22,8 @@ public class ReservationReqDto {
     private Long itemCategoryId;
     private Long resourceId;
     private LocalDate reservationDate;
-    private int startTime;
-    private int endTime;
+    private LocalDate endDate;
+    private Integer startTime;
+    private Integer endTime;
     private String reservationReason;
 }

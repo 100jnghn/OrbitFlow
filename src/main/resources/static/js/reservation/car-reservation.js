@@ -435,37 +435,31 @@ async function submitReservation() {
     }
 
     try {
-        // 시작 날짜부터 종료 날짜까지 각 날짜별로 예약 생성
-        const startIndex = dates.findIndex(d => d.dateString === selectedStartDate);
-        const endIndex = dates.findIndex(d => d.dateString === selectedEndDate);
-        const minIndex = Math.min(startIndex, endIndex);
-        const maxIndex = Math.max(startIndex, endIndex);
+        const payload = {
+            typeCode: 'CAR',
+            resourceId: selectedCar.carId,
+            reservationDate: selectedStartDate,
+            endDate: selectedEndDate,
+            startTime: null,
+            endTime: null,
 
-        for (let i = minIndex; i <= maxIndex; i++) {
-            const dateObj = dates[i];
-            const payload = {
-                typeCode: 'CAR',
-                resourceId: selectedCar.carId,
-                reservationDate: dateObj.dateString,
-                startTime: 0, // 하루 종일 예약
-                endTime: 24,
-                reservationReason: reason
-            };
+            // startTime: 0, // 차량은 시간 X
+            // endTime: 24,  // 차량은 시간 X
+            reservationReason: reason
+        };
 
-            const res = await apiFetch('/api/reservations/me', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
+        const res = await apiFetch('/api/reservations/me', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
 
-            if (!res.ok) {
-                const error = await res.json();
-                throw new Error(error.message || '예약에 실패했습니다.');
-            }
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.message || '예약에 실패했습니다.');
         }
-
         alert('예약이 완료되었습니다.');
 
         // 입력 초기화

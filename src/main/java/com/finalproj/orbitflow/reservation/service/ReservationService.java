@@ -102,6 +102,7 @@ public class ReservationService {
         String typeCode = reservation.getTypeCode();
         ItemCategory itemCategory = null;
         ReservationStatus reservationStatus = null;
+        LocalDate endDate = reservation.getReservationDate();   // 기본은 시작일 = 종료일
 
         // 회의실 예약
         if (typeCode.equals("MEETING")) {
@@ -112,6 +113,9 @@ public class ReservationService {
         else if (typeCode.equals("CAR")) {
             reservationTypeCode = ReservationTypeCode.CAR;
             reservationStatus = reservationStatusRepository.getReferenceById(1L);   // 1 = 예약 대기
+
+            // 차량 예약은 endDate가 따로 있음
+            endDate = reservation.getEndDate();
         } 
         // 기타 자원 예약
         else {
@@ -127,6 +131,7 @@ public class ReservationService {
                 .itemCategory(itemCategory)
                 .resourceId(reservation.getResourceId())
                 .reservationDate(reservation.getReservationDate())
+                .endDate(endDate)
                 .startTime(reservation.getStartTime())
                 .endTime(reservation.getEndTime())
                 .reservationReason(reservation.getReservationReason())
@@ -212,6 +217,7 @@ public class ReservationService {
                 .resourceId(reservation.getResourceId())
                 .resourceName(resourceName)
                 .reservationDate(reservation.getReservationDate())
+                .endDate(reservation.getEndDate())
                 .startTime(reservation.getStartTime())                      // 차량은 - 으로 표시
                 .endTime(reservation.getEndTime())                          // 차량은 - 으로 표시
                 .reservationReason(reservation.getReservationReason())
