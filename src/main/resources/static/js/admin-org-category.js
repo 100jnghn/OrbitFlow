@@ -21,6 +21,7 @@ const els = {
     tbody: () => document.getElementById('categoryTableBody'),
 
     search: () => document.getElementById('searchKeyword'),
+    btnSearch: () => document.getElementById('btnSearch'),
     includeInactive: () => document.getElementById('includeInactive'),
     btnOpenCreate: () => document.getElementById('btnOpenCreate'),
     btnSaveOrder: () => document.getElementById('btnSaveOrder'),
@@ -66,12 +67,16 @@ function filterCategories() {
 }
 
 function bindEvents() {
-    els.search()?.addEventListener('input', filterCategories);
     els.includeInactive()?.addEventListener('change', loadCategories);
 
     els.btnOpenCreate()?.addEventListener('click', openCreateModal);
     els.btnSaveOrder()?.addEventListener('click', saveOrder);
-
+    els.btnSearch()?.addEventListener('click', filterCategories);
+    els.search()?.addEventListener('keydown', e => { // 엔터키 검색 지원
+        if (e.key === 'Enter') {
+            filterCategories();
+        }
+    });
     els.btnCloseModal()?.addEventListener('click', closeModal);
     els.btnCancel()?.addEventListener('click', closeModal);
     els.btnSaveCategory()?.addEventListener('click', saveCategory);
