@@ -9,7 +9,7 @@ let selectedStartHour = null;
 let selectedEndHour = null;
 let isSelectingRange = false;
 
-const HOURS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+const HOURS = Array.from({ length: 24 }, (_, i) => i); // 0~23
 
 /* ==========================
    Helper Functions

@@ -151,8 +151,8 @@
 }
 
 .time-header {
-    flex: 0 0 80px; /* 고정 폭 */
-    min-width: 80px;
+    flex: 0 0 50px; /* 고정 폭 */
+    min-width: 50px;
     padding: 8px;
     background: #f8f9fa;
     border: 1px solid #e9ecef;
@@ -171,8 +171,8 @@
 }
 
 .time-cell {
-    flex: 0 0 80px;
-    min-width: 80px;
+    flex: 0 0 50px;
+    min-width: 50px;
     padding: 12px 8px;
     border: 1px solid #e9ecef;
     border-left: none;

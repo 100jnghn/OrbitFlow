@@ -212,8 +212,8 @@ public class ReservationService {
                 .resourceId(reservation.getResourceId())
                 .resourceName(resourceName)
                 .reservationDate(reservation.getReservationDate())
-                .startTime(reservation.getStartTime())
-                .endTime(reservation.getEndTime())
+                .startTime(reservation.getStartTime())                      // 차량은 - 으로 표시
+                .endTime(reservation.getEndTime())                          // 차량은 - 으로 표시
                 .reservationReason(reservation.getReservationReason())
                 .rejectReason(reservation.getRejectReason())
                 .reservationStatusId(reservationStatusId)

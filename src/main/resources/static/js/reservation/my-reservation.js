@@ -162,8 +162,8 @@ async function loadReservations(page = 0) {
                 createCell(r.resourceName),
                 createCell(r.reservationReason),
                 createCell(formatDate(r.reservationDate)),
-                createCell(formatHour(r.startTime)),
-                createCell(formatHour(r.endTime)),
+                createCell(r.typeCode === 'CAR' ? '-' : formatHour(r.startTime)),
+                createCell(r.typeCode === 'CAR' ? '-' : formatHour(r.endTime)),
                 createStatusCell(r.reservationStatusName),
                 createActionCell(r)
             );

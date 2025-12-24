@@ -42,6 +42,8 @@ public class QEmployee extends EntityPathBase<Employee> {
 
     public final EnumPath<com.finalproj.orbitflow.hr.employee.enums.Gender> gender = createEnum("gender", com.finalproj.orbitflow.hr.employee.enums.Gender.class);
 
+    public final DatePath<java.time.LocalDate> hireDate = createDate("hireDate", java.time.LocalDate.class);
+
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final StringPath internalPhone = createString("internalPhone");

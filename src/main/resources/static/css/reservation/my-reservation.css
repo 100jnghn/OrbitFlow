@@ -227,7 +227,7 @@
     align-items: center;
     justify-content: center;
 
-    width: 100px;                 /* 모든 badge 동일한 너비 */
+    width: 90px;                 /* 모든 badge 동일한 너비 */
     height: 30px;                /* 동일한 높이 */
 
     border-radius: 13px;
