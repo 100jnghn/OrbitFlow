@@ -1,137 +1,105 @@
-/* sidebar.css */
-
+/* 공통 사이드바 스타일 */
 .sidebar {
     width: 250px;
-    background: #0f1729 !important;
+    background: #0f1729;
     color: #fff;
     display: flex;
     flex-direction: column;
-    z-index: 100;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+.sidebar-inner {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding-top: 24px;
+}
+
+.sidebar-title {
+    padding: 0 0 16px 36px;
+    letter-spacing: -2px;
+    font-weight: bold;
+    color: #b3b3cd;
+    font-size: 20px;
+}
+
+.sidebar-logo-icon {
+    color: #4a69bd;
+    margin-right: 8px;
+}
+
+.sidebar-menu-wrapper {
+    flex: 1;
+    overflow-y: auto;
 }
 
 .sidebar-menu {
     list-style: none;
     margin: 0;
-    padding: 0 0 16px 30px !important;
+    padding: 0 0 16px 36px;
 }
 
-/* --- 대분류 스타일 --- */
-.menu-item {
-    position: relative;
-    list-style: none;
-    margin-bottom: 2px;
-}
-
-.menu-title {
-    display: flex !important;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0 !important;
-    cursor: pointer !important;
-    color: #c9ccdd !important; /* 기본 색상: 연한 회색 */
+.sidebar-section-title {
+    margin-top: 20px;
+    margin-bottom: 8px;
+    font-weight: bold;
     font-size: 15px;
-    user-select: none;
-    transition: all 0.2s ease;
+    color: #ffffff;
 }
 
-/* 대분류 호버 시 및 활성화(active) 시 효과 */
-.menu-title:hover,
-.menu-item.active .menu-title {
-    color: #ffffff !important; /* 화이트로 강조 */
-}
-
-/* 현재 페이지가 포함된 대분류 텍스트 굵게 */
-.menu-item.active .menu-title span {
-    font-weight: 600;
-}
-
-/* --- 화살표 애니메이션 --- */
-.arrow {
-    font-size: 11px;
-    transition: transform 0.3s ease;
-    margin-right: 15px;
-    pointer-events: none;
-}
-
-.menu-item.active .arrow {
-    transform: rotate(180deg);
-    color: #5dade2; /* 펼쳐졌을 때 화살표 색상 포인트 */
-}
-
-/* --- 소분류 제어 (아코디언) --- */
-.sub-menu {
-    display: none !important;
-    list-style: none !important;
-    padding: 5px 0 10px 15px !important;
-    margin: 0 !important;
-    border-left: 1px solid rgba(255, 255, 255, 0.1); /* 소분류 구분선 추가 */
-    margin-left: 5px !important;
-}
-
-.menu-item.active .sub-menu {
-    display: block !important;
-}
-
-/* --- 소분류 링크 스타일 --- */
-.sub-menu li a {
-    text-decoration: none;
-    color: #8a8d9e !important; /* 소분류 기본 색상: 차분한 블루그레이 */
-    font-size: 14px;
-    display: block;
-    padding: 7px 0;
-    transition: all 0.2s ease;
-    position: relative;
-}
-
-/* 소분류 호버 시 */
-.sub-menu li a:hover {
-    color: #ffffff !important;
-    padding-left: 5px; /* 호버 시 살짝 움직이는 효과 */
-}
-
-/* [핵심] 선택된 소분류 메뉴 효과 */
-.sub-menu li.selected a {
-    color: #5dade2 !important; /* 포인트 컬러 (하늘색) */
-    font-weight: 700 !important;
-    padding-left: 8px;
-}
-
-/* 선택된 메뉴 옆에 작은 인디케이터(점) 추가 */
-.sub-menu li.selected a::before {
-    content: '';
-    position: absolute;
-    left: -2px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 4px;
-    height: 4px;
-    background-color: #5dade2;
-    border-radius: 50%;
-}
-
-/* --- 단일 메뉴 및 기타 간섭 무력화 --- */
-.sidebar-menu li.selected {
-    background: transparent !important;
-    border-left: none !important;
-    margin-left: 0 !important;
-    padding: 0 !important;
-}
-
-/* 소분류가 없는 단일 대분류 링크 (예: 결재관리) */
 .sidebar-link {
     text-decoration: none;
     color: #c9ccdd;
     font-size: 15px;
     display: block;
-    padding: 12px 0;
+    padding: 4px 0;
+}
+
+.sidebar-link:hover {
+    color: #ffffff;
+}
+
+.sidebar-menu li {
+    margin: 6px 0;
+    cursor: pointer;
+    transition: color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.sidebar-menu li a {
+    display: block;
+    padding: 8px 0;
+    text-decoration: none;
+    color: #c9ccdd;
+    font-size: 15px;
     transition: color 0.2s;
 }
 
-.menu-item.no-sub.selected .sidebar-link {
-    color: #ffffff !important;
-    font-weight: 700;
-    border-left: 3px solid #5dade2 !important;
-    padding-left: 10px;
-    margin-left: -30px; /* 사이드바 패딩 상쇄 */
-    background: rgba(93, 173, 226, 0.1); /* 배경 살짝 강조 */
+.sidebar-menu li:hover a {
+    color: #fff;
 }
+
+.sidebar-menu li.selected {
+    color: #fff;
+    font-weight: bold;
+    background: rgba(255, 255, 255, 0.1);
+    margin-left: -36px;
+    padding: 8px 36px;
+    border-left: 4px solid #4a69bd;
+}
+
+.sidebar-menu li.selected a {
+    color: #fff;
+    font-weight: bold;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    background: #fff;
+    min-height: 80px;
+    padding: 15px 24px;
+    font-size: 13px;
+    color: #333;
+}
+
+

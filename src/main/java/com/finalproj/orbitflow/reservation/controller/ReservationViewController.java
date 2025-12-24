@@ -38,4 +38,15 @@ public class ReservationViewController {
         return "reservation/meetingroom-reservation";
     }
 
+    /**
+     * 차량 예약 페이지
+     */
+    @GetMapping("/car")
+    public String getCarReservationPage(Model model) {
+        model.addAttribute("pageTitle", "차량 예약");
+        model.addAttribute("currentGNB", "reservation");
+        model.addAttribute("currentMenu", "car-reservation");
+        return "reservation/car-reservation";
+    }
+
 }

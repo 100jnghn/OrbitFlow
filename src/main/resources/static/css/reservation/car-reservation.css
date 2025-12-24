@@ -1,0 +1,435 @@
+/* =========================
+   Page Header
+========================= */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.page-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #222;
+    letter-spacing: -1px;
+}
+
+/* =========================
+   Filter Section
+========================= */
+.filter-image-wrapper {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.filter-section {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    flex: 0 0 50%;
+    padding: 20px 24px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.car-image-section {
+    flex: 0 0 50%;
+    padding: 20px 24px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80px;
+}
+
+.car-image {
+    max-width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 0 0 20%;
+}
+
+.filter-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+}
+
+.filter-select {
+    padding: 12px 14px;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-select:hover {
+    border-color: #4a69bd;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #4a69bd;
+    box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.1);
+}
+
+/* =========================
+   Grid Container
+========================= */
+.grid-container {
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    /* ⭐ 가운데 정렬 핵심 */
+    display: flex;
+    justify-content: center; /* 좌우 */
+    align-items: center;     /* 상하 */
+
+    /* 중요 */
+    min-height: 400px;       /* 최소 높이 지정 (없으면 상하 중앙 안 보임) */
+    overflow-x: auto;
+}
+
+.grid-inner {
+    display: inline-block; /* 내용 크기만큼 */
+}
+
+.grid-header {
+    display: flex;
+    margin-bottom: 2px;
+}
+
+.car-column-header {
+    display: flex;
+
+    /*width: 150px;*/
+    min-width: 150px;
+    padding: 12px 8px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    font-weight: 600;
+    font-size: 14px;
+    color: #495057;
+    text-align: center;
+    border-radius: 8px 0 0 0;
+}
+
+.car-name-cell {
+    display: flex;
+    /*width: 150px;*/
+    min-width: 150px;
+    padding: 12px 8px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-top: none;
+    font-weight: 600;
+    font-size: 13px;
+    color: #495057;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+.times-header {
+    display: flex;
+    flex: 1;
+}
+
+.time-header {
+    flex: 0 0 80px; /* 고정 폭 */
+    min-width: 80px;
+    padding: 8px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-left: none;
+    font-weight: 600;
+    font-size: 12px;
+    text-align: center;
+    white-space: nowrap;
+    box-sizing: border-box; /* 이거 없으면 셀 선택 시 크기 달라져서 정렬 깨짐 */
+
+}
+
+.time-cells {
+    display: flex;
+    flex: 1;
+}
+
+.time-cell {
+    flex: 0 0 80px;
+    min-width: 80px;
+    padding: 12px 8px;
+    border: 1px solid #e9ecef;
+    border-left: none;
+    border-top: none;
+    text-align: center;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    box-sizing: border-box; /* 이거 없으면 셀 선택 시 크기 달라져서 정렬 깨짐 */
+}
+
+.time-header:last-child {
+    border-radius: 0 8px 0 0;
+}
+
+/* =========================
+   Grid Body
+========================= */
+.grid-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.grid-row {
+    display: flex;
+}
+
+.grid-row:last-child .car-name-cell {
+    border-radius: 0 0 0 8px;
+}
+
+
+.grid-row:last-child .time-cell:last-child {
+    border-radius: 0 0 8px 0;
+}
+
+/* 예약 가능 */
+.time-cell.available {
+    background: #fff;
+    color: #28a745;
+}
+
+.time-cell.available:hover {
+    background: #e8f5e9;
+    transform: scale(1.02);
+}
+
+/* 선택됨 */
+.time-cell.selected {
+    background: #cfe2ff;
+    color: #084298;
+    /*font-weight: 600;*/
+    border: 1px solid #0d6efd;
+}
+
+.time-cell.selected::after {
+    /*content: '✓';*/
+    display: block;
+    /*font-size: 10px;*/
+    /*margin-top: 2px;*/
+}
+
+/* 예약 불가 */
+.time-cell.unavailable {
+    background: #f8d7da;
+    color: #c62828;
+    cursor: not-allowed;
+}
+
+/* 내 예약 */
+.time-cell.my-reservation {
+    background: #d4edda;
+    color: #155724;
+    font-weight: 600;
+}
+
+.time-cell.my-reservation::after {
+    content: '내 예약';
+    display: block;
+    font-size: 11px;
+    margin-top: 4px;
+}
+
+/* =========================
+   Reservation Form Container
+========================= */
+.reservation-form-container {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    margin-top: 24px;
+}
+
+.reservation-info-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.info-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+}
+
+.info-value {
+    font-size: 14px;
+    color: #222;
+    font-weight: 500;
+    min-height: 20px;
+}
+
+/* =========================
+   Reservation Input Section
+========================= */
+.reservation-input-section {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+.input-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.required {
+    color: #dc3545;
+    margin-left: 2px;
+}
+
+.form-input {
+    width: 95%;
+    padding: 12px 14px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #4a69bd;
+    box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.1);
+}
+
+.form-input::placeholder {
+    color: #adb5bd;
+}
+
+.btn-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    background: #4a69bd;
+    color: #fff;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.btn-submit:hover {
+    background: #3a5aa0;
+}
+
+.btn-submit:disabled {
+    background: #adb5bd;
+    cursor: not-allowed;
+}
+
+/* =========================
+   Empty State
+========================= */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+}
+
+.empty-state i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+}
+
+/* =========================
+   Loading State
+========================= */
+.loading-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.loading-state i {
+    font-size: 32px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* =========================
+   Responsive
+========================= */
+@media (max-width: 1200px) {
+    .reservation-info-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .reservation-info-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .reservation-input-section {
+        flex-direction: column;
+    }
+
+    .btn-submit {
+        width: 100%;
+    }
+}
+
