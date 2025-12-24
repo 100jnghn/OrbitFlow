@@ -60,37 +60,40 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
 
-            if (jwtProvider.validateToken(token)) {
-
-                Long employeeId = jwtProvider.getEmployeeId(token);
-                Long tokenCompanyId = jwtProvider.getCompanyId(token);
-
-                SecurityUser user =
-                        userDetailsService.loadByEmployeeId(employeeId);
-
-                // 테넌트 불일치 방지 (DB값과 토큰값이 다르면 차단)
-                if (tokenCompanyId == null || !tokenCompanyId.equals(user.getCompanyId())) {
-                    SecurityContextHolder.clearContext();
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    return;
-                }
-
-                // 계정 상태 체크 (JWT 단계)
-                if (user.getStatus() != EmployeeStatus.ACTIVE) {
-                    SecurityContextHolder.clearContext();
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    return;
-                }
-
-                var auth = new UsernamePasswordAuthenticationToken(
-                        user, null, user.getAuthorities()
-                );
-                auth.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
-
-                SecurityContextHolder.getContext().setAuthentication(auth);
+            // 토큰은 있는데 유효하지 않으면 → 바로 401
+            if (!jwtProvider.validateToken(token)) {
+                SecurityContextHolder.clearContext();
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
             }
+
+            Long employeeId = jwtProvider.getEmployeeId(token);
+            Long tokenCompanyId = jwtProvider.getCompanyId(token);
+
+            SecurityUser user = userDetailsService.loadByEmployeeId(employeeId);
+
+            // 테넌트 불일치
+            if (!tokenCompanyId.equals(user.getCompanyId())) {
+                SecurityContextHolder.clearContext();
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
+
+            // 계정 상태 체크 (JWT 단계)
+            if (user.getStatus() != EmployeeStatus.ACTIVE) {
+                SecurityContextHolder.clearContext();
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
+
+            var auth = new UsernamePasswordAuthenticationToken(
+                    user, null, user.getAuthorities()
+            );
+            auth.setDetails(
+                    new WebAuthenticationDetailsSource().buildDetails(request)
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(auth);
         }
 
         filterChain.doFilter(request, response);

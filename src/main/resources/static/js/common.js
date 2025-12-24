@@ -5,6 +5,12 @@
 
 let isRefreshing = false;
 let refreshSubscribers = [];
+let sessionWarningTimer = null;
+let countdownTimer = null;
+let isExtendModalOpen = false;
+let sessionExpired = false;
+const SESSION_WARNING_SHOWN_KEY = 'sessionWarningShown';
+
 
 /* =========================
    API Fetch + Token Refresh (기존 로직 유지)
@@ -33,6 +39,7 @@ async function apiFetch(url, options = {}) {
     isRefreshing = false;
 
     if (!refreshed) {
+        sessionExpired = true;
         refreshSubscribers = [];
         handleSessionExpired();
         throw new Error('SESSION_EXPIRED');
@@ -49,11 +56,39 @@ async function refreshAccessToken() {
     if (!res.ok) return false;
     const result = await res.json();
     sessionStorage.setItem('accessToken', result.data.accessToken);
+    saveSessionExpiry(result.data.refreshExpiresAt);
+    scheduleSessionWarning();
+
     return true;
 }
 
+function showSessionExtendModal() {
+    if (isExtendModalOpen) return;
+
+    const modal = document.getElementById('extendSessionModal');
+    if (!modal) return;
+
+    isExtendModalOpen = true;
+    if (modal) modal.style.display = 'flex';
+
+    startSessionCountdown();
+}
+
+function closeExtendSessionModal() {
+    const modal = document.getElementById('extendSessionModal');
+    if (modal) modal.style.display = 'none';
+
+    isExtendModalOpen = false;
+    clearInterval(countdownTimer);
+}
+
+
 function handleSessionExpired() {
+    if (sessionExpired) return; // 중복 방지
+    sessionExpired = true;
+
     sessionStorage.clear();
+
     const modal = document.getElementById('sessionModal');
     if (modal) modal.style.display = 'block';
 }
@@ -65,6 +100,30 @@ async function logout() {
     sessionStorage.clear();
     location.href = '/login';
 }
+
+async function extendSession() {
+    try {
+        const res = await fetch('/api/auth/extend-session', {
+            method: 'POST',
+            credentials: 'include'
+        });
+
+        if (!res.ok) throw new Error('EXTEND_FAILED');
+
+        const result = await res.json();
+
+        sessionStorage.setItem('accessToken', result.data.accessToken);
+        saveSessionExpiry(result.data.refreshExpiresAt);
+
+        sessionStorage.removeItem('sessionWarningShown');
+
+        closeExtendSessionModal();
+        scheduleSessionWarning();
+    } catch (e) {
+        handleSessionExpired();
+    }
+}
+
 
 /* =========================
    관리자 사이드바 제어 핵심
@@ -141,25 +200,116 @@ function toggleAdminMenu(element) {
    사용자 정보 로드 및 초기화 실행
 ========================= */
 async function loadMe() {
+    const token = sessionStorage.getItem('accessToken');
+    if (!token) {
+        location.href = '/login';
+        return;
+    }
+
     try {
         const res = await apiFetch('/api/auth/me');
-        if (!res.ok) throw new Error('AUTH_FAILED');
+        if (!res.ok) throw new Error();
+
         const result = await res.json();
         const me = result.data;
 
         const userNameEl = document.getElementById('userName');
         if (userNameEl) userNameEl.innerText = `${me.name} (${me.role})`;
 
+
         const adminMenuLink = document.getElementById('adminMenuLink');
         if (adminMenuLink) {
-            adminMenuLink.style.display = (me.role === 'ADMIN' || me.role === 'COMPANY_ADMIN') ? '' : 'none';
+            adminMenuLink.style.display =
+                (me.role === 'ADMIN' || me.role === 'COMPANY_ADMIN')
+                    ? 'inline-flex'
+                    : 'none';
         }
+
+        scheduleSessionWarning(); // 여기서만 호출
+
     } catch (e) {
         location.href = '/login';
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    const path = window.location.pathname;
+
+    // 로그인 페이지에서는 인증 체크 X
+    if (path === '/login') return;
+
     loadMe();
-    initAdminSidebar(); // ✅ 페이지 로드 시 실행
+    initAdminSidebar(); // 페이지 로드 시 실행
 });
+
+function saveSessionExpiry(refreshExpiresAt) {
+    sessionStorage.setItem(
+        'refreshExpiresAt',
+        new Date(refreshExpiresAt).getTime()
+    );
+}
+
+
+/** 세션 만료 경고 타이머 추가 **/
+function scheduleSessionWarning() {
+    const expiresAt = Number(sessionStorage.getItem('refreshExpiresAt'));
+    if (!expiresAt) return;
+
+    const now = Date.now();
+
+    // 이미 만료된 세션이면 경고 띄우지 말고 종료
+    if (expiresAt <= now) {
+        return;
+    }
+
+    if (sessionStorage.getItem('sessionWarningShown') === 'true') {
+        return;
+    }
+
+    const WARNING_BEFORE_MS = 10 * 1000;
+    const delay = expiresAt - now - WARNING_BEFORE_MS;
+
+    clearTimeout(sessionWarningTimer);
+
+    if (delay <= 0) {
+        showSessionExtendModalOnce();
+        return;
+    }
+
+    sessionWarningTimer = setTimeout(showSessionExtendModalOnce, delay);
+
+}
+
+/** 카운트다운 시작 함수 **/
+function startSessionCountdown() {
+    const countdownEl = document.getElementById('sessionCountdown');
+    if (!countdownEl) return;
+
+    clearInterval(countdownTimer);
+
+    countdownTimer = setInterval(() => {
+        const expiresAt = Number(sessionStorage.getItem('refreshExpiresAt'));
+        if (!expiresAt) return;
+
+        const remainingMs = expiresAt - Date.now();
+
+        if (remainingMs <= 0) {
+            clearInterval(countdownTimer);
+            handleSessionExpired();
+            return;
+        }
+
+        const sec = Math.floor(remainingMs / 1000);
+        const mm = String(Math.floor(sec / 60)).padStart(2, '0');
+        const ss = String(sec % 60).padStart(2, '0');
+
+        countdownEl.textContent = `${mm}:${ss}`;
+    }, 1000);
+}
+
+function showSessionExtendModalOnce() {
+    if (isExtendModalOpen) return;
+
+    sessionStorage.setItem('sessionWarningShown', 'true');
+    showSessionExtendModal();
+}
