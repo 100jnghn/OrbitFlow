@@ -2,14 +2,27 @@
    Global State
 ========================== */
 let cars = [];
-let selectedDate = null;
 let reservations = [];
 let selectedCar = null;
-let selectedStartHour = null;
-let selectedEndHour = null;
-let isSelectingRange = false;
+let selectedDate = null;
+let dates = []; // 오늘부터 14일 후까지의 날짜 배열
 
-const HOURS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+/* ==========================
+   Generate Dates
+========================== */
+function generateDates() {
+    dates = [];
+    const today = new Date();
+    
+    for (let i = 0; i < 14; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+        dates.push({
+            dateString: formatDate(date),
+            displayText: formatDateKorean(formatDate(date))
+        });
+    }
+}
 
 /* ==========================
    Helper Functions
@@ -30,36 +43,12 @@ function formatDateKorean(dateString) {
     const month = date.getMonth() + 1;
     const day = date.getDate();
     const dayOfWeek = days[date.getDay()];
-    return `${month}월 ${day}일 (${dayOfWeek})`;
+    return `${month}/${day} (${dayOfWeek})`;
 }
 
 // 시간 포맷팅 (HH:00 ~ HH:00)
 function formatTimeRange(hour) {
     return `${String(hour).padStart(2, '0')}:00 ~ ${String(hour + 1).padStart(2, '0')}:00`;
-}
-
-/* ==========================
-   Date Selector
-========================== */
-function initDateSelector() {
-    const select = document.getElementById('reservation-date-select');
-    const today = new Date();
-
-    for (let i = 0; i < 14; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() + i);
-
-        const option = document.createElement('option');
-        option.value = formatDate(date);
-        option.textContent = formatDateKorean(formatDate(date));
-
-        if (i === 0) {
-            option.selected = true;
-            selectedDate = option.value;
-        }
-
-        select.appendChild(option);
-    }
 }
 
 /* ==========================
@@ -74,7 +63,7 @@ async function loadCars() {
         const { data } = await res.json();
         cars = data || [];
 
-        renderTimeHeaders();
+        renderDateHeaders();
 
     } catch (e) {
         console.error(e);
@@ -85,21 +74,45 @@ async function loadCars() {
 /* ==========================
    Load Reservations
 ========================== */
-async function loadReservations(date) {
+async function loadReservations() {
     try {
+        // 날짜 범위로 예약 조회 (오늘부터 14일 후까지)
+        const startDate = dates[0].dateString;
+        const endDate = dates[dates.length - 1].dateString;
+        
         const params = new URLSearchParams({
-            date: date,
+            startDate: startDate,
+            endDate: endDate,
             typeCode: 'CAR'
         });
 
-        const res = await apiFetch(`/api/reservations/date?${params.toString()}`, {
+        const res = await apiFetch(`/api/reservations/range?${params.toString()}`, {
             method: 'GET'
         });
 
-        if (!res.ok) throw new Error();
-
-        const { data } = await res.json();
-        reservations = data || [];
+        if (!res.ok) {
+            // 범위 조회가 안되면 각 날짜별로 조회
+            const allReservations = [];
+            for (const dateObj of dates) {
+                const dateParams = new URLSearchParams({
+                    date: dateObj.dateString,
+                    typeCode: 'CAR'
+                });
+                const dateRes = await apiFetch(`/api/reservations/date?${dateParams.toString()}`, {
+                    method: 'GET'
+                });
+                if (dateRes.ok) {
+                    const { data } = await dateRes.json();
+                    if (data) {
+                        allReservations.push(...data);
+                    }
+                }
+            }
+            reservations = allReservations;
+        } else {
+            const { data } = await res.json();
+            reservations = data || [];
+        }
 
         renderGrid();
 
@@ -111,16 +124,17 @@ async function loadReservations(date) {
 }
 
 /* ==========================
-   Render Time Headers
+   Render Date Headers
 ========================== */
-function renderTimeHeaders() {
-    const container = document.getElementById('times-header');
+function renderDateHeaders() {
+    const container = document.getElementById('dates-header');
     container.innerHTML = '';
 
-    HOURS.forEach(hour => {
+    dates.forEach(dateObj => {
         const header = document.createElement('div');
-        header.className = 'time-header';
-        header.textContent = `${String(hour).padStart(2, '0')}:00`;
+        header.className = 'date-header';
+        header.textContent = dateObj.displayText;
+        header.title = dateObj.dateString;
         container.appendChild(header);
     });
 }
@@ -153,22 +167,22 @@ function renderGrid() {
         carNameCell.title = car.name;
         row.appendChild(carNameCell);
 
-        // 시간대 셀들
-        const timeCells = document.createElement('div');
-        timeCells.className = 'time-cells';
+        // 날짜 셀들
+        const dateCells = document.createElement('div');
+        dateCells.className = 'date-cells';
 
-        HOURS.forEach(hour => {
+        dates.forEach(dateObj => {
             const cell = document.createElement('div');
-            cell.className = 'time-cell';
+            cell.className = 'date-cell';
             cell.dataset.carId = car.carId;
             cell.dataset.carName = car.name;
             cell.dataset.carNumber = car.number || '-';
             cell.dataset.carDriverAge = car.driverAge || '-';
             cell.dataset.carDescription = car.description || '-';
-            cell.dataset.hour = hour;
+            cell.dataset.date = dateObj.dateString;
 
             // 예약 여부 확인
-            const isReserved = checkReservation(car.carId, hour);
+            const isReserved = checkReservation(car.carId, dateObj.dateString);
 
             if (isReserved) {
                 if (isReserved.isMine) {
@@ -180,14 +194,13 @@ function renderGrid() {
                 }
             } else {
                 cell.className += ' available';
-                // cell.textContent = '예약 가능';
-                cell.addEventListener('click', (e) => handleCellClick(e.currentTarget, car, hour));
+                cell.addEventListener('click', (e) => handleCellClick(e.currentTarget, car, dateObj.dateString));
             }
 
-            timeCells.appendChild(cell);
+            dateCells.appendChild(cell);
         });
 
-        row.appendChild(timeCells);
+        row.appendChild(dateCells);
         container.appendChild(row);
     });
 }
@@ -195,11 +208,10 @@ function renderGrid() {
 /* ==========================
    Check Reservation
 ========================== */
-function checkReservation(carId, hour) {
+function checkReservation(carId, dateString) {
     const reservation = reservations.find(r =>
         r.resourceId === carId &&
-        r.startTime <= hour &&
-        r.endTime > hour &&
+        r.reservationDate === dateString &&
         (r.reservationStatusId === 1 || r.reservationStatusId === 2) // 대기 or 확정
     );
 
@@ -216,7 +228,7 @@ function checkReservation(carId, hour) {
 /* ==========================
    Cell Selection Functions
 ========================== */
-function handleCellClick(cell, car, hour) {
+function handleCellClick(cell, car, dateString) {
     const carId = parseInt(cell.dataset.carId);
 
     // 다른 차량을 클릭하면 초기화
@@ -225,56 +237,18 @@ function handleCellClick(cell, car, hour) {
     }
 
     selectedCar = car;
-
-    // 첫 번째 클릭 (시작 시간)
-    if (!selectedStartHour) {
-        selectedStartHour = hour;
-        selectedEndHour = hour + 1;
-        updateSelection();
-        updateReservationForm();
-        return;
-    }
-
-    // 두 번째 클릭 (종료 시간)
-    if (hour < selectedStartHour) {
-        // 시작 시간보다 이전을 클릭하면 새로운 시작 시간으로
-        selectedStartHour = hour;
-        selectedEndHour = hour + 1;
-    } else {
-        // 종료 시간 설정 (클릭한 시간 +1)
-        selectedEndHour = hour + 1;
-    }
-
-    // 선택한 범위에 예약 불가능한 시간이 있는지 확인
-    if (!isRangeAvailable(carId, selectedStartHour, selectedEndHour)) {
-        alert('선택한 시간 범위에 예약 불가능한 시간이 포함되어 있습니다.');
-        clearSelection();
-        selectedCar = car;
-        selectedStartHour = hour;
-        selectedEndHour = hour + 1;
-    }
+    selectedDate = dateString;
 
     updateSelection();
     updateReservationForm();
 }
 
-function isRangeAvailable(carId, startHour, endHour) {
-    for (let hour = startHour; hour < endHour; hour++) {
-        const isReserved = checkReservation(carId, hour);
-        if (isReserved) {
-            return false;
-        }
-    }
-    return true;
-}
-
 function clearSelection() {
     selectedCar = null;
-    selectedStartHour = null;
-    selectedEndHour = null;
+    selectedDate = null;
 
     // 모든 선택 해제
-    document.querySelectorAll('.time-cell.selected').forEach(cell => {
+    document.querySelectorAll('.date-cell.selected').forEach(cell => {
         cell.classList.remove('selected');
     });
 
@@ -283,19 +257,17 @@ function clearSelection() {
 
 function updateSelection() {
     // 모든 선택 해제
-    document.querySelectorAll('.time-cell.selected').forEach(cell => {
+    document.querySelectorAll('.date-cell.selected').forEach(cell => {
         cell.classList.remove('selected');
     });
 
-    // 해당 차량의 시간 범위 선택
-    if (selectedCar && selectedStartHour !== null && selectedEndHour !== null) {
-        document.querySelectorAll('.time-cell').forEach(cell => {
+    // 해당 차량의 날짜 선택
+    if (selectedCar && selectedDate) {
+        document.querySelectorAll('.date-cell').forEach(cell => {
             const cellCarId = parseInt(cell.dataset.carId);
-            const cellHour = parseInt(cell.dataset.hour);
+            const cellDate = cell.dataset.date;
 
-            if (cellCarId === selectedCar.carId &&
-                cellHour >= selectedStartHour &&
-                cellHour < selectedEndHour) {
+            if (cellCarId === selectedCar.carId && cellDate === selectedDate) {
                 cell.classList.add('selected');
             }
         });
@@ -338,21 +310,6 @@ function updateReservationForm() {
     // 날짜
     document.getElementById('selected-date').textContent = selectedDate ? formatDateKorean(selectedDate) : '-';
 
-    // 시작/종료 시간
-    if (selectedStartHour !== null) {
-        document.getElementById('selected-start-time').textContent =
-            `${String(selectedStartHour).padStart(2, '0')}:00`;
-    } else {
-        document.getElementById('selected-start-time').textContent = '-';
-    }
-
-    if (selectedEndHour !== null) {
-        document.getElementById('selected-end-time').textContent =
-            `${String(selectedEndHour).padStart(2, '0')}:00`;
-    } else {
-        document.getElementById('selected-end-time').textContent = '-';
-    }
-
     // 신청 버튼 활성화/비활성화
     updateSubmitButtonState();
 }
@@ -392,8 +349,7 @@ function validateReservationReason(showEmptyMessage = true) {
 function updateSubmitButtonState() {
     const submitBtn = document.getElementById('btn-submit');
     const isValid = selectedCar &&
-                    selectedStartHour !== null &&
-                    selectedEndHour !== null &&
+                    selectedDate !== null &&
                     validateReservationReason(false);
     submitBtn.disabled = !isValid;
 }
@@ -402,8 +358,8 @@ function updateSubmitButtonState() {
    Submit Reservation
 ========================== */
 async function submitReservation() {
-    if (!selectedCar || selectedStartHour === null || selectedEndHour === null) {
-        alert('차량과 시간을 선택해주세요.');
+    if (!selectedCar || !selectedDate) {
+        alert('차량과 날짜를 선택해주세요.');
         return;
     }
 
@@ -418,8 +374,8 @@ async function submitReservation() {
             typeCode: 'CAR',
             resourceId: selectedCar.carId,
             reservationDate: selectedDate,
-            startTime: selectedStartHour,
-            endTime: selectedEndHour,
+            startTime: 0, // 하루 종일 예약
+            endTime: 24,
             reservationReason: reason
         };
 
@@ -446,7 +402,7 @@ async function submitReservation() {
             reasonMsg.className = 'hint';
         }
         clearSelection();
-        loadReservations(selectedDate);
+        loadReservations();
 
     } catch (e) {
         console.error(e);
@@ -458,16 +414,6 @@ async function submitReservation() {
    Event Listeners
 ========================== */
 function initEventListeners() {
-    // 날짜 선택 시 자동 조회
-    const dateSelect = document.getElementById('reservation-date-select');
-    if (dateSelect) {
-        dateSelect.addEventListener('change', (e) => {
-            selectedDate = e.target.value;
-            clearSelection();
-            loadReservations(selectedDate);
-        });
-    }
-
     // 신청 버튼
     const btnSubmit = document.getElementById('btn-submit');
     if (btnSubmit) {
@@ -495,11 +441,11 @@ function initEventListeners() {
    초기화
 ========================== */
 document.addEventListener('DOMContentLoaded', async () => {
-    initDateSelector();
+    generateDates();
     initEventListeners();
     updateReservationForm();
 
     await loadCars();
-    await loadReservations(selectedDate);
+    await loadReservations();
 });
 

@@ -30,35 +30,25 @@
         <h1 class="page-title">차량 예약</h1>
     </div>
 
-    <!-- Date Selection -->
-    <div class="filter-section">
-        <div class="filter-item">
-            <label class="filter-label">예약 날짜</label>
-            <select class="filter-select" id="reservation-date-select">
-                <!-- JavaScript로 동적 생성 -->
-            </select>
-        </div>
+    <!-- Car Image Section -->
+    <div class="car-image-section">
+        <img id="selected-car-image" src="" alt="" class="car-image">
     </div>
 
-    <!-- Reservation Grid and Image -->
-    <div class="grid-image-wrapper">
-        <div class="grid-container">
-            <div class="grid-inner">
-                <div class="grid-header">
-                    <div class="car-column-header"></div>
-                    <div class="times-header" id="times-header">
-                        <!-- JavaScript로 시간 헤더 생성 -->
-                    </div>
-                </div>
-                <div class="grid-body-wrapper">
-                    <div class="grid-body" id="grid-body">
-                        <!-- JavaScript로 그리드 생성 -->
-                    </div>
+    <!-- Reservation Grid -->
+    <div class="grid-container">
+        <div class="grid-inner">
+            <div class="grid-header">
+                <div class="car-column-header"></div>
+                <div class="dates-header" id="dates-header">
+                    <!-- JavaScript로 날짜 헤더 생성 -->
                 </div>
             </div>
-        </div>
-        <div class="car-image-section">
-            <img id="selected-car-image" src="" alt="" class="car-image">
+            <div class="grid-body-wrapper">
+                <div class="grid-body" id="grid-body">
+                    <!-- JavaScript로 그리드 생성 -->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -88,14 +78,6 @@
             <div class="info-item">
                 <label class="info-label">날짜</label>
                 <div class="info-value" id="selected-date">-</div>
-            </div>
-            <div class="info-item">
-                <label class="info-label">시작 시간</label>
-                <div class="info-value" id="selected-start-time">-</div>
-            </div>
-            <div class="info-item">
-                <label class="info-label">종료 시간</label>
-                <div class="info-value" id="selected-end-time">-</div>
             </div>
         </div>
 

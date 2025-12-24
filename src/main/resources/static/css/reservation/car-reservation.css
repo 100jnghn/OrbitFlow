@@ -16,70 +16,19 @@
 }
 
 /* =========================
-   Filter Section
-========================= */
-.filter-section {
-    display: flex;
-    align-items: flex-end;
-    gap: 12px;
-    margin-bottom: 24px;
-    padding: 20px 24px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.filter-item {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    flex: 0 0 20%;
-}
-
-.filter-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #888;
-    text-transform: uppercase;
-}
-
-.filter-select {
-    padding: 12px 14px;
-    font-size: 14px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    background: #fff;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.filter-select:hover {
-    border-color: #4a69bd;
-}
-
-.filter-select:focus {
-    outline: none;
-    border-color: #4a69bd;
-    box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.1);
-}
-
-/* =========================
    Grid Container
 ========================= */
-.grid-image-wrapper {
-    display: flex;
-    gap: 24px;
-    margin-bottom: 24px;
-    align-items: stretch;
-}
-
 .grid-container {
-    flex: 0 0 auto;
+    /*width: 100%;*/
     background: #fff;
     border-radius: 12px;
     padding: 24px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     overflow-x: auto;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
 }
 
 .grid-inner {
@@ -87,7 +36,8 @@
 }
 
 .car-image-section {
-    flex: 1;
+    width: 400px;
+    height: 300px;
     padding: 20px 24px;
     background: #fff;
     border-radius: 12px;
@@ -95,6 +45,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    align-items: flex-start;
+    margin-bottom: 24px;
 }
 
 .car-image {
@@ -142,14 +94,14 @@
 }
 
 
-.times-header {
+.dates-header {
     display: flex;
     flex: 1;
 }
 
-.time-header {
-    flex: 0 0 70px; /* 고정 폭 */
-    min-width: 70px;
+.date-header {
+    flex: 0 0 80px; /* 고정 폭 */
+    min-width: 80px;
     padding: 8px;
     background: #f8f9fa;
     border: 1px solid #e9ecef;
@@ -159,17 +111,16 @@
     text-align: center;
     white-space: nowrap;
     box-sizing: border-box; /* 이거 없으면 셀 선택 시 크기 달라져서 정렬 깨짐 */
-
 }
 
-.time-cells {
+.date-cells {
     display: flex;
     flex: 1;
 }
 
-.time-cell {
-    flex: 0 0 70px;
-    min-width: 70px;
+.date-cell {
+    flex: 0 0 80px;
+    min-width: 80px;
     padding: 12px 8px;
     border: 1px solid #e9ecef;
     border-left: none;
@@ -181,7 +132,7 @@
     box-sizing: border-box; /* 이거 없으면 셀 선택 시 크기 달라져서 정렬 깨짐 */
 }
 
-.time-header:last-child {
+.date-header:last-child {
     border-radius: 0 8px 0 0;
 }
 
@@ -202,51 +153,43 @@
 }
 
 
-.grid-row:last-child .time-cell:last-child {
+.grid-row:last-child .date-cell:last-child {
     border-radius: 0 0 8px 0;
 }
 
 /* 예약 가능 */
-.time-cell.available {
+.date-cell.available {
     background: #fff;
     color: #28a745;
 }
 
-.time-cell.available:hover {
+.date-cell.available:hover {
     background: #e8f5e9;
     transform: scale(1.02);
 }
 
 /* 선택됨 */
-.time-cell.selected {
+.date-cell.selected {
     background: #cfe2ff;
     color: #084298;
-    /*font-weight: 600;*/
     border: 1px solid #0d6efd;
 }
 
-.time-cell.selected::after {
-    /*content: '✓';*/
-    display: block;
-    /*font-size: 10px;*/
-    /*margin-top: 2px;*/
-}
-
 /* 예약 불가 */
-.time-cell.unavailable {
+.date-cell.unavailable {
     background: #f8d7da;
     color: #c62828;
     cursor: not-allowed;
 }
 
 /* 내 예약 */
-.time-cell.my-reservation {
+.date-cell.my-reservation {
     background: #d4edda;
     color: #155724;
     font-weight: 600;
 }
 
-.time-cell.my-reservation::after {
+.date-cell.my-reservation::after {
     content: '내 예약';
     display: block;
     font-size: 11px;
