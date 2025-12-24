@@ -252,33 +252,28 @@ function saveSessionExpiry(refreshExpiresAt) {
 
 /** 세션 만료 경고 타이머 추가 **/
 function scheduleSessionWarning() {
+    clearTimeout(sessionWarningTimer);
+
     const expiresAt = Number(sessionStorage.getItem('refreshExpiresAt'));
     if (!expiresAt) return;
 
     const now = Date.now();
+    if (expiresAt <= now) return;
 
-    // 이미 만료된 세션이면 경고 띄우지 말고 종료
-    if (expiresAt <= now) {
-        return;
-    }
-
-    if (sessionStorage.getItem('sessionWarningShown') === 'true') {
-        return;
-    }
-
-    const WARNING_BEFORE_MS = 10 * 1000;
+    // const WARNING_BEFORE_MS = 25 * 1000; // 테스트용 - 25초 전
+    const WARNING_BEFORE_MS = 5 * 60 * 1000; // 5분 전
     const delay = expiresAt - now - WARNING_BEFORE_MS;
-
-    clearTimeout(sessionWarningTimer);
 
     if (delay <= 0) {
         showSessionExtendModalOnce();
         return;
     }
 
-    sessionWarningTimer = setTimeout(showSessionExtendModalOnce, delay);
-
+    sessionWarningTimer = setTimeout(() => {
+        showSessionExtendModalOnce();
+    }, delay);
 }
+
 
 /** 카운트다운 시작 함수 **/
 function startSessionCountdown() {
