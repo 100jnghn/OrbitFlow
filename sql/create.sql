@@ -1028,6 +1028,7 @@ CREATE TABLE reservation
     item_category_id      BIGINT,
     resource_id           BIGINT       NOT NULL,
     reservation_date      DATE         NOT NULL,
+    end_date              DATE,
     start_time            INT          NOT NULL,
     end_time              INT          NOT NULL,
     reservation_reason    VARCHAR(255) NOT NULL,
