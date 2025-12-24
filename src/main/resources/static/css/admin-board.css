@@ -263,8 +263,8 @@
 }
 
 .toggle-label .status-inactive {
-    color: var(--neutral-400);
-    font-weight: 500;
+    color: var(--neutral-400);     /* 옅은 회색 */
+    font-weight: 400;              /* 덜 강조 */
 }
 
 /* 비활성화 상태일 때 토글 슬라이더 색상 변경 */
@@ -334,6 +334,25 @@
     border: none;
     background: transparent;
     color: var(--neutral-400);
+}
+
+/* 부서 게시판 활성화 테이블 전용 - 페이지네이션 중앙과 부서명 열 정렬 맞추기 */
+.admin-section:has(#organizationTableBody) .admin-table th:first-child {
+    width: 60px;
+}
+
+.admin-section:has(#organizationTableBody) .admin-table th:nth-child(2) {
+    text-align: center;
+    padding-left: 80px; /* 부서명 열을 오른쪽으로 이동 */
+}
+
+.admin-section:has(#organizationTableBody) .admin-table th:last-child {
+    width: 280px;
+}
+
+.admin-section:has(#organizationTableBody) .admin-table td:nth-child(2) {
+    text-align: center;
+    padding-left: 80px; /* 부서명 열을 오른쪽으로 이동 */
 }
 
 /* 모달 스타일 */

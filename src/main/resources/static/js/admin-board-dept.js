@@ -179,15 +179,15 @@ function renderOrganizationTable(organizations) {
             <td>
                 ${hasBoard ? `
                 <div class="toggle-label">
-                    <span class="${isActivated ? 'status-inactive' : 'status-active'}">비활성화</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" ${isActivated ? 'checked' : ''} 
-                               data-org-id="${org.id}"
-                               data-board-id="${boardCategoryId}">
-                        <span class="toggle-slider"></span>
-                    </label>
-                    <span class="${isActivated ? 'status-active' : 'status-inactive'}">활성화</span>
-                </div>
+        <span class="status-inactive">비활성화</span>
+        <label class="toggle-switch">
+            <input type="checkbox" ${isActivated ? 'checked' : ''} 
+                   data-org-id="${org.id}"
+                   data-board-id="${boardCategoryId}">
+            <span class="toggle-slider"></span>
+        </label>
+        <span class="status-active">활성화</span>
+    </div>
                 ` : `
                 <div class="toggle-label" style="opacity: 0.5;">
                     <span style="color: #9ca3af;">게시판 없음</span>
