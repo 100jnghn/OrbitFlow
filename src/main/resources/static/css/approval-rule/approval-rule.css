@@ -130,6 +130,7 @@
 }
 
 .select-org-category:disabled,
+.select-org:disabled,
 .select-pos:disabled,
 .select-employee:disabled {
     background-color: #f2f4f7;

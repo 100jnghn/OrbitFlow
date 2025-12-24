@@ -8,7 +8,16 @@ html, body {
     padding: 0;
     font-family: 'Segoe UI', Arial, sans-serif;
     background: #f7f9fb;
-    overflow: hidden; /* 🔑 app-content 외부 스크롤 차단 */
+    overflow: hidden;
+}
+
+.app-content {
+    flex: 1;
+    padding: 24px 40px 16px;
+    display: flex;
+    min-height: 0;
+    overflow: hidden;
+    justify-content: center;
 }
 
 .form-editor-container {
@@ -16,12 +25,12 @@ html, body {
     display: flex;
     width: 100%;
     min-width: 1600px;
-    max-width: 1800px; /* ⭐ 추가 추천 */
+    max-width: 1800px;
     overflow: hidden;
 }
 
 /* ======================================================
-   공통 패널 레이아웃
+   공통 패널
    ====================================================== */
 
 #component-list-panel,
@@ -33,25 +42,22 @@ html, body {
     padding: 18px;
     box-shadow: 0 2px 8px #e2e6ed35;
     box-sizing: border-box;
-
-    min-height: 0; /* 🔑 flex 스크롤 필수 */
+    min-height: 0;
     overflow: hidden;
 }
 
 /* ======================================================
-   좌측 패널 – 컴포넌트 목록
+   좌측 – 컴포넌트 목록
    ====================================================== */
 
 #component-list-panel {
     min-width: 190px;
     max-width: 230px;
     flex-shrink: 0;
-
     display: flex;
     flex-direction: column;
     gap: 18px;
-
-    overflow-y: auto; /* 좌측만 독립 스크롤 */
+    overflow-y: auto;
 }
 
 #component-list-panel h3 {
@@ -59,15 +65,12 @@ html, body {
     font-size: 1.1em;
     color: #253464;
     font-weight: 600;
-    letter-spacing: 0.02em;
 }
 
-/* 컴포넌트 버튼 */
 .component-btn-list {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    margin-top: 5px;
 }
 
 .component-btn {
@@ -83,84 +86,281 @@ html, body {
     text-align: left;
 }
 
-.component-btn:hover,
-.component-btn:focus {
+.component-btn:hover {
     border-color: #7e9be2;
     background: #eaefff;
-    outline: none;
 }
 
 /* ======================================================
-   중앙 패널 – 문서 편집 영역
+   중앙 – 문서 편집 영역
    ====================================================== */
 
 #form-edit-area-wrapper {
-    flex: 1 1 0%;
+    flex: 1;
     display: flex;
     flex-direction: column;
     min-width: 400px;
     align-items: center;
-
-    min-height: 0; /* 🔑 */
 }
 
-/* 제목 영역 (고정) */
 #form-edit-title {
     margin-bottom: 20px;
     width: 90%;
-    text-align: left;
     color: #253464;
     font-weight: 600;
     font-size: 1.1em;
-
-    flex-shrink: 0;
 }
 
-/* 실제 스크롤 영역 */
 #form-edit-area {
-    flex: 1; /* 🔑 */
+    flex: 1;
     min-height: 0;
     width: 90%;
-
     background: #f6f8fc;
     border-radius: 4px;
     padding: 26px 18px;
     box-shadow: 0 1px 4px #e8ecf360;
-
     display: flex;
     flex-direction: column;
     gap: 14px;
-
     overflow-y: auto;
-    overflow-x: hidden;
-}
-
-#form-edit-area.empty {
-    text-align: center;
-    color: #a4b0c7;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 /* ======================================================
    중앙 – 컴포넌트 미리보기
    ====================================================== */
 
-.form-component {
-    background: #fff;
-    border: 1.5px solid #e2e6ef;
-    border-radius: 7px;
-    padding: 17px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
+.form-comp-row {
     position: relative;
+    padding: 10px 14px;
+    border: 1px solid #dedede;
+    background: #fff;
+    border-radius: 6px;
+    transition: background 0.15s, border 0.15s;
 }
 
-.form-component.selected {
-    border: 2px solid #79a2ff;
-    background: #f3f7ff;
+.form-comp-row:not(.fixed) {
+    cursor: pointer;
+}
+
+.form-comp-row.fixed {
+    background: #f5f7fa;
+    border: 1px solid #e0e0ec;
+}
+
+.form-comp-row.selected {
+    border: 2px solid #196de7;
+    background: #eef5ff;
+}
+
+.form-comp-row.invalid {
+    border: 2px solid #e22719;
+    background: #fff2f2;
+}
+
+/* Drag 상태 */
+.form-comp-row.drag-hover {
+    background: #eaf4ff;
+}
+
+.form-comp-row.dragging {
+    opacity: 0.6;
+}
+
+/* ======================================================
+   공통 미리보기 레이아웃
+   ====================================================== */
+
+.preview-row {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    column-gap: 12px;
+    align-items: flex-start;
+}
+
+.preview-row > * {
+    min-width: 0;
+}
+
+.comp-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-weight: 500;
+    color: #1f2949;
+    white-space: nowrap;
+}
+
+
+.required {
+    color: #e22719;
+}
+
+.comp-label.required::after,
+.doc-title-label.required::after {
+    content: " *";
+    color: #e22719;
+    font-size: 0.85em;
+    line-height: 1;
+}
+
+/* label / table header용 필수 표시 */
+.comp-label.is-required::after,
+.table-preview th.is-required::after {
+    content: " *";
+    color: #e22719;
+    font-weight: 600;
+}
+
+
+.preview-input {
+    width: 60%;
+    padding: 6px 8px;
+}
+
+.preview-textarea {
+    min-width: 170px;
+    min-height: 32px;
+    resize: none;
+}
+
+.unit {
+    font-size: 0.9em;
+    color: #888;
+}
+
+.range-preview {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.range-preview input[type="date"],
+.range-preview input[type="time"] {
+    width: 140px;
+}
+
+.range-sep {
+    margin: 0 4px;
+}
+
+
+/* ======================================================
+   옵션 미리보기
+   ====================================================== */
+
+.option-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.option-preview label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ======================================================
+   구분선
+   ====================================================== */
+
+.divider-preview {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #999;
+}
+
+.divider-preview span {
+    flex: 1;
+    height: 1px;
+    background: #ddd;
+}
+
+.divider-preview em {
+    font-style: normal;
+    font-size: 0.9em;
+}
+
+/* ======================================================
+   안내 문구 (notice)
+   ====================================================== */
+
+.notice-message-box {
+    padding: 8px 10px;
+    margin: 0;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    border-radius: 6px;
+}
+
+/* 스타일 */
+.notice-message-box.info {
+    background: #eef4ff;
+    border: 1px solid #dbe4ff;
+}
+
+.notice-message-box.warning {
+    background: #fff7e6;
+    border: 1px solid #ffe8a1;
+}
+
+.notice-message-box.danger {
+    background: #fff0f0;
+    border: 1px solid #ffd6d6;
+}
+
+
+/* ======================================================
+   ✅ 테이블 미리보기 (핵심 수정)
+   ====================================================== */
+
+.table-preview {
+    width: 100%;
+    table-layout: fixed; /* 🔑 컬럼 폭 균등 분배 */
+    border-collapse: collapse;
+    margin-top: 6px;
+}
+
+.table-preview th,
+.table-preview td {
+    border: 1px solid #ddd;
+    padding: 6px;
+    overflow: hidden; /* 🔑 */
+    text-overflow: ellipsis; /* 🔑 */
+    white-space: nowrap; /* 🔑 */
+}
+
+.table-preview th {
+    background: #f7f8fa;
+    font-weight: 500;
+}
+
+.table-preview input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* ======================================================
+   삭제 버튼
+   ====================================================== */
+
+.delete-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 16px;
+    color: #c33;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.form-comp-row:hover .delete-btn {
+    opacity: 1;
 }
 
 /* ======================================================
@@ -171,12 +371,44 @@ html, body {
     min-width: 260px;
     max-width: 350px;
     flex-shrink: 0;
-
     display: flex;
     flex-direction: column;
     gap: 24px;
+    min-height: 0;
+}
 
-    min-height: 0; /* 🔑 */
+/* ======================================================
+   설정 패널
+   ====================================================== */
+
+#component-setting-panel {
+    background: #f8fafc;
+    border-radius: 7px;
+    padding: 15px;
+    box-shadow: 0 0.5px 2px #e8ebf2a3;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.setting-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 15px;
+}
+
+.setting-row.inline {
+    flex-direction: row;
+    align-items: center;
+}
+
+.setting-row input,
+.setting-row select,
+.setting-row textarea {
+    padding: 7px 8px;
+    border-radius: 4px;
+    border: 1px solid #cfd8e7;
 }
 
 /* ======================================================
@@ -209,55 +441,7 @@ html, body {
 }
 
 /* ======================================================
-   우측 패널 – 설정 영역
-   ====================================================== */
-
-/* 상단: 컴포넌트 설정 (스크롤 영역) */
-#component-setting-panel {
-    background: #f8fafc;
-    border-radius: 7px;
-    padding: 15px;
-    box-shadow: 0 0.5px 2px #e8ebf2a3;
-
-    flex: 1; /* 🔑 */
-    min-height: 0;
-    overflow-y: auto;
-}
-
-/* 하단: 문서 설정 (고정 영역) */
-#form-setting-panel {
-    background: #f8fafc;
-    border-radius: 7px;
-    padding: 15px;
-    box-shadow: 0 0.5px 2px #e8ebf2a3;
-
-    flex-shrink: 0;
-}
-
-#component-setting-panel h4,
-#form-setting-panel h4 {
-    margin: 0 0 12px;
-    font-weight: bold;
-    color: #1f2949;
-}
-
-.setting-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-.setting-row input,
-.setting-row select {
-    flex: 1;
-    padding: 7px 8px;
-    border-radius: 4px;
-    border: 1px solid #cfd8e7;
-}
-
-/* ======================================================
-   하단 액션 버튼
+   하단 액션 버튼 (이전/저장/다음)
    ====================================================== */
 
 .form-action-buttons {
@@ -271,9 +455,12 @@ html, body {
     padding: 10px 0;
     border-radius: 5px;
     font-size: 0.95em;
+    font-weight: 500;
     cursor: pointer;
+    transition: background 0.15s, border 0.15s, opacity 0.15s;
 }
 
+/* 이전/다음 */
 #before-form-btn,
 #next-form-btn {
     background: #f0f2f7;
@@ -281,22 +468,54 @@ html, body {
     color: #314066;
 }
 
+#before-form-btn:hover,
+#next-form-btn:hover {
+    background: #e9eef9;
+    border-color: #89afe2;
+}
+
+/* 저장 */
 #save-form-btn {
     background: #5687ef;
     color: #fff;
     border: none;
 }
 
+#save-form-btn:hover {
+    opacity: 0.92;
+}
+
+/* disabled 상태 */
+.form-action-buttons button:disabled,
+.right-panel-action-buttons button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+
 /* ======================================================
-   스크롤바 스타일 (공통)
+   Validation Hint
+   ====================================================== */
+
+.hint {
+    font-size: 0.82rem;
+    line-height: 1.4;
+}
+
+.hint.error {
+    color: #e05353;
+}
+
+.hint.success {
+    color: #2e8b57;
+}
+
+/* ======================================================
+   스크롤바
    ====================================================== */
 
 ::-webkit-scrollbar {
     width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -322,13 +541,4 @@ html, body {
     .form-editor-container {
         flex-direction: column;
     }
-}
-
-.app-content {
-    flex: 1;
-    padding: 24px 40px 16px;
-    display: flex;
-    min-height: 0;
-    overflow: hidden;
-    justify-content: center;
 }

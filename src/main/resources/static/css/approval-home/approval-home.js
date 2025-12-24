@@ -1,3 +1,6 @@
+// ========================
+// 상수 및 상태 변수
+// ========================
 const API_URL = '/api/admin/form-templates/all';
 
 const approvalStatusMap = {
@@ -14,16 +17,42 @@ let approvalState = {
 };
 
 let lastSelectedUpdateTemplateId = null;
+let lastSelectedUpdateId = null;
+let lastUpdateDropdownItems = [];
+let lastUpdateDropdownIdMap = {};
+let updatePopupDebounce;
 
 const LIST_TITLE_MAX = 30; // 또는 35
-
-
 const TEMPLATE_NAME_MAX = 50;
 const TEMPLATE_DESC_MAX = 200;
 const UPDATE_SEARCH_MAX = TEMPLATE_NAME_MAX;
 
+// ========================
+// DOM 참조 및 힌트 엘리먼트
+// ========================
+const popupTemplateName = document.getElementById('popupTemplateName');
+const popupTemplateDesc = document.getElementById('popupTemplateDesc');
+const popupCreateBtn = document.getElementById('popupCreateBtn');
+const updateTemplateSearch = document.getElementById('updateTemplateSearch');
+const keywordInput = document.getElementById('keywordInput');
 
-// fetch -> apiFetch 치환
+/* maxlength 설정 */
+popupTemplateName.setAttribute('maxlength', TEMPLATE_NAME_MAX);
+popupTemplateDesc.setAttribute('maxlength', TEMPLATE_DESC_MAX);
+
+// 힌트 엘리먼트
+const popupTemplateNameMsg =
+    popupTemplateName.closest('.modal-form-group').querySelector('.hint');
+const popupTemplateDescMsg =
+    popupTemplateDesc.closest('.modal-form-group').querySelector('.hint');
+const updateTemplateSearchMsg =
+    document.getElementById('updateTemplateSearchHint');
+const keywordInputMsg =
+    keywordInput.closest('.search-group').querySelector('.hint');
+
+// ========================
+// API 호출 함수
+// ========================
 async function fetchApprovalDocs({ status, keyword, page, pageSize }) {
     const params = [];
     if (typeof page === 'number') params.push(`offset=${page}`);
@@ -37,6 +66,69 @@ async function fetchApprovalDocs({ status, keyword, page, pageSize }) {
     return result && result.data ? result.data : { content: [], totalPages: 1, number: 0, totalElements: 0 };
 }
 
+/**
+ * 선택한 양식 그룹(groupId)을 기반으로 결재 양식 임시 저장 생성
+ * @param {number} groupId - FormTemplateGroup ID
+ * @param {string} categoryCode - TemplateCategoryCode (예: 'ATTENDANCE', 'SCHEDULE', 'GENERAL')
+ */
+async function createFormTemplateByGroupId(groupId, categoryCode) {
+    if (!groupId) {
+        alert('양식 그룹 ID가 유효하지 않습니다.');
+        return null;
+    }
+    if (!categoryCode) {
+        alert('양식 카테고리를 선택해주세요.');
+        return null;
+    }
+
+    try {
+        const params = new URLSearchParams({
+            templateGroupId: groupId,
+            categoryCode: categoryCode
+        });
+
+        const res = await apiFetch(`/api/admin/form-templates?${params.toString()}`, {
+            method: 'POST'
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err?.message || '결재 양식 생성에 실패했습니다.');
+        }
+
+        const result = await res.json();
+        const formTemplateId = result?.data?.formTemplateId;
+
+        if (!formTemplateId) {
+            throw new Error('생성된 결재 양식 ID를 받지 못했습니다.');
+        }
+
+        return formTemplateId;
+
+    } catch (e) {
+        console.error('[createFormTemplateByGroupId error]', e);
+        alert(e.message || '결재 양식 생성 중 오류가 발생했습니다.');
+        return null;
+    }
+}
+
+// 업데이트 팝업 검색 ajax
+async function fetchUpdateTemplates(keyword) {
+    if (!keyword) return [];
+    const res = await apiFetch(
+        `/api/form-templates/active?keyword=${encodeURIComponent(keyword)}`
+    );
+    if (!res.ok) return [];
+
+    const result = await res.json();
+    if (Array.isArray(result.data)) return result.data;
+    if (result.data && Array.isArray(result.data.content)) return result.data.content;
+    return [];
+}
+
+// ========================
+// 테이블/팝업 렌더링 및 유틸 함수
+// ========================
 function renderTableRows(docs) {
     const tbody = document.getElementById('approvalTableBody');
     const emptyMsg = document.getElementById('approvalTableEmpty');
@@ -86,7 +178,6 @@ function renderTableRows(docs) {
             }
         });
 
-
         tr.innerHTML = `
         <td class="col-title" title="${escapeHTML(doc.formTemplateGroupName)}">
             <div class="title-wrap">
@@ -95,10 +186,7 @@ function renderTableRows(docs) {
             </span>
             ${renderActionIcon(doc.formTemplateStatus)}
             </div>
-        
         </td>
-
-
         <td class="col-version">${doc.formTemplateVersion}</td>
         <td class="col-usedoc">${doc.useDocument || 0}</td>
         <td class="col-updated">${formatDate(doc.updatedAt)}</td>
@@ -110,36 +198,72 @@ function renderTableRows(docs) {
     });
 }
 
-/* ======================
-   Create Popup DOM
-====================== */
-const popupTemplateName = document.getElementById('popupTemplateName');
-const popupTemplateDesc = document.getElementById('popupTemplateDesc');
-const popupCreateBtn = document.getElementById('popupCreateBtn');
-const updateTemplateSearch = document.getElementById('updateTemplateSearch');
-const keywordInput = document.getElementById('keywordInput');
+function renderUpdateDropdown(items) {
+    const dropdown = document.getElementById('updateDropdown');
+    dropdown.innerHTML = '';
+    if (!items.length) {
+        dropdown.style.display = 'none';
+        return;
+    }
+    lastUpdateDropdownItems = items;
+    lastUpdateDropdownIdMap = {};
+    items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'modal-dropdown-item';
 
-/* maxlength 설정 */
-popupTemplateName.setAttribute('maxlength', TEMPLATE_NAME_MAX);
-popupTemplateDesc.setAttribute('maxlength', TEMPLATE_DESC_MAX);
+        const name =
+            item.formTemplateGroupName ||
+            item.formTemplateName ||
+            item.name ||
+            '';
 
-/* ===== hint elements ===== */
+        const groupId = item.formTemplateGroupId || item.groupId;
+        const templateId = item.formTemplateId || item.templateId;
 
-// 생성 팝업
-const popupTemplateNameMsg =
-    popupTemplateName.closest('.modal-form-group').querySelector('.hint');
+        div.textContent = truncateText(name, TEMPLATE_NAME_MAX);
+        div.title = name;
 
-const popupTemplateDescMsg =
-    popupTemplateDesc.closest('.modal-form-group').querySelector('.hint');
+        div.addEventListener('mousedown', function () {
+            updateTemplateSearch.value = name;
 
-// 업데이트 팝업
-const updateTemplateSearchMsg =
-    document.getElementById('updateTemplateSearchHint');
+            lastSelectedUpdateId = groupId;
+            lastSelectedUpdateTemplateId = templateId;
 
-// 메인 검색
-const keywordInputMsg =
-    keywordInput.closest('.search-group').querySelector('.hint');
+            dropdown.style.display = 'none';
+            showSelectedUpdateDescription(groupId);
+            showMsg(
+                updateTemplateSearchMsg,
+                `선택됨 (${name.length}/${UPDATE_SEARCH_MAX})`,
+                'success'
+            );
+        });
 
+        dropdown.appendChild(div);
+    });
+
+    dropdown.style.display = 'block';
+}
+
+async function showSelectedUpdateDescription(groupId) {
+    const descTextEl = document.getElementById('updateSelectedDescText');
+    if (!groupId || !descTextEl) return;
+
+    descTextEl.textContent = '조회 중...';
+
+    try {
+        const res = await apiFetch(`/api/form-template-groups/${groupId}`);
+        if (!res.ok) throw new Error();
+
+        const result = await res.json();
+        descTextEl.textContent =
+            result?.data?.description ||
+            result?.data?.desc ||
+            result?.data?.summary ||
+            '(설명 없음)';
+    } catch {
+        descTextEl.textContent = '(설명 조회 실패)';
+    }
+}
 
 function renderActionIcon(status) {
     if (status === 'DRAFT') {
@@ -148,23 +272,25 @@ function renderActionIcon(status) {
     return `<span class="action-icon view-icon" title="상세 보기">🔍</span>`;
 }
 
-
 function renderAttend(tags) {
     if (Array.isArray(tags) && tags.includes('ATTENDANCE')) {
         return '<span class="tag-on">O</span>';
     }
     return '<span class="tag-off">X</span>';
 }
+
 function renderSchedule(tags) {
     if (Array.isArray(tags) && tags.includes('SCHEDULE')) {
         return '<span class="tag-on">O</span>';
     }
     return '<span class="tag-off">X</span>';
 }
+
 function renderStatusBadge(status) {
     const map = approvalStatusMap[status] || { text: status, class: 'status-badge' };
     return `<span class="${map.class}">${map.text}</span>`;
 }
+
 function formatDate(dateStr) {
     if (!dateStr) return '';
     const d = new Date(dateStr);
@@ -172,6 +298,7 @@ function formatDate(dateStr) {
         String(d.getMonth() + 1).padStart(2, '0') + '-' +
         String(d.getDate()).padStart(2, '0');
 }
+
 function escapeHTML(str) {
     if (!str) return '';
     return String(str)
@@ -182,6 +309,15 @@ function escapeHTML(str) {
         .replace(/'/g, "&#39;");
 }
 
+function truncateText(text, max) {
+    if (!text) return '';
+    if (text.length <= max) return text;
+    return text.slice(0, max) + '…';
+}
+
+// ========================
+// 렌더/페이지네이션/데이터로드
+// ========================
 function renderPagination(page, totalPages) {
     const prevBtn = document.getElementById('prevPageBtn');
     const nextBtn = document.getElementById('nextPageBtn');
@@ -210,7 +346,9 @@ async function loadAndRender(override = {}) {
     }
 }
 
-
+// ========================
+// 팝업 (생성/업데이트) 열기/닫기 함수
+// ========================
 function showCreatePopup(initName = '', initDesc = '') {
     popupTemplateName.value = initName;
     popupTemplateDesc.value = initDesc;
@@ -228,70 +366,49 @@ function hideCreatePopup() {
     document.getElementById('createPopup').style.display = 'none';
 }
 
+function showUpdatePopup() {
+    lastSelectedUpdateTemplateId = null;
+    lastSelectedUpdateId = null;
 
+    document.getElementById('updatePopup').style.display = 'flex';
+    document.getElementById('updateTemplateSearch').value = '';
+    document.getElementById('updateSelectedDescText').textContent = '';
+    document.getElementById('updateDropdown').style.display = 'none';
+    updateTemplateSearch.focus();
+}
+
+function hideUpdatePopup() {
+    lastSelectedUpdateTemplateId = null;
+    lastSelectedUpdateId = null;
+
+    document.getElementById('updatePopup').style.display = 'none';
+    document.getElementById('updateDropdown').style.display = 'none';
+    document.getElementById('updateTemplateSearch').value = '';
+    document.getElementById('updateSelectedDescText').textContent = '';
+}
+
+// ========================
+// 메시지/히든/텍스트 보조 함수
+// ========================
 function showMsg(el, message, type) {
     if (!el) return;
     el.textContent = message;
     el.className = 'hint ' + type;
 }
 
-function truncateText(text, max) {
-    if (!text) return '';
-    if (text.length <= max) return text;
-    return text.slice(0, max) + '…';
-}
-
 function clearHint(el) {
     if (el) el.textContent = '';
 }
 
-
-/**
- * 선택한 양식 그룹(groupId)을 기반으로 결재 양식 임시 저장 생성
- * @param {number} groupId - FormTemplateGroup ID
- * @param {string} categoryCode - TemplateCategoryCode (예: 'ATTENDANCE', 'SCHEDULE', 'GENERAL')
- */
-async function createFormTemplateByGroupId(groupId, categoryCode) {
-    if (!groupId) {
-        alert('양식 그룹 ID가 유효하지 않습니다.');
-        return null;
-    }
-    if (!categoryCode) {
-        alert('양식 카테고리를 선택해주세요.');
-        return null;
-    }
-
-    try {
-        const params = new URLSearchParams({
-            templateGroupId: groupId,
-            categoryCode: categoryCode
-        });
-
-        const res = await apiFetch(`/api/admin/form-templates?${params.toString()}`, {
-            method: 'POST'
-        });
-
-        if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw new Error(err?.message || '결재 양식 생성에 실패했습니다.');
-        }
-
-        const result = await res.json();
-        const formTemplateId = result?.data?.formTemplateId;
-
-        if (!formTemplateId) {
-            throw new Error('생성된 결재 양식 ID를 받지 못했습니다.');
-        }
-
-        return formTemplateId;
-
-    } catch (e) {
-        console.error('[createFormTemplateByGroupId error]', e);
-        alert(e.message || '결재 양식 생성 중 오류가 발생했습니다.');
-        return null;
+function enforceMaxLength(inputEl, max) {
+    if (inputEl.value.length > max) {
+        inputEl.value = inputEl.value.slice(0, max);
     }
 }
 
+// ========================
+// 폼 검증 함수
+// ========================
 function validateTemplateName() {
     const v = popupTemplateName.value.trim();
 
@@ -317,7 +434,6 @@ function validateTemplateName() {
     return true;
 }
 
-
 function validateTemplateDesc() {
     const v = popupTemplateDesc.value.trim();
 
@@ -342,7 +458,6 @@ function validateTemplateDesc() {
     );
     return true;
 }
-
 
 function validateUpdateTemplateSearch() {
     const v = updateTemplateSearch.value.trim();
@@ -394,14 +509,9 @@ function validateKeywordSearch() {
     return true;
 }
 
-
-function enforceMaxLength(inputEl, max) {
-    if (inputEl.value.length > max) {
-        inputEl.value = inputEl.value.slice(0, max);
-    }
-}
-
-
+// ========================
+// 버튼 상태 업데이트
+// ========================
 function updateCreateButtonState() {
     const isNameValid = popupTemplateName.value.trim().length > 0 &&
         popupTemplateName.value.length <= TEMPLATE_NAME_MAX;
@@ -412,7 +522,9 @@ function updateCreateButtonState() {
     popupCreateBtn.disabled = !(isNameValid && isDescValid);
 }
 
-
+// ========================
+// 이벤트 바인딩 메인/팝업
+// ========================
 function bindEventHandlers() {
     popupTemplateName.addEventListener('input', () => {
         enforceMaxLength(popupTemplateName, TEMPLATE_NAME_MAX);
@@ -431,12 +543,12 @@ function bindEventHandlers() {
         validateKeywordSearch();
     });
 
-
     document.getElementById('statusFilter').addEventListener('change', function () {
         approvalState.status = this.value;
         approvalState.page = 0;
         loadAndRender({ status: this.value, page: 0 });
     });
+
     document.getElementById('searchBtn').addEventListener('click', function () {
         if (!validateKeywordSearch() && keywordInput.value.trim()) return;
         approvalState.keyword = keywordInput.value;
@@ -461,20 +573,25 @@ function bindEventHandlers() {
             loadAndRender({ page: approvalState.page });
         }
     });
+
     document.getElementById('nextPageBtn').addEventListener('click', function () {
         approvalState.page += 1;
         loadAndRender({ page: approvalState.page });
     });
+
     document.getElementById('createTemplateBtn').addEventListener('click', function () {
         showCreatePopup();
     });
+
     document.getElementById('updateTemplateBtn').addEventListener('click', function () {
         showUpdatePopup();
     });
+
     // 팝업 취소, 작성 버튼
     document.getElementById('popupCancelBtn').addEventListener('click', function(){
         hideCreatePopup();
     });
+
     document.getElementById('popupCreateBtn')
         .addEventListener('click', async function () {
 
@@ -521,125 +638,6 @@ function bindEventHandlers() {
                 popupCreateBtn.disabled = false;
             }
         });
-
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-    bindEventHandlers();
-    loadAndRender({});
-    bindUpdatePopupEvents();
-});
-
-// [추가: 결재 양식 업데이트 팝업 로직]
-let updatePopupDebounce;
-
-function showUpdatePopup() {
-    lastSelectedUpdateTemplateId = null;
-    lastSelectedUpdateId = null;
-
-    document.getElementById('updatePopup').style.display = 'flex';
-    document.getElementById('updateTemplateSearch').value = '';
-    document.getElementById('updateSelectedDescText').textContent = '';
-    document.getElementById('updateDropdown').style.display = 'none';
-    updateTemplateSearch.focus();
-}
-
-function hideUpdatePopup() {
-    lastSelectedUpdateTemplateId = null;
-    lastSelectedUpdateId = null;
-
-    document.getElementById('updatePopup').style.display = 'none';
-    document.getElementById('updateDropdown').style.display = 'none';
-    document.getElementById('updateTemplateSearch').value = '';
-    document.getElementById('updateSelectedDescText').textContent = '';
-}
-
-
-async function fetchUpdateTemplates(keyword) {
-    if (!keyword) return [];
-    const res = await apiFetch(
-        `/api/form-templates/active?keyword=${encodeURIComponent(keyword)}`
-    );
-    if (!res.ok) return [];
-
-    const result = await res.json();
-    if (Array.isArray(result.data)) return result.data;
-    if (result.data && Array.isArray(result.data.content)) return result.data.content;
-    return [];
-}
-
-
-let lastUpdateDropdownItems = [];
-let lastUpdateDropdownIdMap = {};
-let lastSelectedUpdateId = null;
-
-function renderUpdateDropdown(items, inputValue) {
-    const dropdown = document.getElementById('updateDropdown');
-    dropdown.innerHTML = '';
-    if (!items.length) {
-        dropdown.style.display = 'none';
-        return;
-    }
-    lastUpdateDropdownItems = items;
-    lastUpdateDropdownIdMap = {};
-    items.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'modal-dropdown-item';
-
-        const name =
-            item.formTemplateGroupName ||
-            item.formTemplateName ||
-            item.name ||
-            '';
-
-        const groupId = item.formTemplateGroupId || item.groupId;
-        const templateId = item.formTemplateId || item.templateId;
-
-        div.textContent = truncateText(name, TEMPLATE_NAME_MAX);
-        div.title = name;
-
-
-        div.addEventListener('mousedown', function () {
-            updateTemplateSearch.value = name;
-
-            lastSelectedUpdateId = groupId;
-            lastSelectedUpdateTemplateId = templateId;
-
-            dropdown.style.display = 'none';
-            showSelectedUpdateDescription(groupId);
-            showMsg(
-                updateTemplateSearchMsg,
-                `선택됨 (${name.length}/${UPDATE_SEARCH_MAX})`,
-                'success'
-            );
-        });
-
-
-        dropdown.appendChild(div);
-    });
-
-    dropdown.style.display = 'block';
-}
-
-async function showSelectedUpdateDescription(groupId) {
-    const descTextEl = document.getElementById('updateSelectedDescText');
-    if (!groupId || !descTextEl) return;
-
-    descTextEl.textContent = '조회 중...';
-
-    try {
-        const res = await apiFetch(`/api/form-template-groups/${groupId}`);
-        if (!res.ok) throw new Error();
-
-        const result = await res.json();
-        descTextEl.textContent =
-            result?.data?.description ||
-            result?.data?.desc ||
-            result?.data?.summary ||
-            '(설명 없음)';
-    } catch {
-        descTextEl.textContent = '(설명 조회 실패)';
-    }
 }
 
 function bindUpdatePopupEvents() {
@@ -654,7 +652,6 @@ function bindUpdatePopupEvents() {
 
     // 취소
     cancelBtn.addEventListener('click', hideUpdatePopup);
-
 
     // 검색 입력
     input.addEventListener('input', () => {
@@ -677,7 +674,6 @@ function bindUpdatePopupEvents() {
         }, 400);
     });
 
-
     input.addEventListener('blur', () => {
         setTimeout(() => dropdown.style.display = 'none', 150);
     });
@@ -697,17 +693,14 @@ function bindUpdatePopupEvents() {
                 {method: 'POST'}
             );
 
-
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
                 throw new Error(err?.message || '문서 업데이트에 실패했습니다.');
             }
 
-
             const result = await res.json();
 
             console.log('revise api result:', result);
-
 
             const createdTemplateId = result?.data?.createdTemplateId;
 
@@ -726,5 +719,14 @@ function bindUpdatePopupEvents() {
         } finally {
             okBtn.disabled = false;
         }
-    });
+    }); 
 }
+
+// ========================
+// DOMContentLoaded 진입점
+// ========================
+document.addEventListener('DOMContentLoaded', function () {
+    bindEventHandlers();
+    loadAndRender({});
+    bindUpdatePopupEvents();
+});

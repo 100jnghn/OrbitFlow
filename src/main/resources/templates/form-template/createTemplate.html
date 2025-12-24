@@ -33,7 +33,6 @@
 
     <!-- 페이지별 JS -->
     <th:block th:fragment="pageScript">
-        <script src="/js/common.js" defer></script>
         <script src="/css/form-template/createTemplate.js"></script>
         <script th:inline="javascript">
             const templateId = /*[[${templateId}]]*/ null
@@ -60,8 +59,14 @@
             <div id="form-edit-title">
                 <span id="form-title-preview">새 문서 양식</span>
             </div>
-            <div id="form-edit-area" class="empty"></div>
+            <div id="form-edit-area" class="empty">
+                <!-- 문서 레벨 validation hint -->
+                <div class="hint-msg form-hint" id="component-hint">
+                    컴포넌트를 추가하여 문서를 구성하세요.
+                </div>
+            </div>
         </main>
+
 
         <!-- 우측 패널: 설정 -->
         <aside id="right-panel">
@@ -85,7 +90,9 @@
             <section id="component-setting-panel">
                 <h4>컴포넌트 설정</h4>
                 <div id="component-setting-content">
-                    <span style="color:#9ab;">컴포넌트를 선택하세요.</span>
+                   <span class="hint-msg" id="component-setting-hint">
+                       컴포넌트를 선택하세요.
+                    </span>
                 </div>
             </section>
 
@@ -96,13 +103,13 @@
                 <div class="setting-row">
                     <label for="form-title-input">제목</label>
                     <input id="form-title-input"
-                           name="title"
-                           type="text"
-                           placeholder="문서의 제목"
-                           maxlength="100"
-                           required>
+                            name="title"
+                            type="text"
+                            placeholder="문서의 제목"
+                            autocomplete="off">
+                    <!-- JS validation hint -->
+                    <div class="hint-msg" id="title-hint"></div>
                 </div>
-
                 <div class="setting-row">
                     <label for="form-category-input">카테고리</label>
                     <select id="form-category-input"
@@ -113,8 +120,9 @@
                         <option value="SCHEDULE">일정</option>
                         <option value="ATTENDANCE">근태</option>
                     </select>
+                    <!-- JS validation hint -->
+                    <div class="hint-msg" id="category-hint"></div>
                 </div>
-
                 <div class="form-action-buttons">
                     <button id="before-form-btn" type="button">이전</button>
                     <button id="next-form-btn" type="button">다음</button>
