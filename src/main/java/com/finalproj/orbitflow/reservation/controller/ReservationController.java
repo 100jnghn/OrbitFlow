@@ -6,6 +6,7 @@ import com.finalproj.orbitflow.reservation.dto.ReservationReqDto;
 import com.finalproj.orbitflow.reservation.dto.ReservationResDto;
 import com.finalproj.orbitflow.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -29,6 +30,7 @@ import java.util.List;
 @RequestMapping("/api")
 @Controller
 @RequiredArgsConstructor
+@Slf4j
 public class ReservationController {
 
     private final ReservationService reservationService;
@@ -99,6 +101,8 @@ public class ReservationController {
     ) {
         Long companyId = user.getCompanyId();
         Long userId = user.getEmployeeId();
+
+        log.info("예약 신청: " + reservation.getTypeCode());
 
         reservationService.insertReservation(companyId, userId, reservation);
 

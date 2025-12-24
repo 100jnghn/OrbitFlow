@@ -93,6 +93,8 @@ public class ReservationService {
     @Transactional
     public void insertReservation(Long companyId, Long userId, ReservationReqDto reservation) {
 
+//        log.info("예약 타입 : " + reservation.getTypeCode());
+
         Company company = companyRepository.getReferenceById(companyId);
         Employee employee = employeeRepository.getReferenceById(userId);
 
