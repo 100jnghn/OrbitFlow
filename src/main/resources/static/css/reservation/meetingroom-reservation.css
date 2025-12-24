@@ -87,13 +87,24 @@
    Grid Container
 ========================= */
 .grid-container {
-    max-width: 1200px;     /* 원하는 최대 폭 */
-    margin: 0 auto;        /* 가운데 정렬 핵심 */
+    margin: 0 auto;
     background: #fff;
     border-radius: 12px;
     padding: 24px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    /* ⭐ 가운데 정렬 핵심 */
+    display: flex;
+    justify-content: center; /* 좌우 */
+    align-items: center;     /* 상하 */
+
+    /* 중요 */
+    min-height: 400px;       /* 최소 높이 지정 (없으면 상하 중앙 안 보임) */
     overflow-x: auto;
+}
+
+.grid-inner {
+    display: inline-block; /* 내용 크기만큼 */
 }
 
 .grid-header {
@@ -134,15 +145,14 @@
 }
 
 
-
 .times-header {
     display: flex;
     flex: 1;
 }
 
 .time-header {
-    flex: 0 0 56px;     /* 고정 폭 */
-    min-width: 56px;
+    flex: 0 0 80px; /* 고정 폭 */
+    min-width: 80px;
     padding: 8px;
     background: #f8f9fa;
     border: 1px solid #e9ecef;
@@ -151,6 +161,8 @@
     font-size: 12px;
     text-align: center;
     white-space: nowrap;
+    box-sizing: border-box; /* 이거 없으면 셀 선택 시 크기 달라져서 정렬 깨짐 */
+
 }
 
 .time-cells {
@@ -159,8 +171,8 @@
 }
 
 .time-cell {
-    flex: 0 0 56px;     /* ⭐ shrink 방지 */
-    min-width: 56px;
+    flex: 0 0 80px;
+    min-width: 80px;
     padding: 12px 8px;
     border: 1px solid #e9ecef;
     border-left: none;
@@ -168,7 +180,8 @@
     text-align: center;
     font-size: 12px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background-color 0.2s;
+    box-sizing: border-box; /* 이거 없으면 셀 선택 시 크기 달라져서 정렬 깨짐 */
 }
 
 .time-header:last-child {
@@ -211,15 +224,15 @@
 .time-cell.selected {
     background: #cfe2ff;
     color: #084298;
-    font-weight: 600;
-    border: 2px solid #0d6efd;
+    /*font-weight: 600;*/
+    border: 1px solid #0d6efd;
 }
 
 .time-cell.selected::after {
-    content: '✓';
+    /*content: '✓';*/
     display: block;
-    font-size: 10px;
-    margin-top: 2px;
+    /*font-size: 10px;*/
+    /*margin-top: 2px;*/
 }
 
 /* 예약 불가 */
@@ -311,7 +324,7 @@
 }
 
 .form-input {
-    width: 100%;
+    width: 95%;
     padding: 12px 14px;
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -405,11 +418,11 @@
     .reservation-info-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .reservation-input-section {
         flex-direction: column;
     }
-    
+
     .btn-submit {
         width: 100%;
     }

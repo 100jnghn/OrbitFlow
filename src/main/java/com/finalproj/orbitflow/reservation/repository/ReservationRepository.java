@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -55,4 +56,17 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
 
     Optional<Reservation> findById(Long reservationId);
-}
+
+    @Query("""
+    SELECT r
+    FROM Reservation r
+    WHERE r.company.id = :companyId
+      AND r.reservationDate = :reservationDate
+      AND r.typeCode = :typeCode
+      AND r.reservationStatus.id = 2
+""")
+    List<Reservation> findByCompanyAndDateAndType(
+            @Param("companyId") Long companyId,
+            @Param("reservationDate") LocalDate reservationDate,
+            @Param("typeCode") ReservationTypeCode typeCode
+    );}

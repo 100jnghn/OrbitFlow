@@ -136,7 +136,7 @@ function renderGrid() {
         container.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-inbox"></i>
-                <p>회의실 정보를 불러오는 중입니다...</p>
+                <p>회의실 정보가 없습니다</p>
             </div>
         `;
         return;
@@ -160,27 +160,39 @@ function renderGrid() {
         HOURS.forEach(hour => {
             const cell = document.createElement('div');
             cell.className = 'time-cell';
-            cell.dataset.roomId = room.id;
+            cell.dataset.roomId = room.meetingroomId;
             cell.dataset.roomName = room.name;
             cell.dataset.roomPosition = room.position || '-';
             cell.dataset.roomDescription = room.description || '-';
             cell.dataset.hour = hour;
-            
-            // 예약 여부 확인
-            const isReserved = checkReservation(room.id, hour);
-            
-            if (isReserved) {
-                if (isReserved.isMine) {
-                    cell.className += ' my-reservation';
-                    cell.textContent = '예약됨';
-                } else {
-                    cell.className += ' unavailable';
-                    cell.textContent = '예약 불가';
+
+            console.log("회의실 번호 : " + room.meetingroomId)
+
+            const reservationInfo = checkReservation(room.meetingroomId, hour);
+
+            if (reservationInfo) {
+                const { statusId } = reservationInfo;
+                console.log("상태값: " + statusId)
+
+                // 승인 대기 → 빨간색
+                if (statusId === 1) {
+                    cell.classList.add('pending');
+                    // cell.textContent = '승인 대기';
                 }
-            } else {
-                cell.className += ' available';
-                cell.textContent = '예약 가능';
-                cell.addEventListener('click', (e) => handleCellClick(e.currentTarget, room, hour));
+                // 예약 확정
+                else if (statusId === 2) {
+                    cell.classList.add('unavailable');
+                    // cell.textContent = '예약됨';
+                }
+
+                cell.style.cursor = 'not-allowed';
+            }
+            else {
+                cell.classList.add('available');
+                // cell.textContent = '예약 가능';
+                cell.addEventListener('click', () =>
+                    handleCellClick(cell, room, hour)
+                );
             }
             
             timeCells.appendChild(cell);
@@ -195,21 +207,19 @@ function renderGrid() {
    Check Reservation
 ========================== */
 function checkReservation(roomId, hour) {
-    const reservation = reservations.find(r => 
-        r.resourceId === roomId && 
-        r.startTime <= hour && 
+    const reservation = reservations.find(r =>
+        r.resourceId === roomId &&
+        r.startTime <= hour &&
         r.endTime > hour &&
-        (r.reservationStatusId === 1 || r.reservationStatusId === 2) // 대기 or 확정
+        r.typeCode === 'MEETING'
     );
-    
-    if (reservation) {
-        return {
-            isMine: reservation.isMine || false,
-            reservation: reservation
-        };
-    }
-    
-    return null;
+
+    if (!reservation) return null;
+
+    return {
+        statusId: reservation.reservationStatusId,
+        reservation
+    };
 }
 
 /* ==========================
@@ -217,16 +227,19 @@ function checkReservation(roomId, hour) {
 ========================== */
 function handleCellClick(cell, room, hour) {
     const roomId = parseInt(cell.dataset.roomId);
-    
+
+    console.log("클릭 roomId:", roomId);
+    console.log("현재 selectedRoom:", selectedRoom);
+
     // 다른 회의실을 클릭하면 초기화
-    if (selectedRoom && selectedRoom.id !== roomId) {
+    if (selectedRoom && selectedRoom.meetingroomId !== roomId) {
         clearSelection();
     }
     
     selectedRoom = room;
     
     // 첫 번째 클릭 (시작 시간)
-    if (!selectedStartHour) {
+    if (selectedStartHour === null) {
         selectedStartHour = hour;
         selectedEndHour = hour + 1;
         updateSelection();
@@ -292,7 +305,7 @@ function updateSelection() {
             const cellRoomId = parseInt(cell.dataset.roomId);
             const cellHour = parseInt(cell.dataset.hour);
             
-            if (cellRoomId === selectedRoom.id && 
+            if (cellRoomId === selectedRoom.meetingroomId &&
                 cellHour >= selectedStartHour && 
                 cellHour < selectedEndHour) {
                 cell.classList.add('selected');
@@ -362,14 +375,14 @@ async function submitReservation() {
     try {
         const payload = {
             typeCode: 'MEETING',
-            resourceId: selectedRoom.id,
+            resourceId: selectedRoom.meetingroomId,
             reservationDate: selectedDate,
             startTime: selectedStartHour,
             endTime: selectedEndHour,
             reservationReason: reason
         };
         
-        const res = await apiFetch('/api/reservations', {
+        const res = await apiFetch('/api/reservations/me', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -426,6 +439,8 @@ function initEventListeners() {
         });
     }
 }
+
+
 
 /* ==========================
    초기화
