@@ -71,6 +71,18 @@
     justify-content: center;
     gap: 8px;
     transition: all 0.2s ease;
+    text-align: center;
+    line-height: 1.5;
+    width: auto;
+    min-width: fit-content;
+    vertical-align: middle;
+}
+
+.btn-add i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
 }
 
 .btn-add:hover {
@@ -617,6 +629,17 @@
     transition: all 0.2s ease;
     white-space: nowrap;
     vertical-align: middle;
+    text-align: center;
+    line-height: 1.5;
+    width: auto;
+    min-width: fit-content;
+}
+
+.btn-search i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
 }
 
 .btn-search:hover {
@@ -838,6 +861,10 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .btn-delete-confirm:hover {
