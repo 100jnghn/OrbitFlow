@@ -113,7 +113,6 @@ async function loadItems(categoryId = null) {
         const {data} = await res.json();
         items = data || [];
 
-        renderTimeHeaders();
         renderGrid();
 
     } catch (e) {
@@ -177,7 +176,7 @@ function renderGrid() {
         container.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-inbox"></i>
-                <p>자원 정보를 불러오는 중입니다...</p>
+                <p>카테고리를 선택하세요</p>
             </div>
         `;
         return;
@@ -460,7 +459,7 @@ async function submitReservation() {
             reservationReason: reason
         };
 
-        const res = await apiFetch('/api/reservations', {
+        const res = await apiFetch('/api/reservations/me', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -501,11 +500,20 @@ function initEventListeners() {
     if (categorySelect) {
         categorySelect.addEventListener('change', (e) => {
             selectedCategoryId = e.target.value ? parseInt(e.target.value) : null;
-            console.log(selectedCategoryId)
             clearSelection();
 
             if (selectedCategoryId !== null) {
                 loadItems(selectedCategoryId);
+            } else {
+                clearSelection()
+                const container = document.getElementById('grid-body');
+
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>카테고리를 선택하세요</p>
+                    </div>
+                    `;
             }
         });
     }
@@ -551,8 +559,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     initEventListeners();
     updateReservationForm();
 
+    // 시간 헤더 먼저 표시
+    renderTimeHeaders();
+
     await loadCategories();
-    // await loadItems();
     await loadReservations(selectedDate);
 });
 
