@@ -1,4 +1,4 @@
-let currentParams = { page: 0, size: 10, status: 'ON_TIME' }; // ✅ 기본값 변경
+let currentParams = { page: 0, size: 10, status: 'ALL' }; // ✅ 기본값 변경
 
 document.addEventListener('DOMContentLoaded', function() {
     const dropdown = document.getElementById('monthDropdown');
@@ -138,7 +138,8 @@ function renderTable(recs) {
 function getBadgeClass(c) {
     if (c === 'LATE') return 'badge-late';
     if (c === 'ABSENT') return 'badge-absent';
-    // ✅ 휴가 뱃지 스타일이 없으면 일단 normal로
+    if (c === 'ON_TIME') return 'badge-normal'; // 정상 출근 스타일
+    if (c === 'VACATION') return 'badge-vacation'; // 휴가 스타일 (필요 시 CSS 추가)
     return 'badge-normal';
 }
 

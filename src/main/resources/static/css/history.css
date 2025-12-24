@@ -351,9 +351,12 @@
     font-weight: 700;
 }
 
-.badge-normal { background: #ebf8ff; color: #3182ce; }
-.badge-late { background: #fffaf0; color: #dd6b20; }
-.badge-absent { background: #fff5f5; color: #e53e3e; }
+
+.badge-normal { background: #ebf8ff; color: #3182ce; }   /* 정상 출근 (파란색 계열) */
+.badge-late { background: #fffaf0; color: #dd6b20; }     /* 지각 (주황색 계열) */
+.badge-absent { background: #fff5f5; color: #e53e3e; }   /* 결근 (빨간색 계열) */
+.badge-vacation { background: #f0fff4; color: #38a169; } /* 휴가 (초록색 계열) */
+
 
 .modern-btn-search {
     height: 40px;
@@ -391,3 +394,5 @@
     border-color: #5687ef;
     font-weight: 700;
 }
+
+
