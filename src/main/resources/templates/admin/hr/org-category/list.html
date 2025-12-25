@@ -16,7 +16,6 @@
 <!-- ================= 메인 컨텐츠 ================= -->
 <th:block th:fragment="content">
 
-
   <!-- 상단 타이틀 -->
   <div class="orgcat-title-row">
     <h1 class="orgcat-title">조직 카테고리 관리</h1>
@@ -25,75 +24,114 @@
   <!-- 메인 카드 -->
   <section class="orgcat-card">
 
-    <!-- 상단 유틸: 검색 + 추가 버튼 -->
+    <!-- ================= 상단 유틸 ================= -->
     <div class="orgcat-toolbar">
 
       <!-- 왼쪽: 검색 / 필터 -->
       <div class="toolbar-left">
+
+        <!-- 검색 -->
         <div class="orgcat-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input id="searchKeyword"
-                 type="text"
-                 placeholder="카테고리명 검색"
-                 autocomplete="off">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <input
+                  id="searchKeyword"
+                  type="text"
+                  placeholder="카테고리명 검색"
+                  autocomplete="off"
+                  aria-label="카테고리명 검색"
+          >
         </div>
 
-        <button class="btn btn-outline" id="btnSearch" type="button">
+        <button
+                class="btn btn-outline"
+                id="btnSearch"
+                type="button"
+        >
           검색
         </button>
 
+        <!-- 비활성 포함 -->
         <label class="inactive-toggle">
           <input type="checkbox" id="includeInactive">
           <span>비활성 포함</span>
           <small>(정렬 제외)</small>
         </label>
+
       </div>
 
       <!-- 오른쪽: 주요 액션 -->
       <div class="toolbar-right">
-        <button class="btn btn-primary" id="btnOpenCreate" type="button">
+        <button
+                class="btn btn-primary"
+                id="btnOpenCreate"
+                type="button"
+        >
           카테고리 추가
         </button>
       </div>
 
     </div>
 
-
-
-    <!-- 테이블 -->
-    <div class="orgcat-table-wrap">
+    <!-- ================= 테이블 ================= -->
+    <div class="orgcat-table-wrap" data-role="sortable-area">
       <table class="orgcat-table">
+
         <thead>
         <tr>
-          <th class="col-order">순서</th>
+          <th class="col-order" aria-label="정렬 순서">순서</th>
           <th class="col-name">카테고리명</th>
           <th class="col-status">상태</th>
           <th class="col-action">관리</th>
         </tr>
         </thead>
+
         <tbody id="categoryTableBody">
         <!-- JS 렌더링 -->
         </tbody>
+
       </table>
     </div>
 
-    <!-- 하단: 안내 + 저장 버튼 -->
+    <!-- ================= 하단 영역 ================= -->
     <div class="orgcat-footer">
-      <div class="orgcat-hint" id="orderHint">
+
+      <!-- 안내 문구 (JS에서 상태별 제어) -->
+      <div
+              class="orgcat-hint"
+              id="orderHint"
+              aria-live="polite"
+      >
         드래그앤드롭으로 순서를 변경할 수 있습니다.
       </div>
 
-      <button class="btn btn-outline" id="btnSaveOrder" type="button" disabled>
+      <!-- 순서 변경 시에만 활성화됨 (검색/필터 중 비활성) -->
+      <button
+              class="btn btn-outline"
+              id="btnSaveOrder"
+              type="button"
+              disabled
+      >
         변경사항저장
       </button>
+
     </div>
 
   </section>
 
   <!-- ================= 모달 ================= -->
-  <div id="categoryModal" class="modal hidden" aria-hidden="true">
-    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div
+          id="categoryModal"
+          class="modal hidden"
+          aria-hidden="true"
+  >
+    <div
+            class="modal-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modalTitle"
+    >
 
+      <!-- 모달 헤더 -->
       <div class="modal-head">
         <div class="modal-head-text">
           <h2 id="modalTitle">조직 카테고리 생성/수정</h2>
@@ -101,25 +139,35 @@
             회사별로 조직 카테고리를 추가하고, 비활성화할 수 있습니다.
           </p>
         </div>
-        <button class="icon-btn" id="btnCloseModal" type="button" aria-label="닫기">
+
+        <button
+                class="icon-btn"
+                id="btnCloseModal"
+                type="button"
+                aria-label="닫기"
+        >
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
       <input type="hidden" id="categoryId">
 
+      <!-- 모달 바디 -->
       <div class="modal-body">
+
         <!-- 카테고리명 -->
         <div class="form-group">
           <label class="form-label" for="categoryName">카테고리명</label>
-          <input class="form-input"
-                 id="categoryName"
-                 type="text"
-                 placeholder="예: 본부 / 팀 / 센터">
+          <input
+                  class="form-input"
+                  id="categoryName"
+                  type="text"
+                  placeholder="예: 본부 / 팀 / 센터"
+          >
           <p class="form-help" id="nameHelp"></p>
         </div>
 
-        <!-- 사용 여부 토글 -->
+        <!-- 사용 여부 -->
         <div class="form-group">
           <label class="form-label">사용여부</label>
 
@@ -131,11 +179,17 @@
             <span class="toggle-text" id="toggleText">사용</span>
           </div>
         </div>
+
       </div>
 
+      <!-- 모달 액션 -->
       <div class="modal-actions">
-        <button class="btn btn-ghost" id="btnCancel" type="button">취소</button>
-        <button class="btn btn-primary" id="btnSaveCategory" type="button">저장</button>
+        <button class="btn btn-ghost" id="btnCancel" type="button">
+          취소
+        </button>
+        <button class="btn btn-primary" id="btnSaveCategory" type="button">
+          저장
+        </button>
       </div>
 
     </div>
@@ -145,7 +199,7 @@
 
 <!-- ================= 페이지별 JS ================= -->
 <th:block th:fragment="pageScript">
-  <!-- SortableJS (드래그앤드랍) -->
+  <!-- SortableJS -->
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
   <script th:src="@{/js/admin-org-category.js}"></script>
 </th:block>
