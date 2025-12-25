@@ -15,6 +15,8 @@ import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -32,6 +34,8 @@ import java.time.LocalDateTime;
 )
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ApprovalLine extends BaseEntity {
 
     @Id
@@ -62,4 +66,8 @@ public class ApprovalLine extends BaseEntity {
 
     @Column(name = "decided_at")
     private LocalDateTime decidedAt;
+
+    public void setApprover(Employee head) {
+        this.approver = head;
+    }
 }

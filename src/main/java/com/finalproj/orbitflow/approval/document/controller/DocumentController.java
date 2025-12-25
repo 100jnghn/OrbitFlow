@@ -51,7 +51,7 @@ public class DocumentController {
     @PostMapping("/draft/{formTemplateId}")
     public ResponseEntity<ResponseDto> createDocument(
         @PathVariable Long formTemplateId,
-        @RequestParam Long beforeDocumentId
+        @RequestParam(required = false) Long beforeDocumentId
     ) {
         DocumentCreateResDto result = documentService.createDraft(SecurityUtils.getCompanyId(), SecurityUtils.getEmployeeId(), formTemplateId, beforeDocumentId);
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.CREATED, "결재 문서 초안 생성 성공", result));

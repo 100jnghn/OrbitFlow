@@ -78,4 +78,37 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
             EmployeeStatus status
     );
 
+
+    @Query("""
+        select e
+        from Employee e
+        join e.positionCategory pc
+        join e.organization o
+        where o.id = :organizationId
+          and pc.orgCategory.id = :orgCategoryId
+          and pc.isHead = true
+          and pc.isActive = true
+          and e.status = "ACTIVE"
+    """)
+    Optional<Employee> findHeadByOrganizationAndOrgCategory(
+            @Param("organizationId") Long organizationId,
+            @Param("orgCategoryId") Long orgCategoryId
+    );
+
+    @Query("""
+        select case when count(e) > 0 then true else false end
+        from Employee e
+        join e.organization o
+        join e.positionCategory pc
+        where e.id = :employeeId
+          and o.id = :organizationId
+          and pc.id = :positionCategoryId
+          and e.status = "ACTIVE"
+          and pc.isActive = true
+    """)
+    boolean existsInOrgAndPositionCategory(
+            @Param("employeeId") Long employeeId,
+            @Param("organizationId") Long organizationId,
+            @Param("positionCategoryId") Long positionCategoryId
+    );
 }

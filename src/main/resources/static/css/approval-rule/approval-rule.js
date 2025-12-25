@@ -89,17 +89,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 조직 + 직책 → 사원
     async function fetchEmployees(orgId, positionId) {
         if (!orgId || !positionId) return [];
-        const key = `${orgId}_${positionId}`;
-        if (employeesByKey.has(key)) return employeesByKey.get(key);
 
-        // TODO 실제 API로 교체
-        const list = [
-            {id: 101, name: '김철수'},
-            {id: 102, name: '이영희'}
-        ];
+        const key = `${orgId}_${positionId}`;
+        if (employeesByKey.has(key)) {
+            return employeesByKey.get(key);
+        }
+
+        const res = await apiFetch(
+            `/api/admin/employees/by-org-and-position` +
+            `?orgId=${orgId}&positionCategoryId=${positionId}`
+        );
+
+        if (!res.ok) {
+            console.error("사원 조회 실패", res.status);
+            alert('사원 목록을 불러오지 못했습니다.');
+            return [];
+        }
+
+
+        const result = await res.json();
+        const list = result?.data ?? [];
+
+        // 필요하면 여기서 가공 가능 (지금은 그대로 사용)
+        // 예: id / name만 쓰고 싶다면 map 가능
+        // const list = (result?.data ?? []).map(e => ({ id: e.id, name: e.name }));
+
         employeesByKey.set(key, list);
         return list;
     }
+
 
     // 기존 결재선 조회
     async function fetchApprovalRuleDetail() {
@@ -128,34 +146,149 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    function validateSteps({showAlert = false} = {}) {
-        for (let i = 0; i < steps.length; i++) {
-            const s = steps[i];
+    function markStepError(stepEl) {
+        stepEl.classList.add('step-error');
+    }
 
-            if (!s.organizationCategoryId) {
-                if (showAlert) {
-                    alert(`Step ${i + 1}의 조직 카테고리를 선택해주세요.`);
-                }
+    function clearStepError(stepEl) {
+        stepEl.classList.remove('step-error');
+    }
+
+
+    function clearFieldError(selectEl) {
+        if (!selectEl) return;
+
+        selectEl.classList.remove('is-error');
+
+        const parent = selectEl.parentElement;
+        const hint = parent.querySelector('.field-hint.error');
+        if (hint) hint.remove();
+    }
+
+
+    function showFieldError(selectEl, message) {
+        if (!selectEl) return;
+
+        // 에러 상태 클래스 추가
+        selectEl.classList.add('is-error');
+
+        // 기존 hint 제거
+        const parent = selectEl.parentElement;
+        const prevHint = parent.querySelector('.field-hint.error');
+        if (prevHint) prevHint.remove();
+
+        // hint 생성 (드롭다운 하단)
+        const hint = document.createElement('div');
+        hint.className = 'field-hint error';
+        hint.innerText = message;
+
+        parent.appendChild(hint);
+
+        // 포커스 이동
+        selectEl.focus();
+    }
+
+
+    function validateDuplicateEmployees() {
+        const used = new Map(); // employeeId -> step index
+
+        for (let i = 0; i < steps.length; i++) {
+            const empId = steps[i].employeeId;
+            if (!empId) continue;
+
+            if (used.has(empId)) {
+                const prevIdx = used.get(empId);
+
+                [prevIdx, i].forEach(idx => {
+                    const stepEl = approvalStepsContainer.children[idx];
+                    const sel = stepEl.querySelector('.select-employee');
+                    markStepError(stepEl);
+                    showFieldError(sel, '이미 결재선에 포함된 사원입니다.');
+                });
+
                 return false;
             }
 
-            // 첫 Step 제외
+
+            used.set(empId, i);
+        }
+        return true;
+    }
+
+    function validateDuplicateOrgPosition() {
+        const used = new Map(); // key -> step index
+
+        for (let i = 0; i < steps.length; i++) {
+            const s = steps[i];
+
+            if (!s.organizationId || !s.positionId) continue;
+
+            const key = `${s.organizationId}_${s.positionId}`;
+            if (used.has(key)) {
+                const prevIdx = used.get(key);
+                [prevIdx, i].forEach(idx => {
+                    const stepEl = approvalStepsContainer.children[idx];
+                    const sel = stepEl.querySelector('.select-pos');
+
+                    markStepError(stepEl);
+                    showFieldError(
+                        sel,
+                        '동일한 조직과 직책이 이미 결재선에 포함되어 있습니다.'
+                    );
+                });
+                return false;
+            }
+            used.set(key, i);
+        }
+        return true;
+    }
+
+
+    function validateSteps() {
+
+        // 🔹 이전 에러 상태 초기화
+        document.querySelectorAll('.approval-step').forEach(step => {
+            step.classList.remove('step-error');
+            step.querySelectorAll('select').forEach(clearFieldError);
+        });
+
+        for (let i = 0; i < steps.length; i++) {
+            const s = steps[i];
+            const stepEl = approvalStepsContainer.children[i];
+
+            // 조직 카테고리
+            if (!s.organizationCategoryId) {
+                const sel = stepEl.querySelector('.select-org-category');
+                markStepError(stepEl);
+                showFieldError(sel, '조직 카테고리를 선택해주세요.');
+                return false;
+            }
+
+            // 첫 step 제외
             if (i > 0) {
+
                 if (!s.organizationId) {
-                    if (showAlert) {
-                        alert(`Step ${i + 1}의 조직을 선택해주세요.`);
-                    }
+                    const sel = stepEl.querySelector('.select-org');
+                    markStepError(stepEl);
+                    showFieldError(sel, '조직을 선택해주세요.');
                     return false;
                 }
 
                 if (!s.positionId) {
-                    if (showAlert) {
-                        alert(`Step ${i + 1}의 직책을 선택해주세요.`);
-                    }
+                    const sel = stepEl.querySelector('.select-pos');
+                    markStepError(stepEl);
+                    showFieldError(sel, '직책을 선택해주세요.');
                     return false;
                 }
             }
         }
+
+        // 2. 동일 사원 중복 방지
+        if (!validateDuplicateEmployees()) return false;
+
+        // 3. 동일 조직 + 직책 중복 방지
+        if (!validateDuplicateOrgPosition()) return false;
+
         return true;
     }
 
@@ -183,45 +316,54 @@ document.addEventListener('DOMContentLoaded', async () => {
             ).join('');
 
             const empOptions = (step.employees || []).map(
-                e => `<option value="${e.id}" ${step.employeeId === e.id ? 'selected' : ''}>${e.name}</option>`
+                e => `<option value="${e.id}" ${step.employeeId === e.id ? 'selected' : ''}>${e.employeeNo} ${e.name}</option>`
             ).join('');
 
             const html = `
-                <div class="approval-step">
-                    <div class="approval-step-label">Step ${idx + 1}</div>
-
-                    <div class="approval-select-group">
-                        ${!isFirst ? `
+    <div class="approval-step">
+        <div class="approval-step-label">Step ${idx + 1}</div>
+                <div class="approval-select-group">
+                    ${!isFirst ? `
+                        <div class="select-field">
                             <select class="select-org-category" data-idx="${idx}">
                                 <option value="">조직 카테고리 *</option>
                                 ${categoryOptions}
                             </select>
-
+                        </div>
+        
+                        <div class="select-field">
                             <select class="select-org" data-idx="${idx}" ${!step.organizations.length ? 'disabled' : ''}>
                                 <option value="">조직 *</option>
                                 ${orgOptions}
                             </select>
-
+                        </div>
+        
+                        <div class="select-field">
                             <select class="select-pos" data-idx="${idx}" ${!step.positions.length ? 'disabled' : ''}>
                                 <option value="">직책 *</option>
                                 ${posOptions}
                             </select>
-
+                        </div>
+        
+                        <div class="select-field">
                             <select class="select-employee" data-idx="${idx}" ${!step.positionId ? 'disabled' : ''}>
                                 <option value="">사원 (선택)</option>
                                 ${empOptions}
                             </select>
-                        ` : `
+                        </div>
+                    ` : `
+                        <div class="select-field">
                             <select class="select-org-category" data-idx="${idx}">
                                 <option value="">조직 카테고리 *</option>
                                 ${categoryOptions}
                             </select>
-                        `}
-                    </div>
-
-                    ${!isFirst ? `<button class="remove-step-btn" data-idx="${idx}"></button>` : `<div></div>`}
+                        </div>
+                    `}
                 </div>
-            `;
+                ${!isFirst ? `<button class="remove-step-btn" data-idx="${idx}"></button>` : `<div></div>`}
+            </div>
+        `;
+
 
             approvalStepsContainer.insertAdjacentHTML('beforeend', html);
         });
@@ -238,8 +380,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 조직 카테고리
         document.querySelectorAll('.select-org-category').forEach(sel => {
             sel.onchange = async e => {
+                clearFieldError(e.target);
+
                 const i = +e.target.dataset.idx;
+
+                const stepEl = approvalStepsContainer.children[i];
+                clearStepError(stepEl);
+
                 const categoryId = +e.target.value || null;
+
 
                 steps[i] = {
                     ...steps[i],
@@ -263,7 +412,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 조직
         document.querySelectorAll('.select-org').forEach(sel => {
             sel.onchange = async e => {
+                clearFieldError(e.target);
+
                 const i = +e.target.dataset.idx;
+
+                const stepEl = approvalStepsContainer.children[i];
+                clearStepError(stepEl);
+
                 const orgId = +e.target.value || null;
 
                 steps[i].organizationId = orgId;
@@ -283,7 +438,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 직책
         document.querySelectorAll('.select-pos').forEach(sel => {
             sel.onchange = async e => {
+                clearFieldError(e.target);
+
                 const i = +e.target.dataset.idx;
+
+                const stepEl = approvalStepsContainer.children[i];
+                clearStepError(stepEl);
+
                 const posId = +e.target.value || null;
 
                 steps[i].positionId = posId;
@@ -304,10 +465,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 사원
         document.querySelectorAll('.select-employee').forEach(sel => {
             sel.onchange = e => {
-                const i = +e.target.dataset.idx;
-                steps[i].employeeId = +e.target.value || null;
+                const i = Number(e.target.dataset.idx);
+                steps[i].employeeId = e.target.value
+                    ? Number(e.target.value)
+                    : null;
             };
         });
+
 
         // step 삭제
         document.querySelectorAll('.remove-step-btn').forEach(btn => {
@@ -324,7 +488,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     ================================ */
     if (addStepBtn) {
         addStepBtn.onclick = () => {
-            if (!validateSteps({showAlert: true})) return;
+            if (!validateSteps()) return;
 
             steps.push({
                 organizationCategoryId: null,
@@ -383,7 +547,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const formTemplateId = form.dataset.templateId;
         if (!formTemplateId) return false;
 
-        if (!validateSteps({showAlert: true})) return false;
+        if (!validateSteps()) return false;
 
         const approvalRuleJson = steps.map((s, idx) => ({
             step: idx + 1,
@@ -426,6 +590,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     ================================ */
 
     async function init() {
+        employeesByKey.clear();
         organizations = await fetchOrganizations();
         const detail = await fetchApprovalRuleDetail();
 

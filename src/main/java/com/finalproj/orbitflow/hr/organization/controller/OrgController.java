@@ -9,6 +9,7 @@ import com.finalproj.orbitflow.hr.organization.dto.OrgUpdateReqDto;
 import com.finalproj.orbitflow.hr.organization.service.OrgService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,6 +24,8 @@ import java.util.List;
  * @filename : OrgController
  * @since : 2025-12-19 금요일
  */
+
+@Slf4j
 @PreAuthorize("hasAnyRole('COMPANY_ADMIN', 'ADMIN')")
 @RestController
 @RequiredArgsConstructor
@@ -107,9 +110,13 @@ public class OrgController {
 
     @GetMapping("/include-orgs")
     public ResponseEntity<ResponseDto> listByIncludeOrgs() {
+        log.info("[include-orgs] API called");
+
+
+        log.info("[include-orgs] currentUser = {}", SecurityUtils.getCurrentUser());
+
 
         List<OrgResDto> orgsByEmployeeId = orgService.findOrgsByEmployeeId(SecurityUtils.getCurrentUser().getOrganizationId());
-
         return ResponseEntity.ok(
                 new ResponseDto<>(HttpStatus.OK, "소속 조직도 조회 성공", orgsByEmployeeId)
         );

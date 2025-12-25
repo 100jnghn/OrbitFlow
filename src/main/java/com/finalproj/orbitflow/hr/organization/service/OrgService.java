@@ -17,6 +17,7 @@ import com.finalproj.orbitflow.hr.organization.entity.Organization;
 import com.finalproj.orbitflow.hr.organization.repository.OrgRepository;
 import com.finalproj.orbitflow.hr.organization.repository.OrgResView;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +35,7 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class OrgService {
 
     private final OrgRepository orgRepository;
@@ -277,10 +279,18 @@ public class OrgService {
     }
 
 
-
     public List<OrgResDto> findOrgsByEmployeeId(Long orgId) {
 
+        log.info("[OrgService] findHierarchy orgId={}", orgId);
+
+        if (orgId == null) {
+            log.error("[OrgService] orgId is null");
+            return List.of();
+        }
+
         List<OrgResView> hierarchy = orgRepository.findHierarchy(orgId);
+
+        log.info("[OrgService] hierarchy size={}", hierarchy.size());
 
         return hierarchy.stream()
                 .sorted(Comparator.comparing(OrgResView::getOrderIndex))
@@ -294,5 +304,6 @@ public class OrgService {
                 ))
                 .toList();
     }
+
 
 }
