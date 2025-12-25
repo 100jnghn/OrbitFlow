@@ -52,11 +52,21 @@ function createCategoryCell(typeCode, typeName) {
     return td;
 }
 
-function createStatusCell(statusName) {
+function createStatusCell(reservation) {
     const td = document.createElement('td');
+    td.className = 'status-cell';
+    
     const badge = document.createElement('span');
-    badge.className = 'status-badge';
-    badge.textContent = statusName;
+    badge.className = 'status-badge status-badge-clickable';
+    badge.textContent = reservation.reservationStatusName;
+    badge.dataset.reservationId = reservation.reservationId;
+    badge.dataset.currentStatusId = reservation.reservationStatusId;
+    
+    badge.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showStatusDropdown(badge, reservation);
+    });
+    
     td.appendChild(badge);
     return td;
 }
@@ -89,6 +99,8 @@ let currentFilters = {
     statusId: null,
     typeCode: null
 };
+let statusList = []; // 상태 목록 저장
+let activeDropdown = null; // 현재 활성화된 드롭다운
 
 /* ==========================
    Data Load
@@ -103,6 +115,8 @@ async function loadStatuses() {
         if(!res.ok) throw new Error();
 
         const {data} = await res.json();
+        statusList = data; // 상태 목록 저장
+        
         const select = document.getElementById("status-filter")
 
         select.innerHTML = '<option value="">전체</option>';
@@ -184,7 +198,7 @@ async function loadReservations(page = 0) {
                 createCell(formatDate(r.reservationDate)),
                 createCell(r.typeCode === 'CAR' ? '-' : formatHour(r.startTime)),
                 createCell(r.typeCode === 'CAR' ? '-' : formatHour(r.endTime)),
-                createStatusCell(r.reservationStatusName),
+                createStatusCell(r),
                 createActionCell(r)
             );
             tbody.appendChild(tr);
@@ -230,8 +244,85 @@ function renderPagination(pageData) {
 }
 
 /* ==========================
+   Status Dropdown
+========================== */
+function showStatusDropdown(badge, reservation) {
+    // 기존 드롭다운이 있으면 제거
+    if (activeDropdown) {
+        activeDropdown.remove();
+        activeDropdown = null;
+    }
+
+    // 드롭다운 생성
+    const dropdown = document.createElement('div');
+    dropdown.className = 'status-dropdown';
+    dropdown.dataset.reservationId = reservation.reservationId;
+    
+    // 상태 목록 추가
+    statusList.forEach(status => {
+        const item = document.createElement('div');
+        item.className = 'status-dropdown-item';
+        if (status.id === reservation.reservationStatusId) {
+            item.classList.add('active');
+        }
+        item.textContent = status.statusName;
+        item.onclick = () => {
+            updateReservationStatus(reservation.reservationId, status.id, status.statusName);
+            dropdown.remove();
+            activeDropdown = null;
+        };
+        dropdown.appendChild(item);
+    });
+
+    // 배지 위치 기준으로 드롭다운 위치 설정
+    const rect = badge.getBoundingClientRect();
+    dropdown.style.position = 'fixed';
+    dropdown.style.top = `${rect.bottom + 4}px`;
+    dropdown.style.left = `${rect.left}px`;
+    dropdown.style.zIndex = '1000';
+
+    document.body.appendChild(dropdown);
+    activeDropdown = dropdown;
+
+    // 외부 클릭 시 드롭다운 닫기
+    setTimeout(() => {
+        document.addEventListener('click', function closeDropdown(e) {
+            if (!dropdown.contains(e.target) && e.target !== badge) {
+                dropdown.remove();
+                activeDropdown = null;
+                document.removeEventListener('click', closeDropdown);
+            }
+        }, { once: true });
+    }, 0);
+}
+
+/* ==========================
    Actions
 ========================== */
+async function updateReservationStatus(reservationId, statusId, statusName) {
+    try {
+        const res = await apiFetch(`/api/admin/reservations/${reservationId}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ statusId })
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.message || '상태 변경에 실패했습니다.');
+        }
+
+        alert(`예약 상태가 "${statusName}"으로 변경되었습니다.`);
+        loadReservations(currentPage);
+
+    } catch (e) {
+        console.error(e);
+        alert(e.message || '상태 변경에 실패했습니다.');
+    }
+}
+
 async function approveReservation(id) {
     if (!confirm('예약을 승인하시겠습니까?')) return;
 

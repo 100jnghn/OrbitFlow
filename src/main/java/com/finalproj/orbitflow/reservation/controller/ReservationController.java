@@ -2,9 +2,9 @@ package com.finalproj.orbitflow.reservation.controller;
 
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUser;
-import com.finalproj.orbitflow.reservation.dto.ReservationRejectReqDto;
 import com.finalproj.orbitflow.reservation.dto.ReservationReqDto;
 import com.finalproj.orbitflow.reservation.dto.ReservationResDto;
+import com.finalproj.orbitflow.reservation.dto.ReservationStatusChangeReqDto;
 import com.finalproj.orbitflow.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -169,7 +169,7 @@ public class ReservationController {
     @PatchMapping("/admin/reservations/{reservationId}/reject")
     public ResponseEntity<ResponseDto> rejectReservation(
             @PathVariable Long reservationId,
-            @RequestBody ReservationRejectReqDto rejectReqDto
+            @RequestBody ReservationStatusChangeReqDto rejectReqDto
     ) {
         reservationService.rejectReservation(reservationId, rejectReqDto);
 
@@ -178,5 +178,17 @@ public class ReservationController {
         );
     }
 
+    // 관리자 - 예약 상태 변경
+    @PatchMapping("/admin/reservations/{reservationId}/status")
+    public ResponseEntity<ResponseDto> changeReservationStatus(
+            @PathVariable Long reservationId,
+            @RequestBody ReservationStatusChangeReqDto reservationStatusChangeReqDto
+    ) {
+        reservationService.changeReservationStatus(reservationId, reservationStatusChangeReqDto);
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, "예약 상태 변경 성공", null)
+        );
+    }
 
 }

@@ -4,9 +4,9 @@ import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
-import com.finalproj.orbitflow.reservation.dto.ReservationRejectReqDto;
 import com.finalproj.orbitflow.reservation.dto.ReservationReqDto;
 import com.finalproj.orbitflow.reservation.dto.ReservationResDto;
+import com.finalproj.orbitflow.reservation.dto.ReservationStatusChangeReqDto;
 import com.finalproj.orbitflow.reservation.entity.Reservation;
 import com.finalproj.orbitflow.reservation.entity.ReservationStatus;
 import com.finalproj.orbitflow.reservation.enums.ReservationStatusCode;
@@ -142,7 +142,7 @@ public class ReservationService {
         reservationRepository.save(newReservation);
     }
 
-
+    // 사용자 - 예약 취소 -> 사용자 예약 취소는 사유를 입력받지 않음
     @Transactional
     public void cancelReservation(Long reservationId) {
 
@@ -160,7 +160,7 @@ public class ReservationService {
         ReservationStatus canceledStatus = reservationStatusRepository.findByStatusCode(ReservationStatusCode.CANCELED);
 
         // 취소 상태로 변경
-        reservation.changeStatus(canceledStatus);
+        reservation.changeStatus(canceledStatus, null);
     }
 
     @Transactional(readOnly = true)
@@ -221,7 +221,7 @@ public class ReservationService {
     }
 
     @Transactional
-    public void rejectReservation(Long reservationId, ReservationRejectReqDto rejectReqDto) {
+    public void rejectReservation(Long reservationId, ReservationStatusChangeReqDto rejectReqDto) {
 
         String rejectReason = rejectReqDto.getRejectReason();
 
@@ -229,6 +229,28 @@ public class ReservationService {
         reservationRepository.rejectReservation(reservationId, rejectReason, rejectStatus);
     }
 
+    // 관리자 - 예약 상태 변경 -> 반려/취소는 사유를 필수 입력해야 함
+    @Transactional
+    public void changeReservationStatus(Long reservationId, ReservationStatusChangeReqDto dto) {
+
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new IllegalStateException("해당 예약을 찾을 수 없습니다."));
+
+        ReservationStatus newStatus = reservationStatusRepository.findById(dto.getStatusId())
+                .orElseThrow(() -> new IllegalStateException("해당 상태로 변경 불가"));
+
+        ReservationStatusCode targetCode = newStatus.getStatusCode();
+
+        String rejectReason = null;
+        if (targetCode.equals(ReservationStatusCode.REJECT) || targetCode.equals(ReservationStatusCode.CANCELED)) {
+            if (dto.getRejectReason() == null || dto.getRejectReason().isBlank()) {
+                throw new IllegalArgumentException("반려/취소 사유는 필수입니다.");
+            }
+            rejectReason = dto.getRejectReason();
+        }
+
+        reservation.changeStatus(newStatus, rejectReason);
+    }
 
 
     // Entity -> Dto
@@ -280,6 +302,5 @@ public class ReservationService {
                 .reservationStatusName(reservationStatusName)
                 .build();
     }
-
 
 }

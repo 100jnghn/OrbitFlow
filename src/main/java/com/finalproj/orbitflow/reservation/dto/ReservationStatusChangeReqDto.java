@@ -14,7 +14,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ReservationRejectReqDto {
+public class ReservationStatusChangeReqDto {
 
+    private Long statusId;
     private String rejectReason;
 }
