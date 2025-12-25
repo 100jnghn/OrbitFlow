@@ -63,7 +63,23 @@ function filterCategories() {
         hint.style.display = activeCount > 1 ? 'block' : 'none';
     }
 
-    initSortable();
+    const searchMode = isSearchMode();
+
+    if (!searchMode) {
+        initSortable();
+    } else {
+        destroySortable();
+    }
+
+    toggleSaveOrderButton(!searchMode);
+
+}
+
+function destroySortable() {
+    if (sortableInstance) {
+        sortableInstance.destroy();
+        sortableInstance = null;
+    }
 }
 
 function bindEvents() {
@@ -117,9 +133,6 @@ async function loadCategories() {
         filterCategories();
         resetOrderChanged();
 
-        initSortable();
-        resetOrderChanged();
-
     } catch (e) {
         console.error(e);
         alert('조직 카테고리 조회 중 오류 발생');
@@ -166,6 +179,11 @@ function renderTable(list) {
     return active.length;
 }
 
+function isSearchMode() {
+    const keyword = els.search()?.value.trim() ?? '';
+    const includeInactive = els.includeInactive()?.checked ?? false;
+    return keyword.length > 0 || includeInactive;
+}
 
 function renderRow(category) {
     const tr = document.createElement('tr');
@@ -174,7 +192,9 @@ function renderRow(category) {
     const isActive = normalizeActive(category);
 
     tr.innerHTML = `
-      <td>${isActive ? dragHandleHtml() : ''}</td>
+      <td>
+        ${isActive && !isSearchMode() ? dragHandleHtml() : ''}
+      </td>
       <td><strong>${escapeHtml(category.name)}</strong></td>
       <td>
         <span class="status-badge ${isActive ? 'status-active' : 'status-inactive'}">
@@ -349,6 +369,7 @@ function closeModal() {
 }
 
 function markOrderChanged() {
+    if (isSearchMode()) return;
     isOrderChanged = true;
     els.btnSaveOrder().disabled = false;
 }
@@ -391,4 +412,11 @@ function toast(msg) {
     `;
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 1400);
+}
+
+function toggleSaveOrderButton(show) {
+    const btn = els.btnSaveOrder();
+    if (!btn) return;
+
+    btn.style.display = show ? 'inline-flex' : 'none';
 }
