@@ -10,6 +10,7 @@ import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.UnauthorizedException;
 import com.finalproj.orbitflow.global.security.CustomUserDetailsService;
 import com.finalproj.orbitflow.global.security.SecurityUser;
+import com.finalproj.orbitflow.global.security.SecurityUtils;
 import com.finalproj.orbitflow.global.security.jwt.JwtProvider;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -209,12 +209,8 @@ public class AuthController {
      * 내 정보 조회
      */
     @GetMapping("/me")
-    public ResponseEntity<ResponseDto> me(
-            @AuthenticationPrincipal SecurityUser user
-    ) {
-        if (user == null) {
-            throw new UnauthorizedException("인증 정보가 없습니다.");
-        }
+    public ResponseEntity<ResponseDto> me() {
+        SecurityUser user = SecurityUtils.getCurrentUser();
 
         MeResDto res = new MeResDto(
                 user.getEmployeeId(),
