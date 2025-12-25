@@ -64,12 +64,12 @@ function createStatusCell(statusName) {
 function createActionCell(reservation) {
     const td = document.createElement('td');
 
-    // 승인 대기(1), 예약 확정(2)만 취소 가능
-    if (reservation.reservationStatusId === 1 || reservation.reservationStatusId === 2) {
+    // 승인 대기(1)만 승인 가능
+    if (reservation.reservationStatusId === 1) {
         const btn = document.createElement('button');
-        btn.className = 'btn-cancel';
-        btn.textContent = '취소';
-        btn.onclick = () => cancelReservation(reservation.reservationId);
+        btn.className = 'btn-approve';
+        btn.textContent = '승인';
+        btn.onclick = () => approveReservation(reservation.reservationId);
         td.appendChild(btn);
     } else {
         td.textContent = '-';
@@ -232,22 +232,22 @@ function renderPagination(pageData) {
 /* ==========================
    Actions
 ========================== */
-async function cancelReservation(id) {
-    if (!confirm('예약을 취소하시겠습니까?')) return;
+async function approveReservation(id) {
+    if (!confirm('예약을 승인하시겠습니까?')) return;
 
     try {
-        const res = await apiFetch(`/api/reservations/${id}/cancel`, {
+        const res = await apiFetch(`/api/admin/reservations/${id}/approve`, {
             method: 'PATCH'
         });
 
         if (!res.ok) throw new Error();
 
-        alert('예약이 취소되었습니다.');
+        alert('예약이 승인되었습니다.');
         loadReservations(currentPage);
 
     } catch (e) {
         console.error(e);
-        alert('예약 취소에 실패했습니다.');
+        alert('예약 승인에 실패했습니다.');
     }
 }
 

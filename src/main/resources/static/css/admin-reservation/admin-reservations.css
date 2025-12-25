@@ -201,7 +201,7 @@
     text-align: center;
 }
 
-/* 취소 열 - 중앙 정렬 */
+/* 승인 열 - 중앙 정렬 */
 .resource-table th:nth-child(10),
 .resource-table td:nth-child(10) {
     text-align: center;
@@ -322,22 +322,22 @@
     gap: 8px;
 }
 
-.btn-cancel {
+.btn-approve {
     padding: 6px 12px;
     border-radius: 4px;
     font-size: 13px;
     border: none;
     cursor: pointer;
     transition: background 0.2s;
-    background: #ffebee;
-    color: #c62828;
+    background: #e8f5e9;
+    color: #2e7d32;
 }
 
-.btn-cancel:hover {
-    background: #ffcdd2;
+.btn-approve:hover {
+    background: #c8e6c9;
 }
 
-.btn-cancel:disabled {
+.btn-approve:disabled {
     opacity: 0.4;
     cursor: not-allowed;
 }
