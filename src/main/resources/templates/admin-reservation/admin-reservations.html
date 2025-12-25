@@ -101,6 +101,22 @@
             <div class="pagination"></div>
         </div>
     </div>
+
+    <!-- Status Reason Modal -->
+    <div id="status-reason-modal" class="status-reason-modal" style="display: none;">
+        <div class="status-reason-modal-content">
+            <div class="status-reason-modal-title" id="status-reason-modal-title">사유 입력</div>
+            <div class="status-reason-modal-form-group">
+                <label for="status-reason-input" id="status-reason-label">사유</label>
+                <textarea id="status-reason-input" class="status-reason-textarea" placeholder="사유를 입력해주세요." maxlength="255"></textarea>
+                <div class="status-reason-hint" id="status-reason-hint"></div>
+            </div>
+            <div class="status-reason-modal-actions">
+                <button type="button" class="status-reason-modal-cancel-btn" id="status-reason-modal-cancel">취소</button>
+                <button type="button" class="status-reason-modal-submit-btn" id="status-reason-modal-submit">확인</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 </body>

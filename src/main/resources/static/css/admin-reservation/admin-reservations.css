@@ -478,3 +478,114 @@
     margin: 0 16px;
 }
 
+/* =========================
+   Status Reason Modal
+========================= */
+.status-reason-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.status-reason-modal-content {
+    width: 400px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.status-reason-modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 8px;
+}
+
+.status-reason-modal-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.status-reason-modal-form-group label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #555;
+}
+
+.status-reason-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.status-reason-textarea:focus {
+    outline: none;
+    border-color: #4a69bd;
+    box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.1);
+}
+
+.status-reason-hint {
+    font-size: 12px;
+    color: #999;
+    min-height: 16px;
+}
+
+.status-reason-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.status-reason-modal-cancel-btn,
+.status-reason-modal-submit-btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.status-reason-modal-cancel-btn {
+    background: #f5f5f5;
+    color: #666;
+}
+
+.status-reason-modal-cancel-btn:hover {
+    background: #e0e0e0;
+}
+
+.status-reason-modal-submit-btn {
+    background: #4a69bd;
+    color: #fff;
+}
+
+.status-reason-modal-submit-btn:hover {
+    background: #3d5aa3;
+}
+
+.status-reason-modal-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+

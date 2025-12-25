@@ -267,9 +267,16 @@ function showStatusDropdown(badge, reservation) {
         }
         item.textContent = status.statusName;
         item.onclick = () => {
-            updateReservationStatus(reservation.reservationId, status.id, status.statusName);
-            dropdown.remove();
-            activeDropdown = null;
+            // '예약 반려' 또는 '예약 취소'인 경우 모달 표시
+            if (status.statusName === '예약 반려' || status.statusName === '예약 취소') {
+                dropdown.remove();
+                activeDropdown = null;
+                showStatusReasonModal(reservation.reservationId, status.id, status.statusName);
+            } else {
+                updateReservationStatus(reservation.reservationId, status.id, status.statusName);
+                dropdown.remove();
+                activeDropdown = null;
+            }
         };
         dropdown.appendChild(item);
     });
@@ -297,8 +304,138 @@ function showStatusDropdown(badge, reservation) {
 }
 
 /* ==========================
+   Status Reason Modal
+========================== */
+let pendingStatusUpdate = null; // 모달에서 처리할 상태 변경 정보
+
+function showStatusReasonModal(reservationId, statusId, statusName) {
+    const modal = document.getElementById('status-reason-modal');
+    const title = document.getElementById('status-reason-modal-title');
+    const label = document.getElementById('status-reason-label');
+    const input = document.getElementById('status-reason-input');
+    const hint = document.getElementById('status-reason-hint');
+    const cancelBtn = document.getElementById('status-reason-modal-cancel');
+    const submitBtn = document.getElementById('status-reason-modal-submit');
+
+    // 모달 제목과 라벨 설정
+    if (statusName === '예약 반려') {
+        title.textContent = '예약 반려 사유';
+        label.textContent = '반려 사유';
+    } else if (statusName === '예약 취소') {
+        title.textContent = '예약 취소 사유';
+        label.textContent = '취소 사유';
+    }
+
+    // 입력 필드 초기화
+    input.value = '';
+    hint.textContent = '';
+    hint.className = 'status-reason-hint';
+
+    // 상태 변경 정보 저장
+    pendingStatusUpdate = {
+        reservationId,
+        statusId,
+        statusName
+    };
+
+    // 모달 표시
+    modal.style.display = 'flex';
+
+    // 취소 버튼 이벤트
+    cancelBtn.onclick = () => {
+        closeStatusReasonModal();
+    };
+
+    // 확인 버튼 이벤트
+    submitBtn.onclick = () => {
+        const reason = input.value.trim();
+        if (!reason) {
+            hint.textContent = '사유를 입력해주세요.';
+            hint.style.color = '#c62828';
+            return;
+        }
+
+        if (reason.length > 255) {
+            hint.textContent = `최대 255자까지 입력 가능합니다. (${reason.length}/255)`;
+            hint.style.color = '#c62828';
+            return;
+        }
+
+        // 상태 변경 API 호출
+        updateReservationStatusWithReason(reservationId, statusId, statusName, reason);
+    };
+
+    // Enter 키 처리
+    input.onkeydown = (e) => {
+        if (e.key === 'Enter' && e.ctrlKey) {
+            submitBtn.click();
+        }
+    };
+
+    // 입력 시 힌트 업데이트
+    input.oninput = () => {
+        const value = input.value.trim();
+        if (value.length > 255) {
+            hint.textContent = `최대 255자까지 입력 가능합니다. (${value.length}/255)`;
+            hint.style.color = '#c62828';
+        } else if (value.length > 0) {
+            hint.textContent = `${value.length}/255`;
+            hint.style.color = '#666';
+        } else {
+            hint.textContent = '';
+        }
+    };
+
+    // 모달 외부 클릭 시 닫기
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            closeStatusReasonModal();
+        }
+    };
+
+    // 포커스 설정
+    setTimeout(() => {
+        input.focus();
+    }, 100);
+}
+
+function closeStatusReasonModal() {
+    const modal = document.getElementById('status-reason-modal');
+    modal.style.display = 'none';
+    pendingStatusUpdate = null;
+}
+
+/* ==========================
    Actions
 ========================== */
+async function updateReservationStatusWithReason(reservationId, statusId, statusName, reason) {
+    try {
+        const res = await apiFetch(`/api/admin/reservations/${reservationId}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                statusId,
+                rejectReason: reason
+            })
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.message || '상태 변경에 실패했습니다.');
+        }
+
+        closeStatusReasonModal();
+        alert(`예약 상태가 "${statusName}"으로 변경되었습니다.`);
+        loadReservations(currentPage);
+
+    } catch (e) {
+        console.error(e);
+        alert(e.message || '상태 변경에 실패했습니다.');
+    }
+}
+
 async function updateReservationStatus(reservationId, statusId, statusName) {
     try {
         const res = await apiFetch(`/api/admin/reservations/${reservationId}/status`, {
