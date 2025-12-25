@@ -325,6 +325,16 @@
     color: #155724;
 }
 
+/* 상태 셀에 rejectReason tooltip이 있을 때 cursor 변경 */
+.status-cell[data-fulltext] {
+    cursor: help;
+}
+
+/* badge는 클릭 가능하도록 유지 */
+.status-cell[data-fulltext] .status-badge {
+    pointer-events: auto;
+}
+
 .status-badge-clickable {
     cursor: pointer;
     transition: all 0.2s;

@@ -110,8 +110,44 @@ function createStatusCell(reservation) {
     
     badge.addEventListener('click', (e) => {
         e.stopPropagation();
+        // tooltip 숨기기
+        hideTooltip();
         showStatusDropdown(badge, reservation);
     });
+    
+    // '예약 반려' 또는 '예약 취소'일 때 rejectReason tooltip 추가
+    if ((reservation.reservationStatusName === '예약 반려' || reservation.reservationStatusName === '예약 취소') 
+        && reservation.rejectReason) {
+        td.dataset.fulltext = reservation.rejectReason;
+        
+        // td에 tooltip 이벤트 추가 (badge를 제외한 영역)
+        td.addEventListener('mouseenter', (e) => {
+            // badge 위가 아닐 때만 tooltip 표시
+            if (e.target !== badge && !badge.contains(e.target)) {
+                showTooltip(e);
+            }
+        });
+        td.addEventListener('mousemove', (e) => {
+            if (e.target !== badge && !badge.contains(e.target)) {
+                moveTooltip(e);
+            }
+        });
+        td.addEventListener('mouseleave', hideTooltip);
+        
+        // badge 위에서도 tooltip 표시 (클릭 전에)
+        badge.addEventListener('mouseenter', (e) => {
+            e.stopPropagation();
+            showTooltip(e);
+        });
+        badge.addEventListener('mousemove', (e) => {
+            e.stopPropagation();
+            moveTooltip(e);
+        });
+        badge.addEventListener('mouseleave', (e) => {
+            e.stopPropagation();
+            hideTooltip();
+        });
+    }
     
     td.appendChild(badge);
     return td;
