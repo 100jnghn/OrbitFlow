@@ -41,49 +41,25 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/",
                                 "/api/auth/**",
                                 "/login",
+                                "/view/**",
                                 "/companies/signup",
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",
-                                "/view/**",
                                 "/favicon.ico"
                                 ).permitAll()
+
+                        .requestMatchers("/api/admin/**")
+                        .hasAnyRole("ADMIN", "COMPANY_ADMIN")
+
                         .anyRequest().authenticated()
-
-
-
-//                        // ===== 인증 API =====
-//                        .requestMatchers(
-//                                "/api/auth/login",
-//                                "/api/auth/refresh"
-//                        ).permitAll()
-//
-//                        // ===== 관리자 화면 =====
-//                        .requestMatchers("/view/admin/**").permitAll()
-//
-//                        // ===== 일반 화면 =====
-//                        .requestMatchers("/view/**")
-//                        .authenticated()
-//
-//                        // ===== API =====
-//                        .requestMatchers("/api/company-admin/**")
-//                        .hasRole("COMPANY_ADMIN")
-//
-//                        .requestMatchers("/api/admin/**")
-//                        .hasAnyRole("ADMIN", "COMPANY_ADMIN")
-//
-//                        .anyRequest().authenticated()
                 )
-                // HttpSession + JSESSIONID 기반이라 주석처리함
-//                .formLogin(login -> login
-//                        .loginPage("/login")
-//                        .defaultSuccessUrl("/", true)
-//                )
+
                 .addFilterBefore(jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class);
-//                .userDetailsService(userDetailsService); // 기존의 자동 호출에서 직접 호출(로그인 api / JwtAuthenticationFilter)로 변경
 
         return http.build();
     }
