@@ -256,13 +256,23 @@
     text-decoration: underline;
 }
 
+/* 페이지네이션 및 글쓰기 버튼 컨테이너 */
+.board-bottom-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    margin-bottom: 16px;
+    gap: 16px;
+}
+
 /* 페이지네이션 */
 .pagination {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 8px;
-    margin: 32px 0;
+    flex: 1;
 }
 
 .page-btn,
@@ -319,7 +329,7 @@
 .board-actions {
     display: flex;
     justify-content: flex-end;
-    margin-top: 24px;
+    flex-shrink: 0;
 }
 
 .btn-write {

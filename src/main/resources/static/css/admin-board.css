@@ -154,6 +154,8 @@
     text-align: center;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    height: 48px;
+    box-sizing: border-box;
 }
 
 .admin-table td:first-child {

@@ -10,7 +10,8 @@ import lombok.*;
 public class BoardCategoryReqDto {
 
     /** 게시판 생성 DTO */
-    @Data
+    @Getter
+    @Setter
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
