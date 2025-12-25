@@ -1,4 +1,39 @@
 /* ==========================
+   Tooltip (singleton)
+========================== */
+let tooltipEl = null;
+
+function ensureTooltip() {
+    if (!tooltipEl) {
+        tooltipEl = document.createElement('div');
+        tooltipEl.className = 'tooltip';
+        document.body.appendChild(tooltipEl);
+    }
+}
+
+function showTooltip(e) {
+    const text = e.currentTarget.dataset.fulltext;
+    if (!text) return;
+
+    ensureTooltip();
+    tooltipEl.textContent = text;
+    tooltipEl.style.display = 'block';
+    moveTooltip(e);
+}
+
+function moveTooltip(e) {
+    if (!tooltipEl) return;
+    tooltipEl.style.left = e.pageX + 12 + 'px';
+    tooltipEl.style.top = e.pageY + 12 + 'px';
+}
+
+function hideTooltip() {
+    if (tooltipEl) {
+        tooltipEl.style.display = 'none';
+    }
+}
+
+/* ==========================
    Helper Functions
 ========================== */
 
@@ -18,15 +53,17 @@ function formatHour(hour) {
 /* ==========================
    Table Cell Helpers
 ========================== */
-function createCell(value = '-', fullText = null) {
+function createCell(value = '-', tooltip = false) {
     const td = document.createElement('td');
-    td.textContent = value;
+    const text = (value ?? '').toString();
     
-    // hover 시 전체 텍스트 보기 기능
-    // fullText가 제공되면 사용하고, 없으면 value를 사용
-    const tooltipText = fullText !== null ? fullText : value;
-    if (tooltipText && tooltipText !== '-') {
-        td.setAttribute('data-full-text', tooltipText);
+    td.textContent = text;
+    
+    if (tooltip && text.length > 0 && text !== '-') {
+        td.dataset.fulltext = text;
+        td.addEventListener('mouseenter', showTooltip);
+        td.addEventListener('mousemove', moveTooltip);
+        td.addEventListener('mouseleave', hideTooltip);
     }
     
     return td;
@@ -49,6 +86,15 @@ function createCategoryCell(typeCode, typeName) {
 
     badge.textContent = typeName;
     td.appendChild(badge);
+    
+    // hover 시 전체 텍스트 보기 기능
+    if (typeName && typeName !== '-') {
+        td.dataset.fulltext = typeName;
+        td.addEventListener('mouseenter', showTooltip);
+        td.addEventListener('mousemove', moveTooltip);
+        td.addEventListener('mouseleave', hideTooltip);
+    }
+    
     return td;
 }
 
@@ -191,10 +237,10 @@ async function loadReservations(page = 0) {
             
             tr.append(
                 createCell(startNumber + i + 1),
-                createCategoryCell(r.typeCode, r.typeName),
-                createCell(applicantName, applicantName), // 신청자 이름
-                createCell(resourceName, resourceName), // 자원 이름
-                createCell(reservationReason, reservationReason), // 예약 사유 (hover 기능)
+                createCategoryCell(r.typeCode, r.typeName), // 카테고리 (tooltip 적용)
+                createCell(applicantName, true), // 신청자 이름 (tooltip 적용)
+                createCell(resourceName, true), // 자원 이름 (tooltip 적용)
+                createCell(reservationReason, true), // 예약 사유 (tooltip 적용)
                 createCell(formatDate(r.reservationDate)),
                 createCell(r.typeCode === 'CAR' ? '-' : formatHour(r.startTime)),
                 createCell(r.typeCode === 'CAR' ? '-' : formatHour(r.endTime)),

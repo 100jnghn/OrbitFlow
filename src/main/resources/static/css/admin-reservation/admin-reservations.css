@@ -220,48 +220,59 @@
 }
 
 /* =========================
-   Cell with Hover Tooltip
+   Tooltip Base (공통 디자인)
 ========================= */
-.resource-table td {
-    position: relative;
-}
+.tooltip,
+.resource-table td[data-fulltext]:hover::after {
+    max-width: 400px;
+    padding: 6px 10px;
 
-/* hover 시 전체 텍스트 보기 */
-.resource-table td[data-full-text]:hover::after {
-    content: attr(data-full-text);
-    position: absolute;
-    left: 50%;
-    bottom: 100%;
-    transform: translateX(-50%);
-    margin-bottom: 8px;
-    padding: 8px 12px;
-    background: #333;
+    background: rgba(33, 37, 41, 0.95);
     color: #fff;
     font-size: 13px;
-    white-space: normal;
-    word-wrap: break-word;
-    border-radius: 6px;
-    z-index: 1000;
-    pointer-events: none;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    max-width: 300px;
-    min-width: 150px;
     line-height: 1.4;
+
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+
+    white-space: normal;
+    font-family: 'Noto Sans KR', system-ui, sans-serif;
 }
 
-.resource-table td[data-full-text]:hover::before {
-    content: '';
+/* =========================
+   JS Tooltip (position: fixed)
+========================= */
+.tooltip {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    display: none;
+}
+
+/* =========================
+   CSS Hover Tooltip (카테고리, 신청자 이름, 자원 이름, 예약 사유)
+========================= */
+.resource-table td:nth-child(2),  /* 카테고리 */
+.resource-table td:nth-child(3),  /* 신청자 이름 */
+.resource-table td:nth-child(4),  /* 자원 이름 */
+.resource-table td:nth-child(5) { /* 예약 사유 */
+    cursor: help;
+}
+
+.resource-table td:nth-child(2):hover::after,
+.resource-table td:nth-child(3):hover::after,
+.resource-table td:nth-child(4):hover::after,
+.resource-table td:nth-child(5):hover::after {
+    content: attr(data-fulltext);
+
     position: absolute;
-    left: 50%;
-    bottom: 100%;
-    transform: translateX(-50%);
-    margin-bottom: 2px;
-    width: 0;
-    height: 0;
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-top: 6px solid #333;
-    z-index: 1001;
+    left: 0;
+    top: 100%;
+    z-index: 1000;
+}
+
+/* 카테고리 셀 hover 지원 */
+.resource-table td[data-fulltext] .category-badge {
     pointer-events: none;
 }
 
