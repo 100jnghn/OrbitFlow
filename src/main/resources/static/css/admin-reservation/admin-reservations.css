@@ -123,6 +123,34 @@
 }
 
 /* =========================
+   Batch Approve Button
+========================= */
+.batch-approve-wrapper {
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
+.btn-batch-approve {
+    padding: 12px 24px;
+    background: #4a69bd;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-batch-approve:hover {
+    background: #3a5aa0;
+}
+
+.btn-batch-approve:active {
+    transform: translateY(1px);
+}
+
+/* =========================
    Table Container
 ========================= */
 .table-container {

@@ -340,8 +340,17 @@ function showStatusDropdown(badge, reservation) {
     dropdown.className = 'status-dropdown';
     dropdown.dataset.reservationId = reservation.reservationId;
     
+    // 회의실인 경우 필터링된 상태 목록 사용
+    let filteredStatusList = statusList;
+    if (reservation.typeCode === 'MEETING') {
+        // 회의실은 '예약 확정', '예약 취소'만 표시
+        filteredStatusList = statusList.filter(status => 
+            status.statusName === '예약 확정' || status.statusName === '예약 취소'
+        );
+    }
+    
     // 상태 목록 추가
-    statusList.forEach(status => {
+    filteredStatusList.forEach(status => {
         const item = document.createElement('div');
         item.className = 'status-dropdown-item';
         if (status.id === reservation.reservationStatusId) {
@@ -562,6 +571,47 @@ async function approveReservation(id) {
 }
 
 /* ==========================
+   Batch Approve
+========================== */
+async function batchApproveReservations() {
+    const statusSelect = document.getElementById('status-filter');
+    const statusId = statusSelect?.value ? Number(statusSelect.value) : null;
+
+    // '승인 대기' 상태인지 확인
+    const selectedOption = statusSelect?.options[statusSelect?.selectedIndex];
+    if (selectedOption?.textContent !== '승인 대기') {
+        alert('승인 대기 상태를 선택해주세요.');
+        return;
+    }
+
+    if (!confirm(`승인 대기 상태의 모든 예약을 일괄 승인하시겠습니까?`)) {
+        return;
+    }
+
+    try {
+        const params = new URLSearchParams({
+            statusId: statusId
+        });
+
+        const res = await apiFetch(`/api/admin/reservations/batch-approve?${params.toString()}`, {
+            method: 'PATCH'
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.message || '일괄 승인에 실패했습니다.');
+        }
+
+        alert('일괄 승인이 완료되었습니다.');
+        loadReservations(currentPage);
+
+    } catch (e) {
+        console.error(e);
+        alert(e.message || '일괄 승인에 실패했습니다.');
+    }
+}
+
+/* ==========================
    Filter Functions
 ========================== */
 function applyFilters() {
@@ -577,8 +627,27 @@ function applyFilters() {
 
     currentFilters.showPast = pastToggle?.checked ?? false;
 
+    // 일괄 승인 버튼 표시/숨김 제어
+    updateBatchApproveButton();
+
     // 필터 변경 시 항상 첫 페이지부터
     loadReservations(0);
+}
+
+function updateBatchApproveButton() {
+    const batchApproveWrapper = document.getElementById('batch-approve-wrapper');
+    const statusSelect = document.getElementById('status-filter');
+
+    // '승인 대기' 상태 ID는 1 (일반적으로)
+    // statusSelect의 선택된 옵션 텍스트가 '승인 대기'인지 확인
+    const selectedOption = statusSelect?.options[statusSelect?.selectedIndex];
+    const isPendingStatus = selectedOption?.textContent === '승인 대기';
+
+    if (isPendingStatus) {
+        batchApproveWrapper.style.display = 'block';
+    } else {
+        batchApproveWrapper.style.display = 'none';
+    }
 }
 
 /* ==========================
@@ -588,6 +657,7 @@ function initFilters() {
     const typeSelect = document.getElementById('resource-category-filter');
     const statusSelect = document.getElementById('status-filter');
     const pastToggle = document.getElementById('past-reservations-toggle');
+    const batchApproveBtn = document.getElementById('btn-batch-approve');
 
     // 자원 타입 변경 시 자동 검색
     if (typeSelect) {
@@ -602,6 +672,11 @@ function initFilters() {
     // 과거 예약 토글 변경 시 자동 검색
     if (pastToggle) {
         pastToggle.addEventListener('change', applyFilters);
+    }
+
+    // 일괄 승인 버튼 클릭
+    if (batchApproveBtn) {
+        batchApproveBtn.addEventListener('click', batchApproveReservations);
     }
 }
 
