@@ -377,7 +377,9 @@ function renderBoardDetail(board) {
             
             <!-- 댓글 작성 영역 -->
             <div class="comment-write-area">
-                <textarea id="commentInput" class="comment-input" placeholder="댓글을 입력하세요..." rows="3" onkeydown="handleCommentKeydown(event)"></textarea>
+                <textarea id="commentInput" class="comment-input" placeholder="댓글을 입력하세요..." rows="3" onkeydown="handleCommentKeydown(event)" oninput="updateCommentCharCount()" maxlength="500"></textarea>
+                <div id="commentCharCount" class="char-count">0/500</div>
+                <div id="commentError" class="error-message" style="display: none;"></div>
                 <div class="comment-write-actions">
                     <button type="button" class="btn-comment-submit" onclick="submitComment()">
                         등록
@@ -583,7 +585,8 @@ function renderComments(comments) {
                         </div>
                     </div>
                     <div class="comment-content-edit" id="comment-content-edit-${commentId}" style="display: none;">
-                        <textarea class="comment-edit-input" id="comment-edit-input-${commentId}" rows="3">${escapeHTML(content)}</textarea>
+                        <textarea class="comment-edit-input" id="comment-edit-input-${commentId}" rows="3" maxlength="500" oninput="updateEditCommentCharCount(${commentId})">${escapeHTML(content)}</textarea>
+                        <div id="comment-edit-char-count-${commentId}" class="char-count">${content.length}/500</div>
                         <div class="comment-edit-actions">
                             <button type="button" class="btn-comment-save" onclick="saveComment(${commentId})">저장</button>
                             <button type="button" class="btn-comment-cancel" onclick="cancelEditComment(${commentId})">취소</button>
@@ -599,6 +602,64 @@ function renderComments(comments) {
     }).join('');
 }
 
+// 에러 메시지 표시/숨김 함수
+function showError(elementId, message) {
+    const errorElement = document.getElementById(elementId);
+    if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+    }
+}
+
+function hideError(elementId) {
+    const errorElement = document.getElementById(elementId);
+    if (errorElement) {
+        errorElement.style.display = 'none';
+    }
+}
+
+// 댓글 글자수 카운터 업데이트 (상시 표시)
+function updateCommentCharCount() {
+    const input = document.getElementById('commentInput');
+    const countElement = document.getElementById('commentCharCount');
+    if (input && countElement) {
+        const currentLength = input.value.length;
+        const maxLength = 500;
+        
+        // 항상 표시
+        countElement.style.display = 'block';
+        countElement.textContent = `${currentLength}/${maxLength}`;
+        
+        // 500자 이상이면 경고 색상
+        if (currentLength >= 500) {
+            countElement.style.color = '#EF4444';
+        } else {
+            countElement.style.color = '#6B7280';
+        }
+    }
+}
+
+// 댓글 수정 글자수 카운터 업데이트 (상시 표시)
+function updateEditCommentCharCount(commentId) {
+    const input = document.getElementById(`comment-edit-input-${commentId}`);
+    const countElement = document.getElementById(`comment-edit-char-count-${commentId}`);
+    if (input && countElement) {
+        const currentLength = input.value.length;
+        const maxLength = 500;
+        
+        // 항상 표시
+        countElement.style.display = 'block';
+        countElement.textContent = `${currentLength}/${maxLength}`;
+        
+        // 500자 이상이면 경고 색상
+        if (currentLength >= 500) {
+            countElement.style.color = '#EF4444';
+        } else {
+            countElement.style.color = '#6B7280';
+        }
+    }
+}
+
 // 댓글 작성
 async function submitComment() {
     if (!boardId) return;
@@ -606,8 +667,22 @@ async function submitComment() {
     const commentInput = document.getElementById('commentInput');
     const content = commentInput?.value.trim();
 
-    if (!content) {
-        alert('댓글 내용을 입력해주세요.');
+    // 에러 메시지 초기화
+    hideError('commentError');
+
+    if (!content || content.length === 0) {
+        showError('commentError', '댓글 내용을 입력해주세요.');
+        return;
+    }
+
+    // 공백만 입력된 경우 체크
+    if (!content.replace(/\s/g, '').length) {
+        showError('commentError', '공백만 입력된 댓글은 등록할 수 없습니다.');
+        return;
+    }
+
+    if (content.length > 500) {
+        showError('commentError', '댓글은 500자 이하여야 합니다.');
         return;
     }
 
@@ -632,10 +707,12 @@ async function submitComment() {
         }
 
         commentInput.value = '';
+        hideError('commentError');
+        updateCommentCharCount(); // 카운터 초기화 (0/500 표시)
         loadComments(currentCommentPage);
     } catch (error) {
         console.error('Error submitting comment:', error);
-        alert(error.message || '댓글 작성에 실패했습니다.');
+        showError('commentError', error.message || '댓글 작성에 실패했습니다.');
     }
 }
 
@@ -659,6 +736,7 @@ function editComment(commentId) {
         if (textarea) {
             textarea.focus();
             textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+            updateEditCommentCharCount(commentId); // 수정 모드 진입 시 카운터 업데이트
         }
     }
 }
@@ -680,8 +758,24 @@ async function saveComment(commentId) {
     const textarea = document.getElementById(`comment-edit-input-${commentId}`);
     const content = textarea?.value.trim();
 
-    if (!content) {
+    if (!content || content.length === 0) {
         alert('댓글 내용을 입력해주세요.');
+        return;
+    }
+
+    // 공백만 입력된 경우 체크
+    if (!content.replace(/\s/g, '').length) {
+        alert('공백만 입력된 댓글은 등록할 수 없습니다.');
+        return;
+    }
+
+    if (content.length > 500) {
+        alert('댓글은 500자 이하여야 합니다.');
+        return;
+    }
+
+    if (content.length > 1000) {
+        alert('댓글은 1000자 이하여야 합니다.');
         return;
     }
 

@@ -154,6 +154,8 @@
     text-align: center;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    height: 48px;
+    box-sizing: border-box;
 }
 
 .admin-table td:first-child {
@@ -506,6 +508,20 @@
 .form-group textarea {
     resize: vertical;
     min-height: 120px;
+}
+
+/* 에러 메시지 스타일 */
+.error-message {
+    color: var(--danger-color);
+    font-size: 13px;
+    margin-top: 6px;
+    display: none;
+    line-height: 1.5;
+}
+
+.form-group input:invalid + .error-message,
+.form-group textarea:invalid + .error-message {
+    display: block;
 }
 
 .modal-actions {

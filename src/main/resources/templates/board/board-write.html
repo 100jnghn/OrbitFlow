@@ -42,8 +42,11 @@
 
             <!-- 제목 입력 -->
             <div class="form-group">
-                <label for="boardTitleInput" class="form-label">제목</label>
-                <input type="text" id="boardTitleInput" class="form-input" placeholder="제목을 입력해주세요" required>
+                <label for="boardTitleInput" class="form-label">
+                    제목 <span id="titleCharCount" class="char-count" style="display: none;"></span>
+                </label>
+                <input type="text" id="boardTitleInput" class="form-input" placeholder="제목을 입력해주세요" required maxlength="100" oninput="updateTitleCharCount()">
+                <div id="boardTitleError" class="error-message" style="display: none;"></div>
             </div>
 
             <!-- 파일 업로드 -->
@@ -60,8 +63,11 @@
 
             <!-- 내용 입력 -->
             <div class="form-group">
-                <label for="boardContent" class="form-label">내용</label>
-                <textarea id="boardContent" class="form-textarea" placeholder="내용을 입력해주세요" required></textarea>
+                <label for="boardContent" class="form-label">
+                    내용 <span id="contentCharCount" class="char-count" style="display: none;"></span>
+                </label>
+                <textarea id="boardContent" class="form-textarea" placeholder="내용을 입력해주세요" required maxlength="10000" oninput="updateContentCharCount()"></textarea>
+                <div id="boardContentError" class="error-message" style="display: none;"></div>
             </div>
 
             <!-- 버튼 -->

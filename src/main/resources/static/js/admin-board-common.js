@@ -30,8 +30,8 @@ document.addEventListener('DOMContentLoaded', function() {
 async function loadBoardList(page = 0) {
     try {
         // Spring Data의 sort 파라미터 형식: sort=createdAt,desc (방향 포함)
-        // 페이지 크기를 5로 설정하여 부서 게시판과 동일하게 페이징 처리
-        const response = await apiFetch(`${API_BASE_URL}?organizationOnly=false&page=${page}&size=5&sort=createdAt,desc`, {
+        // 페이지 크기를 8로 설정하여 페이징 처리
+        const response = await apiFetch(`${API_BASE_URL}?organizationOnly=false&page=${page}&size=8&sort=createdAt,desc`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -94,7 +94,7 @@ async function loadBoardList(page = 0) {
             number, 
             totalPages,
             totalElements: totalElements,
-            size: data.size || 5,
+            size: data.size || 8,
             first: data.first !== undefined ? data.first : (number === 0),
             last: data.last !== undefined ? data.last : (number === totalPages - 1)
         });
@@ -126,7 +126,7 @@ function renderBoardTable(boards) {
 
     boards.forEach((board, index) => {
         const row = document.createElement('tr');
-        const rowNumber = currentBoardPage * 5 + index + 1;
+        const rowNumber = currentBoardPage * 8 + index + 1;
         
         const createdAt = new Date(board.createdAt).toLocaleString('ko-KR', {
             year: 'numeric',
@@ -155,9 +155,10 @@ function renderBoardPagination() {
     const pagination = document.getElementById('boardPagination');
     pagination.innerHTML = '';
 
-    if (totalBoardPages <= 1) {
-        return;
-    }
+    // 페이징 버튼 상시 출력
+    // if (totalBoardPages <= 1) {
+    //     return;
+    // }
 
     // 이전 버튼
     const prevBtn = document.createElement('button');
@@ -235,6 +236,9 @@ function openAddBoardModal() {
     document.getElementById('boardId').value = '';
     document.getElementById('employeeSearchResults').innerHTML = '';
     document.getElementById('selectedEmployees').innerHTML = '';
+    // 에러 메시지 초기화
+    hideError('boardNameError');
+    hideError('employeeSearchError');
     document.getElementById('boardModal').style.display = 'block';
 }
 
@@ -325,8 +329,27 @@ function closeBoardModal() {
     document.getElementById('employeeSearchResults').innerHTML = '';
     selectedEmployees = [];
     renderSelectedEmployees();
+    // 에러 메시지 초기화
+    hideError('boardNameError');
+    hideError('employeeSearchError');
     isEditMode = false;
     editingBoardId = null;
+}
+
+// 에러 메시지 표시/숨김 함수
+function showError(elementId, message) {
+    const errorElement = document.getElementById(elementId);
+    if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+    }
+}
+
+function hideError(elementId) {
+    const errorElement = document.getElementById(elementId);
+    if (errorElement) {
+        errorElement.style.display = 'none';
+    }
 }
 
 // 게시판 폼 제출 처리
@@ -336,8 +359,16 @@ async function handleBoardSubmit(e) {
     const boardName = document.getElementById('boardName').value.trim();
     const commentActivated = document.querySelector('input[name="commentActivated"]:checked').value === 'true';
 
+    // 에러 메시지 초기화
+    hideError('boardNameError');
+
     if (!boardName) {
-        alert('게시판 이름을 입력해주세요.');
+        showError('boardNameError', '게시판 이름을 입력해주세요.');
+        return;
+    }
+
+    if (boardName.length > 100) {
+        showError('boardNameError', '게시판 이름은 100자 이하여야 합니다.');
         return;
     }
 
@@ -392,9 +423,24 @@ async function handleBoardSubmit(e) {
 
 // 사원 검색
 async function searchEmployee() {
-    const keyword = document.getElementById('employeeSearchInput').value.trim();
-    if (!keyword) {
-        alert('사원 이름 또는 사번을 입력해주세요.');
+    const searchInput = document.getElementById('employeeSearchInput');
+    const keyword = searchInput?.value.trim(); // trim은 하지만 공백 포함 검색 허용을 위해 원본 값 사용
+    
+    // 에러 메시지 초기화
+    hideError('employeeSearchError');
+    const resultsDiv = document.getElementById('employeeSearchResults');
+    if (resultsDiv) {
+        resultsDiv.innerHTML = '';
+    }
+
+    // Validation: 최소 2자, 최대 30자
+    if (!keyword || keyword.length < 2) {
+        showError('employeeSearchError', '검색어는 최소 2자 이상 입력해주세요.');
+        return;
+    }
+
+    if (keyword.length > 30) {
+        showError('employeeSearchError', '검색어는 30자 이하여야 합니다.');
         return;
     }
 
@@ -414,12 +460,25 @@ async function searchEmployee() {
             throw new Error('사원 검색에 실패했습니다.');
         }
 
-        const employees = await response.json();
-        displayEmployeeSearchResults(employees);
+        const result = await response.json();
+        // ResponseDto 구조인 경우 data 추출, 아니면 직접 사용
+        const employees = result.data || result;
+        
+        // 검색 결과가 50건 이상이면 안내 메시지만 표시 (검색 결과는 표시하지 않음)
+        if (Array.isArray(employees) && employees.length >= 50) {
+            showError('employeeSearchError', '검색 결과가 너무 많습니다. 검색어를 더 입력해주세요.');
+            if (resultsDiv) {
+                resultsDiv.innerHTML = '';
+            }
+        } else {
+            displayEmployeeSearchResults(employees);
+            // 검색 성공 시 에러 메시지 숨김
+            hideError('employeeSearchError');
+        }
     } catch (error) {
         console.error('Error searching employees:', error);
         if (error.message !== 'SESSION_EXPIRED') {
-            alert('사원 검색에 실패했습니다.');
+            showError('employeeSearchError', '사원 검색에 실패했습니다.');
         }
     }
 }
@@ -734,14 +793,23 @@ window.onclick = function(event) {
     }
 }
 
-// Enter 키로 사원 검색
+// Enter 키로 사원 검색 및 실시간 validation
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('employeeSearchInput');
     if (searchInput) {
+        // Enter 키로 검색
         searchInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 searchEmployee();
+            }
+        });
+        
+        // 입력 시 에러 메시지 초기화 (2자 이상 입력 시에만)
+        searchInput.addEventListener('input', function() {
+            const keyword = this.value.trim();
+            if (keyword.length >= 2 && keyword.length <= 30) {
+                hideError('employeeSearchError');
             }
         });
     }

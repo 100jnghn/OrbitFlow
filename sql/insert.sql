@@ -1879,7 +1879,7 @@ INSERT INTO leave_balance (company_id, employee_id, year, total_granted, remaini
 
                                                                                              (1, 15, 2025, 11.0, 10.5), -- 신입사원 (매달 1개씩 총 11개 부여됨)
 
-                                                                                             (1, 16, 2025, 15.0, 13.0)  -- 15개 중 2개 사용
+                                                                                             (1, 16, 2025, 15.0, 13.0); -- 15개 중 2개 사용
 
 -- 실제 휴가 사용 기록 (결재 완료 건들)
 INSERT INTO attendance_record (employee_id, company_id, start_date, end_date, days, type_id, status, approved_at, created_at) VALUES
@@ -1933,11 +1933,11 @@ INSERT INTO attendance (company_id, employee_id, work_date, commute_at, leave_at
 -- 1~10: OrbitFlow(C1), 11~16: TechSolution(C2), 17~20: GlobalService(C3)
 INSERT INTO board_category (company_id, organization_id, board_name, board_type, is_activated, comment_activated) VALUES
                                                                                                                       (1, NULL, '전사 공지사항', 'FREE', 1, 1), (1, NULL, '자유 게시판', 'FREE', 1, 1), (1, NULL, '사내 건의함', 'FREE', 1, 1),
-                                                                                                                      (1, NULL, '칭찬 게시판', 'FREE', 1, 1), (1, NULL, '자기계발/스터디', 'FREE', 1, 1), (1, 1, '백엔드 기술 공유', 'FREE', 1, 1),
-                                                                                                                      (1, 2, '프론트엔드 위키', 'FREE', 1, 1), (1, 3, 'HR 행정 지원', 'FREE', 1, 1), (1, 4, '영업 전략 및 성과', 'FREE', 1, 1),
+                                                                                                                      (1, NULL, '칭찬 게시판', 'FREE', 1, 1), (1, NULL, '자기계발/스터디', 'FREE', 1, 1), (1, 1, '백엔드팀 게시판', 'FREE', 1, 1),
+                                                                                                                      (1, 2, '프론트엔드 위키', 'FREE', 1, 1), (1, 3, 'HR 행정 지원', 'FREE', 1, 1), (1, 4, '영업본부 게시판', 'FREE', 1, 1),
                                                                                                                       (1, 5, '마케팅 에셋 보관함', 'FREE', 1, 1), (2, NULL, 'TS 공지사항', 'FREE', 1, 1), (2, NULL, '기술 공유 라운지', 'FREE', 1, 1),
-                                                                                                                      (2, NULL, '사내 중고 장터', 'FREE', 1, 1), (2, 6, 'AI 모델 연구소', 'FREE', 1, 1), (2, 7, '플랫폼부', 'FREE', 1, 1),
-                                                                                                                      (2, 8, '인프라팀', 'FREE', 1, 1), (3, NULL, 'Global Notice', 'FREE', 1, 1), (3, NULL, 'General Forum', 'FREE', 1, 1),
+                                                                                                                      (2, NULL, '사내 중고 장터', 'FREE', 1, 1), (2, 6, 'AI 모델 연구소', 'FREE', 1, 1), (2, 7, '플랫폼부 게시판', 'FREE', 1, 1),
+                                                                                                                      (2, 8, '인프라팀 게시판', 'FREE', 1, 1), (3, NULL, 'Global Notice', 'FREE', 1, 1), (3, NULL, 'General Forum', 'FREE', 1, 1),
                                                                                                                       (3, 9, 'Customer Feedback', 'FREE', 1, 1), (3, 10, 'Global Ad Campaign', 'FREE', 1, 1);
 
 -- ==========================================
