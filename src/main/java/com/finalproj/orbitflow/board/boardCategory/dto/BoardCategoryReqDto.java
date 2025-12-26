@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.board.boardCategory.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 /**
@@ -10,7 +11,8 @@ import lombok.*;
 public class BoardCategoryReqDto {
 
     /** 게시판 생성 DTO */
-    @Data
+    @Getter
+    @Setter
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
@@ -49,10 +51,12 @@ public class BoardCategoryReqDto {
 
         /** 게시판 이름 (필수) */
         @NotBlank(message = "게시판 이름은 필수입니다.")
+        @Size(max = 100, message = "게시판 이름은 100자 이하여야 합니다.")
         private String boardName;
 
         /** 게시판 유형 ('공지사항', '자유게시판' 등) (필수) */
         @NotBlank(message = "게시판 유형은 필수입니다.")
+        @Size(max = 50, message = "게시판 유형은 50자 이하여야 합니다.")
         private String boardType;
 
         /** 활성화 여부 (조직 게시판에만 적용) */

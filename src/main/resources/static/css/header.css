@@ -79,6 +79,22 @@
     color: #111827;
 }
 
+.header-bar .profile .icon-group a {
+    color: inherit;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: color 0.15s ease;
+}
+
+.header-bar .profile .icon-group a:hover {
+    color: #111827;
+}
+
+.header-bar .profile .icon-group a:hover i {
+    color: #111827;
+}
+
 /* 사용자 정보 */
 .header-bar .profile .user-info {
     display: flex;

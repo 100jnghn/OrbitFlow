@@ -125,7 +125,7 @@ async function loadOrganizationList(page = 0) {
         console.log(orgsWithActivation);
         
         // 페이지네이션을 위한 처리
-        const pageSize = 5;
+        const pageSize = 10;
         const startIndex = page * pageSize;
         const endIndex = startIndex + pageSize;
         const paginatedOrgs = orgsWithActivation.slice(startIndex, endIndex);
@@ -159,7 +159,7 @@ function renderOrganizationTable(organizations) {
     organizations.forEach((org, index) => {
         console.log(`Rendering org ${index}:`, org);
         const row = document.createElement('tr');
-        const rowNumber = currentOrgPage * 5 + index + 1;
+        const rowNumber = currentOrgPage * 10 + index + 1;
 
         const boardCategoryId = org.boardCategoryId;
         const hasBoard = boardCategoryId && boardCategoryId !== null && boardCategoryId !== 0;

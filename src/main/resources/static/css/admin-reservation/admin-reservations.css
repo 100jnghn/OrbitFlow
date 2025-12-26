@@ -123,6 +123,34 @@
 }
 
 /* =========================
+   Batch Approve Button
+========================= */
+.batch-approve-wrapper {
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
+.btn-batch-approve {
+    padding: 12px 24px;
+    background: #4a69bd;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-batch-approve:hover {
+    background: #3a5aa0;
+}
+
+.btn-batch-approve:active {
+    transform: translateY(1px);
+}
+
+/* =========================
    Table Container
 ========================= */
 .table-container {
@@ -186,24 +214,24 @@
 }
 
 /* 예약일, 시작시간, 종료시간 - 중앙 정렬 */
-.resource-table th:nth-child(5),
-.resource-table td:nth-child(5),
 .resource-table th:nth-child(6),
 .resource-table td:nth-child(6),
 .resource-table th:nth-child(7),
-.resource-table td:nth-child(7) {
-    text-align: center;
-}
-
-/* 상태 열 - 중앙 정렬 */
+.resource-table td:nth-child(7),
 .resource-table th:nth-child(8),
 .resource-table td:nth-child(8) {
     text-align: center;
 }
 
-/* 취소 열 - 중앙 정렬 */
+/* 상태 열 - 중앙 정렬 */
 .resource-table th:nth-child(9),
 .resource-table td:nth-child(9) {
+    text-align: center;
+}
+
+/* 승인 열 - 중앙 정렬 */
+.resource-table th:nth-child(10),
+.resource-table td:nth-child(10) {
     text-align: center;
 }
 
@@ -220,21 +248,78 @@
 }
 
 /* =========================
+   Tooltip Base (공통 디자인)
+========================= */
+.tooltip,
+.resource-table td[data-fulltext]:hover::after {
+    max-width: 400px;
+    padding: 6px 10px;
+
+    background: rgba(33, 37, 41, 0.95);
+    color: #fff;
+    font-size: 13px;
+    line-height: 1.4;
+
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+
+    white-space: normal;
+    font-family: 'Noto Sans KR', system-ui, sans-serif;
+}
+
+/* =========================
+   JS Tooltip (position: fixed)
+========================= */
+.tooltip {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    display: none;
+}
+
+/* =========================
+   CSS Hover Tooltip (카테고리, 신청자 이름, 자원 이름, 예약 사유)
+========================= */
+.resource-table td:nth-child(2),  /* 카테고리 */
+.resource-table td:nth-child(3),  /* 신청자 이름 */
+.resource-table td:nth-child(4),  /* 자원 이름 */
+.resource-table td:nth-child(5) { /* 예약 사유 */
+    cursor: help;
+}
+
+.resource-table td:nth-child(2):hover::after,
+.resource-table td:nth-child(3):hover::after,
+.resource-table td:nth-child(4):hover::after,
+.resource-table td:nth-child(5):hover::after {
+    content: attr(data-fulltext);
+
+    position: absolute;
+    left: 0;
+    top: 100%;
+    z-index: 1000;
+}
+
+/* 카테고리 셀 hover 지원 */
+.resource-table td[data-fulltext] .category-badge {
+    pointer-events: none;
+}
+
+/* =========================
    Category Badge
 ========================= */
 .category-badge {
-    display: inline-flex;        /* 중앙 정렬을 더 안정적으로 */
+    display: inline-flex;
     align-items: center;
     justify-content: center;
 
-    width: 90px;                 /* 모든 badge 동일한 너비 */
-    height: 30px;                /* 동일한 높이 */
+    width: 90px;
+    height: 30px;
 
     border-radius: 13px;
     font-size: 12px;
     font-weight: 600;
 
-    white-space: nowrap;         /* 줄바꿈 방지 */
+    white-space: nowrap;
 }
 
 /* 하늘색 */
@@ -269,8 +354,70 @@
 }
 
 /* 상태 셀에 rejectReason tooltip이 있을 때 cursor 변경 */
-.resource-table td[data-fulltext] .status-badge {
-    pointer-events: none;
+.status-cell[data-fulltext] {
+    cursor: help;
+}
+
+/* badge는 클릭 가능하도록 유지 */
+.status-cell[data-fulltext] .status-badge {
+    pointer-events: auto;
+}
+
+.status-badge-clickable {
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.status-badge-clickable:hover {
+    background: #c3e6cb;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.status-cell {
+    position: relative;
+}
+
+/* =========================
+   Status Dropdown
+========================= */
+.status-dropdown {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 150px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.status-dropdown-item {
+    padding: 10px 16px;
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.status-dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.status-dropdown-item:hover {
+    background: #f8f9fa;
+}
+
+.status-dropdown-item.active {
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-weight: 600;
+}
+
+.status-dropdown-item.active:hover {
+    background: #c8e6c9;
 }
 
 /* =========================
@@ -281,22 +428,22 @@
     gap: 8px;
 }
 
-.btn-cancel {
+.btn-approve {
     padding: 6px 12px;
     border-radius: 4px;
     font-size: 13px;
     border: none;
     cursor: pointer;
     transition: background 0.2s;
-    background: #ffebee;
-    color: #c62828;
+    background: #e8f5e9;
+    color: #2e7d32;
 }
 
-.btn-cancel:hover {
-    background: #ffcdd2;
+.btn-approve:hover {
+    background: #c8e6c9;
 }
 
-.btn-cancel:disabled {
+.btn-approve:disabled {
     opacity: 0.4;
     cursor: not-allowed;
 }
@@ -381,56 +528,113 @@
 }
 
 /* =========================
-   Tooltip Base (공통 디자인)
+   Status Reason Modal
 ========================= */
-.tooltip,
-.resource-table td[data-fulltext]:hover::after {
-    max-width: 400px;
-    padding: 6px 10px;
-
-    background: rgba(33, 37, 41, 0.95);
-    color: #fff;
-    font-size: 13px;
-    line-height: 1.4;
-
-    border-radius: 4px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-
-    white-space: normal;
-    font-family: 'Noto Sans KR', system-ui, sans-serif;
-}
-
-/* =========================
-   JS Tooltip (position: fixed)
-========================= */
-.tooltip {
+.status-reason-modal {
     position: fixed;
-    z-index: 9999;
-    pointer-events: none;
-    display: none;
-}
-
-/* =========================
-   CSS Hover Tooltip (카테고리, 이름, 예약 사유)
-========================= */
-.resource-table td:nth-child(2),  /* 카테고리 */
-.resource-table td:nth-child(3),  /* 이름 */
-.resource-table td:nth-child(4) { /* 예약 사유 */
-    cursor: help;
-}
-
-.resource-table td:nth-child(2):hover::after,
-.resource-table td:nth-child(3):hover::after,
-.resource-table td:nth-child(4):hover::after {
-    content: attr(data-fulltext);
-
-    position: absolute;
+    top: 0;
     left: 0;
-    top: 100%;
-    z-index: 1000;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
 }
 
-/* 카테고리 셀 hover 지원 */
-.resource-table td[data-fulltext] .category-badge {
-    pointer-events: none;
+.status-reason-modal-content {
+    width: 400px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
+
+.status-reason-modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 8px;
+}
+
+.status-reason-modal-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.status-reason-modal-form-group label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #555;
+}
+
+.status-reason-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.status-reason-textarea:focus {
+    outline: none;
+    border-color: #4a69bd;
+    box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.1);
+}
+
+.status-reason-hint {
+    font-size: 12px;
+    color: #999;
+    min-height: 16px;
+}
+
+.status-reason-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.status-reason-modal-cancel-btn,
+.status-reason-modal-submit-btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.status-reason-modal-cancel-btn {
+    background: #f5f5f5;
+    color: #666;
+}
+
+.status-reason-modal-cancel-btn:hover {
+    background: #e0e0e0;
+}
+
+.status-reason-modal-submit-btn {
+    background: #4a69bd;
+    color: #fff;
+}
+
+.status-reason-modal-submit-btn:hover {
+    background: #3d5aa3;
+}
+
+.status-reason-modal-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+

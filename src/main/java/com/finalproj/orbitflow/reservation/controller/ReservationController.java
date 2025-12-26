@@ -4,6 +4,7 @@ import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import com.finalproj.orbitflow.reservation.dto.ReservationReqDto;
 import com.finalproj.orbitflow.reservation.dto.ReservationResDto;
+import com.finalproj.orbitflow.reservation.dto.ReservationStatusChangeReqDto;
 import com.finalproj.orbitflow.reservation.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -80,7 +81,7 @@ public class ReservationController {
             @RequestParam String date,
             @RequestParam String typeCode
     ) {
-        Long companyId =  user.getCompanyId();
+        Long companyId = user.getCompanyId();
 
         List<ReservationResDto> reservations = reservationService.getReservationsByDate(
                 companyId,
@@ -88,7 +89,7 @@ public class ReservationController {
                 typeCode
         );
 
-        return  ResponseEntity.ok().body(
+        return ResponseEntity.ok().body(
                 new ResponseDto(HttpStatus.OK, date + "일 예약 조회 성공", reservations)
         );
     }
@@ -111,8 +112,6 @@ public class ReservationController {
         );
     }
 
-    //
-
     // 내 예약 취소
     @PatchMapping("/reservations/{reservationId}/cancel")
     public ResponseEntity<ResponseDto> cancelReservation(
@@ -125,4 +124,86 @@ public class ReservationController {
         );
     }
 
+
+    // ----------------------------------------------------------------------- //
+    // 관리자 예약 관리 기능 //
+
+    // 관리자 - 예약 신청 리스트 조회
+    @GetMapping("/admin/reservations")
+    public ResponseEntity<ResponseDto> getReservations(
+            @AuthenticationPrincipal SecurityUser user,
+            @RequestParam(defaultValue = "false") boolean showPast,
+            @RequestParam(required = false) Long statusId,
+            @RequestParam(required = false) String typeCode,
+            @SortDefault.SortDefaults({
+                    @SortDefault(sort = "reservationDate", direction = Sort.Direction.ASC),
+                    @SortDefault(sort = "startTime", direction = Sort.Direction.ASC)
+            }) Pageable pageable
+    ) {
+        Page<ReservationResDto> reservations = reservationService.getReservations(
+                user.getCompanyId(),
+                showPast,
+                statusId,
+                typeCode,
+                pageable
+        );
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, "예약 리스트 조회 성공", reservations)
+        );
+    }
+
+    // 관리자 - 예약 한 건 승인
+    @PatchMapping("/admin/reservations/{reservationId}/approve")
+    public ResponseEntity<ResponseDto> approveReservation(
+            @PathVariable Long reservationId
+    ) {
+        reservationService.approveReservation(reservationId);
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, "예약 승인 성공", null)
+        );
+    }
+
+    // 관리자 - 예약 한 건 반려
+    @PatchMapping("/admin/reservations/{reservationId}/reject")
+    public ResponseEntity<ResponseDto> rejectReservation(
+            @PathVariable Long reservationId,
+            @RequestBody ReservationStatusChangeReqDto rejectReqDto
+    ) {
+        reservationService.rejectReservation(reservationId, rejectReqDto);
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, "예약 반려 처리 성공", null)
+        );
+    }
+
+    // 관리자 - 예약 상태 변경
+    @PatchMapping("/admin/reservations/{reservationId}/status")
+    public ResponseEntity<ResponseDto> changeReservationStatus(
+            @PathVariable Long reservationId,
+            @RequestBody ReservationStatusChangeReqDto reservationStatusChangeReqDto
+    ) {
+        reservationService.changeReservationStatus(reservationId, reservationStatusChangeReqDto);
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, "예약 상태 변경 성공", null)
+        );
+    }
+
+    // 관리자 - 예약 일괄 승인
+    // '전체' -> null로 들어옴 -> default value 'ALL'
+    // 'CAR' || 'ITEM'
+    @PatchMapping("/admin/reservations/batch-approve")
+    public ResponseEntity<ResponseDto> batchApproveReservation(
+            @AuthenticationPrincipal SecurityUser user,
+            @RequestParam(value = "typeCode", required = false, defaultValue = "ALL") String typeCode
+    ) {
+        Long companyId = user.getCompanyId();
+        int approveCount = reservationService.batchApprove(companyId, typeCode);
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, approveCount + "개 예약 일괄 승인됨", approveCount)
+        );
+    }
 }

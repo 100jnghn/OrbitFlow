@@ -35,7 +35,7 @@
             <div class="section-header">
                 <h2 class="section-title">게시판 관리</h2>
                 <button class="btn-add" onclick="openAddBoardModal()">
-                    <i class="fas fa-plus"></i>추가
+                    <i class="fas fa-plus"></i> 추가
                 </button>
             </div>
 
@@ -76,7 +76,8 @@
                     <div class="form-group">
                         <label for="boardName" class="form-label">제목</label>
                         <input type="text" id="boardName" name="boardName" required 
-                               placeholder="게시판 이름을 입력하세요" class="form-input">
+                               placeholder="게시판 이름을 입력하세요" class="form-input" maxlength="100">
+                        <div id="boardNameError" class="error-message" style="display: none;"></div>
                     </div>
 
                     <!-- 2. 게시판 권한 -->
@@ -85,12 +86,13 @@
                         <div class="permission-section">
                             <div class="permission-search">
                                 <input type="text" id="employeeSearchInput" 
-                                       placeholder="사원 이름 또는 사번으로 검색" 
-                                       class="form-input">
+                                       placeholder="사원 이름, 사번 또는 이메일로 검색 (2자 이상)" 
+                                       class="form-input" maxlength="30">
                                 <button type="button" class="btn-search" onclick="searchEmployee()">
-                                    <i class="fas fa-search"></i>검색
+                                    <i class="fas fa-search"></i> 검색
                                 </button>
                             </div>
+                            <div id="employeeSearchError" class="error-message" style="display: none;"></div>
                             <div id="employeeSearchResults" class="employee-search-results"></div>
                             <div id="selectedEmployees" class="selected-employees">
                                 <!-- 선택된 사원들이 여기에 표시됨 -->

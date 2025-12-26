@@ -422,9 +422,10 @@ function renderPagination(page) {
     const pagination = document.getElementById('boardPagination');
     pagination.innerHTML = '';
 
-    if (totalPages <= 1) {
-        return;
-    }
+    // 페이징 버튼 상시 출력
+    // if (totalPages <= 1) {
+    //     return;
+    // }
 
     // 이전 버튼
     const prevBtn = document.createElement('button');

@@ -1893,6 +1893,7 @@ VALUES (1, 10, 2025, 15.0, 11.5), -- 15개 중 3.5개 사용 (12월 현재)
 
        (1, 16, 2025, 15.0, 13.0);
 -- 15개 중 2개 사용
+                                                                                             (1, 16, 2025, 15.0, 13.0); -- 15개 중 2개 사용
 
 -- 실제 휴가 사용 기록 (결재 완료 건들)
 INSERT INTO attendance_record (employee_id, company_id, start_date, end_date, days, type_id, status, approved_at,

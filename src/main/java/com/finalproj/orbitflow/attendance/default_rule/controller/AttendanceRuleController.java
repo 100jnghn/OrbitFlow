@@ -86,6 +86,14 @@ public class AttendanceRuleController {
     public ResponseEntity<List<EmployeeSearchDto>> searchEmployees(
             @AuthenticationPrincipal SecurityUser admin,
             @RequestParam String keyword) {
-        return ResponseEntity.ok(attendanceRuleService.searchEmployees(admin.getCompanyId(), keyword));
+        // Validation: 최소 2자, 최대 30자, trim 처리
+        String trimmedKeyword = keyword != null ? keyword.trim() : "";
+        if (trimmedKeyword.length() < 2) {
+            throw new IllegalArgumentException("검색어는 최소 2자 이상이어야 합니다.");
+        }
+        if (trimmedKeyword.length() > 30) {
+            throw new IllegalArgumentException("검색어는 30자 이하여야 합니다.");
+        }
+        return ResponseEntity.ok(attendanceRuleService.searchEmployees(admin.getCompanyId(), trimmedKeyword));
     }
 }
