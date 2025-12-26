@@ -128,4 +128,30 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             @Param("rejectReason") String rejectReason,
             @Param("rejectStatus") ReservationStatus rejectStatus
     );
+
+    // 예약 승인 대기 상태의 Reservation 리스트 조회
+    @Query("""
+                select r
+                from Reservation r
+                where r.company.id = :companyId
+                  and r.typeCode = :typeCode
+                  and r.reservationStatus.statusCode = :statusCode
+            """)
+    List<Reservation> findWaitingCompanyAndTypeCode(
+            @Param("companyId") Long companyId,
+            @Param("typeCode") ReservationTypeCode typeCode,
+            @Param("statusCode") ReservationStatusCode statusCode
+    );
+
+    // 리스트의 reservation id 일괄 승인
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+                update Reservation r
+                set r.reservationStatus = :status
+                where r.id in :ids
+            """)
+    void bulkUpdateStatus(
+            @Param("ids") List<Long> ids,
+            @Param("status") ReservationStatus status
+    );
 }

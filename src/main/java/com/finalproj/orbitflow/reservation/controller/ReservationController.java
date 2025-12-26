@@ -191,4 +191,19 @@ public class ReservationController {
         );
     }
 
+    // 관리자 - 예약 일괄 승인
+    // '전체' -> null로 들어옴 -> default value 'ALL'
+    // 'CAR' || 'ITEM'
+    @PatchMapping("/admin/reservations/batch-approve")
+    public ResponseEntity<ResponseDto> batchApproveReservation(
+            @AuthenticationPrincipal SecurityUser user,
+            @RequestParam(value = "typeCode", required = false, defaultValue = "ALL") String typeCode
+    ) {
+        Long companyId = user.getCompanyId();
+        int approveCount = reservationService.batchApprove(companyId, typeCode);
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, approveCount + "개 예약 일괄 승인됨", approveCount)
+        );
+    }
 }

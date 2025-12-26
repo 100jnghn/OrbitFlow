@@ -26,7 +26,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Please explain the class!!!
@@ -251,6 +255,197 @@ public class ReservationService {
 
         reservation.changeStatus(newStatus, rejectReason);
     }
+
+
+    // ---------------------------------------------------------------------------------- //
+    // region 예약 일괄 승인 관련 함수
+
+    /*
+     * @param companyId
+     * @param typeCode
+     * @return -> 일괄 승인한 예약 수
+     *
+     * typeCode = 'ALL' || 'CAR' || 'ITEM'
+     */
+    @Transactional
+    public int batchApprove(Long companyId, String typeCode) {
+
+        int result = 0;
+
+        if (typeCode.equals("ALL")) {
+            result += carBatchApprove(companyId);
+            result += itemBatchApprove(companyId);
+
+        } else if (typeCode.equals("CAR")) {
+            result = carBatchApprove(companyId);
+
+        } else if (typeCode.equals("ITEM")) {
+            result = itemBatchApprove(companyId);
+        } else return 0;
+
+        return result;
+    }
+
+    /**
+     * 차량 예약 일괄 승인
+     * 1. companyId
+     * 2. typeCode = CAR
+     * 3. status = PENDING
+     * 4. resourceId - Grouping
+     * 5. 날짜 겹치는지 판단
+     * 6. 날짜 겹치지 않는 예약은 승인 처리
+     * 7. 날짜 겹치지 않는 예약 cnt 반환
+     */
+    private int carBatchApprove(Long companyId) {
+
+        // 승인 대기 차량 예약 리스트 조회
+        List<Reservation> waitingCars = reservationRepository.findWaitingCompanyAndTypeCode(
+                companyId,
+                ReservationTypeCode.CAR,
+                ReservationStatusCode.PENDING
+        );
+
+        // 승인 대기 중인 차량 예약이 없으면 0반환
+        if (waitingCars.isEmpty()) return 0;
+
+        // resourceId 기준 그룹핑
+        Map<Long, List<Reservation>> groups = waitingCars
+                .stream()
+                .collect(Collectors.groupingBy(
+                        r -> r.getResourceId()
+                ));
+
+        // 각 resourceId 그룹에서 시간이 겹치지 않는 Reservation 리스트
+        List<Long> approveIds = new ArrayList<>();
+
+        for (List<Reservation> group : groups.values()) {
+
+            // 날짜 기준 정렬
+            group.sort(Comparator.comparing(Reservation::getReservationDate));
+
+            // 승인할 Reservation 리스트
+            List<Reservation> approved = new ArrayList<>();
+
+            for (Reservation current : group) {
+
+                // 예약 날짜 겹치는지 확인
+                boolean overlap = approved.stream().anyMatch(
+                        prev -> isCarDateOverlapping(current, prev)
+                );
+
+                if (!overlap) {
+                    approved.add(current);
+                    approveIds.add(current.getId());
+                }
+            }
+        }
+
+        if (!approveIds.isEmpty()) {
+            reservationRepository.bulkUpdateStatus(
+                    approveIds,
+                    getConfirmStatus()
+            );
+        }
+
+        return approveIds.size();
+    }
+
+    // 기타 자원 예약 일괄 승인
+    private int itemBatchApprove(Long companyId) {
+
+        // 승인 대기 상태의 자원 리스트 조회
+        List<Reservation> waitingItems = reservationRepository.findWaitingCompanyAndTypeCode(
+                companyId,
+                ReservationTypeCode.ITEM,
+                ReservationStatusCode.PENDING
+        );
+
+        if (waitingItems.isEmpty()) return 0;
+
+        // item_category_id 기준 grouping
+        Map<Long, List<Reservation>> groups = waitingItems
+                .stream()
+                .collect(Collectors.groupingBy(
+                        Reservation::getResourceId
+                ));
+
+        // 승인할 자원의 id 리스트
+        List<Long> approveIds = new ArrayList<>();
+
+        for (List<Reservation> group : groups.values()) {
+
+            // {날짜 + 시작 시간} 기준 정렬
+            group.sort(
+                    Comparator
+                            .comparing(Reservation::getReservationDate)
+                            .thenComparingInt(Reservation::getStartTime)
+            );
+
+            List<Reservation> approved = new ArrayList<>();
+
+            for (Reservation current : group) {
+
+                // 예약 시간 겹치는지 판단
+                boolean overlap = approved.stream().anyMatch(
+                        prev -> isItemTimeOverlapping(current, prev)
+                );
+
+                if (!overlap) {
+                    approved.add(current);
+                    approveIds.add(current.getId());
+                }
+            }
+        }
+
+        if (!approveIds.isEmpty()) {
+            reservationRepository.bulkUpdateStatus(
+                    approveIds,
+                    getConfirmStatus()
+            );
+        }
+
+        return approveIds.size();
+    }
+
+    // 차량 예약 날짜 겹치는지 판단하는 메소드
+    private boolean isCarDateOverlapping(Reservation a, Reservation b) {
+
+        LocalDate aStartDate = a.getReservationDate();
+        LocalDate aEndDate = a.getEndDate();
+
+        LocalDate bStartDate = b.getReservationDate();
+        LocalDate bEndDate = b.getEndDate();
+
+        // A의 종료일이 B의 시작일보다 이전이면 겹치지 않음
+        // A의 시작일이 B의 종료일보다 이후면 겹치지 않음
+        // 둘 다 true -> 날짜가 겹치는 예약임
+        return !aEndDate.isBefore(bStartDate) && !aStartDate.isAfter(bEndDate);
+    }
+
+    // 자원 예약 날짜 겹치는지 판단하는 메소드
+    private boolean isItemTimeOverlapping(Reservation a, Reservation b) {
+
+        // 날짜가 다르다면 겹치지 않음
+        if (!a.getReservationDate().equals(b.getReservationDate())) {
+            return false;
+        }
+
+        int aStartTime = a.getStartTime();
+        int aEndTime = a.getEndTime();
+
+        int bStartTime = b.getStartTime();
+        int bEndTime = b.getEndTime();
+
+        return (aStartTime < bEndTime) && (aEndTime > bStartTime);
+    }
+
+    // 예약 승인 상태 반환
+    private ReservationStatus getConfirmStatus() {
+        return reservationStatusRepository.findByStatusCode(ReservationStatusCode.CONFIRM);
+    }
+
+    // endregion
+    // ---------------------------------------------------------------------------------- //
 
 
     // Entity -> Dto

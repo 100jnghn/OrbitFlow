@@ -574,7 +574,10 @@ async function approveReservation(id) {
    Batch Approve
 ========================== */
 async function batchApproveReservations() {
+    const typeSelect = document.getElementById('resource-category-filter');
     const statusSelect = document.getElementById('status-filter');
+    
+    const typeCode = typeSelect?.value || null;
     const statusId = statusSelect?.value ? Number(statusSelect.value) : null;
 
     // '승인 대기' 상태인지 확인
@@ -584,25 +587,32 @@ async function batchApproveReservations() {
         return;
     }
 
-    if (!confirm(`승인 대기 상태의 모든 예약을 일괄 승인하시겠습니까?`)) {
+    if (!confirm(`승인 대기 상태의 예약을 일괄 승인하시겠습니까?`)) {
         return;
     }
 
     try {
-        const params = new URLSearchParams({
-            statusId: statusId
-        });
+        const params = new URLSearchParams();
+
+        // resource-category-filter에서 선택한 카테고리 추가
+        if (typeCode) {
+            params.append('typeCode', typeCode);
+        }
+
+        console.log("타입코드 : " + typeCode)
 
         const res = await apiFetch(`/api/admin/reservations/batch-approve?${params.toString()}`, {
             method: 'PATCH'
         });
+
+        const result = await res.json();
 
         if (!res.ok) {
             const error = await res.json();
             throw new Error(error.message || '일괄 승인에 실패했습니다.');
         }
 
-        alert('일괄 승인이 완료되었습니다.');
+        alert(`${result.data}개 예약이 일괄 승인되었습니다.`);
         loadReservations(currentPage);
 
     } catch (e) {
