@@ -17,23 +17,49 @@ const SESSION_WARNING_SHOWN_KEY = 'sessionWarningShown';
 ========================= */
 async function apiFetch(url, options = {}) {
     const accessToken = sessionStorage.getItem('accessToken');
-    options.headers = {
+
+    // 토큰 없으면 즉시 로그인
+    if (!accessToken) {
+        location.href = '/login';
+        throw new Error('NO_TOKEN');
+    }
+
+    const headers = {
         ...(options.headers || {}),
-        ...(accessToken && { 'Authorization': `Bearer ${accessToken}` })
+        Authorization: `Bearer ${accessToken}`
     };
 
-    let res = await fetch(url, options);
+    const fetchOptions = {
+        ...options,
+        headers,
+        credentials: 'include' // refresh 쿠키 필수
+    };
+
+    let res = await fetch(url, fetchOptions);
     if (res.status !== 401) return res;
 
+    /* ===== refresh 중이면 대기 ===== */
     if (isRefreshing) {
         return new Promise((resolve, reject) => {
             refreshSubscribers.push(async () => {
-                options.headers.Authorization = `Bearer ${sessionStorage.getItem('accessToken')}`;
-                try { resolve(await fetch(url, options)); } catch (e) { reject(e); }
+                try {
+                    resolve(
+                        await fetch(url, {
+                            ...fetchOptions,
+                            headers: {
+                                ...headers,
+                                Authorization: `Bearer ${sessionStorage.getItem('accessToken')}`
+                            }
+                        })
+                    );
+                } catch (e) {
+                    reject(e);
+                }
             });
         });
     }
 
+    /* ===== refresh 시작 ===== */
     isRefreshing = true;
     const refreshed = await refreshAccessToken();
     isRefreshing = false;
@@ -45,15 +71,27 @@ async function apiFetch(url, options = {}) {
         throw new Error('SESSION_EXPIRED');
     }
 
+    /* ===== 대기 중이던 요청 재시도 ===== */
     refreshSubscribers.forEach(cb => cb());
     refreshSubscribers = [];
-    options.headers.Authorization = `Bearer ${sessionStorage.getItem('accessToken')}`;
-    return fetch(url, options);
+
+    /* ===== 현재 요청 재시도 ===== */
+    return fetch(url, {
+        ...fetchOptions,
+        headers: {
+            ...headers,
+            Authorization: `Bearer ${sessionStorage.getItem('accessToken')}`
+        }
+    });
 }
 
 async function refreshAccessToken() {
-    const res = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' });
+    const res = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        credentials: 'include'
+    });
     if (!res.ok) return false;
+
     const result = await res.json();
     sessionStorage.setItem('accessToken', result.data.accessToken);
     saveSessionExpiry(result.data.refreshExpiresAt);

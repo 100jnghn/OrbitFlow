@@ -9,10 +9,7 @@ import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import com.finalproj.orbitflow.hr.orgCategory.repository.OrgCategoryRepository;
 import com.finalproj.orbitflow.hr.orgPositionUsage.repository.OrgPositionUsageRepository;
-import com.finalproj.orbitflow.hr.organization.dto.OrgCreateReqDto;
-import com.finalproj.orbitflow.hr.organization.dto.OrgOrderUpdateReqDto;
-import com.finalproj.orbitflow.hr.organization.dto.OrgResDto;
-import com.finalproj.orbitflow.hr.organization.dto.OrgUpdateReqDto;
+import com.finalproj.orbitflow.hr.organization.dto.*;
 import com.finalproj.orbitflow.hr.organization.entity.Organization;
 import com.finalproj.orbitflow.hr.organization.repository.OrgRepository;
 import com.finalproj.orbitflow.hr.organization.repository.OrgResView;
@@ -64,24 +61,31 @@ public class OrgService {
         }
 
         // 다음 orderIndex (형제 단위)
-        int nextOrderIndex = (int) orgRepository.countByCompanyIdAndParentOrgIdAndIsActiveTrue(companyId, parentOrgId) + 1;
+        int nextOrderIndex =
+                (int) orgRepository.countByCompanyIdAndParentOrgIdAndIsActiveTrue(
+                        companyId, parentOrgId) + 1;
 
-        Organization org = Organization.create(companyId, categoryId, parentOrgId, name, nextOrderIndex);
+        Organization org =
+                Organization.create(companyId, categoryId, parentOrgId, name, nextOrderIndex);
+
         Organization saved = orgRepository.save(org);
 
         // 조직 게시판 카테고리 자동 생성
-        organizationBoardCategorySyncService.createIfAbsent(companyId, saved.getId(), saved.getName());
+        organizationBoardCategorySyncService.createIfAbsent(
+                companyId, saved.getId(), saved.getName());
 
         return saved.getId();
     }
 
     /* ================= 조회 ================= */
     @Transactional(readOnly = true)
-    public List<OrgResDto> findAll(Long companyId) {
+    public List<OrgResDto> findAll(Long companyId, boolean includeInactive) {
 
-        return orgRepository
-                .findByCompanyIdAndIsActiveTrueOrderByOrderIndexAsc(companyId)
-                .stream()
+        List<Organization> orgs = includeInactive
+                ? orgRepository.findByCompanyIdOrderByIsActiveDescParentOrgIdAscOrderIndexAsc(companyId)
+                : orgRepository.findByCompanyIdAndIsActiveTrueOrderByParentOrgIdAscOrderIndexAsc(companyId);
+
+        return orgs.stream()
                 .map(OrgResDto::from)
                 .toList();
     }
@@ -94,20 +98,22 @@ public class OrgService {
 
         Long newParentId = request.getParentOrgId();
         String newName = normalizeNameOrThrow(request.getName());
+        Boolean reqActive = request.getIsActive();
+
+        // 비활성화 요청 처리
+        if (Boolean.FALSE.equals(reqActive) && Boolean.TRUE.equals(org.getIsActive())) {
+            deactivateInternal(companyId, org);
+            return;
+        }
 
         // 자기 자신을 상위로 금지
         if (newParentId != null && Objects.equals(newParentId, organizationId)) {
             throw new InvalidRequestException("자기 자신을 상위 조직으로 지정할 수 없습니다.");
         }
 
-        // 상위 조직 검증(존재/회사/활성)
-        if (newParentId != null) {
-            getActiveOrgInCompanyOrThrow(companyId, newParentId);
-        }
-
         // 순환 참조 방지: newParent의 조상 중에 organizationId가 있으면 금지
         if (newParentId != null && isCycle(companyId, organizationId, newParentId)) {
-            throw new InvalidStateException("조직 트리에 순환 구조가 발생할 수 있어 상위 조직을 변경할 수 없습니다.");
+            throw new InvalidStateException("조직 트리에 순환 구조가 발생할 수 있습니다.");
         }
 
         // 형제 단위 이름 중복 (수정: 자기 자신 제외)
@@ -116,51 +122,42 @@ public class OrgService {
             throw new InvalidStateException("이미 존재하는 조직명입니다.");
         }
 
-        // 부모가 바뀌면: 새 부모의 마지막 순번으로 이동
-        boolean parentChanged = !Objects.equals(org.getParentOrgId(), newParentId);
-        if (parentChanged) {
-            int nextOrderIndex = (int) orgRepository.countByCompanyIdAndParentOrgIdAndIsActiveTrue(companyId, newParentId) + 1;
-            org.updateOrderIndex(nextOrderIndex);
+        // ===== 재활성 여부 판단 =====
+        boolean reactivated =
+                Boolean.TRUE.equals(reqActive)
+                        && Boolean.FALSE.equals(org.getIsActive());
+
+        if (reactivated) {
+
+            Long parentId = org.getParentOrgId();
+
+            int nextOrderIndex =
+                    orgRepository.findMaxOrderIndex(companyId, parentId) + 1;
+
+            org.activate(nextOrderIndex);
         }
 
-        org.update(newParentId, newName); // categoryId는 변경 불가이므로 기존 값 유지
+        // 실제 값 반영
+        org.update(org.getParentOrgId(), newName);
 
         // 이름이 바뀐 경우에만 게시판 카테고리명 동기화 (정책 선택)
         if (!oldName.equals(newName)) {
-            organizationBoardCategorySyncService.syncBoardName(companyId, organizationId, newName);
+            organizationBoardCategorySyncService
+                    .syncBoardName(companyId, organizationId, newName);
         }
     }
 
     /* ================= 비활성화 ================= */
     public void deactivate(Long companyId, Long organizationId) {
-
         Organization org = getOrgInCompanyOrThrow(companyId, organizationId);
-
-        // 하위 조직 존재하면 비활성화 불가(트리 무결성)
-        if (orgRepository.existsByCompanyIdAndParentOrgIdAndIsActiveTrue(companyId, organizationId)) {
-            throw new InvalidStateException("하위 조직이 존재하여 비활성화할 수 없습니다.");
-        }
-
-        // 기존 정책: 조직에 재직/정지/임시 계정이 남아 있으면 비활성화 불가
-        if (employeeRepository.existsByCompanyIdAndOrganizationIdAndStatusNot(
-                companyId,
-                organizationId,
-                EmployeeStatus.RESIGNED
-        )) {
-            throw new InvalidStateException("해당 조직에 소속된 재직 중인 사원이 존재하여 비활성화할 수 없습니다.");
-        }
-
-        orgPositionUsageRepository.deleteByCompany_IdAndOrganization_Id(companyId, organizationId);
-
-        org.deactivate();
-
-        // 조직 게시판도 비활성화(삭제 대신)
-        organizationBoardCategorySyncService.deactivateBoard(companyId, organizationId);
+        deactivateInternal(companyId, org);
     }
 
 
 
+
     /* ================= 정렬 ================= */
+    @Transactional
     public void updateOrder(Long companyId, List<OrgOrderUpdateReqDto.OrderItem> orders) {
 
         if (orders == null || orders.isEmpty()) {
@@ -177,42 +174,36 @@ public class OrgService {
             throw new InvalidRequestException("중복된 조직 ID가 존재합니다.");
         }
 
-        // 같은 parentOrgId인지 검증 + 활성 검증
+        // 회사 소속 + 활성 조직 검증
+        List<Organization> orgs = orders.stream()
+                .map(o -> getOrgInCompanyOrThrow(companyId, o.getId()))
+                .toList();
+
         Long parentOrgId = null;
 
-        for (OrgOrderUpdateReqDto.OrderItem item : orders) {
-            Organization org = getOrgInCompanyOrThrow(companyId, item.getId());
-
+        for (Organization org : orgs) {
             if (!Boolean.TRUE.equals(org.getIsActive())) {
-                throw new InvalidStateException("비활성 조직은 정렬 대상이 될 수 없습니다.");
+                throw new InvalidStateException("비활성 조직은 정렬할 수 없습니다.");
             }
 
             if (parentOrgId == null) {
                 parentOrgId = org.getParentOrgId();
             } else if (!Objects.equals(parentOrgId, org.getParentOrgId())) {
-                throw new InvalidStateException("서로 다른 상위 조직의 조직은 함께 정렬할 수 없습니다.");
+                throw new InvalidStateException("서로 다른 상위 조직은 함께 정렬할 수 없습니다.");
             }
         }
 
-        // 정렬 대상 개수 검증(형제 단위)
-        long activeCount = orgRepository.countByCompanyIdAndParentOrgIdAndIsActiveTrue(companyId, parentOrgId);
-        if (activeCount != orders.size()) {
-            throw new InvalidStateException("정렬 대상 개수가 일치하지 않습니다.");
-        }
 
-        // 임시 orderIndex 할당 (충돌 방지)
-        int tempIndex = -1;
-        for (OrgOrderUpdateReqDto.OrderItem item : orders) {
-            Organization org = getOrgInCompanyOrThrow(companyId, item.getId());
-            org.updateOrderIndex(tempIndex--);
+        // 임시 orderIndex (충돌 방지)
+        int temp = -1;
+        for (Organization org : orgs) {
+            org.updateOrderIndex(temp--);
         }
-
         orgRepository.flush();
 
-        // 최종 orderIndex 재할당
+        // 최종 orderIndex 재할당 (프론트 순서 그대로)
         int orderIndex = 1;
-        for (OrgOrderUpdateReqDto.OrderItem item : orders) {
-            Organization org = getOrgInCompanyOrThrow(companyId, item.getId());
+        for (Organization org : orgs) {
             org.updateOrderIndex(orderIndex++);
         }
     }
@@ -245,20 +236,16 @@ public class OrgService {
     private boolean isCycle(Long companyId, Long targetOrgId, Long newParentId) {
         Long cursor = newParentId;
         while (cursor != null) {
-            if (Objects.equals(cursor, targetOrgId)) {
-                return true;
-            }
-            Organization parent = getOrgInCompanyOrThrow(companyId, cursor);
-            cursor = parent.getParentOrgId();
+            if (Objects.equals(cursor, targetOrgId)) return true;
+            cursor = getOrgInCompanyOrThrow(companyId, cursor).getParentOrgId();
         }
         return false;
     }
 
     private void validateCategoryActiveInCompany(Long companyId, Long categoryId) {
         // OrgCategory 엔티티 구조가 companyId를 갖고 있으니 이 방식으로 검증 가능
-        com.finalproj.orbitflow.hr.orgCategory.entity.OrgCategory category =
-                orgCategoryRepository.findById(categoryId)
-                        .orElseThrow(() -> new NotFoundException("조직 카테고리를 찾을 수 없습니다."));
+        var category = orgCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException("조직 카테고리를 찾을 수 없습니다."));
 
         if (!Objects.equals(category.getCompanyId(), companyId)) {
             throw new ForbiddenException("해당 회사의 조직 카테고리가 아닙니다.");
@@ -293,6 +280,51 @@ public class OrgService {
                         v.getIsActive() != null && v.getIsActive() == 1
                 ))
                 .toList();
+    }
+
+    private void deactivateInternal(Long companyId, Organization org) {
+
+        Long organizationId = org.getId();
+
+        if (orgRepository.existsByCompanyIdAndParentOrgIdAndIsActiveTrue(companyId, organizationId)) {
+            throw new InvalidStateException("하위 조직이 존재하여 비활성화할 수 없습니다.");
+        }
+
+        if (employeeRepository.existsByCompanyIdAndOrganizationIdAndStatusNot(
+                companyId, organizationId, EmployeeStatus.RESIGNED)) {
+            throw new InvalidStateException("재직 중인 사원이 존재하여 비활성화할 수 없습니다.");
+        }
+
+        orgPositionUsageRepository
+                .deleteByCompany_IdAndOrganization_Id(companyId, organizationId);
+
+        org.deactivate();
+        organizationBoardCategorySyncService.
+                deactivateBoard(companyId, organizationId);
+    }
+
+
+    @Transactional(readOnly = true)
+    public OrgDeactivateCheckResDto checkDeactivatable(Long companyId, Long orgId) {
+
+        // 하위 조직 존재
+        if (orgRepository.existsByCompanyIdAndParentOrgIdAndIsActiveTrue(companyId, orgId)) {
+            return new OrgDeactivateCheckResDto(
+                    false,
+                    "하위 조직이 존재하여 비활성화할 수 없습니다."
+            );
+        }
+
+        // 재직 중 사원 존재
+        if (employeeRepository.existsByCompanyIdAndOrganizationIdAndStatusNot(
+                companyId, orgId, EmployeeStatus.RESIGNED)) {
+            return new OrgDeactivateCheckResDto(
+                    false,
+                    "재직 중인 사원이 존재하여 비활성화할 수 없습니다."
+            );
+        }
+
+        return new OrgDeactivateCheckResDto(true, null);
     }
 
 }

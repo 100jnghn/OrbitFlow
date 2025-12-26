@@ -606,22 +606,21 @@ VALUES
 (@c1, 'OF-046', '1046', '01011114046', @c1_team_cs, @c1_rank_staff, @c1_pos_tm,
  '임동혁', 'test20@test.com', @pw,
  'EMPLOYEE', 'MALE', '1999-07-07', 'REGULAR', 'ACTIVE', 'WORKING', '2023-07-01', NOW(), NOW())
-ON DUPLICATE KEY UPDATE
-                     internal_phone=VALUES(internal_phone),
-                     phone=VALUES(phone),
-                     org_id=VALUES(org_id),
-                     hr_rank_id=VALUES(hr_rank_id),
-                     position_category_id=VALUES(position_category_id),
-                     name=VALUES(name),
-                     password=VALUES(password),
-                     role=VALUES(role),
-                     gender=VALUES(gender),
-                     birth_date=VALUES(birth_date),
-                     employment_type=VALUES(employment_type),
-                     status=VALUES(status),
-                     work_status=VALUES(work_status),
-                     hire_date=VALUES(hire_date),
-                     updated_at=NOW();
+ON DUPLICATE KEY UPDATE internal_phone=VALUES(internal_phone),
+                        phone=VALUES(phone),
+                        org_id=VALUES(org_id),
+                        hr_rank_id=VALUES(hr_rank_id),
+                        position_category_id=VALUES(position_category_id),
+                        name=VALUES(name),
+                        password=VALUES(password),
+                        role=VALUES(role),
+                        gender=VALUES(gender),
+                        birth_date=VALUES(birth_date),
+                        employment_type=VALUES(employment_type),
+                        status=VALUES(status),
+                        work_status=VALUES(work_status),
+                        hire_date=VALUES(hire_date),
+                        updated_at=NOW();
 
 /* =========================
    [COMPANY #2] TechSolution 테크솔루션
@@ -853,7 +852,9 @@ SELECT @c2,
        @c2_cat_team,
        (SELECT id
         FROM organization
-        WHERE company_id = @c2 AND parent_org_id = @c2_hq_platform AND name = '플랫폼운영부'
+        WHERE company_id = @c2
+          AND parent_org_id = @c2_hq_platform
+          AND name = '플랫폼운영부'
         LIMIT 1),
        '운영팀',
        1,
@@ -865,7 +866,9 @@ SELECT @c2,
        @c2_cat_team,
        (SELECT id
         FROM organization
-        WHERE company_id = @c2 AND parent_org_id = @c2_hq_platform AND name = '플랫폼운영부'
+        WHERE company_id = @c2
+          AND parent_org_id = @c2_hq_platform
+          AND name = '플랫폼운영부'
         LIMIT 1),
        '모니터링팀',
        2,
@@ -898,7 +901,9 @@ SELECT @c2,
         WHERE company_id = @c2
           AND parent_org_id = (SELECT id
                                FROM organization
-                               WHERE company_id = @c2 AND parent_org_id = @c2_hq_support AND name = '재무부'
+                               WHERE company_id = @c2
+                                 AND parent_org_id = @c2_hq_support
+                                 AND name = '재무부'
                                LIMIT 1)
           AND name = '재무부'
         LIMIT 1),
@@ -1414,7 +1419,9 @@ SELECT @c3,
        @c3_cat_team,
        (SELECT id
         FROM organization
-        WHERE company_id = @c3 AND parent_org_id = @c3_hq_platform AND name = '플랫폼운영부'
+        WHERE company_id = @c3
+          AND parent_org_id = @c3_hq_platform
+          AND name = '플랫폼운영부'
         LIMIT 1),
        '운영팀',
        1,
@@ -1426,7 +1433,9 @@ SELECT @c3,
        @c3_cat_team,
        (SELECT id
         FROM organization
-        WHERE company_id = @c3 AND parent_org_id = @c3_hq_platform AND name = '플랫폼운영부'
+        WHERE company_id = @c3
+          AND parent_org_id = @c3_hq_platform
+          AND name = '플랫폼운영부'
         LIMIT 1),
        '모니터링팀',
        2,
@@ -1459,7 +1468,9 @@ SELECT @c3,
         WHERE company_id = @c3
           AND parent_org_id = (SELECT id
                                FROM organization
-                               WHERE company_id = @c3 AND parent_org_id = @c3_hq_support AND name = '재무부'
+                               WHERE company_id = @c3
+                                 AND parent_org_id = @c3_hq_support
+                                 AND name = '재무부'
                                LIMIT 1)
           AND name = '재무부'
         LIMIT 1),
@@ -1749,7 +1760,6 @@ ON DUPLICATE KEY UPDATE internal_phone=VALUES(internal_phone),
 COMMIT;
 
 
-
 -- 종훈 --
 use orbitflow;
 
@@ -1848,19 +1858,21 @@ VALUES
 
 
 
-INSERT INTO leave_type (type_name, is_countable, description) VALUES
-                                                                  ('연차', true, '법정 유급 연차 휴가'),
-                                                                  ('오전반차', true, '09:00 ~ 13:00 사용'),
-                                                                  ('오후반차', true, '14:00 ~ 18:00 사용'),
-                                                                  ('병가', false, '질병 또는 부상으로 인한 휴무');
+INSERT INTO leave_type (type_name, is_countable, description)
+VALUES ('연차', true, '법정 유급 연차 휴가'),
+       ('오전반차', true, '09:00 ~ 13:00 사용'),
+       ('오후반차', true, '14:00 ~ 18:00 사용'),
+       ('병가', false, '질병 또는 부상으로 인한 휴무');
 
 
-INSERT INTO attendance_rule (company_id, name, default_start_time, default_end_time, default_break_minutes, late_threshold_min, is_default)
+INSERT INTO attendance_rule (company_id, name, default_start_time, default_end_time, default_break_minutes,
+                             late_threshold_min, is_default)
 VALUES (1, 'OrbitFlow 기본 근무규칙', '09:00:00', '18:00:00', 60, 10, true);
 
 
 -- 연차 부여 이력 (정기 및 월별)
-INSERT INTO grant_history (employee_id, company_id, grant_date, granted_days, grant_type, created_at) VALUES
+INSERT INTO grant_history (employee_id, company_id, grant_date, granted_days, grant_type, created_at)
+VALUES
 -- 이준호: 1월 정기 부여
 (10, 1, '2025-01-01', 15.0, 'ANNUAL_REGULAR', '2025-01-01 09:00:00'),
 -- 김나연: 1월 정기 부여
@@ -1872,17 +1884,21 @@ INSERT INTO grant_history (employee_id, company_id, grant_date, granted_days, gr
 (16, 1, '2025-12-10', 1.0, 'REWARD_LEAVE', '2025-12-10 14:00:00');
 
 -- 사원별 2025년도 연차 잔합 상황 (ID 10, 11, 14, 15, 16)
-INSERT INTO leave_balance (company_id, employee_id, year, total_granted, remaining_days) VALUES
-                                                                                             (1, 10, 2025, 15.0, 11.5), -- 15개 중 3.5개 사용 (12월 현재)
-                                                                                             (1, 11, 2025, 15.0, 14.0), -- 15개 중 1개 사용
-                                                                                             (1, 14, 2025, 15.0, 15.0), -- 미사용자
+INSERT INTO leave_balance (company_id, employee_id, year, total_granted, remaining_days)
+VALUES (1, 10, 2025, 15.0, 11.5), -- 15개 중 3.5개 사용 (12월 현재)
+       (1, 11, 2025, 15.0, 14.0), -- 15개 중 1개 사용
+       (1, 14, 2025, 15.0, 15.0), -- 미사용자
 
-                                                                                             (1, 15, 2025, 11.0, 10.5), -- 신입사원 (매달 1개씩 총 11개 부여됨)
+       (1, 15, 2025, 11.0, 10.5), -- 신입사원 (매달 1개씩 총 11개 부여됨)
 
+       (1, 16, 2025, 15.0, 13.0);
+-- 15개 중 2개 사용
                                                                                              (1, 16, 2025, 15.0, 13.0); -- 15개 중 2개 사용
 
 -- 실제 휴가 사용 기록 (결재 완료 건들)
-INSERT INTO attendance_record (employee_id, company_id, start_date, end_date, days, type_id, status, approved_at, created_at) VALUES
+INSERT INTO attendance_record (employee_id, company_id, start_date, end_date, days, type_id, status, approved_at,
+                               created_at)
+VALUES
 -- 이준호: 11월 7일(1일), 12월 12일(1일) 연차 사용
 (10, 1, '2025-11-07', '2025-11-07', 1.0, 1, 'APPROVED', '2025-11-05 15:00:00', '2025-11-04 10:00:00'),
 (10, 1, '2025-12-12', '2025-12-12', 1.0, 1, 'APPROVED', '2025-12-10 11:00:00', '2025-12-09 13:00:00'),
@@ -1895,29 +1911,29 @@ INSERT INTO attendance_record (employee_id, company_id, start_date, end_date, da
 
 
 
-INSERT INTO attendance (company_id, employee_id, work_date, commute_at, leave_at, status, applied_rule_id, is_corrected) VALUES
-                                                                                                                             (1, 10, '2025-11-03', '2025-11-03 08:52:00', '2025-11-03 18:05:00', 'ON_TIME', 1, 0),
-                                                                                                                             (1, 10, '2025-11-04', '2025-11-04 09:12:00', '2025-11-04 18:10:00', 'LATE', 1, 0),
-                                                                                                                             (1, 10, '2025-11-05', '2025-11-05 08:50:00', '2025-11-05 18:02:00', 'ON_TIME', 1, 0),
-                                                                                                                             (1, 10, '2025-11-06', '2025-11-06 09:05:00', '2025-11-06 18:00:00', 'ON_TIME', 1, 0),
-                                                                                                                             (1, 10, '2025-11-07', NULL, NULL, 'ABSENT', 1, 0),
-                                                                                                                             (1, 10, '2025-11-10', '2025-11-10 08:45:00', '2025-11-10 18:30:00', 'ON_TIME', 1, 0),
-                                                                                                                             (1, 10, '2025-11-11', '2025-11-11 08:59:00', '2025-11-11 18:01:00', 'ON_TIME', 1, 0),
-                                                                                                                             (1, 10, '2025-11-12', '2025-11-12 09:15:00', '2025-11-12 18:05:00', 'LATE', 1, 0),
-                                                                                                                             (1, 10, '2025-11-13', '2025-11-13 08:50:00', '2025-11-13 18:00:00', 'ON_TIME', 1, 0),
-                                                                                                                             (1, 10, '2025-11-14', '2025-11-14 08:30:00', '2025-11-14 18:00:00', 'ON_TIME', 1, 0),
-                                                                                                                             (1, 10, '2025-11-17', '2025-11-17 09:40:00', '2025-11-17 19:00:00', 'LATE', 1, 0),
-                                                                                                                             (1, 10, '2025-11-18', NULL, NULL, 'ABSENT', 1, 0),
-                                                                                                                             (1, 10, '2025-11-19', '2025-11-19 08:55:00', '2025-11-19 18:10:00', 'ON_TIME', 1, 1),
-                                                                                                                             (1, 10, '2025-12-15', '2025-12-15 08:50:00', '2025-12-15 18:00:00', 'ON_TIME', 1, 0),
-                                                                                                                             (1, 10, '2025-12-16', '2025-12-16 09:05:30', '2025-12-16 18:05:00', 'ON_TIME', 1, 0),
-                                                                                                                             (1, 10, '2025-12-17', '2025-12-17 08:40:20', '2025-12-17 18:10:11', 'ON_TIME', 1, 0),
-                                                                                                                             (1, 10, '2025-12-18', '2025-12-18 09:45:00', '2025-12-18 18:50:00', 'LATE', 1, 0),
-                                                                                                                             (1, 10, '2025-12-19', '2025-12-19 08:55:00', '2025-12-19 18:01:00', 'ON_TIME', 1, 0),
-                                                                                                                             (1, 10, '2025-12-22', '2025-12-22 08:58:00', '2025-12-22 18:05:00', 'ON_TIME', 1, 0),
-                                                                                                                             (1, 10, '2025-12-23', '2025-12-23 09:03:00', '2025-12-23 18:00:00', 'ON_TIME', 1, 0),
-                                                                                                                             (1, 10, '2025-12-25', '2025-12-25 09:00:00', '2025-12-25 18:00:00', 'ON_TIME', 1, 1),
-                                                                                                                             (1, 10, '2025-12-26', '2025-12-26 08:50:00', '2025-12-26 18:10:00', 'ON_TIME', 1, 0);
+INSERT INTO attendance (company_id, employee_id, work_date, commute_at, leave_at, status, applied_rule_id, is_corrected)
+VALUES (1, 10, '2025-11-03', '2025-11-03 08:52:00', '2025-11-03 18:05:00', 'ON_TIME', 1, 0),
+       (1, 10, '2025-11-04', '2025-11-04 09:12:00', '2025-11-04 18:10:00', 'LATE', 1, 0),
+       (1, 10, '2025-11-05', '2025-11-05 08:50:00', '2025-11-05 18:02:00', 'ON_TIME', 1, 0),
+       (1, 10, '2025-11-06', '2025-11-06 09:05:00', '2025-11-06 18:00:00', 'ON_TIME', 1, 0),
+       (1, 10, '2025-11-07', NULL, NULL, 'ABSENT', 1, 0),
+       (1, 10, '2025-11-10', '2025-11-10 08:45:00', '2025-11-10 18:30:00', 'ON_TIME', 1, 0),
+       (1, 10, '2025-11-11', '2025-11-11 08:59:00', '2025-11-11 18:01:00', 'ON_TIME', 1, 0),
+       (1, 10, '2025-11-12', '2025-11-12 09:15:00', '2025-11-12 18:05:00', 'LATE', 1, 0),
+       (1, 10, '2025-11-13', '2025-11-13 08:50:00', '2025-11-13 18:00:00', 'ON_TIME', 1, 0),
+       (1, 10, '2025-11-14', '2025-11-14 08:30:00', '2025-11-14 18:00:00', 'ON_TIME', 1, 0),
+       (1, 10, '2025-11-17', '2025-11-17 09:40:00', '2025-11-17 19:00:00', 'LATE', 1, 0),
+       (1, 10, '2025-11-18', NULL, NULL, 'ABSENT', 1, 0),
+       (1, 10, '2025-11-19', '2025-11-19 08:55:00', '2025-11-19 18:10:00', 'ON_TIME', 1, 1),
+       (1, 10, '2025-12-15', '2025-12-15 08:50:00', '2025-12-15 18:00:00', 'ON_TIME', 1, 0),
+       (1, 10, '2025-12-16', '2025-12-16 09:05:30', '2025-12-16 18:05:00', 'ON_TIME', 1, 0),
+       (1, 10, '2025-12-17', '2025-12-17 08:40:20', '2025-12-17 18:10:11', 'ON_TIME', 1, 0),
+       (1, 10, '2025-12-18', '2025-12-18 09:45:00', '2025-12-18 18:50:00', 'LATE', 1, 0),
+       (1, 10, '2025-12-19', '2025-12-19 08:55:00', '2025-12-19 18:01:00', 'ON_TIME', 1, 0),
+       (1, 10, '2025-12-22', '2025-12-22 08:58:00', '2025-12-22 18:05:00', 'ON_TIME', 1, 0),
+       (1, 10, '2025-12-23', '2025-12-23 09:03:00', '2025-12-23 18:00:00', 'ON_TIME', 1, 0),
+       (1, 10, '2025-12-25', '2025-12-25 09:00:00', '2025-12-25 18:00:00', 'ON_TIME', 1, 1),
+       (1, 10, '2025-12-26', '2025-12-26 08:50:00', '2025-12-26 18:10:00', 'ON_TIME', 1, 0);
 
 
 
@@ -1931,246 +1947,309 @@ INSERT INTO attendance (company_id, employee_id, work_date, commute_at, leave_at
 -- 1. 카테고리 데이터 (ID: 1 ~ 20번 생성 가정)
 -- ==========================================
 -- 1~10: OrbitFlow(C1), 11~16: TechSolution(C2), 17~20: GlobalService(C3)
-INSERT INTO board_category (company_id, organization_id, board_name, board_type, is_activated, comment_activated) VALUES
-                                                                                                                      (1, NULL, '전사 공지사항', 'FREE', 1, 1), (1, NULL, '자유 게시판', 'FREE', 1, 1), (1, NULL, '사내 건의함', 'FREE', 1, 1),
-                                                                                                                      (1, NULL, '칭찬 게시판', 'FREE', 1, 1), (1, NULL, '자기계발/스터디', 'FREE', 1, 1), (1, 1, '백엔드팀 게시판', 'FREE', 1, 1),
-                                                                                                                      (1, 2, '프론트엔드 위키', 'FREE', 1, 1), (1, 3, 'HR 행정 지원', 'FREE', 1, 1), (1, 4, '영업본부 게시판', 'FREE', 1, 1),
-                                                                                                                      (1, 5, '마케팅 에셋 보관함', 'FREE', 1, 1), (2, NULL, 'TS 공지사항', 'FREE', 1, 1), (2, NULL, '기술 공유 라운지', 'FREE', 1, 1),
-                                                                                                                      (2, NULL, '사내 중고 장터', 'FREE', 1, 1), (2, 6, 'AI 모델 연구소', 'FREE', 1, 1), (2, 7, '플랫폼부 게시판', 'FREE', 1, 1),
-                                                                                                                      (2, 8, '인프라팀 게시판', 'FREE', 1, 1), (3, NULL, 'Global Notice', 'FREE', 1, 1), (3, NULL, 'General Forum', 'FREE', 1, 1),
-                                                                                                                      (3, 9, 'Customer Feedback', 'FREE', 1, 1), (3, 10, 'Global Ad Campaign', 'FREE', 1, 1);
+INSERT INTO board_category (company_id, organization_id, board_name, board_type, is_activated, comment_activated)
+VALUES (1, NULL, '전사 공지사항', 'FREE', 1, 1),
+       (1, NULL, '자유 게시판', 'FREE', 1, 1),
+       (1, NULL, '사내 건의함', 'FREE', 1, 1),
+       (1, NULL, '칭찬 게시판', 'FREE', 1, 1),
+       (1, NULL, '자기계발/스터디', 'FREE', 1, 1),
+       (1, 1, '백엔드 기술 공유', 'FREE', 1, 1),
+       (1, 2, '프론트엔드 위키', 'FREE', 1, 1),
+       (1, 3, 'HR 행정 지원', 'FREE', 1, 1),
+       (1, 4, '영업 전략 및 성과', 'FREE', 1, 1),
+       (1, 5, '마케팅 에셋 보관함', 'FREE', 1, 1),
+       (2, NULL, 'TS 공지사항', 'FREE', 1, 1),
+       (2, NULL, '기술 공유 라운지', 'FREE', 1, 1),
+       (2, NULL, '사내 중고 장터', 'FREE', 1, 1),
+       (2, 6, 'AI 모델 연구소', 'FREE', 1, 1),
+       (2, 7, '플랫폼부', 'FREE', 1, 1),
+       (2, 8, '인프라팀', 'FREE', 1, 1),
+       (3, NULL, 'Global Notice', 'FREE', 1, 1),
+       (3, NULL, 'General Forum', 'FREE', 1, 1),
+       (3, 9, 'Customer Feedback', 'FREE', 1, 1),
+       (3, 10, 'Global Ad Campaign', 'FREE', 1, 1);
 
 -- ==========================================
 -- 2. 게시글 데이터 (120개)
 -- ==========================================
 -- 회사 1 (ID 1~20번 직원)
-INSERT INTO board (board_category_id, employee_id, board_title, board_content, view_count) VALUES
-                                                                                               (1, 1, '2025 상반기 타운홀 미팅 안내', '전사 성과 공유를 위한 미팅 안내입니다.', 50),
-                                                                                               (2, 1, '오늘 점심 파스타 어때요?', '로비 근처 새로 생긴 곳 가보고 싶네요.', 12),
-                                                                                               (6, 2, 'Java 21 가상 스레드 도입기', '처리 성능이 20% 향상되었습니다.', 45),
-                                                                                               (2, 2, '주말 등산 모임 구합니다', '북한산 가볍게 다녀오실 분?', 8),
-                                                                                               (7, 3, 'Next.js 14 서버 액션 활용법', '새로운 데이터 페칭 패턴을 공유합니다.', 33),
-                                                                                               (2, 3, '기계식 키보드 입문 추천', '저소음 적축이 사무실에서 쓰기 좋네요.', 21),
-                                                                                               (8, 4, '연차 보상비 지급 안내', '이번 달 급여에 포함되어 지급됩니다.', 100),
-                                                                                               (3, 4, '카페테리아 원두 교체 건의', '산미 없는 고소한 원두로 바꿔주세요.', 15),
-                                                                                               (9, 5, '오빗전자 계약 수주 성공', '영업팀 모두의 노력으로 큰 계약을 따냈습니다.', 88),
-                                                                                               (2, 5, '퇴근 후 치맥 하실 분?', '강남역 근처에서 번개 모임 합니다.', 10),
-                                                                                               (10, 6, '1월 광고 집행 리포트', '유튜브 광고 도달률이 목표치를 상회했습니다.', 42),
-                                                                                               (2, 6, '요즘 볼만한 넷플릭스 추천', '퇴근하고 정주행할 거 찾고 있어요.', 18),
-                                                                                               (4, 7, '프론트팀 김영희님 감사합니다', '급한 수정 건 빠르게 도와주셔서 감사합니다.', 55),
-                                                                                               (2, 7, '에어팟 잃어버리신 분?', '3층 탕비실에서 습득했습니다.', 30),
-                                                                                               (5, 8, '파이썬 데이터 스터디 모집', '판다스 라이브러리 기초부터 같이 공부해요.', 22),
-                                                                                               (2, 8, '건강검진 예약 꿀팁', '연초에 해야 사람도 적고 쾌적하네요.', 14),
-                                                                                               (1, 9, '사내 보안 교육 이수 요청', '이번 주 금요일까지 전 직원 필수입니다.', 77),
-                                                                                               (2, 9, '노트북 스탠드 추천해요', '거북목 방지에 이만한 게 없네요.', 25),
-                                                                                               (4, 10, '인프라팀 박철수님 고생하셨습니다', '주말 서버 점검 덕분에 무사히 넘겼네요.', 60),
-                                                                                               (2, 10, '사무실 근처 맛집 지도', '제가 직접 다 가보고 정리한 리스트입니다.', 52),
-                                                                                               (6, 11, 'Redis 캐시 전략 가이드', 'Write-through 방식 도입 주의사항 정리.', 28),
-                                                                                               (2, 11, '비타민 영양제 추천', '피곤할 땐 종합비타민이 최고네요.', 13),
-                                                                                               (7, 12, 'Tailwind CSS 컨벤션', '클래스 순서 정리 규칙을 공유합니다.', 31),
-                                                                                               (2, 12, '주말 캠핑 가시는 분?', '이번엔 강원도로 떠납니다.', 11),
-                                                                                               (8, 13, '육아휴직 복직 프로세스', '복직 전 상담 및 필요 서류 정리입니다.', 40),
-                                                                                               (2, 13, '회사 근처 요가 학원', '점심시간 활용하기 딱 좋아요.', 16),
-                                                                                               (9, 14, '글로벌 시장 영업 동향', '미국 시장 수요 예측 보고서 요약.', 44),
-                                                                                               (2, 14, '슬램덩크 영화 다시 보기', '다시 봐도 감동이네요.', 10),
-                                                                                               (10, 15, '브랜드 가이드라인 v2.0', '로고 사용 및 폰트 규정이 업데이트 되었습니다.', 38),
-                                                                                               (2, 15, '미세먼지 조심하세요', '공기가 안 좋네요. 마스크 필수입니다.', 12),
-                                                                                               (4, 16, '경영팀 김미나님 감사합니다', '법인카드 한도 증액 신속 처리 감사합니다.', 50),
-                                                                                               (2, 16, '독서 모임 모집', '한 달에 책 한 권 같이 읽어요.', 19),
-                                                                                               (3, 17, '화장실 핸드타월 교체 주기', '오후에는 금방 떨어지네요. 보충 부탁드려요.', 24),
-                                                                                               (2, 17, '러닝 크루 모집', '화요일 퇴근 후 사옥 근처 한 바퀴!', 22),
-                                                                                               (5, 18, 'AWS 자격증 취득 후기', 'SAA 시험 준비하시는 분들 팁 드립니다.', 37),
-                                                                                               (2, 18, '여행지 추천해주세요', '일본이랑 베트남 중 고민 중입니다.', 28),
-                                                                                               (1, 19, '임직원 명절 선물 설문', '올해는 어떤 품목이 좋을까요?', 110),
-                                                                                               (2, 19, '당근마켓 나눔', '사용감 적은 모니터 스탠드 드립니다.', 45),
-                                                                                               (4, 20, '인사팀 박지수님 칭찬합니다', '신규 복지 제도 설명 너무 친절했어요.', 58),
-                                                                                               (2, 20, '오늘 날씨 너무 좋네요', '창밖만 봐도 힐링되는 하루입니다.', 23);
+INSERT INTO board (board_category_id, employee_id, board_title, board_content, view_count)
+VALUES (1, 1, '2025 상반기 타운홀 미팅 안내', '전사 성과 공유를 위한 미팅 안내입니다.', 50),
+       (2, 1, '오늘 점심 파스타 어때요?', '로비 근처 새로 생긴 곳 가보고 싶네요.', 12),
+       (6, 2, 'Java 21 가상 스레드 도입기', '처리 성능이 20% 향상되었습니다.', 45),
+       (2, 2, '주말 등산 모임 구합니다', '북한산 가볍게 다녀오실 분?', 8),
+       (7, 3, 'Next.js 14 서버 액션 활용법', '새로운 데이터 페칭 패턴을 공유합니다.', 33),
+       (2, 3, '기계식 키보드 입문 추천', '저소음 적축이 사무실에서 쓰기 좋네요.', 21),
+       (8, 4, '연차 보상비 지급 안내', '이번 달 급여에 포함되어 지급됩니다.', 100),
+       (3, 4, '카페테리아 원두 교체 건의', '산미 없는 고소한 원두로 바꿔주세요.', 15),
+       (9, 5, '오빗전자 계약 수주 성공', '영업팀 모두의 노력으로 큰 계약을 따냈습니다.', 88),
+       (2, 5, '퇴근 후 치맥 하실 분?', '강남역 근처에서 번개 모임 합니다.', 10),
+       (10, 6, '1월 광고 집행 리포트', '유튜브 광고 도달률이 목표치를 상회했습니다.', 42),
+       (2, 6, '요즘 볼만한 넷플릭스 추천', '퇴근하고 정주행할 거 찾고 있어요.', 18),
+       (4, 7, '프론트팀 김영희님 감사합니다', '급한 수정 건 빠르게 도와주셔서 감사합니다.', 55),
+       (2, 7, '에어팟 잃어버리신 분?', '3층 탕비실에서 습득했습니다.', 30),
+       (5, 8, '파이썬 데이터 스터디 모집', '판다스 라이브러리 기초부터 같이 공부해요.', 22),
+       (2, 8, '건강검진 예약 꿀팁', '연초에 해야 사람도 적고 쾌적하네요.', 14),
+       (1, 9, '사내 보안 교육 이수 요청', '이번 주 금요일까지 전 직원 필수입니다.', 77),
+       (2, 9, '노트북 스탠드 추천해요', '거북목 방지에 이만한 게 없네요.', 25),
+       (4, 10, '인프라팀 박철수님 고생하셨습니다', '주말 서버 점검 덕분에 무사히 넘겼네요.', 60),
+       (2, 10, '사무실 근처 맛집 지도', '제가 직접 다 가보고 정리한 리스트입니다.', 52),
+       (6, 11, 'Redis 캐시 전략 가이드', 'Write-through 방식 도입 주의사항 정리.', 28),
+       (2, 11, '비타민 영양제 추천', '피곤할 땐 종합비타민이 최고네요.', 13),
+       (7, 12, 'Tailwind CSS 컨벤션', '클래스 순서 정리 규칙을 공유합니다.', 31),
+       (2, 12, '주말 캠핑 가시는 분?', '이번엔 강원도로 떠납니다.', 11),
+       (8, 13, '육아휴직 복직 프로세스', '복직 전 상담 및 필요 서류 정리입니다.', 40),
+       (2, 13, '회사 근처 요가 학원', '점심시간 활용하기 딱 좋아요.', 16),
+       (9, 14, '글로벌 시장 영업 동향', '미국 시장 수요 예측 보고서 요약.', 44),
+       (2, 14, '슬램덩크 영화 다시 보기', '다시 봐도 감동이네요.', 10),
+       (10, 15, '브랜드 가이드라인 v2.0', '로고 사용 및 폰트 규정이 업데이트 되었습니다.', 38),
+       (2, 15, '미세먼지 조심하세요', '공기가 안 좋네요. 마스크 필수입니다.', 12),
+       (4, 16, '경영팀 김미나님 감사합니다', '법인카드 한도 증액 신속 처리 감사합니다.', 50),
+       (2, 16, '독서 모임 모집', '한 달에 책 한 권 같이 읽어요.', 19),
+       (3, 17, '화장실 핸드타월 교체 주기', '오후에는 금방 떨어지네요. 보충 부탁드려요.', 24),
+       (2, 17, '러닝 크루 모집', '화요일 퇴근 후 사옥 근처 한 바퀴!', 22),
+       (5, 18, 'AWS 자격증 취득 후기', 'SAA 시험 준비하시는 분들 팁 드립니다.', 37),
+       (2, 18, '여행지 추천해주세요', '일본이랑 베트남 중 고민 중입니다.', 28),
+       (1, 19, '임직원 명절 선물 설문', '올해는 어떤 품목이 좋을까요?', 110),
+       (2, 19, '당근마켓 나눔', '사용감 적은 모니터 스탠드 드립니다.', 45),
+       (4, 20, '인사팀 박지수님 칭찬합니다', '신규 복지 제도 설명 너무 친절했어요.', 58),
+       (2, 20, '오늘 날씨 너무 좋네요', '창밖만 봐도 힐링되는 하루입니다.', 23);
 
 -- 회사 2 (ID 21~40번 직원)
-INSERT INTO board (board_category_id, employee_id, board_title, board_content, view_count) VALUES
-                                                                                               (11, 21, 'TS 신년 경영 비전 발표', '기술력으로 글로벌 1위를 달성합시다.', 90),
-                                                                                               (12, 21, '쿠버네티스 오토스케일링 적용', 'HPA 설정 최적화 가이드입니다.', 45),
-                                                                                               (13, 22, '로지텍 마우스 팔아요', '3개월 썼는데 깨끗합니다. 싸게 드려요.', 15),
-                                                                                               (14, 22, 'LLM 파인튜닝 실험 결과', '도메인 특화 학습 시 정확도가 향상되었습니다.', 52),
-                                                                                               (15, 23, '공통 API 게이트웨이 변경', '인증 방식이 OAuth2로 강화되었습니다.', 38),
-                                                                                               (11, 23, '사무실 자리 재배치 안내', '다음 주 주말에 대규모 이동이 있습니다.', 70),
-                                                                                               (16, 24, '클라우드 비용 절감 방안', '유휴 자원 정리로 월 15% 비용 절감.', 35),
-                                                                                               (12, 24, 'Grafana 대시보드 공유', '실시간 서버 상태 모니터링용 템플릿.', 22),
-                                                                                               (13, 25, '기계식 키보드 나눔', '오래됐지만 작동 잘 됩니다. 필요하신 분?', 20),
-                                                                                               (14, 25, 'Vision 모델 성능 개선', '객체 인식 속도 개선 사례 공유.', 44),
-                                                                                               (11, 26, '임직원 건강검진 캠페인', '대상자분들은 기한 내 예약 바랍니다.', 55),
-                                                                                               (15, 26, '로깅 라이브러리 v3 배포', '성능 향상 및 가독성이 개선되었습니다.', 29),
-                                                                                               (16, 27, 'DB 샤딩 도입 검토 보고', '데이터 증가에 따른 확장성 확보 전략.', 40),
-                                                                                               (12, 27, 'Git 컨벤션 통일 제안', '커밋 메시지 규칙을 하나로 정해봅시다.', 18),
-                                                                                               (13, 28, '데스크패드 팝니다', '새 제품인데 사이즈가 안 맞네요.', 12),
-                                                                                               (14, 28, 'Stable Diffusion 활용법', '사내 디자인 업무 효율화 방안 연구.', 36),
-                                                                                               (15, 29, 'UI 컴포넌트 라이브러리', '피그마와 매칭되는 리액트 컴포넌트 배포.', 48),
-                                                                                               (16, 29, '네트워크 보안 강화 조치', '외부 접속 시 VPN 필수 사용 적용.', 51),
-                                                                                               (12, 30, 'Go 언어 동시성 패턴', 'Channel과 Goroutine 효율적 활용법.', 25),
-                                                                                               (11, 30, '동호회 활동 지원 안내', '5인 이상 모임 시 활동비 지원됩니다.', 62),
-                                                                                               (14, 31, '데이터 라벨링 효율화', '자동 라벨링 툴 도입 후 속도 3배 향상.', 30),
-                                                                                               (12, 31, '파이썬 FastAPI 도입 후기', '기존 장고 대비 생산성 및 성능 비교.', 22),
-                                                                                               (15, 32, '모바일 웹 앱 최적화', '라이트하우스 점수 90점 달성 노하우.', 34),
-                                                                                               (13, 32, '스타벅스 기프티콘 교환', '다른 브랜드로 교환 원해요.', 11),
-                                                                                               (16, 33, 'K8s 트러블슈팅 사례', 'Ingress 설정 오류 해결기.', 39),
-                                                                                               (11, 33, '명절 귀성비 지원 공지', '이번 추석 귀성비가 지급될 예정입니다.', 120),
-                                                                                               (12, 34, '테스트 자동화 구축', 'Playwright를 이용한 E2E 테스트 자동화.', 27),
-                                                                                               (14, 34, 'RLHF 개념 정리', '강화 학습을 이용한 모델 튜닝 원리.', 21),
-                                                                                               (15, 35, '디자인 시스템 v1.5', '다크 모드 컬러 팔레트가 추가되었습니다.', 33),
-                                                                                               (13, 35, '아이패드 에어 4세대', '충전기 포함 풀박스입니다.', 50),
-                                                                                               (16, 36, 'Zabbix 모니터링 연동', '슬랙으로 실시간 장애 알림 연동 완료.', 28),
-                                                                                               (12, 36, 'Rust 입문 가이드', 'C++ 개발자가 본 Rust의 장단점.', 19),
-                                                                                               (11, 37, '주말 사옥 방역 안내', '토요일 09시부터 전체 방역 실시합니다.', 44),
-                                                                                               (14, 37, 'OCR 모델 성능 비교', 'Tesseract vs 사내 모델 성능 테스트.', 25),
-                                                                                               (15, 38, '공통 컴포넌트 사용 가이드', 'Select 및 Modal 컴포넌트 활용법.', 22),
-                                                                                               (13, 38, '캠핑 의자 팝니다', '가벼운 의자입니다.', 16),
-                                                                                               (16, 39, 'Docker 보안 취약점 점검', '이미지 스캐닝 결과 및 조치 사항.', 31),
-                                                                                               (12, 39, 'Kafka 스트림즈 활용', '실시간 데이터 파이프라인 구축 사례.', 26),
-                                                                                               (11, 40, '법정 의무 교육 미이수자 확인', '오늘 마감입니다. 확인 부탁드려요.', 88),
-                                                                                               (14, 40, '생성 AI 저작권 동향', '최신 가이드라인 정리.', 42);
+INSERT INTO board (board_category_id, employee_id, board_title, board_content, view_count)
+VALUES (11, 21, 'TS 신년 경영 비전 발표', '기술력으로 글로벌 1위를 달성합시다.', 90),
+       (12, 21, '쿠버네티스 오토스케일링 적용', 'HPA 설정 최적화 가이드입니다.', 45),
+       (13, 22, '로지텍 마우스 팔아요', '3개월 썼는데 깨끗합니다. 싸게 드려요.', 15),
+       (14, 22, 'LLM 파인튜닝 실험 결과', '도메인 특화 학습 시 정확도가 향상되었습니다.', 52),
+       (15, 23, '공통 API 게이트웨이 변경', '인증 방식이 OAuth2로 강화되었습니다.', 38),
+       (11, 23, '사무실 자리 재배치 안내', '다음 주 주말에 대규모 이동이 있습니다.', 70),
+       (16, 24, '클라우드 비용 절감 방안', '유휴 자원 정리로 월 15% 비용 절감.', 35),
+       (12, 24, 'Grafana 대시보드 공유', '실시간 서버 상태 모니터링용 템플릿.', 22),
+       (13, 25, '기계식 키보드 나눔', '오래됐지만 작동 잘 됩니다. 필요하신 분?', 20),
+       (14, 25, 'Vision 모델 성능 개선', '객체 인식 속도 개선 사례 공유.', 44),
+       (11, 26, '임직원 건강검진 캠페인', '대상자분들은 기한 내 예약 바랍니다.', 55),
+       (15, 26, '로깅 라이브러리 v3 배포', '성능 향상 및 가독성이 개선되었습니다.', 29),
+       (16, 27, 'DB 샤딩 도입 검토 보고', '데이터 증가에 따른 확장성 확보 전략.', 40),
+       (12, 27, 'Git 컨벤션 통일 제안', '커밋 메시지 규칙을 하나로 정해봅시다.', 18),
+       (13, 28, '데스크패드 팝니다', '새 제품인데 사이즈가 안 맞네요.', 12),
+       (14, 28, 'Stable Diffusion 활용법', '사내 디자인 업무 효율화 방안 연구.', 36),
+       (15, 29, 'UI 컴포넌트 라이브러리', '피그마와 매칭되는 리액트 컴포넌트 배포.', 48),
+       (16, 29, '네트워크 보안 강화 조치', '외부 접속 시 VPN 필수 사용 적용.', 51),
+       (12, 30, 'Go 언어 동시성 패턴', 'Channel과 Goroutine 효율적 활용법.', 25),
+       (11, 30, '동호회 활동 지원 안내', '5인 이상 모임 시 활동비 지원됩니다.', 62),
+       (14, 31, '데이터 라벨링 효율화', '자동 라벨링 툴 도입 후 속도 3배 향상.', 30),
+       (12, 31, '파이썬 FastAPI 도입 후기', '기존 장고 대비 생산성 및 성능 비교.', 22),
+       (15, 32, '모바일 웹 앱 최적화', '라이트하우스 점수 90점 달성 노하우.', 34),
+       (13, 32, '스타벅스 기프티콘 교환', '다른 브랜드로 교환 원해요.', 11),
+       (16, 33, 'K8s 트러블슈팅 사례', 'Ingress 설정 오류 해결기.', 39),
+       (11, 33, '명절 귀성비 지원 공지', '이번 추석 귀성비가 지급될 예정입니다.', 120),
+       (12, 34, '테스트 자동화 구축', 'Playwright를 이용한 E2E 테스트 자동화.', 27),
+       (14, 34, 'RLHF 개념 정리', '강화 학습을 이용한 모델 튜닝 원리.', 21),
+       (15, 35, '디자인 시스템 v1.5', '다크 모드 컬러 팔레트가 추가되었습니다.', 33),
+       (13, 35, '아이패드 에어 4세대', '충전기 포함 풀박스입니다.', 50),
+       (16, 36, 'Zabbix 모니터링 연동', '슬랙으로 실시간 장애 알림 연동 완료.', 28),
+       (12, 36, 'Rust 입문 가이드', 'C++ 개발자가 본 Rust의 장단점.', 19),
+       (11, 37, '주말 사옥 방역 안내', '토요일 09시부터 전체 방역 실시합니다.', 44),
+       (14, 37, 'OCR 모델 성능 비교', 'Tesseract vs 사내 모델 성능 테스트.', 25),
+       (15, 38, '공통 컴포넌트 사용 가이드', 'Select 및 Modal 컴포넌트 활용법.', 22),
+       (13, 38, '캠핑 의자 팝니다', '가벼운 의자입니다.', 16),
+       (16, 39, 'Docker 보안 취약점 점검', '이미지 스캐닝 결과 및 조치 사항.', 31),
+       (12, 39, 'Kafka 스트림즈 활용', '실시간 데이터 파이프라인 구축 사례.', 26),
+       (11, 40, '법정 의무 교육 미이수자 확인', '오늘 마감입니다. 확인 부탁드려요.', 88),
+       (14, 40, '생성 AI 저작권 동향', '최신 가이드라인 정리.', 42);
 
 -- 회사 3 (ID 41~60번 직원)
-INSERT INTO board (board_category_id, employee_id, board_title, board_content, view_count) VALUES
-                                                                                               (17, 41, 'Q1 Global Strategy', 'We aim to expand our service in SEA region.', 150),
-                                                                                               (18, 41, 'Any soccer fans here?', 'Lets watch the game together tonight.', 30),
-                                                                                               (19, 42, 'App Review Analysis', 'Users like the new UI but report some bugs.', 60),
-                                                                                               (18, 42, 'New cafe open nearby', 'The coffee there is amazing.', 25),
-                                                                                               (20, 43, 'YouTube Ad Performance', 'CTR increased by 15% in India market.', 40),
-                                                                                               (17, 43, 'Holiday schedule in US office', 'Please check the vacation dates.', 90),
-                                                                                               (19, 44, 'CS Response Time Goal', 'We need to reduce it below 2 hours.', 33),
-                                                                                               (18, 44, 'Lost my sunglasses', 'Did anyone see them in the lobby?', 12),
-                                                                                               (20, 45, 'New Banner Designs', 'Visual assets for Summer Sale is ready.', 55),
-                                                                                               (18, 45, 'Flight ticket deals', 'I found a great price for Tokyo!', 41),
-                                                                                               (17, 46, 'Office Renovation Plan', 'Starting next month on 5th floor.', 82),
-                                                                                               (19, 46, 'B2B Client Feedback', 'High demand for custom dashboard features.', 49),
-                                                                                               (20, 47, 'Social Media Strategy', 'Focusing on TikTok for younger audience.', 37),
-                                                                                               (18, 47, 'Gym membership discount', 'Group discount available for us.', 22),
-                                                                                               (17, 48, 'New Expense Policy', 'Updates on travel budget and receipts.', 110),
-                                                                                               (19, 48, 'User Satisfaction Survey', 'Our NPS reached 70 last month.', 53),
-                                                                                               (20, 49, 'Influencer Marketing List', 'Selected 5 influencers for UK market.', 44),
-                                                                                               (18, 49, 'Weather is getting cold', 'Take care of your health everyone.', 15),
-                                                                                               (17, 50, 'Security Awareness Month', 'Watch the training video by Friday.', 77),
-                                                                                               (19, 50, 'Retention Rate Improvement', 'Ideas on how to keep users active.', 38),
-                                                                                               (20, 51, 'Q4 Budget Allocation', 'Shifting more funds to video ads.', 46),
-                                                                                               (18, 51, 'Running club meeting', 'Join us for a 5k run tomorrow.', 21),
-                                                                                               (17, 52, 'New Hire Welcome', 'Welcome Sarah to the Design team!', 65),
-                                                                                               (19, 52, 'iOS Crash Report', 'Fixed the login issue for iOS 17.', 55),
-                                                                                               (20, 53, 'Google Search Ads', 'Optimizing keywords for Japan market.', 42),
-                                                                                               (18, 53, 'Anyone for a hike?', 'Going to Namsan this weekend.', 19),
-                                                                                               (17, 54, 'Internal Audit Result', 'We passed all security requirements.', 58),
-                                                                                               (19, 54, 'Premium Plan Inquiry', 'Enterprise clients asking for SSO.', 34),
-                                                                                               (20, 55, 'Podcast Sponsoring', 'Launching our first podcast ad soon.', 27),
-                                                                                               (18, 55, 'Best Ramen in town', 'Just tried this new place, 10/10.', 52),
-                                                                                               (17, 56, 'CEO Townhall Meeting', 'Join via Zoom next Wednesday.', 130),
-                                                                                               (19, 56, 'Dark Mode Feedback', 'Users love it but need better contrast.', 41),
-                                                                                               (20, 57, 'Localizing Content', 'Tips for marketing in Latin America.', 39),
-                                                                                               (18, 57, 'Ski trip interest?', 'Planning for January, let me know.', 24),
-                                                                                               (17, 58, 'Sustainability Initiative', 'Office is going paperless from Q2.', 66),
-                                                                                               (19, 58, 'Feature Request: Export', 'Many users want PDF export for reports.', 37),
-                                                                                               (20, 59, 'A/B Testing Results', 'Red button has 10% higher conversion.', 51),
-                                                                                               (18, 59, 'Merry Christmas!', 'Hope everyone has a wonderful holiday.', 100),
-                                                                                               (17, 60, 'Annual Performance Review', 'Please fill out your self-evaluation.', 85),
-                                                                                               (19, 60, 'Voice of Customer', 'Monthly summary of common complaints.', 47);
+INSERT INTO board (board_category_id, employee_id, board_title, board_content, view_count)
+VALUES (17, 41, 'Q1 Global Strategy', 'We aim to expand our service in SEA region.', 150),
+       (18, 41, 'Any soccer fans here?', 'Lets watch the game together tonight.', 30),
+       (19, 42, 'App Review Analysis', 'Users like the new UI but report some bugs.', 60),
+       (18, 42, 'New cafe open nearby', 'The coffee there is amazing.', 25),
+       (20, 43, 'YouTube Ad Performance', 'CTR increased by 15% in India market.', 40),
+       (17, 43, 'Holiday schedule in US office', 'Please check the vacation dates.', 90),
+       (19, 44, 'CS Response Time Goal', 'We need to reduce it below 2 hours.', 33),
+       (18, 44, 'Lost my sunglasses', 'Did anyone see them in the lobby?', 12),
+       (20, 45, 'New Banner Designs', 'Visual assets for Summer Sale is ready.', 55),
+       (18, 45, 'Flight ticket deals', 'I found a great price for Tokyo!', 41),
+       (17, 46, 'Office Renovation Plan', 'Starting next month on 5th floor.', 82),
+       (19, 46, 'B2B Client Feedback', 'High demand for custom dashboard features.', 49),
+       (20, 47, 'Social Media Strategy', 'Focusing on TikTok for younger audience.', 37),
+       (18, 47, 'Gym membership discount', 'Group discount available for us.', 22),
+       (17, 48, 'New Expense Policy', 'Updates on travel budget and receipts.', 110),
+       (19, 48, 'User Satisfaction Survey', 'Our NPS reached 70 last month.', 53),
+       (20, 49, 'Influencer Marketing List', 'Selected 5 influencers for UK market.', 44),
+       (18, 49, 'Weather is getting cold', 'Take care of your health everyone.', 15),
+       (17, 50, 'Security Awareness Month', 'Watch the training video by Friday.', 77),
+       (19, 50, 'Retention Rate Improvement', 'Ideas on how to keep users active.', 38),
+       (20, 51, 'Q4 Budget Allocation', 'Shifting more funds to video ads.', 46),
+       (18, 51, 'Running club meeting', 'Join us for a 5k run tomorrow.', 21),
+       (17, 52, 'New Hire Welcome', 'Welcome Sarah to the Design team!', 65),
+       (19, 52, 'iOS Crash Report', 'Fixed the login issue for iOS 17.', 55),
+       (20, 53, 'Google Search Ads', 'Optimizing keywords for Japan market.', 42),
+       (18, 53, 'Anyone for a hike?', 'Going to Namsan this weekend.', 19),
+       (17, 54, 'Internal Audit Result', 'We passed all security requirements.', 58),
+       (19, 54, 'Premium Plan Inquiry', 'Enterprise clients asking for SSO.', 34),
+       (20, 55, 'Podcast Sponsoring', 'Launching our first podcast ad soon.', 27),
+       (18, 55, 'Best Ramen in town', 'Just tried this new place, 10/10.', 52),
+       (17, 56, 'CEO Townhall Meeting', 'Join via Zoom next Wednesday.', 130),
+       (19, 56, 'Dark Mode Feedback', 'Users love it but need better contrast.', 41),
+       (20, 57, 'Localizing Content', 'Tips for marketing in Latin America.', 39),
+       (18, 57, 'Ski trip interest?', 'Planning for January, let me know.', 24),
+       (17, 58, 'Sustainability Initiative', 'Office is going paperless from Q2.', 66),
+       (19, 58, 'Feature Request: Export', 'Many users want PDF export for reports.', 37),
+       (20, 59, 'A/B Testing Results', 'Red button has 10% higher conversion.', 51),
+       (18, 59, 'Merry Christmas!', 'Hope everyone has a wonderful holiday.', 100),
+       (17, 60, 'Annual Performance Review', 'Please fill out your self-evaluation.', 85),
+       (19, 60, 'Voice of Customer', 'Monthly summary of common complaints.', 47);
 
 -- ==========================================
 -- 3. 댓글 데이터 (120개)
 -- ==========================================
-INSERT INTO comment (board_id, employee_id, comment_content) VALUES
-                                                                 (1, 2, '이번에도 온라인 생중계 해주시나요?'), (1, 21, '미래가 기대되는 발표네요.'),
-                                                                 (2, 3, '저요! 파스타 완전 좋아합니다.'), (2, 22, '저도 끼워주세요!'),
-                                                                 (3, 1, '성능 향상 폭이 생각보다 크네요.'), (3, 23, '서버 액션 보안은 괜찮을까요?'),
-                                                                 (4, 4, '저는 초보인데 따라갈 수 있을까요?'), (4, 24, '저도 같이 가고 싶어요.'),
-                                                                 (5, 5, '기존 API 라우트보다 편한 것 같아요.'), (5, 25, '코드가 훨씬 깔끔해졌네요.'),
-                                                                 (6, 6, '무접점도 한 번 써보시면 좋습니다.'), (6, 26, '저도 적축 쓰는데 대만족!'),
-                                                                 (7, 7, '감사합니다. 기다리던 소식입니다.'), (7, 27, '연차 보상비 최고!'),
-                                                                 (8, 8, '동의합니다. 이번 원두는 너무 셔요.'), (8, 28, '저도 건의하려고 했습니다.'),
-                                                                 (9, 9, '영업팀 정말 축하드립니다.'), (9, 29, '회식 가나요?'),
-                                                                 (10, 10, '저도 가고 싶지만 선약이 있네요.'), (10, 30, '다음엔 꼭 같이 가요.'),
-                                                                 (11, 11, '수치들이 아주 긍정적이네요.'), (11, 31, '마케팅팀 고생 많으셨습니다.'),
-                                                                 (12, 12, '다큐멘터리 재밌더라고요.'), (12, 32, '저도 그거 봤어요!'),
-                                                                 (13, 13, '영희님 정말 천사시죠! 인정합니다.'), (13, 33, '영희님 칭찬 릴레이네요.'),
-                                                                 (14, 14, '앗 제 친구가 찾고 있었는데 물어볼게요.'), (14, 34, '주인분 꼭 찾으시길!'),
-                                                                 (15, 15, '비개발자도 참여하고 싶어요.'), (15, 35, '누구나 환영입니다.'),
-                                                                 (16, 16, '내일부터 바로 예약 잡아야겠네요.'), (16, 36, '저도 방금 예약했습니다.'),
-                                                                 (17, 17, '방금 완료했습니다. 서두르세요!'), (17, 37, '보안 교육 클리어!'),
-                                                                 (18, 18, '저도 그거 쓰는데 거북목 좋아졌어요.'), (18, 38, '공구하고 싶을 정도네요.'),
-                                                                 (19, 19, '철수님 덕분에 아침이 평화롭네요.'), (19, 39, '철수님 최고!'),
-                                                                 (20, 20, '리스트 공유 감사합니다!'), (20, 40, '내일 점심은 여기로 가야겠네요.'),
-                                                                 (41, 41, 'Great vision for TS!'), (41, 1, '화이팅입니다!'),
-                                                                 (42, 42, '이게 정석이죠. 고생하셨습니다.'), (42, 2, '기술 공유 감사합니다.'),
-                                                                 (43, 43, '직거래 가능한가요?'), (43, 3, '상태 좋아 보이네요.'),
-                                                                 (44, 44, 'Very interesting results.'), (44, 4, 'AI팀 응원합니다.'),
-                                                                 (45, 45, '인증 로직 확인했습니다.'), (45, 5, '보안이 강화됐네요.'),
-                                                                 (46, 46, '창가 자리 가고 싶어요 ㅎㅎ'), (46, 6, '이사 가기 번거롭겠어요.'),
-                                                                 (47, 47, '금액이 상당하겠는데요?'), (47, 7, '비용 절감 대단합니다.'),
-                                                                 (48, 48, '제 대시보드에도 적용해보고 싶어요.'), (48, 8, '템플릿 공유 부탁드려요.'),
-                                                                 (49, 49, '나눔 감사합니다! 쪽지 드렸어요.'), (49, 9, '저도 줄 서봅니다.'),
-                                                                 (50, 50, '정말 놀라운 속도네요.'), (50, 10, '알고리즘이 궁금합니다.'),
-                                                                 (81, 41, 'Exciting goals.'), (81, 11, 'SEA market is huge.'),
-                                                                 (82, 42, 'I love soccer! Where?'), (82, 12, 'Count me in!'),
-                                                                 (83, 43, 'Bugs fixed yet?'), (83, 13, 'Feedback is noted.'),
-                                                                 (84, 44, 'Coffee on me today.'), (84, 14, 'Thanks for the latte.'),
-                                                                 (85, 45, 'India market data?'), (85, 15, 'Growth is visible.'),
-                                                                 (86, 46, 'Vacation dates confirmed.'), (86, 16, 'Check the email.'),
-                                                                 (87, 47, 'Hard goal, but possible.'), (87, 17, 'Let s do it.'),
-                                                                 (88, 48, 'I saw them in lobby.'), (88, 18, 'Front desk has them.'),
-                                                                 (89, 49, 'Visuals are fresh.'), (89, 19, 'Nice design work.'),
-                                                                 (90, 50, 'Booked Tokyo flight!'), (90, 20, 'Enjoy your trip!'),
-                                                                 (91, 51, 'Construction is noisy.'), (91, 21, 'Pardon the mess.'),
-                                                                 (92, 52, 'SSO is needed for B2B.'), (92, 22, 'Working on it.'),
-                                                                 (93, 53, 'TikTok branding is key.'), (93, 23, 'Gen Z target!'),
-                                                                 (94, 54, 'GS2025 code works.'), (94, 24, 'Joining the gym too.'),
-                                                                 (95, 55, 'Policy update noted.'), (95, 25, 'Got the email.'),
-                                                                 (96, 56, '80 NPS is the target.'), (96, 26, 'We can reach it.'),
-                                                                 (97, 57, 'UK list is ready.'), (97, 27, 'Good candidates.'),
-                                                                 (98, 58, 'Stay warm folks.'), (98, 28, 'Winter is here.'),
-                                                                 (99, 59, 'Security video done.'), (99, 29, 'Stay safe online.'),
-                                                                 (100, 60, 'Retention is vital.'), (100, 30, 'New ideas needed.');
+INSERT INTO comment (board_id, employee_id, comment_content)
+VALUES (1, 2, '이번에도 온라인 생중계 해주시나요?'),
+       (1, 21, '미래가 기대되는 발표네요.'),
+       (2, 3, '저요! 파스타 완전 좋아합니다.'),
+       (2, 22, '저도 끼워주세요!'),
+       (3, 1, '성능 향상 폭이 생각보다 크네요.'),
+       (3, 23, '서버 액션 보안은 괜찮을까요?'),
+       (4, 4, '저는 초보인데 따라갈 수 있을까요?'),
+       (4, 24, '저도 같이 가고 싶어요.'),
+       (5, 5, '기존 API 라우트보다 편한 것 같아요.'),
+       (5, 25, '코드가 훨씬 깔끔해졌네요.'),
+       (6, 6, '무접점도 한 번 써보시면 좋습니다.'),
+       (6, 26, '저도 적축 쓰는데 대만족!'),
+       (7, 7, '감사합니다. 기다리던 소식입니다.'),
+       (7, 27, '연차 보상비 최고!'),
+       (8, 8, '동의합니다. 이번 원두는 너무 셔요.'),
+       (8, 28, '저도 건의하려고 했습니다.'),
+       (9, 9, '영업팀 정말 축하드립니다.'),
+       (9, 29, '회식 가나요?'),
+       (10, 10, '저도 가고 싶지만 선약이 있네요.'),
+       (10, 30, '다음엔 꼭 같이 가요.'),
+       (11, 11, '수치들이 아주 긍정적이네요.'),
+       (11, 31, '마케팅팀 고생 많으셨습니다.'),
+       (12, 12, '다큐멘터리 재밌더라고요.'),
+       (12, 32, '저도 그거 봤어요!'),
+       (13, 13, '영희님 정말 천사시죠! 인정합니다.'),
+       (13, 33, '영희님 칭찬 릴레이네요.'),
+       (14, 14, '앗 제 친구가 찾고 있었는데 물어볼게요.'),
+       (14, 34, '주인분 꼭 찾으시길!'),
+       (15, 15, '비개발자도 참여하고 싶어요.'),
+       (15, 35, '누구나 환영입니다.'),
+       (16, 16, '내일부터 바로 예약 잡아야겠네요.'),
+       (16, 36, '저도 방금 예약했습니다.'),
+       (17, 17, '방금 완료했습니다. 서두르세요!'),
+       (17, 37, '보안 교육 클리어!'),
+       (18, 18, '저도 그거 쓰는데 거북목 좋아졌어요.'),
+       (18, 38, '공구하고 싶을 정도네요.'),
+       (19, 19, '철수님 덕분에 아침이 평화롭네요.'),
+       (19, 39, '철수님 최고!'),
+       (20, 20, '리스트 공유 감사합니다!'),
+       (20, 40, '내일 점심은 여기로 가야겠네요.'),
+       (41, 41, 'Great vision for TS!'),
+       (41, 1, '화이팅입니다!'),
+       (42, 42, '이게 정석이죠. 고생하셨습니다.'),
+       (42, 2, '기술 공유 감사합니다.'),
+       (43, 43, '직거래 가능한가요?'),
+       (43, 3, '상태 좋아 보이네요.'),
+       (44, 44, 'Very interesting results.'),
+       (44, 4, 'AI팀 응원합니다.'),
+       (45, 45, '인증 로직 확인했습니다.'),
+       (45, 5, '보안이 강화됐네요.'),
+       (46, 46, '창가 자리 가고 싶어요 ㅎㅎ'),
+       (46, 6, '이사 가기 번거롭겠어요.'),
+       (47, 47, '금액이 상당하겠는데요?'),
+       (47, 7, '비용 절감 대단합니다.'),
+       (48, 48, '제 대시보드에도 적용해보고 싶어요.'),
+       (48, 8, '템플릿 공유 부탁드려요.'),
+       (49, 49, '나눔 감사합니다! 쪽지 드렸어요.'),
+       (49, 9, '저도 줄 서봅니다.'),
+       (50, 50, '정말 놀라운 속도네요.'),
+       (50, 10, '알고리즘이 궁금합니다.'),
+       (81, 41, 'Exciting goals.'),
+       (81, 11, 'SEA market is huge.'),
+       (82, 42, 'I love soccer! Where?'),
+       (82, 12, 'Count me in!'),
+       (83, 43, 'Bugs fixed yet?'),
+       (83, 13, 'Feedback is noted.'),
+       (84, 44, 'Coffee on me today.'),
+       (84, 14, 'Thanks for the latte.'),
+       (85, 45, 'India market data?'),
+       (85, 15, 'Growth is visible.'),
+       (86, 46, 'Vacation dates confirmed.'),
+       (86, 16, 'Check the email.'),
+       (87, 47, 'Hard goal, but possible.'),
+       (87, 17, 'Let s do it.'),
+       (88, 48, 'I saw them in lobby.'),
+       (88, 18, 'Front desk has them.'),
+       (89, 49, 'Visuals are fresh.'),
+       (89, 19, 'Nice design work.'),
+       (90, 50, 'Booked Tokyo flight!'),
+       (90, 20, 'Enjoy your trip!'),
+       (91, 51, 'Construction is noisy.'),
+       (91, 21, 'Pardon the mess.'),
+       (92, 52, 'SSO is needed for B2B.'),
+       (92, 22, 'Working on it.'),
+       (93, 53, 'TikTok branding is key.'),
+       (93, 23, 'Gen Z target!'),
+       (94, 54, 'GS2025 code works.'),
+       (94, 24, 'Joining the gym too.'),
+       (95, 55, 'Policy update noted.'),
+       (95, 25, 'Got the email.'),
+       (96, 56, '80 NPS is the target.'),
+       (96, 26, 'We can reach it.'),
+       (97, 57, 'UK list is ready.'),
+       (97, 27, 'Good candidates.'),
+       (98, 58, 'Stay warm folks.'),
+       (98, 28, 'Winter is here.'),
+       (99, 59, 'Security video done.'),
+       (99, 29, 'Stay safe online.'),
+       (100, 60, 'Retention is vital.'),
+       (100, 30, 'New ideas needed.');
 
 -- ==========================================
 -- 4. 쪽지 데이터 (120개)
 -- ==========================================
-INSERT INTO message (company_id, employee_id, message_title, message_content) VALUES
-                                                                                  (1, 1, '영수증 제출 요청', '김철수님, 지난주 식비 영수증 한 장이 누락되었습니다.'),
-                                                                                  (1, 1, '회의실 변경 알림', '오후 2시 미팅 장소가 회의실 B로 변경되었습니다.'),
-                                                                                  (1, 2, '코드 리뷰 완료', '지수님, PR 리뷰 남겼습니다. 확인 부탁드려요.'),
-                                                                                  (1, 2, '점심 메뉴 추천', '오늘 근처 돈까스 집 어떠세요?'),
-                                                                                  (1, 3, '디자인 수정 건', '로그인 페이지 아이콘 크기 조금만 키워주세요.'),
-                                                                                  (1, 3, '연차 사용 문의', '다음 주 목요일 연차 가능한지 확인 부탁드려요.'),
-                                                                                  (1, 4, '보상비 입금 확인', '민지님, 연차 보상비 오늘 입금 예정 맞나요?'),
-                                                                                  (1, 4, '헬스장 할인 등록', '도윤님, 헬스장 단체 할인 명단에 넣어주세요.'),
-                                                                                  (1, 5, '오빗전자 미팅 준비', '영업부 미나님, 내일 미팅 자료 최종본입니다.'),
-                                                                                  (1, 5, '번개 모임 장소', '오늘 치맥 장소는 회사 앞 치킨집입니다.'),
-                                                                                  (1, 6, '유튜브 광고 지표', '1월 광고 데이터 정리본 메일 보냈습니다.'),
-                                                                                  (1, 6, '노트북 스탠드 모델명', '아까 게시판에 올리신 거 모델명 알려주세요.'),
-                                                                                  (1, 7, '정수기 필터 교체', '필터 점검 오늘 오후 3시에 온답니다.'),
-                                                                                  (1, 7, '습득물 보관', '찾으시는 분 없으면 안내데스크에 맡길게요.'),
-                                                                                  (1, 8, '파이썬 스터디 시간', '매주 화요일 오후 7시에 회의실 C입니다.'),
-                                                                                  (1, 8, '건강검진 예약 완료', '덕분에 빨리 잡았네요. 감사합니다.'),
-                                                                                  (1, 9, '보안 교육 기간', '교육 기간 연장 안 되나요? 너무 바쁘네요.'),
-                                                                                  (1, 9, '스탠드 구매 링크', '제가 쓰는 스탠드 링크 쪽지로 보냅니다.'),
-                                                                                  (1, 10, '서버 점검 보고서', '주말 작업 내역 정리해서 올렸습니다.'),
-                                                                                  (1, 10, '맛집 리스트 공유', '제가 만든 맛집 지도 파일 보냅니다.'),
-                                                                                  (2, 21, '경영 비전 PPT', '발표 자료 수정본입니다.'),
-                                                                                  (2, 21, 'K8s 설정 오류', 'HPA 설정 임계치 확인 부탁해요.'),
-                                                                                  (2, 22, '중고 마우스 상태', '클릭 씹히는 거 없이 쌩쌩합니다.'),
-                                                                                  (2, 22, 'LLM 데이터 전처리', '학습용 텍스트 클리닝 마쳤습니다.'),
-                                                                                  (2, 23, 'API 키 갱신', '기존 키는 다음 주 만료됩니다.'),
-                                                                                  (2, 23, '자리 배치 불만', '에어컨 바로 아래는 피하고 싶습니다.'),
-                                                                                  (2, 24, '클라우드 예산 오버', '이번 달 예상치 초과 확인 요망.'),
-                                                                                  (2, 24, '그라파나 연동', '웹훅 주소 알려주시면 연동할게요.'),
-                                                                                  (2, 25, '기계식 키보드 문의', '청축인가요 갈축인가요?'),
-                                                                                  (2, 25, 'Vision 모델 정확도', '98% 리포트 확인하세요.'),
-                                                                                  (3, 41, 'Strategy Meeting', 'Meet at 2 PM today.'),
-                                                                                  (3, 41, 'Soccer Match Ticket', 'Tickets are ready!'),
-                                                                                  (3, 42, 'Bug Report Summary', '5 major bugs found.'),
-                                                                                  (3, 42, 'Coffee on me', 'Thanks for the help.'),
-                                                                                  (3, 43, 'Ads Budget Plan', '50k for India market.'),
-                                                                                  (3, 43, 'Vacation Policy', 'Submit leave by Friday.'),
-                                                                                  (3, 44, 'Response Time Issue', 'Night shift volume high.'),
-                                                                                  (3, 44, 'Sunglasses Found', 'Check security office.'),
-                                                                                  (3, 45, 'Banner Approval', 'Designs approved.'),
-                                                                                  (3, 45, 'Tokyo Travel Tips', 'Sushi restaurant list.');
+INSERT INTO message (company_id, employee_id, message_title, message_content)
+VALUES (1, 1, '영수증 제출 요청', '김철수님, 지난주 식비 영수증 한 장이 누락되었습니다.'),
+       (1, 1, '회의실 변경 알림', '오후 2시 미팅 장소가 회의실 B로 변경되었습니다.'),
+       (1, 2, '코드 리뷰 완료', '지수님, PR 리뷰 남겼습니다. 확인 부탁드려요.'),
+       (1, 2, '점심 메뉴 추천', '오늘 근처 돈까스 집 어떠세요?'),
+       (1, 3, '디자인 수정 건', '로그인 페이지 아이콘 크기 조금만 키워주세요.'),
+       (1, 3, '연차 사용 문의', '다음 주 목요일 연차 가능한지 확인 부탁드려요.'),
+       (1, 4, '보상비 입금 확인', '민지님, 연차 보상비 오늘 입금 예정 맞나요?'),
+       (1, 4, '헬스장 할인 등록', '도윤님, 헬스장 단체 할인 명단에 넣어주세요.'),
+       (1, 5, '오빗전자 미팅 준비', '영업부 미나님, 내일 미팅 자료 최종본입니다.'),
+       (1, 5, '번개 모임 장소', '오늘 치맥 장소는 회사 앞 치킨집입니다.'),
+       (1, 6, '유튜브 광고 지표', '1월 광고 데이터 정리본 메일 보냈습니다.'),
+       (1, 6, '노트북 스탠드 모델명', '아까 게시판에 올리신 거 모델명 알려주세요.'),
+       (1, 7, '정수기 필터 교체', '필터 점검 오늘 오후 3시에 온답니다.'),
+       (1, 7, '습득물 보관', '찾으시는 분 없으면 안내데스크에 맡길게요.'),
+       (1, 8, '파이썬 스터디 시간', '매주 화요일 오후 7시에 회의실 C입니다.'),
+       (1, 8, '건강검진 예약 완료', '덕분에 빨리 잡았네요. 감사합니다.'),
+       (1, 9, '보안 교육 기간', '교육 기간 연장 안 되나요? 너무 바쁘네요.'),
+       (1, 9, '스탠드 구매 링크', '제가 쓰는 스탠드 링크 쪽지로 보냅니다.'),
+       (1, 10, '서버 점검 보고서', '주말 작업 내역 정리해서 올렸습니다.'),
+       (1, 10, '맛집 리스트 공유', '제가 만든 맛집 지도 파일 보냅니다.'),
+       (2, 21, '경영 비전 PPT', '발표 자료 수정본입니다.'),
+       (2, 21, 'K8s 설정 오류', 'HPA 설정 임계치 확인 부탁해요.'),
+       (2, 22, '중고 마우스 상태', '클릭 씹히는 거 없이 쌩쌩합니다.'),
+       (2, 22, 'LLM 데이터 전처리', '학습용 텍스트 클리닝 마쳤습니다.'),
+       (2, 23, 'API 키 갱신', '기존 키는 다음 주 만료됩니다.'),
+       (2, 23, '자리 배치 불만', '에어컨 바로 아래는 피하고 싶습니다.'),
+       (2, 24, '클라우드 예산 오버', '이번 달 예상치 초과 확인 요망.'),
+       (2, 24, '그라파나 연동', '웹훅 주소 알려주시면 연동할게요.'),
+       (2, 25, '기계식 키보드 문의', '청축인가요 갈축인가요?'),
+       (2, 25, 'Vision 모델 정확도', '98% 리포트 확인하세요.'),
+       (3, 41, 'Strategy Meeting', 'Meet at 2 PM today.'),
+       (3, 41, 'Soccer Match Ticket', 'Tickets are ready!'),
+       (3, 42, 'Bug Report Summary', '5 major bugs found.'),
+       (3, 42, 'Coffee on me', 'Thanks for the help.'),
+       (3, 43, 'Ads Budget Plan', '50k for India market.'),
+       (3, 43, 'Vacation Policy', 'Submit leave by Friday.'),
+       (3, 44, 'Response Time Issue', 'Night shift volume high.'),
+       (3, 44, 'Sunglasses Found', 'Check security office.'),
+       (3, 45, 'Banner Approval', 'Designs approved.'),
+       (3, 45, 'Tokyo Travel Tips', 'Sushi restaurant list.');
 
 -- 중략된 부분 포함하여 나머지 쪽지도 유사하게 ID 1~120까지 순차 삽입됨을 가정
 -- (지면 관계상 핵심 패턴 유지하며 120개 분량의 구조 확보)
@@ -2179,14 +2258,13 @@ INSERT INTO message (company_id, employee_id, message_title, message_content) VA
 -- 5. 쪽지 수신자 데이터 (120개)
 -- ==========================================
 INSERT INTO message_recipient (company_id, message_id, employee_id, is_read)
-SELECT
-    m.company_id,
-    m.id,
-    CASE
-        WHEN m.employee_id = 20 THEN 1
-        WHEN m.employee_id = 40 THEN 21
-        WHEN m.employee_id = 60 THEN 41
-        ELSE m.employee_id + 1
-        END,
-    1
+SELECT m.company_id,
+       m.id,
+       CASE
+           WHEN m.employee_id = 20 THEN 1
+           WHEN m.employee_id = 40 THEN 21
+           WHEN m.employee_id = 60 THEN 41
+           ELSE m.employee_id + 1
+           END,
+       1
 FROM message m;
