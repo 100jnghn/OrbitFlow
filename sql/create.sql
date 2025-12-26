@@ -48,15 +48,26 @@ CREATE TABLE org_category
 
 CREATE TABLE organization
 (
-    id            BIGINT AUTO_INCREMENT PRIMARY KEY,
-    company_id    BIGINT       NOT NULL,
-    category_id   BIGINT       NOT NULL,
-    parent_org_id BIGINT       NULL,
-    name          VARCHAR(100) NOT NULL,
-    order_index   INT          NOT NULL,
-    is_active     BOOLEAN      NOT NULL DEFAULT TRUE,
-    created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id         BIGINT       NOT NULL,
+    category_id        BIGINT       NOT NULL,
+    parent_org_id      BIGINT       NULL,
+    name               VARCHAR(100) NOT NULL,
+
+    order_index        INT          NULL, -- NOT NULL 제거
+    is_active          BOOLEAN      NOT NULL DEFAULT TRUE,
+
+    -- 활성 조직만 정렬 대상
+    active_order_index INT
+                       GENERATED ALWAYS AS (
+                           CASE
+                               WHEN is_active = TRUE THEN order_index
+                               ELSE NULL
+                               END
+                           ) STORED,
+
+    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_org_company
         FOREIGN KEY (company_id) REFERENCES company (id),
@@ -65,9 +76,12 @@ CREATE TABLE organization
     CONSTRAINT fk_org_parent
         FOREIGN KEY (parent_org_id) REFERENCES organization (id),
 
-    CONSTRAINT uk_org_sibling_order -- 형제 단위 정렬 충돌 방지
-        UNIQUE (company_id, parent_org_id, order_index),
-    CONSTRAINT uk_org_sibling_name  -- 형제 단위 이름 중복 방지
+    -- 활성 조직만 형제 단위 정렬 충돌 방지
+    CONSTRAINT uk_org_active_sibling_order
+        UNIQUE (company_id, parent_org_id, active_order_index),
+
+    -- 형제 단위 이름 중복 방지 (활성 기준은 서비스 로직에서)
+    CONSTRAINT uk_org_sibling_name
         UNIQUE (company_id, parent_org_id, name)
 ) ENGINE = InnoDB;
 

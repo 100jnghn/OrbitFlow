@@ -1,0 +1,162 @@
+/* ==================================================
+   admin-organization.css (FINAL – PRODUCTION)
+   - admin-org-category.css 위에 덮어쓰는 조직 트리 전용 스타일
+   - DIV 기반 트리 + 토글 + 정렬 모드 대응
+================================================== */
+
+/* ===== 트리 컨테이너 ===== */
+#orgTree {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* ===== 조직 노드 ===== */
+.org-node {
+    user-select: none;
+}
+
+.org-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 46px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    transition: background .12s ease;
+}
+
+.org-row:hover {
+    background: #f6f8fc;
+}
+
+/* ===== 드래그 핸들 ===== */
+.org-row .drag-handle {
+    flex-shrink: 0;
+    margin-right: 2px;
+}
+
+/* ===== 토글 ===== */
+.org-toggle {
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 900;
+    color: #667085;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.org-toggle:hover {
+    background: #eef2ff;
+    color: var(--primary);
+}
+
+.org-toggle-placeholder {
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+}
+
+/* ===== 조직명 ===== */
+.org-label {
+    flex: 1;
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ===== 상태 배지 보정 ===== */
+.org-row .status-badge {
+    margin-left: auto;
+}
+
+/* ===== 수정 버튼 위치 안정화 ===== */
+.org-row .table-btn {
+    margin-left: 6px;
+}
+
+/* ===== 깊이 표현 ===== */
+.org-node {
+    position: relative;
+}
+
+.org-node::before {
+    content: "";
+    position: absolute;
+    left: -10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e5e7eb;
+}
+
+/* 루트는 라인 제거 */
+.org-node[data-parent-id="root"]::before {
+    display: none;
+}
+
+/* ===== 정렬 모드 ===== */
+.sortable-chosen .org-row {
+    background: #f2f6ff;
+}
+
+.sortable-ghost {
+    opacity: 0.45;
+}
+
+.sortable-chosen .org-toggle {
+    pointer-events: none;
+    opacity: 0.4;
+}
+
+
+/* ===== 드래그 중 서브트리 ===== */
+.dragging-subtree .org-row {
+    background: #f8fafc;
+    opacity: 0.9;
+}
+
+/* ===== 비활성 조직 ===== */
+.org-node:not([data-active="true"]) .org-label {
+    color: #98a2b3;
+}
+
+/* 비활성 조직 전체 */
+.org-node[data-active="false"] .org-row {
+    opacity: 0.55;
+}
+
+/* 비활성 조직은 hover도 약하게 */
+.org-node[data-active="false"] .org-row:hover {
+    background: transparent;
+}
+
+/* 비활성 조직은 드래그 핸들 숨김 */
+.org-node[data-active="false"] .drag-handle {
+    display: none;
+}
+
+/* ===== 반응형 보정 ===== */
+@media (max-width: 720px) {
+    .org-row {
+        padding: 8px 10px;
+    }
+
+    .org-label {
+        font-size: 13px;
+    }
+}
+
+.org-highlight {
+    background: #fff3bf;
+    color: #b54708;
+    padding: 0 2px;
+    border-radius: 4px;
+}

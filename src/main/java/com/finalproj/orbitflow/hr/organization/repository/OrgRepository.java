@@ -20,7 +20,13 @@ public interface OrgRepository extends JpaRepository<Organization, Long> {
     /**
      * 회사별 전체 조직 조회 (트리 구성용) - 활성만
      */
-    List<Organization> findByCompanyIdAndIsActiveTrueOrderByOrderIndexAsc(Long companyId);
+    List<Organization> findByCompanyIdAndIsActiveTrueOrderByParentOrgIdAscOrderIndexAsc(Long companyId);
+
+    /**
+     * 회사별 전체 조직 조회 - 비활성까지 포함
+     */
+    List<Organization> findByCompanyIdOrderByIsActiveDescParentOrgIdAscOrderIndexAsc(Long companyId);
+
 
     Optional<Organization> findByCompanyIdAndId(Long companyId, Long id);
 
@@ -105,5 +111,16 @@ public interface OrgRepository extends JpaRepository<Organization, Long> {
     List<OrgResView> findHierarchy(@Param("orgId") Long orgId);
 
 
+    @Query("""
+    SELECT COALESCE(MAX(o.orderIndex), 0)
+    FROM Organization o
+    WHERE o.companyId = :companyId
+      AND o.parentOrgId = :parentOrgId
+      AND o.isActive = true
+""")
+    int findMaxOrderIndex(
+            @Param("companyId") Long companyId,
+            @Param("parentOrgId") Long parentOrgId
+    );
 
 }

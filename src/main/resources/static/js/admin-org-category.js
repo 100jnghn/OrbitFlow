@@ -228,15 +228,13 @@ function dragHandleHtml() {
    Sortable (활성만)
 ====================== */
 function initSortable() {
-    const tbody = els.tbody();
-    if (!tbody) return;
+    if (sortableInstance) {
+        sortableInstance.destroy();
+        sortableInstance = null;
+    }
 
-    if (sortableInstance) sortableInstance.destroy();
-
-    sortableInstance = Sortable.create(tbody, {
+    sortableInstance = Sortable.create(els.tbody(), {
         handle: '.drag-handle',
-        filter: 'tr:not([data-id])', // separator 제외
-        preventOnFilter: false,
         animation: 160,
 
         onMove: evt => {
@@ -245,9 +243,10 @@ function initSortable() {
             return c && normalizeActive(c);
         },
 
-        onEnd: markOrderChanged
+        onEnd: () => {
+            markOrderChanged();
+        }
     });
-
 }
 
 /* ======================
