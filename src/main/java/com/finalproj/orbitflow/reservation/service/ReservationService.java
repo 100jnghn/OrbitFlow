@@ -26,10 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -323,19 +320,25 @@ public class ReservationService {
             // 날짜 기준 정렬
             group.sort(Comparator.comparing(Reservation::getReservationDate));
 
-            // 승인할 Reservation 리스트
-            List<Reservation> approved = new ArrayList<>();
+            // 날짜가 겹치는 예약의 id 저장
+            // A - B, B - C 이렇게 겹치면 ABBC가 되므로 SET 사용
+            Set<Long> conflictIds = new HashSet<>();
 
-            for (Reservation current : group) {
+            // 모든 쌍 비교
+            for (int i = 0; i < group.size(); i++) {
+                for (int j = i + 1; j < group.size(); j++) {
 
-                // 예약 날짜 겹치는지 확인
-                boolean overlap = approved.stream().anyMatch(
-                        prev -> isCarDateOverlapping(current, prev)
-                );
+                    if (isCarDateOverlapping(group.get(i), group.get(j))) {
+                        conflictIds.add(group.get(i).getId());
+                        conflictIds.add(group.get(j).getId());
+                    }
+                }
+            }
 
-                if (!overlap) {
-                    approved.add(current);
-                    approveIds.add(current.getId());
+            // 겹치지 않은 예약만 승인 리스트에 추가
+            for (Reservation r : group) {
+                if (!conflictIds.contains(r.getId())) {
+                    approveIds.add(r.getId());
                 }
             }
         }
@@ -362,7 +365,7 @@ public class ReservationService {
 
         if (waitingItems.isEmpty()) return 0;
 
-        // item_category_id 기준 grouping
+        // resourceId 기준 grouping
         Map<Long, List<Reservation>> groups = waitingItems
                 .stream()
                 .collect(Collectors.groupingBy(
@@ -374,25 +377,34 @@ public class ReservationService {
 
         for (List<Reservation> group : groups.values()) {
 
-            // {날짜 + 시작 시간} 기준 정렬
+            // 날짜 + 시작시간 기준 정렬
             group.sort(
                     Comparator
                             .comparing(Reservation::getReservationDate)
                             .thenComparingInt(Reservation::getStartTime)
             );
 
-            List<Reservation> approved = new ArrayList<>();
+            // 날짜가 겹치는 예약의 id 저장
+            // A - B, B - C 이렇게 겹치면 ABBC가 되므로 SET 사용
+            Set<Long> conflictIds = new HashSet<>();
 
-            for (Reservation current : group) {
+            for (int i = 0; i < group.size(); i++) {
+                for (int j = i + 1; j < group.size(); j++) {
 
-                // 예약 시간 겹치는지 판단
-                boolean overlap = approved.stream().anyMatch(
-                        prev -> isItemTimeOverlapping(current, prev)
-                );
+                    Reservation a = group.get(i);
+                    Reservation b = group.get(j);
 
-                if (!overlap) {
-                    approved.add(current);
-                    approveIds.add(current.getId());
+                    if (isItemTimeOverlapping(a, b)) {
+                        conflictIds.add(a.getId());
+                        conflictIds.add(b.getId());
+                    }
+                }
+            }
+
+            // 겹치지 않는 예약만 일괄 승인 리스트에 추가
+            for (Reservation r : group) {
+                if (!conflictIds.contains(r.getId())) {
+                    approveIds.add(r.getId());
                 }
             }
         }

@@ -605,12 +605,13 @@ async function batchApproveReservations() {
             method: 'PATCH'
         });
 
-        const result = await res.json();
 
         if (!res.ok) {
             const error = await res.json();
             throw new Error(error.message || '일괄 승인에 실패했습니다.');
         }
+
+        const result = await res.json();
 
         alert(`${result.data}개 예약이 일괄 승인되었습니다.`);
         loadReservations(currentPage);
