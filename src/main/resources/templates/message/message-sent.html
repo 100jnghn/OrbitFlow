@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-user :: layout(
+        ~{::content},
+        ~{fragments/header :: header},
+        ~{sidebar/message/message-sidebar :: sidebar},
+        ~{::pageCss},
+        ~{::pageScript}
+      )}">
+<head>
+    <meta charset="UTF-8">
+    <title>보낸 메시지함</title>
+
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/layout.css}">
+        <link rel="stylesheet" th:href="@{/css/layout-user.css}">
+        <link rel="stylesheet" th:href="@{/css/message.css}">
+    </th:block>
+
+    <th:block th:fragment="pageScript">
+        <script th:src="@{/js/message.js}"></script>
+    </th:block>
+</head>
+<body>
+
+<div th:fragment="content">
+    <div class="board-container">
+        <!-- 메시지함 제목 -->
+        <div class="board-header">
+            <h1>보낸 메시지함</h1>
+        </div>
+
+        <!-- 검색 및 필터 -->
+        <div class="board-search-section">
+            <div class="search-filters">
+                <select id="dateFilter" class="filter-select">
+                    <option value="">날짜(기간)</option>
+                    <option value="today">오늘</option>
+                    <option value="week">이번 주</option>
+                    <option value="month">이번 달</option>
+                    <option value="custom">기간 선택</option>
+                </select>
+                <input type="date" id="startDate" class="date-input" style="display: none;">
+                <input type="date" id="endDate" class="date-input" style="display: none;">
+                
+                <select id="searchType" class="filter-select">
+                    <option value="ALL">전체</option>
+                    <option value="TITLE">제목만</option>
+                </select>
+                
+                <input type="text" id="searchKeyword" class="search-input" 
+                       placeholder="검색어를 입력하세요" maxlength="100">
+                <button type="button" class="btn-search" onclick="searchMessages()">
+                    <i class="fas fa-search"></i> 검색
+                </button>
+            </div>
+        </div>
+
+        <!-- 메시지 목록 테이블 -->
+        <div class="board-table-container">
+            <table class="board-table">
+                <thead>
+                    <tr>
+                        <th>번호</th>
+                        <th>제목</th>
+                        <th>수신자</th>
+                        <th>발신일</th>
+                        <th>읽음 여부</th>
+                    </tr>
+                </thead>
+                <tbody id="messageTableBody">
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px; color: #9ca3af;">
+                            메시지를 불러오는 중...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 페이지네이션 -->
+        <div class="board-bottom-actions">
+            <div class="pagination" id="messagePagination">
+                <!-- 동적으로 생성됨 -->
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+
