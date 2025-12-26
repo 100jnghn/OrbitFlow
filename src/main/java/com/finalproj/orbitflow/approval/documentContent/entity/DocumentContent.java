@@ -12,6 +12,8 @@ package com.finalproj.orbitflow.approval.documentContent.entity;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -20,6 +22,8 @@ import lombok.NoArgsConstructor;
 @Table(name = "document_content")
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class DocumentContent extends BaseEntity {
 
     @Id
@@ -32,4 +36,8 @@ public class DocumentContent extends BaseEntity {
 
     @Column(name = "content_json", nullable = false, columnDefinition = "json")
     private String contentJson;
+
+    public void updateContentJson(String updateJson) {
+        this.contentJson = updateJson;
+    }
 }

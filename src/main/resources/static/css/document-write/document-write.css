@@ -1,0 +1,390 @@
+/* =====================================================
+   Base
+   ===================================================== */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 14px;
+}
+
+button.primary {
+    background-color: #2563eb;
+    color: #fff;
+}
+
+button.primary:hover {
+    background-color: #1d4ed8;
+}
+
+button:not(.primary) {
+    background-color: #e5e7eb;
+}
+
+button:not(.primary):hover {
+    background-color: #d1d5db;
+}
+
+/* =====================================================
+   Layout
+   ===================================================== */
+
+.document-write {
+    display: flex;
+    gap: 24px;
+    padding: 24px;
+    height: calc(100vh - 120px);
+}
+
+/* =====================================================
+   Left Panel - Document
+   ===================================================== */
+
+.doc-left-panel {
+    flex: 1;
+    max-width: 900px; /* ✅ 핵심 */
+    /*margin: 0 auto; !* ✅ 가운데 정렬 *!*/
+
+    background-color: #f9fafb;
+    border-radius: 10px;
+    padding: 32px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+
+/* =====================================================
+   Document Title
+   ===================================================== */
+
+.doc-title-area {
+    margin-bottom: 24px;
+}
+
+.doc-title-area label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.doc-title-area label.required::after {
+    content: ' *';
+    color: #dc2626;
+    font-weight: 700;
+}
+
+#documentTitle {
+    width: 100%;
+    font-size: 20px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 2px solid #d1d5db;
+}
+
+#documentTitle:focus {
+    outline: none;
+    border-color: #2563eb;
+}
+
+/* =====================================================
+   Document Fields
+   ===================================================== */
+
+.doc-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.doc-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.doc-field label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.doc-field label.required::after {
+    content: ' *';
+    color: #dc2626;
+    font-weight: 700;
+}
+
+/* =====================================================
+   Inputs (공통)
+   ===================================================== */
+
+.doc-field input,
+.doc-field textarea,
+.doc-field select {
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+}
+
+.doc-field input:focus,
+.doc-field textarea:focus,
+.doc-field select:focus {
+    outline: none;
+    border-color: #2563eb;
+}
+
+.doc-field textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* 비활성 */
+.doc-field input:disabled,
+.doc-field textarea:disabled,
+.doc-field select:disabled {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+
+/* Required 강조 */
+.doc-field.required input,
+.doc-field.required textarea,
+.doc-field.required select {
+    border-color: #fca5a5;
+    background-color: #fff7f7;
+}
+
+/* =====================================================
+   Date / Time Range
+   ===================================================== */
+
+.date-range,
+.time-range {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.date-range input,
+.time-range input {
+    flex: 1;
+}
+
+/* =====================================================
+   Radio / Checkbox
+   ===================================================== */
+
+.doc-field label input[type="radio"],
+.doc-field label input[type="checkbox"] {
+    margin-right: 6px;
+}
+
+/* =====================================================
+   Notice
+   ===================================================== */
+
+.notice {
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.notice.info {
+    background-color: #e0f2fe;
+    color: #075985;
+}
+
+.notice.warn {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+/* =====================================================
+   Divider
+   ===================================================== */
+
+.doc-divider {
+    margin: 32px 0;
+}
+
+.doc-divider hr {
+    border: none;
+    border-top: 2px solid #cbd5e1;
+}
+
+/* =====================================================
+   Leave Reason
+   ===================================================== */
+
+.leave-reason {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.leave-reason select,
+.leave-reason textarea {
+    width: 100%;
+}
+
+/* =====================================================
+   Table
+   ===================================================== */
+
+.doc-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.doc-table th {
+    background: #f7f7f7;
+    font-weight: 600;
+}
+
+.doc-table th,
+.doc-table td {
+    border: 1px solid #e5e7eb;
+    padding: 8px;
+}
+
+.add-row-btn {
+    margin-top: 8px;
+}
+
+/* =====================================================
+   Image Upload
+   ===================================================== */
+
+.doc-image-wrapper {
+    margin-bottom: 24px;
+}
+
+.image-upload-container {
+    cursor: pointer;
+}
+
+.image-preview {
+    border: 2px dashed #cbd5e1;
+    padding: 16px;
+    text-align: center;
+    border-radius: 8px;
+    transition: border-color 0.2s;
+}
+
+.image-preview:hover {
+    border-color: #2563eb;
+}
+
+.image-preview img {
+    max-width: 100%;
+    max-height: 240px;
+    display: block;
+    margin: 0 auto;
+}
+
+.upload-placeholder {
+    color: #888;
+}
+
+.upload-placeholder i {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.upload-hint {
+    font-size: 12px;
+    color: #aaa;
+}
+
+/* =====================================================
+   Approval Line
+   ===================================================== */
+
+.approval-line-area {
+    margin-top: 32px;
+}
+
+.approval-line-area h3 {
+    font-size: 16px;
+    margin-bottom: 12px;
+}
+
+.approval-line-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.approval-line-row .order {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.approval-line-row .approver {
+    flex: 1;
+    text-align: center;
+    font-size: 14px;
+    color: #374151;
+}
+
+.change-approver-btn {
+    font-size: 12px;
+    padding: 6px 10px;
+}
+
+/* =====================================================
+   Right Panel
+   ===================================================== */
+
+.doc-right-panel {
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.side-panel {
+    background-color: #f3f4f6;
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.side-panel h4 {
+    font-size: 15px;
+    margin-bottom: 10px;
+}
+
+/* =====================================================
+   Footer Buttons
+   ===================================================== */
+
+.footer-buttons {
+    margin-top: auto;
+    display: flex;
+    gap: 8px;
+}
+
+.footer-buttons button {
+    flex: 1;
+}

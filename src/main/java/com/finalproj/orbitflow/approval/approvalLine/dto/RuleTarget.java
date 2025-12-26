@@ -45,16 +45,17 @@ public class RuleTarget {
     }
 
     public static RuleTarget fixedEmployee(
+            Long employeeId,
             Long organizationId,
-            Long positionId,
-            Long employeeId
+            Long positionCategoryId
     ) {
         return new RuleTarget(
                 RuleTargetType.FIXED_EMPLOYEE,
                 null,
                 organizationId,
-                positionId,
+                positionCategoryId,
                 employeeId
         );
     }
+
 }

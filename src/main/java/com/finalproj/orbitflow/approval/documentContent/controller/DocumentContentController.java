@@ -1,11 +1,13 @@
 package com.finalproj.orbitflow.approval.documentContent.controller;
 
+import com.finalproj.orbitflow.approval.documentContent.dto.DocumentContentPatchReqDto;
+import com.finalproj.orbitflow.approval.documentContent.service.DocumentContentService;
+import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * Please explain the class!!!
@@ -19,12 +21,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/document-contents")
 @RequiredArgsConstructor
 public class DocumentContentController {
+    private final DocumentContentService documentContentService;
 
+    @GetMapping("/{documentId}")
+    public ResponseEntity<ResponseDto> getDocumentContent(
+            @PathVariable("documentId") Long documentId
+    ) {
+        FormTemplateSchema result = documentContentService.getDocumentContentByDocumentId(documentId);
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "문서 내용 조회 성공",  result));
+    }
 
-    //TODO 값이 입력된 문서 구조를 JSON으로 전달받아 documentContent 생성
-    @PostMapping
-    public ResponseEntity<ResponseDto> createContent() {
-
-        return null;
+    @PatchMapping("/{documentId}")
+    public ResponseEntity<ResponseDto> updateDocumentContent(
+            @PathVariable Long documentId,
+            @RequestBody DocumentContentPatchReqDto reqDto
+    ) {
+        documentContentService.patchContent(documentId, reqDto);
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "문서 내용 수정 성공", null));
     }
 }

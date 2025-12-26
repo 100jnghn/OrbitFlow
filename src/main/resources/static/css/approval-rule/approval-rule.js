@@ -553,7 +553,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             step: idx + 1,
             organizationCategoryId: s.organizationCategoryId,
             organizationId: s.organizationId,
-            positionId: idx === 0 ? null : s.positionId,
+            positionCategoryId: idx === 0 ? null : s.positionId,
             employeeId: idx === 0 ? null : s.employeeId
         }));
 

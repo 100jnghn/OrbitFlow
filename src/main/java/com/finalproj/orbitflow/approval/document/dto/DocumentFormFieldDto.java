@@ -38,7 +38,7 @@ public class DocumentFormFieldDto {
                 .required(formFieldSchema.isRequired())
                 .order(formFieldSchema.getOrder())
                 .meta(formFieldSchema.getMeta())
-                .value(null)
+                .value(formFieldSchema.getValue())
                 .editable(fieldType.isEditable())
                 .build();
     }
