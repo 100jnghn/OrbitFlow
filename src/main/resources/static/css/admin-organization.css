@@ -154,9 +154,13 @@
     }
 }
 
+.org-focus .org-row {
+    background: #fff7ed;
+    outline: 2px solid #fdba74;
+}
+
 .org-highlight {
-    background: #fff3bf;
-    color: #b54708;
+    background: #ffe066;
+    border-radius: 3px;
     padding: 0 2px;
-    border-radius: 4px;
 }

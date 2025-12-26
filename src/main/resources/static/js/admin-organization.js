@@ -25,6 +25,7 @@ const els = {
     tree: () => document.getElementById('orgTree'),
     search: () => document.getElementById('searchKeyword'),
     includeInactive: () => document.getElementById('includeInactive'),
+    includeDescendants: () => document.getElementById('includeDescendants'),
     btnSearch: () => document.getElementById('btnSearch'),
     btnCreate: () => document.getElementById('btnOpenCreate'),
     btnSaveOrder: () => document.getElementById('btnSaveOrder'),
@@ -76,38 +77,39 @@ function applyFilterAndRender() {
     const keyword = els.search().value.trim().toLowerCase();
     const includeInactive = els.includeInactive().checked;
 
-    let base = allOrgList.filter(o => {
-        if (!includeInactive && !normalizeActive(o)) return false;
-        return true;
-    });
-
-
+    // 검색어 없을 때 → 기존 전체 트리
     if (!keyword) {
-        filteredOrgList = base;
+        filteredOrgList = allOrgList.filter(o =>
+            includeInactive || normalizeActive(o)
+        );
+
         renderTree();
         initSortable();
         return;
     }
 
-    // 검색 중 → 정렬 불가
-    destroySortable();           // 드래그 완전 차단
-    resetOrderChanged();         // 저장 버튼 비활성화
+    // 검색어 있을 때
+    const includeDescendants = els.includeDescendants().checked;
+    const visibleIds = collectMatchedOrgIds(keyword, includeDescendants);
 
-    const matched = base.filter(o =>
-        o.name.toLowerCase().includes(keyword)
-    );
+    filteredOrgList = allOrgList.filter(o => {
+        // 회사(최상위 parent=null)는 제외
+        if (o.parentOrgId === null) return false;
 
-    const withParents = new Map();
-    matched.forEach(o => {
-        let cur = o;
-        while (cur) {
-            withParents.set(cur.id, cur);
-            cur = allOrgList.find(p => p.id === cur.parentOrgId);
-        }
+        if (!includeInactive && !normalizeActive(o)) return false;
+
+        return visibleIds.has(o.id);
     });
 
-    filteredOrgList = [...withParents.values()];
+    // 부모 자동 펼침
+    filteredOrgList.forEach(o => expandParents(o));
+
     renderTree();
+
+    // 검색 중 정렬 비활성화
+    destroySortable();
+    els.btnSaveOrder().disabled = true;
+    isOrderChanged = false;
 }
 
 
@@ -129,15 +131,19 @@ function renderTree() {
         return;
     }
 
-    list
-        .filter(o => o.parentOrgId === null)
+    const visibleIds = new Set(list.map(o => o.id));
+
+    // 검색 결과 기준 루트 노드 찾기
+    const roots = list.filter(o => !visibleIds.has(o.parentOrgId));
+
+    roots
         .sort((a, b) => a.orderIndex - b.orderIndex)
         .forEach(o => renderNode(o, 0, container));
 }
 
 
 function renderNode(org, depth, container) {
-    const hasChildren = allOrgList.some(o => o.parentOrgId === org.id);
+    const hasChildren = filteredOrgList.some(o => o.parentOrgId === org.id);
     const isExpanded = expandedSet.has(org.id);
 
     const node = document.createElement('div');
@@ -180,7 +186,7 @@ function renderNode(org, depth, container) {
     }
 
     if (hasChildren && isExpanded) {
-        allOrgList
+        filteredOrgList
             .filter(o => o.parentOrgId === org.id)
             .sort((a, b) => a.orderIndex - b.orderIndex)
             .forEach(child => renderNode(child, depth + 1, container));
@@ -272,6 +278,8 @@ function bindEvents() {
     els.btnCloseIcon().addEventListener('click', closeModal);
     els.btnCancel().addEventListener('click', closeModal);
     els.btnSave().addEventListener('click', saveOrg);
+
+    els.includeDescendants().addEventListener('change', applyFilterAndRender);
 }
 
 /* ======================
@@ -437,4 +445,105 @@ function highlight(text, keyword) {
     const escaped = escapeHtml(text);
     const reg = new RegExp(`(${keyword})`, 'ig');
     return escaped.replace(reg, '<mark class="org-highlight">$1</mark>');
+}
+
+function expandParents(org) {
+    let cur = org;
+    while (cur?.parentOrgId) {
+        expandedSet.add(cur.parentOrgId);
+        cur = allOrgList.find(o => o.id === cur.parentOrgId);
+    }
+}
+
+function focusFirstMatch(keyword) {
+    const match = allOrgList.find(o =>
+        o.name.toLowerCase().includes(keyword)
+    );
+    if (!match) return;
+
+    expandParents(match);
+
+    // 다시 렌더링 (부모 열린 상태 반영)
+    renderTree();
+
+    // DOM에서 해당 노드 찾기
+    const el = document.querySelector(`.org-node[data-id="${match.id}"]`);
+    if (!el) return;
+
+    el.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+    });
+
+    el.classList.add('org-focus');
+    setTimeout(() => el.classList.remove('org-focus'), 1500);
+}
+
+function groupHasKeyword(root, keyword) {
+    const stack = [root];
+
+    while (stack.length) {
+        const cur = stack.pop();
+
+        if (cur.name.toLowerCase().includes(keyword)) {
+            return true;
+        }
+
+        const children = allOrgList.filter(o => o.parentOrgId === cur.id);
+        stack.push(...children);
+    }
+
+    return false;
+}
+
+function expandParentsByKeyword(root, keyword) {
+    const stack = [root];
+
+    while (stack.length) {
+        const cur = stack.pop();
+
+        if (cur.name.toLowerCase().includes(keyword)) {
+            expandParents(cur);
+        }
+
+        const children = allOrgList.filter(o => o.parentOrgId === cur.id);
+        stack.push(...children);
+    }
+}
+
+function collectMatchedOrgIds(keyword, includeDescendants) {
+    const result = new Set();
+
+    allOrgList.forEach(org => {
+        if (!org.name.toLowerCase().includes(keyword)) return;
+
+        // 1. 자기 자신
+        result.add(org.id);
+
+        // 2. 부모 체인
+        let cur = org;
+        while (cur.parentOrgId) {
+            const parent = allOrgList.find(o => o.id === cur.parentOrgId);
+            if (!parent) break;
+            result.add(parent.id);
+            cur = parent;
+        }
+
+        // 3. 하위 조직 (옵션 ON일 때만)
+        if (includeDescendants) {
+            collectDescendants(org.id, result);
+        }
+    });
+
+    return result;
+}
+
+function collectDescendants(parentId, set) {
+    allOrgList
+        .filter(o => o.parentOrgId === parentId)
+        .forEach(child => {
+            if (set.has(child.id)) return;
+            set.add(child.id);
+            collectDescendants(child.id, set);
+        });
 }
