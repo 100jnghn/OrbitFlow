@@ -532,6 +532,13 @@
     color: var(--neutral-700);
 }
 
+.char-count {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--neutral-500);
+    margin-left: 8px;
+}
+
 .form-input {
     width: 100%;
     padding: 12px 16px;
@@ -547,6 +554,15 @@
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+/* 폼 validation 에러 메시지 스타일 */
+.form-group .error-message {
+    color: var(--danger-color);
+    font-size: 13px;
+    margin-top: 6px;
+    display: none;
+    line-height: 1.5;
 }
 
 .form-textarea {
@@ -976,6 +992,13 @@
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
+.comment-write-area .char-count {
+    margin-left: 0;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    display: block;
+}
+
 .comment-write-actions {
     display: flex;
     justify-content: flex-end;
@@ -1115,6 +1138,13 @@
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.comment-content-edit .char-count {
+    margin-left: 0;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    display: block;
 }
 
 .comment-edit-actions {
