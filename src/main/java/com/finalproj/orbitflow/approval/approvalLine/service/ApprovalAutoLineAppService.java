@@ -21,8 +21,8 @@ public class ApprovalAutoLineAppService {
     private final ApprovalLineService approvalLineService;
     private final OrgService orgService;
 
-    public void generate(Long employeeId, Long formTemplateId, Long documentId) {
-        List<OrgResDto> orgs = orgService.findOrgsByEmployeeId(employeeId);
+    public void generate(Long orgId, Long formTemplateId, Long documentId) {
+        List<OrgResDto> orgs = orgService.findOrgsByEmployeeId(orgId);
 
         approvalLineService.createApprovalLineByRule(orgs, formTemplateId, documentId);
     }

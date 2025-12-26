@@ -5,6 +5,8 @@ import com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 /**
  * Please explain the class!!!
  *
@@ -16,5 +18,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ApprovalLineRepository extends JpaRepository<ApprovalLine, Long> {
 
-    void deleteByDocumentAndStatus(Document document, ApprovalStatus approvalStatus);
+    int deleteByDocumentAndStatus(Document document, ApprovalStatus approvalStatus);
+
+
+    List<ApprovalLine> findByDocument_IdOrderByOrderNoAsc(Long documentId);
 }

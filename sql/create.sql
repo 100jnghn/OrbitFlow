@@ -506,14 +506,23 @@ CREATE TABLE document_content
 -- =========================================================
 CREATE TABLE approval_line
 (
-    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    document_id BIGINT                                 NOT NULL,
-    company_id  BIGINT                                 NOT NULL,
-    approver_id BIGINT                                 NULL,
-    order_no    INT                                    NOT NULL,
-    status      ENUM ('WAITING','APPROVED','REJECTED') NOT NULL,
-    comment     TEXT,
-    decided_at  TIMESTAMP,
+    id                            BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    document_id                   BIGINT                                 NOT NULL,
+    company_id                    BIGINT                                 NOT NULL,
+
+    -- 결재자 탐색 기준
+    approval_org_id               BIGINT                                 NULL,
+    approval_position_category_id BIGINT                                 NULL,
+
+    -- 실제 결재자
+    approver_id                   BIGINT                                 NULL,
+
+    order_no                      INT                                    NOT NULL,
+    status                        ENUM ('WAITING','APPROVED','REJECTED') NOT NULL,
+    comment                       TEXT,
+    decided_at                    TIMESTAMP,
+
     CONSTRAINT uk_al_document_order
         UNIQUE (document_id, order_no),
 
@@ -527,6 +536,16 @@ CREATE TABLE approval_line
             REFERENCES company (id)
             ON DELETE RESTRICT,
 
+    CONSTRAINT fk_al_approval_org
+        FOREIGN KEY (approval_org_id)
+            REFERENCES organization (id)
+            ON DELETE SET NULL,
+
+    CONSTRAINT fk_al_approval_position_category
+        FOREIGN KEY (approval_position_category_id)
+            REFERENCES position_category (id)
+            ON DELETE SET NULL,
+
     CONSTRAINT fk_al_approver
         FOREIGN KEY (approver_id)
             REFERENCES employee (id)
@@ -536,11 +555,16 @@ CREATE TABLE approval_line
 CREATE INDEX idx_al_document
     ON approval_line (document_id);
 
+CREATE INDEX idx_al_company
+    ON approval_line (company_id);
+
 CREATE INDEX idx_al_approver_status
     ON approval_line (approver_id, status);
 
-CREATE INDEX idx_al_company
-    ON approval_line (company_id);
+-- ⭐ 결재자 자동/수동 탐색용
+CREATE INDEX idx_al_org_position
+    ON approval_line (approval_org_id, approval_position_category_id);
+
 
 -- =========================================================
 -- 9. DOCUMENT AI SUMMARY
