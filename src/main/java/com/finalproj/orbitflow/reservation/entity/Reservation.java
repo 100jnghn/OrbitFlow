@@ -77,7 +77,8 @@ public class Reservation extends BaseEntity {
     private ReservationStatus reservationStatus;
 
     // 예약 취소
-    public void changeStatus(ReservationStatus reservationStatus) {
+    public void changeStatus(ReservationStatus reservationStatus, String rejectReason) {
         this.reservationStatus = reservationStatus;
+        this.rejectReason = rejectReason;
     }
 }
