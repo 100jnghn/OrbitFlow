@@ -4,6 +4,7 @@ const MESSAGE_API = '/api/messages';
 
 let messageId = null;
 let currentFolder = 'INBOX';
+let messageDetailData = null;  // 메시지 상세 데이터 저장용
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', async function() {
@@ -50,6 +51,7 @@ async function loadMessageDetail() {
     if (!messageId) return;
 
     try {
+        // 폴더 파라미터 제거됨 (백엔드에서 자동으로 판단)
         const response = await apiFetch(`${MESSAGE_API}/${messageId}`, {
             method: 'GET',
             headers: {
@@ -73,6 +75,8 @@ async function loadMessageDetail() {
         const message = result.data;
 
         if (message) {
+            messageDetailData = message;  // 메시지 상세 데이터 저장
+            window.messageDetailData = message;  // goBack 함수에서 사용하기 위해 전역 변수로도 저장
             renderMessageDetail(message);
         } else {
             showError('메시지 데이터가 없습니다.');
@@ -91,7 +95,12 @@ function renderMessageDetail(message) {
     const title = message.title || '';
     const messageContent = message.content || '';
     const senderName = message.senderName || '';
+    const folderType = message.folderType || currentFolder;  // 백엔드에서 받은 folderType 사용
+    const archived = message.archived !== undefined ? message.archived : false;
     const createdAt = formatDateTime(message.createdAt);
+    
+    // 실제 폴더 타입에 따라 표시할 폴더명 결정 (보관함인 경우 원래 폴더 타입으로)
+    const displayFolderType = archived ? 'ARCHIVE' : folderType;
     
     // 폴더명 표시
     const folderNames = {
@@ -101,30 +110,13 @@ function renderMessageDetail(message) {
     };
     const folderNameElement = document.getElementById('messageFolderName');
     if (folderNameElement) {
-        folderNameElement.textContent = folderNames[currentFolder] || '메시지';
+        folderNameElement.textContent = folderNames[displayFolderType] || '메시지';
     }
 
-    // 폴더별 버튼 다르게 표시
+    // 폴더별 버튼 다르게 표시 (보관함 여부에 따라)
     let actionButtons = '';
-    if (currentFolder === 'INBOX') {
-        actionButtons = `
-            <button type="button" class="btn-archive" onclick="archiveMessage()">
-                <i class="fas fa-archive"></i> 보관함 이동
-            </button>
-            <button type="button" class="btn-delete" onclick="deleteMessage()">
-                <i class="fas fa-trash"></i> 삭제
-            </button>
-        `;
-    } else if (currentFolder === 'SENT') {
-        actionButtons = `
-            <button type="button" class="btn-archive" onclick="archiveMessage()">
-                <i class="fas fa-archive"></i> 보관함 이동
-            </button>
-            <button type="button" class="btn-delete" onclick="deleteMessage()">
-                <i class="fas fa-trash"></i> 삭제
-            </button>
-        `;
-    } else if (currentFolder === 'ARCHIVE') {
+    if (archived) {
+        // 보관함인 경우 보관 해제 버튼
         actionButtons = `
             <button type="button" class="btn-unarchive" onclick="unarchiveMessage()">
                 <i class="fas fa-inbox"></i> 보관 해제
@@ -133,6 +125,43 @@ function renderMessageDetail(message) {
                 <i class="fas fa-trash"></i> 삭제
             </button>
         `;
+    } else if (folderType === 'INBOX') {
+        // 받은 메시지함인 경우 보관함 이동 버튼
+        actionButtons = `
+            <button type="button" class="btn-archive" onclick="archiveMessage()">
+                <i class="fas fa-archive"></i> 보관함 이동
+            </button>
+            <button type="button" class="btn-delete" onclick="deleteMessage()">
+                <i class="fas fa-trash"></i> 삭제
+            </button>
+        `;
+    } else if (folderType === 'SENT') {
+        // 보낸 메시지함인 경우 보관함 이동 버튼
+        actionButtons = `
+            <button type="button" class="btn-archive" onclick="archiveMessage()">
+                <i class="fas fa-archive"></i> 보관함 이동
+            </button>
+            <button type="button" class="btn-delete" onclick="deleteMessage()">
+                <i class="fas fa-trash"></i> 삭제
+            </button>
+        `;
+    }
+
+    // 발신자/수신자 표시 (folderType에 따라)
+    let peerInfo = '';
+    if (folderType === 'INBOX') {
+        peerInfo = `<span class="meta-item">
+            <i class="fas fa-user"></i> 발신자: ${escapeHTML(senderName)}
+        </span>`;
+    } else if (folderType === 'SENT') {
+        // 보낸 메시지함은 수신자 정보가 없을 수 있으므로 일단 발신자 표시
+        peerInfo = `<span class="meta-item">
+            <i class="fas fa-user"></i> 발신자: ${escapeHTML(senderName)}
+        </span>`;
+    } else {
+        peerInfo = `<span class="meta-item">
+            <i class="fas fa-user"></i> 발신자: ${escapeHTML(senderName)}
+        </span>`;
     }
 
     content.innerHTML = `
@@ -141,19 +170,7 @@ function renderMessageDetail(message) {
             <div class="board-detail-header-info">
                 <h1 class="board-detail-title">${escapeHTML(title)}</h1>
                 <div class="board-detail-meta">
-                    ${currentFolder === 'INBOX' ? `
-                        <span class="meta-item">
-                            <i class="fas fa-user"></i> 발신자: ${escapeHTML(senderName)}
-                        </span>
-                    ` : currentFolder === 'SENT' ? `
-                        <span class="meta-item">
-                            <i class="fas fa-user"></i> 수신자: ${escapeHTML(senderName)}
-                        </span>
-                    ` : `
-                        <span class="meta-item">
-                            <i class="fas fa-user"></i> 발신자: ${escapeHTML(senderName)}
-                        </span>
-                    `}
+                    ${peerInfo}
                     <span class="meta-item">
                         <i class="fas fa-calendar"></i> ${createdAt}
                     </span>
@@ -180,12 +197,21 @@ function renderMessageDetail(message) {
 
 // 목록으로 돌아가기
 function goBack() {
+    // message 객체에서 archived와 folderType을 사용하여 돌아갈 경로 결정
+    // 일단 현재 폴더 기준으로 처리 (추후 message 객체를 저장하여 사용할 수 있음)
     const folderPaths = {
         'INBOX': '/view/message/inbox',
         'SENT': '/view/message/sent',
         'ARCHIVE': '/view/message/archive'
     };
-    const path = folderPaths[currentFolder] || '/view/message/inbox';
+    
+    // currentFolder가 ARCHIVE로 설정되어 있으면 보관함으로, 아니면 원래 폴더로
+    let targetFolder = currentFolder;
+    if (currentFolder === 'ARCHIVE' || window.messageDetailData?.archived) {
+        targetFolder = 'ARCHIVE';
+    }
+    
+    const path = folderPaths[targetFolder] || '/view/message/inbox';
     window.location.href = path;
 }
 
@@ -247,4 +273,5 @@ function escapeHTML(str) {
     div.textContent = str;
     return div.innerHTML;
 }
+
 
