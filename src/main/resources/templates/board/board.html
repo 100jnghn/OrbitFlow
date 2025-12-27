@@ -3,7 +3,7 @@
       th:replace="~{layout/layout-user :: layout(
         ~{::content},
         ~{fragments/header :: header},
-        ~{sidebar/board-sidebar :: sidebar},
+        ~{sidebar/board/user-board-sidebar :: sidebar},
         ~{::pageCss},
         ~{::pageScript}
       )}">
@@ -49,14 +49,14 @@
                 <input type="date" id="endDate" class="date-input" style="display: none;">
                 
                 <select id="searchType" class="filter-select">
-                    <option value="ALL">제목</option>
+                    <option value="ALL">전체</option>
                     <option value="TITLE">제목만</option>
                     <option value="CONTENT">내용만</option>
                     <option value="AUTHOR">작성자</option>
                 </select>
                 
                 <input type="text" id="searchKeyword" class="search-input" 
-                       placeholder="검색어를 입력하세요">
+                       placeholder="검색어를 입력하세요" maxlength="100">
                 <button type="button" class="btn-search" onclick="searchBoards()">
                     <i class="fas fa-search"></i> 검색
                 </button>
@@ -85,16 +85,16 @@
             </table>
         </div>
 
-        <!-- 페이지네이션 -->
-        <div class="pagination" id="boardPagination">
-            <!-- 동적으로 생성됨 -->
-        </div>
-
-        <!-- 글쓰기 버튼 -->
-        <div class="board-actions">
-            <button type="button" class="btn-write" onclick="writePost()" id="writeBtn" style="display: none;">
-                <i class="fas fa-pencil-alt"></i> 글쓰기
-            </button>
+        <!-- 페이지네이션 및 글쓰기 버튼 -->
+        <div class="board-bottom-actions">
+            <div class="pagination" id="boardPagination">
+                <!-- 동적으로 생성됨 -->
+            </div>
+            <div class="board-actions">
+                <button type="button" class="btn-write" onclick="writePost()" id="writeBtn" style="display: none;">
+                    <i class="fas fa-pencil-alt"></i> 글쓰기
+                </button>
+            </div>
         </div>
     </div>
 </div>

@@ -2,10 +2,7 @@ package com.finalproj.orbitflow.hr.organization.controller;
 
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUtils;
-import com.finalproj.orbitflow.hr.organization.dto.OrgCreateReqDto;
-import com.finalproj.orbitflow.hr.organization.dto.OrgOrderUpdateReqDto;
-import com.finalproj.orbitflow.hr.organization.dto.OrgResDto;
-import com.finalproj.orbitflow.hr.organization.dto.OrgUpdateReqDto;
+import com.finalproj.orbitflow.hr.organization.dto.*;
 import com.finalproj.orbitflow.hr.organization.service.OrgService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -51,14 +48,16 @@ public class OrgController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponseDto<List<OrgResDto>>> list() {
+    public ResponseEntity<ResponseDto<List<OrgResDto>>> list(
+            @RequestParam(defaultValue = "false") boolean includeInactive
+    ) {
         Long companyId = SecurityUtils.getCompanyId();
 
         return ResponseEntity.ok(
-                new ResponseDto(
+                new ResponseDto<>(
                         HttpStatus.OK,
                         "조직 목록 조회",
-                        orgService.findAll(companyId)
+                        orgService.findAll(companyId, includeInactive)
                 )
         );
     }
@@ -70,7 +69,7 @@ public class OrgController {
     ) {
         orgService.update(SecurityUtils.getCompanyId(), id, request);
         return ResponseEntity.ok(
-                new ResponseDto(HttpStatus.OK, "조직 수정 완료", null)
+                new ResponseDto(HttpStatus.OK, "조직 정보 변경 완료", null)
         );
     }
 
@@ -85,6 +84,7 @@ public class OrgController {
         );
     }
 
+    // 프론트에서 사용하지 않는 api -> 추후 목록에서 바로 비활성화 같은 기능용으로 일단 보류
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseDto<Void>> deactivate(@PathVariable Long id) {
         Long companyId = SecurityUtils.getCompanyId();
@@ -121,5 +121,21 @@ public class OrgController {
                 new ResponseDto<>(HttpStatus.OK, "소속 조직도 조회 성공", orgsByEmployeeId)
         );
     }
+
+    @GetMapping("/{id}/deactivate-check")
+    public ResponseEntity<ResponseDto<OrgDeactivateCheckResDto>> checkDeactivate(
+            @PathVariable Long id
+    ) {
+        Long companyId = SecurityUtils.getCompanyId();
+
+        return ResponseEntity.ok(
+                new ResponseDto<>(
+                        HttpStatus.OK,
+                        "비활성화 가능 여부 조회",
+                        orgService.checkDeactivatable(companyId, id)
+                )
+        );
+    }
+
 }
 

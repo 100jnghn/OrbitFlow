@@ -13,34 +13,12 @@
 </head>
 <body>
 
-<!-- ✅ header fragment (경로 중요) -->
+<!-- header fragment (경로 중요) -->
 <div th:replace="~{fragments/header :: header}"></div>
 
 <div class="main-content" style="padding: 20px;">
 
     <h2>메인 페이지</h2>
-
-    <!-- 세션 만료 모달 -->
-    <div id="sessionModal"
-         style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:9999;">
-        <div style="
-            background:#fff;
-            padding:20px;
-            margin:200px auto;
-            width:300px;
-            text-align:center;
-            border-radius:8px;
-        ">
-            <p>
-                세션이 만료되었습니다.<br>
-                다시 로그인해주세요.
-            </p>
-            <button onclick="confirmSessionExpired()"
-                    style="padding:8px 16px; cursor:pointer;">
-                확인
-            </button>
-        </div>
-    </div>
 
     사용자 메인 페이지
 

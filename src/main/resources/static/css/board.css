@@ -2,11 +2,11 @@
 
 /* 컬러 팔레트 */
 :root {
-    --primary-color: #4F46E5;
-    --primary-hover: #4338CA;
+    --primary-color: #3B82F6;
+    --primary-hover: #2563EB;
     --secondary-color: #6366F1;
     --success-color: #10B981;
-    --danger-color: #EF4444;
+    --danger-color: #DC2626;
     --danger-hover: #DC2626;
     --warning-color: #F59E0B;
     --neutral-50: #F9FAFB;
@@ -28,6 +28,9 @@
     padding: 24px;
     max-width: 1400px;
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 200px);
 }
 
 /* 게시판 헤더 */
@@ -75,7 +78,7 @@
 .filter-select:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .date-input {
@@ -90,7 +93,7 @@
 .date-input:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .search-input {
@@ -107,7 +110,7 @@
 .search-input:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .btn-search {
@@ -130,7 +133,7 @@
 .btn-search:hover {
     background: var(--primary-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 /* 게시글 테이블 */
@@ -141,12 +144,17 @@
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--neutral-200);
+    min-height: 550px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .board-table {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
+    height: 100%;
 }
 
 .board-table thead {
@@ -248,71 +256,89 @@
     text-decoration: underline;
 }
 
+/* 페이지네이션 및 글쓰기 버튼 컨테이너 */
+.board-bottom-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    margin-bottom: 16px;
+    gap: 16px;
+}
+
 /* 페이지네이션 */
 .pagination {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 8px;
-    margin: 32px 0;
+    flex: 1;
 }
 
 .page-btn,
 .page-number {
-    padding: 10px 14px;
-    border: 1px solid var(--neutral-300);
-    background: white;
+    min-width: 32px;
+    height: 36px;
+    padding: 0 8px;
+    border: 1px solid #ddd;
+    background: #fff;
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
-    color: var(--neutral-700);
-    min-width: 40px;
+    color: #555;
     text-align: center;
     font-weight: 500;
-    transition: all 0.2s ease;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .page-btn:hover:not(:disabled),
 .page-number:hover:not(.active) {
-    background: var(--neutral-50);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    background: #f8f9fa;
+    border-color: #4a69bd;
+    color: #4a69bd;
 }
 
 .page-btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
-    background: var(--neutral-100);
 }
 
 .page-number.active {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-    font-weight: 600;
+    background: #4a69bd;
+    color: #fff;
+    border-color: #4a69bd;
+    font-weight: 500;
 }
 
 .ellipsis {
-    padding: 10px 4px;
+    min-width: 32px;
+    height: 36px;
+    padding: 0 4px;
     color: var(--neutral-400);
     border: none;
     background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* 글쓰기 버튼 */
 .board-actions {
     display: flex;
     justify-content: flex-end;
-    margin-top: 24px;
+    flex-shrink: 0;
 }
 
 .btn-write {
-    padding: 12px 24px;
+    padding: 10px 20px;
     background: var(--primary-color);
     color: white;
     border: none;
     border-radius: 8px;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 500;
     cursor: pointer;
     display: inline-flex;
@@ -325,7 +351,7 @@
 .btn-write:hover {
     background: var(--primary-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 /* 사이드바 메뉴 스타일 - sidebar.css 아코디언 디자인 적용 */
@@ -506,6 +532,13 @@
     color: var(--neutral-700);
 }
 
+.char-count {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--neutral-500);
+    margin-left: 8px;
+}
+
 .form-input {
     width: 100%;
     padding: 12px 16px;
@@ -520,7 +553,16 @@
 .form-input:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 폼 validation 에러 메시지 스타일 */
+.form-group .error-message {
+    color: var(--danger-color);
+    font-size: 13px;
+    margin-top: 6px;
+    display: none;
+    line-height: 1.5;
 }
 
 .form-textarea {
@@ -541,7 +583,7 @@
 .form-textarea:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .file-upload-section {
@@ -605,6 +647,10 @@
     font-size: 14px;
     font-weight: 500;
     transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
 }
 
 .btn-file-remove:hover {
@@ -631,6 +677,10 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .btn-cancel:hover {
@@ -648,12 +698,16 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .btn-submit:hover {
     background: var(--primary-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .btn-submit:disabled {
@@ -695,8 +749,7 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     border: 1px solid var(--neutral-200);
-    max-width: 1400px;
-    margin: 0 auto;
+    width: 100%;
 }
 
 .loading-message,
@@ -864,7 +917,7 @@
 .btn-edit:hover {
     background: var(--primary-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .btn-delete {
@@ -936,7 +989,14 @@
 .comment-input:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.comment-write-area .char-count {
+    margin-left: 0;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    display: block;
 }
 
 .comment-write-actions {
@@ -954,12 +1014,16 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .btn-comment-submit:hover {
     background: var(--primary-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 /* 댓글 목록 */
@@ -1073,7 +1137,14 @@
 .comment-edit-input:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.comment-content-edit .char-count {
+    margin-left: 0;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    display: block;
 }
 
 .comment-edit-actions {
@@ -1092,12 +1163,16 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
 }
 
 .btn-comment-save:hover {
     background: var(--primary-hover);
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
 }
 
 .btn-comment-cancel {
@@ -1110,6 +1185,10 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
 }
 
 .btn-comment-cancel:hover {
@@ -1136,6 +1215,10 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
 }
 
 .btn-comment-edit {
@@ -1143,7 +1226,7 @@
 }
 
 .btn-comment-edit:hover {
-    background: rgba(79, 70, 229, 0.1);
+    background: rgba(59, 130, 246, 0.1);
     color: var(--primary-hover);
 }
 

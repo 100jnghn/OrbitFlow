@@ -5,55 +5,128 @@
 
 let isRefreshing = false;
 let refreshSubscribers = [];
+let sessionWarningTimer = null;
+let countdownTimer = null;
+let isExtendModalOpen = false;
+let sessionExpired = false;
+const SESSION_WARNING_SHOWN_KEY = 'sessionWarningShown';
+
 
 /* =========================
    API Fetch + Token Refresh (기존 로직 유지)
 ========================= */
 async function apiFetch(url, options = {}) {
     const accessToken = sessionStorage.getItem('accessToken');
-    options.headers = {
+
+    // 토큰 없으면 즉시 로그인
+    if (!accessToken) {
+        location.href = '/login';
+        throw new Error('NO_TOKEN');
+    }
+
+    const headers = {
         ...(options.headers || {}),
-        ...(accessToken && { 'Authorization': `Bearer ${accessToken}` })
+        Authorization: `Bearer ${accessToken}`
     };
 
-    let res = await fetch(url, options);
+    const fetchOptions = {
+        ...options,
+        headers,
+        credentials: 'include' // refresh 쿠키 필수
+    };
+
+    let res = await fetch(url, fetchOptions);
     if (res.status !== 401) return res;
 
+    /* ===== refresh 중이면 대기 ===== */
     if (isRefreshing) {
         return new Promise((resolve, reject) => {
             refreshSubscribers.push(async () => {
-                options.headers.Authorization = `Bearer ${sessionStorage.getItem('accessToken')}`;
-                try { resolve(await fetch(url, options)); } catch (e) { reject(e); }
+                try {
+                    resolve(
+                        await fetch(url, {
+                            ...fetchOptions,
+                            headers: {
+                                ...headers,
+                                Authorization: `Bearer ${sessionStorage.getItem('accessToken')}`
+                            }
+                        })
+                    );
+                } catch (e) {
+                    reject(e);
+                }
             });
         });
     }
 
+    /* ===== refresh 시작 ===== */
     isRefreshing = true;
     const refreshed = await refreshAccessToken();
     isRefreshing = false;
 
     if (!refreshed) {
+        sessionExpired = true;
         refreshSubscribers = [];
         handleSessionExpired();
         throw new Error('SESSION_EXPIRED');
     }
 
+    /* ===== 대기 중이던 요청 재시도 ===== */
     refreshSubscribers.forEach(cb => cb());
     refreshSubscribers = [];
-    options.headers.Authorization = `Bearer ${sessionStorage.getItem('accessToken')}`;
-    return fetch(url, options);
+
+    /* ===== 현재 요청 재시도 ===== */
+    return fetch(url, {
+        ...fetchOptions,
+        headers: {
+            ...headers,
+            Authorization: `Bearer ${sessionStorage.getItem('accessToken')}`
+        }
+    });
 }
 
 async function refreshAccessToken() {
-    const res = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' });
+    const res = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        credentials: 'include'
+    });
     if (!res.ok) return false;
+
     const result = await res.json();
     sessionStorage.setItem('accessToken', result.data.accessToken);
+    saveSessionExpiry(result.data.refreshExpiresAt);
+    scheduleSessionWarning();
+
     return true;
 }
 
+function showSessionExtendModal() {
+    if (isExtendModalOpen) return;
+
+    const modal = document.getElementById('extendSessionModal');
+    if (!modal) return;
+
+    isExtendModalOpen = true;
+    if (modal) modal.style.display = 'flex';
+
+    startSessionCountdown();
+}
+
+function closeExtendSessionModal() {
+    const modal = document.getElementById('extendSessionModal');
+    if (modal) modal.style.display = 'none';
+
+    isExtendModalOpen = false;
+    clearInterval(countdownTimer);
+}
+
+
 function handleSessionExpired() {
+    if (sessionExpired) return; // 중복 방지
+    sessionExpired = true;
+
     sessionStorage.clear();
+
     const modal = document.getElementById('sessionModal');
     if (modal) modal.style.display = 'block';
 }
@@ -65,6 +138,30 @@ async function logout() {
     sessionStorage.clear();
     location.href = '/login';
 }
+
+async function extendSession() {
+    try {
+        const res = await fetch('/api/auth/extend-session', {
+            method: 'POST',
+            credentials: 'include'
+        });
+
+        if (!res.ok) throw new Error('EXTEND_FAILED');
+
+        const result = await res.json();
+
+        sessionStorage.setItem('accessToken', result.data.accessToken);
+        saveSessionExpiry(result.data.refreshExpiresAt);
+
+        sessionStorage.removeItem('sessionWarningShown');
+
+        closeExtendSessionModal();
+        scheduleSessionWarning();
+    } catch (e) {
+        handleSessionExpired();
+    }
+}
+
 
 /* =========================
    관리자 사이드바 제어 핵심
@@ -141,25 +238,111 @@ function toggleAdminMenu(element) {
    사용자 정보 로드 및 초기화 실행
 ========================= */
 async function loadMe() {
+    const token = sessionStorage.getItem('accessToken');
+    if (!token) {
+        location.href = '/login';
+        return;
+    }
+
     try {
         const res = await apiFetch('/api/auth/me');
-        if (!res.ok) throw new Error('AUTH_FAILED');
+        if (!res.ok) throw new Error();
+
         const result = await res.json();
         const me = result.data;
 
         const userNameEl = document.getElementById('userName');
         if (userNameEl) userNameEl.innerText = `${me.name} (${me.role})`;
 
+
         const adminMenuLink = document.getElementById('adminMenuLink');
         if (adminMenuLink) {
-            adminMenuLink.style.display = (me.role === 'ADMIN' || me.role === 'COMPANY_ADMIN') ? '' : 'none';
+            adminMenuLink.style.display =
+                (me.role === 'ADMIN' || me.role === 'COMPANY_ADMIN')
+                    ? 'inline-flex'
+                    : 'none';
         }
+
+        scheduleSessionWarning(); // 여기서만 호출
+
     } catch (e) {
         location.href = '/login';
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    const path = window.location.pathname;
+
+    // 로그인 페이지에서는 인증 체크 X
+    if (path === '/login') return;
+
     loadMe();
-    initAdminSidebar(); // ✅ 페이지 로드 시 실행
+    initAdminSidebar(); // 페이지 로드 시 실행
 });
+
+function saveSessionExpiry(refreshExpiresAt) {
+    sessionStorage.setItem(
+        'refreshExpiresAt',
+        new Date(refreshExpiresAt).getTime()
+    );
+}
+
+
+/** 세션 만료 경고 타이머 추가 **/
+function scheduleSessionWarning() {
+    clearTimeout(sessionWarningTimer);
+
+    const expiresAt = Number(sessionStorage.getItem('refreshExpiresAt'));
+    if (!expiresAt) return;
+
+    const now = Date.now();
+    if (expiresAt <= now) return;
+
+    // const WARNING_BEFORE_MS = 25 * 1000; // 테스트용 - 25초 전
+    const WARNING_BEFORE_MS = 5 * 60 * 1000; // 5분 전
+    const delay = expiresAt - now - WARNING_BEFORE_MS;
+
+    if (delay <= 0) {
+        showSessionExtendModalOnce();
+        return;
+    }
+
+    sessionWarningTimer = setTimeout(() => {
+        showSessionExtendModalOnce();
+    }, delay);
+}
+
+
+/** 카운트다운 시작 함수 **/
+function startSessionCountdown() {
+    const countdownEl = document.getElementById('sessionCountdown');
+    if (!countdownEl) return;
+
+    clearInterval(countdownTimer);
+
+    countdownTimer = setInterval(() => {
+        const expiresAt = Number(sessionStorage.getItem('refreshExpiresAt'));
+        if (!expiresAt) return;
+
+        const remainingMs = expiresAt - Date.now();
+
+        if (remainingMs <= 0) {
+            clearInterval(countdownTimer);
+            handleSessionExpired();
+            return;
+        }
+
+        const sec = Math.floor(remainingMs / 1000);
+        const mm = String(Math.floor(sec / 60)).padStart(2, '0');
+        const ss = String(sec % 60).padStart(2, '0');
+
+        countdownEl.textContent = `${mm}:${ss}`;
+    }, 1000);
+}
+
+function showSessionExtendModalOnce() {
+    if (isExtendModalOpen) return;
+
+    sessionStorage.setItem('sessionWarningShown', 'true');
+    showSessionExtendModal();
+}

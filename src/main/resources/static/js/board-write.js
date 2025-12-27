@@ -31,6 +31,13 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // 게시판 목록 로드 (사이드바용)
     loadBoardCategories();
+    
+    // 게시판 이름 표시
+    updateBoardCategoryName();
+    
+    // 글자수 카운터 초기화
+    updateTitleCharCount();
+    updateContentCharCount();
 });
 
 // 게시판 카테고리 목록 로드 (사이드바용)
@@ -69,6 +76,9 @@ async function loadBoardCategories() {
         cachedOrganizationBoards = orgData.data || [];
 
         renderSidebar(cachedAccessibleBoards, cachedOrganizationBoards);
+        
+        // 게시판 이름 업데이트
+        updateBoardCategoryName();
     } catch (error) {
         console.error('Error loading board categories:', error);
     }
@@ -173,8 +183,17 @@ async function loadBoardDetail() {
         const board = result.data;
 
         if (board) {
-            document.getElementById('boardTitleInput').value = board.boardTitle || board.title || '';
-            document.getElementById('boardContent').value = board.boardContent || board.content || '';
+            const titleInput = document.getElementById('boardTitleInput');
+            const contentInput = document.getElementById('boardContent');
+            
+            if (titleInput) {
+                titleInput.value = board.boardTitle || board.title || '';
+                updateTitleCharCount();
+            }
+            if (contentInput) {
+                contentInput.value = board.boardContent || board.content || '';
+                updateContentCharCount();
+            }
             
             // categoryId 설정 (URL 파라미터가 없으면 게시글에서 가져옴)
             if (!categoryId) {
@@ -190,11 +209,8 @@ async function loadBoardDetail() {
                 renderSidebar(cachedAccessibleBoards, cachedOrganizationBoards);
             }
 
-            // 제목 업데이트
-            const titleElement = document.getElementById('boardTitle');
-            if (titleElement) {
-                titleElement.textContent = '글수정';
-            }
+            // 게시판 이름 표시
+            updateBoardCategoryName();
             const submitBtn = document.getElementById('submitBtn');
             if (submitBtn) {
                 submitBtn.textContent = '수정';
@@ -241,6 +257,50 @@ function addFileToList(fileName, fileId, isExisting) {
     fileList.appendChild(fileItem);
 }
 
+// 게시판 이름 업데이트
+function updateBoardCategoryName() {
+    const categoryNameElement = document.getElementById('boardCategoryName');
+    if (!categoryNameElement) return;
+    
+    if (categoryId) {
+        // 캐시된 게시판 목록에서 찾기
+        const allBoards = [...cachedAccessibleBoards, ...cachedOrganizationBoards];
+        const board = allBoards.find(b => b.id === categoryId);
+        
+        if (board) {
+            categoryNameElement.textContent = board.boardName || board.name || '게시판';
+        } else {
+            // 캐시에 없으면 API로 가져오기
+            loadBoardCategoryName(categoryId);
+        }
+    } else {
+        categoryNameElement.textContent = '게시판';
+    }
+}
+
+// 게시판 이름 로드
+async function loadBoardCategoryName(catId) {
+    try {
+        const response = await apiFetch(`${BOARD_CATEGORY_API}/${catId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            const board = result.data;
+            const categoryNameElement = document.getElementById('boardCategoryName');
+            if (categoryNameElement && board) {
+                categoryNameElement.textContent = board.boardName || board.name || '게시판';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading board category name:', error);
+    }
+}
+
 // 파일 제거
 function removeFile(button) {
     const fileItem = button.closest('.file-item');
@@ -259,9 +319,29 @@ function removeFile(button) {
     fileItem.remove();
 }
 
+// 에러 메시지 표시/숨김 함수
+function showError(elementId, message) {
+    const errorElement = document.getElementById(elementId);
+    if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+    }
+}
+
+function hideError(elementId) {
+    const errorElement = document.getElementById(elementId);
+    if (errorElement) {
+        errorElement.style.display = 'none';
+    }
+}
+
 // 폼 제출
 async function handleSubmit(e) {
     e.preventDefault();
+
+    // 에러 메시지 초기화
+    hideError('boardTitleError');
+    hideError('boardContentError');
 
     // 작성 모드일 때만 categoryId 체크
     if (!boardId && !categoryId) {
@@ -273,12 +353,22 @@ async function handleSubmit(e) {
     const content = document.getElementById('boardContent').value.trim();
 
     if (!title) {
-        alert('제목을 입력해주세요.');
+        showError('boardTitleError', '제목을 입력해주세요.');
+        return;
+    }
+
+    if (title.length > 100) {
+        showError('boardTitleError', '제목은 100자 이하여야 합니다.');
         return;
     }
 
     if (!content) {
-        alert('내용을 입력해주세요.');
+        showError('boardContentError', '내용을 입력해주세요.');
+        return;
+    }
+
+    if (content.length > 10000) {
+        showError('boardContentError', '내용은 10000자 이하여야 합니다.');
         return;
     }
 
@@ -350,10 +440,70 @@ async function handleSubmit(e) {
 // 취소
 function cancelWrite() {
     if (confirm('작성 중인 내용이 사라집니다. 정말 취소하시겠습니까?')) {
-        if (categoryId) {
-            window.location.href = `/view/board?categoryId=${categoryId}`;
+        // 수정 모드일 때는 게시글 상세 페이지로 이동
+        if (boardId) {
+            if (categoryId) {
+                window.location.href = `/view/board/detail?boardId=${boardId}&categoryId=${categoryId}`;
+            } else {
+                window.location.href = `/view/board/detail?boardId=${boardId}`;
+            }
         } else {
-            window.location.href = '/view/board';
+            // 작성 모드일 때는 게시판 목록으로 이동
+            if (categoryId) {
+                window.location.href = `/view/board?categoryId=${categoryId}`;
+            } else {
+                window.location.href = '/view/board';
+            }
+        }
+    }
+}
+
+// 제목 글자수 카운터 업데이트 (50자 이상부터 표시, 80자 이상 경고)
+function updateTitleCharCount() {
+    const input = document.getElementById('boardTitleInput');
+    const countElement = document.getElementById('titleCharCount');
+    if (input && countElement) {
+        const currentLength = input.value.length;
+        const maxLength = 100;
+        
+        // 50자 이상일 때만 표시
+        if (currentLength >= 50) {
+            countElement.style.display = 'inline';
+            countElement.textContent = `${currentLength}/${maxLength}`;
+            
+            // 80자 이상이면 경고 색상
+            if (currentLength >= 80) {
+                countElement.style.color = '#EF4444';
+            } else {
+                countElement.style.color = '#6B7280';
+            }
+        } else {
+            countElement.style.display = 'none';
+        }
+    }
+}
+
+// 내용 글자수 카운터 업데이트 (8000자 이상부터 표시, 9500자 이상 경고)
+function updateContentCharCount() {
+    const input = document.getElementById('boardContent');
+    const countElement = document.getElementById('contentCharCount');
+    if (input && countElement) {
+        const currentLength = input.value.length;
+        const maxLength = 10000;
+        
+        // 8000자 이상일 때만 표시
+        if (currentLength >= 8000) {
+            countElement.style.display = 'inline';
+            countElement.textContent = `${currentLength}/${maxLength}`;
+            
+            // 9500자 이상이면 경고 색상
+            if (currentLength >= 9500) {
+                countElement.style.color = '#EF4444';
+            } else {
+                countElement.style.color = '#6B7280';
+            }
+        } else {
+            countElement.style.display = 'none';
         }
     }
 }

@@ -59,7 +59,7 @@
             <i class="fas fa-chevron-down arrow"></i>
         </div>
         <ul class="sub-menu">
-            <li><a th:href="@{/admin/reservation}">예약 현황 관리</a></li>
+            <li><a th:href="@{/view/admin/reservations}">예약 현황 관리</a></li>
         </ul>
     </li>
 
@@ -83,8 +83,8 @@
             <li th:classappend="${currentMenu == 'org-category'} ? 'selected' : ''">
                 <a th:href="@{/view/admin/org-categories}">조직 카테고리 관리</a>
             </li>
-            <li th:classappend="${currentMenu} == 'organization' ? 'selected' : ''">
-                <a th:href="@{/admin/organization}">조직 구조 관리</a>
+            <li th:classappend="${currentMenu == 'organization'} ? 'selected' : ''">
+                <a th:href="@{/view/admin/organizations}">조직 관리</a>
             </li>
         </ul>
     </li>

@@ -21,6 +21,7 @@ const els = {
     tbody: () => document.getElementById('categoryTableBody'),
 
     search: () => document.getElementById('searchKeyword'),
+    btnSearch: () => document.getElementById('btnSearch'),
     includeInactive: () => document.getElementById('includeInactive'),
     btnOpenCreate: () => document.getElementById('btnOpenCreate'),
     btnSaveOrder: () => document.getElementById('btnSaveOrder'),
@@ -62,16 +63,36 @@ function filterCategories() {
         hint.style.display = activeCount > 1 ? 'block' : 'none';
     }
 
-    initSortable();
+    const searchMode = isSearchMode();
+
+    if (!searchMode) {
+        initSortable();
+    } else {
+        destroySortable();
+    }
+
+    toggleSaveOrderButton(!searchMode);
+
+}
+
+function destroySortable() {
+    if (sortableInstance) {
+        sortableInstance.destroy();
+        sortableInstance = null;
+    }
 }
 
 function bindEvents() {
-    els.search()?.addEventListener('input', filterCategories);
     els.includeInactive()?.addEventListener('change', loadCategories);
 
     els.btnOpenCreate()?.addEventListener('click', openCreateModal);
     els.btnSaveOrder()?.addEventListener('click', saveOrder);
-
+    els.btnSearch()?.addEventListener('click', filterCategories);
+    els.search()?.addEventListener('keydown', e => { // 엔터키 검색 지원
+        if (e.key === 'Enter') {
+            filterCategories();
+        }
+    });
     els.btnCloseModal()?.addEventListener('click', closeModal);
     els.btnCancel()?.addEventListener('click', closeModal);
     els.btnSaveCategory()?.addEventListener('click', saveCategory);
@@ -110,9 +131,6 @@ async function loadCategories() {
         categoryList = Array.isArray(result.data) ? result.data : [];
 
         filterCategories();
-        resetOrderChanged();
-
-        initSortable();
         resetOrderChanged();
 
     } catch (e) {
@@ -161,6 +179,11 @@ function renderTable(list) {
     return active.length;
 }
 
+function isSearchMode() {
+    const keyword = els.search()?.value.trim() ?? '';
+    const includeInactive = els.includeInactive()?.checked ?? false;
+    return keyword.length > 0 || includeInactive;
+}
 
 function renderRow(category) {
     const tr = document.createElement('tr');
@@ -169,7 +192,9 @@ function renderRow(category) {
     const isActive = normalizeActive(category);
 
     tr.innerHTML = `
-      <td>${isActive ? dragHandleHtml() : ''}</td>
+      <td>
+        ${isActive && !isSearchMode() ? dragHandleHtml() : ''}
+      </td>
       <td><strong>${escapeHtml(category.name)}</strong></td>
       <td>
         <span class="status-badge ${isActive ? 'status-active' : 'status-inactive'}">
@@ -203,15 +228,13 @@ function dragHandleHtml() {
    Sortable (활성만)
 ====================== */
 function initSortable() {
-    const tbody = els.tbody();
-    if (!tbody) return;
+    if (sortableInstance) {
+        sortableInstance.destroy();
+        sortableInstance = null;
+    }
 
-    if (sortableInstance) sortableInstance.destroy();
-
-    sortableInstance = Sortable.create(tbody, {
+    sortableInstance = Sortable.create(els.tbody(), {
         handle: '.drag-handle',
-        filter: 'tr:not([data-id])', // separator 제외
-        preventOnFilter: false,
         animation: 160,
 
         onMove: evt => {
@@ -220,9 +243,10 @@ function initSortable() {
             return c && normalizeActive(c);
         },
 
-        onEnd: markOrderChanged
+        onEnd: () => {
+            markOrderChanged();
+        }
     });
-
 }
 
 /* ======================
@@ -344,6 +368,7 @@ function closeModal() {
 }
 
 function markOrderChanged() {
+    if (isSearchMode()) return;
     isOrderChanged = true;
     els.btnSaveOrder().disabled = false;
 }
@@ -386,4 +411,11 @@ function toast(msg) {
     `;
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 1400);
+}
+
+function toggleSaveOrderButton(show) {
+    const btn = els.btnSaveOrder();
+    if (!btn) return;
+
+    btn.style.display = show ? 'inline-flex' : 'none';
 }
