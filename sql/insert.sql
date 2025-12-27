@@ -431,19 +431,23 @@ SET @c1_rank_head := (SELECT id
                       LIMIT 1);
 
 UPDATE hr_rank
-SET parent_hr_rank_id=@c1_rank_staff
+SET parent_hr_rank_id = @c1_rank_asst
+WHERE company_id = @c1
+  AND name = '사원';
+UPDATE hr_rank
+SET parent_hr_rank_id = @c1_rank_mgr
 WHERE company_id = @c1
   AND name = '대리';
 UPDATE hr_rank
-SET parent_hr_rank_id=@c1_rank_asst
+SET parent_hr_rank_id = @c1_rank_sr
 WHERE company_id = @c1
   AND name = '과장';
 UPDATE hr_rank
-SET parent_hr_rank_id=@c1_rank_mgr
+SET parent_hr_rank_id = @c1_rank_head
 WHERE company_id = @c1
   AND name = '차장';
 UPDATE hr_rank
-SET parent_hr_rank_id=@c1_rank_sr
+SET parent_hr_rank_id = NULL
 WHERE company_id = @c1
   AND name = '부장';
 
@@ -1031,19 +1035,23 @@ SET @c2_rank_head := (SELECT id
                       LIMIT 1);
 
 UPDATE hr_rank
-SET parent_hr_rank_id=@c2_rank_staff
+SET parent_hr_rank_id = @c2_rank_asst
+WHERE company_id = @c2
+  AND name = '사원';
+UPDATE hr_rank
+SET parent_hr_rank_id = @c2_rank_mgr
 WHERE company_id = @c2
   AND name = '대리';
 UPDATE hr_rank
-SET parent_hr_rank_id=@c2_rank_asst
+SET parent_hr_rank_id = @c2_rank_sr
 WHERE company_id = @c2
   AND name = '과장';
 UPDATE hr_rank
-SET parent_hr_rank_id=@c2_rank_mgr
+SET parent_hr_rank_id = @c2_rank_head
 WHERE company_id = @c2
   AND name = '차장';
 UPDATE hr_rank
-SET parent_hr_rank_id=@c2_rank_sr
+SET parent_hr_rank_id = NULL
 WHERE company_id = @c2
   AND name = '부장';
 
@@ -1598,19 +1606,23 @@ SET @c3_rank_head := (SELECT id
                       LIMIT 1);
 
 UPDATE hr_rank
-SET parent_hr_rank_id=@c3_rank_staff
+SET parent_hr_rank_id = @c3_rank_asst
+WHERE company_id = @c3
+  AND name = '사원';
+UPDATE hr_rank
+SET parent_hr_rank_id = @c3_rank_mgr
 WHERE company_id = @c3
   AND name = '대리';
 UPDATE hr_rank
-SET parent_hr_rank_id=@c3_rank_asst
+SET parent_hr_rank_id = @c3_rank_sr
 WHERE company_id = @c3
   AND name = '과장';
 UPDATE hr_rank
-SET parent_hr_rank_id=@c3_rank_mgr
+SET parent_hr_rank_id = @c3_rank_head
 WHERE company_id = @c3
   AND name = '차장';
 UPDATE hr_rank
-SET parent_hr_rank_id=@c3_rank_sr
+SET parent_hr_rank_id = NULL
 WHERE company_id = @c3
   AND name = '부장';
 
