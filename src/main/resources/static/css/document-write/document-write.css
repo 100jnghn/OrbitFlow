@@ -81,11 +81,6 @@ button:not(.primary):hover {
     margin-bottom: 6px;
 }
 
-.doc-title-area label.required::after {
-    content: ' *';
-    color: #dc2626;
-    font-weight: 700;
-}
 
 #documentTitle {
     width: 100%;
@@ -122,7 +117,7 @@ button:not(.primary):hover {
     color: #374151;
 }
 
-.doc-field label.required::after {
+.required::after {
     content: ' *';
     color: #dc2626;
     font-weight: 700;
@@ -387,4 +382,116 @@ button:not(.primary):hover {
 
 .footer-buttons button {
     flex: 1;
+}
+
+.approver-editor.hidden {
+    display: none;
+}
+
+#toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    min-width: 260px;
+    max-width: 360px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transform: translateY(10px);
+    animation: toast-in 0.25s ease forwards;
+}
+
+.toast.success {
+    background: #2ecc71;
+}
+
+.toast.info {
+    background: #3498db;
+}
+
+.toast.warning {
+    background: #f39c12;
+}
+
+.toast.error {
+    background: #e74c3c;
+}
+
+@keyframes toast-in {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes toast-out {
+    to {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+}
+
+.field-error {
+    border-color: #e74c3c !important;
+}
+
+.field-hint {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #e74c3c;
+}
+
+
+.approval-line-row.error {
+    border: 1px solid #e74c3c;
+    border-radius: 6px;
+    padding: 8px;
+}
+
+.approval-line-hint {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #e74c3c;
+}
+
+.date-range.field-error,
+.time-range.field-error {
+    border: 1px solid #e74c3c;
+    border-radius: 6px;
+    padding: 6px;
+    background: #fff6f6;
+}
+
+
+.radio-group.field-error {
+    border: 1.5px solid #e74c3c;
+    border-radius: 6px;
+    padding: 8px 10px;
+}
+
+.radio-group label {
+    margin-right: 12px;
+    cursor: pointer;
+}
+
+.table-cell-hint {
+    position: absolute;
+    background: #374151;
+    color: #ffffff;
+    font-size: 11px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    margin-top: 4px;
+    white-space: nowrap;
+    z-index: 9999;
 }

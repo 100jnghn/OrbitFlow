@@ -468,4 +468,14 @@ public class ApprovalLineService {
                 .toList();
     }
 
+    @Transactional
+    public void updateApprovalLine(Long approvalLineId, Long approvalId) {
+        Employee approver = employeeRepository.findById(approvalId)
+                .orElseThrow(() -> new NotFoundException("Approver not found"));
+
+        ApprovalLine line = approvalLineRepository.findById(approvalLineId)
+                .orElseThrow(() -> new NotFoundException("ApprovalLine not found"));
+
+        line.setApprover(approver);
+    }
 }

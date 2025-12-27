@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.approval.approvalLine.controller;
 
+import com.finalproj.orbitflow.approval.approvalLine.dto.ApprovalLineUpdateReqDto;
 import com.finalproj.orbitflow.approval.approvalLine.dto.ApprovalRuleResDto;
 import com.finalproj.orbitflow.approval.approvalLine.service.ApprovalAutoLineAppService;
 import com.finalproj.orbitflow.approval.approvalLine.service.ApprovalLineService;
@@ -45,5 +46,14 @@ public class ApprovalLineController {
     ) {
         List<ApprovalRuleResDto> result = approvalLineService.getApprovalLinesByDocumentId(documentId);
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "결재선 조회 성공", result));
+    }
+
+    @PatchMapping("/approval-lines/{approvalLineId}")
+    public ResponseEntity<ResponseDto>  updateApprovalLine(
+            @PathVariable Long approvalLineId,
+            @RequestBody ApprovalLineUpdateReqDto reqDto
+            ) {
+        approvalLineService.updateApprovalLine(approvalLineId, reqDto.getApproverId());
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "결재선 지정 성공",  null));
     }
 }

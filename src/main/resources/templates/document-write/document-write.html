@@ -43,7 +43,7 @@
              ========================= -->
         <div class="doc-left-panel">
             <!-- 문서 제목 -->
-            <div class="doc-title-area">
+            <div class="doc-field doc-title-area">
                 <label id="documentTitleLabel" class="required">
                     문서 제목
                 </label>
@@ -58,6 +58,9 @@
             <!-- 결재선 지정 -->
             <div class="approval-line-area">
                 <h3>결재선 지정</h3>
+                <p class="approval-guide">
+                    ℹ️ 결재선은 변경 즉시 저장됩니다.
+                </p>
                 <div id="approvalLineContainer">
                     <!-- 결재선 step 렌더링 -->
                 </div>
@@ -88,10 +91,11 @@
             <div class="side-panel footer-buttons">
                 <button id="tempSaveBtn">임시저장</button>
                 <button id="prevBtn">이전</button>
-                <button id="nextBtn" class="primary">다음</button>
+                <button id="nextBtn" class="primary">상신</button>
             </div>
         </div>
     </section>
+    <div id="toast-container"></div>
 </div>
 </body>
 </html>
