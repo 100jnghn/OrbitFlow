@@ -3,15 +3,15 @@ package com.finalproj.orbitflow.leave.leaveGrant.entity;
 
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal; // DECIMAL(4, 2) 처리를 위해 사용
 import java.time.LocalDate;
 
 @Entity
 @Getter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "grant_history")
 public class LeaveGrant extends BaseEntity {

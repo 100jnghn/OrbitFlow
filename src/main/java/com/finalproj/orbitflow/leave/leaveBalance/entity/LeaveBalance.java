@@ -3,14 +3,14 @@ package com.finalproj.orbitflow.leave.leaveBalance.entity;
 
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal; // DECIMAL(5, 2) 처리를 위해 사용
 
 @Entity
 @Getter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "leave_balance",
         uniqueConstraints = {
@@ -39,4 +39,6 @@ public class LeaveBalance extends BaseEntity {
     @Column(name = "remaining_days", precision = 5, scale = 2)
     private BigDecimal remainingDays; // 잔여 일수 (DECIMAL 5,2)
 
+    public void updateBalance(BigDecimal days) {
+    }
 }
