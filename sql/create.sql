@@ -91,7 +91,7 @@ CREATE TABLE hr_rank
     company_id        BIGINT      NOT NULL,
     parent_hr_rank_id BIGINT      NULL,
     name              VARCHAR(50) NOT NULL,
-    order_index       INT         NOT NULL,
+    order_index       INT,
     is_active         BOOLEAN     NOT NULL DEFAULT TRUE,
     created_at        TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP

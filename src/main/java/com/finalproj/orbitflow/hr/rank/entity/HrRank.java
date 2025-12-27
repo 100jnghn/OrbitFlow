@@ -40,8 +40,8 @@ public class HrRank extends BaseEntity {
     @Column(nullable = false, length = 50)
     private String name; // 대리 / 과장 등
 
-    @Column(name = "order_index", nullable = false)
-    private Integer orderIndex;
+    @Column(name = "order_index")
+    private Integer orderIndex; // null 허용
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
@@ -58,21 +58,22 @@ public class HrRank extends BaseEntity {
     }
 
     // ====== 도메인 메서드 ======
-    public void update(String name, HrRank parentHrRank, Boolean isActive) {
+    public void update(String name, HrRank parentHrRank) {
         this.name = name;
         this.parentHrRank = parentHrRank;
-        this.isActive = isActive;
     }
 
     public void changeOrderIndex(Integer orderIndex) {
         this.orderIndex = orderIndex;
     }
 
-    public void activate() {
+    public void activate(Integer newOrderIndex) {
         this.isActive = true;
+        this.orderIndex = newOrderIndex;
     }
 
     public void deactivate() {
         this.isActive = false;
+        this.orderIndex = null;
     }
 }
