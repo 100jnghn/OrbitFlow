@@ -906,18 +906,17 @@ CREATE TABLE message
 
 CREATE TABLE message_recipient
 (
-    id          BIGINT     NOT NULL AUTO_INCREMENT,
-    company_id  BIGINT     NOT NULL,
-    message_id  BIGINT     NOT NULL,
-    employee_id BIGINT     NOT NULL,
-    is_read     TINYINT(1) NOT NULL DEFAULT 0,
-    read_at     TIMESTAMP  NULL,
-    created_at  TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id                  BIGINT       NOT NULL AUTO_INCREMENT,
+    company_id          BIGINT       NOT NULL,
+    message_id          BIGINT       NOT NULL,
+    employee_id         BIGINT       NOT NULL,
+    is_read             TINYINT(1)   NOT NULL DEFAULT 0,
+    message_folder_type VARCHAR(20)  NOT NULL DEFAULT 'INBOX', -- INBOX, SEND 구분용 컬럼 추가
+    read_at             TIMESTAMP    NULL,
+    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uk_message_recipient (company_id, message_id, employee_id),
-    FOREIGN KEY (company_id) REFERENCES company (id),
-    FOREIGN KEY (message_id) REFERENCES message (id),
-    FOREIGN KEY (employee_id) REFERENCES employee (id)
+    FOREIGN KEY (message_id) REFERENCES message (id)
 );
 
 -- /////////////////////////////////// 종훈 /////////////////////////////////// --
