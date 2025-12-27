@@ -1070,6 +1070,7 @@ CREATE TABLE schedule
 (
     id                   BIGINT AUTO_INCREMENT,
     company_id           BIGINT       NOT NULL,
+    is_company           BOOLEAN      NOT NULL, -- TRUE -> 전사 일정
     org_category_id      BIGINT,                -- null -> 개인 일정
     org_id               BIGINT,                -- null -> 개인 일정
     employee_id          BIGINT       NOT NULL, -- 작성자 id
