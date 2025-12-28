@@ -47,6 +47,16 @@ public class MessageViewController {
     }
 
     /**
+     * 메시지 보내기 페이지
+     */
+    @GetMapping("/message/send")
+    public String sendPage(Model model) {
+        model.addAttribute("pageTitle", "메시지 보내기");
+        model.addAttribute("currentGNB", "message");
+        return "message/message-send";
+    }
+
+    /**
      * 메시지 상세 조회 페이지
      */
     @GetMapping("/message/detail")
