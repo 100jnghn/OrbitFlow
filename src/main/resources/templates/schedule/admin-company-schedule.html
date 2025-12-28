@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-admin :: layout(
+        ~{::content},
+        ~{fragments/header :: header},
+        ~{sidebar/admin-sidebar :: menu},
+        ~{::pageCss},
+        ~{::pageScript}
+      )}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>전사 일정 관리</title>
+
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- 페이지별 CSS -->
+    <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/schedule/admin-company-schedule.css}">
+    </th:block>
+
+    <!-- 페이지별 JS -->
+    <th:block th:fragment="pageScript">
+        <script th:src="@{/js/schedule/admin-company-schedule.js}"></script>
+    </th:block>
+</head>
+<body>
+
+<!-- Main Content -->
+<div th:fragment="content">
+    <div class="schedule-container">
+        <!-- 헤더 섹션 -->
+        <div class="schedule-header">
+            <h1 class="page-title">전사 일정 관리</h1>
+            
+            <!-- 필터 및 네비게이션 -->
+            <div class="header-controls">
+                <!-- 상태 필터 -->
+                <div class="filter-group">
+                    <label for="statusFilter" class="filter-label">상태</label>
+                    <select id="statusFilter" class="filter-select">
+                        <option value="ALL">전체</option>
+                        <option value="RELEASE">공개</option>
+                        <option value="HOLD">보류</option>
+                        <option value="DELETED">삭제됨</option>
+                        <option value="ETC">기타</option>
+                    </select>
+                </div>
+
+                <!-- 월 네비게이션 -->
+                <div class="month-navigation">
+                    <button type="button" class="nav-btn" id="prevMonth">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div class="current-month" id="currentMonthDisplay">
+                        2024년 12월
+                    </div>
+                    <button type="button" class="nav-btn" id="nextMonth">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <!-- 오늘로 이동 -->
+                <button type="button" class="btn-today" id="btnToday">
+                    오늘
+                </button>
+            </div>
+        </div>
+
+        <!-- 캘린더 섹션 -->
+        <div class="calendar-wrapper">
+            <!-- 요일 헤더 -->
+            <div class="calendar-header">
+                <div class="day-header">일</div>
+                <div class="day-header">월</div>
+                <div class="day-header">화</div>
+                <div class="day-header">수</div>
+                <div class="day-header">목</div>
+                <div class="day-header">금</div>
+                <div class="day-header">토</div>
+            </div>
+
+            <!-- 캘린더 그리드 -->
+            <div class="calendar-grid" id="calendarGrid">
+                <!-- 일정이 동적으로 렌더링됩니다 -->
+            </div>
+        </div>
+
+        <!-- 일정 목록 섹션 (선택적) -->
+        <div class="schedule-list-section">
+            <h2 class="section-title">일정 목록</h2>
+            <div class="schedule-list" id="scheduleList">
+                <!-- 일정 목록이 동적으로 렌더링됩니다 -->
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
