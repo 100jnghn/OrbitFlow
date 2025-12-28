@@ -22,51 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
         todayLabel.innerText = `금일 요약 현황 (${formattedToday})`;
     }
 
-    // 날짜 입력 필드 실시간 검증
-    const startDateInput = document.getElementById('startDate');
-    const endDateInput = document.getElementById('endDate');
-    const searchKeywordInput = document.getElementById('searchKeyword');
-
-    if (startDateInput) {
-        startDateInput.addEventListener('change', function() {
-            clearFieldError('startDateError', 'startDate');
-            clearFieldError('endDateError', 'endDate');
-            const endDate = document.getElementById('endDate').value;
-            if (this.value && endDate) {
-                const start = new Date(this.value);
-                const end = new Date(endDate);
-                if (end < start) {
-                    showError('endDateError', '종료일은 시작일보다 이후여야 합니다.');
-                }
-            }
-        });
-    }
-
-    if (endDateInput) {
-        endDateInput.addEventListener('change', function() {
-            clearFieldError('endDateError', 'endDate');
-            const startDate = document.getElementById('startDate').value;
-            if (startDate && this.value) {
-                const start = new Date(startDate);
-                const end = new Date(this.value);
-                if (end < start) {
-                    showError('endDateError', '종료일은 시작일보다 이후여야 합니다.');
-                } else {
-                    clearFieldError('endDateError', 'endDate');
-                }
-            }
-        });
-    }
-
-    if (searchKeywordInput) {
-        searchKeywordInput.addEventListener('input', function() {
-            clearFieldError('searchKeywordError', 'searchKeyword');
-            const keyword = this.value.trim();
-            if (keyword && keyword.length > 100) {
-                showError('searchKeywordError', '검색어는 100자 이하여야 합니다.');
-            }
-        });
-    }
+    // 날짜 입력 필드 실시간 검증 제거 (에러 메시지 표시하지 않음)
 
     // 정정 모달 정정 사유 실시간 검증
     const modalReasonInput = document.getElementById('modalReason');
@@ -233,43 +189,38 @@ function clearFieldError(errorElementId, inputElementId) {
 }
 
 /**
- * 검색 필터 유효성 검사
+ * 검색 필터 유효성 검사 (에러 메시지 없이 검증만 수행)
  */
 function validateSearchFilters() {
-    clearAllErrors();
-    let isValid = true;
-
     const startDate = document.getElementById('startDate').value;
     const endDate = document.getElementById('endDate').value;
     const keyword = document.getElementById('searchKeyword').value.trim();
 
-    // 시작일과 종료일 검증
+    // 시작일과 종료일 검증 (에러 메시지 표시하지 않음)
     if (startDate && endDate) {
         const start = new Date(startDate);
         const end = new Date(endDate);
         
         if (end < start) {
-            showError('endDateError', '종료일은 시작일보다 이후여야 합니다.');
-            isValid = false;
+            return false; // 검색 차단만 함
         }
     }
 
     // 검색어 길이 검증 (이미 maxlength 있지만 추가 검증)
     if (keyword && keyword.length > 100) {
-        showError('searchKeywordError', '검색어는 100자 이하여야 합니다.');
-        isValid = false;
+        return false; // 검색 차단만 함
     }
 
-    return isValid;
+    return true;
 }
 
 /**
  * 검색 처리
  */
 function handleSearch() {
-    // 유효성 검사
+    // 유효성 검사 (에러 메시지 표시하지 않고 검색만 차단)
     if (!validateSearchFilters()) {
-        return;
+        return; // 검색하지 않음
     }
 
     currentSearchParams.keyword = document.getElementById('searchKeyword').value.trim();

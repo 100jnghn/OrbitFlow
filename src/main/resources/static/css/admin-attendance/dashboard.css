@@ -350,6 +350,11 @@
     color: #991B1B;
 }
 
+.BEFORE_WORK {
+    background-color: #DBEAFE;
+    color: #1E40AF;
+}
+
 /* 테이블 액션 버튼 */
 .btn-table-action {
     background: var(--primary-color);
@@ -462,15 +467,43 @@
 
 .date-field-wrapper,
 .search-input-wrapper {
+    position: relative;
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    align-items: center;
 }
 
 .date-field-wrapper .error-message,
 .search-input-wrapper .error-message {
+    position: absolute;
+    top: 100%;
+    left: 0;
     font-size: 12px;
     margin-top: 4px;
+    min-height: 16px;
+    display: none;
+    color: var(--danger-color);
+}
+
+.date-field-wrapper .error-message:not(:empty),
+.search-input-wrapper .error-message:not(:empty) {
+    display: block;
+}
+
+/* 입력 필드와 버튼 높이 맞추기 */
+.date-field-wrapper .date-input,
+.search-input-wrapper .search-input {
+    height: 40px;
+    box-sizing: border-box;
+}
+
+.filter-select {
+    height: 40px;
+    box-sizing: border-box;
+}
+
+.btn-search {
+    height: 40px;
+    box-sizing: border-box;
 }
 
 .date-input.error,

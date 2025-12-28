@@ -76,8 +76,22 @@ public class AttendanceDashboardService {
      * 엔티티 결합 및 DTO 변환 (근무 시간 계산 로직 추가)
      */
     private AdminAttendanceResDto convertToCombinedDto(Employee emp, Attendance att, LocalDate date) {
-        String statusName = (att != null) ? att.getStatus().getDescription() : "기록 누락";
-        String statusCode = (att != null) ? att.getStatus().name() : "ABSENT";
+        // 출근 기록이 없는 경우: 오늘 날짜면 "근무예정", 과거 날짜면 "기록 누락"
+        String statusName;
+        String statusCode;
+        if (att != null) {
+            statusName = att.getStatus().getDescription();
+            statusCode = att.getStatus().name();
+        } else {
+            // 오늘 날짜이고 출근 기록이 없으면 "근무예정", 과거 날짜면 "기록 누락"
+            if (date.equals(LocalDate.now())) {
+                statusName = AttendanceStatus.BEFORE_WORK.getDescription();
+                statusCode = AttendanceStatus.BEFORE_WORK.name();
+            } else {
+                statusName = "기록 누락";
+                statusCode = "ABSENT";
+            }
+        }
 
         // 근무 시간 계산 (Duration 활용)
         String workingTime = "-";
