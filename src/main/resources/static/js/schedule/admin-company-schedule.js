@@ -447,8 +447,259 @@ function hideLoading() {
 /**
  * 일정 등록 모달 열기
  */
-function openAddScheduleModal() {
-    // TODO: 일정 등록 모달 구현
-    alert('일정 등록 기능은 추후 구현 예정입니다.');
+async function openAddScheduleModal() {
+    const modal = document.getElementById('scheduleModal');
+    if (!modal) return;
+
+    // 폼 초기화
+    document.getElementById('scheduleForm').reset();
+    
+    // 오늘 날짜로 기본값 설정
+    const today = new Date();
+    const todayStr = formatDateForInput(today);
+    document.getElementById('scheduleStartDate').value = todayStr;
+    document.getElementById('scheduleEndDate').value = todayStr;
+    document.getElementById('scheduleStartTime').value = '09:00';
+    document.getElementById('scheduleEndTime').value = '18:00';
+    
+    // 조직 카테고리를 '회사'로 고정
+    await setCompanyOrgCategory();
+    
+    // 설명 필드 글자 수 초기화
+    updateDescriptionCharCount();
+    
+    // 제목 필드 글자 수 초기화
+    updateTitleCharCount();
+    
+    modal.style.display = 'block';
+    
+    // 폼 제출 이벤트 리스너
+    const form = document.getElementById('scheduleForm');
+    form.onsubmit = handleScheduleSubmit;
+    
+    // 설명 필드 실시간 글자 수 업데이트
+    const descriptionField = document.getElementById('scheduleDescription');
+    descriptionField.addEventListener('input', updateDescriptionCharCount);
+    
+    // 제목 필드 실시간 글자 수 업데이트
+    const titleField = document.getElementById('scheduleTitle');
+    titleField.addEventListener('input', updateTitleCharCount);
+}
+
+/**
+ * 모달 닫기
+ */
+function closeScheduleModal() {
+    const modal = document.getElementById('scheduleModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+/**
+ * 조직 카테고리를 '회사'로 설정
+ */
+async function setCompanyOrgCategory() {
+    try {
+        const response = await apiFetch('/api/admin/org-categories?includeInactive=false', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                location.href = '/login';
+                return;
+            }
+            throw new Error('조직 카테고리 목록을 불러오는데 실패했습니다.');
+        }
+
+        const result = await response.json();
+        const categories = result.data || [];
+
+        // '회사' 카테고리 찾기
+        const companyCategory = categories.find(cat => cat.name === '회사');
+        
+        const select = document.getElementById('scheduleOrgCategory');
+        const option = document.getElementById('companyCategoryOption');
+        
+        if (companyCategory) {
+            option.value = companyCategory.id;
+            option.textContent = '회사';
+        } else {
+            option.value = '';
+            option.textContent = '회사';
+        }
+        
+        select.disabled = true;
+    } catch (error) {
+        console.error('Error loading org categories:', error);
+        if (error.message !== 'SESSION_EXPIRED') {
+            alert('조직 카테고리 목록을 불러오는데 실패했습니다.');
+        }
+    }
+}
+
+/**
+ * 제목 필드 글자 수 업데이트
+ */
+function updateTitleCharCount() {
+    const titleField = document.getElementById('scheduleTitle');
+    const charCountEl = document.getElementById('titleCharCount');
+    const errorEl = document.getElementById('titleError');
+    
+    if (!titleField || !charCountEl) return;
+    
+    const currentLength = titleField.value.length;
+    const maxLength = 20;
+    
+    charCountEl.textContent = `(${currentLength}/${maxLength})`;
+    
+    // 글자 수에 따라 스타일 변경
+    charCountEl.classList.remove('warning', 'error');
+    errorEl.classList.remove('show');
+    
+    if (currentLength > maxLength) {
+        charCountEl.classList.add('error');
+        errorEl.textContent = `제목은 최대 ${maxLength}자까지 입력 가능합니다.`;
+        errorEl.classList.add('show');
+    } else if (currentLength > maxLength * 0.9) {
+        charCountEl.classList.add('warning');
+    }
+}
+
+/**
+ * 설명 필드 글자 수 업데이트
+ */
+function updateDescriptionCharCount() {
+    const descriptionField = document.getElementById('scheduleDescription');
+    const charCountEl = document.getElementById('descriptionCharCount');
+    const errorEl = document.getElementById('descriptionError');
+    
+    if (!descriptionField || !charCountEl) return;
+    
+    const currentLength = descriptionField.value.length;
+    const maxLength = 200;
+    
+    charCountEl.textContent = `(${currentLength}/${maxLength})`;
+    
+    // 글자 수에 따라 스타일 변경
+    charCountEl.classList.remove('warning', 'error');
+    errorEl.classList.remove('show');
+    
+    if (currentLength > maxLength) {
+        charCountEl.classList.add('error');
+        errorEl.textContent = `설명은 최대 ${maxLength}자까지 입력 가능합니다.`;
+        errorEl.classList.add('show');
+    } else if (currentLength > maxLength * 0.9) {
+        charCountEl.classList.add('warning');
+    }
+}
+
+/**
+ * 일정 등록 폼 제출
+ */
+async function handleScheduleSubmit(e) {
+    e.preventDefault();
+    
+    const title = document.getElementById('scheduleTitle').value.trim();
+    const description = document.getElementById('scheduleDescription').value.trim();
+    const startDate = document.getElementById('scheduleStartDate').value;
+    const startTime = document.getElementById('scheduleStartTime').value;
+    const endDate = document.getElementById('scheduleEndDate').value;
+    const endTime = document.getElementById('scheduleEndTime').value;
+    const status = document.getElementById('scheduleStatus').value;
+    const orgCategoryId = document.getElementById('scheduleOrgCategory').value;
+    
+    if (!title) {
+        alert('제목을 입력해주세요.');
+        return;
+    }
+    
+    // 제목 글자 수 검증
+    if (title.length > 20) {
+        alert('제목은 최대 20자까지 입력 가능합니다.');
+        document.getElementById('scheduleTitle').focus();
+        return;
+    }
+    
+    // 설명 글자 수 검증
+    if (description.length > 200) {
+        alert('설명은 최대 200자까지 입력 가능합니다.');
+        document.getElementById('scheduleDescription').focus();
+        return;
+    }
+    
+    // 날짜/시간 검증
+    const startDateTime = new Date(`${startDate}T${startTime}`);
+    const endDateTime = new Date(`${endDate}T${endTime}`);
+    
+    if (endDateTime <= startDateTime) {
+        alert('종료 날짜/시간은 시작 날짜/시간보다 이후여야 합니다.');
+        return;
+    }
+    
+    // LocalDateTime 형식으로 변환 (ISO 8601)
+    const startAt = startDateTime.toISOString().slice(0, 19);
+    const endAt = endDateTime.toISOString().slice(0, 19);
+    
+    const scheduleData = {
+        isCompany: true,  // 전사 일정
+        title: title,
+        description: description || null,
+        startAt: startAt,
+        endAt: endAt,
+        status: status,
+        orgCategoryId: orgCategoryId ? parseInt(orgCategoryId) : null,
+        orgId: null  // 조직은 null로 고정
+    };
+    
+    try {
+        const response = await apiFetch('/api/schedules', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(scheduleData)
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                location.href = '/login';
+                return;
+            }
+            const error = await response.json();
+            throw new Error(error.message || '일정 등록에 실패했습니다.');
+        }
+
+        alert('일정이 등록되었습니다.');
+        closeScheduleModal();
+        loadSchedules();  // 일정 목록 새로고침
+    } catch (error) {
+        console.error('Error creating schedule:', error);
+        if (error.message !== 'SESSION_EXPIRED') {
+            alert(error.message || '일정 등록에 실패했습니다.');
+        }
+    }
+}
+
+/**
+ * 날짜를 input[type="date"] 형식으로 변환 (YYYY-MM-DD)
+ */
+function formatDateForInput(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// 모달 외부 클릭 시 닫기
+window.onclick = function(event) {
+    const scheduleModal = document.getElementById('scheduleModal');
+    if (event.target === scheduleModal) {
+        closeScheduleModal();
+    }
 }
 
