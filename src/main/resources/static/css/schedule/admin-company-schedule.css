@@ -141,6 +141,32 @@
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
+.btn-add-schedule {
+    margin-left: auto;
+    padding: 10px 20px;
+    background: var(--success-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-add-schedule:hover {
+    background: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-add-schedule i {
+    font-size: 13px;
+}
+
 /* 캘린더 래퍼 */
 .calendar-wrapper {
     background: #fff;

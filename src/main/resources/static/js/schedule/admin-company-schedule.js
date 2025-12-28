@@ -15,16 +15,12 @@ let schedules = [];
 const statusColorMap = {
     'RELEASE': 'release',
     'HOLD': 'hold',
-    'DELETED': 'deleted',
-    'ETC': 'etc'
 };
 
 // 상태별 한글명 매핑
 const statusNameMap = {
     'RELEASE': '공개',
     'HOLD': '보류',
-    'DELETED': '삭제됨',
-    'ETC': '기타'
 };
 
 // 페이지 로드 시 초기화
@@ -78,6 +74,14 @@ function setupEventListeners() {
     if (btnToday) {
         btnToday.addEventListener('click', function() {
             goToToday();
+        });
+    }
+
+    // 일정 등록 버튼
+    const btnAddSchedule = document.getElementById('btnAddSchedule');
+    if (btnAddSchedule) {
+        btnAddSchedule.addEventListener('click', function() {
+            openAddScheduleModal();
         });
     }
 }
@@ -438,5 +442,13 @@ function showLoading() {
  */
 function hideLoading() {
     // renderCalendar에서 처리됨
+}
+
+/**
+ * 일정 등록 모달 열기
+ */
+function openAddScheduleModal() {
+    // TODO: 일정 등록 모달 구현
+    alert('일정 등록 기능은 추후 구현 예정입니다.');
 }
 
