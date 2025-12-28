@@ -253,56 +253,48 @@
    휴가 사유 (leave-reason) — 분리 렌더링 최종
 ========================================================= */
 
-/* 휴가 사유 그룹 - 첫 행 */
+/* leave-reason 단일 row */
 .document-content-panel
-.doc-field-row.leave-reason-start {
-    border-bottom: none;
-}
-
-/* 두 번째 행 라벨 숨김 */
-.document-content-panel
-.doc-field-row.leave-reason-end
-.doc-field-label {
-    border-top: none;
-    color: transparent;
-}
-
-/* 휴가 사유 라벨 세로 중앙 */
-.document-content-panel
-.doc-field-row.leave-reason-start
-.doc-field-label {
-    align-items: center;
-}
-
-/* 휴가 사유 value 내부 2컬럼 */
-.document-content-panel
-.doc-field-row.leave-reason-start
-.doc-field-value,
-.document-content-panel
-.doc-field-row.leave-reason-end
+.doc-field-row.leave-reason-row
 .doc-field-value {
+    padding: 0;
+}
+
+/* 내부 표 */
+.leave-reason-inner {
+    display: grid;
+    grid-template-rows: auto auto;
+    box-sizing: border-box;
+}
+
+/* 내부 행 */
+.leave-reason-inner-row {
     display: grid;
     grid-template-columns: 120px 1fr;
-    column-gap: 8px;
     align-items: start;
+    box-sizing: border-box;
 }
 
-/* 내부 항목명 */
-.inner-label {
+/* 내부 라벨 */
+.leave-reason-inner-label {
+    padding: 8px 10px;
     font-weight: 600;
     white-space: nowrap;
+    box-sizing: border-box;
 }
 
-/* 내부 세로 구분선 */
-.inner-value {
-    padding-left: 8px;
-    border-left: 1px solid #000;
-    min-height: 100%;
+/* 내부 값 */
+.leave-reason-inner-value {
+    padding: 8px 10px;
+    border-left: 2px solid #000; /* ← 바깥과 통일 */
+    white-space: pre-wrap;
+    box-sizing: border-box;
 }
 
-/* 내부 가로 구분선 */
-.document-content-panel
-.doc-field-row.leave-reason-end
-.doc-field-value {
-    border-top: 1px solid #000;
+/* 내부 가로선 */
+.leave-reason-inner-row:first-child
+.leave-reason-inner-label,
+.leave-reason-inner-row:first-child
+.leave-reason-inner-value {
+    border-bottom: 2px solid #000;
 }

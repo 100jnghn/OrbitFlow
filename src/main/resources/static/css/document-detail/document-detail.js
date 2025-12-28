@@ -73,10 +73,9 @@ function renderDocumentContent(schema) {
     for (let i = 0; i < fields.length; i++) {
         const field = fields[i];
 
-        // ✅ 휴가 사유 특수 처리
         if (field.fieldType === "leave-reason") {
-            const rows = renderLeaveReasonRows(field);
-            rows.forEach(r => container.appendChild(r));
+            const row = renderLeaveReasonRow(field);
+            if (row) container.appendChild(row);
             continue;
         }
 
@@ -86,47 +85,49 @@ function renderDocumentContent(schema) {
 
 }
 
-function renderLeaveReasonRows(field) {
-    const rows = [];
+function renderLeaveReasonRow(field) {
     const value = field.value || {};
 
     const typeLabel =
         vacationTypeMap.get(String(value.vacationTypeCode)) ?? "-";
     const detail = value.detailReason?.trim() || "-";
 
-    /* 1️⃣ 휴가 유형 */
-    const typeRow = createFieldRow("휴가 사유", "");
-    typeRow.classList.add("leave-reason-start");
+    // 바깥 row는 1개만 생성
+    const row = createFieldRow(field.label ?? "휴가 사유", "");
+    row.classList.add("leave-reason-row"); // 단일 표용 클래스
 
-    typeRow.querySelector(".doc-field-value").append(
-        createInnerPair("휴가 유형", typeLabel)
-    );
+    const valueEl = row.querySelector(".doc-field-value");
+    valueEl.innerHTML = ""; // createFieldRow의 기본 텍스트 제거(안전)
 
-    /* 2️⃣ 상세 사유 */
-    const detailRow = createFieldRow("", "");
-    detailRow.classList.add("leave-reason-end");
+    // 내부 표 컨테이너
+    const inner = document.createElement("div");
+    inner.className = "leave-reason-inner";
 
-    detailRow.querySelector(".doc-field-value").append(
-        createInnerPair("상세 사유", detail)
-    );
+    // 내부 1행: 휴가 유형
+    inner.appendChild(createLeaveInnerRow("휴가 유형", typeLabel));
 
-    rows.push(typeRow, detailRow);
-    return rows;
+    // 내부 2행: 상세 사유
+    inner.appendChild(createLeaveInnerRow("상세 사유", detail));
+
+    valueEl.appendChild(inner);
+
+    return row;
 }
 
-function createInnerPair(label, value) {
-    const fragment = document.createDocumentFragment();
+function createLeaveInnerRow(label, value) {
+    const r = document.createElement("div");
+    r.className = "leave-reason-inner-row";
 
-    const labelEl = document.createElement("span");
-    labelEl.className = "inner-label";
-    labelEl.textContent = label;
+    const l = document.createElement("div");
+    l.className = "leave-reason-inner-label";
+    l.textContent = label;
 
-    const valueEl = document.createElement("span");
-    valueEl.className = "inner-value";
-    valueEl.textContent = value;
+    const v = document.createElement("div");
+    v.className = "leave-reason-inner-value";
+    v.textContent = value;
 
-    fragment.append(labelEl, valueEl);
-    return fragment;
+    r.append(l, v);
+    return r;
 }
 
 
