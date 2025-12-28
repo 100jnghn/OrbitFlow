@@ -4,6 +4,8 @@ import com.finalproj.orbitflow.approval.document.dto.*;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
 import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
+import com.finalproj.orbitflow.approval.documentContent.entity.DocumentContent;
+import com.finalproj.orbitflow.approval.documentContent.repository.DocumentContentRepository;
 import com.finalproj.orbitflow.approval.formTemplate.entity.FormTemplate;
 import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateRepository;
 import com.finalproj.orbitflow.approval.formTemplate.schema.FormFieldSchema;
@@ -26,6 +28,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Please explain the class!!!
@@ -45,6 +48,7 @@ public class DocumentService {
     private final ObjectMapper objectMapper;
     private final CompanyRepository companyRepository;
     private final EmployeeRepository employeeRepository;
+    private final DocumentContentRepository documentContentRepository;
 
 
     @Transactional(readOnly = true)
@@ -128,6 +132,22 @@ public class DocumentService {
                 .sorted(Comparator.comparing(FormFieldSchema::getOrder))
                 .map(DocumentFormFieldDto::from)
                 .toList();
+
+
+        Map<String, Object> content = Map.of("fields", fields);
+        String contentJson;
+        try {
+            contentJson = objectMapper.writeValueAsString(content);
+        } catch (Exception e) {
+            throw new IllegalStateException("문서 내용 JSON 생성 실패", e);
+        }
+
+        DocumentContent documentContent = DocumentContent.builder()
+                .document(createdDocument)
+                .contentJson(contentJson)
+                .build();
+
+        documentContentRepository.save(documentContent);
 
         return DocumentCreateResDto.from(createdDocument.getId(), createdDocument.getStatus(), fields);
     }

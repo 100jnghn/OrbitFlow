@@ -174,11 +174,12 @@ function renderNotice(field, value) {
 
     const val = document.createElement("div");
     val.className = `field-value notice ${field.meta?.style || "info"}`;
-    val.innerText = value || field.meta?.message || "";
+    val.innerText = formatValue(value) || field.meta?.message || "";
 
     wrap.append(label, val);
     return wrap;
 }
+
 
 /**
  * Image – 좌 label / 우 이미지 (밑줄 문제 해결)
@@ -260,28 +261,31 @@ function renderTableFlow(field, rows, page, root) {
     let tbody = null;
 
     for (const row of rows) {
-        // 아직 테이블이 없으면 새로 생성 (append는 아직 안 함)
         if (!tableBlock) {
             tableBlock = createTableBlock(field);
             tbody = tableBlock.tbody;
         }
 
         const tr = document.createElement("tr");
+
+        // 🔹 행 번호
+        const noTd = document.createElement("td");
+        noTd.innerText = String(tbody.children.length + 1);
+        noTd.className = "table-no";
+        tr.appendChild(noTd);
+
+        // 기존 데이터
         field.meta.columns.forEach(col => {
             const td = document.createElement("td");
             td.innerText = row[col.id] ?? "";
             tr.appendChild(td);
         });
 
-        // row를 임시로 추가
         tbody.appendChild(tr);
 
-        // 🔑 여기서 처음으로 page append 여부 판단
         if (!canAppend(page, tableBlock.wrapper)) {
-            // 이 페이지엔 못 들어감 → row 제거
             tbody.removeChild(tr);
 
-            // 새 페이지에서 테이블 시작
             page = createPage();
             root.appendChild(page);
 
@@ -289,11 +293,12 @@ function renderTableFlow(field, rows, page, root) {
             tbody = tableBlock.tbody;
             tbody.appendChild(tr);
 
-            page.querySelector(".page-content").appendChild(tableBlock.wrapper);
+            page.querySelector(".page-content")
+                .appendChild(tableBlock.wrapper);
         } else {
-            // 들어갈 수 있으면 아직 wrapper가 page에 없다면 추가
             if (!tableBlock.wrapper.parentNode) {
-                page.querySelector(".page-content").appendChild(tableBlock.wrapper);
+                page.querySelector(".page-content")
+                    .appendChild(tableBlock.wrapper);
             }
         }
     }
@@ -317,6 +322,11 @@ function createTableBlock(field) {
 
     const thead = document.createElement("thead");
     const tr = document.createElement("tr");
+
+    const noTh = document.createElement("th");
+    noTh.className = "table-no";
+    noTh.innerText = "No";
+    tr.appendChild(noTh);
 
     field.meta.columns.forEach(col => {
         const th = document.createElement("th");
@@ -343,6 +353,12 @@ function createTableBlock(field) {
 function formatValue(value) {
     if (value == null) return "";
 
+    // preview 전용 display 객체
+    if (typeof value === "object" && value.display) {
+        return value.display;
+    }
+
+    // (안전망 – 혹시 이전 구조 섞여와도 대응)
     if (typeof value === "object" && value.start && value.end) {
         return `${value.start} ~ ${value.end}`;
     }
@@ -357,6 +373,7 @@ function formatValue(value) {
 
     return String(value);
 }
+
 
 /* =====================================================
  * Preview Navigation

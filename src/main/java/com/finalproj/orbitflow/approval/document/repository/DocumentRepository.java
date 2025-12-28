@@ -18,4 +18,5 @@ public interface DocumentRepository extends JpaRepository<Document, Long>, Docum
 
 
     Page<Document> getDocumentByWriter_Id(Long writerId, Pageable pageable);
+
 }

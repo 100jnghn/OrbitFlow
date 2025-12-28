@@ -34,9 +34,11 @@ public enum FieldType {
     CHECKBOX("checkbox", true),
 
     LEAVE_DATE_RANGE("leave-date-range", true),
+    LEAVE_REASON("leave-reason", true), // 🔥 추가
+
+    SCHEDULE_DATE_RANGE("schedule-date-range", true), // 🔥 추가
 
     TABLE("table", true),
-
     IMAGE("image", true),
 
     CURRENCY("currency", true),

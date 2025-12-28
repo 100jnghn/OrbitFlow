@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Please explain the class!!!
@@ -35,4 +36,15 @@ public interface PositionCategoryRepository extends JpaRepository<PositionCatego
     List<PositionCategory> findByCompanyIdOrderByIsActiveDescOrderIndexAscCreatedAtDesc(Long companyId);
 
     boolean existsByCompanyIdAndOrgCategoryIdAndIsHeadTrue(Long companyId, Long id);
+
+    @Query("""
+    select p
+    from PositionCategory p
+    where p.orgCategory.id = :orgCategoryId
+      and p.isHead = true
+""")
+    Optional<PositionCategory> findHeadPositionByOrgCategoryId(
+            @Param("orgCategoryId") Long orgCategoryId
+    );
+
 }

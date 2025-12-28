@@ -1968,6 +1968,12 @@ VALUES
  (SELECT id FROM reservation_status WHERE status_code = 'CONFIRM'));
 
 
+INSERT INTO template_category (code, name)
+VALUES ('ATTENDANCE', '근태'),
+       ('SCHEDULE', '일정'),
+       ('GENERAL', '일반');
+
+
 
 INSERT INTO leave_type (type_name, is_countable, description)
 VALUES ('연차', true, '법정 유급 연차 휴가'),
