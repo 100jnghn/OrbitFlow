@@ -16,6 +16,9 @@ document.addEventListener('DOMContentLoaded', function() {
         currentFolder = 'SENT';
     } else if (urlPath.includes('/archive')) {
         currentFolder = 'ARCHIVE';
+    } else if (urlPath.includes('/send')) {
+        // 메시지 보내기 페이지는 목록 로드하지 않음
+        return;
     }
     
     // 사이드바 선택 효과
