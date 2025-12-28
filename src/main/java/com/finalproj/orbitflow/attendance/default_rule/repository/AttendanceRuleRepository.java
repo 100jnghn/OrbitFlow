@@ -8,4 +8,6 @@ import java.util.Optional;
 public interface AttendanceRuleRepository extends JpaRepository<AttendanceRule, Long> {
 
     Optional<AttendanceRule> findByCompanyIdAndIsDefaultTrue(Long companyId);
+
+    boolean existsByCompanyId(Long id);
 }

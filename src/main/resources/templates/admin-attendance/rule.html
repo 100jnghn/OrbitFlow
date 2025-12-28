@@ -5,34 +5,30 @@
         ~{fragments/header :: header},
         ~{sidebar/admin-sidebar :: menu},
         ~{::pageCss},
-        ~{}
+        ~{::pageScript}
       )}">
 <head>
     <meta charset="UTF-8">
     <title th:text="${pageTitle} ?: '관리자 - 근태 규칙 관리'">관리자 - 근태 규칙 관리</title>
 
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-
     <th:block th:fragment="pageCss">
-        <link rel="stylesheet" th:href="@{/css/layout.css}">
-        <link rel="stylesheet" th:href="@{/css/layout-admin.css}">
-        <link rel="stylesheet" th:href="@{/css/admin-rule.css}">
+        <link rel="stylesheet" th:href="@{/css/admin-board.css}">
+        <link rel="stylesheet" th:href="@{/css/admin-attendance/admin-rule.css}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     </th:block>
 </head>
 <body>
 
 <div th:fragment="content">
-    <div class="content-area">
-        <div class="page-header">
+    <div class="board-admin-container">
+        <!-- 게시판 제목 -->
+        <div class="board-header">
             <h1>근태 규칙 및 근무 시간 관리</h1>
-            <p class="page-description">회사 전체의 기본 규칙을 설정하고, 특정 사원에게 예외 규칙을 적용합니다.</p>
         </div>
 
+        <!-- 기본 규칙 섹션 -->
         <section class="rule-section">
-            <h2>1. 회사 전체 기본 규칙</h2>
+            <h2 class="section-title">1. 회사 전체 기본 규칙</h2>
             <div class="rule-form">
                 <div class="form-group">
                     <label><strong>기본 출퇴근 시간</strong></label>
@@ -50,18 +46,23 @@
                     </div>
                 </div>
                 <div class="form-actions">
-                    <button type="button" id="saveDefaultRuleBtn" class="btn-primary">저장</button>
+                    <button type="button" id="saveDefaultRuleBtn" class="btn-primary">
+                        <i class="fas fa-save"></i> 저장
+                    </button>
                 </div>
             </div>
         </section>
 
+        <!-- 예외 규칙 섹션 -->
         <section class="rule-section">
             <div class="section-header">
-                <h2>2. 사원별 예외 규칙 관리</h2>
-                <button type="button" id="addExceptionRuleBtn" class="btn-success">+ 예외 규칙 추가</button>
+                <h2 class="section-title">2. 사원별 예외 규칙 관리</h2>
+                <button type="button" id="addExceptionRuleBtn" class="btn-add">
+                    <i class="fas fa-plus"></i> 예외 규칙 추가
+                </button>
             </div>
-            <div class="table-container">
-                <table class="exception-table">
+            <div class="board-table-container">
+                <table class="board-table" id="exceptionTable">
                     <thead>
                     <tr>
                         <th>대상 사원</th>
@@ -107,6 +108,7 @@
                             </div>
                             <div id="employeeSearchResults" class="employee-search-results"></div>
                             <div id="selectedEmployeeInfo" class="selected-employee-info" style="display: none;"></div>
+                            <span class="error-message" id="employeeError"></span>
                         </div>
                     </div>
 
@@ -118,10 +120,12 @@
                                 <div class="date-field">
                                     <label>적용 시작일</label>
                                     <input type="date" id="validFrom" name="validFrom" class="date-input" required>
+                                    <span class="error-message" id="validFromError"></span>
                                 </div>
                                 <div class="date-field">
                                     <label>종료일 (NULL)</label>
                                     <input type="date" id="validTo" name="validTo" class="date-input">
+                                    <span class="error-message" id="validToError"></span>
                                 </div>
                             </div>
                         </div>
@@ -135,20 +139,20 @@
                                 <div class="override-field">
                                     <label>출근 시간</label>
                                     <input type="time" id="exceptionStartTime" name="startTime" class="time-input">
+                                    <span class="error-message" id="startTimeError"></span>
                                 </div>
                                 <div class="override-field">
                                     <label>퇴근 시간</label>
                                     <input type="time" id="exceptionEndTime" name="endTime" class="time-input">
+                                    <span class="error-message" id="endTimeError"></span>
                                 </div>
                                 <div class="override-field">
                                     <label>휴게 시간 (분)</label>
-                                    <input type="number" id="exceptionBreakMinutes" name="breakMinutes" min="0" class="number-input">
-                                </div>
-                                <div class="override-field">
-                                    <label>조기 퇴근 (분)</label>
-                                    <input type="number" id="earlyLeaveMinutes" name="earlyLeaveMinutes" min="0" class="number-input">
+                                    <input type="number" id="exceptionBreakMinutes" name="breakMinutes" min="0" max="480" class="number-input">
+                                    <span class="error-message" id="breakMinutesError"></span>
                                 </div>
                             </div>
+                            <div class="error-message" id="overrideFieldsError" style="margin-top: 8px;"></div>
                         </div>
                     </div>
 
@@ -158,6 +162,7 @@
                             <label class="section-label">규칙 적용 사유</label>
                             <textarea id="reason" name="reason" class="form-control reason-textarea" 
                                       placeholder="40자 이내로 규칙 적용 사유 및 변경 시간 작성" maxlength="40" required></textarea>
+                            <span class="error-message" id="reasonError"></span>
                         </div>
                     </div>
 
@@ -211,6 +216,7 @@
                                 <div class="date-field">
                                     <label>적용 종료일 (수정 가능):</label>
                                     <input type="date" id="editValidTo" name="validTo" class="date-input">
+                                    <span class="error-message" id="editValidToError"></span>
                                 </div>
                             </div>
                         </div>
@@ -224,18 +230,17 @@
                                 <div class="override-field">
                                     <label>출근 시간:</label>
                                     <input type="time" id="editExceptionStartTime" name="startTime" class="time-input">
+                                    <span class="error-message" id="editStartTimeError"></span>
                                 </div>
                                 <div class="override-field">
                                     <label>퇴근 시간:</label>
                                     <input type="time" id="editExceptionEndTime" name="endTime" class="time-input">
+                                    <span class="error-message" id="editEndTimeError"></span>
                                 </div>
                                 <div class="override-field">
                                     <label>휴게 시간:</label>
-                                    <input type="number" id="editExceptionBreakMinutes" name="breakMinutes" min="0" class="number-input">
-                                </div>
-                                <div class="override-field">
-                                    <label>조기 퇴근:</label>
-                                    <input type="number" id="editEarlyLeaveMinutes" name="earlyLeaveMinutes" min="0" class="number-input">
+                                    <input type="number" id="editExceptionBreakMinutes" name="breakMinutes" min="0" max="480" class="number-input">
+                                    <span class="error-message" id="editBreakMinutesError"></span>
                                 </div>
                             </div>
                         </div>
@@ -247,6 +252,7 @@
                             <label class="section-label">규칙 수정 사유</label>
                             <textarea id="editReason" name="reason" class="form-control reason-textarea" 
                                       placeholder="40자 이내로 규칙 수정 사유 작성" maxlength="40" required></textarea>
+                            <span class="error-message" id="editReasonError"></span>
                         </div>
                     </div>
 
@@ -258,9 +264,11 @@
             </div>
         </div>
     </div>
-
-    <script th:src="@{/js/attendance_exception.js}"></script>
 </div>
+
+<th:block th:fragment="pageScript">
+    <script th:src="@{/js/admin-attendance/rule.js}"></script>
+</th:block>
 
 <!-- 사이드바 -->
 <ul th:fragment="admin-sidebar-menu" class="sidebar-menu">

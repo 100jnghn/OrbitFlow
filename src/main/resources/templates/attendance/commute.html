@@ -12,15 +12,20 @@
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 
     <th:block th:fragment="pageCss">
-        <link rel="stylesheet" th:href="@{/css/commute.css}">
+        <link rel="stylesheet" th:href="@{/css/board.css}">
+        <link rel="stylesheet" th:href="@{/css/attendance/commute.css}">
     </th:block>
 </head>
 <body>
 <div th:fragment="content">
-    <div style="padding: 24px 40px;">
-        <h1 class="page-title">출퇴근 기록</h1>
+    <div class="board-container">
+        <!-- 게시판 제목 -->
+        <div class="board-header">
+            <h1>출퇴근 기록</h1>
+        </div>
 
-        <div class="main-action-card">
+        <!-- 출퇴근 액션 카드 -->
+        <div class="card main-action-card">
             <div class="time-info">
                 <div class="time-section">
                     <div class="time-label">현재 시각</div>
@@ -38,7 +43,8 @@
             </div>
         </div>
 
-        <div class="record-section">
+        <!-- 오늘의 기록 -->
+        <div class="card record-section">
             <h2 class="section-title">오늘의 기록</h2>
             <div class="record-item">
                 <span class="record-label">출근 시각:</span>
@@ -60,7 +66,7 @@
     </div>
 
     <th:block th:fragment="pageScript">
-        <script th:src="@{/js/commute.js}"></script>
+        <script th:src="@{/js/attendance/commute.js}"></script>
     </th:block>
 </div>
 </body>
