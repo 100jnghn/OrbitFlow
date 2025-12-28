@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<ul th:fragment="menu" class="sidebar-menu">
+    <li class="sidebar-section-title">일정 관리</li>
+    <li th:classappend="${currentMenu == 'schedule'} ? 'selected' : ''">
+        <a th:href="@{/view/schedule}" class="sidebar-link">내 일정</a>
+    </li>
+</ul>
+</body>
+</html>
+

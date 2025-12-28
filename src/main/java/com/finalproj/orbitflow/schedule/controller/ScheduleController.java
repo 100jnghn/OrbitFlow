@@ -94,7 +94,7 @@ public class ScheduleController {
      * 사용자 - 개인 일정 조회
      * 월 단위 조회, 주 단위 검색
      */
-    @GetMapping("/schedules/{employeeId}")
+    @GetMapping("/schedules/personal")
     public ResponseEntity<ResponseDto> getEmployeeSchedules(
             @AuthenticationPrincipal SecurityUser user,
             @RequestParam int year,

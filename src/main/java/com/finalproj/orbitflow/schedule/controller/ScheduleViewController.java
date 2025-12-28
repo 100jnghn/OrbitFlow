@@ -17,6 +17,11 @@ public class ScheduleViewController {
 
     @GetMapping("/admin/company-schedule")
     public String getCompanySchedulePage() {
-        return "schedule/admin-company-schedule";
+        return "admin-schedule/admin-company-schedule";
+    }
+
+    @GetMapping("/schedule")
+    public String getSchedulePage() {
+        return "schedule/schedule";
     }
 }
