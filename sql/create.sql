@@ -522,20 +522,28 @@ CREATE TABLE approval_line
 (
     id                            BIGINT AUTO_INCREMENT PRIMARY KEY,
 
-    document_id                   BIGINT                                 NOT NULL,
-    company_id                    BIGINT                                 NOT NULL,
+    document_id                   BIGINT    NOT NULL,
+    company_id                    BIGINT    NOT NULL,
 
-    -- 결재자 탐색 기준
-    approval_org_id               BIGINT                                 NULL,
-    approval_position_category_id BIGINT                                 NULL,
+    -- 결재자 탐색 기준 (자동 결재선)
+    approval_org_id               BIGINT    NULL,
+    approval_position_category_id BIGINT    NULL,
 
-    -- 실제 결재자
-    approver_id                   BIGINT                                 NULL,
+    -- 실제 결재자 (확정 시점에 세팅)
+    approver_id                   BIGINT    NULL,
 
-    order_no                      INT                                    NOT NULL,
-    status                        ENUM ('WAITING','APPROVED','REJECTED') NOT NULL,
+    order_no                      INT       NOT NULL,
+
+    -- 결재 상태
+    status                        ENUM (
+        'WAITING',
+        'IN_PROGRESS',
+        'APPROVED',
+        'REJECTED'
+        )                                   NOT NULL,
+
     comment                       TEXT,
-    decided_at                    TIMESTAMP,
+    decided_at                    TIMESTAMP NULL,
 
     CONSTRAINT uk_al_document_order
         UNIQUE (document_id, order_no),
@@ -566,18 +574,13 @@ CREATE TABLE approval_line
             ON DELETE SET NULL
 ) ENGINE = InnoDB;
 
-CREATE INDEX idx_al_document
-    ON approval_line (document_id);
-
-CREATE INDEX idx_al_company
-    ON approval_line (company_id);
-
+-- 결재자 + 상태 기반 조회 (결재함)
 CREATE INDEX idx_al_approver_status
     ON approval_line (approver_id, status);
 
--- ⭐ 결재자 자동/수동 탐색용
-CREATE INDEX idx_al_org_position
-    ON approval_line (approval_org_id, approval_position_category_id);
+-- 현재 결재자 탐색 최적화
+CREATE INDEX idx_al_document_status_order
+    ON approval_line (document_id, status, order_no);
 
 
 -- =========================================================

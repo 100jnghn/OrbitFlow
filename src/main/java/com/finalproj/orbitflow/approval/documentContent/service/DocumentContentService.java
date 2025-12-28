@@ -1,9 +1,12 @@
 package com.finalproj.orbitflow.approval.documentContent.service;
 
+import com.finalproj.orbitflow.approval.document.entity.Document;
+import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
 import com.finalproj.orbitflow.approval.documentContent.dto.DocumentContentPatchReqDto;
 import com.finalproj.orbitflow.approval.documentContent.entity.DocumentContent;
 import com.finalproj.orbitflow.approval.documentContent.repository.DocumentContentRepository;
 import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
+import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -62,7 +65,13 @@ public class DocumentContentService {
                 .findByDocument_Id(documentId)
                 .orElseThrow(() -> new NotFoundException("문서 내용을 찾을 수 없습니다."));
 
-        // 1️⃣ 기존 JSON 파싱
+        Document document = content.getDocument();
+
+        if(document.getStatus() != DocumentStatus.DRAFT) {
+            throw new ForbiddenException("결재 진행 중인 문서는 수정할 수 없습니다.");
+        }
+
+        // 기존 JSON 파싱
         ObjectNode root =
                 (ObjectNode) objectMapper.readTree(content.getContentJson());
 
@@ -72,7 +81,7 @@ public class DocumentContentService {
             throw new IllegalStateException("문서 필드 정보가 없습니다.");
         }
 
-        // 2️⃣ 요청 값 Map으로 변환
+        // 요청 값 Map으로 변환
         Map<String, JsonNode> patchMap = reqDto.getFields().stream()
                 .filter(f -> f.getFieldId() != null)
                 .filter(f -> f.getValue() != null)
@@ -81,20 +90,36 @@ public class DocumentContentService {
                         DocumentContentPatchReqDto.FieldValueDto::getValue
                 ));
 
+        String newTitle = null;
 
-        // 3️⃣ 기존 fields 순회하며 value만 덮어쓰기
+        // 기존 fields 순회하며 value만 덮어쓰기
         for (JsonNode fieldNode : fieldsNode) {
-            String fieldId = fieldNode.get("fieldId").asString();
+            String fieldId = fieldNode.get("fieldId").asText();
 
-            if (patchMap.containsKey(fieldId)) {
-                ((ObjectNode) fieldNode)
-                        .set("value", patchMap.get(fieldId));
+            if (!patchMap.containsKey(fieldId)) continue;
+
+            JsonNode newValue = patchMap.get(fieldId);
+
+            ((ObjectNode) fieldNode).set("value", newValue);
+
+            if ("document-title".equals(fieldId)) {
+                if (newValue.isString()) {
+                    newTitle = newValue.asString().trim();
+                }
             }
         }
 
-        // 4️⃣ 다시 JSON 저장
-        content.updateContentJson(
-                objectMapper.writeValueAsString(root)
-        );
+        if (newTitle != null && !newTitle.isBlank()) {
+            document.updateTitle(newTitle);
+        }
+
+        // 다시 JSON 저장
+        try {
+            content.updateContentJson(
+                    objectMapper.writeValueAsString(root)
+            );
+        } catch (Exception e) {
+            throw new IllegalStateException("문서 JSON 직렬화 실패", e);
+        }
     }
 }

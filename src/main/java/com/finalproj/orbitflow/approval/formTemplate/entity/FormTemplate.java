@@ -88,4 +88,8 @@ public class FormTemplate extends BaseEntity {
     }
 
     public void updateVersion(int nextVersion) {this.version = nextVersion;}
+
+    public boolean isActive() {
+        return this.status == FormTemplateStatus.ACTIVE;
+    }
 }

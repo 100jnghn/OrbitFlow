@@ -1,6 +1,7 @@
 package com.finalproj.orbitflow.approval.document.controller;
 
 import com.finalproj.orbitflow.approval.document.dto.*;
+import com.finalproj.orbitflow.approval.document.service.DocumentApplicationService;
 import com.finalproj.orbitflow.approval.document.service.DocumentService;
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUtils;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/documents")
 public class DocumentController {
     private final DocumentService documentService;
+    private final DocumentApplicationService documentApplicationService;
 
 
     @GetMapping("/my-written")
@@ -50,10 +52,10 @@ public class DocumentController {
 
     @PostMapping("/draft/{formTemplateId}")
     public ResponseEntity<ResponseDto> createDocument(
-        @PathVariable Long formTemplateId,
-        @RequestParam(required = false) Long beforeDocumentId
+            @PathVariable Long formTemplateId,
+            @RequestParam(required = false) Long beforeDocumentId
     ) {
-        DocumentCreateResDto result = documentService.createDraft(SecurityUtils.getCompanyId(), SecurityUtils.getEmployeeId(), formTemplateId, beforeDocumentId);
+        DocumentCreateResDto result = documentApplicationService.createDraft(SecurityUtils.getCompanyId(), SecurityUtils.getEmployeeId(), formTemplateId, beforeDocumentId);
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.CREATED, "결재 문서 초안 생성 성공", result));
     }
 
@@ -67,4 +69,22 @@ public class DocumentController {
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "문서 수정 성공", null));
     }
 
+
+    @PostMapping("/{documentId}/submit")
+    public ResponseEntity<ResponseDto> submitDocument(
+            @PathVariable Long documentId
+    ) {
+        documentService.submitDocument(SecurityUtils.getEmployeeId(), documentId);
+
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "문서 상신 성공",  null));
+    }
+
+    @GetMapping("/{documentId}/detail")
+    public ResponseEntity<ResponseDto> getDocumentDetail(
+            @PathVariable Long documentId
+    ) {
+        DocumentDetailResDto result = documentService.getDocumentDetail(SecurityUtils.getEmployeeId(), documentId);
+
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "문서 상세 조회 성공",  result));
+    }
 }

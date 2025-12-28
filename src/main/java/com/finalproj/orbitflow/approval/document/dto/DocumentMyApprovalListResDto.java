@@ -28,4 +28,7 @@ public class DocumentMyApprovalListResDto {
     private Instant processedAt;          // 내가 결재한 날짜 (없으면 null)
     private String currentApproverName;   // 현재 결재자
     private ApprovalStatus myApprovalStatus;
+
+    private String currentApproverOrgName;
+    private String currentApproverPositionName;
 }

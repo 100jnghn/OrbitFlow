@@ -9,6 +9,8 @@ import com.finalproj.orbitflow.approval.document.entity.QDocument;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
 import com.finalproj.orbitflow.approval.formTemplateGroup.entity.QFormTemplateGroup;
 import com.finalproj.orbitflow.hr.employee.entity.QEmployee;
+import com.finalproj.orbitflow.hr.organization.entity.QOrganization;
+import com.finalproj.orbitflow.hr.positionCategory.entity.QPositionCategory;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
@@ -20,6 +22,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 /**
@@ -40,6 +45,8 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
     private static final QFormTemplateGroup templateGroup = QFormTemplateGroup.formTemplateGroup;
     private static final QApprovalLine approvalLine = QApprovalLine.approvalLine;
 
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+
     // ======================================================
     // 1. 내가 기안한 문서 조회 (기안함)
     // ======================================================
@@ -51,20 +58,20 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
             Pageable pageable
     ) {
         QApprovalLine approvalLineSub = new QApprovalLine("approvalLineSub");
-        QEmployee approver = new QEmployee("approver");
 
-        List<DocumentListResDto> content =
+        QEmployee currentApprover = new QEmployee("currentApprover");
+        QOrganization currentOrg = new QOrganization("currentOrg");
+        QPositionCategory currentPosition = new QPositionCategory("currentPosition");
+
+        BooleanExpression whereCondition =
+                document.company.id.eq(companyId)
+                        .and(document.writer.id.eq(employeeId))
+                        .and(documentStatusEq(reqDto.getDocumentStatus()))
+                        .and(keywordEq(reqDto))
+                        .and(createdAtBetween(reqDto));
+
+        var baseQuery =
                 queryFactory
-                        .select(Projections.constructor(
-                                DocumentListResDto.class,
-                                document.title,
-                                templateGroup.name,
-                                document.templateVersion,
-                                document.createdAt,
-                                document.status,
-                                approver.name,
-                                approvalLine.orderNo
-                        ))
                         .from(document)
                         .join(document.templateGroup, templateGroup)
                         .leftJoin(approvalLine).on(
@@ -80,30 +87,36 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
                                                 )
                                 )
                         )
-                        .leftJoin(approvalLine.approver, approver)
-                        .where(
-                                document.company.id.eq(companyId),
-                                document.writer.id.eq(employeeId),
-                                documentStatusEq(reqDto.getDocumentStatus()),
-                                keywordEq(reqDto),
-                                createdAtBetween(reqDto)
-                        )
+                        .leftJoin(approvalLine.approver, currentApprover)
+                        .leftJoin(currentApprover.organization, currentOrg)
+                        .leftJoin(currentApprover.positionCategory, currentPosition)
+                        .where(whereCondition);
+
+        List<DocumentListResDto> content =
+                baseQuery
+                        .select(Projections.constructor(
+                                DocumentListResDto.class,
+                                document.id,
+                                document.title,
+                                templateGroup.name,
+                                document.templateVersion,
+                                document.createdAt,
+                                document.status,
+
+                                currentOrg.name,
+                                currentPosition.name,
+                                currentApprover.name,
+
+                                approvalLine.orderNo
+                        ))
                         .orderBy(document.createdAt.desc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize())
                         .fetch();
 
         Long total =
-                queryFactory
+                baseQuery
                         .select(document.count())
-                        .from(document)
-                        .where(
-                                document.company.id.eq(companyId),
-                                document.writer.id.eq(employeeId),
-                                documentStatusEq(reqDto.getDocumentStatus()),
-                                keywordEq(reqDto),
-                                createdAtBetween(reqDto)
-                        )
                         .fetchOne();
 
         return new PageImpl<>(content, pageable, total == null ? 0 : total);
@@ -124,19 +137,35 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
         QApprovalLine currentLine = new QApprovalLine("currentLine");
         QApprovalLine currentLineSub = new QApprovalLine("currentLineSub");
 
-        List<DocumentMyApprovalListResDto> content =
+        QEmployee currentApprover = new QEmployee("currentApprover");
+        QOrganization currentOrg = new QOrganization("currentOrg");
+        QPositionCategory currentPosition = new QPositionCategory("currentPosition");
+
+        BooleanExpression whereCondition =
+                document.company.id.eq(companyId)
+                        .and(myLine.approver.id.eq(employeeId))
+                        .and(
+                                myLine.status.in(ApprovalStatus.APPROVED, ApprovalStatus.REJECTED)
+                                        .or(
+                                                myLine.status.eq(ApprovalStatus.WAITING)
+                                                        .and(
+                                                                myLine.orderNo.eq(
+                                                                        JPAExpressions
+                                                                                .select(currentLineSub.orderNo.min())
+                                                                                .from(currentLineSub)
+                                                                                .where(
+                                                                                        currentLineSub.document.eq(document),
+                                                                                        currentLineSub.status.eq(ApprovalStatus.WAITING)
+                                                                                )
+                                                                )
+                                                        )
+                                        )
+                        )
+                        .and(approvalStatusEq(reqDto.getApprovalStatus()))
+                        .and(keywordContains(reqDto.getKeyword()));
+
+        var baseQuery =
                 queryFactory
-                        .select(Projections.constructor(
-                                DocumentMyApprovalListResDto.class,
-                                document.id,
-                                document.title,
-                                templateGroup.name,
-                                document.writer.name,
-                                document.createdAt,
-                                myLine.decidedAt,
-                                currentLine.approver.name,
-                                myLine.status
-                        ))
                         .from(myLine)
                         .join(myLine.document, document)
                         .join(document.templateGroup, templateGroup)
@@ -154,63 +183,38 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
                                                 )
                                 )
                         )
-                        .where(
-                                document.company.id.eq(companyId),
-                                myLine.approver.id.eq(employeeId),
+                        .leftJoin(currentLine.approver, currentApprover)
+                        .leftJoin(currentApprover.organization, currentOrg)
+                        .leftJoin(currentApprover.positionCategory, currentPosition)
+                        .where(whereCondition);
 
-                                // 내가 처리했거나, 현재 내 차례인 문서
-                                myLine.status.in(ApprovalStatus.APPROVED, ApprovalStatus.REJECTED)
-                                        .or(
-                                                myLine.status.eq(ApprovalStatus.WAITING)
-                                                        .and(
-                                                                myLine.orderNo.eq(
-                                                                        JPAExpressions
-                                                                                .select(currentLineSub.orderNo.min())
-                                                                                .from(currentLineSub)
-                                                                                .where(
-                                                                                        currentLineSub.document.eq(document),
-                                                                                        currentLineSub.status.eq(ApprovalStatus.WAITING)
-                                                                                )
-                                                                )
-                                                        )
-                                        ),
+        List<DocumentMyApprovalListResDto> content =
+                baseQuery
+                        .select(Projections.constructor(
+                                DocumentMyApprovalListResDto.class,
+                                document.id,
+                                document.title,
+                                templateGroup.name,
+                                document.writer.name,
+                                document.createdAt,
+                                myLine.decidedAt,
 
-                                approvalStatusEq(reqDto.getApprovalStatus()),
-                                keywordContains(reqDto.getKeyword())
-                        )
+                                // ⭐ 현재 결재자 정보
+                                currentOrg.name,
+                                currentPosition.name,
+                                currentApprover.name,
+
+                                // ⭐ 내 결재 상태
+                                myLine.status
+                        ))
                         .orderBy(document.createdAt.desc())
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize())
                         .fetch();
 
         Long total =
-                queryFactory
+                baseQuery
                         .select(document.count())
-                        .from(myLine)
-                        .join(myLine.document, document)
-                        .where(
-                                document.company.id.eq(companyId),
-                                myLine.approver.id.eq(employeeId),
-
-                                myLine.status.in(ApprovalStatus.APPROVED, ApprovalStatus.REJECTED)
-                                        .or(
-                                                myLine.status.eq(ApprovalStatus.WAITING)
-                                                        .and(
-                                                                myLine.orderNo.eq(
-                                                                        JPAExpressions
-                                                                                .select(currentLineSub.orderNo.min())
-                                                                                .from(currentLineSub)
-                                                                                .where(
-                                                                                        currentLineSub.document.eq(document),
-                                                                                        currentLineSub.status.eq(ApprovalStatus.WAITING)
-                                                                                )
-                                                                )
-                                                        )
-                                        ),
-
-                                approvalStatusEq(reqDto.getApprovalStatus()),
-                                keywordContains(reqDto.getKeyword())
-                        )
                         .fetchOne();
 
         return new PageImpl<>(content, pageable, total == null ? 0 : total);
@@ -223,6 +227,10 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
         return status != null ? document.status.eq(status) : null;
     }
 
+    /**
+     * 결재 상태 필터
+     * - 결재함 기준에서는 myLine.status 의미
+     */
     private BooleanExpression approvalStatusEq(ApprovalStatus status) {
         return status != null ? approvalLine.status.eq(status) : null;
     }
@@ -244,8 +252,35 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
                 : null;
     }
 
+    // ======================================================
+    // 날짜 조건 (Instant 기반)
+    // ======================================================
     private BooleanExpression createdAtBetween(DocumentListReqDto reqDto) {
-        // (생략: 네가 이미 작성한 로직 그대로)
-        return null;
+        LocalDate start = reqDto.getStartDate();
+        LocalDate end = reqDto.getEndDate();
+
+        if (start == null && end == null) {
+            return null;
+        }
+
+        if (start != null && end != null) {
+            Instant startInstant =
+                    start.atStartOfDay(KST).toInstant();
+
+            Instant endInstant =
+                    end.plusDays(1).atStartOfDay(KST).toInstant().minusNanos(1);
+
+            return document.createdAt.between(startInstant, endInstant);
+        }
+
+        if (start != null) {
+            return document.createdAt.goe(
+                    start.atStartOfDay(KST).toInstant()
+            );
+        }
+
+        return document.createdAt.loe(
+                end.plusDays(1).atStartOfDay(KST).toInstant().minusNanos(1)
+        );
     }
 }
