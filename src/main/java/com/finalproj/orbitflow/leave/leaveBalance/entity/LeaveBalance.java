@@ -39,6 +39,13 @@ public class LeaveBalance extends BaseEntity {
     @Column(name = "remaining_days", precision = 5, scale = 2)
     private BigDecimal remainingDays; // 잔여 일수 (DECIMAL 5,2)
 
+    // LeaveBalance.java 내 수정
     public void updateBalance(BigDecimal days) {
+        if (this.totalGranted == null) this.totalGranted = BigDecimal.ZERO;
+        if (this.remainingDays == null) this.remainingDays = BigDecimal.ZERO;
+
+        // 기존 잔합에 부여된 일수를 더함
+        this.totalGranted = this.totalGranted.add(days);
+        this.remainingDays = this.remainingDays.add(days);
     }
 }

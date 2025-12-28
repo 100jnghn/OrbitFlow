@@ -1,0 +1,228 @@
+/* [1] 컨테이너 및 배경 설정 */
+.leave-container {
+    padding: 30px 40px;
+    background-color: #f8f9fa; /* 도안의 연한 회색 배경 */
+    min-height: calc(100vh - 70px);
+    font-family: 'Pretendard', -apple-system, sans-serif;
+}
+
+/* 페이지 헤더 */
+.page-header {
+    margin-bottom: 25px;
+}
+
+.page-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+}
+
+.base-date {
+    font-size: 14px;
+    color: #666;
+}
+
+/* [2] 화이트 카드 공통 스타일 */
+.card {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e1e4e8;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    margin-bottom: 25px;
+    overflow: hidden;
+}
+
+/* 연차 요약 카드 전용 섹션 */
+.leave-summary {
+    display: flex;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e1e4e8;
+    padding: 30px 0;
+    margin-bottom: 25px;
+}
+
+.summary-card {
+    flex: 1;
+    text-align: center;
+    position: relative;
+}
+
+.summary-card:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 20%;
+    height: 60%;
+    width: 1px;
+    background-color: #eee;
+}
+
+.summary-label {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 12px;
+}
+
+.summary-count {
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+}
+
+.summary-count .unit {
+    font-size: 16px;
+    color: #999;
+    font-weight: 400;
+}
+
+.count-used { color: #e74c3c !important; }      /* 사용일수 강조 */
+.count-remaining { color: #4b69ff !important; } /* 잔여일수 강조 */
+
+/* [3] 필터 섹션 (기타 휴가 현황 영역 ②) */
+.filter-section {
+    padding: 20px 25px;
+    background-color: #ffffff;
+}
+
+.filter-row {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.filter-group label {
+    font-weight: 600;
+    font-size: 14px;
+    color: #444;
+}
+
+.form-select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    color: #333;
+    min-width: 140px;
+    background-color: #fff;
+}
+
+/* [4] 상세 내역 테이블 영역 (영역 ③) */
+.leave-detail-section {
+    padding: 25px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #333;
+}
+
+/* 상태 범례 */
+.status-legend {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: #777;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* 테이블 스타일 */
+.leave-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.leave-table th {
+    background-color: #fcfcfc;
+    color: #666;
+    font-weight: 600;
+    padding: 14px;
+    font-size: 13px;
+    border-top: 1px solid #eee;
+    border-bottom: 2px solid #f1f1f1;
+    text-align: center;
+}
+
+.leave-table td {
+    padding: 16px 14px;
+    border-bottom: 1px solid #f8f8f8;
+    text-align: center;
+    font-size: 14px;
+    color: #333;
+}
+
+/* 일수 강조 색상 */
+.count-plus { color: #2ecc71; font-weight: 600; }
+.count-minus, .text-red { color: #e74c3c; font-weight: 600; }
+
+/* 상태 점 스타일 */
+.status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.status-dot.approved { background-color: #2ecc71; } /* 승인: 초록 */
+.status-dot.submitted { background-color: #f1c40f; } /* 대기: 노랑 */
+.status-dot.rejected { background-color: #e74c3c; }  /* 반려: 빨강 */
+
+/* [5] 페이지네이션 (영역 ④) */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    padding: 30px 0 10px;
+}
+
+.pagination {
+    display: flex;
+    gap: 4px;
+}
+
+.pagination button, .page-link {
+    min-width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ddd;
+    background-color: #fff;
+    color: #555;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: 0.2s;
+}
+
+.pagination button.active {
+    background-color: #4b69ff; /* 도안의 메인 블루 컬러 */
+    color: #fff;
+    border-color: #4b69ff;
+    font-weight: 700;
+}
+
+.pagination button:hover:not(.active) {
+    background-color: #f0f2f5;
+}

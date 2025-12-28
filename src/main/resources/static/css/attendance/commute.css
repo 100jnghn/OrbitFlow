@@ -1,0 +1,193 @@
+/* [1] 전역 스타일 및 레이아웃 */
+.commute-container {
+    padding: 40px;
+    background-color: #f8f9fa; /* 상용 시스템 특유의 연회색 배경 */
+    min-height: 100vh;
+    font-family: 'Pretendard', -apple-system, sans-serif;
+    color: #1a1a1a;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    letter-spacing: -0.5px;
+}
+
+/* [2] 화이트 카드 컴포넌트 */
+.main-action-card, .record-section {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 40px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03); /* 부드러운 입체감 */
+}
+
+/* [3] 시간 정보 디자인 (High-End 스타일) */
+.time-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 40px;
+    padding-bottom: 40px;
+    border-bottom: 1.5px solid #f1f3f5;
+}
+
+.time-label {
+    font-size: 14px;
+    color: #868e96;
+    font-weight: 600;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.current-time {
+    font-size: 80px; /* 시각적 압도감 */
+    font-weight: 800;
+    color: #4b69ff; /* 브랜드 대표 블루 */
+    font-family: 'Roboto Mono', monospace;
+    line-height: 1;
+    letter-spacing: -3px;
+}
+
+.work-hours {
+    font-size: 32px;
+    font-weight: 700;
+    color: #343a40;
+}
+
+/* [4] 스마트 버튼 디자인 */
+.button-group {
+    display: flex;
+    gap: 16px;
+}
+
+.button-group button {
+    flex: 1;
+    padding: 22px;
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 출근 버튼 (Soft Blue) */
+.btn-checkin {
+    background: #edf2ff;
+    color: #4b69ff;
+    border: 1px solid #dbe4ff;
+}
+
+.btn-checkin:hover:not(:disabled) {
+    background: #4b69ff;
+    color: #fff;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(75, 105, 255, 0.25);
+}
+
+/* 자리비움 버튼 (Soft Amber) */
+.btn-away {
+    background: #fff9db;
+    color: #f08c00;
+    border: 1px solid #fff3bf;
+}
+
+.btn-away:hover:not(:disabled), .btn-away.active {
+    background: #fab005;
+    color: #fff;
+    transform: translateY(-3px);
+}
+
+/* 퇴근 버튼 (Soft Crimson) */
+.btn-checkout {
+    background: #fff5f5;
+    color: #fa5252;
+    border: 1px solid #ffe3e3;
+}
+
+.btn-checkout:hover:not(:disabled) {
+    background: #fa5252;
+    color: #fff;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(250, 82, 82, 0.25);
+}
+
+button:disabled {
+    background: #f1f3f5 !important;
+    color: #adb5bd !important;
+    border-color: #e9ecef !important;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* [5] 섹션별 기록 리스트 */
+.record-section {
+    padding: 32px 40px;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-title::before {
+    content: "";
+    width: 4px;
+    height: 18px;
+    background: #4b69ff;
+    border-radius: 2px;
+}
+
+.record-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+.record-item:last-child {
+    border-bottom: none;
+}
+
+.record-label {
+    font-size: 15px;
+    color: #495057;
+    font-weight: 600;
+}
+
+.record-value {
+    font-size: 16px;
+    color: #1a1a1a;
+    font-weight: 700;
+}
+
+/* [6] 상태 배지 디자인 고도화 */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    background: #ebfbee;
+    color: #40c057;
+    box-shadow: 0 2px 5px rgba(64, 192, 87, 0.1);
+}
+
+.away-badge {
+    background: #fff9db !important;
+    color: #f08c00 !important;
+}
+
+.status-late { color: #fa5252; }
+.status-ontime { color: #40c057; }

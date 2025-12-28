@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-admin :: layout(
+          ~{::content},
+          ~{fragments/header :: header},
+          ~{sidebar/admin-sidebar :: menu},
+          ~{::pageCss},
+          ~{::pageScript}
+      )}">
+<head>
+    <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/admin-board.css}">
+        <link rel="stylesheet" th:href="@{/css/admin-attendance/dashboard.css}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    </th:block>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="board-admin-container">
+        <!-- 게시판 제목 -->
+        <div class="board-header">
+            <h1>직원 근태 종합 현황 대시보드</h1>
+        </div>
+
+        <!-- 요약 카드 섹션 -->
+        <div class="summary-section">
+            <h2 class="section-title" id="todayLabel">금일 요약 현황 (로드 중...)</h2>
+            <div class="summary-cards">
+                <div class="summary-card card-green">
+                    <span class="card-label">출근 완료 인원</span>
+                    <div class="card-value">
+                        <span id="onTimeCount">0</span> <small>/ <span id="totalEmployees">0</span></small>
+                    </div>
+                </div>
+                <div class="summary-card card-orange">
+                    <span class="card-label">금일 지각 인원</span>
+                    <div class="card-value"><span id="lateCount">0</span> <small>명</small></div>
+                </div>
+                <div class="summary-card card-red">
+                    <span class="card-label">퇴근 미처리 (근무중)</span>
+                    <div class="card-value"><span id="notLeavingCount">0</span> <small>명</small></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 검색 및 필터 -->
+        <div class="board-search-section">
+            <div class="search-filters">
+                <div class="date-field-wrapper">
+                    <input type="date" id="startDate" class="date-input">
+                    <span class="error-message" id="startDateError"></span>
+                </div>
+                <div class="date-field-wrapper">
+                    <input type="date" id="endDate" class="date-input">
+                    <span class="error-message" id="endDateError"></span>
+                </div>
+                
+                <select id="statusFilter" class="filter-select">
+                    <option value="ALL">전체 상태</option>
+                    <option value="ON_TIME">정상</option>
+                    <option value="LATE">지각</option>
+                    <option value="ABSENT">결근</option>
+                </select>
+                
+                <div class="search-input-wrapper">
+                    <input type="text" id="searchKeyword" class="search-input" 
+                           placeholder="이름 또는 사번 입력" maxlength="100"
+                           onkeyup="if(window.event.keyCode==13){handleSearch()}">
+                    <span class="error-message" id="searchKeywordError"></span>
+                </div>
+                
+                <button type="button" class="btn-search" onclick="handleSearch()">
+                    <i class="fas fa-search"></i> 검색
+                </button>
+            </div>
+        </div>
+
+        <!-- 게시글 목록 테이블 -->
+        <div class="board-table-container">
+            <table class="board-table" id="attendanceTable">
+                <thead>
+                <tr>
+                    <th>이름 / 사번</th>
+                    <th>출근 시각</th>
+                    <th>퇴근 시각</th>
+                    <th>총 근무 시간</th>
+                    <th>상태</th>
+                    <th>날짜</th>
+                    <th>관리</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 40px; color: #9ca3af;">
+                        데이터를 불러오는 중입니다...
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 페이지네이션 -->
+        <div class="board-bottom-actions">
+            <div class="pagination" id="boardPagination">
+                <!-- 동적으로 생성됨 -->
+            </div>
+        </div>
+    </div>
+
+    <div id="correctionModal" class="modal-overlay" style="display: none;">
+        <div class="modal-window">
+            <div class="modal-header">
+                <h3>근태 기록 정정</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="targetAttendanceId">
+                <div class="form-item">
+                    <label>변경할 상태</label>
+                    <select id="modalStatus" class="form-select">
+                        <option value="ON_TIME">정상 출근</option>
+                        <option value="LATE">지각</option>
+                        <option value="ABSENT">결근</option>
+                    </select>
+                </div>
+                <div class="form-item">
+                    <label>정정 사유 <small class="text-danger">*</small></label>
+                    <textarea id="modalReason" class="form-textarea"
+                              placeholder="사유를 입력하세요 (예: 단말기 오류, 외근 후 퇴근 등)" maxlength="255"></textarea>
+                    <span class="error-message" id="modalReasonError"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal()">닫기</button>
+                <button class="btn-save" onclick="submitCorrection()">저장하기</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block th:fragment="pageScript">
+    <script th:src="@{/js/admin-attendance/dashboard.js}"></script>
+</th:block>
+</body>
+</html>

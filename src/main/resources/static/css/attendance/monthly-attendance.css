@@ -1,0 +1,221 @@
+/* 월별 근태조회 페이지 - 게시판 디자인과 통일 */
+
+/* 컬러 팔레트 (게시판과 동일) */
+:root {
+    --primary-color: #3B82F6;
+    --primary-hover: #2563EB;
+    --neutral-50: #F9FAFB;
+    --neutral-100: #F3F4F6;
+    --neutral-200: #E5E7EB;
+    --neutral-300: #D1D5DB;
+    --neutral-400: #9CA3AF;
+    --neutral-500: #6B7280;
+    --neutral-600: #4B5563;
+    --neutral-700: #374151;
+    --neutral-800: #1F2937;
+}
+
+/* 컨테이너 좌우 여백 - 화면 크기에 맞춤 */
+.board-container {
+    padding: 24px 0;
+    max-width: 100%;
+    width: 100%;
+}
+
+/* 테이블 컬럼 정렬 (근태조회 페이지용) */
+#attendanceTable th:nth-child(1),
+#attendanceTable td:nth-child(1) {
+    text-align: center !important;
+}
+
+#attendanceTable th:nth-child(2),
+#attendanceTable td:nth-child(2) {
+    text-align: center !important;
+}
+
+#attendanceTable th:nth-child(3),
+#attendanceTable td:nth-child(3) {
+    text-align: center !important;
+}
+
+#attendanceTable th:nth-child(4),
+#attendanceTable td:nth-child(4) {
+    text-align: center !important;
+}
+
+#attendanceTable th:nth-child(5),
+#attendanceTable td:nth-child(5) {
+    text-align: center !important;
+}
+
+/* 요약 카드 디자인 */
+.card {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid var(--neutral-200);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.summary-grid {
+    display: flex;
+    padding: 10px 0;
+}
+
+.summary-item {
+    flex: 1;
+    text-align: center;
+    border-right: 1px solid var(--neutral-200);
+}
+
+.summary-item:last-child { 
+    border-right: none; 
+}
+
+.summary-label {
+    display: block;
+    font-size: 13px;
+    color: var(--neutral-500);
+    margin-bottom: 10px;
+}
+
+.summary-value {
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.val-blue { 
+    color: var(--primary-color); 
+}
+
+.val-orange { 
+    color: #F59E0B; 
+}
+
+.val-red { 
+    color: #DC2626; 
+}
+
+/* 상태 배지 */
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.badge-late { 
+    background-color: #FEF3C7; 
+    color: #F59E0B; 
+}
+
+.badge-absent { 
+    background-color: #FEE2E2; 
+    color: #DC2626; 
+}
+
+.badge-normal { 
+    background-color: #D1FAE5; 
+    color: #10B981; 
+}
+
+.badge-vacation { 
+    background-color: #DBEAFE; 
+    color: #3B82F6; 
+}
+
+/* 기간 설정 영역 내의 시작일/종료일 박스 사이 간격 조정 */
+.range-inputs {
+    display: flex;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+/* 월별 선택 드롭다운 (게시판 필터와 통일) */
+.custom-dropdown {
+    min-width: 200px;
+    background-color: white;
+    border: 1px solid var(--neutral-300);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    box-sizing: border-box;
+    line-height: 1.5;
+}
+
+.custom-dropdown:hover {
+    border-color: var(--primary-color);
+}
+
+.custom-dropdown:focus-within {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.dropdown-selected {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    font-size: 14px;
+    color: var(--neutral-700);
+}
+
+.dropdown-selected span {
+    letter-spacing: 0.5px;
+}
+
+.dropdown-selected i {
+    font-size: 14px;
+    color: var(--neutral-500);
+}
+
+/* 드롭다운 리스트(36개월 목록) 디자인 */
+.dropdown-list {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 100%;
+    background: #fff;
+    border: 1px solid var(--neutral-200);
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    max-height: 300px;
+    overflow-y: auto;
+    display: none;
+    padding: 8px 0;
+    list-style: none;
+    margin: 0;
+}
+
+.custom-dropdown.show .dropdown-list {
+    display: block;
+}
+
+.dropdown-list li {
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--neutral-700);
+    transition: background 0.2s;
+    cursor: pointer;
+}
+
+.dropdown-list li:hover {
+    background-color: var(--neutral-50);
+    color: var(--primary-color);
+}
+
+.dropdown-list li.active {
+    background-color: #EFF6FF;
+    color: var(--primary-color);
+    font-weight: 600;
+}

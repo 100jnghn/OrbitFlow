@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="
+      ~{layout/layout-user :: layout(
+      ~{::content},
+      ~{fragments/header :: header},
+      ~{sidebar/attendance/user-attendance-sidebar :: menu},
+      ~{::pageCss}, ~{::pageScript})}">
+<head>
+    <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/leave/leave.css}">
+    </th:block>
+</head>
+<body>
+
+<div th:fragment="content" class="leave-container">
+    <div class="page-header">
+        <h2 class="page-title">내 연차 현황</h2>
+        <p class="base-date">
+            <span th:text="${displayYear}">2025</span>년 기준
+            <span class="date-detail">(회계연도 1월 1일)</span>
+        </p>
+    </div>
+
+    <div class="leave-summary">
+        <div class="summary-card">
+            <p class="summary-label">총 발생 연차</p>
+            <p class="summary-count"><span id="totalGranted">0.0</span> <span class="unit">일</span></p>
+        </div>
+        <div class="summary-card">
+            <p class="summary-label">사용 연차</p>
+            <p class="summary-count count-used"><span id="usedDays">0.0</span> <span class="unit">일</span></p>
+        </div>
+        <div class="summary-card">
+            <p class="summary-label">잔여 연차</p>
+            <p class="summary-count count-remaining"><span id="remainingDays">0.0</span> <span class="unit">일</span></p>
+        </div>
+    </div>
+
+    <div class="leave-detail-section">
+        <h3 class="section-title">연차 상세 내역</h3>
+        <table class="leave-table" id="leaveHistoryTable">
+            <thead>
+            <tr>
+                <th>항목</th>
+                <th>발생/사용일</th>
+                <th>기간</th>
+                <th>일수</th>
+                <th>상태</th>
+            </tr>
+            </thead>
+            <tbody id="leaveHistoryList">
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination" id="leavePagination"></div>
+</div>
+
+<th:block th:fragment="pageScript">
+    <script th:src="@{/js/leave/annual-leave.js}"></script>
+</th:block>
+
+</body>
+</html>

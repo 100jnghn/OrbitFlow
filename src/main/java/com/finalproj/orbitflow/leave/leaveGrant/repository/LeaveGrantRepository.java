@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Please explain the class!!!
@@ -17,4 +18,6 @@ import java.time.LocalDate;
 @Repository
 public interface LeaveGrantRepository extends JpaRepository<LeaveGrant,Long> {
     boolean existsByEmployeeIdAndGrantTypeAndGrantDate(Long id, String annualRegular, LocalDate today);
+
+    List<LeaveGrant> findByCompanyIdAndEmployeeIdOrderByGrantDateDesc(Long companyId, Long employeeId);
 }
