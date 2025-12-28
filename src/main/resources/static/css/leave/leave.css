@@ -1,0 +1,141 @@
+/* 내 연차 조회 페이지 - 게시판 디자인과 통일 */
+
+/* 컨테이너 좌우 여백 - 화면 크기에 맞춤 (월별 근태조회와 동일) */
+.board-container {
+    padding: 24px;
+    max-width: 100%;
+    width: 100%;
+}
+
+/* 연차 요약 카드 전용 섹션 (게시판 디자인과 통일) */
+.leave-summary {
+    display: flex;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid var(--neutral-200);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.summary-card {
+    flex: 1;
+    text-align: center;
+    position: relative;
+}
+
+.summary-card:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 20%;
+    height: 60%;
+    width: 1px;
+    background-color: var(--neutral-200);
+}
+
+.summary-label {
+    display: block;
+    font-size: 13px;
+    color: var(--neutral-500);
+    margin-bottom: 10px;
+}
+
+.summary-count {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--neutral-800);
+}
+
+.summary-count .unit {
+    font-size: 16px;
+    color: var(--neutral-500);
+    font-weight: 400;
+}
+
+.count-used { 
+    color: #DC2626 !important;      /* 사용일수 강조 */
+}
+
+.count-remaining { 
+    color: var(--primary-color) !important; /* 잔여일수 강조 */
+}
+
+/* 범례 스타일 */
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* 테이블 컬럼 정렬 (연차 조회 페이지용) */
+#leaveHistoryTable th:nth-child(1),
+#leaveHistoryTable td:nth-child(1) {
+    text-align: left !important;
+    padding-left: 20px;
+}
+
+#leaveHistoryTable th:nth-child(2),
+#leaveHistoryTable td:nth-child(2),
+#leaveHistoryTable th:nth-child(3),
+#leaveHistoryTable td:nth-child(3),
+#leaveHistoryTable th:nth-child(4),
+#leaveHistoryTable td:nth-child(4),
+#leaveHistoryTable th:nth-child(5),
+#leaveHistoryTable td:nth-child(5) {
+    text-align: center !important;
+}
+
+/* 휴가 신청 현황 테이블 컬럼 정렬 */
+#otherLeaveTable th:nth-child(1),
+#otherLeaveTable td:nth-child(1) {
+    text-align: left !important;
+    padding-left: 20px;
+}
+
+#otherLeaveTable th:nth-child(2),
+#otherLeaveTable td:nth-child(2),
+#otherLeaveTable th:nth-child(3),
+#otherLeaveTable td:nth-child(3),
+#otherLeaveTable th:nth-child(4),
+#otherLeaveTable td:nth-child(4),
+#otherLeaveTable th:nth-child(5),
+#otherLeaveTable td:nth-child(5) {
+    text-align: center !important;
+}
+
+/* 일수 강조 색상 */
+.count-plus { 
+    color: #10B981; 
+    font-weight: 600; 
+}
+
+.count-minus, .text-red { 
+    color: #DC2626; 
+    font-weight: 600; 
+}
+
+/* 상태 점 스타일 */
+.status-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    vertical-align: middle;
+}
+
+.status-dot.approved { background-color: #10B981; } /* 승인: 초록 */
+.status-dot.submitted { background-color: #F59E0B; } /* 대기: 노랑 */
+.status-dot.rejected { background-color: #DC2626; }  /* 반려: 빨강 */
+
+.status-text {
+    font-size: 13px;
+    color: var(--neutral-700);
+}

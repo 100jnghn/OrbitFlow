@@ -10,16 +10,28 @@ import java.util.Optional;
 
 public interface MessageRecipientRepository extends JpaRepository<MessageRecipient, Long> {
 
-    Page<MessageRecipient> findByCompanyIdAndRecipient_IdAndFolderTypeAndDeletedAtIsNull(
+    /** (받은/보낸) 기본 목록: 보관함 제외 + 삭제 제외 */
+    Page<MessageRecipient> findByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedFalseAndMessageFolderTypeOrderByCreatedAtDesc(
             Long companyId,
             Long employeeId,
             MessageFolderType folderType,
             Pageable pageable
     );
 
-    Optional<MessageRecipient> findByCompanyIdAndMessage_IdAndRecipient_IdAndDeletedAtIsNull(
+    /** 보관함 목록: isArchived=true + 삭제 제외 (folderType은 복귀용이라 필터 걸지 않는 걸 추천) */
+    Page<MessageRecipient> findByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedTrueOrderByCreatedAtDesc(
+            Long companyId,
+            Long employeeId,
+            Pageable pageable
+    );
+
+    /** 상세 조회용(내 것만) */
+    Optional<MessageRecipient> findByCompanyIdAndMessage_IdAndEmployee_IdAndDeletedAtIsNull(
             Long companyId,
             Long messageId,
             Long employeeId
     );
+
+    /** 중복 방지(옵션) */
+    boolean existsByCompanyIdAndMessage_IdAndEmployee_Id(Long companyId, Long messageId, Long employeeId);
 }

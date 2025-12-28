@@ -14,12 +14,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
  */
 
 @Controller
-@RequestMapping("/view/attendance")
+@RequestMapping("/view")
 public class AttendanceHistoryViewController {
 
-    @GetMapping("/monthly")
+    @GetMapping("/attendance/monthly")
     public String monthlyHistoryPage(Model model) {
         model.addAttribute("currentMenu", "monthly");
-        return "/attendance/history";
+        return "attendance/monthly-attendance";
     }
 }

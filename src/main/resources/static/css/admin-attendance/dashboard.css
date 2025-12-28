@@ -1,0 +1,588 @@
+/* 근태기록 관리 페이지 - 게시판 디자인과 통일 */
+
+/* 컬러 변수 (admin-board.css와 동일) */
+:root {
+    --danger-color: #DC2626;
+}
+
+/* 컨테이너 좌우 여백 - 화면 크기에 맞춤 */
+.board-admin-container {
+    padding: 24px 0;
+    max-width: 100%;
+    width: 100%;
+}
+
+/* 게시판 헤더 스타일 */
+.board-header {
+    margin-bottom: 28px;
+    text-align: left;
+}
+
+.board-header h1 {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--neutral-800);
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+/* 검색 섹션 스타일 */
+.board-search-section {
+    margin-bottom: 24px;
+    padding: 24px;
+    background: var(--neutral-50);
+    border-radius: 12px;
+    border: 1px solid var(--neutral-200);
+}
+
+.search-filters {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-select {
+    padding: 10px 14px;
+    border: 1px solid var(--neutral-300);
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+    color: var(--neutral-700);
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.date-input {
+    padding: 10px 14px;
+    border: 1px solid var(--neutral-300);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--neutral-700);
+    transition: all 0.2s ease;
+}
+
+.date-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 10px 16px;
+    border: 1px solid var(--neutral-300);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--neutral-800);
+    transition: all 0.2s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.btn-search {
+    padding: 10px 20px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-search:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* 테이블 컨테이너 스타일 */
+.board-table-container {
+    margin-bottom: 24px;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--neutral-200);
+    min-height: 550px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 테이블 스타일 */
+.board-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    height: 100%;
+}
+
+.board-table thead {
+    background: var(--neutral-50);
+}
+
+.board-table th {
+    padding: 14px 16px;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--neutral-700);
+    border-bottom: 2px solid var(--neutral-200);
+}
+
+.board-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--neutral-200);
+    font-size: 14px;
+    color: var(--neutral-800);
+    vertical-align: middle;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    height: 48px;
+    box-sizing: border-box;
+}
+
+.board-table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.board-table tbody tr:hover {
+    background: var(--neutral-50);
+}
+
+.board-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* 페이지네이션 및 액션 버튼 컨테이너 */
+.board-bottom-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    margin-bottom: 16px;
+    gap: 16px;
+}
+
+/* 페이지네이션 */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.page-btn,
+.page-number {
+    min-width: 32px;
+    height: 36px;
+    padding: 0 8px;
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #555;
+    text-align: center;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page-btn:hover:not(:disabled),
+.page-number:hover:not(.active) {
+    background: #f8f9fa;
+    border-color: #4a69bd;
+    color: #4a69bd;
+}
+
+.page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.page-number.active {
+    background: #4a69bd;
+    color: #fff;
+    border-color: #4a69bd;
+    font-weight: 500;
+}
+
+.ellipsis {
+    min-width: 32px;
+    height: 36px;
+    padding: 0 4px;
+    color: var(--neutral-400);
+    border: none;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 요약 카드 섹션 */
+.summary-section {
+    margin-bottom: 24px;
+}
+
+.summary-section .section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--neutral-800);
+    margin-bottom: 16px;
+}
+
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.summary-card {
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--neutral-200);
+}
+
+.card-label {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 10px;
+    color: var(--neutral-600);
+    font-weight: 500;
+}
+
+.card-value {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+/* 카드별 배경색 정의 */
+.card-green {
+    background-color: #D1FAE5;
+    color: #065F46;
+}
+
+.card-orange {
+    background-color: #FEF3C7;
+    color: #92400E;
+}
+
+.card-red {
+    background-color: #FEE2E2;
+    color: #991B1B;
+}
+
+.card-blue {
+    background-color: #DBEAFE;
+    color: #1E40AF;
+}
+
+/* 테이블 컬럼 정렬 */
+#attendanceTable th:nth-child(1),
+#attendanceTable td:nth-child(1) {
+    text-align: left !important;
+    padding-left: 20px;
+}
+
+#attendanceTable th:nth-child(2),
+#attendanceTable td:nth-child(2),
+#attendanceTable th:nth-child(3),
+#attendanceTable td:nth-child(3),
+#attendanceTable th:nth-child(4),
+#attendanceTable td:nth-child(4),
+#attendanceTable th:nth-child(5),
+#attendanceTable td:nth-child(5),
+#attendanceTable th:nth-child(6),
+#attendanceTable td:nth-child(6) {
+    text-align: center !important;
+}
+
+#attendanceTable th:nth-child(7),
+#attendanceTable td:nth-child(7) {
+    text-align: center !important;
+    width: 120px;
+}
+
+/* 상태 배지 스타일 */
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.ON_TIME {
+    background-color: #D1FAE5;
+    color: #065F46;
+}
+
+.LATE {
+    background-color: #FEF3C7;
+    color: #92400E;
+}
+
+.ABSENT {
+    background-color: #FEE2E2;
+    color: #991B1B;
+}
+
+.BEFORE_WORK {
+    background-color: #DBEAFE;
+    color: #1E40AF;
+}
+
+/* 테이블 액션 버튼 */
+.btn-table-action {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.btn-table-action:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+}
+
+/* 모달 스타일 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-window {
+    background: white;
+    width: 500px;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.modal-header h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--neutral-800);
+    margin: 0;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: var(--neutral-400);
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+    background: var(--neutral-100);
+    color: var(--neutral-800);
+}
+
+.modal-body {
+    margin-bottom: 24px;
+}
+
+.form-item {
+    margin-bottom: 20px;
+}
+
+.form-item label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--neutral-700);
+    margin-bottom: 8px;
+}
+
+.form-item .text-danger {
+    color: var(--danger-color);
+}
+
+/* 에러 메시지 스타일 */
+.error-message {
+    display: block;
+    color: var(--danger-color);
+    font-size: 12px;
+    margin-top: 4px;
+    min-height: 16px;
+    line-height: 1.4;
+}
+
+.date-field-wrapper,
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.date-field-wrapper .error-message,
+.search-input-wrapper .error-message {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    font-size: 12px;
+    margin-top: 4px;
+    min-height: 16px;
+    display: none;
+    color: var(--danger-color);
+}
+
+.date-field-wrapper .error-message:not(:empty),
+.search-input-wrapper .error-message:not(:empty) {
+    display: block;
+}
+
+/* 입력 필드와 버튼 높이 맞추기 */
+.date-field-wrapper .date-input,
+.search-input-wrapper .search-input {
+    height: 40px;
+    box-sizing: border-box;
+}
+
+.filter-select {
+    height: 40px;
+    box-sizing: border-box;
+}
+
+.btn-search {
+    height: 40px;
+    box-sizing: border-box;
+}
+
+.date-input.error,
+.search-input.error,
+.form-textarea.error {
+    border-color: var(--danger-color);
+}
+
+.date-input.error:focus,
+.search-input.error:focus,
+.form-textarea.error:focus {
+    border-color: var(--danger-color);
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.form-select,
+.form-textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--neutral-300);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--neutral-800);
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+.form-select:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 24px;
+    border-top: 1px solid var(--neutral-200);
+}
+
+.btn-cancel {
+    padding: 10px 20px;
+    background: white;
+    color: var(--neutral-700);
+    border: 1px solid var(--neutral-300);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+    background: var(--neutral-50);
+    border-color: var(--neutral-400);
+}
+
+.btn-save {
+    padding: 10px 20px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-save:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
