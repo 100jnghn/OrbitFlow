@@ -1,0 +1,308 @@
+/* ===============================
+   공통
+=============================== */
+.document-detail-page {
+    font-family: 'Noto Sans KR', sans-serif;
+    padding: 20px 24px 32px;
+    background-color: #f7f8fa;
+    box-sizing: border-box;
+}
+
+/* ===============================
+   문서 헤더
+=============================== */
+.document-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.document-header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.status-badge {
+    padding: 4px 10px;
+    font-size: 12px;
+    border-radius: 12px;
+    background-color: #e5e7eb;
+    color: #374151;
+}
+
+/* ===============================
+   본문 레이아웃
+=============================== */
+.document-body {
+    display: flex;
+    gap: 16px;
+}
+
+/* ===============================
+   좌측 문서 내용 패널
+=============================== */
+.document-content-panel {
+    flex: 1;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 0;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.05);
+    overflow: auto;
+    min-width: 0;
+}
+
+/* 문서 실제 렌더 영역 */
+.document-content-panel #documentContentContainer {
+    margin: 25px;
+    background-color: #ffffff;
+    display: block;
+}
+
+/* ===============================
+   우측 사이드 패널
+=============================== */
+.document-side-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+.side-panel-box {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.05);
+}
+
+.side-panel-box h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+/* ===============================
+   결재선 / 코멘트
+=============================== */
+#approvalLineList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.approval-line-item {
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 8px;
+}
+
+.approver-name {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.approver-status {
+    font-size: 12px;
+    margin-top: 2px;
+    color: #6b7280;
+}
+
+.approver-status.approved {
+    color: #16a34a;
+}
+
+.approver-status.rejected {
+    color: #dc2626;
+}
+
+.approver-status.waiting {
+    color: #2563eb;
+}
+
+.approver-comment {
+    font-size: 12px;
+    margin-top: 4px;
+    color: #374151;
+}
+
+/* ===============================
+   첨부 / 참조 문서
+=============================== */
+#attachmentList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#attachmentList li {
+    margin-bottom: 6px;
+}
+
+#attachmentList a {
+    font-size: 13px;
+    color: #2563eb;
+    text-decoration: none;
+}
+
+#attachmentList a:hover {
+    text-decoration: underline;
+}
+
+/* ===============================
+   하단 액션 버튼
+=============================== */
+.document-action-bar {
+    margin-top: 16px;
+    padding-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.action-btn {
+    min-width: 80px;
+    padding: 8px 14px;
+    font-size: 13px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+}
+
+.action-btn.secondary {
+    background-color: #e5e7eb;
+    color: #111827;
+}
+
+.action-btn.primary {
+    background-color: #2563eb;
+    color: #ffffff;
+}
+
+.action-btn.danger {
+    background-color: #dc2626;
+    color: #ffffff;
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.action-right {
+    display: flex;
+    gap: 8px;
+}
+
+/* =========================================================
+   문서 필드 (표 레이아웃)
+========================================================= */
+.document-content-panel .doc-field-row {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    border-left: 2px solid #000;
+    border-right: 2px solid #000;
+    border-bottom: 2px solid #000;
+    margin: 0;
+}
+
+/* 첫 필드 + 구분선 다음 필드만 상단선 */
+.document-content-panel .doc-field-row:first-child,
+.document-content-panel hr.doc-divider + .doc-field-row {
+    border-top: 2px solid #000;
+}
+
+/* 좌측 라벨 */
+.document-content-panel .doc-field-label {
+    padding: 8px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #000;
+    background-color: #ffffff;
+    border-right: 2px solid #000;
+    display: flex;
+    align-items: flex-start;
+}
+
+/* 우측 값 */
+.document-content-panel .doc-field-value {
+    padding: 8px 10px;
+    font-size: 13px;
+    color: #000;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    text-align: left;
+}
+
+.document-content-panel .doc-field-value.empty {
+    color: #666;
+}
+
+/* ===============================
+   문서 구분선 (hr)
+=============================== */
+.document-content-panel hr.doc-divider {
+    border: none;
+    border-top: 2px solid #000;
+    margin: 24px 0;
+    height: 0;
+}
+
+/* =========================================================
+   휴가 사유 (leave-reason) — 분리 렌더링 최종
+========================================================= */
+
+/* 휴가 사유 그룹 - 첫 행 */
+.document-content-panel
+.doc-field-row.leave-reason-start {
+    border-bottom: none;
+}
+
+/* 두 번째 행 라벨 숨김 */
+.document-content-panel
+.doc-field-row.leave-reason-end
+.doc-field-label {
+    border-top: none;
+    color: transparent;
+}
+
+/* 휴가 사유 라벨 세로 중앙 */
+.document-content-panel
+.doc-field-row.leave-reason-start
+.doc-field-label {
+    align-items: center;
+}
+
+/* 휴가 사유 value 내부 2컬럼 */
+.document-content-panel
+.doc-field-row.leave-reason-start
+.doc-field-value,
+.document-content-panel
+.doc-field-row.leave-reason-end
+.doc-field-value {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    column-gap: 8px;
+    align-items: start;
+}
+
+/* 내부 항목명 */
+.inner-label {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* 내부 세로 구분선 */
+.inner-value {
+    padding-left: 8px;
+    border-left: 1px solid #000;
+    min-height: 100%;
+}
+
+/* 내부 가로 구분선 */
+.document-content-panel
+.doc-field-row.leave-reason-end
+.doc-field-value {
+    border-top: 1px solid #000;
+}

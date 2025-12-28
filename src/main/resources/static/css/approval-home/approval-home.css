@@ -444,3 +444,155 @@
     /* 레이아웃 영향 제거 */
     pointer-events: none;
 }
+
+
+/* ===============================
+   작성 팝업 (approval-home 모달 스타일 재사용)
+   =============================== */
+
+.write-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(27, 32, 54, 0.36);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.write-popup {
+    width: 380px;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 6px 30px rgba(31, 36, 73, 0.17);
+    padding: 36px 32px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* 헤더 */
+.write-popup .popup-header h3 {
+    font-size: 1.22rem;
+    font-weight: 700;
+    color: #18246e;
+    margin-bottom: 10px;
+}
+
+.write-popup .close-btn {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    position: absolute;
+    top: 18px;
+    right: 22px;
+}
+
+/* form group */
+.write-popup .modal-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.write-popup input[type="text"] {
+    padding: 8px 13px;
+    border-radius: 7px;
+    border: 1.3px solid #bfc4e0;
+    font-size: 1.01rem;
+    background: #fafbff;
+}
+
+/* 힌트 */
+.write-popup .hint {
+    font-size: 12px;
+    margin-top: 6px;
+}
+
+/* 설명 박스 */
+.write-popup .selected-desc {
+    border: 1.4px solid #bfc4e0;
+    border-radius: 7px;
+    background: #fff;
+    min-height: 120px;
+    box-shadow: 0 3px 18px rgba(80, 87, 149, 0.11);
+    padding: 12px 16px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* ===============================
+   드롭다운 (검색 결과)
+   =============================== */
+
+.modal-dropdown {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    background: #fff;
+    border: 1.4px solid #bfc4e0;
+    box-shadow: 0 3px 18px rgba(80, 87, 149, 0.11);
+    z-index: 110;
+    border-radius: 8px;
+    max-height: 210px;
+    overflow-y: auto;
+}
+
+.modal-dropdown-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 1.05rem;
+    color: #294d91;
+    transition: background 0.13s;
+}
+
+.modal-dropdown-item:hover,
+.modal-dropdown-item.selected {
+    background: #ecf2fd;
+}
+
+/* ===============================
+   footer 버튼
+   =============================== */
+
+.write-popup .popup-footer {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.write-popup .btn-secondary {
+    background: #f4f6fa;
+    color: #4b515c;
+    border: 1.4px solid #c2c7d1;
+    padding: 8px 28px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.write-popup .btn-secondary:hover {
+    background: #eceef1;
+}
+
+.write-popup .btn-primary {
+    background: #3563e9;
+    color: #fff;
+    border: 1.4px solid #3563e9;
+    padding: 8px 28px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.write-popup .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

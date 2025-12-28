@@ -10,6 +10,7 @@
  */
 
 let hasUnsavedChanges = false;
+let isInitializing = true;
 let documentFieldDefinitions = [];
 
 const MAX_LENGTH = {
@@ -32,6 +33,8 @@ const MAX_LENGTH = {
 
 // 문서 필드 변경 감지
 document.addEventListener('input', (e) => {
+    if (isInitializing) return;
+
     if (
         e.target.matches(
             'input[data-field-id], textarea[data-field-id], select[data-field-id]'
@@ -61,6 +64,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadDocumentDraft(DOCUMENT_ID);
         await loadApprovalLines(DOCUMENT_ID);
         bindEvents(DOCUMENT_ID);
+
+        hasUnsavedChanges = false;
+        isInitializing = false;
     } catch (e) {
         console.error(e);
         alert('문서 정보를 불러오는 중 오류가 발생했습니다.');
@@ -70,6 +76,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 /* =====================================================
    유틸 함수
    ===================================================== */
+
+function confirmLeaveIfDirty() {
+    if (!hasUnsavedChanges) return true;
+
+    return confirm(
+        '저장되지 않은 변경 사항이 있습니다.\n' +
+        '정말로 이동하시겠습니까?'
+    );
+}
+
 
 function showToast(message, type = 'info', duration = 3000) {
     const container = document.getElementById('toast-container');
@@ -885,6 +901,10 @@ function addTableRow(tbody, field, rowData = {}) {
            입력 제어
         ========================= */
         input.addEventListener('input', () => {
+            if (!isInitializing) {
+                hasUnsavedChanges = true;
+            }
+
             let v = input.value;
 
             // 숫자 / 통화 → 숫자만
@@ -897,7 +917,6 @@ function addTableRow(tbody, field, rowData = {}) {
                 v = v.slice(0, maxLength);
             }
 
-            // 비어있을 때
             if (v === '') {
                 input.value = '';
                 delete input.dataset.rawValue;
@@ -906,7 +925,6 @@ function addTableRow(tbody, field, rowData = {}) {
                 return;
             }
 
-            // currency 포맷
             if (type === 'currency') {
                 input.value = formatCurrency(v);
                 input.dataset.rawValue = v;
@@ -914,9 +932,7 @@ function addTableRow(tbody, field, rowData = {}) {
                 input.value = v;
             }
 
-            // ✅ 실시간 카운트 표시
             showTableCellHint(input, v.length, maxLength);
-
             clearTableFieldError(field.fieldId);
         });
 
@@ -1724,13 +1740,7 @@ function bindEvents(documentId) {
     // 이전
     document.getElementById('prevBtn')
         ?.addEventListener('click', () => {
-
-            const confirmed = confirm(
-                '지금까지 작성한 문서 내용은 저장되지 않습니다.\n' +
-                '이전 페이지로 이동하시겠습니까?'
-            );
-
-            if (!confirmed) return;
+            if (!confirmLeaveIfDirty()) return;
 
             history.back();
         });
@@ -1756,20 +1766,39 @@ function bindEvents(documentId) {
                 payload.fields.map(f => [f.fieldId, f.value])
             );
 
-            // 3️⃣ required 검증 (schema 기준)
+            // 3️⃣ required 검증
             if (!validateRequiredFieldsWithSchema(
                 documentFieldDefinitions,
                 valuesById
             )) return;
 
-            // 4️⃣ 타입별 검증 (schema 기준)
+            // 4️⃣ 타입별 검증
             if (!validateFieldsByTypeWithSchema(
                 documentFieldDefinitions,
                 valuesById
             )) return;
 
-            // ✅ 모든 검증 통과
-            alert('검증 통과! 다음 단계로 이동');
+            try {
+                // 5️⃣ 최종 저장
+                await apiFetch(`/api/document-contents/${DOCUMENT_ID}`, {
+                    method: 'PATCH',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+
+                // 6️⃣ 제출
+                await apiFetch(`/api/documents/${DOCUMENT_ID}/submit`, {
+                    method: 'POST'
+                });
+
+                // 7️⃣ 이동
+                alert('문서가 상신되었습니다.');
+                location.href = '/view/document/my-documents';
+
+            } catch (e) {
+                console.error(e);
+                alert('문서 상신 중 오류가 발생했습니다.');
+            }
         });
 
 

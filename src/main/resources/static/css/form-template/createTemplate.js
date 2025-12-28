@@ -31,6 +31,14 @@ const FORM_COMPONENT_TYPES = [
     "department-search"
 ];
 
+const REQUIRED_TOGGLE_HIDDEN_TYPES = [
+    'divider',
+    'checkbox',
+    'notice'
+    // 필요하면 'image'도 추가 가능
+];
+
+
 // -- 타입별 기본 스키마: 공통필드+meta
 const FORM_COMPONENT_SCHEMAS = {
     text: {
@@ -1535,14 +1543,18 @@ function showComponentSettingPanel(componentId) {
         comp.type === "leave-date-range" ||
         comp.type === "leave-reason";
 
-    if (!isFixed && !isForceRequired) {
+    const hideRequiredToggle =
+        REQUIRED_TOGGLE_HIDDEN_TYPES.includes(comp.type);
+
+    if (!isFixed && !isForceRequired && !hideRequiredToggle) {
         html += `
-        <div class="setting-row" style="margin-top:8px;">
-            <label style="flex:1;">필수 입력</label>
-            <input type="checkbox" id="toggle-required"
-                ${comp.required ? "checked" : ""}>
-        </div>`;
+    <div class="setting-row" style="margin-top:8px;">
+        <label style="flex:1;">필수 입력</label>
+        <input type="checkbox" id="toggle-required"
+            ${comp.required ? "checked" : ""}>
+    </div>`;
     }
+
 
     if (isForceRequired) {
         html += `
