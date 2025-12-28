@@ -1,46 +1,21 @@
-/* [1] 컨테이너 및 배경 설정 */
-.leave-container {
-    padding: 30px 40px;
-    background-color: #f8f9fa; /* 도안의 연한 회색 배경 */
-    min-height: calc(100vh - 70px);
-    font-family: 'Pretendard', -apple-system, sans-serif;
+/* 내 연차 조회 페이지 - 게시판 디자인과 통일 */
+
+/* 컨테이너 좌우 여백 - 화면 크기에 맞춤 (월별 근태조회와 동일) */
+.board-container {
+    padding: 24px;
+    max-width: 100%;
+    width: 100%;
 }
 
-/* 페이지 헤더 */
-.page-header {
-    margin-bottom: 25px;
-}
-
-.page-title {
-    font-size: 22px;
-    font-weight: 700;
-    color: #1a1a1a;
-    margin-bottom: 8px;
-}
-
-.base-date {
-    font-size: 14px;
-    color: #666;
-}
-
-/* [2] 화이트 카드 공통 스타일 */
-.card {
-    background: #ffffff;
-    border-radius: 12px;
-    border: 1px solid #e1e4e8;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-    margin-bottom: 25px;
-    overflow: hidden;
-}
-
-/* 연차 요약 카드 전용 섹션 */
+/* 연차 요약 카드 전용 섹션 (게시판 디자인과 통일) */
 .leave-summary {
     display: flex;
     background: #ffffff;
     border-radius: 12px;
-    border: 1px solid #e1e4e8;
-    padding: 30px 0;
-    margin-bottom: 25px;
+    border: 1px solid var(--neutral-200);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+    margin-bottom: 24px;
 }
 
 .summary-card {
@@ -56,173 +31,111 @@
     top: 20%;
     height: 60%;
     width: 1px;
-    background-color: #eee;
+    background-color: var(--neutral-200);
 }
 
 .summary-label {
-    font-size: 14px;
-    color: #888;
-    margin-bottom: 12px;
+    display: block;
+    font-size: 13px;
+    color: var(--neutral-500);
+    margin-bottom: 10px;
 }
 
 .summary-count {
     font-size: 28px;
-    font-weight: 700;
-    color: #333;
+    font-weight: 800;
+    color: var(--neutral-800);
 }
 
 .summary-count .unit {
     font-size: 16px;
-    color: #999;
+    color: var(--neutral-500);
     font-weight: 400;
 }
 
-.count-used { color: #e74c3c !important; }      /* 사용일수 강조 */
-.count-remaining { color: #4b69ff !important; } /* 잔여일수 강조 */
-
-/* [3] 필터 섹션 (기타 휴가 현황 영역 ②) */
-.filter-section {
-    padding: 20px 25px;
-    background-color: #ffffff;
+.count-used { 
+    color: #DC2626 !important;      /* 사용일수 강조 */
 }
 
-.filter-row {
-    display: flex;
-    gap: 30px;
-    align-items: center;
+.count-remaining { 
+    color: var(--primary-color) !important; /* 잔여일수 강조 */
 }
 
-.filter-group {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.filter-group label {
-    font-weight: 600;
-    font-size: 14px;
-    color: #444;
-}
-
-.form-select {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 14px;
-    color: #333;
-    min-width: 140px;
-    background-color: #fff;
-}
-
-/* [4] 상세 내역 테이블 영역 (영역 ③) */
-.leave-detail-section {
-    padding: 25px;
-}
-
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.section-title {
-    font-size: 17px;
-    font-weight: 700;
-    color: #333;
-}
-
-/* 상태 범례 */
-.status-legend {
-    display: flex;
-    gap: 12px;
-    font-size: 12px;
-    color: #777;
-}
-
+/* 범례 스타일 */
 .legend-item {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
 }
 
-/* 테이블 스타일 */
-.leave-table {
-    width: 100%;
-    border-collapse: collapse;
+/* 테이블 컬럼 정렬 (연차 조회 페이지용) */
+#leaveHistoryTable th:nth-child(1),
+#leaveHistoryTable td:nth-child(1) {
+    text-align: left !important;
+    padding-left: 20px;
 }
 
-.leave-table th {
-    background-color: #fcfcfc;
-    color: #666;
-    font-weight: 600;
-    padding: 14px;
-    font-size: 13px;
-    border-top: 1px solid #eee;
-    border-bottom: 2px solid #f1f1f1;
-    text-align: center;
+#leaveHistoryTable th:nth-child(2),
+#leaveHistoryTable td:nth-child(2),
+#leaveHistoryTable th:nth-child(3),
+#leaveHistoryTable td:nth-child(3),
+#leaveHistoryTable th:nth-child(4),
+#leaveHistoryTable td:nth-child(4),
+#leaveHistoryTable th:nth-child(5),
+#leaveHistoryTable td:nth-child(5) {
+    text-align: center !important;
 }
 
-.leave-table td {
-    padding: 16px 14px;
-    border-bottom: 1px solid #f8f8f8;
-    text-align: center;
-    font-size: 14px;
-    color: #333;
+/* 휴가 신청 현황 테이블 컬럼 정렬 */
+#otherLeaveTable th:nth-child(1),
+#otherLeaveTable td:nth-child(1) {
+    text-align: left !important;
+    padding-left: 20px;
+}
+
+#otherLeaveTable th:nth-child(2),
+#otherLeaveTable td:nth-child(2),
+#otherLeaveTable th:nth-child(3),
+#otherLeaveTable td:nth-child(3),
+#otherLeaveTable th:nth-child(4),
+#otherLeaveTable td:nth-child(4),
+#otherLeaveTable th:nth-child(5),
+#otherLeaveTable td:nth-child(5) {
+    text-align: center !important;
 }
 
 /* 일수 강조 색상 */
-.count-plus { color: #2ecc71; font-weight: 600; }
-.count-minus, .text-red { color: #e74c3c; font-weight: 600; }
+.count-plus { 
+    color: #10B981; 
+    font-weight: 600; 
+}
+
+.count-minus, .text-red { 
+    color: #DC2626; 
+    font-weight: 600; 
+}
 
 /* 상태 점 스타일 */
+.status-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
 .status-dot {
     display: inline-block;
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    margin-right: 6px;
     vertical-align: middle;
 }
 
-.status-dot.approved { background-color: #2ecc71; } /* 승인: 초록 */
-.status-dot.submitted { background-color: #f1c40f; } /* 대기: 노랑 */
-.status-dot.rejected { background-color: #e74c3c; }  /* 반려: 빨강 */
+.status-dot.approved { background-color: #10B981; } /* 승인: 초록 */
+.status-dot.submitted { background-color: #F59E0B; } /* 대기: 노랑 */
+.status-dot.rejected { background-color: #DC2626; }  /* 반려: 빨강 */
 
-/* [5] 페이지네이션 (영역 ④) */
-.pagination-container {
-    display: flex;
-    justify-content: center;
-    padding: 30px 0 10px;
-}
-
-.pagination {
-    display: flex;
-    gap: 4px;
-}
-
-.pagination button, .page-link {
-    min-width: 34px;
-    height: 34px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #ddd;
-    background-color: #fff;
-    color: #555;
-    border-radius: 4px;
-    cursor: pointer;
+.status-text {
     font-size: 13px;
-    transition: 0.2s;
-}
-
-.pagination button.active {
-    background-color: #4b69ff; /* 도안의 메인 블루 컬러 */
-    color: #fff;
-    border-color: #4b69ff;
-    font-weight: 700;
-}
-
-.pagination button:hover:not(.active) {
-    background-color: #f0f2f5;
+    color: var(--neutral-700);
 }

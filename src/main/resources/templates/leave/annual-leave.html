@@ -8,19 +8,22 @@
       ~{::pageCss}, ~{::pageScript})}">
 <head>
     <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/board.css}">
         <link rel="stylesheet" th:href="@{/css/leave/leave.css}">
     </th:block>
 </head>
 <body>
 
-<div th:fragment="content" class="leave-container">
-    <div class="page-header">
-        <h2 class="page-title">내 연차 현황</h2>
-        <p class="base-date">
-            <span th:text="${displayYear}">2025</span>년 기준
-            <span class="date-detail">(회계연도 1월 1일)</span>
-        </p>
-    </div>
+<div th:fragment="content">
+    <div class="board-container">
+        <!-- 게시판 제목 -->
+        <div class="board-header">
+            <h1>내 연차 현황</h1>
+            <p class="base-date" style="margin-top: 8px; font-size: 14px; color: var(--neutral-600);">
+                <span th:text="${displayYear}">2025</span>년 기준
+                <span class="date-detail">(회계연도 1월 1일)</span>
+            </p>
+        </div>
 
     <div class="leave-summary">
         <div class="summary-card">
@@ -37,24 +40,28 @@
         </div>
     </div>
 
-    <div class="leave-detail-section">
-        <h3 class="section-title">연차 상세 내역</h3>
-        <table class="leave-table" id="leaveHistoryTable">
-            <thead>
-            <tr>
-                <th>항목</th>
-                <th>발생/사용일</th>
-                <th>기간</th>
-                <th>일수</th>
-                <th>상태</th>
-            </tr>
-            </thead>
-            <tbody id="leaveHistoryList">
-            </tbody>
-        </table>
-    </div>
+        <!-- 연차 상세 내역 -->
+        <div class="board-table-container">
+            <table class="board-table" id="leaveHistoryTable">
+                <thead>
+                <tr>
+                    <th>항목</th>
+                    <th>발생/사용일</th>
+                    <th>기간</th>
+                    <th>일수</th>
+                    <th>상태</th>
+                </tr>
+                </thead>
+                <tbody id="leaveHistoryList">
+                </tbody>
+            </table>
+        </div>
 
-    <div class="pagination" id="leavePagination"></div>
+        <!-- 페이지네이션 -->
+        <div class="board-bottom-actions">
+            <div class="pagination" id="leavePagination"></div>
+        </div>
+    </div>
 </div>
 
 <th:block th:fragment="pageScript">

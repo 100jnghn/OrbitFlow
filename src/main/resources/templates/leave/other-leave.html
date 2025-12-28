@@ -3,62 +3,63 @@
       th:replace="~{layout/layout-user :: layout(~{::content}, ~{fragments/header :: header}, ~{sidebar/attendance/user-attendance-sidebar :: menu}, ~{::pageCss}, ~{::pageScript})}">
 <head>
     <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/board.css}">
         <link rel="stylesheet" th:href="@{/css/leave/leave.css}">
     </th:block>
 </head>
 <body>
-<div th:fragment="content" class="leave-container">
-    <div class="page-header">
-        <h2 class="page-title">나의 휴가 신청 현황</h2>
-    </div>
+<div th:fragment="content">
+    <div class="board-container">
+        <!-- 게시판 제목 -->
+        <div class="board-header">
+            <h1>나의 휴가 신청 현황</h1>
+        </div>
 
-    <div class="filter-section card">
-        <div class="filter-row">
-            <div class="filter-group">
-                <label>기간 조회:</label>
-                <select id="yearFilter" class="form-select">
+        <!-- 검색 및 필터 -->
+        <div class="board-search-section">
+            <div class="search-filters">
+                <select id="yearFilter" class="filter-select">
                     <option value="2025">2025년 전체</option>
                     <option value="2024">2024년 전체</option>
                 </select>
-            </div>
-            <div class="filter-group">
-                <label>상태:</label>
-                <select id="statusFilter" class="form-select">
-                    <option value="ALL">전체</option>
+                
+                <select id="statusFilter" class="filter-select">
+                    <option value="ALL">전체 상태</option>
                     <option value="SUBMITTED">대기</option>
                     <option value="APPROVED">승인</option>
                     <option value="REJECTED">반려</option>
                 </select>
             </div>
         </div>
-    </div>
 
-    <div class="leave-detail-section card">
-        <div class="section-header">
-            <h3 class="section-title">신청 문서 목록</h3>
-            <div class="status-legend">
-                <span class="legend-item"><span class="status-dot approved"></span>승인</span>
-                <span class="legend-item"><span class="status-dot submitted"></span>대기</span>
-                <span class="legend-item"><span class="status-dot rejected"></span>반려</span>
-            </div>
+        <!-- 상태 범례 -->
+        <div style="margin-bottom: 16px; display: flex; justify-content: flex-end; gap: 16px; font-size: 13px; color: var(--neutral-600);">
+            <span class="legend-item"><span class="status-dot approved"></span>승인</span>
+            <span class="legend-item"><span class="status-dot submitted"></span>대기</span>
+            <span class="legend-item"><span class="status-dot rejected"></span>반려</span>
         </div>
-        <table class="leave-table">
-            <thead>
-            <tr>
-                <th>휴가 종류</th>
-                <th>휴가 기간</th>
-                <th>사용 일수/시간</th>
-                <th>신청일</th>
-                <th>결제 상태</th>
-            </tr>
-            </thead>
-            <tbody id="otherLeaveList">
-            </tbody>
-        </table>
-    </div>
 
-    <div class="pagination-container">
-        <div class="pagination" id="otherPagination"></div>
+        <!-- 게시글 목록 테이블 -->
+        <div class="board-table-container">
+            <table class="board-table" id="otherLeaveTable">
+                <thead>
+                <tr>
+                    <th>휴가 종류</th>
+                    <th>휴가 기간</th>
+                    <th>사용 일수/시간</th>
+                    <th>신청일</th>
+                    <th>결제 상태</th>
+                </tr>
+                </thead>
+                <tbody id="otherLeaveList">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 페이지네이션 -->
+        <div class="board-bottom-actions">
+            <div class="pagination" id="otherPagination"></div>
+        </div>
     </div>
 </div>
 

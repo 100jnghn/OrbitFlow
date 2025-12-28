@@ -17,7 +17,7 @@
 
 /* 컨테이너 좌우 여백 - 화면 크기에 맞춤 */
 .board-container {
-    padding: 24px 0;
+    padding: 24px;
     max-width: 100%;
     width: 100%;
 }

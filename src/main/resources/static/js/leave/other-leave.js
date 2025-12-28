@@ -46,9 +46,9 @@ async function loadOtherLeaveHistory() {
                         <td class="text-center ${dayColorClass}">${item.days}일</td>
                         <td class="text-center">${item.actionDate}</td>
                         <td class="text-center">
-                            <div class="status-badge">
+                            <div class="status-wrapper">
                                 <span class="status-dot ${statusClass}"></span>
-                                ${item.statusName}
+                                <span class="status-text">${item.statusName}</span>
                             </div>
                         </td>
                     </tr>
