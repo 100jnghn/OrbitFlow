@@ -559,6 +559,30 @@
     min-height: 80px;
 }
 
+/* 시간 선택 스타일 */
+.time-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.time-select-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.time-select {
+    flex: 1;
+    min-width: 0;
+}
+
+.time-separator {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--neutral-600);
+    user-select: none;
+}
+
 .char-count {
     font-size: 12px;
     font-weight: 400;

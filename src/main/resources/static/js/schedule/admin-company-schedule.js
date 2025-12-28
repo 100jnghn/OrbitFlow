@@ -454,13 +454,20 @@ async function openAddScheduleModal() {
     // 폼 초기화
     document.getElementById('scheduleForm').reset();
     
+    // 시간/분 select 옵션 생성
+    initializeTimeSelects();
+    
     // 오늘 날짜로 기본값 설정
     const today = new Date();
     const todayStr = formatDateForInput(today);
     document.getElementById('scheduleStartDate').value = todayStr;
     document.getElementById('scheduleEndDate').value = todayStr;
-    document.getElementById('scheduleStartTime').value = '09:00';
-    document.getElementById('scheduleEndTime').value = '18:00';
+    
+    // 기본 시간 설정 (09:00, 18:00)
+    document.getElementById('scheduleStartHour').value = '09';
+    document.getElementById('scheduleStartMinute').value = '00';
+    document.getElementById('scheduleEndHour').value = '18';
+    document.getElementById('scheduleEndMinute').value = '00';
     
     // 조직 카테고리를 '회사'로 고정
     await setCompanyOrgCategory();
@@ -494,6 +501,46 @@ function closeScheduleModal() {
     if (modal) {
         modal.style.display = 'none';
     }
+}
+
+/**
+ * 시간/분 select 옵션 초기화
+ */
+function initializeTimeSelects() {
+    // 시간 select (00~23시)
+    const hourSelects = [
+        document.getElementById('scheduleStartHour'),
+        document.getElementById('scheduleEndHour')
+    ];
+    
+    hourSelects.forEach(select => {
+        if (!select) return;
+        select.innerHTML = '';
+        for (let hour = 0; hour < 24; hour++) {
+            const option = document.createElement('option');
+            option.value = String(hour).padStart(2, '0');
+            option.textContent = `${String(hour).padStart(2, '0')}시`;
+            select.appendChild(option);
+        }
+    });
+    
+    // 분 select (00, 10, 20, 30, 40, 50분)
+    const minuteSelects = [
+        document.getElementById('scheduleStartMinute'),
+        document.getElementById('scheduleEndMinute')
+    ];
+    
+    const minutes = [0, 10, 20, 30, 40, 50];
+    minuteSelects.forEach(select => {
+        if (!select) return;
+        select.innerHTML = '';
+        minutes.forEach(minute => {
+            const option = document.createElement('option');
+            option.value = String(minute).padStart(2, '0');
+            option.textContent = `${String(minute).padStart(2, '0')}분`;
+            select.appendChild(option);
+        });
+    });
 }
 
 /**
@@ -607,9 +654,11 @@ async function handleScheduleSubmit(e) {
     const title = document.getElementById('scheduleTitle').value.trim();
     const description = document.getElementById('scheduleDescription').value.trim();
     const startDate = document.getElementById('scheduleStartDate').value;
-    const startTime = document.getElementById('scheduleStartTime').value;
+    const startHour = document.getElementById('scheduleStartHour').value;
+    const startMinute = document.getElementById('scheduleStartMinute').value;
     const endDate = document.getElementById('scheduleEndDate').value;
-    const endTime = document.getElementById('scheduleEndTime').value;
+    const endHour = document.getElementById('scheduleEndHour').value;
+    const endMinute = document.getElementById('scheduleEndMinute').value;
     const status = document.getElementById('scheduleStatus').value;
     const orgCategoryId = document.getElementById('scheduleOrgCategory').value;
     
@@ -631,6 +680,10 @@ async function handleScheduleSubmit(e) {
         document.getElementById('scheduleDescription').focus();
         return;
     }
+    
+    // 시간 문자열 조합 (HH:MM 형식)
+    const startTime = `${startHour}:${startMinute}`;
+    const endTime = `${endHour}:${endMinute}`;
     
     // 날짜/시간 검증
     const startDateTime = new Date(`${startDate}T${startTime}`);
