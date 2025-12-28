@@ -17,14 +17,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/view")
 public class LeaveBalanceViewController {
 
-    /**
-     * 내 연차 조회 화면 이동
-     */
+    // 연차 현황 조회
     @GetMapping("/attendance/annual-leave")
     public String myLeavePage(Model model) {
-
         model.addAttribute("currentGNB", "work");
         model.addAttribute("currentMenu", "annual-leave");
-        return "leave/my-leave";
+        return "leave/annual-leave";
+    }
+
+    // 기타 휴가 조회
+    @GetMapping("/attendance/other-leave")
+    public String otherLeavePage(Model model) {
+        model.addAttribute("currentGNB", "work");
+        model.addAttribute("currentMenu", "other-leave");
+
+        return "leave/other-leave";
     }
 }

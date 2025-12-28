@@ -2,11 +2,11 @@
 
 /* 컬러 팔레트 */
 :root {
-    --primary-color: #4F46E5;
-    --primary-hover: #4338CA;
+    --primary-color: #3B82F6;
+    --primary-hover: #2563EB;
     --secondary-color: #6366F1;
     --success-color: #10B981;
-    --danger-color: #EF4444;
+    --danger-color: #DC2626;
     --danger-hover: #DC2626;
     --warning-color: #F59E0B;
     --neutral-50: #F9FAFB;
@@ -78,7 +78,7 @@
 .filter-select:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .date-input {
@@ -93,7 +93,7 @@
 .date-input:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .search-input {
@@ -110,7 +110,7 @@
 .search-input:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .btn-search {
@@ -133,7 +133,7 @@
 .btn-search:hover {
     background: var(--primary-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 /* 메시지 테이블 */
@@ -579,7 +579,7 @@
 .btn-unarchive:hover {
     background: var(--primary-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .btn-delete {
@@ -589,6 +589,7 @@
 .btn-delete:hover {
     background: var(--danger-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
+
 

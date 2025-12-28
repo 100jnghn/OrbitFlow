@@ -13,14 +13,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
  * @since : 2025. 12. 19. 금요일
  */
 @Controller
-@RequestMapping("/view/admin/attendance")
+@RequestMapping("/view/admin")
 public class AttendanceDashboardViewController {
 
-    @GetMapping("/rules")
-    public String attendanceRulesPage(Model model) {
+
+
+    @GetMapping("/attendance/dashboard")
+    public String attendanceDashboard(Model model) {
         model.addAttribute("currentGNB", "admin");
-        model.addAttribute("currentMenu", "attendance-rules"); // 규칙 관리 활성화
-        return "admin/admin-rule";
+        model.addAttribute("currentMenu", "attendance-dashboard"); // 대시보드 활성화
+        return "admin-attendance/dashboard";
     }
 
 

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <link rel="stylesheet" href="/css/user-sidebar.css">
+    <link rel="stylesheet" href="/css/user-sidebar/attendance-sidebar.css">
 </head>
 <body>
 <ul th:fragment="menu" class="sidebar-menu">
@@ -21,7 +21,7 @@
         <a th:href="@{/attendance/vacation/apply}" class="sidebar-link">휴가/신청서 작성</a>
     </li>
     <li th:classappend="${currentMenu == 'vacation-status'} ? 'selected' : ''">
-        <a th:href="@{/attendance/vacation/status}" class="sidebar-link">결재 진행 현황</a>
+        <a th:href="@{/view/attendance/other-leave}" class="sidebar-link">휴가 신청 현황</a>
     </li>
 </ul>
 </body>

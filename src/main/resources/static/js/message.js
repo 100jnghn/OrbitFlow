@@ -60,11 +60,20 @@ async function loadMessageList(page = 0) {
 
     try {
         const params = new URLSearchParams({
-            folder: currentFolder,
             page: page,
             size: 10,
             sort: 'createdAt,desc'
         });
+        
+        // 보관함인 경우 archived=true, 그 외에는 archived=false
+        if (currentFolder === 'ARCHIVE') {
+            params.append('archived', 'true');
+            // 보관함은 원래 폴더 타입을 지정하지 않거나, 둘 다 조회해야 할 수도 있음
+            // 일단 폴더 파라미터 없이 archived만 true로 설정
+        } else {
+            params.append('archived', 'false');
+            params.append('folder', currentFolder);
+        }
 
         // 검색 조건 추가
         const dateFilter = document.getElementById('dateFilter')?.value;
@@ -135,48 +144,52 @@ function renderMessageTable(messages) {
         const rowNumber = currentPage * 10 + index + 1;
         
         const title = message.title || '';
-        const senderName = message.senderName || '';
+        const peerName = message.peerName || '';  // senderName → peerName
         const createdAt = formatDateTime(message.createdAt);
-        const isRead = message.isRead !== undefined ? message.isRead : false;
-        const readStatus = isRead ? formatDateTime(message.readAt) : '-';
-
+        const read = message.read !== undefined ? message.read : false;  // isRead → read
+        const readStatus = read ? formatDateTime(message.readAt) : '-';
+        
+        // 보관함인 경우 원래 폴더 타입을 확인
+        const folderType = message.folderType || currentFolder;
+        
         // 폴더별로 다른 컬럼 렌더링
-        if (currentFolder === 'INBOX') {
+        if (currentFolder === 'INBOX' || (currentFolder === 'ARCHIVE' && folderType === 'INBOX')) {
             row.innerHTML = `
                 <td>${rowNumber}</td>
                 <td>
-                    <a href="#" class="board-title-link" onclick="viewMessage(${message.messageId}, '${currentFolder}'); return false;">
+                    <a href="#" class="board-title-link" onclick="viewMessage(${message.messageId}, '${folderType}'); return false;">
                         ${escapeHTML(title)}
                     </a>
                 </td>
-                <td>${escapeHTML(senderName)}</td>
+                <td>${escapeHTML(peerName)}</td>
                 <td>${createdAt}</td>
                 <td>${readStatus}</td>
             `;
-        } else if (currentFolder === 'SENT') {
-            // 보낸 메시지함은 수신자 정보 필요 (현재 DTO에 없으므로 임시로 발신자 표시)
+        } else if (currentFolder === 'SENT' || (currentFolder === 'ARCHIVE' && folderType === 'SENT')) {
+            // 보낸 메시지함은 peerName에 수신자 정보가 있음
             row.innerHTML = `
                 <td>${rowNumber}</td>
                 <td>
-                    <a href="#" class="board-title-link" onclick="viewMessage(${message.messageId}, '${currentFolder}'); return false;">
+                    <a href="#" class="board-title-link" onclick="viewMessage(${message.messageId}, '${folderType}'); return false;">
                         ${escapeHTML(title)}
                     </a>
                 </td>
-                <td>${escapeHTML(senderName)}</td>
+                <td>${escapeHTML(peerName)}</td>
                 <td>${createdAt}</td>
                 <td>${readStatus}</td>
             `;
-        } else if (currentFolder === 'ARCHIVE') {
+        } else {
+            // 기본값
             row.innerHTML = `
                 <td>${rowNumber}</td>
                 <td>
-                    <a href="#" class="board-title-link" onclick="viewMessage(${message.messageId}, '${currentFolder}'); return false;">
+                    <a href="#" class="board-title-link" onclick="viewMessage(${message.messageId}, '${folderType}'); return false;">
                         ${escapeHTML(title)}
                     </a>
                 </td>
-                <td>${escapeHTML(senderName)}</td>
-                <td>${escapeHTML(senderName)}</td>
+                <td>${escapeHTML(peerName)}</td>
                 <td>${createdAt}</td>
+                <td>${readStatus}</td>
             `;
         }
         
@@ -350,4 +363,5 @@ function escapeHTML(str) {
     div.textContent = str;
     return div.innerHTML;
 }
+
 

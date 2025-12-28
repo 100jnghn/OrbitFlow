@@ -25,12 +25,12 @@ CREATE TABLE org_category
     is_active          BOOLEAN     NOT NULL DEFAULT TRUE,
 
     active_order_index INT
-                       GENERATED ALWAYS AS (
-                           CASE
-                               WHEN is_active = TRUE THEN order_index
-                               ELSE NULL
-                               END
-                           ) STORED,
+        GENERATED ALWAYS AS (
+            CASE
+                WHEN is_active = TRUE THEN order_index
+                ELSE NULL
+                END
+            ) STORED,
 
     created_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -59,12 +59,12 @@ CREATE TABLE organization
 
     -- 활성 조직만 정렬 대상
     active_order_index INT
-                       GENERATED ALWAYS AS (
-                           CASE
-                               WHEN is_active = TRUE THEN order_index
-                               ELSE NULL
-                               END
-                           ) STORED,
+        GENERATED ALWAYS AS (
+            CASE
+                WHEN is_active = TRUE THEN order_index
+                ELSE NULL
+                END
+            ) STORED,
 
     created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -91,7 +91,7 @@ CREATE TABLE hr_rank
     company_id        BIGINT      NOT NULL,
     parent_hr_rank_id BIGINT      NULL,
     name              VARCHAR(50) NOT NULL,
-    order_index       INT         NOT NULL,
+    order_index       INT,
     is_active         BOOLEAN     NOT NULL DEFAULT TRUE,
     created_at        TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -114,12 +114,12 @@ CREATE TABLE position_category
     is_active          BOOLEAN     NOT NULL DEFAULT TRUE,
     -- 활성일 때만 정렬 유니크를 적용하기 위한 가상 컬럼
     active_order_index INT
-                       GENERATED ALWAYS AS (
-                           CASE
-                               WHEN is_active = TRUE THEN order_index
-                               ELSE NULL
-                               END
-                           ) STORED,
+        GENERATED ALWAYS AS (
+            CASE
+                WHEN is_active = TRUE THEN order_index
+                ELSE NULL
+                END
+            ) STORED,
     created_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
@@ -342,12 +342,12 @@ CREATE TABLE form_template
 
     -- ✅ ACTIVE 상태에서만 version을 유니크하게 만들기 위한 컬럼
     active_version       INT
-                         GENERATED ALWAYS AS (
-                             CASE
-                                 WHEN status = 'ACTIVE' THEN version
-                                 ELSE NULL
-                                 END
-                             ) STORED,
+        GENERATED ALWAYS AS (
+            CASE
+                WHEN status = 'ACTIVE' THEN version
+                ELSE NULL
+                END
+            ) STORED,
 
     -- ===============================
     -- CONSTRAINTS
@@ -763,12 +763,12 @@ CREATE TABLE employee_signature
 
     -- 활성 서명만 UNIQUE 제약을 걸기 위한 가상 컬럼
     active_flag TINYINT
-                GENERATED ALWAYS AS (
-                    CASE
-                        WHEN is_active = TRUE THEN 1
-                        ELSE NULL
-                        END
-                    ),
+        GENERATED ALWAYS AS (
+            CASE
+                WHEN is_active = TRUE THEN 1
+                ELSE NULL
+                END
+            ),
 
     created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -933,18 +933,17 @@ CREATE TABLE message
 
 CREATE TABLE message_recipient
 (
-    id          BIGINT     NOT NULL AUTO_INCREMENT,
-    company_id  BIGINT     NOT NULL,
-    message_id  BIGINT     NOT NULL,
-    employee_id BIGINT     NOT NULL,
-    is_read     TINYINT(1) NOT NULL DEFAULT 0,
-    read_at     TIMESTAMP  NULL,
-    created_at  TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id                  BIGINT       NOT NULL AUTO_INCREMENT,
+    company_id          BIGINT       NOT NULL,
+    message_id          BIGINT       NOT NULL,
+    employee_id         BIGINT       NOT NULL,
+    is_read             TINYINT(1)   NOT NULL DEFAULT 0,
+    message_folder_type VARCHAR(20)  NOT NULL DEFAULT 'INBOX', -- INBOX, SEND 구분용 컬럼 추가
+    read_at             TIMESTAMP    NULL,
+    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uk_message_recipient (company_id, message_id, employee_id),
-    FOREIGN KEY (company_id) REFERENCES company (id),
-    FOREIGN KEY (message_id) REFERENCES message (id),
-    FOREIGN KEY (employee_id) REFERENCES employee (id)
+    FOREIGN KEY (message_id) REFERENCES message (id)
 );
 
 -- /////////////////////////////////// 종훈 /////////////////////////////////// --
@@ -1097,16 +1096,14 @@ CREATE TABLE schedule
 (
     id                   BIGINT AUTO_INCREMENT,
     company_id           BIGINT       NOT NULL,
-    category_id          BIGINT,
-    org_id               BIGINT,
-    type                 VARCHAR(20)  NOT NULL,
-    employee_id          BIGINT       NOT NULL,
+    is_company           BOOLEAN      NOT NULL, -- TRUE -> 전사 일정
+    org_category_id      BIGINT,                -- null -> 개인 일정
+    org_id               BIGINT,                -- null -> 개인 일정
+    employee_id          BIGINT       NOT NULL, -- 작성자 id
     schedule_title       VARCHAR(100) NOT NULL,
     schedule_description VARCHAR(255),
-    start_date           DATE         NOT NULL,
-    end_date             DATE         NOT NULL,
-    start_time           INT          NOT NULL,
-    end_time             INT          NOT NULL,
+    start_at             DATETIME     NOT NULL,
+    end_at               DATETIME     NOT NULL,
     schedule_status      VARCHAR(20)  NOT NULL,
     created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -1115,7 +1112,7 @@ CREATE TABLE schedule
         FOREIGN KEY (company_id) REFERENCES company (id)
             ON DELETE CASCADE,
     CONSTRAINT fk_schedule_org_category
-        FOREIGN KEY (category_id) REFERENCES org_category (id)
+        FOREIGN KEY (org_category_id) REFERENCES org_category (id)
             ON DELETE CASCADE,
     CONSTRAINT fk_schedule_organization
         FOREIGN KEY (org_id) REFERENCES organization (id)

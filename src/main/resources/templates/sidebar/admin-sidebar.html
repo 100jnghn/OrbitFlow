@@ -86,6 +86,9 @@
             <li th:classappend="${currentMenu == 'organization'} ? 'selected' : ''">
                 <a th:href="@{/view/admin/organizations}">조직 관리</a>
             </li>
+            <li th:classappend="${currentMenu == 'rank'} ? 'selected' : ''">
+                <a th:href="@{/view/admin/ranks}">조직 관리</a>
+            </li>
         </ul>
     </li>
 

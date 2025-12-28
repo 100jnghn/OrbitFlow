@@ -11,9 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const isRange = e.target.value === 'RANGE';
         document.getElementById('monthPickerWrapper').style.display = isRange ? 'none' : 'block';
         document.getElementById('rangePickerWrapper').style.display = isRange ? 'flex' : 'none';
-
-        currentParams.page = 0;
-        executeSearch();
+        // 검색 타입 변경 시 자동 검색하지 않음 (검색 버튼 클릭 시에만 검색)
     });
 
     // ✅ statusFilter 초기값을 currentParams에 동기화
@@ -24,23 +22,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 2. 월 선택 초기화 및 데이터 로드
     initCustomMonthSelector(monthList, selectedText);
+    
+    // 3. 초기 페이지 로드 시 현재 월의 근태 목록 자동 로드
+    const initialMonthValue = document.getElementById('monthSelect').value;
+    if (initialMonthValue) {
+        const [y, m] = initialMonthValue.split('-');
+        loadAttendanceData(y, m);
+    }
 
-    // 3. 드롭다운 토글
+    // 4. 드롭다운 토글
     dropdown.addEventListener('click', (e) => {
         dropdown.classList.toggle('show');
         e.stopPropagation();
     });
     document.addEventListener('click', () => dropdown.classList.remove('show'));
 
-    // 4. 상태 필터 이벤트
-    document.getElementById('statusFilter').addEventListener('change', (e) => {
-        currentParams.status = e.target.value;
-        currentParams.page = 0;
-        executeSearch();
-    });
+    // 5. 상태 필터 변경 시 자동 검색 제거 (검색 버튼 클릭 시에만 적용)
+    // 상태 필터는 검색 버튼 클릭 시 currentParams에 반영됨
 
-    // 5. 기간 조회 버튼
+    // 6. 검색 버튼 클릭 이벤트 (월별/기간 설정 + 상태 필터 함께 적용)
     document.getElementById('rangeSearchBtn').addEventListener('click', () => {
+        // 상태 필터 값을 currentParams에 반영
+        const statusFilter = document.getElementById('statusFilter');
+        if (statusFilter) {
+            currentParams.status = statusFilter.value;
+        }
         currentParams.page = 0;
         executeSearch();
     });
@@ -64,7 +70,7 @@ function initCustomMonthSelector(list, text) {
             li.classList.add('active');
             text.textContent = txt;
             hidden.value = val;
-            executeSearch();
+            // 초기 로드는 검색 버튼을 통해서만 실행
         }
 
         li.onclick = () => {
@@ -73,8 +79,7 @@ function initCustomMonthSelector(list, text) {
             text.textContent = txt;
             hidden.value = val;
             dropdown.classList.remove('show');
-            currentParams.page = 0;
-            executeSearch();
+            // 월 선택 시 자동 검색하지 않음 (검색 버튼 클릭 시에만 검색)
         };
         list.appendChild(li);
     }
@@ -144,15 +149,94 @@ function getBadgeClass(c) {
 }
 
 function renderPagination(pageInfo) {
-    const container = document.getElementById('pagination');
-    container.innerHTML = '';
-    if (pageInfo.totalPages <= 1) return;
+    const pagination = document.getElementById('boardPagination');
+    pagination.innerHTML = '';
 
-    for (let i = 0; i < pageInfo.totalPages; i++) {
-        const btn = document.createElement('button');
-        btn.innerText = i + 1;
-        btn.className = `page-btn ${i === pageInfo.number ? 'active' : ''}`;
-        btn.onclick = () => { currentParams.page = i; executeSearch(); };
-        container.appendChild(btn);
+    const page = pageInfo.number;
+    const totalPages = pageInfo.totalPages;
+
+    // 이전 버튼
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'page-btn';
+    prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prevBtn.disabled = page === 0;
+    prevBtn.onclick = () => {
+        if (page > 0) {
+            currentParams.page = page - 1;
+            executeSearch();
+        }
+    };
+    pagination.appendChild(prevBtn);
+
+    // 페이지 번호
+    const maxVisible = 5;
+    let startPage = Math.max(0, page - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages - 1, startPage + maxVisible - 1);
+
+    if (endPage - startPage < maxVisible - 1) {
+        startPage = Math.max(0, endPage - maxVisible + 1);
     }
+
+    if (startPage > 0) {
+        const firstBtn = document.createElement('button');
+        firstBtn.className = 'page-number';
+        firstBtn.textContent = '1';
+        firstBtn.onclick = () => {
+            currentParams.page = 0;
+            executeSearch();
+        };
+        pagination.appendChild(firstBtn);
+
+        if (startPage > 1) {
+            const ellipsis = document.createElement('span');
+            ellipsis.className = 'ellipsis';
+            ellipsis.textContent = '...';
+            pagination.appendChild(ellipsis);
+        }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.className = 'page-number';
+        if (i === page) {
+            pageBtn.classList.add('active');
+        }
+        pageBtn.textContent = i + 1;
+        pageBtn.onclick = () => {
+            currentParams.page = i;
+            executeSearch();
+        };
+        pagination.appendChild(pageBtn);
+    }
+
+    if (endPage < totalPages - 1) {
+        if (endPage < totalPages - 2) {
+            const ellipsis = document.createElement('span');
+            ellipsis.className = 'ellipsis';
+            ellipsis.textContent = '...';
+            pagination.appendChild(ellipsis);
+        }
+
+        const lastBtn = document.createElement('button');
+        lastBtn.className = 'page-number';
+        lastBtn.textContent = totalPages;
+        lastBtn.onclick = () => {
+            currentParams.page = totalPages - 1;
+            executeSearch();
+        };
+        pagination.appendChild(lastBtn);
+    }
+
+    // 다음 버튼
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'page-btn';
+    nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    nextBtn.disabled = page >= totalPages - 1;
+    nextBtn.onclick = () => {
+        if (page < totalPages - 1) {
+            currentParams.page = page + 1;
+            executeSearch();
+        }
+    };
+    pagination.appendChild(nextBtn);
 }
