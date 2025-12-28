@@ -7,7 +7,6 @@ import com.querydsl.core.types.dsl.*;
 import com.querydsl.core.types.PathMetadata;
 import javax.annotation.processing.Generated;
 import com.querydsl.core.types.Path;
-import com.querydsl.core.types.dsl.PathInits;
 
 
 /**
@@ -18,13 +17,11 @@ public class QSchedule extends EntityPathBase<Schedule> {
 
     private static final long serialVersionUID = -513992439L;
 
-    private static final PathInits INITS = PathInits.DIRECT2;
-
     public static final QSchedule schedule = new QSchedule("schedule");
 
     public final com.finalproj.orbitflow.global.common.QBaseEntity _super = new com.finalproj.orbitflow.global.common.QBaseEntity(this);
 
-    public final com.finalproj.orbitflow.hr.company.entity.QCompany company;
+    public final NumberPath<Long> companyId = createNumber("companyId", Long.class);
 
     //inherited
     public final DateTimePath<java.time.Instant> createdAt = _super.createdAt;
@@ -34,56 +31,40 @@ public class QSchedule extends EntityPathBase<Schedule> {
 
     public final StringPath description = createString("description");
 
-    public final com.finalproj.orbitflow.hr.employee.entity.QEmployee employee;
+    public final NumberPath<Long> employeeId = createNumber("employeeId", Long.class);
 
-    public final DatePath<java.time.LocalDate> endDate = createDate("endDate", java.time.LocalDate.class);
-
-    public final NumberPath<Integer> endTime = createNumber("endTime", Integer.class);
+    public final DateTimePath<java.time.LocalDateTime> endAt = createDateTime("endAt", java.time.LocalDateTime.class);
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
+
+    public final BooleanPath isCompany = createBoolean("isCompany");
 
     //inherited
     public final NumberPath<Long> modifiedBy = _super.modifiedBy;
 
-    public final com.finalproj.orbitflow.hr.organization.entity.QOrganization organization;
+    public final NumberPath<Long> orgCategoryId = createNumber("orgCategoryId", Long.class);
 
-    public final com.finalproj.orbitflow.hr.orgCategory.entity.QOrgCategory orgCategory;
+    public final NumberPath<Long> orgId = createNumber("orgId", Long.class);
 
-    public final DatePath<java.time.LocalDate> startDate = createDate("startDate", java.time.LocalDate.class);
-
-    public final NumberPath<Integer> startTime = createNumber("startTime", Integer.class);
+    public final DateTimePath<java.time.LocalDateTime> startAt = createDateTime("startAt", java.time.LocalDateTime.class);
 
     public final EnumPath<com.finalproj.orbitflow.schedule.enums.ScheduleStatus> status = createEnum("status", com.finalproj.orbitflow.schedule.enums.ScheduleStatus.class);
 
     public final StringPath title = createString("title");
 
-    public final EnumPath<com.finalproj.orbitflow.schedule.enums.ScheduleType> type = createEnum("type", com.finalproj.orbitflow.schedule.enums.ScheduleType.class);
-
     //inherited
     public final DateTimePath<java.time.Instant> updatedAt = _super.updatedAt;
 
     public QSchedule(String variable) {
-        this(Schedule.class, forVariable(variable), INITS);
+        super(Schedule.class, forVariable(variable));
     }
 
     public QSchedule(Path<? extends Schedule> path) {
-        this(path.getType(), path.getMetadata(), PathInits.getFor(path.getMetadata(), INITS));
+        super(path.getType(), path.getMetadata());
     }
 
     public QSchedule(PathMetadata metadata) {
-        this(metadata, PathInits.getFor(metadata, INITS));
-    }
-
-    public QSchedule(PathMetadata metadata, PathInits inits) {
-        this(Schedule.class, metadata, inits);
-    }
-
-    public QSchedule(Class<? extends Schedule> type, PathMetadata metadata, PathInits inits) {
-        super(type, metadata, inits);
-        this.company = inits.isInitialized("company") ? new com.finalproj.orbitflow.hr.company.entity.QCompany(forProperty("company")) : null;
-        this.employee = inits.isInitialized("employee") ? new com.finalproj.orbitflow.hr.employee.entity.QEmployee(forProperty("employee"), inits.get("employee")) : null;
-        this.organization = inits.isInitialized("organization") ? new com.finalproj.orbitflow.hr.organization.entity.QOrganization(forProperty("organization")) : null;
-        this.orgCategory = inits.isInitialized("orgCategory") ? new com.finalproj.orbitflow.hr.orgCategory.entity.QOrgCategory(forProperty("orgCategory")) : null;
+        super(Schedule.class, metadata);
     }
 
 }
