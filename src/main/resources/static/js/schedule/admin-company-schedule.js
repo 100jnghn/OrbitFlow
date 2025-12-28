@@ -10,6 +10,8 @@ let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth() + 1; // 1-12
 let currentStatus = 'ALL';
 let schedules = [];
+let isEditMode = false;
+let editingScheduleId = null;
 
 // 상태별 색상 매핑
 const statusColorMap = {
@@ -308,9 +310,10 @@ function createScheduleItem(schedule, date) {
     scheduleItem.textContent = schedule.title || '제목 없음';
     scheduleItem.title = `${schedule.title || '제목 없음'}\n${formatDateTime(schedule.startAt)} ~ ${formatDateTime(schedule.endAt)}`;
 
-    // 클릭 이벤트 (상세 보기 등)
-    scheduleItem.addEventListener('click', function() {
-        showScheduleDetail(schedule);
+    // 클릭 이벤트 (수정 모달 열기)
+    scheduleItem.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openEditScheduleModal(schedule);
     });
 
     return scheduleItem;
@@ -371,29 +374,89 @@ function createScheduleListItem(schedule) {
         </div>
     `;
 
-    item.addEventListener('click', function() {
-        showScheduleDetail(schedule);
+    item.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openEditScheduleModal(schedule);
     });
 
     return item;
 }
 
 /**
- * 일정 상세 보기 (추후 모달로 구현 가능)
+ * 일정 수정 모달 열기
  */
-function showScheduleDetail(schedule) {
-    const status = schedule.status || 'ETC';
-    const statusName = statusNameMap[status] || '기타';
-    
-    const detail = `
-제목: ${schedule.title || '제목 없음'}
-설명: ${schedule.description || '설명 없음'}
-상태: ${statusName}
-시작: ${formatDateTime(schedule.startAt)}
-종료: ${formatDateTime(schedule.endAt)}
-    `.trim();
+async function openEditScheduleModal(schedule) {
+    if (!schedule || !schedule.scheduleId) {
+        console.error('Invalid schedule data');
+        return;
+    }
 
-    alert(detail);
+    const modal = document.getElementById('scheduleModal');
+    if (!modal) return;
+
+    // 수정 모드 설정
+    isEditMode = true;
+    editingScheduleId = schedule.scheduleId;
+
+    // 모달 제목 및 버튼 변경
+    document.getElementById('modalTitle').textContent = '일정 수정';
+    document.getElementById('submitBtn').textContent = '수정';
+
+    // 시간/분 select 옵션 생성
+    initializeTimeSelects();
+
+    // 일정 정보를 폼에 채우기
+    document.getElementById('scheduleTitle').value = schedule.title || '';
+    document.getElementById('scheduleDescription').value = schedule.description || '';
+    document.getElementById('scheduleStatus').value = schedule.status || 'RELEASE';
+
+    // 날짜/시간 파싱 및 설정
+    const startDate = new Date(schedule.startAt);
+    const endDate = new Date(schedule.endAt);
+
+    document.getElementById('scheduleStartDate').value = formatDateForInput(startDate);
+    document.getElementById('scheduleEndDate').value = formatDateForInput(endDate);
+
+    // 시간/분 추출 (10분 단위로 반올림)
+    const startHour = String(startDate.getHours()).padStart(2, '0');
+    const startMinute = roundToNearestTen(startDate.getMinutes());
+    const endHour = String(endDate.getHours()).padStart(2, '0');
+    const endMinute = roundToNearestTen(endDate.getMinutes());
+
+    document.getElementById('scheduleStartHour').value = startHour;
+    document.getElementById('scheduleStartMinute').value = startMinute;
+    document.getElementById('scheduleEndHour').value = endHour;
+    document.getElementById('scheduleEndMinute').value = endMinute;
+
+    // 조직 카테고리를 '회사'로 고정
+    await setCompanyOrgCategory();
+
+    // 설명 필드 글자 수 업데이트
+    updateDescriptionCharCount();
+
+    // 제목 필드 글자 수 업데이트
+    updateTitleCharCount();
+
+    modal.style.display = 'block';
+
+    // 폼 제출 이벤트 리스너
+    const form = document.getElementById('scheduleForm');
+    form.onsubmit = handleScheduleSubmit;
+
+    // 설명 필드 실시간 글자 수 업데이트
+    const descriptionField = document.getElementById('scheduleDescription');
+    descriptionField.addEventListener('input', updateDescriptionCharCount);
+
+    // 제목 필드 실시간 글자 수 업데이트
+    const titleField = document.getElementById('scheduleTitle');
+    titleField.addEventListener('input', updateTitleCharCount);
+}
+
+/**
+ * 분을 10분 단위로 반올림
+ */
+function roundToNearestTen(minute) {
+    return String(Math.round(minute / 10) * 10).padStart(2, '0');
 }
 
 /**
@@ -451,6 +514,14 @@ async function openAddScheduleModal() {
     const modal = document.getElementById('scheduleModal');
     if (!modal) return;
 
+    // 등록 모드 설정
+    isEditMode = false;
+    editingScheduleId = null;
+
+    // 모달 제목 및 버튼 변경
+    document.getElementById('modalTitle').textContent = '일정 등록';
+    document.getElementById('submitBtn').textContent = '등록';
+
     // 폼 초기화
     document.getElementById('scheduleForm').reset();
     
@@ -501,6 +572,10 @@ function closeScheduleModal() {
     if (modal) {
         modal.style.display = 'none';
     }
+    
+    // 모드 초기화
+    isEditMode = false;
+    editingScheduleId = null;
 }
 
 /**
@@ -710,13 +785,27 @@ async function handleScheduleSubmit(e) {
     };
     
     try {
-        const response = await apiFetch('/api/schedules', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(scheduleData)
-        });
+        let response;
+        
+        if (isEditMode && editingScheduleId) {
+            // 수정 모드
+            response = await apiFetch(`/api/admin/schedules/${editingScheduleId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(scheduleData)
+            });
+        } else {
+            // 등록 모드
+            response = await apiFetch('/api/schedules', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(scheduleData)
+            });
+        }
 
         if (!response.ok) {
             if (response.status === 401) {
@@ -724,16 +813,16 @@ async function handleScheduleSubmit(e) {
                 return;
             }
             const error = await response.json();
-            throw new Error(error.message || '일정 등록에 실패했습니다.');
+            throw new Error(error.message || (isEditMode ? '일정 수정에 실패했습니다.' : '일정 등록에 실패했습니다.'));
         }
 
-        alert('일정이 등록되었습니다.');
+        alert(isEditMode ? '일정이 수정되었습니다.' : '일정이 등록되었습니다.');
         closeScheduleModal();
         loadSchedules();  // 일정 목록 새로고침
     } catch (error) {
-        console.error('Error creating schedule:', error);
+        console.error(`Error ${isEditMode ? 'updating' : 'creating'} schedule:`, error);
         if (error.message !== 'SESSION_EXPIRED') {
-            alert(error.message || '일정 등록에 실패했습니다.');
+            alert(error.message || (isEditMode ? '일정 수정에 실패했습니다.' : '일정 등록에 실패했습니다.'));
         }
     }
 }
