@@ -13,10 +13,13 @@
     <meta charset="UTF-8">
     <title>전사 일정 관리</title>
 
+
+<!--    이 문장 link는 layout으로 옮겨야 함-->
     <link rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
     <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
 
     <!-- 페이지별 CSS -->
     <th:block th:fragment="pageCss">
@@ -36,7 +39,7 @@
         <!-- 헤더 섹션 -->
         <div class="schedule-header">
             <h1 class="page-title">전사 일정 관리</h1>
-            
+
             <!-- 필터 및 네비게이션 -->
             <div class="header-controls">
                 <!-- 상태 필터 -->
@@ -118,10 +121,10 @@
                             제목 <span class="required">*</span>
                             <span class="char-count" id="titleCharCount">(0/20)</span>
                         </label>
-                        <input type="text" 
-                               id="scheduleTitle" 
-                               name="title" 
-                               class="form-input" 
+                        <input type="text"
+                               id="scheduleTitle"
+                               name="title"
+                               class="form-input"
                                placeholder="일정 제목을 입력하세요"
                                maxlength="20"
                                required>
@@ -133,9 +136,9 @@
                         <label for="scheduleDescription" class="form-label">
                             설명 <span class="char-count" id="descriptionCharCount">(0/200)</span>
                         </label>
-                        <textarea id="scheduleDescription" 
-                                  name="description" 
-                                  class="form-input" 
+                        <textarea id="scheduleDescription"
+                                  name="description"
+                                  class="form-input"
                                   placeholder="일정 설명을 입력하세요 (선택)"
                                   maxlength="200"
                                   rows="3"></textarea>
@@ -148,10 +151,10 @@
                             <label for="scheduleStartDate" class="form-label">
                                 시작 날짜 <span class="required">*</span>
                             </label>
-                            <input type="date" 
-                                   id="scheduleStartDate" 
-                                   name="startDate" 
-                                   class="form-input" 
+                            <input type="date"
+                                   id="scheduleStartDate"
+                                   name="startDate"
+                                   class="form-input"
                                    required>
                         </div>
                         <div class="form-group time-group">
@@ -159,16 +162,16 @@
                                 시작 시간 <span class="required">*</span>
                             </label>
                             <div class="time-select-wrapper">
-                                <select id="scheduleStartHour" 
-                                        name="startHour" 
-                                        class="form-input time-select" 
+                                <select id="scheduleStartHour"
+                                        name="startHour"
+                                        class="form-input time-select"
                                         required>
                                     <!-- JavaScript로 동적 생성 -->
                                 </select>
                                 <span class="time-separator">:</span>
-                                <select id="scheduleStartMinute" 
-                                        name="startMinute" 
-                                        class="form-input time-select" 
+                                <select id="scheduleStartMinute"
+                                        name="startMinute"
+                                        class="form-input time-select"
                                         required>
                                     <!-- JavaScript로 동적 생성 -->
                                 </select>
@@ -181,10 +184,10 @@
                             <label for="scheduleEndDate" class="form-label">
                                 종료 날짜 <span class="required">*</span>
                             </label>
-                            <input type="date" 
-                                   id="scheduleEndDate" 
-                                   name="endDate" 
-                                   class="form-input" 
+                            <input type="date"
+                                   id="scheduleEndDate"
+                                   name="endDate"
+                                   class="form-input"
                                    required>
                         </div>
                         <div class="form-group time-group">
@@ -192,16 +195,16 @@
                                 종료 시간 <span class="required">*</span>
                             </label>
                             <div class="time-select-wrapper">
-                                <select id="scheduleEndHour" 
-                                        name="endHour" 
-                                        class="form-input time-select" 
+                                <select id="scheduleEndHour"
+                                        name="endHour"
+                                        class="form-input time-select"
                                         required>
                                     <!-- JavaScript로 동적 생성 -->
                                 </select>
                                 <span class="time-separator">:</span>
-                                <select id="scheduleEndMinute" 
-                                        name="endMinute" 
-                                        class="form-input time-select" 
+                                <select id="scheduleEndMinute"
+                                        name="endMinute"
+                                        class="form-input time-select"
                                         required>
                                     <!-- JavaScript로 동적 생성 -->
                                 </select>
@@ -214,9 +217,9 @@
                         <label for="scheduleStatus" class="form-label">
                             상태 <span class="required">*</span>
                         </label>
-                        <select id="scheduleStatus" 
-                                name="status" 
-                                class="form-input" 
+                        <select id="scheduleStatus"
+                                name="status"
+                                class="form-input"
                                 required>
                             <option value="RELEASE">공개</option>
                             <option value="HOLD">보류</option>
@@ -226,8 +229,8 @@
                     <!-- 조직 카테고리 (고정: 회사) -->
                     <div class="form-group">
                         <label for="scheduleOrgCategory" class="form-label">조직 카테고리</label>
-                        <select id="scheduleOrgCategory" 
-                                name="orgCategoryId" 
+                        <select id="scheduleOrgCategory"
+                                name="orgCategoryId"
                                 class="form-input"
                                 disabled>
                             <option value="" id="companyCategoryOption">회사</option>

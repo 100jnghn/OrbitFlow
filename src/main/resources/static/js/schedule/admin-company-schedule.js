@@ -372,11 +372,16 @@ function createScheduleListItem(schedule) {
                 <span>${formatDateTime(schedule.startAt)} ~ ${formatDateTime(schedule.endAt)}</span>
             </div>
         </div>
+        <button type="button" class="btn-delete-schedule" onclick="deleteSchedule(${schedule.scheduleId}, event)">
+            <i class="fas fa-trash"></i>
+        </button>
     `;
 
     item.addEventListener('click', function(e) {
-        e.stopPropagation();
-        openEditScheduleModal(schedule);
+        // 삭제 버튼 클릭이 아닐 때만 수정 모달 열기
+        if (!e.target.closest('.btn-delete-schedule')) {
+            openEditScheduleModal(schedule);
+        }
     });
 
     return item;
@@ -842,6 +847,45 @@ window.onclick = function(event) {
     const scheduleModal = document.getElementById('scheduleModal');
     if (event.target === scheduleModal) {
         closeScheduleModal();
+    }
+}
+
+/**
+ * 일정 삭제
+ */
+async function deleteSchedule(scheduleId, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+
+    if (!confirm('정말로 이 일정을 삭제하시겠습니까?')) {
+        return;
+    }
+
+    try {
+        const response = await apiFetch(`/api/schedules/${scheduleId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                location.href = '/login';
+                return;
+            }
+            const error = await response.json();
+            throw new Error(error.message || '일정 삭제에 실패했습니다.');
+        }
+
+        alert('일정이 삭제되었습니다.');
+        loadSchedules();  // 일정 목록 새로고침
+    } catch (error) {
+        console.error('Error deleting schedule:', error);
+        if (error.message !== 'SESSION_EXPIRED') {
+            alert(error.message || '일정 삭제에 실패했습니다.');
+        }
     }
 }
 
