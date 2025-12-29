@@ -20,6 +20,7 @@
         document.getElementById('companyToggle').classList.toggle('active', showCompany);
         loadOrganizations();
         loadSchedules();
+        loadDateSchedules(currentDate)
         renderCalendar();
     });
 
@@ -141,7 +142,7 @@
             // 일정 등록용 조직 드롭다운
             const orgSelect = document.getElementById('scheduleOrg');
             orgSelect.innerHTML =
-                '<option value="">선택 안 함</option>' +
+
                 childOrgs
                     .map(org => `<option value="${org.id}">${org.name}</option>`)
                     .join('');
@@ -321,10 +322,10 @@
 
         renderCalendar(filtered);
         
-        // 날짜가 선택되지 않은 경우에만 필터링된 일정 표시
-        if (!selectedDate) {
-            renderScheduleList(filtered);
-        }
+        // // 날짜가 선택되지 않은 경우에만 필터링된 일정 표시
+        // if (!selectedDate) {
+        //     renderScheduleList(filtered);
+        // }
     }
 
     // 캘린더 렌더링
