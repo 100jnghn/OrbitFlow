@@ -136,6 +136,26 @@ public class ScheduleService {
         return schedules.stream().map(ScheduleMapper::toDto).toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<ScheduleResDto> getDateOrganizationSchedules(Long companyId, List<Long> orgIds, LocalDate date) {
+
+        List<Schedule> schedules;
+
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
+        ScheduleStatus scheduleStatus = ScheduleStatus.RELEASE;
+
+        schedules = scheduleRepository.findDateOrganizationSchedules(
+                companyId,
+                scheduleStatus,
+                orgIds,
+                startOfDay,
+                endOfDay
+        );
+
+        return schedules.stream().map(ScheduleMapper::toDto).toList();
+    }
+
     // 개인 일정 조회
     @Transactional(readOnly = true)
     public List<ScheduleResDto> getEmployeeSchedules(

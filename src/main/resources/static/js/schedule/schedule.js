@@ -19,9 +19,16 @@
         document.getElementById('personalToggle').classList.toggle('active', showPersonal);
         document.getElementById('companyToggle').classList.toggle('active', showCompany);
         loadOrganizations();
+        
+        // 오늘 날짜를 선택된 날짜로 설정
+        selectedDate = new Date();
+        selectedDate.setHours(0, 0, 0, 0);
+        
         loadSchedules();
-        loadDateSchedules(currentDate)
         renderCalendar();
+        
+        // 오늘 날짜의 일정 로드
+        loadDateSchedules(selectedDate);
     });
 
     // 이벤트 리스너 설정
@@ -270,46 +277,11 @@
 
             schedules = allSchedules;
 
-            updateSummary();
             filterAndRenderSchedules();
         } catch (error) {
             console.error('Error loading schedules:', error);
             alert('일정을 불러오는데 실패했습니다.');
         }
-    }
-
-// 요약 업데이트
-    function updateSummary() {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const weekStart = new Date(today);
-        weekStart.setDate(today.getDate() - today.getDay());
-
-        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-        const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-        const todayCount = schedules.filter(s => {
-            const start = new Date(s.startAt);
-            const end = new Date(s.endAt);
-            return start <= today && end >= today;
-        }).length;
-
-        const weekCount = schedules.filter(s => {
-            const start = new Date(s.startAt);
-            const end = new Date(s.endAt);
-            return start <= monthEnd && end >= weekStart;
-        }).length;
-
-        const monthCount = schedules.filter(s => {
-            const start = new Date(s.startAt);
-            const end = new Date(s.endAt);
-            return start <= monthEnd && end >= monthStart;
-        }).length;
-
-        document.getElementById('todayCount').textContent = todayCount;
-        document.getElementById('weekCount').textContent = weekCount;
-        document.getElementById('monthCount').textContent = monthCount;
     }
 
     // 필터링 및 렌더링
@@ -372,6 +344,11 @@
                 dayElement.classList.add('today');
             }
 
+            // 선택된 날짜 표시
+            if (selectedDate && date.toDateString() === selectedDate.toDateString()) {
+                dayElement.classList.add('selected');
+            }
+
             const dayNumber = document.createElement('div');
             dayNumber.className = 'day-number';
             dayNumber.textContent = date.getDate();
@@ -412,7 +389,10 @@
                 if (date.getMonth() === month) {
                     e.stopPropagation();
                     selectedDate = new Date(date);
+                    selectedDate.setHours(0, 0, 0, 0);
                     loadDateSchedules(selectedDate);
+                    // 캘린더 다시 렌더링하여 선택된 날짜 표시
+                    filterAndRenderSchedules();
                 }
             });
 

@@ -1,4 +1,4 @@
-/* 일정 관리 페이지 스타일 */
+/* 조직 일정 관리 페이지 스타일 */
 
 /* 컬러 팔레트 */
 :root {
@@ -22,75 +22,14 @@
     --weekend-bg: #F9FAFB;
     --schedule-release: #3B82F6;
     --schedule-hold: #F59E0B;
-    --schedule-personal: #86EFAC; /* 연두색 */
-    --schedule-company: #7DD3FC; /* 하늘색 */
     --schedule-organization: #FEF08A; /* 연노랑색 */
-}
-
-/* 일정 요약 */
-.schedule-summary {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    margin-bottom: 24px;
-}
-
-.summary-card {
-    background: white;
-    border: 1px solid var(--neutral-200);
-    border-radius: 12px;
-    padding: 20px 24px;
-    min-height: 160px;
-    display: flex;
-    align-items: flex-start;
-    transition: all 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.summary-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
-}
-
-.summary-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 24px;
-    flex-shrink: 0;
-}
-
-.summary-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-.summary-label {
-    font-size: 14px;
-    color: var(--neutral-600);
-    margin-bottom: 8px;
-    font-weight: 500;
-}
-
-.summary-value {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--neutral-800);
-    line-height: 1;
 }
 
 /* 필터 및 컨트롤 */
 .schedule-controls {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     padding: 20px;
     background: var(--neutral-50);
     border-radius: 12px;
@@ -102,7 +41,7 @@
 
 .filter-section {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 16px;
     flex-wrap: wrap;
 }
@@ -111,6 +50,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    align-self: flex-start;
 }
 
 .filter-label {
@@ -119,7 +59,7 @@
     color: var(--neutral-700);
 }
 
-.filter-select.multi-select {
+.filter-select {
     min-width: 200px;
     padding: 10px 14px;
     border: 1px solid var(--neutral-300);
@@ -131,7 +71,7 @@
     transition: all 0.2s ease;
 }
 
-.filter-select.multi-select:focus {
+.filter-select:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
@@ -139,16 +79,19 @@
 
 /* 조직 필터 체크박스 리스트 */
 .org-filter-checkbox-list {
-    min-width: 200px;
-    max-height: 200px;
+    min-width: 400px;
+    max-width: 800px;
+    width: 100%;
     padding: 8px;
     border: 1px solid var(--neutral-300);
     border-radius: 8px;
     background: white;
-    overflow-y: auto;
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-content: flex-start;
+    align-items: flex-start;
 }
 
 .org-filter-checkbox-item {
@@ -161,6 +104,8 @@
     transition: background-color 0.2s ease;
     font-size: 14px;
     color: var(--neutral-700);
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .org-filter-checkbox-item:hover {
@@ -176,83 +121,15 @@
 }
 
 .org-filter-checkbox-item span {
-    flex: 1;
     user-select: none;
-}
-
-/* Toggle 버튼 */
-.toggle-group {
-    display: flex;
-    gap: 20px;
-    align-items: center;
-}
-
-.toggle-btn {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 0 0 0 54px;
-    border: none;
-    background: transparent;
-    color: var(--neutral-600);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: color 0.2s ease;
-    position: relative;
-}
-
-.toggle-btn:hover {
-    color: var(--neutral-800);
-}
-
-.toggle-btn.active {
-    color: var(--primary-color);
-}
-
-/* Toggle Switch 배경 */
-.toggle-btn::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 44px;
-    height: 24px;
-    background: var(--neutral-300);
-    border-radius: 12px;
-    transition: background-color 0.3s ease;
-}
-
-/* Toggle Switch 원형 토글 */
-.toggle-btn::after {
-    content: '';
-    position: absolute;
-    left: 2px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 20px;
-    height: 20px;
-    background: white;
-    border-radius: 50%;
-    transition: transform 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* Active 상태 */
-.toggle-btn.active::before {
-    background: var(--primary-color);
-}
-
-.toggle-btn.active::after {
-    transform: translate(20px, -50%);
 }
 
 /* 컨트롤 버튼 */
 .control-buttons {
     display: flex;
     gap: 12px;
-    align-items: center;
+    align-items: flex-start;
+    padding-top: 24px;
 }
 
 .btn-today {
@@ -271,32 +148,6 @@
     background: var(--primary-hover);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-.btn-add-schedule {
-    padding: 10px 20px;
-    background: var(--success-color);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    transition: all 0.2s ease;
-}
-
-.btn-add-schedule:hover {
-    background: #059669;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-.btn-add-schedule i {
-    font-size: 13px;
 }
 
 /* 메인 콘텐츠 */
@@ -466,16 +317,6 @@
     min-width: 0;
 }
 
-.schedule-item.personal {
-    background: var(--schedule-personal);
-    color: var(--neutral-800);
-}
-
-.schedule-item.company {
-    background: var(--schedule-company);
-    color: var(--neutral-800);
-}
-
 .schedule-item.organization {
     background: var(--schedule-organization);
     color: var(--neutral-800);
@@ -526,14 +367,6 @@
     border-left: 4px solid var(--neutral-200);
 }
 
-.schedule-item-list.personal {
-    border-left-color: var(--schedule-personal);
-}
-
-.schedule-item-list.company {
-    border-left-color: var(--schedule-company);
-}
-
 .schedule-item-list.organization {
     border-left-color: var(--schedule-organization);
 }
@@ -571,39 +404,6 @@
 .schedule-item-org {
     font-size: 12px;
     color: var(--neutral-500);
-}
-
-.btn-delete-schedule {
-    padding: 8px 12px;
-    border: none;
-    background: var(--danger-color);
-    color: #fff;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-}
-
-.btn-delete-schedule:hover {
-    background: #B91C1C;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
-}
-
-.btn-delete-schedule i {
-    font-size: 16px;
-    display: inline-block;
-    line-height: 1;
-    color: #fff !important;
-    width: 16px;
-    height: 16px;
 }
 
 /* 모달 스타일 */
@@ -686,131 +486,6 @@
     padding: 28px;
 }
 
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group:last-child {
-    margin-bottom: 0;
-}
-
-.form-label {
-    display: flex;
-    align-items: center;
-    margin-bottom: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--neutral-700);
-    line-height: 1.5;
-}
-
-.form-input {
-    width: 100%;
-    padding: 10px 14px;
-    border: 1px solid var(--neutral-300);
-    border-radius: 8px;
-    font-size: 14px;
-    font-family: inherit;
-    transition: all 0.2s ease;
-    box-sizing: border-box;
-    color: var(--neutral-800);
-}
-
-.form-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.form-input:disabled {
-    background: var(--neutral-100);
-    cursor: not-allowed;
-}
-
-.form-group textarea {
-    resize: vertical;
-    min-height: 80px;
-}
-
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-}
-
-.time-group {
-    display: flex;
-    flex-direction: column;
-}
-
-.time-select-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.time-select {
-    flex: 1;
-    min-width: 0;
-}
-
-.time-separator {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--neutral-600);
-    user-select: none;
-}
-
-.required {
-    color: var(--danger-color);
-    margin-left: 4px;
-}
-
-/* 체크박스 스타일 */
-.checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--neutral-700);
-}
-
-.checkbox-input {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: var(--primary-color);
-}
-
-.char-count {
-    font-size: 12px;
-    font-weight: 400;
-    color: var(--neutral-500);
-    margin-left: 4px;
-}
-
-.char-count.warning {
-    color: var(--warning-color);
-}
-
-.char-count.error {
-    color: var(--danger-color);
-}
-
-.error-message {
-    color: var(--danger-color);
-    font-size: 12px;
-    margin-top: 4px;
-    display: none;
-    line-height: 1.5;
-}
-
-.error-message.show {
-    display: block;
-}
-
 .modal-actions {
     display: flex;
     justify-content: flex-end;
@@ -839,33 +514,6 @@
     background: var(--neutral-50);
     border-color: var(--neutral-400);
     color: var(--neutral-800);
-}
-
-.btn-submit {
-    padding: 10px 20px;
-    border: none;
-    background: var(--primary-color);
-    color: #fff;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-submit:hover {
-    background: var(--primary-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-.btn-submit:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
 }
 
 /* 일정 세부 정보 모달 스타일 */
@@ -898,27 +546,6 @@
     word-wrap: break-word;
 }
 
-.btn-delete {
-    padding: 10px 20px;
-    background: var(--danger-color);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-delete:hover {
-    background: #B91C1C;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
-}
-
 /* 반응형 디자인 */
 @media (max-width: 1200px) {
     .schedule-main-content {
@@ -927,10 +554,6 @@
 }
 
 @media (max-width: 768px) {
-    .schedule-summary {
-        grid-template-columns: 1fr;
-    }
-
     .schedule-controls {
         flex-direction: column;
         align-items: stretch;
@@ -939,10 +562,6 @@
     .filter-section {
         flex-direction: column;
         align-items: stretch;
-    }
-
-    .form-row {
-        grid-template-columns: 1fr;
     }
 
     .calendar-day {
@@ -959,3 +578,4 @@
         margin: 10% auto;
     }
 }
+
