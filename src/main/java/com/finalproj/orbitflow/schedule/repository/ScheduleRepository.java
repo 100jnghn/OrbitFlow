@@ -99,7 +99,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
                 WHERE s.companyId = :companyId
                     AND s.isCompany = false
                     AND s.orgCategoryId IS NOT NULL
-                    AND s.orgId IN :orgids
+                    AND s.orgId IN :orgIds
                     AND s.status = :scheduleStatus
                     AND s.startAt <= :endOfDate
                     AND s.endAt >= :startOfDate

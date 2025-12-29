@@ -1,0 +1,42 @@
+package com.finalproj.orbitflow.hr.organization.controller;
+
+import com.finalproj.orbitflow.global.common.ResponseDto;
+import com.finalproj.orbitflow.global.security.SecurityUser;
+import com.finalproj.orbitflow.global.security.SecurityUtils;
+import com.finalproj.orbitflow.hr.organization.dto.OrgResDto;
+import com.finalproj.orbitflow.hr.organization.service.OrgService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.util.List;
+
+/**
+ * Please explain the class!!!
+ *
+ * @author : 종훈
+ * @filename : OrgUserController
+ * @since : 2025-12-29 오전 11:50 월요일
+ */
+@RequestMapping("/api/organizations")
+@Controller
+@RequiredArgsConstructor
+public class OrgUserController {
+
+    private final OrgService orgService;
+
+    @GetMapping("/include-orgs")
+    public ResponseEntity<ResponseDto> getUserOrgs(
+            @AuthenticationPrincipal SecurityUser user
+    ) {
+        List<OrgResDto> orgsByEmployeeId = orgService.findOrgsByEmployeeId(SecurityUtils.getCurrentUser().getOrganizationId());
+
+        return ResponseEntity.ok(
+                new ResponseDto<>(HttpStatus.OK, "소속 조직도 조회 성공", orgsByEmployeeId)
+        );
+    }
+}

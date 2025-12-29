@@ -111,19 +111,19 @@ public class OrgController {
      * 사용자가 소속한 조직 Hierarchy를 불러오는 api
      * 사용자도 사용
      */
-    @GetMapping("/organizations/include-orgs")
-    public ResponseEntity<ResponseDto> listByIncludeOrgs() {
-        log.info("[include-orgs] API called");
-
-
-        log.info("[include-orgs] currentUser = {}", SecurityUtils.getCurrentUser());
-
-
-        List<OrgResDto> orgsByEmployeeId = orgService.findOrgsByEmployeeId(SecurityUtils.getCurrentUser().getOrganizationId());
-        return ResponseEntity.ok(
-                new ResponseDto<>(HttpStatus.OK, "소속 조직도 조회 성공", orgsByEmployeeId)
-        );
-    }
+//    @GetMapping("/organizations/include-orgs")
+//    public ResponseEntity<ResponseDto> listByIncludeOrgs() {
+//        log.info("[include-orgs] API called");
+//
+//
+//        log.info("[include-orgs] currentUser = {}", SecurityUtils.getCurrentUser());
+//
+//
+//        List<OrgResDto> orgsByEmployeeId = orgService.findOrgsByEmployeeId(SecurityUtils.getCurrentUser().getOrganizationId());
+//        return ResponseEntity.ok(
+//                new ResponseDto<>(HttpStatus.OK, "소속 조직도 조회 성공", orgsByEmployeeId)
+//        );
+//    }
 
     @GetMapping("/admin/organizations/{id}/deactivate-check")
     public ResponseEntity<ResponseDto<OrgDeactivateCheckResDto>> checkDeactivate(
