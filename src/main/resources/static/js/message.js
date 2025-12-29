@@ -140,8 +140,11 @@ function renderMessageTable(messages) {
     
     tbody.innerHTML = '';
 
+    // 폴더별 컬럼 수 결정
+    const colSpan = currentFolder === 'ARCHIVE' ? 6 : 5;
+    
     if (messages.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #9ca3af;">등록된 메시지가 없습니다.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="${colSpan}" style="text-align: center; padding: 40px; color: #9ca3af;">등록된 메시지가 없습니다.</td></tr>`;
         return;
     }
 
@@ -150,20 +153,25 @@ function renderMessageTable(messages) {
         const rowNumber = currentPage * 10 + index + 1;
         
         const title = message.title || '';
-        const peerName = message.peerName || '';  // senderName → peerName
+        const peerName = message.peerName || '';
+        const senderName = message.senderName || '';
+        const recipientName = message.recipientName || peerName;
         const createdAt = formatDateTime(message.createdAt);
-        const read = message.read !== undefined ? message.read : false;  // isRead → read
-        const readStatus = read ? formatDateTime(message.readAt) : '-';
-        
-        // 보관함인 경우 원래 폴더 타입을 확인
+        const read = message.read !== undefined ? message.read : false;
+        const readAt = message.readAt ? formatDateTime(message.readAt) : null;
         const folderType = message.folderType || currentFolder;
         
         // 폴더별로 다른 컬럼 렌더링
-        if (currentFolder === 'INBOX' || (currentFolder === 'ARCHIVE' && folderType === 'INBOX')) {
+        if (currentFolder === 'INBOX') {
+            // 받은 메시지함: 번호 | 제목 | 발신자 | 수신일 | 읽음 여부
+            // 미읽음은 제목 Bold, 읽음 여부는 읽었을 때만 ✔ 표시
+            const titleClass = read ? '' : 'message-unread';
+            const readStatus = read ? '<span style="color: #10B981;">✔</span>' : '';
+            
             row.innerHTML = `
                 <td>${rowNumber}</td>
                 <td>
-                    <a href="#" class="board-title-link" onclick="viewMessage(${message.messageId}, '${folderType}'); return false;">
+                    <a href="#" class="board-title-link ${titleClass}" onclick="viewMessage(${message.messageId}, '${folderType}'); return false;">
                         ${escapeHTML(title)}
                     </a>
                 </td>
@@ -171,8 +179,10 @@ function renderMessageTable(messages) {
                 <td>${createdAt}</td>
                 <td>${readStatus}</td>
             `;
-        } else if (currentFolder === 'SENT' || (currentFolder === 'ARCHIVE' && folderType === 'SENT')) {
-            // 보낸 메시지함은 peerName에 수신자 정보가 있음
+        } else if (currentFolder === 'SENT') {
+            // 보낸 메시지함: 번호 | 제목 | 수신자 | 발신일 | 읽은 일시
+            const readDateTime = readAt ? readAt : '-';
+            
             row.innerHTML = `
                 <td>${rowNumber}</td>
                 <td>
@@ -182,10 +192,28 @@ function renderMessageTable(messages) {
                 </td>
                 <td>${escapeHTML(peerName)}</td>
                 <td>${createdAt}</td>
-                <td>${readStatus}</td>
+                <td>${readDateTime}</td>
+            `;
+        } else if (currentFolder === 'ARCHIVE') {
+            // 보관함: 번호 | 제목 | 구분 | 발신자 | 수신자 | 메시지 일시
+            const folderIcon = folderType === 'INBOX' ? '📥 받은 메시지' : '📤 보낸 메시지';
+            // 수신자 이름: 보관함에서 받은 메시지는 현재 사용자(recipientName), 보낸 메시지는 peerName
+            const displayRecipientName = recipientName || (folderType === 'INBOX' ? '' : peerName);
+            
+            row.innerHTML = `
+                <td>${rowNumber}</td>
+                <td>
+                    <a href="#" class="board-title-link" onclick="viewMessage(${message.messageId}, '${folderType}'); return false;">
+                        ${escapeHTML(title)}
+                    </a>
+                </td>
+                <td>${folderIcon}</td>
+                <td>${escapeHTML(senderName)}</td>
+                <td>${escapeHTML(displayRecipientName)}</td>
+                <td>${createdAt}</td>
             `;
         } else {
-            // 기본값
+            // 기본값 (예외 처리)
             row.innerHTML = `
                 <td>${rowNumber}</td>
                 <td>
@@ -195,7 +223,7 @@ function renderMessageTable(messages) {
                 </td>
                 <td>${escapeHTML(peerName)}</td>
                 <td>${createdAt}</td>
-                <td>${readStatus}</td>
+                <td>${read ? '읽음' : '미읽음'}</td>
             `;
         }
         

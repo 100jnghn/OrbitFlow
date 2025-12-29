@@ -99,15 +99,60 @@ public class MessageService {
 
         // peerName 정책:
         // - INBOX: senderName
-        // - SENT: "수신자 N명" 또는 대표 1명
+        // - SENT: 수신자 이름 ("외 N명" 형태로 표시)
         return page.map(mr -> {
             String peerName;
+            String recipientName = null;
+            
             if (mr.getMessageFolderType() == MessageFolderType.INBOX) {
                 peerName = mr.getMessage().getSender().getName();
+                // 보관함에서 받은 메시지인 경우, 현재 사용자가 수신자
+                if (archived) {
+                    recipientName = mr.getEmployee().getName();
+                }
             } else {
-                peerName = "수신자"; // 필요하면 나중에 "N명" 같은 식으로 확장
+                // SENT: 보낸 메시지함에서는 수신자 이름 사용
+                List<MessageRecipient> recipients = messageRecipientRepository
+                        .findByMessage_IdAndMessageFolderTypeAndDeletedAtIsNull(
+                                mr.getMessage().getId(), MessageFolderType.INBOX);
+                if (!recipients.isEmpty()) {
+                    String firstRecipient = recipients.get(0).getEmployee().getName();
+                    if (recipients.size() > 1) {
+                        peerName = firstRecipient + " 외 " + (recipients.size() - 1) + "명";
+                    } else {
+                        peerName = firstRecipient;
+                    }
+                    // 보관함에서 보낸 메시지인 경우, recipientName도 동일하게 설정
+                    if (archived) {
+                        recipientName = peerName;
+                    }
+                } else {
+                    peerName = "수신자 없음";
+                    if (archived) {
+                        recipientName = peerName;
+                    }
+                }
             }
-            return MessageResDto.ListItem.from(mr, peerName);
+            
+            MessageResDto.ListItem item = MessageResDto.ListItem.from(mr, peerName);
+            // 보관함인 경우 recipientName 설정
+            if (archived && recipientName != null) {
+                // Builder 패턴이므로 새로운 객체 생성 필요
+                return MessageResDto.ListItem.builder()
+                        .messageId(item.getMessageId())
+                        .recipientId(item.getRecipientId())
+                        .folderType(item.getFolderType())
+                        .archived(item.isArchived())
+                        .read(item.isRead())
+                        .readAt(item.getReadAt())
+                        .title(item.getTitle())
+                        .peerName(item.getPeerName())
+                        .senderName(item.getSenderName())
+                        .recipientName(recipientName)
+                        .createdAt(item.getCreatedAt())
+                        .build();
+            }
+            return item;
         });
     }
 

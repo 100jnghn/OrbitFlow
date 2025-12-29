@@ -18,9 +18,12 @@ public class MessageResDto {
         private MessageFolderType folderType; // 원래 폴더(INBOX/SENT)
         private boolean archived;
         private boolean read;
+        private Instant readAt;       // 읽은 일시
 
         private String title;
         private String peerName;      // INBOX: 보낸 사람, SENT: 받는 사람(대표 1명만 표시 등 정책 필요)
+        private String senderName;    // 발신자 이름 (보관함용)
+        private String recipientName; // 수신자 이름 (보관함용)
         private Instant createdAt;
 
         public static ListItem from(MessageRecipient mr, String peerName) {
@@ -30,8 +33,11 @@ public class MessageResDto {
                     .folderType(mr.getMessageFolderType())
                     .archived(mr.isArchived())
                     .read(mr.isRead())
+                    .readAt(mr.getReadAt())
                     .title(mr.getMessage().getMessageTitle())
                     .peerName(peerName)
+                    .senderName(mr.getMessage().getSender().getName())
+                    .recipientName(null)  // 보관함에서만 사용, 나중에 필요하면 설정
                     .createdAt(mr.getCreatedAt())
                     .build();
         }
