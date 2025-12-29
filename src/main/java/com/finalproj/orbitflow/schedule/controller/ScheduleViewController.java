@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 public class ScheduleViewController {
 
-    @GetMapping("/admin/company-schedule")
+    @GetMapping("/admin/schedule")
     public String getCompanySchedulePage() {
         return "admin-schedule/admin-company-schedule";
     }
