@@ -47,6 +47,8 @@ public class QPositionCategory extends EntityPathBase<PositionCategory> {
 
     public final com.finalproj.orbitflow.hr.orgCategory.entity.QOrgCategory orgCategory;
 
+    public final QPositionCategory parent;
+
     //inherited
     public final DateTimePath<java.time.Instant> updatedAt = _super.updatedAt;
 
@@ -70,6 +72,7 @@ public class QPositionCategory extends EntityPathBase<PositionCategory> {
         super(type, metadata, inits);
         this.company = inits.isInitialized("company") ? new com.finalproj.orbitflow.hr.company.entity.QCompany(forProperty("company")) : null;
         this.orgCategory = inits.isInitialized("orgCategory") ? new com.finalproj.orbitflow.hr.orgCategory.entity.QOrgCategory(forProperty("orgCategory")) : null;
+        this.parent = inits.isInitialized("parent") ? new QPositionCategory(forProperty("parent"), inits.get("parent")) : null;
     }
 
 }

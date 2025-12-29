@@ -3,11 +3,13 @@ package com.finalproj.orbitflow.leave.leaveType.entity;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "leave_type")
 public class LeaveType extends BaseEntity {
