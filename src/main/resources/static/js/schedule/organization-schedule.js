@@ -24,7 +24,6 @@
         }
         
         loadSchedules();
-        loadDateSchedules(currentDate);
         renderCalendar();
     });
 
@@ -176,12 +175,21 @@
     // 날짜별 일정 로드
     async function loadDateSchedules(date) {
         try {
+            // 선택된 조직이 없으면 일정 목록 초기화
+            if (selectedOrgIds.length === 0) {
+                renderScheduleList([]);
+                return;
+            }
+
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
             const dateStr = `${year}-${month}-${day}`;
 
-            const response = await apiFetch(`/api/schedules/schedule?date=${dateStr}`);
+            // orgIds 파라미터 생성
+            const orgIdsParam = selectedOrgIds.map(id => `orgIds=${id}`).join('&');
+            
+            const response = await apiFetch(`/api/schedules/organizations/schedule?${orgIdsParam}&date=${dateStr}`);
             if (!response.ok) {
                 if (response.status === 401) {
                     location.href = '/login';
@@ -193,11 +201,8 @@
             const result = await response.json();
             const dateSchedules = result.data || [];
 
-            // 조직 일정만 필터링
-            const orgSchedules = dateSchedules.filter(s => s.orgId !== null && !s.company);
-
             // 선택된 날짜의 일정만 목록에 표시
-            renderScheduleList(orgSchedules);
+            renderScheduleList(dateSchedules);
         } catch (error) {
             console.error('Error loading date schedules:', error);
             alert('일정을 불러오는데 실패했습니다.');
@@ -243,6 +248,11 @@
         const filtered = schedules.filter(s => s.orgId !== null && !s.company);
 
         renderCalendar(filtered);
+        
+        // 날짜가 선택되지 않은 경우 일정 목록 초기화
+        if (!selectedDate) {
+            renderScheduleList([]);
+        }
     }
 
     // 캘린더 렌더링
