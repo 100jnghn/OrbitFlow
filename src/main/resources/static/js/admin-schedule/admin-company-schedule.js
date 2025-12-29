@@ -637,7 +637,7 @@ async function setCompanyOrgCategory() {
         const rootCategories = categories.filter(cat => cat.parentOrgId === null);
 
         const select = document.getElementById('scheduleOrgCategory');
-        select.innerHTML = ''; // ⭐ 핵심
+        select.innerHTML = ''; //
 
         rootCategories.forEach(cat => {
             const option = document.createElement('option');

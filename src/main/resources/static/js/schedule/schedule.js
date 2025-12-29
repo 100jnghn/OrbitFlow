@@ -9,6 +9,7 @@
     let showCompany = true; // 전사 일정 표시 여부
     let orgList = [];
     let isSubmitting = false; // 제출 중 플래그 (중복 제출 방지)
+    let selectedDate = null; // 선택된 날짜
 
     // 초기화
     document.addEventListener('DOMContentLoaded', function () {
@@ -27,12 +28,14 @@
         // 이전/다음 달 버튼
         document.getElementById('prevMonthBtn').addEventListener('click', () => {
             currentDate.setMonth(currentDate.getMonth() - 1);
+            selectedDate = null; // 날짜 선택 초기화
             renderCalendar();
             loadSchedules();
         });
 
         document.getElementById('nextMonthBtn').addEventListener('click', () => {
             currentDate.setMonth(currentDate.getMonth() + 1);
+            selectedDate = null; // 날짜 선택 초기화
             renderCalendar();
             loadSchedules();
         });
@@ -40,6 +43,7 @@
         // 오늘 버튼
         document.getElementById('todayBtn').addEventListener('click', () => {
             currentDate = new Date();
+            selectedDate = null; // 날짜 선택 초기화
             renderCalendar();
             loadSchedules();
         });
@@ -151,6 +155,7 @@
     function togglePersonal() {
         showPersonal = !showPersonal;
         document.getElementById('personalToggle').classList.toggle('active', showPersonal);
+        selectedDate = null; // 날짜 선택 초기화
         loadSchedules();
     }
 
@@ -158,6 +163,7 @@
     function toggleCompany() {
         showCompany = !showCompany;
         document.getElementById('companyToggle').classList.toggle('active', showCompany);
+        selectedDate = null; // 날짜 선택 초기화
         loadSchedules();
     }
 
@@ -165,7 +171,36 @@
     function handleOrgFilterChange() {
         const checkedBoxes = document.querySelectorAll('#orgFilter .org-filter-checkbox:checked');
         selectedOrgIds = Array.from(checkedBoxes).map(cb => cb.value);
+        selectedDate = null; // 날짜 선택 초기화
         loadSchedules();
+    }
+
+    // 날짜별 일정 로드
+    async function loadDateSchedules(date) {
+        try {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
+
+            const response = await apiFetch(`/api/schedules/schedule?date=${dateStr}`);
+            if (!response.ok) {
+                if (response.status === 401) {
+                    location.href = '/login';
+                    return;
+                }
+                throw new Error('일정을 불러오는데 실패했습니다.');
+            }
+
+            const result = await response.json();
+            const dateSchedules = result.data || [];
+
+            // 선택된 날짜의 일정만 목록에 표시
+            renderScheduleList(dateSchedules);
+        } catch (error) {
+            console.error('Error loading date schedules:', error);
+            alert('일정을 불러오는데 실패했습니다.');
+        }
     }
 
     // 일정 로드
@@ -285,10 +320,14 @@
         });
 
         renderCalendar(filtered);
-        renderScheduleList(filtered);
+        
+        // 날짜가 선택되지 않은 경우에만 필터링된 일정 표시
+        if (!selectedDate) {
+            renderScheduleList(filtered);
+        }
     }
 
-// 캘린더 렌더링
+    // 캘린더 렌더링
     function renderCalendar(filteredSchedules = schedules) {
         console.log("캘린더 로드");
 
@@ -360,10 +399,11 @@
                 dayElement.appendChild(scheduleItems);
             }
 
-            dayElement.addEventListener('click', () => {
+            dayElement.addEventListener('click', (e) => {
                 if (date.getMonth() === month) {
-                    currentDate = new Date(date);
-                    renderCalendar(filteredSchedules);
+                    e.stopPropagation();
+                    selectedDate = new Date(date);
+                    loadDateSchedules(selectedDate);
                 }
             });
 

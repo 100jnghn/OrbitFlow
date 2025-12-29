@@ -113,14 +113,16 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
     );
 
     @Query("""
-                    SELECT s
-                    FROM Schedule s
-                    WHERE s.companyId = :companyId
-                        AND s.status = :scheduleStatus
-                        AND s.isCompany = false
-                        AND s.orgId IN :orgIds
-                        AND s.startAt < :endOfDay
-                        AND s.endAt > :startOfDay
+                SELECT s
+                FROM Schedule s
+                WHERE s.companyId = :companyId
+                    AND s.isCompany = false
+                    AND s.orgCategoryId IS NOT NULL
+                    AND s.orgId IN :orgIds
+                    AND s.status = :scheduleStatus
+                    AND s.startAt < :endOfDay
+                    AND s.endAt > :startOfDay
+                ORDER BY s.startAt ASC
             """)
     List<Schedule> findDateOrganizationSchedules(
             Long companyId,
