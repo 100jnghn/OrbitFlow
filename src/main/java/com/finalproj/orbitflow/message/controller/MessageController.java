@@ -56,12 +56,14 @@ public class MessageController {
     @GetMapping("/{messageId}")
     public ResponseEntity<ResponseDto<MessageResDto.Detail>> getMessageDetail(
             @AuthenticationPrincipal SecurityUser user,
-            @PathVariable Long messageId
+            @PathVariable Long messageId,
+            @RequestParam(required = false) Long recipientId  // 보낸 메시지함에서 특정 수신자 선택 시
     ) {
         MessageResDto.Detail result = messageService.getMessageDetail(
                 user.getCompanyId(),
                 user.getEmployeeId(),
-                messageId
+                messageId,
+                recipientId
         );
 
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "메시지 상세 조회 성공", result));

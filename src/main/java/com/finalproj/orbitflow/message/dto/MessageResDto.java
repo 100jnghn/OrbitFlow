@@ -55,6 +55,9 @@ public class MessageResDto {
 
         private Long senderId;
         private String senderName;
+        
+        private Long recipientIdDetail;  // 수신자 ID (보낸 메시지 상세에서 사용)
+        private String recipientName;    // 수신자 이름 (보낸 메시지 상세에서 사용)
 
         private MessageFolderType folderType; // 원래 폴더
         private boolean archived;
@@ -66,6 +69,14 @@ public class MessageResDto {
         private Instant createdAt;
 
         public static Detail from(MessageRecipient mr) {
+            // SENT 폴더인 경우 수신자 정보 추가
+            String recipientName = null;
+            Long recipientIdDetail = null;
+            if (mr.getMessageFolderType() == MessageFolderType.SENT) {
+                // SENT 레코드에서 실제 수신자 정보는 INBOX 레코드를 통해 얻어야 함
+                // 일단 null로 설정하고, 필요시 Service에서 설정
+            }
+            
             return Detail.builder()
                     .messageId(mr.getMessage().getId())
                     .recipientId(mr.getId())
@@ -73,6 +84,8 @@ public class MessageResDto {
                     .content(mr.getMessage().getMessageContent())
                     .senderId(mr.getMessage().getSender().getId())
                     .senderName(mr.getMessage().getSender().getName())
+                    .recipientIdDetail(recipientIdDetail)
+                    .recipientName(recipientName)
                     .folderType(mr.getMessageFolderType())
                     .archived(mr.isArchived())
                     .read(mr.isRead())
