@@ -29,7 +29,7 @@
 .schedule-controls {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     padding: 20px;
     background: var(--neutral-50);
     border-radius: 12px;
@@ -41,7 +41,7 @@
 
 .filter-section {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 16px;
     flex-wrap: wrap;
 }
@@ -50,6 +50,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    align-self: flex-start;
 }
 
 .filter-label {
@@ -81,17 +82,16 @@
     min-width: 400px;
     max-width: 800px;
     width: 100%;
-    max-height: 200px;
     padding: 8px;
     border: 1px solid var(--neutral-300);
     border-radius: 8px;
     background: white;
-    overflow-y: auto;
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     gap: 12px;
     align-content: flex-start;
+    align-items: flex-start;
 }
 
 .org-filter-checkbox-item {
@@ -128,7 +128,8 @@
 .control-buttons {
     display: flex;
     gap: 12px;
-    align-items: center;
+    align-items: flex-start;
+    padding-top: 24px;
 }
 
 .btn-today {
