@@ -322,12 +322,15 @@ async function loadBoardList(page = 0) {
 
         // 검색 조건 추가
         const dateFilter = document.getElementById('dateFilter').value;
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        const startDate = startDateInput?.value;
+        const endDate = endDateInput?.value;
         const searchType = document.getElementById('searchType').value;
         const keyword = document.getElementById('searchKeyword').value;
 
-        if (dateFilter === 'custom' && startDate && endDate) {
+        // 기간 조건: custom이거나 today/week/month일 때 날짜가 설정된 경우 전달
+        if (startDate && endDate) {
             params.append('startDate', startDate);
             params.append('endDate', endDate);
         }

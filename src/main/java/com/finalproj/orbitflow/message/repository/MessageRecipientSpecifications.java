@@ -6,6 +6,7 @@ import com.finalproj.orbitflow.message.enums.MessageSearchType;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +19,8 @@ public class MessageRecipientSpecifications {
             Long companyId,
             Long employeeId,
             MessageFolderType folderType,
+            Instant startInstant,
+            Instant endExclusiveInstant,
             MessageSearchType searchType,
             String keyword
     ) {
@@ -30,6 +33,14 @@ public class MessageRecipientSpecifications {
             predicates.add(cb.isNull(root.get("deletedAt")));
             predicates.add(cb.equal(root.get("isArchived"), false));
             predicates.add(cb.equal(root.get("messageFolderType"), folderType));
+
+            // 기간 조건
+            if (startInstant != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), startInstant));
+            }
+            if (endExclusiveInstant != null) {
+                predicates.add(cb.lessThan(root.get("createdAt"), endExclusiveInstant));
+            }
 
             // 검색 조건
             if (keyword != null && !keyword.isBlank()) {
@@ -57,6 +68,8 @@ public class MessageRecipientSpecifications {
     public static Specification<MessageRecipient> archiveSpec(
             Long companyId,
             Long employeeId,
+            Instant startInstant,
+            Instant endExclusiveInstant,
             MessageSearchType searchType,
             String keyword
     ) {
@@ -68,6 +81,14 @@ public class MessageRecipientSpecifications {
             predicates.add(cb.equal(root.get("employee").get("id"), employeeId));
             predicates.add(cb.isNull(root.get("deletedAt")));
             predicates.add(cb.equal(root.get("isArchived"), true));
+
+            // 기간 조건
+            if (startInstant != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), startInstant));
+            }
+            if (endExclusiveInstant != null) {
+                predicates.add(cb.lessThan(root.get("createdAt"), endExclusiveInstant));
+            }
 
             // 검색 조건
             if (keyword != null && !keyword.isBlank()) {

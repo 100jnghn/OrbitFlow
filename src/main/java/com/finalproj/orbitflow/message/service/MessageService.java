@@ -14,14 +14,17 @@ import com.finalproj.orbitflow.message.enums.MessageSearchType;
 import com.finalproj.orbitflow.message.repository.MessageRecipientRepository;
 import com.finalproj.orbitflow.message.repository.MessageRecipientSpecifications;
 import com.finalproj.orbitflow.message.repository.MessageRepository;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -39,6 +42,8 @@ public class MessageService {
             Long employeeId,
             MessageFolderType folder,
             boolean archived,
+            LocalDate startDate,
+            LocalDate endDate,
             String searchTypeStr,
             String keyword,
             Pageable pageable
@@ -46,14 +51,20 @@ public class MessageService {
         // searchType 파싱
         MessageSearchType searchType = MessageSearchType.from(searchTypeStr);
         
-        // 검색어가 있고 검색 타입이 ALL이 아닌 경우 검색 쿼리 사용
+        // 기간 조건 변환 (LocalDate -> Instant)
+        ZoneId zoneId = ZoneId.systemDefault();
+        Instant startInstant = (startDate != null) ? startDate.atStartOfDay(zoneId).toInstant() : null;
+        Instant endExclusiveInstant = (endDate != null) ? endDate.plusDays(1).atStartOfDay(zoneId).toInstant() : null;
+        
+        // 검색어나 기간 조건이 있으면 Specification 사용
         boolean hasSearch = (keyword != null && !keyword.isBlank());
+        boolean hasDateFilter = (startDate != null || endDate != null);
         
         Page<MessageRecipient> page;
         if (archived) {
-            if (hasSearch) {
+            if (hasSearch || hasDateFilter) {
                 Specification<MessageRecipient> spec = MessageRecipientSpecifications.archiveSpec(
-                        companyId, employeeId, searchType, keyword
+                        companyId, employeeId, startInstant, endExclusiveInstant, searchType, keyword
                 );
                 // 정렬을 pageable에 포함
                 pageable = org.springframework.data.domain.PageRequest.of(
@@ -68,9 +79,9 @@ public class MessageService {
                 );
             }
         } else {
-            if (hasSearch) {
+            if (hasSearch || hasDateFilter) {
                 Specification<MessageRecipient> spec = MessageRecipientSpecifications.listSpec(
-                        companyId, employeeId, folder, searchType, keyword
+                        companyId, employeeId, folder, startInstant, endExclusiveInstant, searchType, keyword
                 );
                 // 정렬을 pageable에 포함
                 pageable = org.springframework.data.domain.PageRequest.of(
