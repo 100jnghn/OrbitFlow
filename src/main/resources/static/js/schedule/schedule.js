@@ -375,6 +375,16 @@
     function createScheduleItem(schedule) {
         const item = document.createElement('div');
         item.className = 'schedule-item';
+        
+        // 일정 유형에 따라 클래스 추가
+        if (schedule.company) {
+            item.classList.add('company');
+        } else if (schedule.orgId) {
+            item.classList.add('organization');
+        } else {
+            item.classList.add('personal');
+        }
+        
         item.textContent = schedule.title;
         item.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -406,6 +416,15 @@
     function createScheduleListItem(schedule) {
         const item = document.createElement('div');
         item.className = 'schedule-item-list';
+        
+        // 일정 유형에 따라 클래스 추가
+        if (schedule.company) {
+            item.classList.add('company');
+        } else if (schedule.orgId) {
+            item.classList.add('organization');
+        } else {
+            item.classList.add('personal');
+        }
 
         const content = document.createElement('div');
         content.className = 'schedule-item-content';
@@ -425,8 +444,8 @@
         if (schedule.company) {
             org.textContent = '전사 일정';
         } else if (schedule.orgId) {
-            const orgData = orgList.find(o => o.orgId === schedule.orgId);
-            org.textContent = orgData ? orgData.orgName : '조직 일정';
+            const orgData = orgList.find(o => o.id === schedule.orgId);
+            org.textContent = orgData ? orgData.name : '조직 일정';
         } else {
             org.textContent = '개인 일정';
         }
@@ -514,7 +533,7 @@
         if (schedule.company) {
             typeText = '전사 일정';
         } else if (schedule.orgId) {
-            const orgData = orgList.find(o => o.orgId === schedule.orgId);
+            const orgData = orgList.find(o => o.id === schedule.orgId);
             typeText = orgData ? `${orgData.name} 일정` : '조직 일정';
         } else {
             typeText = '개인 일정';
