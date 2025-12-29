@@ -1,19 +1,31 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+<html xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/layout-user :: layout(
-          ~{::content},
-          ~{fragments/header :: header},
-          ~{sidebar/schedule/user-schedule-sidebar :: menu},
-          ~{::pageCss},
-          ~{::pageScript}
+        ~{::content},
+        ~{fragments/header :: header},
+        ~{::sidebar},
+        ~{::pageCss},
+        ~{::pageScript}
       )}">
 <head>
-    <meta name="_csrf" th:content="${_csrf.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <meta charset="UTF-8">
+    <title>내 일정</title>
 
+    <!-- 페이지별 CSS -->
     <th:block th:fragment="pageCss">
-        <link rel="stylesheet" th:href="@{/css/board.css}">
         <link rel="stylesheet" th:href="@{/css/schedule/schedule.css}">
+    </th:block>
+
+    <!-- 페이지별 JS -->
+    <th:block th:fragment="pageScript">
+        <script th:src="@{/js/schedule/schedule.js}"></script>
+    </th:block>
+
+    <!-- 사이드바 메뉴 -->
+    <th:block th:fragment="sidebar">
+        <ul class="sidebar-menu" id="boardSidebar">
+            <!-- 동적으로 로드됨 -->
+        </ul>
     </th:block>
 </head>
 <body>
@@ -268,10 +280,6 @@
             </div>
         </div>
     </div>
-
-    <th:block th:fragment="pageScript">
-        <script th:src="@{/js/schedule/schedule.js}"></script>
-    </th:block>
 </div>
 </body>
 </html>

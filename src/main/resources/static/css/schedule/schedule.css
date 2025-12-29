@@ -1,5 +1,29 @@
 /* 일정 관리 페이지 스타일 */
 
+/* 컬러 팔레트 */
+:root {
+    --primary-color: #3B82F6;
+    --primary-hover: #2563EB;
+    --secondary-color: #6366F1;
+    --success-color: #10B981;
+    --danger-color: #DC2626;
+    --warning-color: #F59E0B;
+    --neutral-50: #F9FAFB;
+    --neutral-100: #F3F4F6;
+    --neutral-200: #E5E7EB;
+    --neutral-300: #D1D5DB;
+    --neutral-400: #9CA3AF;
+    --neutral-500: #6B7280;
+    --neutral-600: #4B5563;
+    --neutral-700: #374151;
+    --neutral-800: #1F2937;
+    --neutral-900: #111827;
+    --today-bg: #EFF6FF;
+    --weekend-bg: #F9FAFB;
+    --schedule-release: #3B82F6;
+    --schedule-hold: #F59E0B;
+}
+
 /* 일정 요약 */
 .schedule-summary {
     display: grid;
@@ -17,7 +41,7 @@
     align-items: center;
     gap: 16px;
     transition: all 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .summary-card:hover {
@@ -156,9 +180,9 @@
 
 .btn-today {
     padding: 10px 20px;
-    background: white;
-    color: var(--neutral-700);
-    border: 1px solid var(--neutral-300);
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
     border-radius: 8px;
     font-size: 14px;
     font-weight: 500;
@@ -167,13 +191,14 @@
 }
 
 .btn-today:hover {
-    background: var(--neutral-50);
-    border-color: var(--neutral-400);
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .btn-add-schedule {
     padding: 10px 20px;
-    background: var(--primary-color);
+    background: var(--success-color);
     color: white;
     border: none;
     border-radius: 8px;
@@ -183,14 +208,18 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
     transition: all 0.2s ease;
 }
 
 .btn-add-schedule:hover {
-    background: var(--primary-hover);
+    background: #059669;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-add-schedule i {
+    font-size: 13px;
 }
 
 /* 메인 콘텐츠 */
@@ -206,7 +235,7 @@
     border: 1px solid var(--neutral-200);
     border-radius: 12px;
     padding: 24px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .calendar-header {
@@ -226,12 +255,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--neutral-700);
+    color: var(--neutral-600);
     transition: all 0.2s ease;
 }
 
 .btn-nav:hover {
-    background: var(--neutral-50);
+    background: var(--neutral-100);
     border-color: var(--primary-color);
     color: var(--primary-color);
 }
@@ -250,8 +279,8 @@
 .day-header {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
-    margin-bottom: 8px;
+    gap: 6px;
+    margin-bottom: 6px;
 }
 
 .day-name {
@@ -259,67 +288,86 @@
     font-size: 13px;
     font-weight: 600;
     color: var(--neutral-600);
-    padding: 8px 0;
+    padding: 8px 4px;
+}
+
+.day-name:first-child {
+    color: var(--danger-color);
+}
+
+.day-name:last-child {
+    color: var(--primary-color);
 }
 
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
+    gap: 6px;
 }
 
 .calendar-day {
     min-height: 80px;
     border: 1px solid var(--neutral-200);
-    border-radius: 8px;
-    padding: 8px;
-    background: var(--neutral-50);
+    border-radius: 6px;
+    padding: 6px;
+    background: #fff;
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
 }
 
 .calendar-day:hover {
-    background: var(--neutral-100);
+    background: var(--neutral-50);
     border-color: var(--primary-color);
 }
 
 .calendar-day.other-month {
-    opacity: 0.4;
-    background: white;
+    background: var(--neutral-50);
+    opacity: 0.5;
 }
 
 .calendar-day.today {
-    background: rgba(59, 130, 246, 0.1);
+    background: var(--today-bg);
     border-color: var(--primary-color);
-    font-weight: 600;
+    border-width: 2px;
 }
 
 .day-number {
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 13px;
+    font-weight: 600;
     color: var(--neutral-800);
     margin-bottom: 4px;
+}
+
+.calendar-day.today .day-number {
+    color: var(--primary-color);
+}
+
+.calendar-day.other-month .day-number {
+    color: var(--neutral-400);
 }
 
 .schedule-items {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
     margin-top: 4px;
 }
 
 .schedule-item {
     font-size: 11px;
-    padding: 4px 6px;
-    border-radius: 4px;
-    background: var(--primary-color);
+    padding: 3px 6px;
+    margin-bottom: 2px;
+    border-radius: 3px;
+    background: var(--schedule-release);
     color: white;
     cursor: pointer;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     transition: all 0.2s ease;
+    font-weight: 500;
+    line-height: 1.3;
 }
 
 .schedule-item:hover {
@@ -332,8 +380,8 @@
     background: white;
     border: 1px solid var(--neutral-200);
     border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     max-height: 600px;
     overflow-y: auto;
 }
@@ -342,7 +390,7 @@
     font-size: 18px;
     font-weight: 600;
     color: var(--neutral-800);
-    margin: 0 0 20px 0;
+    margin: 0 0 16px 0;
     padding-bottom: 16px;
     border-bottom: 2px solid var(--neutral-200);
 }
@@ -354,20 +402,19 @@
 }
 
 .schedule-item-list {
+    display: flex;
+    align-items: center;
+    gap: 16px;
     padding: 16px;
     border: 1px solid var(--neutral-200);
     border-radius: 8px;
-    background: var(--neutral-50);
+    background: #fff;
     cursor: pointer;
     transition: all 0.2s ease;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
+    position: relative;
 }
 
 .schedule-item-list:hover {
-    background: white;
     border-color: var(--primary-color);
     box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
 }
@@ -375,13 +422,15 @@
 .schedule-item-content {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .schedule-item-title {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 600;
     color: var(--neutral-800);
-    margin-bottom: 6px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -389,8 +438,10 @@
 
 .schedule-item-time {
     font-size: 13px;
-    color: var(--neutral-600);
-    margin-bottom: 4px;
+    color: var(--neutral-500);
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .schedule-item-org {
@@ -435,36 +486,47 @@
 .modal {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 9999;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: auto;
     background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
+    overflow: auto;
+    backdrop-filter: blur(2px);
 }
 
 .modal-content {
-    background-color: white;
+    background-color: #fff;
     margin: 5% auto;
+    padding: 0;
     border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    max-width: 600px;
     width: 90%;
-    max-height: 90vh;
-    overflow-y: auto;
+    max-width: 600px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    animation: modalFadeIn 0.2s ease;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .schedule-modal-content {
-    max-width: 700px;
+    max-width: 600px;
 }
 
 .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 24px;
+    padding: 24px 28px;
     border-bottom: 1px solid var(--neutral-200);
 }
 
@@ -473,23 +535,77 @@
     font-size: 20px;
     font-weight: 600;
     color: var(--neutral-800);
+    letter-spacing: -0.02em;
 }
 
 .close {
-    color: var(--neutral-500);
+    color: var(--neutral-400);
     font-size: 28px;
     font-weight: 300;
     cursor: pointer;
     line-height: 1;
     transition: color 0.2s ease;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
 }
 
 .close:hover {
     color: var(--neutral-800);
+    background: var(--neutral-100);
 }
 
 .modal-body {
-    padding: 24px;
+    padding: 28px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--neutral-700);
+    line-height: 1.5;
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--neutral-300);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    color: var(--neutral-800);
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-input:disabled {
+    background: var(--neutral-100);
+    cursor: not-allowed;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
 }
 
 .form-row {
@@ -511,13 +627,14 @@
 
 .time-select {
     flex: 1;
-    padding: 10px 14px;
+    min-width: 0;
 }
 
 .time-separator {
     font-size: 16px;
     font-weight: 600;
     color: var(--neutral-600);
+    user-select: none;
 }
 
 .required {
@@ -547,7 +664,7 @@
     font-size: 12px;
     font-weight: 400;
     color: var(--neutral-500);
-    margin-left: 8px;
+    margin-left: 4px;
 }
 
 .char-count.warning {
@@ -560,9 +677,10 @@
 
 .error-message {
     color: var(--danger-color);
-    font-size: 13px;
-    margin-top: 6px;
+    font-size: 12px;
+    margin-top: 4px;
     display: none;
+    line-height: 1.5;
 }
 
 .error-message.show {
@@ -574,8 +692,56 @@
     justify-content: flex-end;
     gap: 12px;
     margin-top: 24px;
-    padding-top: 24px;
+    padding-top: 20px;
     border-top: 1px solid var(--neutral-200);
+}
+
+.btn-cancel {
+    padding: 10px 20px;
+    border: 1px solid var(--neutral-300);
+    background: #fff;
+    color: var(--neutral-700);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-cancel:hover {
+    background: var(--neutral-50);
+    border-color: var(--neutral-400);
+    color: var(--neutral-800);
+}
+
+.btn-submit {
+    padding: 10px 20px;
+    border: none;
+    background: var(--primary-color);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-submit:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
 }
 
 /* 일정 세부 정보 모달 스타일 */
@@ -609,19 +775,18 @@
 }
 
 .btn-delete {
-    padding: 12px 24px;
+    padding: 10px 20px;
     background: var(--danger-color);
     color: white;
     border: none;
     border-radius: 8px;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
 }
 
 .btn-delete:hover {
@@ -630,7 +795,7 @@
     box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
-/* 반응형 */
+/* 반응형 디자인 */
 @media (max-width: 1200px) {
     .schedule-main-content {
         grid-template-columns: 1fr;
@@ -655,5 +820,18 @@
     .form-row {
         grid-template-columns: 1fr;
     }
-}
 
+    .calendar-day {
+        min-height: 60px;
+    }
+
+    .schedule-item {
+        font-size: 10px;
+        padding: 2px 4px;
+    }
+
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+    }
+}

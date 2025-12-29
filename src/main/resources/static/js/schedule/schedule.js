@@ -1,4 +1,5 @@
 (() => {
+    console.log('schedule.js loaded');
 
 // 전역 변수
     let currentDate = new Date();
@@ -7,6 +8,7 @@
     let showPersonal = true; // 개인 일정 표시 여부
     let showCompany = true; // 전사 일정 표시 여부
     let orgList = [];
+    let isSubmitting = false; // 제출 중 플래그 (중복 제출 방지)
 
 // 초기화
     document.addEventListener('DOMContentLoaded', function () {
@@ -597,6 +599,12 @@
 // 일정 제출 처리
     async function handleScheduleSubmit(e) {
         e.preventDefault();
+        
+        // 중복 제출 방지
+        if (isSubmitting) {
+            return;
+        }
+        isSubmitting = true;
 
         const title = document.getElementById('scheduleTitle').value.trim();
         const description = document.getElementById('scheduleDescription').value.trim();
@@ -643,11 +651,8 @@
         const startAt = startDateTime.toISOString().slice(0, 19);
         const endAt = endDateTime.toISOString().slice(0, 19);
 
-        // 조직 카테고리가 선택되면 개인 일정, 그렇지 않으면 전사 일정
-        const company = !orgCategoryId;
-
         const scheduleData = {
-            company: company,
+            isCompany: false,
             title: title,
             description: description || null,
             startAt: startAt,
@@ -683,6 +688,8 @@
             if (error.message !== 'SESSION_EXPIRED') {
                 alert(error.message || '일정 등록에 실패했습니다.');
             }
+        } finally {
+            isSubmitting = false;
         }
     }
 
