@@ -277,39 +277,11 @@
 
             schedules = allSchedules;
 
-            updateSummary();
             filterAndRenderSchedules();
         } catch (error) {
             console.error('Error loading schedules:', error);
             alert('일정을 불러오는데 실패했습니다.');
         }
-    }
-
-// 요약 업데이트
-    function updateSummary() {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const weekStart = new Date(today);
-        weekStart.setDate(today.getDate() - today.getDay());
-        
-        const weekEnd = new Date(today);
-        weekEnd.setDate(today.getDate() + (6 - today.getDay()));
-
-        const todayCount = schedules.filter(s => {
-            const start = new Date(s.startAt);
-            const end = new Date(s.endAt);
-            return start <= today && end >= today;
-        }).length;
-
-        const weekCount = schedules.filter(s => {
-            const start = new Date(s.startAt);
-            const end = new Date(s.endAt);
-            return start <= weekEnd && end >= weekStart;
-        }).length;
-
-        document.getElementById('todayCount').textContent = todayCount;
-        document.getElementById('weekCount').textContent = weekCount;
     }
 
     // 필터링 및 렌더링
