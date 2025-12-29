@@ -23,9 +23,6 @@
                 <a th:href="@{/view/attendance/annual-leave}">내 연차 현황</a>
             </li>
 
-            <li th:classappend="${currentMenu == 'vacation-apply'} ? 'selected' : ''">
-                <a th:href="@{/attendance/vacation/apply}">휴가 신청서 작성</a>
-            </li>
 
             <li th:classappend="${currentMenu == 'other-leave'} ? 'selected' : ''">
                 <a th:href="@{/view/attendance/other-leave}">휴가 신청 현황</a>

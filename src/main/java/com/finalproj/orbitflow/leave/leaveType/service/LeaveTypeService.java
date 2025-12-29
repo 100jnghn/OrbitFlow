@@ -8,26 +8,30 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-
-/**
- * Please explain the class!!!
- *
- * @author : rlagkdus
- * @filename : LeaveTypeService
- * @since : 2025. 12. 24. 수요일
- */
+import java.util.stream.Collectors;
 
 @Service
-@Transactional(readOnly=true)
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class LeaveTypeService {
 
     private final LeaveTypeRepository leaveTypeRepository;
 
-    public List<LeaveTypeResDto> getAllSeaveTypes() {
+    /**
+     * 모든 휴가 유형 조회
+     */
+    public List<LeaveTypeResDto> getAllLeaveTypes() {
+        return leaveTypeRepository.findAll().stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
 
-        List<LeaveType> all = leaveTypeRepository.findAll();
-
-        return all.stream().map(LeaveTypeResDto::from).toList();
+    private LeaveTypeResDto mapToDto(LeaveType leaveType) {
+        return LeaveTypeResDto.builder()
+                .id(leaveType.getId())
+                .typeName(leaveType.getTypeName())
+                .isCountable(leaveType.getIsCountable())
+                .description(leaveType.getDescription())
+                .build();
     }
 }
