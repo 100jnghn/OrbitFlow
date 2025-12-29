@@ -445,6 +445,64 @@ button:not(.primary):hover {
     border-color: #e74c3c !important;
 }
 
+
+/* =====================================================
+   Schedule / Event Field Error Styling (FINAL)
+   ===================================================== */
+
+/* schedule-group 자체 (라벨 + 입력 묶음) */
+.schedule-group {
+    position: relative; /* ⭐ hint 표시 필수 */
+}
+
+/* schedule-group 에러 상태 */
+.schedule-group.field-error {
+    background-color: #fff6f6;
+    border-radius: 6px;
+    padding: 6px;
+}
+
+/* schedule 전체 입력 영역 에러 강조 */
+.schedule-input.field-error {
+    outline: 2px solid #e74c3c;
+    outline-offset: 2px;
+}
+
+/* schedule 내부 input / textarea / select 에러 */
+.schedule-group.field-error input,
+.schedule-group.field-error textarea,
+.schedule-group.field-error select {
+    border-color: #e74c3c !important;
+    background-color: #fff7f7;
+}
+
+/* focus 상태에서도 에러 색상 유지 */
+.schedule-group.field-error input:focus,
+.schedule-group.field-error textarea:focus,
+.schedule-group.field-error select:focus {
+    border-color: #e74c3c !important;
+    background-color: #fff7f7;
+    outline: none;
+}
+
+/* 개별 input에 직접 field-error가 붙는 경우 (안전망) */
+.schedule-input.field-error input,
+.schedule-input.field-error textarea,
+.schedule-input.field-error select {
+    border-color: #e74c3c !important;
+    background-color: #fff7f7;
+}
+
+/* field-hint (에러 메시지) */
+.schedule-group .field-hint.error {
+    margin-top: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #e74c3c;
+    display: block;
+}
+
+
 .field-hint {
     margin-top: 4px;
     font-size: 12px;
@@ -480,6 +538,17 @@ button:not(.primary):hover {
 }
 
 .radio-group label {
+    margin-right: 12px;
+    cursor: pointer;
+}
+
+.checkbox-group.field-error {
+    border: 1.5px solid #e74c3c;
+    border-radius: 6px;
+    padding: 8px 10px;
+}
+
+.checkbox-group label {
     margin-right: 12px;
     cursor: pointer;
 }

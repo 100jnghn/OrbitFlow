@@ -114,8 +114,7 @@ const FORM_COMPONENT_SCHEMAS = {
         meta: {
             startLabel: "시작일",
             endLabel: "종료일",
-
-            // 🔑 관리자 고정 설정
+            // 관리자 고정 설정
             baseRole: "COMPANY_EVENT",
             // VACATION | BUSINESS_TRIP | OUTWORK | COMPANY_EVENT
 
@@ -123,11 +122,11 @@ const FORM_COMPONENT_SCHEMAS = {
                 attendance: false,
                 schedule: true
             },
-
             // UI 표시 제어용
             ui: {
                 requireReason: false,      // 휴가일 때 true
-                requireDescription: true   // 회사 일정 등
+                requireDescription: true,   // 회사 일정 등
+                requireTitle: true
             }
         }
     },
@@ -283,51 +282,63 @@ let dragBlockSize = 1;
 // =====================
 
 
-
 function bindAutoClearInvalidFocus() {
+    const getScope = (target) =>
+        target.closest('#option-list-pane > div') ||
+        target.closest('#table-column-list > div') ||
+        target.closest('.setting-row');
 
-    const clearInvalid = (target) => {
+    /* =========================
+       입력 중: error만 제거
+    ========================= */
+    const clearError = (target) => {
         if (!(target instanceof HTMLElement)) return;
 
-        // 1. invalid-focus 제거
-        document
-            .querySelectorAll('.invalid-focus')
-            .forEach(el => el.classList.remove('invalid-focus'));
+        // invalid-focus 제거
+        target.classList.remove('invalid-focus');
+        target.closest('.invalid-focus')?.classList.remove('invalid-focus');
 
-        // 2. setting-row 내부 hint 제거 (컴포넌트 패널)
-        const row = target.closest('.setting-row');
-        if (row) {
-            const hint = row.querySelector('.hint.active');
-            if (hint) {
-                hint.className = 'hint';
-                hint.textContent = '';
-            }
-        }
-
-        // 3. 🔑 문서 설정 패널 전용 hint 제거 (ID 기반)
-        if (target.id === 'form-title-input') {
-            clearHint('title-hint');
-        }
-
-        if (target.id === 'form-category-input') {
-            clearHint('category-hint');
-        }
+        // error hint만 제거
+        const scope = getScope(target);
+        scope?.querySelectorAll('.hint.error').forEach(hint => {
+            hint.textContent = '';
+            hint.className = 'hint';
+        });
     };
 
-    document.addEventListener('input', e => clearInvalid(e.target));
-    document.addEventListener('change', e => clearInvalid(e.target));
+    document.addEventListener('input', e => clearError(e.target));
+    document.addEventListener('change', e => clearError(e.target));
+
+    /* =========================
+       포커스 이탈: success 제거
+    ========================= */
+    document.addEventListener('focusout', e => {
+        const scope = getScope(e.target);
+        scope?.querySelectorAll('.hint.success').forEach(hint => {
+            hint.textContent = '';
+            hint.className = 'hint';
+        });
+    });
 }
-
-
 
 
 function focusComponentError({
                                  componentId,
-                                 panelField,      // selector or function
+                                 panelField,
                                  message,
                                  autoFocus = true
                              }) {
-    // 1. 중앙 패널 강조
+    // 🔒 실시간 입력 중(table 컬럼/옵션)은 포커스 이동 금지
+    if (
+        document.activeElement &&
+        (
+            document.activeElement.closest('#table-column-list') ||
+            document.activeElement.closest('#option-list-pane')
+        )
+    ) {
+        return;
+    }
+
     if (componentId) {
         highlightComponent(componentId);
         selectedComponentId = componentId;
@@ -335,45 +346,42 @@ function focusComponentError({
     }
 
     requestAnimationFrame(() => {
-        let field = null;
+        requestAnimationFrame(() => {
 
-        document.querySelectorAll('.invalid-focus')
-            .forEach(el => el.classList.remove('invalid-focus'));
+            // 🔑 이 줄이 핵심 (이전 코드에 있었음)
+            document
+                .querySelectorAll('.invalid-focus')
+                .forEach(el => el.classList.remove('invalid-focus'));
 
-        // 2. 필드 결정 방식 (핵심)
-        if (typeof panelField === "function") {
-            field = panelField();
-        } else if (typeof panelField === "string") {
-            field = document.querySelector(panelField);
-        }
+            let field = null;
 
-        // 3. fallback (패널 자체)
-        if (!field) {
-            field = document.getElementById('component-setting-content');
-        }
+            if (typeof panelField === "function") {
+                field = panelField();
+            } else if (typeof panelField === "string") {
+                field = document.querySelector(panelField);
+            }
 
-        // 4. 스타일 & 포커스
-        field.classList.add('invalid-focus');
+            if (!field) return;
 
-        if (autoFocus && typeof field.focus === 'function') {
-            field.focus({preventScroll: true});
-        }
+            field.classList.add('invalid-focus');
 
-        // 5. hint 처리
-        const hint =
-            field.closest('.setting-row')
-                ?.querySelector('.hint');
+            if (autoFocus && typeof field.focus === 'function') {
+                field.focus({preventScroll: true});
+            }
 
-        if (hint && message) {
-            hint.textContent = message;
-            hint.classList.add('active');
-        }
+            let hint =
+                field.closest('#option-list-pane > div')?.querySelector('.option-hint') ||
+                field.closest('#table-column-list > div')?.querySelector('.column-hint') ||
+                field.closest('.setting-row')?.querySelector('.hint');
+            if (hint && message) {
+                showMsg(hint, message, 'error');
+            }
+        });
     });
 }
 
 
 function focusDocumentSettingError({field, hintId, message}) {
-    // 기존 invalid-focus 제거
     document
         .querySelectorAll('.invalid-focus')
         .forEach(el => el.classList.remove('invalid-focus'));
@@ -416,8 +424,17 @@ function enforceMaxLength(inputEl, max) {
 function showMsg(el, message, type) {
     if (!el) return;
     el.textContent = message;
-    el.className = 'hint ' + type;
+    el.className = `hint active ${type}`;
 }
+
+
+function clearSuccessHint(hint) {
+    if (!hint) return;
+    hint.classList.remove('success');
+    hint.classList.remove('active');
+    hint.textContent = '';
+}
+
 
 function highlightComponent(componentId) {
     // 기존 invalid 제거
@@ -656,6 +673,7 @@ function validateOptionComponent(comp) {
 
 function validateTableComponent(comp) {
     const columns = comp.meta?.columns ?? [];
+
     if (columns.length === 0) {
         focusComponentError({
             componentId: comp.id,
@@ -664,19 +682,30 @@ function validateTableComponent(comp) {
         });
         return false;
     }
+
     for (let i = 0; i < columns.length; i++) {
         const col = columns[i];
         const label = col.label?.trim() ?? '';
+
         if (!label) {
             focusComponentError({
                 componentId: comp.id,
-                panelField: () =>
-                    document.querySelectorAll('#table-column-list input')[i],
+                panelField: () => {
+                    const list = document.getElementById('table-column-list');
+                    if (!list) return null;
+
+                    const rows = list.querySelectorAll('.table-column-row');
+                    const row = rows[i];
+                    if (!row) return null;
+
+                    return row.querySelector('.table-col-label-input');
+                },
                 message: `컬럼 ${i + 1}의 이름을 입력해주세요.`
             });
             return false;
         }
     }
+
     const {min, max} = comp.meta?.rowPolicy ?? {};
     if (max !== undefined && min > max) {
         focusComponentError({
@@ -686,6 +715,7 @@ function validateTableComponent(comp) {
         });
         return false;
     }
+
     return true;
 }
 
@@ -796,27 +826,39 @@ function applyEventComponentPolicy(comp, baseRole) {
     // 1️⃣ baseRole 고정
     comp.meta.baseRole = baseRole ?? "COMPANY_EVENT";
 
-    // 2️⃣ UI 정책
+    // 2️⃣ UI 정책 (명확한 역할 분리)
     comp.meta.ui ??= {};
-    comp.meta.ui.requireReason = comp.meta.baseRole === "VACATION";
-    comp.meta.ui.requireDescription = comp.meta.baseRole !== "VACATION";
+
+    if (comp.meta.baseRole === "VACATION") {
+        // 휴가
+        comp.meta.ui.requireTitle = false;        // ❌ 일정명 입력 불필요
+        comp.meta.ui.requireReason = true;        // ✅ 휴가 사유 필수
+        comp.meta.ui.requireDescription = false; // textarea는 사유로 대체
+    } else {
+        // 출장 / 외근 / 회사 일정
+        comp.meta.ui.requireTitle = true;         // ⭐ 일정명 필수
+        comp.meta.ui.requireReason = false;
+        comp.meta.ui.requireDescription = true;  // 설명(선택 or 필수는 UI에서)
+    }
 
     // 3️⃣ affect 정책
     switch (comp.meta.baseRole) {
         case "VACATION":
             comp.meta.affect = {attendance: true, schedule: true};
             break;
+
         case "BUSINESS_TRIP":
         case "OUTWORK":
             comp.meta.affect = {attendance: false, schedule: true};
             break;
+
         case "COMPANY_EVENT":
         default:
             comp.meta.affect = {attendance: false, schedule: true};
             break;
     }
 
-    // 4️⃣ 필수 보장
+    // 4️⃣ 필수 보장 (event-date-range 자체는 항상 필수)
     comp.required = true;
 }
 
@@ -1190,16 +1232,18 @@ function renderPreviewInput(comp) {
         =============================== */
         case "notice":
             return `
-                <div class="notice-message-box ${comp.meta?.style ?? "info"}">
-                    ${(comp.meta?.message ?? "안내 문구").trim().replace(/\n/g, "<br>")}
-                </div>
+                <div class="notice-message-box ${comp.meta?.style ?? "info"}">${(comp.meta?.message ?? "안내 문구").trim().replace(/\n/g, "<br>")}</div>
             `;
 
         /* ===============================
            테이블
         =============================== */
         case "table":
-            return renderTablePreview(comp);
+            return `
+        <div class="table-preview-wrapper">
+            ${renderTablePreview(comp)}
+        </div>
+    `;
 
         /* ===============================
            이미지
@@ -1256,11 +1300,22 @@ function renderEventDateRangePreview(comp) {
 
     return `
         <div class="event-body preview-mode ${isVacation ? "vacation-preview" : ""}">
-            <div class="event-row event-range">
+            <div class="event-row event-range range-preview input-medium">
                 <input type="date" disabled />
                 <span class="range-sep">~</span>
                 <input type="date" disabled />
             </div>
+
+            ${!isVacation ? `
+                <div class="event-row event-title">
+                    <input
+                        type="text"
+                        disabled
+                        class="preview-input input-long"
+                        placeholder="일정 제목을 입력하세요"
+                    />
+                </div>
+            ` : ""}
 
             ${isVacation ? `
                 <div class="event-row event-vacation-type">
@@ -1271,7 +1326,9 @@ function renderEventDateRangePreview(comp) {
             ` : ""}
 
             <div class="event-row event-description">
-                <textarea disabled
+                <textarea
+                    disabled
+                    class="preview-textarea input-long"
                     placeholder="${isVacation
         ? "휴가 상세 사유를 입력하세요."
         : "일정 설명을 입력하세요."
@@ -1560,9 +1617,16 @@ function showComponentSettingPanel(componentId) {
             comp.meta.options.forEach((opt, idx) => {
                 const row = document.createElement("div");
                 row.innerHTML = `
-                    <div style="display:flex;gap:6px;">
-                        <input value="${(opt.label ?? '').replace(/"/g, '&quot;')}" style="flex:1;">
-                        <button type="button">🗑️</button>
+                    <div class="option-row">
+                        <input
+                            class="option-label-input"
+                            value="${(opt.label ?? '').replace(/"/g, '&quot;')}"
+                        >
+                        <button
+                            type="button"
+                            class="option-delete-btn"
+                            aria-label="옵션 삭제"
+                        >🗑️</button>
                     </div>
                     <div class="hint option-hint"></div>
                 `;
@@ -1621,31 +1685,63 @@ function showComponentSettingPanel(componentId) {
 
         const renderColumns = () => {
             list.innerHTML = "";
+
             comp.meta.columns.forEach((col, idx) => {
-                const row = document.createElement("div");
-                row.innerHTML = `
-                    <div style="display:flex;gap:6px;">
-                        <input value="${(col.label ?? '').replace(/"/g, '&quot;')}" style="flex:1;">
-                        <select>
-                            ${["text", "number", "currency"].map(t =>
+                const wrapper = document.createElement("div");
+
+                wrapper.innerHTML = `
+                <div class="table-column-row">
+                    <input
+                        class="table-col-label-input"
+                        value="${(col.label ?? '').replace(/"/g, '&quot;')}"
+                    >
+                    <select class="table-col-type-select">
+                        ${["text", "number", "currency"].map(t =>
                     `<option value="${t}" ${t === col.type ? "selected" : ""}>${t}</option>`
                 ).join("")}
-                        </select>
-                        <input type="checkbox" ${col.required ? "checked" : ""}>
-                        <button type="button">🗑️</button>
-                    </div>
-                `;
+                    </select>
+                    <input
+                        type="checkbox"
+                        class="table-col-required-checkbox"
+                        ${col.required ? "checked" : ""}
+                    >
+                    <button
+                        type="button"
+                        class="table-col-delete-btn"
+                        aria-label="컬럼 삭제"
+                    >🗑️</button>
+                </div>
+                <div class="hint column-hint"></div>
+            `;
 
-                const labelInput = row.querySelector("input");
-                const typeSelect = row.querySelector("select");
-                const reqCheck = row.querySelector('input[type="checkbox"]');
-                const delBtn = row.querySelector("button");
+                const labelInput = wrapper.querySelector(".table-col-label-input");
+                const typeSelect = wrapper.querySelector(".table-col-type-select");
+                const reqCheck = wrapper.querySelector(".table-col-required-checkbox");
+                const delBtn = wrapper.querySelector(".table-col-delete-btn");
+                const hint = wrapper.querySelector(".column-hint");
 
+                /* 🔒 checkbox는 포커스 체인 제거 */
+                reqCheck.tabIndex = -1;
+
+                /* =========================
+                   컬럼명 입력
+                ========================= */
+
+                // 입력 중: 데이터 + validation만
                 labelInput.addEventListener("input", () => {
                     enforceMaxLength(labelInput, COMPONENT_LABEL_MAX);
                     col.label = labelInput.value;
+                    validateComponentLabel(labelInput, hint);
+                });
+
+                // 값 확정 시점에만 렌더 (blur ❌)
+                labelInput.addEventListener("change", () => {
                     renderFormComponents();
                 });
+
+                /* =========================
+                   기타 컨트롤
+                ========================= */
 
                 typeSelect.addEventListener("change", e => {
                     col.type = e.target.value;
@@ -1663,10 +1759,9 @@ function showComponentSettingPanel(componentId) {
                     renderFormComponents();
                 });
 
-                list.appendChild(row);
+                list.appendChild(wrapper);
             });
         };
-
         renderColumns();
 
         addBtn.addEventListener("click", () => {
