@@ -162,6 +162,45 @@ async function extendSession() {
     }
 }
 
+/* =========================
+   메시지 카운트 업데이트
+========================= */
+async function updateMessageCount() {
+    try {
+        const response = await apiFetch('/api/messages/unread/count');
+        if (!response.ok) {
+            // 에러 발생 시 배지 숨김
+            const badge = document.getElementById('messageBadge');
+            if (badge) badge.style.display = 'none';
+            return;
+        }
+
+        const result = await response.json();
+        const count = result.data || 0;
+        const badge = document.getElementById('messageBadge');
+        
+        if (badge) {
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count.toString();
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    } catch (e) {
+        // 에러 발생 시 배지 숨김
+        const badge = document.getElementById('messageBadge');
+        if (badge) badge.style.display = 'none';
+    }
+}
+
+// 페이지 로드 시 메시지 카운트 업데이트
+document.addEventListener('DOMContentLoaded', function() {
+    updateMessageCount();
+    // 30초마다 메시지 카운트 업데이트
+    setInterval(updateMessageCount, 30000);
+});
+
 
 /* =========================
    관리자 사이드바 제어 핵심

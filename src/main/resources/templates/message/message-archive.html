@@ -19,11 +19,11 @@
     <th:block th:fragment="pageCss">
         <link rel="stylesheet" th:href="@{/css/layout.css}">
         <link rel="stylesheet" th:href="@{/css/layout-user.css}">
-        <link rel="stylesheet" th:href="@{/css/message.css}">
+        <link rel="stylesheet" th:href="@{/css/message/message.css}">
     </th:block>
 
     <th:block th:fragment="pageScript">
-        <script th:src="@{/js/message.js}"></script>
+        <script th:src="@{/js/message/message.js}"></script>
     </th:block>
 </head>
 <body>
@@ -50,9 +50,10 @@
                 
                 <select id="searchType" class="filter-select">
                     <option value="ALL">전체</option>
-                    <option value="TITLE">제목</option>
+                    <option value="TITLE">제목만</option>
                     <option value="SENDER">발신자</option>
                     <option value="RECIPIENT">수신자</option>
+                    <option value="CONTENT">내용만</option>
                 </select>
                 
                 <input type="text" id="searchKeyword" class="search-input" 
@@ -70,14 +71,15 @@
                     <tr>
                         <th>번호</th>
                         <th>제목</th>
+                        <th>구분</th>
                         <th>발신자</th>
-                        <th>수신일</th>
-                        <th>읽음 여부</th>
+                        <th>수신자</th>
+                        <th>메시지 일시</th>
                     </tr>
                 </thead>
                 <tbody id="messageTableBody">
                     <tr>
-                        <td colspan="5" style="text-align: center; padding: 40px; color: #9ca3af;">
+                        <td colspan="6" style="text-align: center; padding: 40px; color: #9ca3af;">
                             메시지를 불러오는 중...
                         </td>
                     </tr>

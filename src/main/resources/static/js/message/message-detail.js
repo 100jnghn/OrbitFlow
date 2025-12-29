@@ -51,8 +51,16 @@ async function loadMessageDetail() {
     if (!messageId) return;
 
     try {
-        // 폴더 파라미터 제거됨 (백엔드에서 자동으로 판단)
-        const response = await apiFetch(`${MESSAGE_API}/${messageId}`, {
+        // recipientId 파라미터 추가 (보낸 메시지함에서 특정 수신자 선택 시)
+        const urlParams = new URLSearchParams(window.location.search);
+        const recipientId = urlParams.get('recipientId');
+        
+        let url = `${MESSAGE_API}/${messageId}`;
+        if (recipientId) {
+            url += `?recipientId=${recipientId}`;
+        }
+        
+        const response = await apiFetch(url, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -78,6 +86,12 @@ async function loadMessageDetail() {
             messageDetailData = message;  // 메시지 상세 데이터 저장
             window.messageDetailData = message;  // goBack 함수에서 사용하기 위해 전역 변수로도 저장
             renderMessageDetail(message);
+            
+            // 받은 메시지함(INBOX)이고 읽지 않았던 메시지인 경우 헤더 카운트 업데이트
+            // 백엔드에서 자동으로 읽음 처리되므로, 카운트를 즉시 업데이트
+            if (message.folderType === 'INBOX' && typeof updateMessageCount === 'function') {
+                updateMessageCount();
+            }
         } else {
             showError('메시지 데이터가 없습니다.');
         }
@@ -149,18 +163,29 @@ function renderMessageDetail(message) {
 
     // 발신자/수신자 표시 (folderType에 따라)
     let peerInfo = '';
+    const recipientName = message.recipientName || '';
+    
     if (folderType === 'INBOX') {
         peerInfo = `<span class="meta-item">
             <i class="fas fa-user"></i> 발신자: ${escapeHTML(senderName)}
         </span>`;
     } else if (folderType === 'SENT') {
-        // 보낸 메시지함은 수신자 정보가 없을 수 있으므로 일단 발신자 표시
+        // 보낸 메시지함은 수신자 표시
         peerInfo = `<span class="meta-item">
-            <i class="fas fa-user"></i> 발신자: ${escapeHTML(senderName)}
+            <i class="fas fa-user"></i> 수신자: ${escapeHTML(recipientName)}
         </span>`;
     } else {
         peerInfo = `<span class="meta-item">
             <i class="fas fa-user"></i> 발신자: ${escapeHTML(senderName)}
+        </span>`;
+    }
+
+    // 보낸 메시지함인 경우 읽은 일시 표시 (상대방이 읽은 일시)
+    let readAtInfo = '';
+    if (folderType === 'SENT') {
+        const readAt = message.readAt ? formatDateTime(message.readAt) : '-';
+        readAtInfo = `<span class="meta-item">
+            <i class="fas fa-check-circle"></i> 읽은 일시: ${readAt}
         </span>`;
     }
 
@@ -174,6 +199,7 @@ function renderMessageDetail(message) {
                     <span class="meta-item">
                         <i class="fas fa-calendar"></i> ${createdAt}
                     </span>
+                    ${readAtInfo}
                 </div>
             </div>
 

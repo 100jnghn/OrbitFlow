@@ -1,5 +1,10 @@
 /* 메시지 페이지 스타일 - 게시판과 동일한 디자인 시스템 */
 
+/* 미읽음 메시지 제목 Bold 처리 */
+.message-unread {
+    font-weight: bold;
+}
+
 /* 컬러 팔레트 */
 :root {
     --primary-color: #3B82F6;

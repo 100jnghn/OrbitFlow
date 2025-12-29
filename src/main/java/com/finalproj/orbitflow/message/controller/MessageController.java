@@ -10,10 +10,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,6 +31,10 @@ public class MessageController {
             @AuthenticationPrincipal SecurityUser user,
             @RequestParam(required = false, defaultValue = "INBOX") MessageFolderType folder,
             @RequestParam(required = false, defaultValue = "false") boolean archived,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String searchType,
+            @RequestParam(required = false) String keyword,
             Pageable pageable
     ) {
         Page<MessageResDto.ListItem> result = messageService.getMessageList(
@@ -35,6 +42,10 @@ public class MessageController {
                 user.getEmployeeId(),
                 folder,
                 archived,
+                startDate,
+                endDate,
+                searchType,
+                keyword,
                 pageable
         );
 
@@ -45,12 +56,14 @@ public class MessageController {
     @GetMapping("/{messageId}")
     public ResponseEntity<ResponseDto<MessageResDto.Detail>> getMessageDetail(
             @AuthenticationPrincipal SecurityUser user,
-            @PathVariable Long messageId
+            @PathVariable Long messageId,
+            @RequestParam(required = false) Long recipientId  // 보낸 메시지함에서 특정 수신자 선택 시
     ) {
         MessageResDto.Detail result = messageService.getMessageDetail(
                 user.getCompanyId(),
                 user.getEmployeeId(),
-                messageId
+                messageId,
+                recipientId
         );
 
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "메시지 상세 조회 성공", result));
@@ -100,6 +113,15 @@ public class MessageController {
     ) {
         messageService.unarchiveMessage(user.getCompanyId(), user.getEmployeeId(), messageId);
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "보관함 해제 성공", null));
+    }
+
+    /** 안 읽은 메시지 카운트 */
+    @GetMapping("/unread/count")
+    public ResponseEntity<ResponseDto<Long>> getUnreadMessageCount(
+            @AuthenticationPrincipal SecurityUser user
+    ) {
+        long count = messageService.getUnreadMessageCount(user.getCompanyId(), user.getEmployeeId());
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "안 읽은 메시지 카운트 조회 성공", count));
     }
 
 }

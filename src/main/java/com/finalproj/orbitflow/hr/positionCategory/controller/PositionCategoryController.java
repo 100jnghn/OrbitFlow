@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
  * @filename : PositionCategoryController
  * @since : 2025-12-22 월요일
  */
+@PreAuthorize("hasAnyRole('ADMIN','COMPANY_ADMIN')")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/position-categories")
@@ -46,7 +48,10 @@ public class PositionCategoryController {
                 new ResponseDto<>(
                         HttpStatus.OK,
                         "직책 카테고리 전체 조회 완료",
-                        positionCategoryService.findAll(SecurityUtils.getCompanyId(), includeInactive)
+                        positionCategoryService.findAllWithAssignedCount(
+                                SecurityUtils.getCompanyId(),
+                                includeInactive
+                        )
                 )
         );
     }
@@ -67,11 +72,14 @@ public class PositionCategoryController {
         );
     }
 
-    @PostMapping("/order")
+    @PutMapping("/order")
     public ResponseEntity<ResponseDto> updateOrder(
             @RequestBody @Valid PositionCategoryOrderUpdateReqDto request
     ) {
-        positionCategoryService.updateOrder(SecurityUtils.getCompanyId(), request.getOrders());
+        positionCategoryService.updateOrder(
+                SecurityUtils.getCompanyId(),
+                request.getOrders()
+        );
         return ResponseEntity.ok(
                 new ResponseDto<>(
                         HttpStatus.OK,

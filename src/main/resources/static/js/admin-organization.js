@@ -19,6 +19,13 @@ let orgCategories = [];
 const expandedSet = new Set();
 
 /* ======================
+   직책 정책 상태
+====================== */
+let positionCategories = [];
+let selectedPositionIds = new Set();
+let currentOrgCategoryId = null;
+
+/* ======================
    Elements
 ====================== */
 const els = {
@@ -250,14 +257,14 @@ async function saveOrder() {
     nodes.forEach(n => {
         const pid = n.dataset.parentId ?? 'root';
         groups[pid] ??= [];
-        groups[pid].push({ id: Number(n.dataset.id) });
+        groups[pid].push({id: Number(n.dataset.id)});
     });
 
     for (const orders of Object.values(groups)) {
         await apiFetch(`${API_BASE}/order`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ orders })
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({orders})
         });
     }
 
@@ -295,6 +302,10 @@ function openCreate() {
     buildCategorySelect(null);
     buildParentSelect(null);
 
+    currentOrgCategoryId = orgCategories[0]?.id;
+    loadPositionPolicies(null, currentOrgCategoryId);
+
+
     // 생성 시: 카테고리 / 부모조직 활성화
     document.getElementById('categorySelect').disabled = false;
     els.parentSelect().disabled = false;
@@ -316,6 +327,7 @@ async function openEdit(id) {
     if (!org) return;
 
     selectedOrgId = id;
+    currentOrgCategoryId = org.categoryId;
 
     els.modalTitle().textContent = '조직 수정';
     els.orgName().value = org.name ?? '';
@@ -347,6 +359,8 @@ async function openEdit(id) {
         }
     }
 
+    await loadPositionPolicies(id, currentOrgCategoryId);
+
     openModal();
 }
 
@@ -356,16 +370,34 @@ async function saveOrg() {
 
     const payload = {
         name,
-        isActive: isEditMode ? document.getElementById('activeToggle').checked : true
+        categoryId: Number(document.getElementById('categorySelect').value),
+        parentOrgId: els.parentSelect().value
+            ? Number(els.parentSelect().value)
+            : null,
+        isActive: isEditMode
+            ? document.getElementById('activeToggle').checked
+            : true
     };
 
     const url = selectedOrgId ? `${API_BASE}/${selectedOrgId}` : API_BASE;
     const method = selectedOrgId ? 'PUT' : 'POST';
 
-    await apiFetch(url, {
+    const res = await apiFetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(payload)
+    });
+
+    const json = await res.json();
+    const savedOrgId = selectedOrgId ?? json.data;
+
+    await apiFetch('/api/admin/org-position-policies', {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            orgId: savedOrgId,
+            positionCategoryIds: Array.from(selectedPositionIds)
+        })
     });
 
     closeModal();
@@ -392,6 +424,7 @@ function buildParentSelect(selected) {
 function openModal() {
     els.modal().classList.remove('hidden');
 }
+
 function closeModal() {
     els.modal().classList.add('hidden');
 }
@@ -400,6 +433,7 @@ function markOrderChanged() {
     isOrderChanged = true;
     els.btnSaveOrder().disabled = false;
 }
+
 function resetOrderChanged() {
     isOrderChanged = false;
     els.btnSaveOrder().disabled = true;
@@ -408,9 +442,11 @@ function resetOrderChanged() {
 function normalizeActive(o) {
     return o.isActive === true || o.isActive === 1;
 }
+
 function escapeHtml(str) {
     return String(str).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
+
 function dragHandleHtml() {
     return `<span class="drag-handle"><span class="drag-dots">
         <span></span><span></span><span></span><span></span><span></span><span></span>
@@ -547,3 +583,103 @@ function collectDescendants(parentId, set) {
             collectDescendants(child.id, set);
         });
 }
+
+async function loadPositionPolicies(orgId, orgCategoryId) {
+
+    // 1. 활성 직책 전체
+    const res1 = await apiFetch(
+        '/api/admin/position-categories?includeInactive=false'
+    );
+    const json1 = await res1.json();
+    positionCategories = json1.data || [];
+
+    selectedPositionIds.clear();
+
+    // 2. 수정 시: 기존 정책
+    if (orgId) {
+        const res2 = await apiFetch(
+            `/api/admin/org-position-policies/${orgId}`
+        );
+        const json2 = await res2.json();
+        (json2.data || []).forEach(v =>
+            selectedPositionIds.add(v.positionCategoryId)
+        );
+    }
+
+    renderPolicyTable(orgCategoryId);
+}
+
+function renderPolicyTable(orgCategoryId) {
+
+    const keyword =
+        document.getElementById('policyKeyword').value.trim().toLowerCase();
+    const headFilter =
+        document.getElementById('policyHeadFilter').value;
+
+    const tbody = document.getElementById('policyTableBody');
+    tbody.innerHTML = '';
+
+    const filtered = positionCategories
+        .filter(p => p.isActive)
+        .filter(p => !keyword || p.name.toLowerCase().includes(keyword))
+        .filter(p => {
+            if (headFilter === 'HEAD') return p.isHead;
+            if (headFilter === 'NORMAL') return !p.isHead;
+            return true;
+        });
+
+    if (!filtered.length) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="3" class="policy-empty">
+                    선택 가능한 직책이 없습니다.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    filtered.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>
+                ${p.isHead ? `<span class="badge-head">HEAD</span>` : ''}
+                ${escapeHtml(p.name)}
+            </td>
+            <td>${p.assignedCount ?? 0}</td>
+            <td>
+                <label class="switch">
+                    <input type="checkbox"
+                        ${selectedPositionIds.has(p.id) ? 'checked' : ''}
+                        onchange="togglePolicy(${p.id}, this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function togglePolicy(id, checked) {
+    if (checked) selectedPositionIds.add(id);
+    else selectedPositionIds.delete(id);
+}
+
+
+document.getElementById('categorySelect')
+    .addEventListener('change', e => {
+        currentOrgCategoryId = Number(e.target.value);
+        selectedPositionIds.clear();
+        renderPolicyTable(currentOrgCategoryId);
+    });
+
+
+document.getElementById('policyKeyword')
+    .addEventListener('input', () =>
+        renderPolicyTable(currentOrgCategoryId)
+    );
+
+document.getElementById('policyHeadFilter')
+    .addEventListener('change', () =>
+        renderPolicyTable(currentOrgCategoryId)
+    );

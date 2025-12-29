@@ -19,11 +19,11 @@
     <th:block th:fragment="pageCss">
         <link rel="stylesheet" th:href="@{/css/layout.css}">
         <link rel="stylesheet" th:href="@{/css/layout-user.css}">
-        <link rel="stylesheet" th:href="@{/css/message.css}">
+        <link rel="stylesheet" th:href="@{/css/message/message.css}">
     </th:block>
 
     <th:block th:fragment="pageScript">
-        <script th:src="@{/js/message.js}"></script>
+        <script th:src="@{/js/message/message.js}"></script>
     </th:block>
 </head>
 <body>
@@ -52,6 +52,7 @@
                     <option value="ALL">전체</option>
                     <option value="TITLE">제목만</option>
                     <option value="SENDER">발신자</option>
+                    <option value="CONTENT">내용만</option>
                 </select>
                 
                 <input type="text" id="searchKeyword" class="search-input" 
