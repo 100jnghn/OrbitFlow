@@ -33,8 +33,9 @@
 
     <div class="profile">
         <div class="icon-group">
-            <a th:href="@{/view/message/inbox}" style="color: inherit; text-decoration: none;">
+            <a th:href="@{/view/message/inbox}" style="color: inherit; text-decoration: none; position: relative;">
                 <i class="fas fa-envelope"></i>
+                <span id="messageBadge" class="message-badge" style="display: none;">0</span>
             </a>
             <i class="fas fa-bell"></i>
         </div>

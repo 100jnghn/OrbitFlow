@@ -370,5 +370,10 @@ public class MessageService {
         mr.unarchive();
     }
 
-
+    /** 안 읽은 메시지 카운트 (받은 메시지함 기준) */
+    public long getUnreadMessageCount(Long companyId, Long employeeId) {
+        return messageRecipientRepository.countByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedFalseAndMessageFolderTypeAndIsReadFalse(
+                companyId, employeeId, MessageFolderType.INBOX
+        );
+    }
 }
