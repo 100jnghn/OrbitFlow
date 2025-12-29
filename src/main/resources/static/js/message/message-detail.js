@@ -86,6 +86,12 @@ async function loadMessageDetail() {
             messageDetailData = message;  // 메시지 상세 데이터 저장
             window.messageDetailData = message;  // goBack 함수에서 사용하기 위해 전역 변수로도 저장
             renderMessageDetail(message);
+            
+            // 받은 메시지함(INBOX)이고 읽지 않았던 메시지인 경우 헤더 카운트 업데이트
+            // 백엔드에서 자동으로 읽음 처리되므로, 카운트를 즉시 업데이트
+            if (message.folderType === 'INBOX' && typeof updateMessageCount === 'function') {
+                updateMessageCount();
+            }
         } else {
             showError('메시지 데이터가 없습니다.');
         }
@@ -174,6 +180,15 @@ function renderMessageDetail(message) {
         </span>`;
     }
 
+    // 보낸 메시지함인 경우 읽은 일시 표시 (상대방이 읽은 일시)
+    let readAtInfo = '';
+    if (folderType === 'SENT') {
+        const readAt = message.readAt ? formatDateTime(message.readAt) : '-';
+        readAtInfo = `<span class="meta-item">
+            <i class="fas fa-check-circle"></i> 읽은 일시: ${readAt}
+        </span>`;
+    }
+
     content.innerHTML = `
         <div class="board-detail-card">
             <!-- 메시지 헤더 -->
@@ -184,6 +199,7 @@ function renderMessageDetail(message) {
                     <span class="meta-item">
                         <i class="fas fa-calendar"></i> ${createdAt}
                     </span>
+                    ${readAtInfo}
                 </div>
             </div>
 

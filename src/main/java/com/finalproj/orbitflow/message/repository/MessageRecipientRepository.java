@@ -42,4 +42,11 @@ public interface MessageRecipientRepository extends JpaRepository<MessageRecipie
             Long messageId,
             MessageFolderType folderType
     );
+
+    /** 안 읽은 메시지 카운트 (받은 메시지함 기준) */
+    long countByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedFalseAndMessageFolderTypeAndIsReadFalse(
+            Long companyId,
+            Long employeeId,
+            MessageFolderType folderType
+    );
 }

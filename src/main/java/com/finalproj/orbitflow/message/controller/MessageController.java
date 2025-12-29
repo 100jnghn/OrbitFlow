@@ -115,4 +115,13 @@ public class MessageController {
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "보관함 해제 성공", null));
     }
 
+    /** 안 읽은 메시지 카운트 */
+    @GetMapping("/unread/count")
+    public ResponseEntity<ResponseDto<Long>> getUnreadMessageCount(
+            @AuthenticationPrincipal SecurityUser user
+    ) {
+        long count = messageService.getUnreadMessageCount(user.getCompanyId(), user.getEmployeeId());
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "안 읽은 메시지 카운트 조회 성공", count));
+    }
+
 }

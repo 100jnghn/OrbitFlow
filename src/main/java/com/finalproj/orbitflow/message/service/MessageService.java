@@ -240,19 +240,17 @@ public class MessageService {
                     .orElseThrow(() -> new NotFoundException("메시지가 존재하지 않습니다."));
         }
 
-        // 받은 편지함이면 읽음 처리
-        if (mr.getMessageFolderType() == MessageFolderType.INBOX) {
-            mr.markRead();
-        }
-
         MessageResDto.Detail detail = MessageResDto.Detail.from(mr);
         
         // 보낸 메시지함인 경우 수신자 정보 추가
         // recipientId가 제공된 경우 (보낸 메시지함에서 특정 수신자 선택)
-        if (recipientId != null || (mr.getMessageFolderType() == MessageFolderType.INBOX && 
-            mr.getMessage().getSender().getId().equals(employeeId))) {
+        boolean isSentMessageDetail = recipientId != null || (mr.getMessageFolderType() == MessageFolderType.INBOX && 
+            mr.getMessage().getSender().getId().equals(employeeId));
+        
+        if (isSentMessageDetail) {
             // 보낸 메시지함: 현재 레코드가 INBOX이지만 발신자가 현재 사용자
             // 즉, 보낸 메시지함에서 특정 수신자를 선택한 경우
+            // 발신자가 조회하는 경우이므로 읽음 처리하지 않음 (수신자의 readAt은 그대로 유지)
             return MessageResDto.Detail.builder()
                     .messageId(detail.getMessageId())
                     .recipientId(detail.getRecipientId())
@@ -265,10 +263,15 @@ public class MessageService {
                     .folderType(MessageFolderType.SENT)  // 보낸 메시지함으로 표시
                     .archived(detail.isArchived())
                     .read(detail.isRead())
-                    .readAt(detail.getReadAt())
+                    .readAt(detail.getReadAt())  // 수신자가 읽은 일시 (발신자가 조회해도 변경되지 않음)
                     .fileId(detail.getFileId())
                     .createdAt(detail.getCreatedAt())
                     .build();
+        }
+        
+        // 받은 편지함이면 읽음 처리 (수신자가 자신의 메시지를 조회하는 경우)
+        if (mr.getMessageFolderType() == MessageFolderType.INBOX) {
+            mr.markRead();
         }
         
         return detail;
@@ -370,5 +373,10 @@ public class MessageService {
         mr.unarchive();
     }
 
-
+    /** 안 읽은 메시지 카운트 (받은 메시지함 기준) */
+    public long getUnreadMessageCount(Long companyId, Long employeeId) {
+        return messageRecipientRepository.countByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedFalseAndMessageFolderTypeAndIsReadFalse(
+                companyId, employeeId, MessageFolderType.INBOX
+        );
+    }
 }
