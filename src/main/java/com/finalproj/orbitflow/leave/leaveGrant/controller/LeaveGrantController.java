@@ -29,12 +29,23 @@ public class LeaveGrantController {
     private final LeaveGrantService leaveGrantService;
 
     /**
-     * [관리자] 전체 사원 연차 일괄 부여
+     * 1. 회계년도 기준 연차 일괄 부여 테스트
      */
-    @PostMapping("/grant/run")
-    public ResponseEntity<String> runAnnualLeaveGrant() {
-        leaveGrantService.grantAnnualLeave();
-        return ResponseEntity.ok("연차 부여 공정이 완료되었습니다.");
+    @PostMapping("/batch-grant")
+    public ResponseEntity<String> manualBatchGrant(
+            @RequestParam Long companyId,
+            @RequestParam Integer year) {
+        leaveGrantService.batchGrantAnnualLeave(companyId, year);
+        return ResponseEntity.ok(year + "년도 연차 일괄 부여가 완료되었습니다.");
+    }
+
+    /**
+     * 2. 연차 소멸 프로세스 강제 실행 테스트
+     */
+    @PostMapping("/expire-process")
+    public ResponseEntity<String> manualExpireProcess() {
+        leaveGrantService.expireOutdatedLeaves();
+        return ResponseEntity.ok("연차 소멸 프로세스가 강제 실행되었습니다.");
     }
 
 

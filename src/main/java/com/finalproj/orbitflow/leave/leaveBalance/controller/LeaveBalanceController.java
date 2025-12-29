@@ -30,6 +30,7 @@ public class LeaveBalanceController {
 
     private final LeaveBalanceService leaveBalanceService;
 
+    // 부여연차/사용연차/잔여연차 조회
     @GetMapping("/my")
     public ResponseEntity<ResponseDto<LeaveBalanceResDto>> getMyBalance(
             @AuthenticationPrincipal SecurityUser user,
@@ -45,6 +46,7 @@ public class LeaveBalanceController {
     }
 
 
+    //연차 상세조회
     @GetMapping("/history/annual")
     public ResponseEntity<ResponseDto<List<LeaveHistoryResDto>>> getAnnualHistory(
             @AuthenticationPrincipal SecurityUser user) {
@@ -58,6 +60,8 @@ public class LeaveBalanceController {
     }
 
 
+
+    //기타 휴가 상세조회
     @GetMapping("/history/others")
     public ResponseEntity<ResponseDto<List<LeaveHistoryResDto>>> getOtherHistory(
             @AuthenticationPrincipal SecurityUser user) {
