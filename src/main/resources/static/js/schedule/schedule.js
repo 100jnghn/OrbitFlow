@@ -292,9 +292,9 @@
 
         const weekStart = new Date(today);
         weekStart.setDate(today.getDate() - today.getDay());
-
-        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-        const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        
+        const weekEnd = new Date(today);
+        weekEnd.setDate(today.getDate() + (6 - today.getDay()));
 
         const todayCount = schedules.filter(s => {
             const start = new Date(s.startAt);
@@ -305,18 +305,11 @@
         const weekCount = schedules.filter(s => {
             const start = new Date(s.startAt);
             const end = new Date(s.endAt);
-            return start <= monthEnd && end >= weekStart;
-        }).length;
-
-        const monthCount = schedules.filter(s => {
-            const start = new Date(s.startAt);
-            const end = new Date(s.endAt);
-            return start <= monthEnd && end >= monthStart;
+            return start <= weekEnd && end >= weekStart;
         }).length;
 
         document.getElementById('todayCount').textContent = todayCount;
         document.getElementById('weekCount').textContent = weekCount;
-        document.getElementById('monthCount').textContent = monthCount;
     }
 
     // 필터링 및 렌더링
