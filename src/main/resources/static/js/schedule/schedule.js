@@ -78,8 +78,12 @@
                 orgSelect.disabled = true;
                 orgSelect.value = '';
             } else {
-                // 체크 해제 시 조직 활성화
+                // 체크 해제 시 조직 활성화 및 첫 번째 조직으로 설정
                 orgSelect.disabled = false;
+                const childOrgs = orgList.filter(org => org.parentOrgId !== null);
+                if (childOrgs.length > 0) {
+                    orgSelect.value = childOrgs[0].id;
+                }
             }
         });
     }
@@ -141,11 +145,15 @@
 
             // 일정 등록용 조직 드롭다운
             const orgSelect = document.getElementById('scheduleOrg');
-            orgSelect.innerHTML =
-
-                childOrgs
-                    .map(org => `<option value="${org.id}">${org.name}</option>`)
-                    .join('');
+            const orgOptions = childOrgs
+                .map(org => `<option value="${org.id}">${org.name}</option>`)
+                .join('');
+            orgSelect.innerHTML = orgOptions;
+            
+            // 기본값을 첫 번째 조직으로 설정
+            if (childOrgs.length > 0) {
+                orgSelect.value = childOrgs[0].id;
+            }
         } catch (error) {
             console.error('Error loading organizations:', error);
         }
@@ -546,8 +554,13 @@
 
         // 개인일정 체크박스 초기화
         document.getElementById('isPersonalSchedule').checked = false;
-        document.getElementById('scheduleOrg').disabled = false;
-        document.getElementById('scheduleOrg').value = '';
+        const orgSelect = document.getElementById('scheduleOrg');
+        orgSelect.disabled = false;
+        // 기본값을 첫 번째 조직으로 설정
+        const childOrgs = orgList.filter(org => org.parentOrgId !== null);
+        if (childOrgs.length > 0) {
+            orgSelect.value = childOrgs[0].id;
+        }
 
         updateTitleCharCount();
         updateDescriptionCharCount();
