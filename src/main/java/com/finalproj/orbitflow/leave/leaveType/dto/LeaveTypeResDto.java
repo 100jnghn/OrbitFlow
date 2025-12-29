@@ -5,6 +5,7 @@ import lombok.Builder;
 
 @Builder
 public class LeaveTypeResDto {
+    private Long typeId;
     private String typeName;
     private Boolean isCountable;
     private String description;

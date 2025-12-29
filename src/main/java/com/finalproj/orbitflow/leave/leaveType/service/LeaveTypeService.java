@@ -20,18 +20,18 @@ public class LeaveTypeService {
     /**
      * 모든 휴가 유형 조회
      */
-    public List<LeaveTypeResDto> getAllLeaveTypes() {
-        return leaveTypeRepository.findAll().stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
-    }
+//    public List<LeaveTypeResDto> getAllLeaveTypes() {
+//        return leaveTypeRepository.findAll().stream()
+//                .map(this::mapToDto)
+//                .collect(Collectors.toList());
+//    }
 
-    private LeaveTypeResDto mapToDto(LeaveType leaveType) {
-        return LeaveTypeResDto.builder()
-                .id(leaveType.getId())
-                .typeName(leaveType.getTypeName())
-                .isCountable(leaveType.getIsCountable())
-                .description(leaveType.getDescription())
-                .build();
-    }
+//    private LeaveTypeResDto mapToDto(LeaveType leaveType) {
+//        return LeaveTypeResDto.builder()
+//                .id(leaveType.getId())
+//                .typeName(leaveType.getTypeName())
+//                .isCountable(leaveType.getIsCountable())
+//                .description(leaveType.getDescription())
+//                .build();
+//    }
 }

@@ -22,9 +22,9 @@ public class LeaveTypeController {
     /**
      * 모든 휴가 유형 조회
      */
-    @GetMapping("/types")
-    public ResponseEntity<ResponseDto<List<LeaveTypeResDto>>> getAllLeaveTypes() {
-        List<LeaveTypeResDto> leaveTypes = leaveTypeService.getAllLeaveTypes();
-        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "휴가 유형 조회 성공", leaveTypes));
-    }
+//    @GetMapping("/types")
+//    public ResponseEntity<ResponseDto<List<LeaveTypeResDto>>> getAllLeaveTypes() {
+//        List<LeaveTypeResDto> leaveTypes = leaveTypeService.getAllLeaveTypes();
+//        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "휴가 유형 조회 성공", leaveTypes));
+//    }
 }
