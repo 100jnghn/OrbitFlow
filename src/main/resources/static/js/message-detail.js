@@ -51,8 +51,16 @@ async function loadMessageDetail() {
     if (!messageId) return;
 
     try {
-        // 폴더 파라미터 제거됨 (백엔드에서 자동으로 판단)
-        const response = await apiFetch(`${MESSAGE_API}/${messageId}`, {
+        // recipientId 파라미터 추가 (보낸 메시지함에서 특정 수신자 선택 시)
+        const urlParams = new URLSearchParams(window.location.search);
+        const recipientId = urlParams.get('recipientId');
+        
+        let url = `${MESSAGE_API}/${messageId}`;
+        if (recipientId) {
+            url += `?recipientId=${recipientId}`;
+        }
+        
+        const response = await apiFetch(url, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -149,14 +157,16 @@ function renderMessageDetail(message) {
 
     // 발신자/수신자 표시 (folderType에 따라)
     let peerInfo = '';
+    const recipientName = message.recipientName || '';
+    
     if (folderType === 'INBOX') {
         peerInfo = `<span class="meta-item">
             <i class="fas fa-user"></i> 발신자: ${escapeHTML(senderName)}
         </span>`;
     } else if (folderType === 'SENT') {
-        // 보낸 메시지함은 수신자 정보가 없을 수 있으므로 일단 발신자 표시
+        // 보낸 메시지함은 수신자 표시
         peerInfo = `<span class="meta-item">
-            <i class="fas fa-user"></i> 발신자: ${escapeHTML(senderName)}
+            <i class="fas fa-user"></i> 수신자: ${escapeHTML(recipientName)}
         </span>`;
     } else {
         peerInfo = `<span class="meta-item">

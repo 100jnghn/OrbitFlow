@@ -186,7 +186,7 @@ function renderMessageTable(messages) {
             row.innerHTML = `
                 <td>${rowNumber}</td>
                 <td>
-                    <a href="#" class="board-title-link" onclick="viewMessage(${message.messageId}, '${folderType}'); return false;">
+                    <a href="#" class="board-title-link" onclick="viewMessage(${message.messageId}, '${folderType}', ${message.recipientId}); return false;">
                         ${escapeHTML(title)}
                     </a>
                 </td>
@@ -380,12 +380,16 @@ function setupDateFilter() {
 }
 
 // 메시지 상세 보기
-function viewMessage(messageId, folder) {
+function viewMessage(messageId, folder, recipientId) {
     if (!messageId) {
         alert('메시지 ID가 없습니다.');
         return;
     }
-    window.location.href = `/view/message/detail?messageId=${messageId}&folder=${folder}`;
+    let url = `/view/message/detail?messageId=${messageId}&folder=${folder}`;
+    if (recipientId) {
+        url += `&recipientId=${recipientId}`;
+    }
+    window.location.href = url;
 }
 
 // 날짜 시간 포맷
