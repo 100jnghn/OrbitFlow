@@ -180,6 +180,15 @@ function renderMessageDetail(message) {
         </span>`;
     }
 
+    // 보낸 메시지함인 경우 읽은 일시 표시 (상대방이 읽은 일시)
+    let readAtInfo = '';
+    if (folderType === 'SENT') {
+        const readAt = message.readAt ? formatDateTime(message.readAt) : '-';
+        readAtInfo = `<span class="meta-item">
+            <i class="fas fa-check-circle"></i> 읽은 일시: ${readAt}
+        </span>`;
+    }
+
     content.innerHTML = `
         <div class="board-detail-card">
             <!-- 메시지 헤더 -->
@@ -190,6 +199,7 @@ function renderMessageDetail(message) {
                     <span class="meta-item">
                         <i class="fas fa-calendar"></i> ${createdAt}
                     </span>
+                    ${readAtInfo}
                 </div>
             </div>
 
