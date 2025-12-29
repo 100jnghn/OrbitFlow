@@ -503,16 +503,19 @@
         content.appendChild(time);
         content.appendChild(org);
 
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn-delete-schedule';
-        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-        deleteBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            deleteSchedule(schedule.scheduleId);
-        });
-
         item.appendChild(content);
-        item.appendChild(deleteBtn);
+
+        // 전사 일정이 아닌 경우에만 삭제 버튼 추가
+        if (!schedule.company) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn-delete-schedule';
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteSchedule(schedule.scheduleId);
+            });
+            item.appendChild(deleteBtn);
+        }
 
         item.addEventListener('click', () => {
             openScheduleDetailModal(schedule);
@@ -675,7 +678,19 @@
         }
     }
 
-// 일정 제출 처리
+    // 날짜 변환 함수
+    function toLocalDateTimeString(date) {
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        const hh = String(date.getHours()).padStart(2, '0');
+        const mi = String(date.getMinutes()).padStart(2, '0');
+        const ss = String(date.getSeconds()).padStart(2, '0');
+
+        return `${yyyy}-${mm}-${dd}T${hh}:${mi}:${ss}`;
+    }
+
+    // 일정 제출 처리
     async function handleScheduleSubmit(e) {
         e.preventDefault();
 
@@ -735,8 +750,8 @@
             return;
         }
 
-        const startAt = startDateTime.toISOString().slice(0, 19);
-        const endAt = endDateTime.toISOString().slice(0, 19);
+        const startAt = toLocalDateTimeString(startDateTime);
+        const endAt = toLocalDateTimeString(endDateTime);
 
         const scheduleData = {
             isCompany: false,
