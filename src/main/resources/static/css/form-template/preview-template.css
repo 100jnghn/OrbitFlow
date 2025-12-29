@@ -136,6 +136,16 @@
     font-weight: 600;
 }
 
+.table-no {
+    width: 36px;
+    min-width: 36px;
+    max-width: 36px;
+    text-align: center;
+    font-size: 0.85rem;
+    color: #555;
+}
+
+
 /* ===============================
  * Image (문서 셀 내부)
  * =============================== */

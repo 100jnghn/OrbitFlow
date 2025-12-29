@@ -21,6 +21,7 @@ const FORM_COMPONENT_TYPES = [
     "radio",
     "checkbox",
     "leave-date-range",
+    "schedule-date-range",
     "notice",
     "table",
     "image",
@@ -132,7 +133,7 @@ const FORM_COMPONENT_SCHEMAS = {
             endLabel: ""
         }
     },
-    "leave-reason":{
+    "leave-reason": {
         type: "leave-reason",
         label: "휴가 사유",
         required: true,
@@ -142,6 +143,16 @@ const FORM_COMPONENT_SCHEMAS = {
             deductAttendance: null,     // ⭐ 서버 기준값
             detailReason: "",           // 사용자 입력
             options: []                 // 드롭다운 목록 (API)
+        }
+    },
+    "schedule-date-range": {
+        type: "schedule-date-range",
+        label: "일정",
+        required: false,
+        meta: {
+            startLabel: "시작일",
+            endLabel: "종료일",
+            description: ""   // ⬅️ 텍스트 입력
         }
     },
     notice: {
@@ -269,6 +280,188 @@ let dragBlockSize = 1;
 // 3. 유틸리티 함수
 // =====================
 
+function syncDocumentPolicyToggles() {
+    const hasLeave = formComponents.some(c =>
+        c.type === 'leave-date-range' || c.type === 'leave-reason'
+    );
+    const hasSchedule = formComponents.some(c =>
+        c.type === 'schedule-date-range'
+    );
+
+    const attToggle = document.getElementById('toggle-auto-attendance');
+    const schToggle = document.getElementById('toggle-auto-schedule');
+
+    /* =====================
+       근태 자동 반영
+       - 휴가 있으면 필수
+    ===================== */
+    if (hasLeave) {
+        documentSettings.autoReflectAttendance = true;
+        if (attToggle) {
+            attToggle.checked = true;
+            attToggle.disabled = true;
+        }
+    } else if (attToggle) {
+        attToggle.disabled = false;
+        attToggle.checked = documentSettings.autoReflectAttendance;
+    }
+
+    /* =====================
+       일정 자동 반영
+       - 휴가 or 일정 있으면 필수
+    ===================== */
+    if (hasLeave || hasSchedule) {
+        documentSettings.autoReflectSchedule = true;
+        if (schToggle) {
+            schToggle.checked = true;
+            schToggle.disabled = true;
+        }
+    } else if (schToggle) {
+        schToggle.disabled = false;
+        schToggle.checked = documentSettings.autoReflectSchedule;
+    }
+}
+
+
+function bindAutoClearInvalidFocus() {
+
+    const clearInvalid = (target) => {
+        if (!(target instanceof HTMLElement)) return;
+
+        // 1. invalid-focus 제거
+        document
+            .querySelectorAll('.invalid-focus')
+            .forEach(el => el.classList.remove('invalid-focus'));
+
+        // 2. setting-row 내부 hint 제거 (컴포넌트 패널)
+        const row = target.closest('.setting-row');
+        if (row) {
+            const hint = row.querySelector('.hint.active');
+            if (hint) {
+                hint.className = 'hint';
+                hint.textContent = '';
+            }
+        }
+
+        // 3. 🔑 문서 설정 패널 전용 hint 제거 (ID 기반)
+        if (target.id === 'form-title-input') {
+            clearHint('title-hint');
+        }
+
+        if (target.id === 'form-category-input') {
+            clearHint('category-hint');
+        }
+    };
+
+    document.addEventListener('input', e => clearInvalid(e.target));
+    document.addEventListener('change', e => clearInvalid(e.target));
+}
+
+
+function normalizeLeaveComponentSet(components) {
+    const hasLeaveDate = components.some(c => c.type === "leave-date-range");
+    const hasLeaveReason = components.some(c => c.type === "leave-reason");
+
+    // 휴가 사유만 있으면 제거
+    if (hasLeaveReason && !hasLeaveDate) {
+        components = components.filter(c => c.type !== "leave-reason");
+    }
+
+    // 휴가 일정만 있으면 사유 자동 생성
+    if (hasLeaveDate && !hasLeaveReason) {
+        const dateIdx = components.findIndex(c => c.type === "leave-date-range");
+        const groupId = generateId();
+
+        components[dateIdx]._groupId = groupId;
+
+        components.splice(dateIdx + 1, 0, {
+            id: generateId(),
+            type: "leave-reason",
+            label: "휴가 사유",
+            required: true,
+            fixed: false,
+            meta: {
+                vacationTypeCode: null,
+                vacationTypeName: null,
+                deductAttendance: null,
+                detailReason: "",
+                options: []
+            },
+            _groupId: groupId,
+            _linkedTo: components[dateIdx].id
+        });
+    }
+
+    return components;
+}
+
+
+function focusComponentError({
+                                 componentId,
+                                 panelField,      // selector or function
+                                 message,
+                                 autoFocus = true
+                             }) {
+    // 1. 중앙 패널 강조
+    if (componentId) {
+        highlightComponent(componentId);
+        selectedComponentId = componentId;
+        showComponentSettingPanel(componentId);
+    }
+
+    requestAnimationFrame(() => {
+        let field = null;
+
+        document.querySelectorAll('.invalid-focus')
+            .forEach(el => el.classList.remove('invalid-focus'));
+
+        // 2. 필드 결정 방식 (핵심)
+        if (typeof panelField === "function") {
+            field = panelField();
+        } else if (typeof panelField === "string") {
+            field = document.querySelector(panelField);
+        }
+
+        // 3. fallback (패널 자체)
+        if (!field) {
+            field = document.getElementById('component-setting-content');
+        }
+
+        // 4. 스타일 & 포커스
+        field.classList.add('invalid-focus');
+
+        if (autoFocus && typeof field.focus === 'function') {
+            field.focus({preventScroll: true});
+        }
+
+        // 5. hint 처리
+        const hint =
+            field.closest('.setting-row')
+                ?.querySelector('.hint');
+
+        if (hint && message) {
+            hint.textContent = message;
+            hint.classList.add('active');
+        }
+    });
+}
+
+
+function focusDocumentSettingError({field, hintId, message}) {
+    // 기존 invalid-focus 제거
+    document
+        .querySelectorAll('.invalid-focus')
+        .forEach(el => el.classList.remove('invalid-focus'));
+
+    // 포커스 + 스타일
+    if (field) {
+        field.classList.add('invalid-focus');
+        field.focus({preventScroll: false});
+    }
+
+}
+
+
 function deepCopy(obj) {
     if (obj === null || typeof obj !== "object") return obj;
     if (Array.isArray(obj)) return obj.map(deepCopy);
@@ -356,6 +549,23 @@ function removeComponent(componentId) {
     }
 
     renderFormComponents();
+    updateLeaveComponentButtonState();
+    syncDocumentPolicyToggles();
+}
+
+
+function updateLeaveComponentButtonState() {
+    const btn = document.querySelector(
+        '.component-btn[data-type="leave-date-range"]'
+    );
+    if (!btn) return;
+
+    const hasLeave = hasLeaveComponentSet();
+
+    btn.classList.toggle('is-disabled', hasLeave);
+    btn.title = hasLeave
+        ? "이미 추가된 휴가 컴포넌트가 있습니다."
+        : "";
 }
 
 
@@ -370,6 +580,7 @@ function showHint(id, message) {
     el.textContent = message;
     el.classList.add('active');
 }
+
 function clearHint(id) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -379,37 +590,55 @@ function clearHint(id) {
 
 // -- 문서 설정 패널 검증
 function validateDocumentSettingPanel() {
-    let valid = true;
     const titleInput = document.getElementById('form-title-input');
+    const titleHint = document.getElementById('title-hint');
     const categorySelect = document.getElementById('form-category-input');
+    const categoryHint = document.getElementById('category-hint');
+
     const title = titleInput?.value.trim() ?? '';
     const category = categorySelect?.value ?? '';
-    // 제목
+
+    // 제목 필수
     if (!title) {
-        showHint('title-hint', '문서 제목은 필수입니다.');
-        valid = false;
-    } else if (title.length > DOCUMENT_TITLE_MAX) {
-        showHint(
-            'title-hint',
-            `문서 제목은 ${DOCUMENT_TITLE_MAX}자 이하로 입력하세요.`
-        );
-        valid = false;
-    } else {
-        clearHint('title-hint');
+        focusDocumentSettingError({field: titleInput});
+        showMsg(titleHint, '문서 제목은 필수입니다.', 'error');
+        return false;
     }
+
+    if (title.length > DOCUMENT_TITLE_MAX) {
+        focusDocumentSettingError({field: titleInput});
+        showMsg(
+            titleHint,
+            `문서 제목은 ${DOCUMENT_TITLE_MAX}자 이하로 입력하세요.`,
+            'error'
+        );
+        return false;
+    }
+
+    titleHint.textContent = '';
+    titleHint.className = 'hint';
+
     // 카테고리
     if (!category) {
-        showHint('category-hint', '카테고리를 선택하세요.');
-        valid = false;
-    } else {
-        clearHint('category-hint');
+        focusDocumentSettingError({field: categorySelect});
+        showMsg(categoryHint, '카테고리를 선택하세요.', 'error');
+        return false;
     }
-    return valid;
+
+    categoryHint.textContent = '';
+    categoryHint.className = 'hint';
+
+    return true;
 }
 
 function validateDocumentTitle() {
     const titleInput = document.getElementById('form-title-input');
     const titleHint = document.getElementById('title-hint');
+
+    if (titleInput.classList.contains('invalid-focus')) {
+        return false;
+    }
+
     const v = titleInput.value.trim();
     if (!v) {
         titleHint.textContent = '';
@@ -458,19 +687,19 @@ function validateAllComponentLabels() {
         if (comp.fixed) continue;
         const label = comp.label?.trim() ?? '';
         if (!label) {
-            highlightComponent(comp.id);
-            selectedComponentId = comp.id;
-            showComponentSettingPanel(comp.id);
-            alert('이름이 비어있는 컴포넌트가 있습니다.');
+            focusComponentError({
+                componentId: comp.id,
+                panelField: '#input-comp-label',
+                message: '컴포넌트 이름은 필수입니다.'
+            });
             return false;
         }
         if (label.length > COMPONENT_LABEL_MAX) {
-            highlightComponent(comp.id);
-            selectedComponentId = comp.id;
-            showComponentSettingPanel(comp.id);
-            alert(
-                `"${label}" 컴포넌트 이름은 ${COMPONENT_LABEL_MAX}자 이내여야 합니다.`
-            );
+            focusComponentError({
+                componentId: comp.id,
+                panelField: '#input-comp-label',
+                message: `이름은 ${COMPONENT_LABEL_MAX}자 이내여야 합니다.`
+            });
             return false;
         }
     }
@@ -479,28 +708,32 @@ function validateAllComponentLabels() {
 
 function validateOptionComponent(comp) {
     const options = comp.meta?.options ?? [];
-    const compLabel = comp.label?.trim() || '(이름 없음)';
     if (options.length === 0) {
-        highlightComponent(comp.id);
-        showComponentSettingPanel(comp.id);
-        alert(`컴포넌트 "${compLabel}"에는 옵션이 최소 1개 이상 필요합니다.`);
+        focusComponentError({
+            componentId: comp.id,
+            panelField: '#option-list-pane',
+            message: '옵션은 최소 1개 이상 필요합니다.'
+        });
         return false;
     }
     for (let i = 0; i < options.length; i++) {
         const label = options[i].label?.trim() ?? '';
         if (!label) {
-            highlightComponent(comp.id);
-            showComponentSettingPanel(comp.id);
-            alert(`컴포넌트 "${compLabel}"의 옵션 ${i + 1} 이름이 비어 있습니다.`);
+            focusComponentError({
+                componentId: comp.id,
+                panelField: () =>
+                    document.querySelectorAll('#option-list-pane input')[i],
+                message: `옵션 ${i + 1}의 이름을 입력해주세요.`
+            });
             return false;
         }
         if (label.length > COMPONENT_LABEL_MAX) {
-            highlightComponent(comp.id);
-            showComponentSettingPanel(comp.id);
-            alert(
-                `컴포넌트 "${compLabel}"의 옵션 "${label}"은 ` +
-                `${COMPONENT_LABEL_MAX}자 이내여야 합니다.`
-            );
+            focusComponentError({
+                componentId: comp.id,
+                panelField: () =>
+                    document.querySelectorAll('#option-list-pane input')[i],
+                message: `옵션 이름은 ${COMPONENT_LABEL_MAX}자 이내여야 합니다.`
+            });
             return false;
         }
     }
@@ -510,26 +743,33 @@ function validateOptionComponent(comp) {
 function validateTableComponent(comp) {
     const columns = comp.meta?.columns ?? [];
     if (columns.length === 0) {
-        highlightComponent(comp.id);
-        showComponentSettingPanel(comp.id);
-        alert('테이블에는 최소 1개 이상의 컬럼이 필요합니다.');
+        focusComponentError({
+            componentId: comp.id,
+            panelField: '#table-column-list',
+            message: '테이블에는 최소 1개 이상의 컬럼이 필요합니다.'
+        });
         return false;
     }
     for (let i = 0; i < columns.length; i++) {
         const col = columns[i];
         const label = col.label?.trim() ?? '';
         if (!label) {
-            highlightComponent(comp.id);
-            showComponentSettingPanel(comp.id);
-            alert(`컬럼 ${i + 1}의 이름이 비어 있습니다.`);
+            focusComponentError({
+                componentId: comp.id,
+                panelField: () =>
+                    document.querySelectorAll('#table-column-list input')[i],
+                message: `컬럼 ${i + 1}의 이름을 입력해주세요.`
+            });
             return false;
         }
     }
     const {min, max} = comp.meta?.rowPolicy ?? {};
     if (max !== undefined && min > max) {
-        highlightComponent(comp.id);
-        showComponentSettingPanel(comp.id);
-        alert('최대 행 수는 최소 행 수보다 작을 수 없습니다.');
+        focusComponentError({
+            componentId: comp.id,
+            panelField: '#table-row-max',
+            message: '최대 행 수는 최소 행 수보다 작을 수 없습니다.'
+        });
         return false;
     }
     return true;
@@ -550,15 +790,19 @@ function validateAllComponents() {
             case 'notice':
                 const msg = comp.meta?.message?.trim() ?? '';
                 if (!msg) {
-                    highlightComponent(comp.id);
-                    showComponentSettingPanel(comp.id);
-                    alert(`안내 문구가 비어 있는 컴포넌트가 있습니다.`);
+                    focusComponentError({
+                        componentId: comp.id,
+                        panelField: '#input-notice-message',
+                        message: '안내 문구를 입력해주세요.'
+                    });
                     return false;
                 }
                 if (msg.length > NOTICE_MESSAGE_MAX) {
-                    highlightComponent(comp.id);
-                    showComponentSettingPanel(comp.id);
-                    alert(`안내 문구는 ${NOTICE_MESSAGE_MAX}자 이내여야 합니다.`);
+                    focusComponentError({
+                        componentId: comp.id,
+                        panelField: '#input-notice-message',
+                        message: `안내 문구는 ${NOTICE_MESSAGE_MAX}자 이내여야 합니다.`
+                    });
                     return false;
                 }
                 break;
@@ -620,23 +864,85 @@ function bindDocumentTitleValidation() {
     });
 }
 
-function hasLeaveComponent() {
-    return formComponents.some(comp => comp.type === "leave-date-range");
-}
 
-function validateDocumentGlobalRules() {
+function validateLeavePolicyContract() {
 
-    // 🔴 근태 자동 반영 ON → 휴가 컴포넌트 필수
-    if (documentSettings.autoReflectAttendance) {
-        const hasLeave = hasLeaveComponent();
+    const hasLeave = formComponents.some(c =>
+        c.type === "leave-date-range" ||
+        c.type === "leave-reason"
+    );
 
-        if (!hasLeave) {
-            alert(
-                "‘최종 승인 시 근태 자동 반영’을 사용하려면\n" +
-                "문서에 ‘휴가 일정’ 컴포넌트를 추가해야 합니다."
-            );
-            return false;
-        }
+    const hasSchedule = formComponents.some(c =>
+        c.type === "schedule-date-range"
+    );
+
+    const attendanceOn = documentSettings.autoReflectAttendance === true;
+    const scheduleOn = documentSettings.autoReflectSchedule === true;
+
+    /* ==========================
+       1️⃣ 근태 자동 반영 → 휴가 필수
+       (일정만 있어도 ❌)
+    ========================== */
+    if (attendanceOn && !hasLeave) {
+        alert('근태 자동 반영을 사용하려면 휴가 컴포넌트가 필요합니다.');
+
+        focusComponentError({
+            componentId: null,
+            panelField: '#toggle-auto-attendance',
+            message: '근태 자동 반영은 휴가 컴포넌트와 함께 사용해야 합니다.',
+            autoFocus: false
+        });
+
+        return false;
+    }
+
+    /* ==========================
+       2️⃣ 휴가 사용 시 → 일정 자동 반영 필수
+    ========================== */
+    if (hasLeave && !scheduleOn) {
+        const leaveComp = formComponents.find(c =>
+            c.type === 'leave-date-range'
+        );
+
+        focusComponentError({
+            componentId: leaveComp?.id,
+            panelField: '#toggle-auto-schedule',
+            message: '휴가 컴포넌트 사용 시 일정 자동 반영은 필수입니다.',
+            autoFocus: false
+        });
+        return false;
+    }
+
+    /* ==========================
+       3️⃣ 일정 컴포넌트 사용 시 → 일정 자동 반영 필수
+    ========================== */
+    if (hasSchedule && !scheduleOn) {
+        const scheduleComp = formComponents.find(c =>
+            c.type === 'schedule-date-range'
+        );
+
+        focusComponentError({
+            componentId: scheduleComp?.id,
+            panelField: '#toggle-auto-schedule',
+            message: '일정 컴포넌트를 사용하는 경우 일정 자동 반영은 필수입니다.',
+            autoFocus: false
+        });
+        return false;
+    }
+
+    /* ==========================
+       4️⃣ 일정 자동 반영 ON → 일정 or 휴가 필요
+    ========================== */
+    if (scheduleOn && !hasLeave && !hasSchedule) {
+        alert('일정 자동 반영을 사용하려면 일정 또는 휴가 컴포넌트를 추가해야 합니다.');
+
+        focusComponentError({
+            componentId: null,
+            panelField: '.component-btn[data-type="schedule-date-range"]',
+            message: '일정 자동 반영을 사용하려면 일정 컴포넌트를 추가하세요.',
+            autoFocus: false
+        });
+        return false;
     }
 
     return true;
@@ -649,26 +955,28 @@ function validateDocumentGlobalRules() {
 
 function addComponentByType(type) {
     if (!FORM_COMPONENT_SCHEMAS.hasOwnProperty(type)) {
-
-        console.warn(`[FormTemplateBuilder] 컴포넌트 타입 '${type}'는 스키마에 정의되어 있지 않습니다. 추가 중단.`);
+        console.warn(`[FormTemplateBuilder] 컴포넌트 타입 '${type}'는 스키마에 정의되어 있지 않습니다.`);
         return;
     }
+
+    // 휴가 컴포넌트 (기존)
     if (type === "leave-date-range") {
         addLeaveDateRangeWithReason();
         return;
     }
 
-    const schema = FORM_COMPONENT_SCHEMAS[type];
 
+    const schema = FORM_COMPONENT_SCHEMAS[type];
     const metaCopy = deepCopy(schema.meta);
 
-    if ((type === "radio" || type === "checkbox")) {
-        metaCopy.options = metaCopy.options && metaCopy.options.length > 0 ?
-            deepCopy(metaCopy.options.map(opt => typeof opt === "string" ? {
-                id: generateOptionId(),
-                label: opt
-            } : {...opt, id: generateOptionId()})) :
-            [{id: generateOptionId(), label: "옵션 1"}];
+    if (type === "radio" || type === "checkbox") {
+        metaCopy.options = metaCopy.options && metaCopy.options.length > 0
+            ? deepCopy(metaCopy.options.map(opt =>
+                typeof opt === "string"
+                    ? {id: generateOptionId(), label: opt}
+                    : {...opt, id: generateOptionId()}
+            ))
+            : [{id: generateOptionId(), label: "옵션 1"}];
     }
 
     const component = {
@@ -679,13 +987,28 @@ function addComponentByType(type) {
         fixed: false,
         meta: metaCopy
     };
+
+    // document-meta 앞에 삽입
     formComponents.splice(formComponents.length - 1, 0, component);
+
     selectedComponentId = component.id;
     renderFormComponents();
     showComponentSettingPanel(component.id);
 }
 
+function hasLeaveComponentSet() {
+    return formComponents.some(c =>
+        c.type === "leave-date-range" ||
+        c.type === "leave-reason"
+    );
+}
+
 function addLeaveDateRangeWithReason() {
+    if (hasLeaveComponentSet()) {
+        alert("휴가 컴포넌트는 문서에 한 번만 추가할 수 있습니다.");
+        return;
+    }
+
     const groupId = generateId();
 
     const leaveDateComp = {
@@ -723,30 +1046,64 @@ function addLeaveDateRangeWithReason() {
     formComponents.splice(insertIdx, 0, leaveDateComp, leaveReasonComp);
 
     selectedComponentId = leaveDateComp.id;
+
+    // 🔒 계약 강제 (상태)
+    documentSettings.autoReflectAttendance = true;
+    documentSettings.autoReflectSchedule = true;
+
     renderFormComponents();
     showComponentSettingPanel(leaveDateComp.id);
+    updateLeaveComponentButtonState();
+    syncDocumentPolicyToggles();
 }
 
 
 function initComponentListPanel() {
+
     const listContainer = document.getElementById("component-btn-list");
     if (!listContainer) return;
     listContainer.innerHTML = "";
 
+    const hasLeave = hasLeaveComponentSet(); // ⭐ 현재 상태 한번 계산
+
     FORM_COMPONENT_TYPES.forEach(function (type) {
         if (!FORM_COMPONENT_SCHEMAS[type]) return;
+
         const btn = document.createElement("button");
         btn.className = "component-btn";
         btn.type = "button";
         btn.setAttribute("data-type", type);
         btn.innerText = FORM_COMPONENT_SCHEMAS[type].label || type;
 
+
         btn.addEventListener("click", function () {
+
+            // 🔒 휴가 컴포넌트는 1회만 허용
+            if (type === "leave-date-range" && hasLeaveComponentSet()) {
+                const leaveComp = formComponents.find(c =>
+                    c.type === "leave-date-range"
+                );
+
+                alert("휴가 컴포넌트는 문서에 한 번만 추가할 수 있습니다.");
+
+                // 👉 기존 휴가 컴포넌트로 이동 + 설정 패널 열기
+                if (leaveComp) {
+                    selectedComponentId = leaveComp.id;
+                    renderFormComponents();
+                    showComponentSettingPanel(leaveComp.id);
+                }
+                return;
+            }
+
+            // 일반 컴포넌트 추가
             addComponentByType(type);
+            syncDocumentPolicyToggles();
         });
+
 
         listContainer.appendChild(btn);
     });
+    updateLeaveComponentButtonState();
 }
 
 // ============================
@@ -754,6 +1111,7 @@ function initComponentListPanel() {
 // ============================
 
 function renderFormComponents() {
+    enforceSystemRequiredRules();
     const container = document.getElementById("form-edit-area");
     if (!container) return;
 
@@ -871,10 +1229,12 @@ function renderFormComponents() {
         // 클릭 선택
         if (!comp.fixed) {
             row.addEventListener("click", () => {
+                if (row.classList.contains("dragging")) return;
                 selectedComponentId = comp.id;
                 renderFormComponents();
                 showComponentSettingPanel(comp.id);
             });
+
         }
 
         // 타입별 미리보기
@@ -975,32 +1335,30 @@ function renderFormComponents() {
                 inputHtml = `
 <div class="notice-message-box ${comp.meta?.style ?? "info"}">${message}</div>
 `;//화면에서의 공백 문제때문에 일부러 들여쓰기 X
-            } else
-        if (comp.type === "leave-reason") {
+            } else if (comp.type === "leave-reason") {
+                const options = comp.meta?.options ?? [];
+                const selectedCode = comp.meta?.vacationTypeCode;
 
-            const options = comp.meta?.options ?? [];
-            const selectedCode = comp.meta?.vacationTypeCode;
-
-            inputHtml = `
-        <div class="leave-reason-preview">
-            <select disabled class="leave-type-select">
-                <option value="">휴가 유형 선택</option>
-                ${options.map(opt => `
-                    <option value="${opt.code}"
-                        ${opt.code === selectedCode ? "selected" : ""}>
-                        ${opt.name}
-                    </option>
-                `).join("")}
-            </select>
-
-            <textarea
-                disabled
-                class="leave-reason-textarea"
-                placeholder="상세 휴가 사유를 입력하세요.">
-            </textarea>
-        </div>
-    `;
-        } else if (comp.type === "table") {
+                inputHtml = `
+                        <div class="leave-reason-body">
+                            <select disabled>
+                                <option value="">휴가 유형 선택</option>
+                                ${options.map(opt => `
+                                    <option value="${opt.code}"
+                                        ${opt.code === selectedCode ? "selected" : ""}>
+                                        ${opt.name}
+                                    </option>
+                                `).join("")}
+                            </select>
+                
+                            <textarea
+                                disabled
+                                class="leave-reason-textarea"
+                                placeholder="상세 휴가 사유를 입력하세요.">
+                            </textarea>
+                        </div>
+                    `;
+            } else if (comp.type === "table") {
                 const cols = comp.meta?.columns ?? [];
                 const minRows = Math.max(1, comp.meta?.rowPolicy?.min ?? 1);
                 inputHtml = `
@@ -1069,7 +1427,29 @@ function renderFormComponents() {
                         placeholder="부서 검색"
                     />
                 `;
+            } else if (comp.type === "schedule-date-range") {
+                const left = comp.meta?.startLabel || "시작일";
+                const right = comp.meta?.endLabel || "종료일";
+
+                // ⬇️ inputHtml에는 우측 영역만!
+                inputHtml = `
+                        <div class="schedule-body">
+                            <div class="schedule-range">
+                                <input type="date" disabled placeholder="${left}" />
+                                <span class="range-sep">~</span>
+                                <input type="date" disabled placeholder="${right}" />
+                            </div>
+                
+                            <textarea
+                                disabled
+                                class="schedule-desc"
+                                placeholder="일정 내용을 입력하세요.">
+                            </textarea>
+                        </div>
+                    `;
             }
+
+
             if (!["divider"].includes(comp.type)) {
                 row.innerHTML = `
                     <div class="preview-row">
@@ -1099,7 +1479,22 @@ function renderFormComponents() {
         }
         container.appendChild(row);
     });
+
+    syncDocumentPolicyToggles();
+
 }
+
+function enforceSystemRequiredRules() {
+    formComponents.forEach(comp => {
+        if (
+            comp.type === "leave-date-range" ||
+            comp.type === "leave-reason"
+        ) {
+            comp.required = true;
+        }
+    });
+}
+
 
 // ================================
 // 7. 컴포넌트 설정 패널(사이드)
@@ -1112,13 +1507,18 @@ function showComponentSettingPanel(componentId) {
         panel.innerHTML = `<span style="color:#9ab;">컴포넌트를 선택하세요.</span>`;
         return;
     }
+
     const isFixed = !!comp.fixed;
-    // -- 공통 정보 영역
+
+    /* ======================
+       공통 정보 영역
+    ====================== */
     let html = `
     <div style="margin-bottom:11px;">
         <div style="font-weight:600;margin-bottom:4px;">${comp.label || ''}</div>
         <div style="color:#888;font-size:0.97em;">타입: ${comp.type}</div>
     </div>
+
     <div class="setting-row" style="display:flex;flex-direction:column;">
         <label style="margin-bottom:4px;">이름</label>
         <input
@@ -1130,14 +1530,30 @@ function showComponentSettingPanel(componentId) {
         <div class="hint" id="component-label-hint"></div>
     </div>
     `;
-    if (!isFixed) {
+
+    const isForceRequired =
+        comp.type === "leave-date-range" ||
+        comp.type === "leave-reason";
+
+    if (!isFixed && !isForceRequired) {
         html += `
         <div class="setting-row" style="margin-top:8px;">
             <label style="flex:1;">필수 입력</label>
-            <input type="checkbox" id="toggle-required" ${comp.required ? "checked" : ""}>
+            <input type="checkbox" id="toggle-required"
+                ${comp.required ? "checked" : ""}>
         </div>`;
     }
-    // -- notice
+
+    if (isForceRequired) {
+        html += `
+        <div class="setting-row" style="margin-top:8px;color:#888;font-size:0.9em;">
+            ⚠ 이 항목은 근태 반영을 위해 필수 입력 항목입니다.
+        </div>`;
+    }
+
+    /* ======================
+       notice
+    ====================== */
     if (comp.type === "notice") {
         html += `
         <div class="setting-row" style="margin-top:14px;display:flex;flex-direction:column;">
@@ -1149,7 +1565,15 @@ function showComponentSettingPanel(componentId) {
             <div class="hint" id="notice-message-hint"></div>
         </div>`;
     }
-    // -- radio/checkbox 옵션 관리
+
+    /* ======================
+       schedule-date-range ✅ 추가
+    ====================== */
+
+
+    /* ======================
+       radio / checkbox
+    ====================== */
     if (comp.type === "radio" || comp.type === "checkbox") {
         comp.meta.options ??= [{id: generateOptionId(), label: "옵션 1"}];
         html += `
@@ -1159,7 +1583,10 @@ function showComponentSettingPanel(componentId) {
             <button type="button" id="add-option-btn">옵션 추가</button>
         </div>`;
     }
-    // -- table 컬럼 관리
+
+    /* ======================
+       table
+    ====================== */
     if (comp.type === "table") {
         comp.meta.columns ??= [];
         comp.meta.rowPolicy ??= {min: 1, max: undefined, addable: true, removable: true};
@@ -1169,6 +1596,7 @@ function showComponentSettingPanel(componentId) {
             <div id="table-column-list"></div>
             <button type="button" id="add-table-column-btn">+ 컬럼 추가</button>
         </div>
+
         <div class="setting-row" style="margin-top:14px;">
             <div style="font-weight:600;">행 설정</div>
             <label>최소 행 <input type="number" id="table-row-min" value="${comp.meta.rowPolicy.min}"></label><br>
@@ -1177,28 +1605,37 @@ function showComponentSettingPanel(componentId) {
             <label><input type="checkbox" id="table-row-removable" ${comp.meta.rowPolicy.removable ? "checked" : ""}> 행 삭제 가능</label>
         </div>`;
     }
+
     panel.innerHTML = html;
 
-    // -- 공통 이벤트
+    /* ======================
+       공통 이벤트
+    ====================== */
     if (!isFixed) {
         const labelInput = document.getElementById("input-comp-label");
         const labelHint = document.getElementById("component-label-hint");
+
         labelInput.addEventListener("input", () => {
             enforceMaxLength(labelInput, COMPONENT_LABEL_MAX);
             comp.label = labelInput.value;
             validateComponentLabel(labelInput, labelHint);
             renderFormComponents();
         });
+
         document.getElementById("toggle-required")
             ?.addEventListener("change", e => {
                 comp.required = e.target.checked;
                 renderFormComponents();
             });
     }
-    // -- notice 이벤트
+
+    /* ======================
+       notice 이벤트
+    ====================== */
     if (comp.type === "notice") {
         const textarea = document.getElementById("input-notice-message");
         const hint = document.getElementById("notice-message-hint");
+
         textarea.addEventListener("input", () => {
             enforceMaxLength(textarea, NOTICE_MESSAGE_MAX);
             comp.meta.message = textarea.value;
@@ -1206,9 +1643,14 @@ function showComponentSettingPanel(componentId) {
             renderFormComponents();
         });
     }
-    // -- radio/checkbox 옵션 목록 관리
+
+
+    /* ======================
+       radio / checkbox 옵션
+    ====================== */
     if (comp.type === "radio" || comp.type === "checkbox") {
         const pane = document.getElementById("option-list-pane");
+
         const renderOptions = () => {
             pane.innerHTML = "";
             comp.meta.options.forEach((opt, idx) => {
@@ -1220,17 +1662,19 @@ function showComponentSettingPanel(componentId) {
                         <button type="button">🗑️</button>
                     </div>
                     <div class="hint option-hint"></div>
-                </div>
-                `;
+                </div>`;
+
                 const input = row.querySelector("input");
                 const hint = row.querySelector(".option-hint");
                 const del = row.querySelector("button");
+
                 input.addEventListener("input", () => {
                     enforceMaxLength(input, COMPONENT_LABEL_MAX);
                     opt.label = input.value;
                     validateOptionLabel(input, hint);
                     renderFormComponents();
                 });
+
                 del.onclick = () => {
                     if (comp.meta.options.length > 1) {
                         comp.meta.options.splice(idx, 1);
@@ -1238,9 +1682,11 @@ function showComponentSettingPanel(componentId) {
                         renderFormComponents();
                     }
                 };
+
                 pane.appendChild(row);
             });
         };
+
         renderOptions();
         document.getElementById("add-option-btn").onclick = () => {
             comp.meta.options.push({id: generateOptionId(), label: "옵션"});
@@ -1248,9 +1694,13 @@ function showComponentSettingPanel(componentId) {
             renderFormComponents();
         };
     }
-    // -- table 컬럼 관리
+
+    /* ======================
+       table 이벤트
+    ====================== */
     if (comp.type === "table") {
         const list = document.getElementById("table-column-list");
+
         const renderColumns = () => {
             list.innerHTML = "";
             comp.meta.columns.forEach((col, idx) => {
@@ -1268,36 +1718,43 @@ function showComponentSettingPanel(componentId) {
                         <button type="button">🗑️</button>
                     </div>
                     <div class="hint column-hint"></div>
-                </div>
-                `;
+                </div>`;
+
                 const label = row.querySelector("input");
                 const hint = row.querySelector(".column-hint");
                 const type = row.querySelector("select");
                 const req = row.querySelector('input[type="checkbox"]');
                 const del = row.querySelector("button");
+
                 label.addEventListener("input", () => {
                     enforceMaxLength(label, COMPONENT_LABEL_MAX);
                     col.label = label.value;
                     validateComponentLabel(label, hint);
                     renderFormComponents();
                 });
+
                 type.onchange = e => {
                     col.type = e.target.value;
                     renderFormComponents();
                 };
+
                 req.onchange = e => {
                     col.required = e.target.checked;
                     renderFormComponents();
                 };
+
                 del.onclick = () => {
                     comp.meta.columns.splice(idx, 1);
                     renderColumns();
                     renderFormComponents();
                 };
+
                 list.appendChild(row);
             });
         };
+
         renderColumns();
+
         document.getElementById("add-table-column-btn").onclick = () => {
             if (comp.meta.columns.length >= TABLE_COLUMN_MAX) {
                 alert(`컬럼은 최대 ${TABLE_COLUMN_MAX}개까지 추가할 수 있습니다.`);
@@ -1313,31 +1770,19 @@ function showComponentSettingPanel(componentId) {
             renderColumns();
             renderFormComponents();
         };
+
         document.getElementById("table-row-min").oninput = e => {
             let v = Number(e.target.value);
             if (!v || v < TABLE_ROW_MIN) v = TABLE_ROW_MIN;
             if (v > TABLE_ROW_MAX) v = TABLE_ROW_MAX;
             e.target.value = v;
             comp.meta.rowPolicy.min = v;
-            if (
-                comp.meta.rowPolicy.max !== undefined &&
-                comp.meta.rowPolicy.max < v
-            ) {
-                comp.meta.rowPolicy.max = v;
-                const maxInput = document.getElementById("table-row-max");
-                if (maxInput) maxInput.value = v;
-            }
             renderFormComponents();
         };
+
         document.getElementById("table-row-max").oninput = e => {
             let max = Number(e.target.value);
             if (e.target.value === "") {
-                comp.meta.rowPolicy.max = undefined;
-                renderFormComponents();
-                return;
-            }
-            if (isNaN(max)) {
-                e.target.value = "";
                 comp.meta.rowPolicy.max = undefined;
                 renderFormComponents();
                 return;
@@ -1350,8 +1795,10 @@ function showComponentSettingPanel(componentId) {
             e.target.value = max;
             renderFormComponents();
         };
+
         document.getElementById("table-row-addable").onchange =
             e => comp.meta.rowPolicy.addable = e.target.checked;
+
         document.getElementById("table-row-removable").onchange =
             e => comp.meta.rowPolicy.removable = e.target.checked;
     }
@@ -1380,28 +1827,51 @@ function convertComponentsToFields(components) {
 }
 
 function loadTemplateJsonToFormComponents(templateJson) {
-    if (!templateJson || !Array.isArray(templateJson.fields)) {
-        return;
-    }
+    if (!templateJson || !Array.isArray(templateJson.fields)) return;
+
     const fields = [...templateJson.fields]
         .sort((a, b) => a.order - b.order);
-    const components = [];
-    fields.forEach(field => {
-        const isFixed = field.fieldType === "document-title";
-        components.push({
-            id: field.fieldId,
-            type: field.fieldType,
-            label: field.label,
-            required: field.required,
-            fixed: isFixed,
-            meta: field.meta ?? {}
+
+    let components = fields.map(field => ({
+        id: field.fieldId,
+        type: field.fieldType,
+        label: field.label,
+        required: field.required,
+        fixed: field.fieldType === "document-title",
+        meta: field.meta ?? {}
+    }));
+
+    // document-title 보장
+    if (!components.some(c => c.type === "document-title")) {
+        components.unshift({
+            ...FIXED_COMPONENTS.find(c => c.type === "document-title"),
+            id: "document-title"
         });
-    });
-    // document-meta는 항상 마지막에 자동 추가
+    }
+
+    // 휴가 컴포넌트 계약 보정
+    components = normalizeLeaveComponentSet(components);
+
+    // document-meta 항상 마지막
+    components = components.filter(c => c.type !== "document-meta");
     components.push({
-        ...FIXED_COMPONENTS.find(c => c.type === "document-meta")
+        ...FIXED_COMPONENTS.find(c => c.type === "document-meta"),
+        id: "document-meta"
     });
+
     formComponents = components;
+
+    // 휴가 정책 → 문서 설정 동기화
+    if (components.some(c => c.type === "leave-date-range")) {
+        documentSettings.autoReflectAttendance = true;
+        documentSettings.autoReflectSchedule = true;
+    }
+
+    if (components.some(c => c.type === "schedule-date-range")) {
+        documentSettings.autoReflectSchedule = true;
+    }
+
+    syncDocumentPolicyToggles();
 }
 
 // ================================
@@ -1416,7 +1886,7 @@ async function saveFormTemplateStructure(templateId) {
     // 검증
     if (!validateDocumentSettingPanel()) return false;
     if (!validateAllComponents()) return false;
-    if (!validateDocumentGlobalRules()) return false;
+    if (!validateLeavePolicyContract()) return false;
 
     const filteredComponents = formComponents
         .filter(fc => fc.type !== 'document-meta')
@@ -1510,7 +1980,7 @@ function bindDocumentSettingsPanel() {
     const insertedId = "document-global-toggles";
     if (document.getElementById(insertedId)) return;
 
-    // -- 자동반영 토글 UI 추가
+    // -- 자동반영 토글 UI
     const settingTogglesHTML = `
       <div class="setting-row" style="margin-bottom:5px;align-items:center;display:flex;">
         <label for="toggle-auto-attendance" style="flex:1;">
@@ -1519,7 +1989,6 @@ function bindDocumentSettingsPanel() {
         <input
           type="checkbox"
           id="toggle-auto-attendance"
-          ${documentSettings.autoReflectAttendance ? "checked" : ""}
           style="transform:scale(1.15);margin-left:7px;cursor:pointer;"
         >
       </div>
@@ -1530,55 +1999,55 @@ function bindDocumentSettingsPanel() {
         <input
           type="checkbox"
           id="toggle-auto-schedule"
-          ${documentSettings.autoReflectSchedule ? "checked" : ""}
           style="transform:scale(1.15);margin-left:7px;cursor:pointer;"
         >
       </div>
     `;
+
     const wrapper = document.createElement('div');
     wrapper.id = insertedId;
     wrapper.innerHTML = settingTogglesHTML;
-    // 주요 버튼 전 위치에 삽입
+
     const actionButtons = panel.querySelector('.form-action-buttons');
     if (actionButtons) {
         panel.insertBefore(wrapper, actionButtons);
     } else {
         panel.appendChild(wrapper);
     }
-    // -- 기존 바인딩 (참조문서/첨부파일 등)
-    const refToggle = document.getElementById('toggle-reference-document');
-    if (refToggle) {
-        refToggle.checked = documentSettings.allowReferenceDocument;
-        refToggle.addEventListener('change', e => {
-            documentSettings.allowReferenceDocument = !!e.target.checked;
-            console.log('[documentSettings]', documentSettings);
-        });
-    }
-    const attToggle = document.getElementById('toggle-attachment');
-    if (attToggle) {
-        attToggle.checked = documentSettings.allowAttachment;
-        attToggle.addEventListener('change', e => {
-            documentSettings.allowAttachment = !!e.target.checked;
-            console.log('[documentSettings]', documentSettings);
-        });
-    }
+
+    /* ======================
+       컴포넌트 존재 여부 헬퍼
+    ====================== */
+    const hasLeaveComponent = () =>
+        formComponents.some(c =>
+            c.type === 'leave-date-range' || c.type === 'leave-reason'
+        );
+
+
     const autoAttendanceToggle = document.getElementById('toggle-auto-attendance');
-    if (autoAttendanceToggle) {
-        autoAttendanceToggle.checked = documentSettings.autoReflectAttendance;
-        autoAttendanceToggle.addEventListener('change', e => {
-            documentSettings.autoReflectAttendance = !!e.target.checked;
-            console.log('[documentSettings]', documentSettings);
-        });
-    }
     const autoScheduleToggle = document.getElementById('toggle-auto-schedule');
-    if (autoScheduleToggle) {
-        autoScheduleToggle.checked = documentSettings.autoReflectSchedule;
-        autoScheduleToggle.addEventListener('change', e => {
-            documentSettings.autoReflectSchedule = !!e.target.checked;
-            console.log('[documentSettings]', documentSettings);
-        });
-    }
-    // -- 문서 제목 실시간 동기화
+
+    // 초기 상태 동기화
+    autoAttendanceToggle.checked = documentSettings.autoReflectAttendance;
+    autoScheduleToggle.checked = documentSettings.autoReflectSchedule;
+
+    /* ======================
+       근태 자동 반영 토글
+       - 휴가가 있으면 OFF 불가
+    ====================== */
+    autoAttendanceToggle.addEventListener('change', e => {
+        documentSettings.autoReflectAttendance = e.target.checked;
+        syncDocumentPolicyToggles();
+    });
+
+    autoScheduleToggle.addEventListener('change', e => {
+        documentSettings.autoReflectSchedule = e.target.checked;
+        syncDocumentPolicyToggles();
+    });
+
+    /* ======================
+       문서 제목 실시간 동기화
+    ====================== */
     const titleInput = document.getElementById("form-title-input");
     if (titleInput) {
         const titleComp = formComponents.find(c => c.type === "document-title");
@@ -1592,6 +2061,7 @@ function bindDocumentSettingsPanel() {
             renderFormComponents();
         });
     }
+
     bindDocumentTitleValidation();
 }
 
@@ -1675,6 +2145,10 @@ function bindPreviewButton() {
 document.addEventListener('DOMContentLoaded', async function () {
     let resolvedGroupId = null;
     // templateId가 있으면 수정/복제/최신버전 로드
+
+    bindAutoClearInvalidFocus();
+
+
     if (typeof templateId !== "undefined" && templateId) {
         try {
             const res = await apiFetch(`/api/form-templates/${templateId}`);
@@ -1715,6 +2189,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     initComponentListPanel();
     // 설정패널 전역 옵션 바인딩
     bindDocumentSettingsPanel();
+
+    syncDocumentPolicyToggles();
+
     // 구성 요소 렌더링
     renderFormComponents();
     // 저장 버튼 바인딩

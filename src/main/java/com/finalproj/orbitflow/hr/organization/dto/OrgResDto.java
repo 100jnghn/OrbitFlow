@@ -2,7 +2,7 @@ package com.finalproj.orbitflow.hr.organization.dto;
 
 import com.finalproj.orbitflow.hr.organization.entity.Organization;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 
 /**
  * Please explain the class!!!
@@ -11,7 +11,7 @@ import lombok.Getter;
  * @filename : OrgResDto
  * @since : 2025-12-19 금요일
  */
-@Getter
+@Data
 @AllArgsConstructor
 public class OrgResDto {
     private Long id;

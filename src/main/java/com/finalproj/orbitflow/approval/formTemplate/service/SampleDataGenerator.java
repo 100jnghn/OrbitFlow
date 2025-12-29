@@ -46,79 +46,136 @@ public class SampleDataGenerator {
      */
     private Object generateByType(FormFieldSchema field) {
         String type = field.getFieldType();
-        Map<String, Object> meta = field.getMeta() != null ? field.getMeta() : Collections.emptyMap();
+        Map<String, Object> meta =
+                field.getMeta() != null ? field.getMeta() : Collections.emptyMap();
 
         switch (type) {
 
+        /* =========================
+           Text / Display 계열
+        ========================= */
+
             case "document-title":
-                return meta.getOrDefault("value", "문서 제목 예시");
+                return Map.of("display",
+                        meta.getOrDefault("value", "문서 제목 예시"));
 
             case "text":
-                return "텍스트 예시";
+                return Map.of("display", "텍스트 예시");
 
             case "textarea":
-                return "여러 줄 텍스트 예시\n두 번째 줄입니다.";
+                return Map.of("display", "여러 줄 텍스트 예시\n두 번째 줄입니다.");
 
             case "number":
-                return 1;
+                return Map.of("display", "1");
 
-            case "divider":
-                return null;
+            case "currency":
+                return Map.of("display", "100,000원");
+
+            case "address":
+                return Map.of("display", "서울특별시 강남구 테헤란로");
+
+            case "notice":
+                return Map.of("display",
+                        meta.getOrDefault("message", "안내 문구 예시"));
+
+        /* =========================
+           Date / Time 계열
+        ========================= */
 
             case "time":
-                return "09:00";
+                return Map.of("display", "09:00");
 
             case "time-range":
-                return Map.of(
-                        "start", "09:00",
-                        "end", "18:00"
-                );
+                return Map.of("display", "09:00 ~ 18:00");
 
             case "date":
-                return "2025-01-01";
+                return Map.of("display", "2025-01-01");
 
             case "date-range":
             case "leave-date-range":
-                return Map.of(
-                        "start", "2025-01-01",
-                        "end", "2025-01-05"
-                );
+                return Map.of("display", "2025-01-01 ~ 2025-01-05");
 
-            case "radio":
-                return getFirstOptionId(meta);
+            case "schedule-date-range":
+                return Map.of("display",
+                        "2025-01-10 ~ 2025-01-12 (연말 프로젝트 일정)");
 
-            case "checkbox":
-                String optionId = getFirstOptionId(meta);
-                return optionId != null
-                        ? List.of(optionId)
-                        : Collections.emptyList();
+        /* =========================
+           Leave
+        ========================= */
 
-            case "notice":
-                return meta.getOrDefault("message", "안내 문구 예시");
+            case "leave-reason":
+                return Map.of("display", "연차 (개인 사정)");
 
-            case "table":
-                return generateTable(meta);
+        /* =========================
+           Selection
+        ========================= */
+
+            case "radio": {
+                Object optionsObj = meta.get("options");
+                if (!(optionsObj instanceof List)) {
+                    return null;
+                }
+
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> options =
+                        (List<Map<String, Object>>) optionsObj;
+
+                return options.isEmpty()
+                        ? null
+                        : options.get(0).get("id");
+            }
+
+            case "checkbox": {
+                Object optionsObj = meta.get("options");
+                if (!(optionsObj instanceof List)) {
+                    return Collections.emptyList();
+                }
+
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> options =
+                        (List<Map<String, Object>>) optionsObj;
+
+                return options.stream()
+                        .map(opt -> (String) opt.get("id"))
+                        .filter(Objects::nonNull)
+                        .toList();
+            }
+
+
+        /* =========================
+           🔴 구조 유지 (중요)
+        ========================= */
 
             case "image":
+                // ✅ 실제 이미지 영역 미리보기 필요
                 return Map.of(
                         "src", PLACEHOLDER_IMAGE_URL,
                         "alt", meta.getOrDefault("alt", "이미지 미리보기")
                 );
 
-            case "currency":
-                return 100_000;
+            case "table":
+                // ✅ 컬럼 구조 + 최소 행 수 반영
+                return generateTable(meta);
 
-            case "address":
-                return "서울특별시 강남구 테헤란로";
+        /* =========================
+           Search
+        ========================= */
 
             case "employee-search":
-                return generateSearchValue(meta, "EMP001", "홍길동");
+                return Map.of("display", "홍길동");
 
             case "department-search":
-                return generateSearchValue(meta, "DEPT001", "개발팀");
+                return Map.of("display", "개발팀");
+
+        /* =========================
+           Layout
+        ========================= */
+
+            case "divider":
+                return null;
 
             default:
-                return null;
+                return Map.of("display", "");
         }
     }
 
