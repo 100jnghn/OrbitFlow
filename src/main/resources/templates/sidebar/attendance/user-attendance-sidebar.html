@@ -1,27 +1,36 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <link rel="stylesheet" href="/css/user-sidebar/attendance-sidebar.css">
-</head>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <body>
 <ul th:fragment="menu" class="sidebar-menu">
-    <li class="sidebar-section-title">근태 관리</li>
-    <li th:classappend="${currentMenu == 'commute'} ? 'selected' : ''">
-        <a th:href="@{/view/attendance/commute}" class="sidebar-link">근태 기록 관리</a>
-    </li>
-    <li th:classappend="${currentMenu == 'monthly'} ? 'selected' : ''">
-        <a th:href="@{/view/attendance/monthly}" class="sidebar-link">월별 근태 현황</a>
-    </li>
-    <li th:classappend="${currentMenu == 'annual-leave'} ? 'selected' : ''">
-        <a th:href="@{/view/attendance/annual-leave}" class="sidebar-link">연차 발생/사용 현황</a>
+    <link rel="stylesheet" th:href="@{/css/user-sidebar/attendance-sidebar.css}">
+    <li>
+        <span class="attendance-section-title">출퇴근</span>
+        <ul class="attendance-sub-menu">
+            <li th:classappend="${currentMenu == 'commute'} ? 'selected' : ''">
+                <a th:href="@{/view/attendance/commute}">출퇴근기록</a>
+            </li>
+
+            <li th:classappend="${currentMenu == 'monthly'} ? 'selected' : ''">
+                <a th:href="@{/view/attendance/monthly}">월별 근태 현황</a>
+            </li>
+        </ul>
     </li>
 
-    <li class="sidebar-section-title">휴가/신청 관리</li>
-    <li th:classappend="${currentMenu == 'vacation-apply'} ? 'selected' : ''">
-        <a th:href="@{/attendance/vacation/apply}" class="sidebar-link">휴가/신청서 작성</a>
-    </li>
-    <li th:classappend="${currentMenu == 'vacation-status'} ? 'selected' : ''">
-        <a th:href="@{/view/attendance/other-leave}" class="sidebar-link">휴가 신청 현황</a>
+    <li>
+        <span class="attendance-section-title">휴가</span>
+        <ul class="attendance-sub-menu">
+            <li th:classappend="${currentMenu == 'annual-leave'} ? 'selected' : ''">
+                <a th:href="@{/view/attendance/annual-leave}">내 연차 현황</a>
+            </li>
+
+            <li th:classappend="${currentMenu == 'vacation-apply'} ? 'selected' : ''">
+                <a th:href="@{/attendance/vacation/apply}">휴가 신청서 작성</a>
+            </li>
+
+            <li th:classappend="${currentMenu == 'other-leave'} ? 'selected' : ''">
+                <a th:href="@{/view/attendance/other-leave}">휴가 신청 현황</a>
+            </li>
+        </ul>
     </li>
 </ul>
 </body>
