@@ -26,7 +26,7 @@ import java.util.List;
 @PreAuthorize("hasAnyRole('COMPANY_ADMIN', 'ADMIN')")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/api/admin/organizations")
 public class OrgController {
 
     private final OrgService orgService;
@@ -47,7 +47,7 @@ public class OrgController {
                 ));
     }
 
-    @GetMapping("/admin/organizations")
+    @GetMapping()
     public ResponseEntity<ResponseDto<List<OrgResDto>>> list(
             @RequestParam(defaultValue = "false") boolean includeInactive
     ) {
@@ -62,7 +62,7 @@ public class OrgController {
         );
     }
 
-    @PutMapping("/admin/organizations/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<ResponseDto<Void>> update(
             @PathVariable Long id,
             @RequestBody @Valid OrgUpdateReqDto request
@@ -73,7 +73,7 @@ public class OrgController {
         );
     }
 
-    @PutMapping("/admin/organizations/order")
+    @PutMapping("/order")
     public ResponseEntity<ResponseDto<Void>> updateOrder(
             @RequestBody @Valid OrgOrderUpdateReqDto request
     ) {
@@ -85,7 +85,7 @@ public class OrgController {
     }
 
     // 프론트에서 사용하지 않는 api -> 추후 목록에서 바로 비활성화 같은 기능용으로 일단 보류
-    @DeleteMapping("/admin/organizations/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<ResponseDto<Void>> deactivate(@PathVariable Long id) {
         Long companyId = SecurityUtils.getCompanyId();
         orgService.deactivate(companyId, id);
@@ -94,7 +94,7 @@ public class OrgController {
     }
 
     // 특정 조직 카테고리에 해당하는 조직들 조회
-    @GetMapping("/admin/organizations/by-category/{categoryId}")
+    @GetMapping("/by-category/{categoryId}")
     public ResponseEntity<ResponseDto<List<OrgResDto>>> listByCategory(
             @PathVariable Long categoryId
     ) {
@@ -108,10 +108,9 @@ public class OrgController {
     }
 
     /**
-     * 사용자가 소속한 조직 Hierarchy를 불러오는 api
-     * 사용자도 사용
+     * 사용자가 소속한 조직 Hierarchy를 불러오는 api -> 별도의 컨트롤러로 분리
      */
-    @GetMapping("/organizations/include-orgs")
+    @GetMapping("/include-orgs")
     public ResponseEntity<ResponseDto> listByIncludeOrgs() {
         log.info("[include-orgs] API called");
 
@@ -125,7 +124,7 @@ public class OrgController {
         );
     }
 
-    @GetMapping("/admin/organizations/{id}/deactivate-check")
+    @GetMapping("/{id}/deactivate-check")
     public ResponseEntity<ResponseDto<OrgDeactivateCheckResDto>> checkDeactivate(
             @PathVariable Long id
     ) {
