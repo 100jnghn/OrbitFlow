@@ -322,12 +322,15 @@ async function loadBoardList(page = 0) {
 
         // 검색 조건 추가
         const dateFilter = document.getElementById('dateFilter').value;
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        const startDate = startDateInput?.value;
+        const endDate = endDateInput?.value;
         const searchType = document.getElementById('searchType').value;
         const keyword = document.getElementById('searchKeyword').value;
 
-        if (dateFilter === 'custom' && startDate && endDate) {
+        // 기간 조건: custom이거나 today/week/month일 때 날짜가 설정된 경우 전달
+        if (startDate && endDate) {
             params.append('startDate', startDate);
             params.append('endDate', endDate);
         }
@@ -519,7 +522,7 @@ function searchBoards() {
     loadBoardList(currentPage);
 }
 
-// 날짜 필터 변경
+// 날짜 필터 변경 및 검색 입력 엔터 키 이벤트
 document.addEventListener('DOMContentLoaded', function() {
     const dateFilter = document.getElementById('dateFilter');
     if (dateFilter) {
@@ -550,6 +553,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     startDateInput.value = startDate.toISOString().split('T')[0];
                     endDateInput.value = today.toISOString().split('T')[0];
                 }
+            }
+        });
+    }
+    
+    // 검색 입력 필드에 엔터 키 이벤트 추가
+    const searchKeyword = document.getElementById('searchKeyword');
+    if (searchKeyword) {
+        searchKeyword.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchBoards();
             }
         });
     }

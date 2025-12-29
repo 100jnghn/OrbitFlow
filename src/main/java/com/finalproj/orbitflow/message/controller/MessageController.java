@@ -10,10 +10,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,6 +31,10 @@ public class MessageController {
             @AuthenticationPrincipal SecurityUser user,
             @RequestParam(required = false, defaultValue = "INBOX") MessageFolderType folder,
             @RequestParam(required = false, defaultValue = "false") boolean archived,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String searchType,
+            @RequestParam(required = false) String keyword,
             Pageable pageable
     ) {
         Page<MessageResDto.ListItem> result = messageService.getMessageList(
@@ -35,6 +42,10 @@ public class MessageController {
                 user.getEmployeeId(),
                 folder,
                 archived,
+                startDate,
+                endDate,
+                searchType,
+                keyword,
                 pageable
         );
 

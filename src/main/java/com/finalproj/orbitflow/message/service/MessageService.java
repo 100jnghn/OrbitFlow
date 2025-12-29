@@ -10,14 +10,21 @@ import com.finalproj.orbitflow.message.dto.MessageResDto;
 import com.finalproj.orbitflow.message.entity.Message;
 import com.finalproj.orbitflow.message.entity.MessageRecipient;
 import com.finalproj.orbitflow.message.enums.MessageFolderType;
+import com.finalproj.orbitflow.message.enums.MessageSearchType;
 import com.finalproj.orbitflow.message.repository.MessageRecipientRepository;
+import com.finalproj.orbitflow.message.repository.MessageRecipientSpecifications;
 import com.finalproj.orbitflow.message.repository.MessageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -35,27 +42,117 @@ public class MessageService {
             Long employeeId,
             MessageFolderType folder,
             boolean archived,
+            LocalDate startDate,
+            LocalDate endDate,
+            String searchTypeStr,
+            String keyword,
             Pageable pageable
     ) {
-        Page<MessageRecipient> page = archived
-                ? messageRecipientRepository.findByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedTrueOrderByCreatedAtDesc(
-                companyId, employeeId, pageable
-        )
-                : messageRecipientRepository.findByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedFalseAndMessageFolderTypeOrderByCreatedAtDesc(
-                companyId, employeeId, folder, pageable
-        );
+        // searchType 파싱
+        MessageSearchType searchType = MessageSearchType.from(searchTypeStr);
+        
+        // 기간 조건 변환 (LocalDate -> Instant)
+        ZoneId zoneId = ZoneId.systemDefault();
+        Instant startInstant = (startDate != null) ? startDate.atStartOfDay(zoneId).toInstant() : null;
+        Instant endExclusiveInstant = (endDate != null) ? endDate.plusDays(1).atStartOfDay(zoneId).toInstant() : null;
+        
+        // 검색어나 기간 조건이 있으면 Specification 사용
+        boolean hasSearch = (keyword != null && !keyword.isBlank());
+        boolean hasDateFilter = (startDate != null || endDate != null);
+        
+        Page<MessageRecipient> page;
+        if (archived) {
+            if (hasSearch || hasDateFilter) {
+                Specification<MessageRecipient> spec = MessageRecipientSpecifications.archiveSpec(
+                        companyId, employeeId, startInstant, endExclusiveInstant, searchType, keyword
+                );
+                // 정렬을 pageable에 포함
+                pageable = org.springframework.data.domain.PageRequest.of(
+                        pageable.getPageNumber(),
+                        pageable.getPageSize(),
+                        Sort.by(Sort.Direction.DESC, "createdAt")
+                );
+                page = messageRecipientRepository.findAll(spec, pageable);
+            } else {
+                page = messageRecipientRepository.findByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedTrueOrderByCreatedAtDesc(
+                        companyId, employeeId, pageable
+                );
+            }
+        } else {
+            if (hasSearch || hasDateFilter) {
+                Specification<MessageRecipient> spec = MessageRecipientSpecifications.listSpec(
+                        companyId, employeeId, folder, startInstant, endExclusiveInstant, searchType, keyword
+                );
+                // 정렬을 pageable에 포함
+                pageable = org.springframework.data.domain.PageRequest.of(
+                        pageable.getPageNumber(),
+                        pageable.getPageSize(),
+                        Sort.by(Sort.Direction.DESC, "createdAt")
+                );
+                page = messageRecipientRepository.findAll(spec, pageable);
+            } else {
+                page = messageRecipientRepository.findByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedFalseAndMessageFolderTypeOrderByCreatedAtDesc(
+                        companyId, employeeId, folder, pageable
+                );
+            }
+        }
 
         // peerName 정책:
         // - INBOX: senderName
-        // - SENT: "수신자 N명" 또는 대표 1명
+        // - SENT: 수신자 이름 ("외 N명" 형태로 표시)
         return page.map(mr -> {
             String peerName;
+            String recipientName = null;
+            
             if (mr.getMessageFolderType() == MessageFolderType.INBOX) {
                 peerName = mr.getMessage().getSender().getName();
+                // 보관함에서 받은 메시지인 경우, 현재 사용자가 수신자
+                if (archived) {
+                    recipientName = mr.getEmployee().getName();
+                }
             } else {
-                peerName = "수신자"; // 필요하면 나중에 “N명” 같은 식으로 확장
+                // SENT: 보낸 메시지함에서는 수신자 이름 사용
+                List<MessageRecipient> recipients = messageRecipientRepository
+                        .findByMessage_IdAndMessageFolderTypeAndDeletedAtIsNull(
+                                mr.getMessage().getId(), MessageFolderType.INBOX);
+                if (!recipients.isEmpty()) {
+                    String firstRecipient = recipients.get(0).getEmployee().getName();
+                    if (recipients.size() > 1) {
+                        peerName = firstRecipient + " 외 " + (recipients.size() - 1) + "명";
+                    } else {
+                        peerName = firstRecipient;
+                    }
+                    // 보관함에서 보낸 메시지인 경우, recipientName도 동일하게 설정
+                    if (archived) {
+                        recipientName = peerName;
+                    }
+                } else {
+                    peerName = "수신자 없음";
+                    if (archived) {
+                        recipientName = peerName;
+                    }
+                }
             }
-            return MessageResDto.ListItem.from(mr, peerName);
+            
+            MessageResDto.ListItem item = MessageResDto.ListItem.from(mr, peerName);
+            // 보관함인 경우 recipientName 설정
+            if (archived && recipientName != null) {
+                // Builder 패턴이므로 새로운 객체 생성 필요
+                return MessageResDto.ListItem.builder()
+                        .messageId(item.getMessageId())
+                        .recipientId(item.getRecipientId())
+                        .folderType(item.getFolderType())
+                        .archived(item.isArchived())
+                        .read(item.isRead())
+                        .readAt(item.getReadAt())
+                        .title(item.getTitle())
+                        .peerName(item.getPeerName())
+                        .senderName(item.getSenderName())
+                        .recipientName(recipientName)
+                        .createdAt(item.getCreatedAt())
+                        .build();
+            }
+            return item;
         });
     }
 
