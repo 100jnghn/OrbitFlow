@@ -108,6 +108,7 @@ CREATE TABLE position_category
     id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
     company_id         BIGINT      NOT NULL,
     org_category_id    BIGINT      NOT NULL, -- 조직 카테고리 귀속
+    parent_position_id BIGINT      NULL,     -- 상위 직책 (self join)
     name               VARCHAR(50) NOT NULL, -- 사장 / 본부장 / 부장 / 팀장
     order_index        INT,                  -- 비활성 항목 때문에 NULL 허용
     is_head            BOOLEAN     NOT NULL DEFAULT FALSE,
@@ -134,7 +135,12 @@ CREATE TABLE position_category
         FOREIGN KEY (company_id) REFERENCES company (id),
 
     CONSTRAINT fk_pos_cat_org_category
-        FOREIGN KEY (org_category_id) REFERENCES org_category (id)
+        FOREIGN KEY (org_category_id) REFERENCES org_category (id),
+
+    CONSTRAINT fk_pos_cat_parent
+        FOREIGN KEY (parent_position_id)
+            REFERENCES position_category (id)
+            ON DELETE SET NULL
 ) ENGINE = InnoDB;
 
 

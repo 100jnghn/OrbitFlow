@@ -87,7 +87,10 @@
                 <a th:href="@{/view/admin/organizations}">조직 관리</a>
             </li>
             <li th:classappend="${currentMenu == 'rank'} ? 'selected' : ''">
-                <a th:href="@{/view/admin/ranks}">조직 관리</a>
+                <a th:href="@{/view/admin/ranks}">직급 관리</a>
+            </li>
+            <li th:classappend="${currentMenu == 'position-category'} ? 'selected' : ''">
+                <a th:href="@{/view/admin/position-categories}">직책 관리</a>
             </li>
         </ul>
     </li>

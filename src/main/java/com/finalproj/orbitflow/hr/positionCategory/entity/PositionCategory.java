@@ -21,14 +21,14 @@ import lombok.NoArgsConstructor;
 @Table(
         name = "position_category",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"company_id", "name"})
+                @UniqueConstraint(columnNames = {"company_id", "org_category_id", "name"})
         }
 )
 public class PositionCategory extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // 카테고리 ID
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
@@ -37,6 +37,10 @@ public class PositionCategory extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "org_category_id", nullable = false)
     private OrgCategory orgCategory;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_position_id")
+    private PositionCategory parent;
 
     @Column(nullable = false, length = 50)
     private String name; // 본부장 / 팀장 등
@@ -55,27 +59,43 @@ public class PositionCategory extends BaseEntity {
     public static PositionCategory create(
             Company company,
             OrgCategory orgCategory,
+            PositionCategory parent,
             String name,
-            int orderIndex,
+            Integer orderIndex,
             boolean isHead
     ) {
-        PositionCategory category = new PositionCategory();
-        category.company = company;
-        category.orgCategory = orgCategory;
-        category.name = name;
-        category.orderIndex = orderIndex;
-        category.isHead = isHead;
-        category.isActive = true;
-        return category;
+        PositionCategory pc = new PositionCategory();
+        pc.company = company;
+        pc.orgCategory = orgCategory;
+        pc.parent = parent;
+        pc.name = name;
+        pc.orderIndex = orderIndex;
+        pc.isHead = isHead;
+        pc.isActive = true;
+        return pc;
+    }
+
+    /* ========= 상태 변경 ========= */
+    public void activate(Integer newOrderIndex) {
+        this.isActive = true;
+        this.orderIndex = newOrderIndex;
+    }
+
+    public void deactivate() {
+        this.isActive = false;
+        this.orderIndex = null;
     }
 
     /* ========= 수정 ========= */
-    public void update(String name, Boolean isActive) {
+    public void updateName(String name) {
         this.name = name;
-        this.isActive = isActive;
     }
 
     public void updateOrderIndex(Integer orderIndex) {
         this.orderIndex = orderIndex;
+    }
+
+    public void updateParent(PositionCategory parent) {
+        this.parent = parent;
     }
 }

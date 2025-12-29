@@ -68,36 +68,72 @@
                 </button>
             </div>
 
-            <div class="modal-body">
+            <div class="modal-body org-modal-grid">
+                <!-- ================= 좌측: 조직 정보 (기존 코드 그대로) ================= -->
+                <div class="org-form-panel">
+                    <div class="form-group">
+                        <label class="form-label">조직 카테고리</label>
+                        <select id="categorySelect" class="form-input"></select>
+                    </div>
 
-                <div class="form-group">
-                    <label class="form-label">조직 카테고리</label>
-                    <select id="categorySelect" class="form-input"></select>
+                    <div class="form-group">
+                        <label class="form-label">조직명</label>
+                        <input id="orgName" class="form-input" type="text" placeholder="예: 인사팀">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">상위 조직</label>
+                        <select id="parentOrgSelect" class="form-input"></select>
+                    </div>
+
+                    <div class="form-group toggle-row">
+                        <span class="toggle-text">사용 여부</span>
+                        <label class="switch">
+                            <input type="checkbox" id="activeToggle">
+                            <span class="slider"></span>
+                        </label>
+                        <span id="activeLabel">사용</span>
+                    </div>
+
+                    <div class="form-help" id="inactiveHelp" style="display:none;">
+                        비활성화하려면 해당 조직에 소속된 사원이 없어야 합니다.
+                    </div>
+
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">조직명</label>
-                    <input id="orgName" class="form-input" type="text" placeholder="예: 인사팀">
-                </div>
+                <!-- ================= 우측: 직책 정책 ================= -->
+                <section class="org-policy-panel">
 
-                <div class="form-group">
-                    <label class="form-label">상위 조직</label>
-                    <select id="parentOrgSelect" class="form-input"></select>
-                </div>
+                    <h3>직책 사용 정책</h3>
+                    <p>이 조직에서 사용할 직책을 선택하세요.</p>
 
-                <div class="form-group toggle-row">
-                    <span class="toggle-text">사용 여부</span>
-                    <label class="switch">
-                        <input type="checkbox" id="activeToggle">
-                        <span class="slider"></span>
-                    </label>
-                    <span id="activeLabel">사용</span>
-                </div>
+                    <div class="policy-toolbar">
+                        <input id="policyKeyword" placeholder="직책명 검색">
+                        <select id="policyHeadFilter">
+                            <option value="">전체</option>
+                            <option value="HEAD">HEAD</option>
+                            <option value="NORMAL">일반</option>
+                        </select>
+                    </div>
 
-                <div class="form-help" id="inactiveHelp" style="display:none;">
-                    비활성화하려면 해당 조직에 소속된 사원이 없어야 합니다.
-                </div>
+                    <table class="policy-table">
+                        <thead>
+                        <tr>
+                            <th>직책명</th>
+                            <th>부여 인원</th>
+                            <th>사용</th>
+                        </tr>
+                        </thead>
+                        <tbody id="policyTableBody">
+                        <!-- JS 렌더링 -->
+                        </tbody>
+                    </table>
 
+                    <div class="form-help">
+                        비활성 직책은 선택할 수 없습니다.
+                    </div>
+
+                </section>
             </div>
 
             <div class="modal-actions">

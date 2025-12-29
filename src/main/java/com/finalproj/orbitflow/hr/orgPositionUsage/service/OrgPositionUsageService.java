@@ -96,11 +96,11 @@ public class OrgPositionUsageService {
             }
 
             // 조직 카테고리 일치 검증
-            if (!category.getOrgCategory().getId().equals(org.getCategoryId())) {
-                throw new InvalidStateException(
-                        "해당 조직 유형에서 사용할 수 없는 직책 카테고리입니다."
-                );
-            }
+//            if (!category.getOrgCategory().getId().equals(org.getCategoryId())) {
+//                throw new InvalidStateException(
+//                        "해당 조직 유형에서 사용할 수 없는 직책 카테고리입니다."
+//                );
+//            }
 
             repository.save(
                     OrgPositionUsage.create(company, org, category)
