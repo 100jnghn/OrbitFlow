@@ -137,7 +137,6 @@ public class ScheduleController {
      * front page의 캘린더에서 날짜를 선택해서 호출
      * 해당 날짜에 해당하는 전사, 개인, 조직 일정 모두 조회
      *
-     * 사용 안 할 수도 있음
      */
     @GetMapping("/schedules/schedule")
     public ResponseEntity<ResponseDto> getDateSchedules(

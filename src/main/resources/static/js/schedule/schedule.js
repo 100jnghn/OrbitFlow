@@ -9,6 +9,7 @@
     let showCompany = true; // 전사 일정 표시 여부
     let orgList = [];
     let isSubmitting = false; // 제출 중 플래그 (중복 제출 방지)
+    let selectedDate = null; // 선택된 날짜
 
     // 초기화
     document.addEventListener('DOMContentLoaded', function () {
@@ -19,6 +20,7 @@
         document.getElementById('companyToggle').classList.toggle('active', showCompany);
         loadOrganizations();
         loadSchedules();
+        loadDateSchedules(currentDate)
         renderCalendar();
     });
 
@@ -27,12 +29,14 @@
         // 이전/다음 달 버튼
         document.getElementById('prevMonthBtn').addEventListener('click', () => {
             currentDate.setMonth(currentDate.getMonth() - 1);
+            selectedDate = null; // 날짜 선택 초기화
             renderCalendar();
             loadSchedules();
         });
 
         document.getElementById('nextMonthBtn').addEventListener('click', () => {
             currentDate.setMonth(currentDate.getMonth() + 1);
+            selectedDate = null; // 날짜 선택 초기화
             renderCalendar();
             loadSchedules();
         });
@@ -40,6 +44,7 @@
         // 오늘 버튼
         document.getElementById('todayBtn').addEventListener('click', () => {
             currentDate = new Date();
+            selectedDate = null; // 날짜 선택 초기화
             renderCalendar();
             loadSchedules();
         });
@@ -56,11 +61,7 @@
             toggleCompany();
         });
 
-        // 조직 필터
-        document.getElementById('orgFilter').addEventListener('change', (e) => {
-            selectedOrgIds = Array.from(e.target.selectedOptions).map(opt => opt.value);
-            filterAndRenderSchedules();
-        });
+        // 조직 필터는 loadOrganizations에서 동적으로 추가됨
 
         // 폼 제출
         document.getElementById('scheduleForm').addEventListener('submit', handleScheduleSubmit);
@@ -77,8 +78,12 @@
                 orgSelect.disabled = true;
                 orgSelect.value = '';
             } else {
-                // 체크 해제 시 조직 활성화
+                // 체크 해제 시 조직 활성화 및 첫 번째 조직으로 설정
                 orgSelect.disabled = false;
+                const childOrgs = orgList.filter(org => org.parentOrgId !== null);
+                if (childOrgs.length > 0) {
+                    orgSelect.value = childOrgs[0].id;
+                }
             }
         });
     }
@@ -105,11 +110,14 @@
     // 조직 목록 로드
     async function loadOrganizations() {
         try {
-            const response = await apiFetch('/api/admin/organizations/include-orgs');
+            const response = await apiFetch('/api/organizations/include-orgs');
             if (!response.ok) {
                 if (response.status === 401) {
                     location.href = '/login';
                     return;
+                }
+                if (response.status === 403) {
+                    throw new Error("권한 없음");
                 }
                 throw new Error('조직 목록을 불러오는데 실패했습니다.');
             }
@@ -119,19 +127,33 @@
 
             const childOrgs = orgList.filter(org => org.parentOrgId !== null);
 
-            // 조직 필터 드롭다운
+            // 조직 필터 체크박스 리스트
             const orgFilter = document.getElementById('orgFilter');
             orgFilter.innerHTML = childOrgs
-                .map(org => `<option value="${org.id}">${org.name}</option>`)
+                .map(org => `
+                    <label class="org-filter-checkbox-item">
+                        <input type="checkbox" value="${org.id}" class="org-filter-checkbox">
+                        <span>${org.name}</span>
+                    </label>
+                `)
                 .join('');
+
+            // 체크박스 이벤트 리스너 추가
+            orgFilter.querySelectorAll('.org-filter-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', handleOrgFilterChange);
+            });
 
             // 일정 등록용 조직 드롭다운
             const orgSelect = document.getElementById('scheduleOrg');
-            orgSelect.innerHTML =
-                '<option value="">선택 안 함</option>' +
-                childOrgs
-                    .map(org => `<option value="${org.id}">${org.name}</option>`)
-                    .join('');
+            const orgOptions = childOrgs
+                .map(org => `<option value="${org.id}">${org.name}</option>`)
+                .join('');
+            orgSelect.innerHTML = orgOptions;
+            
+            // 기본값을 첫 번째 조직으로 설정
+            if (childOrgs.length > 0) {
+                orgSelect.value = childOrgs[0].id;
+            }
         } catch (error) {
             console.error('Error loading organizations:', error);
         }
@@ -142,6 +164,7 @@
     function togglePersonal() {
         showPersonal = !showPersonal;
         document.getElementById('personalToggle').classList.toggle('active', showPersonal);
+        selectedDate = null; // 날짜 선택 초기화
         loadSchedules();
     }
 
@@ -149,7 +172,44 @@
     function toggleCompany() {
         showCompany = !showCompany;
         document.getElementById('companyToggle').classList.toggle('active', showCompany);
+        selectedDate = null; // 날짜 선택 초기화
         loadSchedules();
+    }
+
+    // 조직 필터 변경 핸들러
+    function handleOrgFilterChange() {
+        const checkedBoxes = document.querySelectorAll('#orgFilter .org-filter-checkbox:checked');
+        selectedOrgIds = Array.from(checkedBoxes).map(cb => cb.value);
+        selectedDate = null; // 날짜 선택 초기화
+        loadSchedules();
+    }
+
+    // 날짜별 일정 로드
+    async function loadDateSchedules(date) {
+        try {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
+
+            const response = await apiFetch(`/api/schedules/schedule?date=${dateStr}`);
+            if (!response.ok) {
+                if (response.status === 401) {
+                    location.href = '/login';
+                    return;
+                }
+                throw new Error('일정을 불러오는데 실패했습니다.');
+            }
+
+            const result = await response.json();
+            const dateSchedules = result.data || [];
+
+            // 선택된 날짜의 일정만 목록에 표시
+            renderScheduleList(dateSchedules);
+        } catch (error) {
+            console.error('Error loading date schedules:', error);
+            alert('일정을 불러오는데 실패했습니다.');
+        }
     }
 
     // 일정 로드
@@ -164,7 +224,7 @@
             if (showPersonal) {
                 try {
                     const personalResponse = await apiFetch(`/api/schedules/personal?year=${year}&month=${month}`);
-                    console.log("전사 일정 조회 요청")
+                    console.log("개인 일정 조회 요청")
 
                     if (personalResponse.ok) {
                         const personalResult = await personalResponse.json();
@@ -189,6 +249,22 @@
                     }
                 } catch (error) {
                     console.error('Error loading company schedules:', error);
+                }
+            }
+
+            // 조직 일정 로드 (체크된 조직이 있을 때)
+            if (selectedOrgIds.length > 0) {
+                try {
+                    const orgIdsParam = selectedOrgIds.map(id => `orgIds=${id}`).join('&');
+                    const orgResponse = await apiFetch(`/api/schedules/organizations?${orgIdsParam}&year=${year}&month=${month}`);
+                    if (orgResponse.ok) {
+                        const orgResult = await orgResponse.json();
+                        if (orgResult.data) {
+                            allSchedules.push(...orgResult.data);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading organization schedules:', error);
                 }
             }
 
@@ -236,7 +312,7 @@
         document.getElementById('monthCount').textContent = monthCount;
     }
 
-// 필터링 및 렌더링
+    // 필터링 및 렌더링
     function filterAndRenderSchedules() {
         let filtered = [...schedules];
 
@@ -244,24 +320,26 @@
         filtered = filtered.filter(s => {
             if (s.company) {
                 return showCompany;
+            } else if (s.orgId) {
+                // 조직 일정은 항상 표시 (이미 selectedOrgIds로 필터링됨)
+                return true;
             } else {
                 return showPersonal;
             }
         });
 
-        // 조직 필터 적용
-        if (selectedOrgIds.length > 0) {
-            filtered = filtered.filter(s => selectedOrgIds.includes(String(s.orgId)));
-        }
-
         renderCalendar(filtered);
-        renderScheduleList(filtered);
+        
+        // // 날짜가 선택되지 않은 경우에만 필터링된 일정 표시
+        // if (!selectedDate) {
+        //     renderScheduleList(filtered);
+        // }
     }
 
-// 캘린더 렌더링
+    // 캘린더 렌더링
     function renderCalendar(filteredSchedules = schedules) {
         console.log("캘린더 로드");
-        
+
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
 
@@ -330,10 +408,11 @@
                 dayElement.appendChild(scheduleItems);
             }
 
-            dayElement.addEventListener('click', () => {
+            dayElement.addEventListener('click', (e) => {
                 if (date.getMonth() === month) {
-                    currentDate = new Date(date);
-                    renderCalendar(filteredSchedules);
+                    e.stopPropagation();
+                    selectedDate = new Date(date);
+                    loadDateSchedules(selectedDate);
                 }
             });
 
@@ -345,6 +424,16 @@
     function createScheduleItem(schedule) {
         const item = document.createElement('div');
         item.className = 'schedule-item';
+        
+        // 일정 유형에 따라 클래스 추가
+        if (schedule.company) {
+            item.classList.add('company');
+        } else if (schedule.orgId) {
+            item.classList.add('organization');
+        } else {
+            item.classList.add('personal');
+        }
+        
         item.textContent = schedule.title;
         item.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -376,6 +465,15 @@
     function createScheduleListItem(schedule) {
         const item = document.createElement('div');
         item.className = 'schedule-item-list';
+        
+        // 일정 유형에 따라 클래스 추가
+        if (schedule.company) {
+            item.classList.add('company');
+        } else if (schedule.orgId) {
+            item.classList.add('organization');
+        } else {
+            item.classList.add('personal');
+        }
 
         const content = document.createElement('div');
         content.className = 'schedule-item-content';
@@ -395,8 +493,8 @@
         if (schedule.company) {
             org.textContent = '전사 일정';
         } else if (schedule.orgId) {
-            const orgData = orgList.find(o => o.orgId === schedule.orgId);
-            org.textContent = orgData ? orgData.orgName : '조직 일정';
+            const orgData = orgList.find(o => o.id === schedule.orgId);
+            org.textContent = orgData ? orgData.name : '조직 일정';
         } else {
             org.textContent = '개인 일정';
         }
@@ -405,16 +503,19 @@
         content.appendChild(time);
         content.appendChild(org);
 
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn-delete-schedule';
-        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-        deleteBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            deleteSchedule(schedule.scheduleId);
-        });
-
         item.appendChild(content);
-        item.appendChild(deleteBtn);
+
+        // 전사 일정이 아닌 경우에만 삭제 버튼 추가
+        if (!schedule.company) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn-delete-schedule';
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteSchedule(schedule.scheduleId);
+            });
+            item.appendChild(deleteBtn);
+        }
 
         item.addEventListener('click', () => {
             openScheduleDetailModal(schedule);
@@ -456,8 +557,13 @@
 
         // 개인일정 체크박스 초기화
         document.getElementById('isPersonalSchedule').checked = false;
-        document.getElementById('scheduleOrg').disabled = false;
-        document.getElementById('scheduleOrg').value = '';
+        const orgSelect = document.getElementById('scheduleOrg');
+        orgSelect.disabled = false;
+        // 기본값을 첫 번째 조직으로 설정
+        const childOrgs = orgList.filter(org => org.parentOrgId !== null);
+        if (childOrgs.length > 0) {
+            orgSelect.value = childOrgs[0].id;
+        }
 
         updateTitleCharCount();
         updateDescriptionCharCount();
@@ -470,27 +576,27 @@
         // 세부 정보 표시
         document.getElementById('detailTitle').textContent = schedule.title || '-';
         document.getElementById('detailDescription').textContent = schedule.description || '-';
-        
+
         const start = new Date(schedule.startAt);
         const end = new Date(schedule.endAt);
         document.getElementById('detailStartAt').textContent = formatDetailDateTime(start);
         document.getElementById('detailEndAt').textContent = formatDetailDateTime(end);
-        
+
         const statusText = schedule.status === 'RELEASE' ? '공개' : '보류';
         document.getElementById('detailStatus').textContent = statusText;
-        
+
         let typeText = '';
         console.log(schedule.company);
         if (schedule.company) {
             typeText = '전사 일정';
         } else if (schedule.orgId) {
-            const orgData = orgList.find(o => o.orgId === schedule.orgId);
+            const orgData = orgList.find(o => o.id === schedule.orgId);
             typeText = orgData ? `${orgData.name} 일정` : '조직 일정';
         } else {
             typeText = '개인 일정';
         }
         document.getElementById('detailType').textContent = typeText;
-        
+
         // 삭제 버튼 표시/숨김 처리
         const deleteBtn = document.getElementById('detailDeleteBtn');
         if (schedule.company) {
@@ -504,10 +610,10 @@
                 deleteSchedule(schedule.scheduleId);
             };
         }
-        
+
         document.getElementById('scheduleDetailModal').style.display = 'block';
     }
-    
+
     // 세부 정보용 날짜/시간 포맷
     function formatDetailDateTime(date) {
         const year = date.getFullYear();
@@ -517,7 +623,7 @@
         const minutes = String(date.getMinutes()).padStart(2, '0');
         return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}`;
     }
-    
+
     // 세부 정보 모달 닫기
     function closeScheduleDetailModal() {
         document.getElementById('scheduleDetailModal').style.display = 'none';
@@ -527,7 +633,7 @@
     function closeScheduleModal() {
         document.getElementById('scheduleModal').style.display = 'none';
     }
-    
+
     // 전역 스코프에 함수 노출 (HTML onclick에서 사용)
     window.closeScheduleDetailModal = closeScheduleDetailModal;
     window.closeScheduleModal = closeScheduleModal;
@@ -572,10 +678,22 @@
         }
     }
 
-// 일정 제출 처리
+    // 날짜 변환 함수
+    function toLocalDateTimeString(date) {
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        const hh = String(date.getHours()).padStart(2, '0');
+        const mi = String(date.getMinutes()).padStart(2, '0');
+        const ss = String(date.getSeconds()).padStart(2, '0');
+
+        return `${yyyy}-${mm}-${dd}T${hh}:${mi}:${ss}`;
+    }
+
+    // 일정 제출 처리
     async function handleScheduleSubmit(e) {
         e.preventDefault();
-        
+
         // 중복 제출 방지
         if (isSubmitting) {
             return;
@@ -591,8 +709,16 @@
         const endHour = document.getElementById('scheduleEndHour').value;
         const endMinute = document.getElementById('scheduleEndMinute').value;
         const isPersonal = document.getElementById('isPersonalSchedule').checked;
+
         const orgId = isPersonal ? '' : document.getElementById('scheduleOrg').value;
+        let orgCategoryId = null;
         
+        // 조직을 선택한 경우 해당 조직의 categoryId 가져오기
+        if (orgId) {
+            const selectedOrg = orgList.find(org => org.id == orgId);
+            orgCategoryId = selectedOrg ? selectedOrg.categoryId : null;
+        }
+
         // 상태는 항상 'RELEASE' (공개)로 고정
         const status = 'RELEASE';
 
@@ -624,8 +750,8 @@
             return;
         }
 
-        const startAt = startDateTime.toISOString().slice(0, 19);
-        const endAt = endDateTime.toISOString().slice(0, 19);
+        const startAt = toLocalDateTimeString(startDateTime);
+        const endAt = toLocalDateTimeString(endDateTime);
 
         const scheduleData = {
             isCompany: false,
@@ -634,6 +760,7 @@
             startAt: startAt,
             endAt: endAt,
             status: status,
+            orgCategoryId: orgCategoryId ? parseInt(orgCategoryId) : null,
             orgId: orgId ? parseInt(orgId) : null
         };
 

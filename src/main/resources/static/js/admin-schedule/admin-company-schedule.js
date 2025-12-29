@@ -26,7 +26,7 @@ const statusNameMap = {
 };
 
 // 페이지 로드 시 초기화
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     initializePage();
     setupEventListeners();
     loadSchedules();
@@ -49,7 +49,7 @@ function setupEventListeners() {
     // 상태 필터 변경
     const statusFilter = document.getElementById('statusFilter');
     if (statusFilter) {
-        statusFilter.addEventListener('change', function() {
+        statusFilter.addEventListener('change', function () {
             currentStatus = this.value;
             loadSchedules();
         });
@@ -58,7 +58,7 @@ function setupEventListeners() {
     // 이전 달 버튼
     const prevMonthBtn = document.getElementById('prevMonth');
     if (prevMonthBtn) {
-        prevMonthBtn.addEventListener('click', function() {
+        prevMonthBtn.addEventListener('click', function () {
             navigateMonth(-1);
         });
     }
@@ -66,7 +66,7 @@ function setupEventListeners() {
     // 다음 달 버튼
     const nextMonthBtn = document.getElementById('nextMonth');
     if (nextMonthBtn) {
-        nextMonthBtn.addEventListener('click', function() {
+        nextMonthBtn.addEventListener('click', function () {
             navigateMonth(1);
         });
     }
@@ -74,7 +74,7 @@ function setupEventListeners() {
     // 오늘 버튼
     const btnToday = document.getElementById('btnToday');
     if (btnToday) {
-        btnToday.addEventListener('click', function() {
+        btnToday.addEventListener('click', function () {
             goToToday();
         });
     }
@@ -82,7 +82,7 @@ function setupEventListeners() {
     // 일정 등록 버튼
     const btnAddSchedule = document.getElementById('btnAddSchedule');
     if (btnAddSchedule) {
-        btnAddSchedule.addEventListener('click', function() {
+        btnAddSchedule.addEventListener('click', function () {
             openAddScheduleModal();
         });
     }
@@ -93,7 +93,7 @@ function setupEventListeners() {
  */
 function navigateMonth(direction) {
     currentMonth += direction;
-    
+
     if (currentMonth > 12) {
         currentMonth = 1;
         currentYear++;
@@ -101,7 +101,7 @@ function navigateMonth(direction) {
         currentMonth = 12;
         currentYear--;
     }
-    
+
     updateMonthDisplay();
     loadSchedules();
 }
@@ -133,9 +133,9 @@ function updateMonthDisplay() {
 async function loadSchedules() {
     try {
         showLoading();
-        
+
         const url = `${API_BASE_URL}?status=${currentStatus}&year=${currentYear}&month=${currentMonth}&isWeekly=false`;
-        
+
         const response = await apiFetch(url, {
             method: 'GET',
             headers: {
@@ -152,17 +152,17 @@ async function loadSchedules() {
         }
 
         const result = await response.json();
-        
+
         // ResponseDto 구조에서 data 추출
         schedules = result.data || [];
-        
+
         if (!Array.isArray(schedules)) {
             schedules = [];
         }
 
         renderCalendar();
         renderScheduleList();
-        
+
     } catch (error) {
         console.error('Error loading schedules:', error);
         if (error.message !== 'SESSION_EXPIRED') {
@@ -189,7 +189,7 @@ function renderCalendar() {
 
     // 이전 달의 마지막 날들
     const prevMonthLastDay = new Date(currentYear, currentMonth - 1, 0).getDate();
-    
+
     // 오늘 날짜
     const today = new Date();
     const isCurrentMonth = today.getFullYear() === currentYear && today.getMonth() + 1 === currentMonth;
@@ -261,15 +261,15 @@ function getSchedulesForDate(date) {
     if (!schedules || schedules.length === 0) return [];
 
     const dateStr = formatDateForComparison(date);
-    
+
     return schedules.filter(schedule => {
         const startAt = new Date(schedule.startAt);
         const endAt = new Date(schedule.endAt);
-        
+
         // 시작일과 종료일을 날짜만 비교
         const scheduleStartDate = formatDateForComparison(startAt);
         const scheduleEndDate = formatDateForComparison(endAt);
-        
+
         // 해당 날짜가 일정 기간 내에 있는지 확인
         return dateStr >= scheduleStartDate && dateStr <= scheduleEndDate;
     });
@@ -291,7 +291,7 @@ function formatDateForComparison(date) {
 function createScheduleItem(schedule, date) {
     const scheduleItem = document.createElement('div');
     scheduleItem.className = 'schedule-item';
-    
+
     const status = schedule.status || 'ETC';
     const statusClass = statusColorMap[status] || 'etc';
     scheduleItem.classList.add(statusClass);
@@ -302,7 +302,7 @@ function createScheduleItem(schedule, date) {
     const currentDate = formatDateForComparison(date);
     const scheduleStartDate = formatDateForComparison(startAt);
     const scheduleEndDate = formatDateForComparison(endAt);
-    
+
     if (currentDate !== scheduleStartDate) {
         scheduleItem.classList.add('multi-day');
     }
@@ -311,7 +311,7 @@ function createScheduleItem(schedule, date) {
     scheduleItem.title = `${schedule.title || '제목 없음'}\n${formatDateTime(schedule.startAt)} ~ ${formatDateTime(schedule.endAt)}`;
 
     // 클릭 이벤트 (수정 모달 열기)
-    scheduleItem.addEventListener('click', function(e) {
+    scheduleItem.addEventListener('click', function (e) {
         e.stopPropagation();
         openEditScheduleModal(schedule);
     });
@@ -377,7 +377,7 @@ function createScheduleListItem(schedule) {
         </button>
     `;
 
-    item.addEventListener('click', function(e) {
+    item.addEventListener('click', function (e) {
         // 삭제 버튼 클릭이 아닐 때만 수정 모달 열기
         if (!e.target.closest('.btn-delete-schedule')) {
             openEditScheduleModal(schedule);
@@ -469,14 +469,14 @@ function roundToNearestTen(minute) {
  */
 function formatDateTime(dateTimeString) {
     if (!dateTimeString) return '-';
-    
+
     const date = new Date(dateTimeString);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
-    
+
     return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
@@ -529,41 +529,41 @@ async function openAddScheduleModal() {
 
     // 폼 초기화
     document.getElementById('scheduleForm').reset();
-    
+
     // 시간/분 select 옵션 생성
     initializeTimeSelects();
-    
+
     // 오늘 날짜로 기본값 설정
     const today = new Date();
     const todayStr = formatDateForInput(today);
     document.getElementById('scheduleStartDate').value = todayStr;
     document.getElementById('scheduleEndDate').value = todayStr;
-    
+
     // 기본 시간 설정 (09:00, 18:00)
     document.getElementById('scheduleStartHour').value = '09';
     document.getElementById('scheduleStartMinute').value = '00';
     document.getElementById('scheduleEndHour').value = '18';
     document.getElementById('scheduleEndMinute').value = '00';
-    
+
     // 조직 카테고리를 '회사'로 고정
     await setCompanyOrgCategory();
-    
+
     // 설명 필드 글자 수 초기화
     updateDescriptionCharCount();
-    
+
     // 제목 필드 글자 수 초기화
     updateTitleCharCount();
-    
+
     modal.style.display = 'block';
-    
+
     // 폼 제출 이벤트 리스너
     const form = document.getElementById('scheduleForm');
     form.onsubmit = handleScheduleSubmit;
-    
+
     // 설명 필드 실시간 글자 수 업데이트
     const descriptionField = document.getElementById('scheduleDescription');
     descriptionField.addEventListener('input', updateDescriptionCharCount);
-    
+
     // 제목 필드 실시간 글자 수 업데이트
     const titleField = document.getElementById('scheduleTitle');
     titleField.addEventListener('input', updateTitleCharCount);
@@ -577,7 +577,7 @@ function closeScheduleModal() {
     if (modal) {
         modal.style.display = 'none';
     }
-    
+
     // 모드 초기화
     isEditMode = false;
     editingScheduleId = null;
@@ -592,7 +592,7 @@ function initializeTimeSelects() {
         document.getElementById('scheduleStartHour'),
         document.getElementById('scheduleEndHour')
     ];
-    
+
     hourSelects.forEach(select => {
         if (!select) return;
         select.innerHTML = '';
@@ -603,13 +603,13 @@ function initializeTimeSelects() {
             select.appendChild(option);
         }
     });
-    
+
     // 분 select (00, 10, 20, 30, 40, 50분)
     const minuteSelects = [
         document.getElementById('scheduleStartMinute'),
         document.getElementById('scheduleEndMinute')
     ];
-    
+
     const minutes = [0, 10, 20, 30, 40, 50];
     minuteSelects.forEach(select => {
         if (!select) return;
@@ -628,44 +628,33 @@ function initializeTimeSelects() {
  */
 async function setCompanyOrgCategory() {
     try {
-        const response = await apiFetch('/api/admin/org-categories?includeInactive=false', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            if (response.status === 401) {
-                location.href = '/login';
-                return;
-            }
-            throw new Error('조직 카테고리 목록을 불러오는데 실패했습니다.');
-        }
+        const response = await apiFetch('/api/organizations/include-orgs');
+        if (!response.ok) throw new Error();
 
         const result = await response.json();
         const categories = result.data || [];
 
-        // '회사' 카테고리 찾기
-        const companyCategory = categories.find(cat => cat.name === '회사');
-        
+        const rootCategories = categories.filter(cat => cat.parentOrgId === null);
+
         const select = document.getElementById('scheduleOrgCategory');
-        const option = document.getElementById('companyCategoryOption');
-        
+        select.innerHTML = ''; //
+
+        rootCategories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.name;
+            select.appendChild(option);
+        });
+
+        // 기본값: 회사
+        const companyCategory = rootCategories.find(cat => cat.name === '회사');
         if (companyCategory) {
-            option.value = companyCategory.id;
-            option.textContent = '회사';
-        } else {
-            option.value = '';
-            option.textContent = '회사';
+            select.value = companyCategory.id;
         }
-        
+
         select.disabled = true;
-    } catch (error) {
-        console.error('Error loading org categories:', error);
-        if (error.message !== 'SESSION_EXPIRED') {
-            alert('조직 카테고리 목록을 불러오는데 실패했습니다.');
-        }
+    } catch (e) {
+        console.error(e);
     }
 }
 
@@ -676,18 +665,18 @@ function updateTitleCharCount() {
     const titleField = document.getElementById('scheduleTitle');
     const charCountEl = document.getElementById('titleCharCount');
     const errorEl = document.getElementById('titleError');
-    
+
     if (!titleField || !charCountEl) return;
-    
+
     const currentLength = titleField.value.length;
     const maxLength = 20;
-    
+
     charCountEl.textContent = `(${currentLength}/${maxLength})`;
-    
+
     // 글자 수에 따라 스타일 변경
     charCountEl.classList.remove('warning', 'error');
     errorEl.classList.remove('show');
-    
+
     if (currentLength > maxLength) {
         charCountEl.classList.add('error');
         errorEl.textContent = `제목은 최대 ${maxLength}자까지 입력 가능합니다.`;
@@ -704,18 +693,18 @@ function updateDescriptionCharCount() {
     const descriptionField = document.getElementById('scheduleDescription');
     const charCountEl = document.getElementById('descriptionCharCount');
     const errorEl = document.getElementById('descriptionError');
-    
+
     if (!descriptionField || !charCountEl) return;
-    
+
     const currentLength = descriptionField.value.length;
     const maxLength = 200;
-    
+
     charCountEl.textContent = `(${currentLength}/${maxLength})`;
-    
+
     // 글자 수에 따라 스타일 변경
     charCountEl.classList.remove('warning', 'error');
     errorEl.classList.remove('show');
-    
+
     if (currentLength > maxLength) {
         charCountEl.classList.add('error');
         errorEl.textContent = `설명은 최대 ${maxLength}자까지 입력 가능합니다.`;
@@ -730,7 +719,7 @@ function updateDescriptionCharCount() {
  */
 async function handleScheduleSubmit(e) {
     e.preventDefault();
-    
+
     const title = document.getElementById('scheduleTitle').value.trim();
     const description = document.getElementById('scheduleDescription').value.trim();
     const startDate = document.getElementById('scheduleStartDate').value;
@@ -741,43 +730,43 @@ async function handleScheduleSubmit(e) {
     const endMinute = document.getElementById('scheduleEndMinute').value;
     const status = document.getElementById('scheduleStatus').value;
     const orgCategoryId = document.getElementById('scheduleOrgCategory').value;
-    
+
     if (!title) {
         alert('제목을 입력해주세요.');
         return;
     }
-    
+
     // 제목 글자 수 검증
     if (title.length > 20) {
         alert('제목은 최대 20자까지 입력 가능합니다.');
         document.getElementById('scheduleTitle').focus();
         return;
     }
-    
+
     // 설명 글자 수 검증
     if (description.length > 200) {
         alert('설명은 최대 200자까지 입력 가능합니다.');
         document.getElementById('scheduleDescription').focus();
         return;
     }
-    
+
     // 시간 문자열 조합 (HH:MM 형식)
     const startTime = `${startHour}:${startMinute}`;
     const endTime = `${endHour}:${endMinute}`;
-    
+
     // 날짜/시간 검증
     const startDateTime = new Date(`${startDate}T${startTime}`);
     const endDateTime = new Date(`${endDate}T${endTime}`);
-    
+
     if (endDateTime <= startDateTime) {
         alert('종료 날짜/시간은 시작 날짜/시간보다 이후여야 합니다.');
         return;
     }
-    
+
     // LocalDateTime 형식으로 변환 (ISO 8601)
     const startAt = startDateTime.toISOString().slice(0, 19);
     const endAt = endDateTime.toISOString().slice(0, 19);
-    
+
     const scheduleData = {
         isCompany: true,  // 전사 일정
         title: title,
@@ -788,10 +777,10 @@ async function handleScheduleSubmit(e) {
         orgCategoryId: orgCategoryId ? parseInt(orgCategoryId) : null,
         orgId: null  // 조직은 null로 고정
     };
-    
+
     try {
         let response;
-        
+
         if (isEditMode && editingScheduleId) {
             // 수정 모드
             response = await apiFetch(`/api/admin/schedules/${editingScheduleId}`, {
@@ -843,7 +832,7 @@ function formatDateForInput(date) {
 }
 
 // 모달 외부 클릭 시 닫기
-window.onclick = function(event) {
+window.onclick = function (event) {
     const scheduleModal = document.getElementById('scheduleModal');
     if (event.target === scheduleModal) {
         closeScheduleModal();
