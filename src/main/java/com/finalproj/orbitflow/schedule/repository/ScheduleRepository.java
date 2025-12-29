@@ -25,12 +25,14 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
                 SELECT s
                 FROM Schedule s
                 WHERE s.companyId = :companyId
-                  AND s.isCompany = true
-                  AND s.startAt <= :endOfMonth
-                  AND s.endAt >= :startOfMonth
+                    AND s.isCompany = true
+                    AND s.orgCategoryId IS NOT NULL
+                    AND s.orgId IS NULL
+                    AND s.startAt <= :endOfMonth
+                    AND s.endAt >= :startOfMonth
                 ORDER BY s.startAt ASC
             """)
-    List<Schedule> findMonthlyCompanySchedules(
+    List<Schedule> findCompanySchedules(
             @Param("companyId") Long companyId,
             @Param("startOfMonth") LocalDateTime startOfMonth,
             @Param("endOfMonth") LocalDateTime endOfMonth
@@ -43,118 +45,71 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
                 SELECT s
                 FROM Schedule s
                 WHERE s.companyId = :companyId
-                  AND s.isCompany = true
-                  AND s.status = :status
-                  AND s.startAt <= :endOfMonth
-                  AND s.endAt >= :startOfMonth
-                ORDER BY s.startAt ASC
-            """)
-    List<Schedule> findMonthlyCompanySchedulesByStatus(
-            @Param("companyId") Long companyId,
-            @Param("status") ScheduleStatus status,
-            @Param("startOfMonth") LocalDateTime startOfMonth,
-            @Param("endOfMonth") LocalDateTime endOfMonth
-    );
-
-    int deleteByIdAndCompanyId(Long scheduleId, Long companyId);
-
-    Schedule findByIdAndCompanyId(Long scheduleId, Long companyId);
-
-    @Query("""
-                SELECT s
-                FROM Schedule s
-                WHERE s.companyId = :companyId
-                    AND s.isCompany = false 
+                    AND s.isCompany = true
                     AND s.status = :status
-                    AND s.orgId IN :orgIds
-                    AND s.startAt <= :endOfMonth
-                    AND s.endAt >= :startOfMonth
-                ORDER BY s.startAt ASC
-            """)
-    List<Schedule> findMonthlyOrganizationSchedules(
-            @Param("companyId") Long companyId,
-            @Param("status") ScheduleStatus status,
-            @Param("orgIds") List<Long> orgIds,
-            @Param("startOfMonth") LocalDateTime startOfMonth,
-            @Param("endOfMonth") LocalDateTime endOfMonth
-    );
-
-    @Query("""
-                SELECT s
-                FROM Schedule s
-                WHERE s.companyId = :companyId
-                    AND s.status = :scheduleStatus
-                    AND s.employeeId = :employeeId
-                    AND s.isCompany = false
-                    AND s.orgCategoryId IS NULL
+                    AND s.orgCategoryId IS NOT NULL
                     AND s.orgId IS NULL
                     AND s.startAt <= :endOfMonth
                     AND s.endAt >= :startOfMonth
-                ORDER BY s.startAt ASC  
+                ORDER BY s.startAt ASC
             """)
-    List<Schedule> findMonthlyEmployeeSchedules(
-            Long companyId,
-            ScheduleStatus scheduleStatus,
-            Long employeeId,
-            LocalDateTime startOfMonth,
-            LocalDateTime endOfMonth
+    List<Schedule> findCompanySchedulesByStatus(
+            @Param("companyId") Long companyId,
+            @Param("status") ScheduleStatus status,
+            @Param("startOfMonth") LocalDateTime startOfMonth,
+            @Param("endOfMonth") LocalDateTime endOfMonth
     );
 
+    /**
+     * 사용자 전사 일정 조회
+     */
     @Query("""
                 SELECT s
                 FROM Schedule s
                 WHERE s.companyId = :companyId
                     AND s.isCompany = true
-                    AND s.status = :status
-                    AND s.startAt <= :endDay
-                    AND s.endAt >= :today
+                    AND s.status = :scheduleStatus
+                    AND s.startAt <= :endOfDate
+                    AND s.endAt >= :startOfDate
                 ORDER BY s.startAt ASC
             """)
-    List<Schedule> findWeeklyCompanySchedules(
+    List<Schedule> findUserCompanySchedules(
             Long companyId,
-            ScheduleStatus scheduleStatus,
-            LocalDateTime today,
-            LocalDateTime endDay
+            LocalDateTime startOfDate,
+            LocalDateTime endOfDate,
+            ScheduleStatus scheduleStatus
     );
 
+    /**
+     * 일정 삭제 (Hard Delete)
+     */
+    int deleteByIdAndCompanyId(Long scheduleId, Long companyId);
+
+    /**
+     * 일정 상세 조회
+     */
+    Schedule findByIdAndCompanyId(Long scheduleId, Long companyId);
+
+    /**
+     * 조직 일정 검색
+     */
     @Query("""
                 SELECT s
                 FROM Schedule s
                 WHERE s.companyId = :companyId
                     AND s.isCompany = false
-                    AND s.orgId IN :orgIds
+                    AND s.orgCategoryId IS NOT NULL
+                    AND s.orgId IN :orgids
                     AND s.status = :scheduleStatus
-                    AND s.startAt <= :endDay
-                    AND s.endAt >= :today
-                ORDER BY s.startAt ASC
+                    AND s.startAt <= :endOfDate
+                    AND s.endAt >= :startOfDate
             """)
-    List<Schedule> findWeeklyOrganizationSchedules(
+    List<Schedule> findOrganizationSchedules(
             Long companyId,
             ScheduleStatus scheduleStatus,
             List<Long> orgIds,
-            LocalDateTime today,
-            LocalDateTime endDay
-    );
-
-    @Query("""
-                SELECT s
-                FROM Schedule s
-                WHERE s.companyId = :companyId
-                    AND s.status = :scheduleStatus
-                    AND s.employeeId = :employeeId
-                    AND s.isCompany = false
-                    AND s.orgCategoryId IS NULL
-                    AND s.orgId IS NULL
-                    AND s.startAt <= :endDay
-                    AND s.endAt >= :today
-                ORDER BY s.startAt ASC
-            """)
-    List<Schedule> findWeeklyEmployeeSchedules(
-            Long companyId,
-            ScheduleStatus scheduleStatus,
-            Long employeeId,
-            LocalDateTime today,
-            LocalDateTime endDay
+            LocalDateTime startOfDate,
+            LocalDateTime endOfDate
     );
 
     @Query("""
@@ -209,5 +164,29 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             Long employeeId,
             LocalDateTime startOfDay,
             LocalDateTime endOfDay
+    );
+
+
+    /**
+     * 진짜 개인 일정 조회
+     */
+    @Query("""
+                SELECT s
+                FROM Schedule s
+                WHERE s.companyId = :companyId
+                    AND s.status = :scheduleStatus
+                    AND s.isCompany = false
+                    AND s.employeeId = :employeeId
+                    AND s.orgId IS NULL
+                    AND s.orgCategoryId IS NULL
+                    AND s.startAt < :endOfDay
+                    AND s.endAt > :startOfDay
+            """)
+    List<Schedule> findEmployeeSchedules(
+            Long companyId,
+            ScheduleStatus scheduleStatus,
+            Long employeeId,
+            LocalDateTime startOfDate,
+            LocalDateTime endOfDate
     );
 }

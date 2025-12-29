@@ -47,6 +47,10 @@ public class QApprovalLine extends EntityPathBase<ApprovalLine> {
 
     public final NumberPath<Integer> orderNo = createNumber("orderNo", Integer.class);
 
+    public final com.finalproj.orbitflow.hr.organization.entity.QOrganization organization;
+
+    public final com.finalproj.orbitflow.hr.positionCategory.entity.QPositionCategory positionCategory;
+
     public final EnumPath<com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus> status = createEnum("status", com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus.class);
 
     //inherited
@@ -73,6 +77,8 @@ public class QApprovalLine extends EntityPathBase<ApprovalLine> {
         this.approver = inits.isInitialized("approver") ? new com.finalproj.orbitflow.hr.employee.entity.QEmployee(forProperty("approver"), inits.get("approver")) : null;
         this.company = inits.isInitialized("company") ? new com.finalproj.orbitflow.hr.company.entity.QCompany(forProperty("company")) : null;
         this.document = inits.isInitialized("document") ? new com.finalproj.orbitflow.approval.document.entity.QDocument(forProperty("document"), inits.get("document")) : null;
+        this.organization = inits.isInitialized("organization") ? new com.finalproj.orbitflow.hr.organization.entity.QOrganization(forProperty("organization")) : null;
+        this.positionCategory = inits.isInitialized("positionCategory") ? new com.finalproj.orbitflow.hr.positionCategory.entity.QPositionCategory(forProperty("positionCategory"), inits.get("positionCategory")) : null;
     }
 
 }

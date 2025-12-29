@@ -40,47 +40,59 @@ public class ScheduleService {
             Long companyId,
             String status,
             int year,
-            int month,
-            boolean isWeekly
+            int month
     ) {
 
         List<Schedule> schedules;
 
-        // 월 단위 조회
+        // 월 시작일
+        LocalDateTime startOfMonth = LocalDate.of(year, month, 1).atStartOfDay();
+
+        // 월 종료일
+        LocalDateTime endOfMonth = LocalDate.of(year, month, 1)
+                .plusMonths(1)
+                .atStartOfDay()
+                .minusNanos(1);
+
+        ScheduleStatus scheduleStatus;
+
+        // 전체 ["RELEASE", "HOLD"] 조회
+        if (status.equals("ALL")) {
+            schedules = scheduleRepository.findCompanySchedules(companyId, startOfMonth, endOfMonth);
+        }
+        // ['RELEASE", "HOLD"] 중 하나로 필터링
+        else {
+            scheduleStatus = ScheduleStatus.valueOf(status.toUpperCase());
+            schedules = scheduleRepository.findCompanySchedulesByStatus(companyId, scheduleStatus, startOfMonth, endOfMonth);
+        }
+
+        return schedules.stream().map(ScheduleMapper::toDto).toList();
+    }
+
+    // 사용자 - 전사 일정 조회
+    @Transactional(readOnly = true)
+    public List<ScheduleResDto> getUserCompanySchedule(Long companyId, int year, int month, boolean isWeekly) {
+
+        List<Schedule> schedules;
+        LocalDateTime startOfDate;
+        LocalDateTime endOfDate;
+        ScheduleStatus scheduleStatus = ScheduleStatus.RELEASE;
+
+        // 월 단위
         if (!isWeekly) {
-
-            // 월 시작일
-            LocalDateTime startOfMonth = LocalDate.of(year, month, 1).atStartOfDay();
-
-            // 월 종료일
-            LocalDateTime endOfMonth = LocalDate.of(year, month, 1)
+            startOfDate = LocalDate.of(year, month, 1).atStartOfDay();
+            endOfDate = LocalDate.of(year, month, 1)
                     .plusMonths(1)
                     .atStartOfDay()
                     .minusNanos(1);
-
-            ScheduleStatus scheduleStatus;
-
-            // 전체 ["RELEASE", "HOLD"] 조회
-            if (status.equals("ALL")) {
-                schedules = scheduleRepository.findMonthlyCompanySchedules(companyId, startOfMonth, endOfMonth);
-            }
-            // ['RELEASE", "HOLD"] 중 하나로 필터링
-            else {
-                scheduleStatus = ScheduleStatus.valueOf(status.toUpperCase());
-                schedules = scheduleRepository.findMonthlyCompanySchedulesByStatus(companyId, scheduleStatus, startOfMonth, endOfMonth);
-            }
         }
-        // 주 단위 조회 - 사용자 일정 조회에서 사용
+        // 주 단위
         else {
-            // 오늘 날짜부터 7일
-            LocalDateTime today = LocalDate.now().atStartOfDay();
-            LocalDateTime endDay = today.plusDays(7);
-
-            ScheduleStatus scheduleStatus = ScheduleStatus.RELEASE;
-
-            schedules = scheduleRepository.findWeeklyCompanySchedules(companyId, scheduleStatus, today, endDay);
+            startOfDate = LocalDate.now().atStartOfDay();
+            endOfDate = startOfDate.plusDays(7);
         }
 
+        schedules = scheduleRepository.findUserCompanySchedules(companyId, startOfDate, endOfDate, scheduleStatus);
         return schedules.stream().map(ScheduleMapper::toDto).toList();
     }
 
@@ -93,43 +105,34 @@ public class ScheduleService {
             List<Long> orgIds,
             boolean isWeekly
     ) {
+
         List<Schedule> schedules;
+        LocalDateTime startOfDate;
+        LocalDateTime endOfDate;
+        ScheduleStatus scheduleStatus = ScheduleStatus.RELEASE;
 
         // 월 단위 검색
         if (!isWeekly) {
-            // month의 시작일
-            LocalDateTime startOfMonth = LocalDate.of(year, month, 1).atStartOfDay();
-
-            // moth의 종료일
-            LocalDateTime endOfMonth = LocalDate.of(year, month, 1)
+            startOfDate = LocalDate.of(year, month, 1).atStartOfDay();
+            endOfDate = LocalDate.of(year, month, 1)
                     .plusMonths(1)
                     .atStartOfDay()
                     .minusNanos(1);
 
-            schedules = scheduleRepository.findMonthlyOrganizationSchedules(
-                    companyId,
-                    ScheduleStatus.RELEASE, // 사용자 - 일정 조회는 RELEASE인 일정만 조회
-                    orgIds,
-                    startOfMonth,
-                    endOfMonth
-            );
         }
         // 주 단위 검색
         else {
-            LocalDateTime today = LocalDate.now().atStartOfDay();
-            LocalDateTime endDay = today.plusDays(7);
-
-            ScheduleStatus scheduleStatus = ScheduleStatus.RELEASE;
-
-            schedules = scheduleRepository.findWeeklyOrganizationSchedules(
-                    companyId,
-                    scheduleStatus,
-                    orgIds,
-                    today,
-                    endDay
-            );
+            startOfDate = LocalDate.now().atStartOfDay();
+            endOfDate = startOfDate.plusDays(7);
         }
 
+        schedules = scheduleRepository.findOrganizationSchedules(
+                companyId,
+                scheduleStatus,
+                orgIds,
+                startOfDate,
+                endOfDate
+        );
         return schedules.stream().map(ScheduleMapper::toDto).toList();
     }
 
@@ -143,40 +146,32 @@ public class ScheduleService {
             boolean isWeekly
     ) {
         List<Schedule> schedules;
+        LocalDateTime startOfDate;
+        LocalDateTime endOfDate;
         ScheduleStatus scheduleStatus = ScheduleStatus.RELEASE;
 
         // 월 단위 검색
         if (!isWeekly) {
-            // month의 시작일
-            LocalDateTime startOfMonth = LocalDate.of(year, month, 1).atStartOfDay();
-
-            // moth의 종료일
-            LocalDateTime endOfMonth = LocalDate.of(year, month, 1)
+            startOfDate = LocalDate.of(year, month, 1).atStartOfDay();
+            endOfDate = LocalDate.of(year, month, 1)
                     .plusMonths(1)
                     .atStartOfDay()
                     .minusNanos(1);
 
-            schedules = scheduleRepository.findMonthlyEmployeeSchedules(
-                    companyId,
-                    scheduleStatus,
-                    employeeId,
-                    startOfMonth,
-                    endOfMonth
-            );
         }
         // 주 단위 검색
         else {
-            LocalDateTime today = LocalDate.now().atStartOfDay();
-            LocalDateTime endDay = today.plusDays(7);
-
-            schedules = scheduleRepository.findWeeklyEmployeeSchedules(
-                    companyId,
-                    scheduleStatus,
-                    employeeId,
-                    today,
-                    endDay
-            );
+            startOfDate = LocalDate.now().atStartOfDay();
+            endOfDate = startOfDate.plusDays(7);
         }
+
+        schedules = scheduleRepository.findEmployeeSchedules(
+                companyId,
+                scheduleStatus,
+                employeeId,
+                startOfDate,
+                endOfDate
+        );
 
         return schedules.stream().map(ScheduleMapper::toDto).toList();
     }
@@ -264,6 +259,7 @@ public class ScheduleService {
     @Transactional
     public void insertSchedule(Long companyId, Long employeeId, ScheduleReqDto dto) {
 
+        // region exception
         if (dto.getTitle() == null || dto.getTitle().isBlank()) {
             throw new IllegalArgumentException("일정 제목은 필수입니다.");
         }
@@ -275,6 +271,7 @@ public class ScheduleService {
         if (dto.getEndAt().isBefore(dto.getStartAt())) {
             throw new IllegalArgumentException("종료 시간은 시작 시간보다 이후여야 합니다.");
         }
+        // endregion
 
         Schedule schedule = ScheduleMapper.toEntity(companyId, employeeId, dto);
         scheduleRepository.save(schedule);
