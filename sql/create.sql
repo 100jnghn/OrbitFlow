@@ -281,24 +281,32 @@ CREATE TABLE template_category
 -- =========================================================
 CREATE TABLE form_template_group
 (
-    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id                   BIGINT AUTO_INCREMENT PRIMARY KEY,
 
-    company_id  BIGINT       NOT NULL,
-    name        VARCHAR(255) NOT NULL,
-    description TEXT,
+    company_id           BIGINT      NOT NULL,
+    name                 VARCHAR(50) NOT NULL,
+    description          VARCHAR(200),
 
-    active      BOOLEAN      NOT NULL DEFAULT TRUE,
+    template_category_id BIGINT      NOT NULL,
+    base_role            VARCHAR(30),
 
-    created_by  BIGINT       NULL,
-    modified_by BIGINT       NULL,
+    active               BOOLEAN     NOT NULL DEFAULT TRUE,
 
-    created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_by           BIGINT      NULL,
+    modified_by          BIGINT      NULL,
+
+    created_at           TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at           TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_ftg_company
         FOREIGN KEY (company_id)
             REFERENCES company (id)
+            ON DELETE RESTRICT,
+
+    CONSTRAINT fk_ftg_category
+        FOREIGN KEY (template_category_id)
+            REFERENCES template_category (id)
             ON DELETE RESTRICT,
 
     CONSTRAINT fk_ftg_created_by
@@ -311,7 +319,7 @@ CREATE TABLE form_template_group
             REFERENCES employee (id)
             ON DELETE SET NULL,
 
-    CONSTRAINT uq_form_template_group_company_name
+    CONSTRAINT uk_form_template_group_company_name
         UNIQUE (company_id, name)
 ) ENGINE = InnoDB;
 
@@ -322,26 +330,27 @@ CREATE TABLE form_template_group
 -- =========================================================
 CREATE TABLE form_template
 (
-    id                   BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
 
-    company_id           BIGINT                             NOT NULL,
-    template_group_id    BIGINT                             NOT NULL,
+    company_id         BIGINT                             NOT NULL,
+    template_group_id  BIGINT                             NOT NULL,
 
-    -- 정식 배포 버전 (ACTIVE에서만 의미 있음)
-    version              INT                                NOT NULL,
+    version            INT                                NOT NULL,
 
-    template_category_id BIGINT                             NOT NULL,
+    status             ENUM ('DRAFT','ACTIVE','INACTIVE') NOT NULL,
 
-    status               ENUM ('DRAFT','ACTIVE','INACTIVE') NOT NULL,
+    affect_tags        JSON,
+    template_json      JSON                               NOT NULL,
+    approval_rule_json JSON                               NULL,
 
-    affect_tags          JSON,
-    template_json        JSON                               NOT NULL,
-    approval_rule_json   JSON                               NULL,
+    created_by         BIGINT                             NULL,
+    modified_by        BIGINT                             NULL,
 
-    created_at           TIMESTAMP                          NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at         TIMESTAMP                          NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP                          NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
 
-    -- ✅ ACTIVE 상태에서만 version을 유니크하게 만들기 위한 컬럼
-    active_version       INT
+    active_version     INT
         GENERATED ALWAYS AS (
             CASE
                 WHEN status = 'ACTIVE' THEN version
@@ -349,9 +358,6 @@ CREATE TABLE form_template
                 END
             ) STORED,
 
-    -- ===============================
-    -- CONSTRAINTS
-    -- ===============================
     CONSTRAINT fk_ft_company
         FOREIGN KEY (company_id)
             REFERENCES company (id)
@@ -362,11 +368,20 @@ CREATE TABLE form_template
             REFERENCES form_template_group (id)
             ON DELETE CASCADE,
 
-    CONSTRAINT fk_ft_category
-        FOREIGN KEY (template_category_id)
-            REFERENCES template_category (id)
-            ON DELETE RESTRICT
+    CONSTRAINT uq_ft_active_version
+        UNIQUE (template_group_id, active_version),
+
+    CONSTRAINT fk_ft_created_by
+        FOREIGN KEY (created_by)
+            REFERENCES employee (id)
+            ON DELETE SET NULL,
+
+    CONSTRAINT fk_ft_modified_by
+        FOREIGN KEY (modified_by)
+            REFERENCES employee (id)
+            ON DELETE SET NULL
 ) ENGINE = InnoDB;
+
 
 -- ACTIVE 상태에서만 version 유니크 보장
 CREATE UNIQUE INDEX uk_ft_company_group_active_version

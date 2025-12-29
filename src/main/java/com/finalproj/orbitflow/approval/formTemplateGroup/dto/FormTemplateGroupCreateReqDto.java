@@ -1,6 +1,9 @@
 package com.finalproj.orbitflow.approval.formTemplateGroup.dto;
 
 import com.finalproj.orbitflow.approval.formTemplateGroup.entity.FormTemplateGroup;
+import com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole;
+import com.finalproj.orbitflow.approval.templateCategory.entity.TemplateCategory;
+import com.finalproj.orbitflow.approval.templateCategory.enums.TemplateCategoryCode;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,14 +23,20 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FormTemplateGroupCreateReqDto {
+
     private String name;
     private String description;
 
-    public FormTemplateGroup toEntity(Company company) {
+    private TemplateCategoryCode categoryCode; // 프론트는 코드만 보냄
+    private BaseRole baseRole;                 // ✅ 추가 (nullable)
+
+    public FormTemplateGroup toEntity(Company company, TemplateCategory category) {
         return FormTemplateGroup.builder()
+                .company(company)
                 .name(this.name)
                 .description(this.description)
-                .company(company)
+                .templateCategory(category)
+                .baseRole(this.baseRole)
                 .active(true)
                 .build();
     }

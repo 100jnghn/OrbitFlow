@@ -26,7 +26,7 @@ public class FormTemplateGroupController {
 
     private final FormTemplateGroupService formTemplateGroupService;
 
-    @GetMapping("form-template-groups")
+    @GetMapping("/form-template-groups")
     public ResponseEntity<ResponseDto> formTemplateGroups(
             @RequestParam(required = false) String keyword
     ) {
@@ -39,7 +39,7 @@ public class FormTemplateGroupController {
     }
 
 
-    @PostMapping("admin/form-template-groups")
+    @PostMapping("/admin/form-template-groups")
     public ResponseEntity<ResponseDto> saveFormTemplateGroup(
             @RequestBody FormTemplateGroupCreateReqDto dto
     ) {
@@ -53,7 +53,7 @@ public class FormTemplateGroupController {
         );
     }
 
-    @GetMapping("form-template-groups/{id}")
+    @GetMapping("/form-template-groups/{id}")
     public ResponseEntity<ResponseDto> getDetailFormTemplateGroup(
             @PathVariable Long id
     ) {

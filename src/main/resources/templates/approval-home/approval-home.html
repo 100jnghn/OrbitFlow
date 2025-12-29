@@ -22,15 +22,14 @@
         <link rel="stylesheet" th:href="@{/css/approval-home/approval-home.css}">
     </th:block>
 
-    <!-- ✅ 페이지별 JS -->
+    <!-- 페이지별 JS -->
     <th:block th:fragment="pageScript">
-        <script th:src="@{/css/approval-home/approval-home.js}"></script>
+        <script th:src="@{/css/approval-home/approval-home.js}" defer></script>
     </th:block>
 </head>
 
 <body>
 
-<!-- Main Content -->
 <div th:fragment="content">
     <div class="approval-home-container">
 
@@ -49,31 +48,60 @@
                     <option value="INACTIVE">비활성</option>
                 </select>
                 <div class="search-group">
-                    <input
-                            type="text"
-                            id="keywordInput"
-                            class="search-input"
-                            placeholder="양식명으로 검색"
-                    />
+                    <input type="text" id="keywordInput" class="search-input" placeholder="양식명으로 검색"/>
                     <div class="hint"></div>
                 </div>
                 <button type="button" id="searchBtn" class="search-btn">검색</button>
             </div>
         </section>
 
-        <!-- 생성 팝업 -->
+        <!-- =====================
+             생성 팝업
+        ====================== -->
         <div id="createPopup" class="modal-backdrop" style="display:none;">
             <div class="modal-content">
                 <div class="modal-title">새 문서 양식 생성</div>
+
+                <!-- 문서 양식 이름 -->
                 <div class="modal-form-group">
                     <label for="popupTemplateName">문서 양식 이름</label>
                     <input type="text" id="popupTemplateName" class="modal-input"/>
                     <div class="hint"></div>
                 </div>
 
+                <!-- 문서 양식 설명 -->
                 <div class="modal-form-group">
-                    <label for="popupTemplateDesc">설명</label>
-                    <textarea id="popupTemplateDesc" class="modal-textarea"></textarea>
+                    <label for="popupTemplateDesc">문서 양식 설명</label>
+                    <textarea
+                            id="popupTemplateDesc"
+                            class="modal-textarea"
+                            rows="3"
+                    ></textarea>
+                    <div class="hint"></div>
+                </div>
+
+                <!-- 🔥 카테고리 (필수) -->
+                <div class="modal-form-group">
+                    <label for="popupCategory">카테고리</label>
+                    <select id="popupCategory" class="modal-select">
+                        <option value="">선택하세요</option>
+                        <option value="GENERAL">일반</option>
+                        <option value="SCHEDULE">일정</option>
+                        <option value="ATTENDANCE">근태</option>
+                    </select>
+                    <div class="hint"></div>
+                </div>
+
+                <!-- 일정 유형 (카테고리 = SCHEDULE) -->
+                <div class="modal-form-group">
+                    <label for="popupBaseRole">일정 유형</label>
+                    <select id="popupBaseRole" class="modal-select" disabled>
+                        <option value="">선택하세요</option>
+                        <option value="VACATION">휴가</option>
+                        <option value="BUSINESS_TRIP">출장</option>
+                        <option value="OUTWORK">외근</option>
+                        <option value="COMPANY_EVENT">회사 일정</option>
+                    </select>
                     <div class="hint"></div>
                 </div>
 
@@ -84,10 +112,13 @@
             </div>
         </div>
 
-        <!-- 업데이트 팝업 -->
+        <!-- =====================
+             업데이트 팝업
+        ====================== -->
         <div id="updatePopup" class="modal-backdrop" style="display:none;">
             <div class="modal-content">
                 <div class="modal-title">문서 양식 업데이트</div>
+
                 <div class="modal-form-group">
                     <label for="updateTemplateSearch">검색할 양식 이름</label>
                     <input type="text" id="updateTemplateSearch" class="modal-input"/>

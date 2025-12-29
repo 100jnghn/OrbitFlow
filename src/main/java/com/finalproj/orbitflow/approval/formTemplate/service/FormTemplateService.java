@@ -8,8 +8,6 @@ import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateRepo
 import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
 import com.finalproj.orbitflow.approval.formTemplateGroup.entity.FormTemplateGroup;
 import com.finalproj.orbitflow.approval.formTemplateGroup.repository.FormTemplateGroupRepository;
-import com.finalproj.orbitflow.approval.templateCategory.entity.TemplateCategory;
-import com.finalproj.orbitflow.approval.templateCategory.enums.TemplateCategoryCode;
 import com.finalproj.orbitflow.approval.templateCategory.repository.TemplateCategoryRepository;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
@@ -77,23 +75,20 @@ public class FormTemplateService {
     @Transactional
     public Long saveFormTemplate(
             Long templateGroupId,
-            Long companyId,
-            TemplateCategoryCode categoryCode
+            Long companyId
     ) {
         FormTemplateGroup group = findGroupAndCheckCompany(templateGroupId, companyId);
 
         Optional<FormTemplate> existingDraft =
-                formTemplateRepository.findTopByTemplateGroup_IdAndStatusOrderByUpdatedAtDesc(
-                        templateGroupId,
-                        FormTemplateStatus.DRAFT
-                );
+                formTemplateRepository
+                        .findTopByTemplateGroup_IdAndStatusOrderByUpdatedAtDesc(
+                                templateGroupId,
+                                FormTemplateStatus.DRAFT
+                        );
 
         if (existingDraft.isPresent()) {
             return existingDraft.get().getId();
         }
-
-        TemplateCategory category = templateCategoryRepository.findByCode(categoryCode)
-                .orElseThrow(() -> new NotFoundException("양식 카테고리를 찾을 수 없습니다."));
 
         int baseVersion = formTemplateRepository
                 .findTopByTemplateGroup_IdAndStatusOrderByVersionDesc(
@@ -103,15 +98,17 @@ public class FormTemplateService {
                 .map(FormTemplate::getVersion)
                 .orElse(1);
 
+        List<AffectTag> affectTags = buildAffectTags(group);
+
         return createDraftTemplate(
                 group,
                 baseVersion,
-                category,
                 buildInitialTemplateJson(),
                 buildInitialApprovalRuleJson(),
-                null
+                affectTags
         );
     }
+
 
     @Transactional
     public Long reviseFormTemplateByTemplateGroup(Long templateGroupId, Long companyId) {
@@ -139,7 +136,6 @@ public class FormTemplateService {
         return createDraftTemplate(
                 group,
                 active.getVersion(),
-                active.getTemplateCategory(),
                 active.getTemplateJson(),
                 active.getApprovalRuleJson(),
                 active.getAffectTags()
@@ -155,24 +151,17 @@ public class FormTemplateService {
     ) {
         FormTemplate formTemplate = findFormTemplate(formTemplateId);
         checkCompany(companyId, formTemplate);
+        checkStatusIsDraft(formTemplate);
 
-        if (reqDto.getCategoryCode() != null) {
-            TemplateCategory category = templateCategoryRepository
-                    .findByCode(reqDto.getCategoryCode())
-                    .orElseThrow(() ->
-                            new NotFoundException("양식 카테고리를 찾을 수 없습니다.")
-                    );
-            formTemplate.changeCategory(category);
-        }
 
-        if (reqDto.getTemplateJson() != null) {
-            formTemplate.updateTemplateJson(
-                    objectMapper.writeValueAsString(reqDto.getTemplateJson())
-            );
-        }
-
-        if (reqDto.getAffectTags() != null) {
-            formTemplate.updateAffectTags(reqDto.getAffectTags());
+        try {
+            if (reqDto.getTemplateJson() != null) {
+                formTemplate.updateTemplateJson(
+                        objectMapper.writeValueAsString(reqDto.getTemplateJson())
+                );
+            }
+        } catch (Exception e) {
+            throw new InvalidRequestException("templateJson 형식이 올바르지 않습니다.");
         }
     }
 
@@ -184,6 +173,8 @@ public class FormTemplateService {
     ) {
         FormTemplate formTemplate = findFormTemplate(formTemplateId);
         checkCompany(companyId, formTemplate);
+        checkStatusIsDraft(formTemplate);
+
 
         if (reqDto.getApprovalRuleJson() != null) {
             formTemplate.updateApprovalRuleJson(
@@ -198,11 +189,7 @@ public class FormTemplateService {
         FormTemplate draft = findFormTemplate(formTemplateId);
         checkCompany(companyId, draft);
 
-        if (draft.getStatus() != FormTemplateStatus.DRAFT) {
-            throw new InvalidRequestException(
-                    "DRAFT 상태의 결재 양식만 활성화할 수 있습니다."
-            );
-        }
+        checkStatusIsDraft(draft);
 
         int nextVersion =
                 calculateNextActiveVersion(draft.getTemplateGroup().getId());
@@ -219,6 +206,14 @@ public class FormTemplateService {
 
         draft.updateVersion(nextVersion);
         draft.updateStatus(FormTemplateStatus.ACTIVE);
+    }
+
+    private static void checkStatusIsDraft(FormTemplate draft) {
+        if (draft.getStatus() != FormTemplateStatus.DRAFT) {
+            throw new InvalidRequestException(
+                    "DRAFT 상태의 결재 양식만 수정 또는 활성화할 수 있습니다."
+            );
+        }
     }
 
 
@@ -291,6 +286,15 @@ public class FormTemplateService {
      * Private helpers
      * ===================================================== */
 
+    private List<AffectTag> buildAffectTags(FormTemplateGroup group) {
+        return switch (group.getTemplateCategory().getCode()) {
+            case GENERAL -> List.of();
+            case SCHEDULE -> List.of(AffectTag.SCHEDULE);
+            case ATTENDANCE -> List.of(AffectTag.ATTENDANCE);
+        };
+    }
+
+
     private FormTemplate findFormTemplate(Long formTemplateId) {
         return formTemplateRepository.findById(formTemplateId)
                 .orElseThrow(() ->
@@ -330,7 +334,6 @@ public class FormTemplateService {
     private Long createDraftTemplate(
             FormTemplateGroup group,
             int version,
-            TemplateCategory category,
             String templateJson,
             String approvalRuleJson,
             List<AffectTag> affectTags
@@ -339,7 +342,6 @@ public class FormTemplateService {
                 .company(group.getCompany())
                 .templateGroup(group)
                 .version(version)
-                .templateCategory(category)
                 .status(FormTemplateStatus.DRAFT)
                 .templateJson(templateJson)
                 .approvalRuleJson(approvalRuleJson)

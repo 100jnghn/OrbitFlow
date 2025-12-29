@@ -30,13 +30,10 @@ public enum FieldType {
     DATE("date", true),
     DATE_RANGE("date-range", true),
 
+    EVENT_DATE_RANGE("event-date-range", true), // ✅ 추가
+
     RADIO("radio", true),
     CHECKBOX("checkbox", true),
-
-    LEAVE_DATE_RANGE("leave-date-range", true),
-    LEAVE_REASON("leave-reason", true), // 🔥 추가
-
-    SCHEDULE_DATE_RANGE("schedule-date-range", true), // 🔥 추가
 
     TABLE("table", true),
     IMAGE("image", true),

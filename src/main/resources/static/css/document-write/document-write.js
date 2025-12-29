@@ -20,7 +20,6 @@ const MAX_LENGTH = {
     textarea: 500,
     number: 10,
     currency: 15,
-    leaveReasonDetail: 300,
 
     /* table 전용 */
     table: {
@@ -29,6 +28,30 @@ const MAX_LENGTH = {
         currency: 15   // ⭐ 추가/확정
     }
 };
+
+const SCHEDULE_REASON_LABEL_MAP = {
+    VACATION: '휴가 사유',
+    BUSINESS_TRIP: '출장 사유',
+    OUTWORK: '외근 사유',
+    COMPANY_EVENT: '일정 사유'
+};
+
+
+let leaveTypeCache = null;
+
+async function loadLeaveTypes() {
+    if (leaveTypeCache) return leaveTypeCache;
+
+    const res = await apiFetch('/api/leave-types/all');
+    if (!res.ok) {
+        showToast('휴가 유형을 불러오지 못했습니다.', 'error');
+        return [];
+    }
+
+    const result = await res.json();
+    leaveTypeCache = result.data ?? [];
+    return leaveTypeCache;
+}
 
 
 // 문서 필드 변경 감지
@@ -76,6 +99,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 /* =====================================================
    유틸 함수
    ===================================================== */
+
+function labeled(labelText, inputEl) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'labeled-field';
+
+    const label = document.createElement('span');
+    label.className = 'inline-label';
+    label.textContent = labelText;
+
+    wrapper.append(label, inputEl);
+    return wrapper;
+}
 
 function confirmLeaveIfDirty() {
     if (!hasUnsavedChanges) return true;
@@ -350,44 +385,6 @@ function clearTableFieldError(fieldId) {
 }
 
 
-function showLeaveReasonError(field) {
-    const value = field.value ?? {};
-    const vacationTypeCode = value.vacationTypeCode;
-    const detailReason = value.detailReason;
-
-    const selectEl = document.querySelector(
-        `select[data-field-id="${field.fieldId}"]`
-    );
-    const textareaEl = document.querySelector(
-        `textarea[data-field-id="${field.fieldId}"]`
-    );
-
-    const isVacationTypeEmpty =
-        vacationTypeCode === null ||
-        vacationTypeCode === undefined ||
-        vacationTypeCode === '';
-
-    // 1️⃣ 휴가 유형 미선택 → select
-    if (isVacationTypeEmpty) {
-        showFieldError(
-            selectEl,
-            '휴가 유형을 선택해주세요.'
-        );
-        return;
-    }
-
-    // 2️⃣ 유형은 선택됨 + 사유 미입력 → textarea
-    if (
-        typeof detailReason !== 'string' ||
-        detailReason.trim().length === 0
-    ) {
-        showFieldError(
-            textareaEl,
-            '휴가 사유를 입력해주세요.'
-        );
-        return;
-    }
-}
 
 
 /* =====================================================
@@ -540,14 +537,14 @@ async function createFieldComponent(field) {
             break;
 
         case 'date-range':
-        case 'schedule-date-range':
-        case 'leave-date-range':
             input = createDateRange(field);
             break;
 
-        case 'leave-reason':
-            input = await createLeaveReason(field);
+        case 'event-date-range':
+            wrapper.classList.add('schedule-field');
+            input = await createEventDateRange(field);
             break;
+
 
         case 'time-range':
             input = createTimeRange(field);
@@ -1001,70 +998,6 @@ function createDateRange(field) {
     return container;
 }
 
-let leaveTypeCache = null;
-
-async function fetchLeaveTypes() {
-    if (leaveTypeCache) return leaveTypeCache;
-
-    const res = await apiFetch('/api/leave-types/all');
-    if (!res.ok) {
-        showToast('휴가 유형을 불러오지 못했습니다.', 'error');
-        return [];
-    }
-
-    const result = await res.json();
-    leaveTypeCache = result.data ?? [];
-    return leaveTypeCache;
-}
-
-
-async function createLeaveReason(field) {
-    const container = document.createElement('div');
-    container.className = 'leave-reason';
-
-    const select = document.createElement('select');
-    const textarea = document.createElement('textarea');
-
-    /* 기본 옵션 */
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = '휴가 유형 선택';
-    select.appendChild(defaultOption);
-
-    /* 휴가 유형 로딩 */
-    const leaveTypes = await fetchLeaveTypes();
-    leaveTypes.forEach(type => {
-        const option = document.createElement('option');
-        option.value = String(type.typeId);   // ← vacationTypeCode
-        option.textContent = type.typeName;  // ← name은 표시용
-        select.appendChild(option);
-    });
-
-    /* 기존 값 복원 */
-    if (
-        field.value?.vacationTypeCode !== undefined &&
-        field.value?.vacationTypeCode !== null
-    ) {
-        select.value = String(field.value.vacationTypeCode);
-    } else {
-        select.value = ''; // ✅ 기본 옵션
-    }
-
-    textarea.placeholder = '상세 사유 입력';
-    textarea.value = field.value?.detailReason ?? '';
-
-    bindLengthCounter(textarea, MAX_LENGTH.leaveReasonDetail);
-
-    /* fieldId + subKey */
-    select.dataset.fieldId = field.fieldId;
-    select.dataset.subKey = 'vacationTypeCode';
-
-    textarea.dataset.fieldId = field.fieldId;
-    textarea.dataset.subKey = 'detailReason';
-
-    container.append(select, textarea);
-    return container;
-}
 
 function normalizeInputValue(value) {
     if (value === null || value === undefined) return '';
@@ -1268,19 +1201,115 @@ async function reloadApprovalLines() {
 }
 
 
-function validateLeaveReasonField(field) {
-    const value = field.value ?? {};
+function createVacationDateUI(field) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'vacation-date-ui';
 
-    const vacationTypeValid =
-        value.vacationTypeCode !== null &&
-        value.vacationTypeCode !== '';
+    const start = document.createElement('input');
+    start.type = 'date';
 
-    const detailReasonValid =
-        typeof value.detailReason === 'string' &&
-        value.detailReason.trim().length > 0;
+    const end = document.createElement('input');
+    end.type = 'date';
 
-    return vacationTypeValid && detailReasonValid;
+    start.dataset.fieldId = field.fieldId;
+    start.dataset.rangeType = 'start';
+    end.dataset.fieldId = field.fieldId;
+    end.dataset.rangeType = 'end';
+
+    wrapper.append(
+        labeled('시작일', start),
+        labeled('종료일', end)
+    );
+
+    return wrapper;
 }
+
+async function createEventDateRange(field) {
+    const baseRole = field.meta?.baseRole;
+
+    const inputWrapper = document.createElement('div');
+    inputWrapper.className = 'schedule-input';
+
+    /* 1️⃣ 시작일 - 종료일 */
+    const rangeGroup = document.createElement('div');
+    rangeGroup.className = 'schedule-group';
+
+    const rangeLabel = document.createElement('div');
+    rangeLabel.className = 'schedule-group-label';
+    rangeLabel.textContent = '시작일 - 종료일';
+
+    const dateRange = document.createElement('div');
+    dateRange.className = 'date-range';
+
+    const start = document.createElement('input');
+    start.type = 'date';
+    start.dataset.fieldId = field.fieldId;
+    start.dataset.rangeType = 'start';
+    start.value = field.value?.start || '';
+
+    const end = document.createElement('input');
+    end.type = 'date';
+    end.dataset.fieldId = field.fieldId;
+    end.dataset.rangeType = 'end';
+    end.value = field.value?.end || '';
+
+    dateRange.append(start, document.createTextNode(' ~ '), end);
+    rangeGroup.append(rangeLabel, dateRange);
+    inputWrapper.appendChild(rangeGroup);
+
+    /* 2️⃣ 휴가 유형 (VACATION만, API 조회) */
+    if (baseRole === 'VACATION') {
+        const leaveTypes = await loadLeaveTypes();
+
+        const typeGroup = document.createElement('div');
+        typeGroup.className = 'schedule-group';
+
+        const typeLabel = document.createElement('div');
+        typeLabel.className = 'schedule-group-label';
+        typeLabel.textContent = '휴가 유형';
+
+        const select = document.createElement('select');
+        select.dataset.fieldId = field.fieldId;
+        select.dataset.subKey = 'vacationTypeId';
+
+        const empty = document.createElement('option');
+        empty.value = '';
+        empty.textContent = '선택';
+        select.appendChild(empty);
+
+        leaveTypes.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = String(t.typeId);
+            opt.textContent = t.typeName;
+            opt.selected = String(field.value?.vacationTypeId) === String(t.typeId);
+            select.appendChild(opt);
+        });
+
+        typeGroup.append(typeLabel, select);
+        inputWrapper.appendChild(typeGroup);
+    }
+
+    /* 3️⃣ 사유 (유형별 라벨) */
+    const reasonGroup = document.createElement('div');
+    reasonGroup.className = 'schedule-group';
+
+    const reasonLabel = document.createElement('div');
+    reasonLabel.className = 'schedule-group-label';
+    reasonLabel.textContent =
+        SCHEDULE_REASON_LABEL_MAP[baseRole] ?? '사유';
+
+    const reason = document.createElement('textarea');
+    reason.placeholder = '사유를 입력하세요.';
+    reason.dataset.fieldId = field.fieldId;
+    reason.dataset.subKey = 'reason';
+    reason.value = field.value?.reason || '';
+
+    reasonGroup.append(reasonLabel, reason);
+    inputWrapper.appendChild(reasonGroup);
+
+    return inputWrapper;
+}
+
 
 function validateTableField(fieldDef, rows) {
     const {required, label, meta} = fieldDef;
@@ -1403,14 +1432,23 @@ function validateRequiredField(field) {
             //아직 기능 미구현
             return true;
 
-        case 'leave-reason':
-            return validateLeaveReasonField(field);
+        case 'event-date-range': {
+            if (!field.value?.start || !field.value?.end) return false;
+
+            if (field.meta?.baseRole === 'VACATION') {
+                if (!field.value?.vacationTypeId) return false;
+            }
+
+            if (field.meta?.ui?.requireReason) {
+                return Boolean(field.value?.reason?.trim());
+            }
+            return true;
+        }
 
         case 'date-range':
-        case 'leave-date-range':
-        case 'schedule-date-range':
         case 'time-range':
             return Boolean(field.value?.start && field.value?.end);
+
 
         case 'table':
             return true; // table은 schema 기반 검증에서만 처리
@@ -1482,8 +1520,7 @@ function validateFieldsByTypeWithSchema(fieldDefs, valuesById) {
 
         switch (field.fieldType) {
             case 'date-range':
-            case 'leave-date-range':
-            case 'schedule-date-range':
+            case 'event-date-range':
                 if (!validateRangeField(field, value)) {
                     return false;
                 }
@@ -1599,20 +1636,11 @@ function validateRequiredFieldsWithSchema(fieldDefs, valuesById) {
         });
 
         if (!valid) {
-            if (field.fieldType === 'leave-reason') {
-                showLeaveReasonError({
-                    fieldId: field.fieldId,
-                    value
-                });
-                return false;
-            }
-
 
             // ✅ range류는 wrapper 기준 처리
             if (
                 field.fieldType === 'date-range' ||
-                field.fieldType === 'leave-date-range' ||
-                field.fieldType === 'schedule-date-range' ||
+                field.fieldType === 'event-date-range' ||
                 field.fieldType === 'time-range'
             ) {
                 // start/end 중 뭘 비웠는지에 따라 포커스도 맞춤
@@ -1667,21 +1695,25 @@ function showRangeFieldError(fieldId, message, focusRangeType = 'start') {
     const fieldWrapper = getFieldWrapperByFieldId(fieldId);
     if (!fieldWrapper) return;
 
-    const rangeWrapper = fieldWrapper.querySelector('.date-range, .time-range');
+    // 🔹 실제 range input wrapper만 타겟
+    const rangeWrapper =
+        fieldWrapper.querySelector('.date-range, .time-range');
+
     if (!rangeWrapper) return;
 
-    // 기존 hint 제거 (doc-field 기준)
+    // 기존 hint 제거
     fieldWrapper.querySelector('.field-hint')?.remove();
 
     // 에러 클래스
     fieldWrapper.classList.add('field-error');
     rangeWrapper.classList.add('field-error');
 
+    // start / end input 하이라이트
     rangeWrapper
         .querySelectorAll('input[data-range-type]')
         .forEach(inp => inp.classList.add('field-error'));
 
-    // ✅ hint는 doc-field 바로 아래
+    // 메시지
     const hint = document.createElement('div');
     hint.className = 'field-hint';
     hint.textContent = message;
@@ -1694,18 +1726,12 @@ function showRangeFieldError(fieldId, message, focusRangeType = 'start') {
     });
 
     // 포커스
-    const focusTarget =
-        rangeWrapper.querySelector(
-            `input[data-range-type="${focusRangeType}"]:not([disabled])`
-        ) ||
-        rangeWrapper.querySelector('input:not([disabled])');
-
-    if (focusTarget) {
-        requestAnimationFrame(() =>
-            focusTarget.focus({preventScroll: true})
-        );
-    }
+    const focusTarget = rangeWrapper.querySelector(
+        `input[data-range-type="${focusRangeType}"]:not([disabled])`
+    );
+    focusTarget?.focus({preventScroll: true});
 }
+
 
 function clearRangeFieldErrorByFieldId(fieldId) {
     const fieldWrapper = getFieldWrapperByFieldId(fieldId);
@@ -1715,10 +1741,11 @@ function clearRangeFieldErrorByFieldId(fieldId) {
     fieldWrapper.querySelector('.field-hint')?.remove();
 
     const rangeWrapper =
-        fieldWrapper.querySelector('.date-range, .time-range');
+        fieldWrapper.querySelector(
+            '.date-range, .time-range, .event-date-range'
+        );
 
     rangeWrapper?.classList.remove('field-error');
-
     rangeWrapper
         ?.querySelectorAll('input[data-range-type]')
         .forEach(inp => inp.classList.remove('field-error'));
@@ -1941,7 +1968,7 @@ function collectDocumentValues() {
             return;
         }
 
-        /* ===== leave-reason (subKey object) ===== */
+        /* ===== object field (subKey 기반 값) ===== */
         if (el.dataset.subKey) {
             const existing = fieldMap.get(fieldId) ?? {
                 fieldId,

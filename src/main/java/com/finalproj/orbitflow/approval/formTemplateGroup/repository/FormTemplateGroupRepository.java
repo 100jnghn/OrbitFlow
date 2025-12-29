@@ -25,7 +25,7 @@ public interface FormTemplateGroupRepository extends JpaRepository<FormTemplateG
       and f.name like concat('%', :keyword, '%')
     order by f.name asc
     """)
-    List<FormTemplateGroupListView> findByCompanyAndKeyword(
+    List<FormTemplateGroup> findByCompanyAndKeyword(
             Long companyId,
             String keyword
     );

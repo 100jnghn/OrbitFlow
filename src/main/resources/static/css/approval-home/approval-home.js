@@ -8,6 +8,16 @@ const approvalStatusMap = {
     ACTIVE:   { text: '활성',   class: 'status-badge status-approved' },
     INACTIVE: { text: '비활성', class: 'status-badge status-rejected' }
 };
+const BASE_ROLE_OPTIONS = {
+    SCHEDULE: [
+        {value: 'COMPANY_EVENT', label: '회사 일정'}
+    ],
+    ATTENDANCE: [
+        {value: 'VACATION', label: '휴가'},
+        {value: 'BUSINESS_TRIP', label: '출장'},
+        {value: 'OUTWORK', label: '외근'}
+    ]
+};
 
 let approvalState = {
     keyword: '',
@@ -19,7 +29,6 @@ let approvalState = {
 let lastSelectedUpdateTemplateId = null;
 let lastSelectedUpdateId = null;
 let lastUpdateDropdownItems = [];
-let lastUpdateDropdownIdMap = {};
 let updatePopupDebounce;
 
 const LIST_TITLE_MAX = 30; // 또는 35
@@ -35,20 +44,102 @@ const popupTemplateDesc = document.getElementById('popupTemplateDesc');
 const popupCreateBtn = document.getElementById('popupCreateBtn');
 const updateTemplateSearch = document.getElementById('updateTemplateSearch');
 const keywordInput = document.getElementById('keywordInput');
+const popupCategory = document.getElementById('popupCategory');
+const popupBaseRole = document.getElementById('popupBaseRole');
 
-/* maxlength 설정 */
-popupTemplateName.setAttribute('maxlength', TEMPLATE_NAME_MAX);
-popupTemplateDesc.setAttribute('maxlength', TEMPLATE_DESC_MAX);
+const popupCategoryMsg =
+    popupCategory
+        ? popupCategory.closest('.modal-form-group')?.querySelector('.hint')
+        : null;
+
+const popupBaseRoleMsg =
+    popupBaseRole
+        ? popupBaseRole.closest('.modal-form-group')?.querySelector('.hint')
+        : null;
+
 
 // 힌트 엘리먼트
 const popupTemplateNameMsg =
-    popupTemplateName.closest('.modal-form-group').querySelector('.hint');
+    popupTemplateName
+        ? popupTemplateName.closest('.modal-form-group')?.querySelector('.hint')
+        : null;
+
 const popupTemplateDescMsg =
-    popupTemplateDesc.closest('.modal-form-group').querySelector('.hint');
+    popupTemplateDesc
+        ? popupTemplateDesc.closest('.modal-form-group')?.querySelector('.hint')
+        : null;
+
 const updateTemplateSearchMsg =
     document.getElementById('updateTemplateSearchHint');
 const keywordInputMsg =
-    keywordInput.closest('.search-group').querySelector('.hint');
+    keywordInput
+        ? keywordInput.closest('.search-group')?.querySelector('.hint')
+        : null;
+
+
+function handleCategoryChange() {
+    if (!popupCategory || !popupBaseRole) return;
+
+    const category = popupCategory.value;
+
+    // 초기화
+    popupBaseRole.innerHTML = '<option value="">선택하세요</option>';
+    popupBaseRole.value = '';
+    popupBaseRole.disabled = true;
+
+    const options = BASE_ROLE_OPTIONS[category];
+    if (!options) {
+        // GENERAL 등 → 일정 유형 사용 안 함
+        if (popupBaseRoleMsg) popupBaseRoleMsg.textContent = '';
+        return;
+    }
+
+    // 옵션 채우기
+    options.forEach(opt => {
+        const optionEl = document.createElement('option');
+        optionEl.value = opt.value;
+        optionEl.textContent = opt.label;
+        popupBaseRole.appendChild(optionEl);
+    });
+
+    popupBaseRole.disabled = false;
+}
+
+
+function initPopupMaxLength() {
+    if (popupTemplateName) {
+        popupTemplateName.setAttribute('maxlength', TEMPLATE_NAME_MAX);
+    }
+
+    if (popupTemplateDesc) {
+        popupTemplateDesc.setAttribute('maxlength', TEMPLATE_DESC_MAX);
+    }
+}
+
+
+function validateCreatePopup() {
+    const dom = getCreatePopupDom();
+    if (!dom) return false;
+
+    let valid = true;
+
+    if (!validateTemplateName()) valid = false;
+    if (!validateTemplateDesc()) valid = false;
+
+    if (!dom.category.value) {
+        showMsg(popupCategoryMsg, '카테고리를 선택해주세요.', 'error');
+        valid = false;
+    }
+
+    if (dom.category.value === 'SCHEDULE' && !dom.baseRole.value) {
+        showMsg(popupBaseRoleMsg, '일정 유형을 선택해주세요.', 'error');
+        valid = false;
+    }
+
+    dom.createBtn.disabled = !valid;
+    return valid;
+}
+
 
 // ========================
 // API 호출 함수
@@ -66,51 +157,6 @@ async function fetchApprovalDocs({ status, keyword, page, pageSize }) {
     return result && result.data ? result.data : { content: [], totalPages: 1, number: 0, totalElements: 0 };
 }
 
-/**
- * 선택한 양식 그룹(groupId)을 기반으로 결재 양식 임시 저장 생성
- * @param {number} groupId - FormTemplateGroup ID
- * @param {string} categoryCode - TemplateCategoryCode (예: 'ATTENDANCE', 'SCHEDULE', 'GENERAL')
- */
-async function createFormTemplateByGroupId(groupId, categoryCode) {
-    if (!groupId) {
-        alert('양식 그룹 ID가 유효하지 않습니다.');
-        return null;
-    }
-    if (!categoryCode) {
-        alert('양식 카테고리를 선택해주세요.');
-        return null;
-    }
-
-    try {
-        const params = new URLSearchParams({
-            templateGroupId: groupId,
-            categoryCode: categoryCode
-        });
-
-        const res = await apiFetch(`/api/admin/form-templates?${params.toString()}`, {
-            method: 'POST'
-        });
-
-        if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw new Error(err?.message || '결재 양식 생성에 실패했습니다.');
-        }
-
-        const result = await res.json();
-        const formTemplateId = result?.data?.formTemplateId;
-
-        if (!formTemplateId) {
-            throw new Error('생성된 결재 양식 ID를 받지 못했습니다.');
-        }
-
-        return formTemplateId;
-
-    } catch (e) {
-        console.error('[createFormTemplateByGroupId error]', e);
-        alert(e.message || '결재 양식 생성 중 오류가 발생했습니다.');
-        return null;
-    }
-}
 
 // 업데이트 팝업 검색 ajax
 async function fetchUpdateTemplates(keyword) {
@@ -175,6 +221,12 @@ function renderTableRows(docs) {
                 // 활성 / 비활성 → 미리보기
                 window.location.href =
                     `/view/admin/preview-template/${templateId}`;
+            }
+        });
+        tr.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                tr.click();
             }
         });
 
@@ -350,17 +402,34 @@ async function loadAndRender(override = {}) {
 // 팝업 (생성/업데이트) 열기/닫기 함수
 // ========================
 function showCreatePopup(initName = '', initDesc = '') {
-    popupTemplateName.value = initName;
-    popupTemplateDesc.value = initDesc;
+    const dom = getCreatePopupDom();
+    if (!dom) {
+        console.error('Create popup DOM not found');
+        return;
+    }
 
-    popupTemplateNameMsg.textContent = '';
-    popupTemplateDescMsg.textContent = '';
-    validateTemplateName();
-    validateTemplateDesc();
+    const {name, desc, createBtn, category, baseRole} = dom;
+
+    name.value = initName;
+    desc.value = initDesc;
+
+    category.value = '';
+    baseRole.value = '';
+    baseRole.disabled = true;
+
+    popupTemplateNameMsg && (popupTemplateNameMsg.textContent = '');
+    popupTemplateDescMsg && (popupTemplateDescMsg.textContent = '');
+    popupCategoryMsg && (popupCategoryMsg.textContent = '');
+    popupBaseRoleMsg && (popupBaseRoleMsg.textContent = '');
+
+    createBtn.disabled = true;
+
+    handleCategoryChange();
     updateCreateButtonState();
 
     document.getElementById('createPopup').style.display = 'flex';
 }
+
 
 function hideCreatePopup() {
     document.getElementById('createPopup').style.display = 'none';
@@ -378,6 +447,8 @@ function showUpdatePopup() {
 }
 
 function hideUpdatePopup() {
+    clearTimeout(updatePopupDebounce);
+
     lastSelectedUpdateTemplateId = null;
     lastSelectedUpdateId = null;
 
@@ -413,7 +484,11 @@ function validateTemplateName() {
     const v = popupTemplateName.value.trim();
 
     if (!v) {
-        popupTemplateNameMsg.textContent = '';
+        showMsg(
+            popupTemplateNameMsg,
+            '양식명을 입력해주세요.',
+            'error'
+        );
         return false;
     }
 
@@ -434,11 +509,16 @@ function validateTemplateName() {
     return true;
 }
 
+
 function validateTemplateDesc() {
     const v = popupTemplateDesc.value.trim();
 
     if (!v) {
-        popupTemplateDescMsg.textContent = '';
+        showMsg(
+            popupTemplateDescMsg,
+            '설명을 입력해주세요.',
+            'error'
+        );
         return false;
     }
 
@@ -510,134 +590,175 @@ function validateKeywordSearch() {
 }
 
 // ========================
-// 버튼 상태 업데이트
-// ========================
-function updateCreateButtonState() {
-    const isNameValid = popupTemplateName.value.trim().length > 0 &&
-        popupTemplateName.value.length <= TEMPLATE_NAME_MAX;
-
-    const isDescValid = popupTemplateDesc.value.trim().length > 0 &&
-        popupTemplateDesc.value.length <= TEMPLATE_DESC_MAX;
-
-    popupCreateBtn.disabled = !(isNameValid && isDescValid);
-}
-
-// ========================
 // 이벤트 바인딩 메인/팝업
 // ========================
 function bindEventHandlers() {
-    popupTemplateName.addEventListener('input', () => {
-        enforceMaxLength(popupTemplateName, TEMPLATE_NAME_MAX);
-        validateTemplateName();
-        updateCreateButtonState();
-    });
+    /* ======================
+       Create Popup 전용
+    ====================== */
+    if (popupTemplateName && popupTemplateDesc && popupCreateBtn) {
+        popupTemplateName.addEventListener('input', () => {
+            enforceMaxLength(popupTemplateName, TEMPLATE_NAME_MAX);
+            updateCreateButtonState();
+        });
 
-    popupTemplateDesc.addEventListener('input', () => {
-        enforceMaxLength(popupTemplateDesc, TEMPLATE_DESC_MAX);
-        validateTemplateDesc();
-        updateCreateButtonState();
-    });
+        popupTemplateDesc.addEventListener('input', () => {
+            enforceMaxLength(popupTemplateDesc, TEMPLATE_DESC_MAX);
+            updateCreateButtonState();
+        });
 
-    keywordInput.addEventListener('input', () => {
+        popupCategory?.addEventListener('change', () => {
+            handleCategoryChange();
+            updateCreateButtonState();
+        });
+
+        popupBaseRole?.addEventListener('change', () => {
+            updateCreateButtonState();
+        });
+
+        document
+            .getElementById('popupCancelBtn')
+            ?.addEventListener('click', hideCreatePopup);
+
+        document
+            .getElementById('popupCreateBtn')
+            ?.addEventListener('click', async function () {
+
+                if (!validateCreatePopup()) return;
+
+                const name = popupTemplateName.value.trim();
+                const desc = popupTemplateDesc.value.trim();
+                const categoryCode = popupCategory.value;
+                const baseRole =
+                    categoryCode === 'SCHEDULE'
+                        ? popupBaseRole.value
+                        : null;
+
+                try {
+                    popupCreateBtn.disabled = true;
+
+                    // 1️⃣ 그룹 생성
+                    // 1️⃣ 그룹 생성 (수정본)
+                    const res = await apiFetch('/api/admin/form-template-groups', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            name,
+                            description: desc,
+                            categoryCode,
+                            baseRole: popupBaseRole.disabled ? null : popupBaseRole.value
+                        })
+                    });
+
+
+                    if (!res.ok) {
+                        const errMsg =
+                            (await res.json())?.message ||
+                            '문서 양식 그룹 생성에 실패했습니다.';
+                        alert(errMsg);
+                        return;
+                    }
+
+                    const result = await res.json();
+                    const groupId = result?.data?.createdFormTemplateGroupId;
+                    if (!groupId) {
+                        alert('생성된 양식 그룹 ID를 가져오지 못했습니다.');
+                        return;
+                    }
+
+
+                    // 2️⃣ 템플릿 생성 (수정본)
+                    const res2 = await apiFetch(
+                        `/api/admin/form-templates?templateGroupId=${groupId}`,
+                        {method: 'POST'}
+                    );
+
+
+                    if (!res2.ok) {
+                        const err = await res2.json().catch(() => ({}));
+                        throw new Error(err?.message || '결재 양식 생성 실패');
+                    }
+
+                    const result2 = await res2.json();
+                    const templateId = result2?.data?.formTemplateId;
+
+                    hideCreatePopup();
+                    window.location.href =
+                        `/view/admin/create-template?templateId=${templateId}`;
+
+                } catch (e) {
+                    console.error(e);
+                    alert(e.message || '문서 양식 생성 중 오류가 발생했습니다.');
+                } finally {
+                    updateCreateButtonState();
+                }
+            });
+    }
+
+    /* ======================
+       검색 / 페이징 (공통)
+    ====================== */
+    keywordInput?.addEventListener('input', () => {
         enforceMaxLength(keywordInput, TEMPLATE_NAME_MAX);
         validateKeywordSearch();
     });
 
-    document.getElementById('statusFilter').addEventListener('change', function () {
-        approvalState.status = this.value;
-        approvalState.page = 0;
-        loadAndRender({ status: this.value, page: 0 });
-    });
+    document
+        .getElementById('statusFilter')
+        ?.addEventListener('change', function () {
+            approvalState.status = this.value;
+            approvalState.page = 0;
+            loadAndRender({status: this.value, page: 0});
+        });
 
-    document.getElementById('searchBtn').addEventListener('click', function () {
-        if (!validateKeywordSearch() && keywordInput.value.trim()) return;
-        approvalState.keyword = keywordInput.value;
+    document
+        .getElementById('searchBtn')
+        ?.addEventListener('click', function () {
+            const keyword = keywordInput.value.trim();
+            if (keyword && !validateKeywordSearch()) return;
+
+            approvalState.keyword = keyword;
+            approvalState.page = 0;
+            loadAndRender({keyword, page: 0});
+            clearHint(keywordInputMsg);
+        });
+
+    keywordInput?.addEventListener('keyup', function (e) {
+        if (e.key !== 'Enter') return;
+
+        const keyword = this.value.trim();
+        if (keyword && !validateKeywordSearch()) return;
+
+        approvalState.keyword = keyword;
         approvalState.page = 0;
-        loadAndRender({keyword: keywordInput.value, page: 0});
+        loadAndRender({keyword, page: 0});
         clearHint(keywordInputMsg);
     });
 
-    keywordInput.addEventListener('keyup', function (e) {
-        if (e.key === 'Enter') {
-            if (!validateKeywordSearch() && this.value.trim()) return;
-            approvalState.keyword = this.value;
-            approvalState.page = 0;
-            loadAndRender({keyword: this.value, page: 0});
-            clearHint(keywordInputMsg);
-        }
-    });
-
-    document.getElementById('prevPageBtn').addEventListener('click', function () {
-        if (approvalState.page > 0) {
-            approvalState.page -= 1;
-            loadAndRender({ page: approvalState.page });
-        }
-    });
-
-    document.getElementById('nextPageBtn').addEventListener('click', function () {
-        approvalState.page += 1;
-        loadAndRender({ page: approvalState.page });
-    });
-
-    document.getElementById('createTemplateBtn').addEventListener('click', function () {
-        showCreatePopup();
-    });
-
-    document.getElementById('updateTemplateBtn').addEventListener('click', function () {
-        showUpdatePopup();
-    });
-
-    // 팝업 취소, 작성 버튼
-    document.getElementById('popupCancelBtn').addEventListener('click', function(){
-        hideCreatePopup();
-    });
-
-    document.getElementById('popupCreateBtn')
-        .addEventListener('click', async function () {
-
-            if (popupCreateBtn.disabled) return;
-
-            const name = popupTemplateName.value.trim();
-            const desc = popupTemplateDesc.value.trim();
-
-            try {
-                popupCreateBtn.disabled = true;
-
-                const res = await apiFetch('/api/admin/form-template-groups', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({name, description: desc})
-                });
-
-                if (!res.ok) {
-                    const errMsg =
-                        (await res.json())?.message ||
-                        '문서 양식 그룹 생성에 실패했습니다.';
-                    alert(errMsg);
-                    return;
-                }
-
-                const result = await res.json();
-                const groupId = result?.data?.createdFormTemplateGroupId;
-                if (!groupId) {
-                    alert('생성된 양식 그룹 ID를 가져오지 못했습니다.');
-                    return;
-                }
-
-                const templateId =
-                    await createFormTemplateByGroupId(groupId, "GENERAL");
-
-                hideCreatePopup();
-                window.location.href =
-                    `/view/admin/create-template?templateId=${templateId}`;
-
-            } catch (e) {
-                console.error(e);
-                alert('문서 양식 그룹 생성 중 오류가 발생했습니다.');
-            } finally {
-                popupCreateBtn.disabled = false;
+    document
+        .getElementById('prevPageBtn')
+        ?.addEventListener('click', function () {
+            if (approvalState.page > 0) {
+                approvalState.page -= 1;
+                loadAndRender({page: approvalState.page});
             }
         });
+
+    document
+        .getElementById('nextPageBtn')
+        ?.addEventListener('click', function () {
+            approvalState.page += 1;
+            loadAndRender({page: approvalState.page});
+        });
+
+    document
+        .getElementById('createTemplateBtn')
+        ?.addEventListener('click', () => showCreatePopup());
+
+
+    document
+        .getElementById('updateTemplateBtn')
+        ?.addEventListener('click', showUpdatePopup);
 }
 
 function bindUpdatePopupEvents() {
@@ -645,10 +766,7 @@ function bindUpdatePopupEvents() {
     const dropdown = document.getElementById('updateDropdown');
     const cancelBtn = document.getElementById('popupUpdateCancelBtn');
     const okBtn = document.getElementById('popupUpdateOkBtn');
-
-    // 팝업 열기
-    document.getElementById('updateTemplateBtn')
-        .addEventListener('click', showUpdatePopup);
+    if (!input || !dropdown || !cancelBtn || !okBtn) return;
 
     // 취소
     cancelBtn.addEventListener('click', hideUpdatePopup);
@@ -722,10 +840,39 @@ function bindUpdatePopupEvents() {
     }); 
 }
 
+function updateCreateButtonState() {
+    const dom = getCreatePopupDom();
+    if (!dom) return;
+
+    dom.createBtn.disabled = !validateCreatePopup();
+}
+
+function getCreatePopupDom() {
+    const name = document.getElementById('popupTemplateName');
+    const desc = document.getElementById('popupTemplateDesc');
+    const createBtn = document.getElementById('popupCreateBtn');
+    const category = document.getElementById('popupCategory');
+    const baseRole = document.getElementById('popupBaseRole');
+
+    if (!name || !desc || !createBtn || !category || !baseRole) {
+        return null;
+    }
+
+    return {name, desc, createBtn, category, baseRole};
+}
+
+
 // ========================
 // DOMContentLoaded 진입점
 // ========================
 document.addEventListener('DOMContentLoaded', function () {
+    initPopupMaxLength();
+
+    // popup DOM 있을 때만
+    if (popupCategory) {
+        handleCategoryChange();
+    }
+
     bindEventHandlers();
     loadAndRender({});
     bindUpdatePopupEvents();

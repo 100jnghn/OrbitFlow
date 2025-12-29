@@ -205,7 +205,21 @@ html, body {
     white-space: nowrap;
 }
 
+.currency-preview {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
 
+.currency-preview .preview-input {
+    max-width: 320px; /* number와 동일 */
+}
+
+.currency-preview .unit {
+    white-space: nowrap;
+    font-size: 0.9em;
+    color: #888;
+}
 
 
 .comp-label.required::after,
@@ -225,16 +239,24 @@ html, body {
 }
 
 
-.preview-input {
-    width: 60%;
-    padding: 6px 8px;
+.preview-input,
+.preview-textarea {
+    box-sizing: border-box;
 }
 
-.preview-textarea {
-    min-width: 170px;
-    min-height: 32px;
-    resize: none;
+/* === 길이 계열 === */
+.input-long {
+    max-width: 420px;
 }
+
+.input-medium {
+    max-width: 220px;
+}
+
+.input-compact {
+    max-width: 140px;
+}
+
 
 .unit {
     font-size: 0.9em;
@@ -245,12 +267,13 @@ html, body {
     display: flex;
     align-items: center;
     gap: 6px;
+    max-width: 320px;
 }
 
-.range-preview input[type="date"],
-.range-preview input[type="time"] {
-    width: 140px;
+.range-preview input {
+    flex: 1;
 }
+
 
 .range-sep {
     margin: 0 4px;
@@ -284,7 +307,7 @@ html, body {
     color: #999;
 }
 
-.divider-preview span {
+.divider-preview .divider-line {
     flex: 1;
     height: 1px;
     background: #ddd;
@@ -293,6 +316,7 @@ html, body {
 .divider-preview em {
     font-style: normal;
     font-size: 0.9em;
+    white-space: nowrap;
 }
 
 /* ======================================================
@@ -647,4 +671,42 @@ html, body {
     border-radius: 4px;
     background: #fff;
     font-size: 0.95em;
+}
+
+.image-preview {
+    max-width: 240px;
+}
+
+.image-preview img {
+    max-width: 100%;
+    border-radius: 4px;
+}
+
+.image-preview.placeholder {
+    width: 240px;
+    height: 140px;
+    border: 1px dashed #ccc;
+    color: #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.address-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.address-preview input {
+    width: 100%;
+}
+
+.search-preview {
+    display: flex;
+    gap: 6px;
+}
+
+.search-preview input {
+    flex: 1;
 }

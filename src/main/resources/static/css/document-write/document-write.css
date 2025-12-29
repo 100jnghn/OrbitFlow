@@ -495,3 +495,72 @@ button:not(.primary):hover {
     white-space: nowrap;
     z-index: 9999;
 }
+
+/* =====================================================
+   Schedule / Event Field (일정 컴포넌트)
+   ===================================================== */
+
+.doc-field.schedule-field {
+    gap: 10px; /* 라벨과 내용 사이 */
+}
+
+.schedule-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-left: 2px;
+}
+
+.schedule-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.schedule-row .sub-label {
+    width: 60px;
+    font-size: 13px;
+    color: #4b5563;
+    flex-shrink: 0;
+}
+
+.schedule-row input,
+.schedule-row textarea {
+    flex: 1;
+}
+
+.schedule-row textarea {
+    min-height: 80px;
+}
+
+.schedule-field {
+    background: #f9fafb;
+    border-radius: 8px;
+    padding:0;
+}
+
+/* 일정 입력 전체 */
+.schedule-input {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 12px 14px; /* ✅ 여기로 이동 */
+}
+
+
+/* 일정 내부 그룹 */
+.schedule-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* 그룹 이름 */
+.schedule-group-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #374151;
+}

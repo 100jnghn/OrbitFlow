@@ -12,7 +12,6 @@ package com.finalproj.orbitflow.approval.formTemplate.entity;
 import com.finalproj.orbitflow.approval.formTemplate.enums.AffectTag;
 import com.finalproj.orbitflow.approval.formTemplate.enums.FormTemplateStatus;
 import com.finalproj.orbitflow.approval.formTemplateGroup.entity.FormTemplateGroup;
-import com.finalproj.orbitflow.approval.templateCategory.entity.TemplateCategory;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import jakarta.persistence.*;
@@ -49,9 +48,7 @@ public class FormTemplate extends BaseEntity {
     @Column(name = "active_version", insertable = false, updatable = false)
     private Integer activeVersion;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "template_category_id", nullable = false)
-    private TemplateCategory templateCategory;
+
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -67,16 +64,8 @@ public class FormTemplate extends BaseEntity {
     @Column(name = "approval_rule_json", columnDefinition = "json")
     private String approvalRuleJson;
 
-    public void changeCategory(TemplateCategory category) {
-        this.templateCategory = category;
-    }
-
     public void updateTemplateJson(String templateJson) {
         this.templateJson = templateJson;
-    }
-
-    public void updateAffectTags(List<AffectTag> affectTags) {
-        this.affectTags = affectTags;
     }
 
     public void updateApprovalRuleJson(String approvalRuleJson) {

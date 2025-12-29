@@ -1,9 +1,11 @@
 package com.finalproj.orbitflow.approval.formTemplate.controller;
 
-import com.finalproj.orbitflow.approval.formTemplate.dto.*;
+import com.finalproj.orbitflow.approval.formTemplate.dto.FormTemplateAllListResDto;
+import com.finalproj.orbitflow.approval.formTemplate.dto.FormTemplateDetailResDto;
+import com.finalproj.orbitflow.approval.formTemplate.dto.FormTemplatePreviewResDto;
+import com.finalproj.orbitflow.approval.formTemplate.dto.FormTemplateUpdateReqDto;
 import com.finalproj.orbitflow.approval.formTemplate.enums.FormTemplateStatus;
 import com.finalproj.orbitflow.approval.formTemplate.service.FormTemplateService;
-import com.finalproj.orbitflow.approval.templateCategory.enums.TemplateCategoryCode;
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -32,13 +34,11 @@ public class FormTemplateController {
 
     @PostMapping("/admin/form-templates")
     public ResponseEntity<ResponseDto> saveFormTemplate(
-            @RequestParam Long templateGroupId,
-            @RequestParam TemplateCategoryCode categoryCode
+            @RequestParam Long templateGroupId
     ) {
         Long formTemplateId = formTemplateService.saveFormTemplate(
                 templateGroupId,
-                SecurityUtils.getCompanyId(),
-                categoryCode
+                SecurityUtils.getCompanyId()
         );
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -48,6 +48,7 @@ public class FormTemplateController {
                         Map.of("formTemplateId", formTemplateId)
                 ));
     }
+
 
     @PostMapping("/admin/form-templates/{templateGroupId}/revise")
     public ResponseEntity<ResponseDto> reviseFormTemplate(
