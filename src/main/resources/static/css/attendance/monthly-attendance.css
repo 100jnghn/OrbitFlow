@@ -97,12 +97,16 @@
     color: #DC2626; 
 }
 
-/* 상태 배지 */
+/* 상태 배지 - 크기 통일 */
 .status-badge {
+    display: inline-block;
     padding: 4px 10px;
     border-radius: 4px;
     font-size: 12px;
     font-weight: 700;
+    min-width: 60px;
+    text-align: center;
+    box-sizing: border-box;
 }
 
 .badge-late { 

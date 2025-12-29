@@ -164,4 +164,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     );
 
     List<Employee> findByStatus(EmployeeStatus employeeStatus);
+
+    List<Employee> findByCompanyIdAndStatus(Long companyId, EmployeeStatus employeeStatus);
 }

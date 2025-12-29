@@ -22,7 +22,7 @@ public class AttendanceDashboardViewController {
     public String attendanceDashboard(Model model) {
         model.addAttribute("currentGNB", "admin");
         model.addAttribute("currentMenu", "attendance-dashboard"); // 대시보드 활성화
-        return "admin-attendance/dashboard";
+        return "admin-attendance/admin-dashboard";
     }
 
 

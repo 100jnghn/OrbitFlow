@@ -25,12 +25,5 @@ public class LeaveBalanceViewController {
         return "leave/annual-leave";
     }
 
-    // 기타 휴가 조회
-    @GetMapping("/attendance/other-leave")
-    public String otherLeavePage(Model model) {
-        model.addAttribute("currentGNB", "work");
-        model.addAttribute("currentMenu", "other-leave");
 
-        return "leave/other-leave";
-    }
 }

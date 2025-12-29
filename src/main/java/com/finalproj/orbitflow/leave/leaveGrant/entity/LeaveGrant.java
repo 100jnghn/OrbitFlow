@@ -42,4 +42,8 @@ public class LeaveGrant extends BaseEntity {
     @Column(name = "is_expired", nullable = false)
     private Boolean isExpired;      // 소멸 처리 여부
 
+    public void updateExpiredStatus(Boolean isExpired) {
+        this.isExpired = isExpired;
+    }
+
 }

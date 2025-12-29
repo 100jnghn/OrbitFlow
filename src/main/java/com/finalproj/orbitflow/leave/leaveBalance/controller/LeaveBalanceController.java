@@ -30,6 +30,7 @@ public class LeaveBalanceController {
 
     private final LeaveBalanceService leaveBalanceService;
 
+    // 부여연차/사용연차/잔여연차 조회
     @GetMapping("/my")
     public ResponseEntity<ResponseDto<LeaveBalanceResDto>> getMyBalance(
             @AuthenticationPrincipal SecurityUser user,
@@ -45,28 +46,5 @@ public class LeaveBalanceController {
     }
 
 
-    @GetMapping("/history/annual")
-    public ResponseEntity<ResponseDto<List<LeaveHistoryResDto>>> getAnnualHistory(
-            @AuthenticationPrincipal SecurityUser user) {
 
-        List<LeaveHistoryResDto> history = leaveBalanceService.getAnnualLeaveHistory(
-                user.getCompanyId(),
-                user.getEmployeeId()
-        );
-
-        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "연차 상세 내역 조회 성공", history));
-    }
-
-
-    @GetMapping("/history/others")
-    public ResponseEntity<ResponseDto<List<LeaveHistoryResDto>>> getOtherHistory(
-            @AuthenticationPrincipal SecurityUser user) {
-
-        List<LeaveHistoryResDto> history = leaveBalanceService.getOtherLeaveHistory(
-                user.getCompanyId(),
-                user.getEmployeeId()
-        );
-
-        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "기타 휴가 신청 내역 조회 성공", history));
-    }
 }
