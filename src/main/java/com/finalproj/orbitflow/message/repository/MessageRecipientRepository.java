@@ -5,10 +5,11 @@ import com.finalproj.orbitflow.message.enums.MessageFolderType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.Optional;
 
-public interface MessageRecipientRepository extends JpaRepository<MessageRecipient, Long> {
+public interface MessageRecipientRepository extends JpaRepository<MessageRecipient, Long>, JpaSpecificationExecutor<MessageRecipient> {
 
     /** (받은/보낸) 기본 목록: 보관함 제외 + 삭제 제외 */
     Page<MessageRecipient> findByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedFalseAndMessageFolderTypeOrderByCreatedAtDesc(

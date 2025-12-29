@@ -299,7 +299,7 @@ function searchMessages() {
     loadMessageList(currentPage);
 }
 
-// 날짜 필터 설정
+// 날짜 필터 설정 및 검색 입력 엔터 키 이벤트
 function setupDateFilter() {
     const dateFilter = document.getElementById('dateFilter');
     if (!dateFilter) return;
@@ -335,6 +335,17 @@ function setupDateFilter() {
             }
         }
     });
+    
+    // 검색 입력 필드에 엔터 키 이벤트 추가
+    const searchKeyword = document.getElementById('searchKeyword');
+    if (searchKeyword) {
+        searchKeyword.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchMessages();
+            }
+        });
+    }
 }
 
 // 메시지 상세 보기

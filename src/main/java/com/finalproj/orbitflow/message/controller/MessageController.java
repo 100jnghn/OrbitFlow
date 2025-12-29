@@ -28,6 +28,8 @@ public class MessageController {
             @AuthenticationPrincipal SecurityUser user,
             @RequestParam(required = false, defaultValue = "INBOX") MessageFolderType folder,
             @RequestParam(required = false, defaultValue = "false") boolean archived,
+            @RequestParam(required = false) String searchType,
+            @RequestParam(required = false) String keyword,
             Pageable pageable
     ) {
         Page<MessageResDto.ListItem> result = messageService.getMessageList(
@@ -35,6 +37,8 @@ public class MessageController {
                 user.getEmployeeId(),
                 folder,
                 archived,
+                searchType,
+                keyword,
                 pageable
         );
 

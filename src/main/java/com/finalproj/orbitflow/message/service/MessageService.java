@@ -10,8 +10,12 @@ import com.finalproj.orbitflow.message.dto.MessageResDto;
 import com.finalproj.orbitflow.message.entity.Message;
 import com.finalproj.orbitflow.message.entity.MessageRecipient;
 import com.finalproj.orbitflow.message.enums.MessageFolderType;
+import com.finalproj.orbitflow.message.enums.MessageSearchType;
 import com.finalproj.orbitflow.message.repository.MessageRecipientRepository;
+import com.finalproj.orbitflow.message.repository.MessageRecipientSpecifications;
 import com.finalproj.orbitflow.message.repository.MessageRepository;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,15 +39,52 @@ public class MessageService {
             Long employeeId,
             MessageFolderType folder,
             boolean archived,
+            String searchTypeStr,
+            String keyword,
             Pageable pageable
     ) {
-        Page<MessageRecipient> page = archived
-                ? messageRecipientRepository.findByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedTrueOrderByCreatedAtDesc(
-                companyId, employeeId, pageable
-        )
-                : messageRecipientRepository.findByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedFalseAndMessageFolderTypeOrderByCreatedAtDesc(
-                companyId, employeeId, folder, pageable
-        );
+        // searchType 파싱
+        MessageSearchType searchType = MessageSearchType.from(searchTypeStr);
+        
+        // 검색어가 있고 검색 타입이 ALL이 아닌 경우 검색 쿼리 사용
+        boolean hasSearch = (keyword != null && !keyword.isBlank());
+        
+        Page<MessageRecipient> page;
+        if (archived) {
+            if (hasSearch) {
+                Specification<MessageRecipient> spec = MessageRecipientSpecifications.archiveSpec(
+                        companyId, employeeId, searchType, keyword
+                );
+                // 정렬을 pageable에 포함
+                pageable = org.springframework.data.domain.PageRequest.of(
+                        pageable.getPageNumber(),
+                        pageable.getPageSize(),
+                        Sort.by(Sort.Direction.DESC, "createdAt")
+                );
+                page = messageRecipientRepository.findAll(spec, pageable);
+            } else {
+                page = messageRecipientRepository.findByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedTrueOrderByCreatedAtDesc(
+                        companyId, employeeId, pageable
+                );
+            }
+        } else {
+            if (hasSearch) {
+                Specification<MessageRecipient> spec = MessageRecipientSpecifications.listSpec(
+                        companyId, employeeId, folder, searchType, keyword
+                );
+                // 정렬을 pageable에 포함
+                pageable = org.springframework.data.domain.PageRequest.of(
+                        pageable.getPageNumber(),
+                        pageable.getPageSize(),
+                        Sort.by(Sort.Direction.DESC, "createdAt")
+                );
+                page = messageRecipientRepository.findAll(spec, pageable);
+            } else {
+                page = messageRecipientRepository.findByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedFalseAndMessageFolderTypeOrderByCreatedAtDesc(
+                        companyId, employeeId, folder, pageable
+                );
+            }
+        }
 
         // peerName 정책:
         // - INBOX: senderName
@@ -53,7 +94,7 @@ public class MessageService {
             if (mr.getMessageFolderType() == MessageFolderType.INBOX) {
                 peerName = mr.getMessage().getSender().getName();
             } else {
-                peerName = "수신자"; // 필요하면 나중에 “N명” 같은 식으로 확장
+                peerName = "수신자"; // 필요하면 나중에 "N명" 같은 식으로 확장
             }
             return MessageResDto.ListItem.from(mr, peerName);
         });

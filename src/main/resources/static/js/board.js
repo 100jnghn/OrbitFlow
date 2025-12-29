@@ -519,7 +519,7 @@ function searchBoards() {
     loadBoardList(currentPage);
 }
 
-// 날짜 필터 변경
+// 날짜 필터 변경 및 검색 입력 엔터 키 이벤트
 document.addEventListener('DOMContentLoaded', function() {
     const dateFilter = document.getElementById('dateFilter');
     if (dateFilter) {
@@ -550,6 +550,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     startDateInput.value = startDate.toISOString().split('T')[0];
                     endDateInput.value = today.toISOString().split('T')[0];
                 }
+            }
+        });
+    }
+    
+    // 검색 입력 필드에 엔터 키 이벤트 추가
+    const searchKeyword = document.getElementById('searchKeyword');
+    if (searchKeyword) {
+        searchKeyword.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchBoards();
             }
         });
     }
