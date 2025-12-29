@@ -179,8 +179,8 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
                     AND s.employeeId = :employeeId
                     AND s.orgId IS NULL
                     AND s.orgCategoryId IS NULL
-                    AND s.startAt < :endOfDay
-                    AND s.endAt > :startOfDay
+                    AND s.startAt < :endOfDate
+                    AND s.endAt > :startOfDate
             """)
     List<Schedule> findEmployeeSchedules(
             Long companyId,
