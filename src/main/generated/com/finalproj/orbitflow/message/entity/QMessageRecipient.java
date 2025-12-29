@@ -34,7 +34,7 @@ public class QMessageRecipient extends EntityPathBase<MessageRecipient> {
 
     public final DateTimePath<java.time.Instant> deletedAt = createDateTime("deletedAt", java.time.Instant.class);
 
-    public final EnumPath<com.finalproj.orbitflow.message.enums.MessageFolderType> folderType = createEnum("folderType", com.finalproj.orbitflow.message.enums.MessageFolderType.class);
+    public final com.finalproj.orbitflow.hr.employee.entity.QEmployee employee;
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
@@ -44,12 +44,12 @@ public class QMessageRecipient extends EntityPathBase<MessageRecipient> {
 
     public final QMessage message;
 
+    public final EnumPath<com.finalproj.orbitflow.message.enums.MessageFolderType> messageFolderType = createEnum("messageFolderType", com.finalproj.orbitflow.message.enums.MessageFolderType.class);
+
     //inherited
     public final NumberPath<Long> modifiedBy = _super.modifiedBy;
 
-    public final DateTimePath<java.time.Instant> readDate = createDateTime("readDate", java.time.Instant.class);
-
-    public final com.finalproj.orbitflow.hr.employee.entity.QEmployee recipient;
+    public final DateTimePath<java.time.Instant> readAt = createDateTime("readAt", java.time.Instant.class);
 
     //inherited
     public final DateTimePath<java.time.Instant> updatedAt = _super.updatedAt;
@@ -72,8 +72,8 @@ public class QMessageRecipient extends EntityPathBase<MessageRecipient> {
 
     public QMessageRecipient(Class<? extends MessageRecipient> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
+        this.employee = inits.isInitialized("employee") ? new com.finalproj.orbitflow.hr.employee.entity.QEmployee(forProperty("employee"), inits.get("employee")) : null;
         this.message = inits.isInitialized("message") ? new QMessage(forProperty("message"), inits.get("message")) : null;
-        this.recipient = inits.isInitialized("recipient") ? new com.finalproj.orbitflow.hr.employee.entity.QEmployee(forProperty("recipient"), inits.get("recipient")) : null;
     }
 
 }

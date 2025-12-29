@@ -28,9 +28,6 @@ public class ScheduleReqDto {
 
     private LocalDateTime startAt;
     private LocalDateTime endAt;
-
-    /**
-     * 기본값: RELEASE
-     */
+    
     private String status;
 }
