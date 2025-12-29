@@ -47,10 +47,10 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     );
   
     /**
-     * 회사 ID + 이름 또는 사번으로 사원 검색
+     * 회사 ID + 이름, 사번 또는 이메일로 사원 검색
      */
     @Query("SELECT e FROM Employee e WHERE e.company.id = :companyId " +
-           "AND (e.name LIKE CONCAT('%', :keyword, '%') OR e.employeeNo LIKE CONCAT('%', :keyword, '%')) " +
+           "AND (e.name LIKE CONCAT('%', :keyword, '%') OR e.employeeNo LIKE CONCAT('%', :keyword, '%') OR e.email LIKE CONCAT('%', :keyword, '%')) " +
            "AND e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE")
     List<Employee> searchByCompanyIdAndKeyword(
             @Param("companyId") Long companyId,
