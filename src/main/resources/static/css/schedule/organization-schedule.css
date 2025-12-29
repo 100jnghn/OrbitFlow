@@ -263,6 +263,16 @@
     border-width: 2px;
 }
 
+.calendar-day.selected {
+    border-color: #FCA5A5; /* 연한 빨간색 테두리 */
+    border-width: 2px;
+}
+
+.calendar-day.selected.today {
+    border-color: #FCA5A5; /* 연한 빨간색 테두리 */
+    border-width: 2px;
+}
+
 .day-number {
     font-size: 13px;
     font-weight: 600;
