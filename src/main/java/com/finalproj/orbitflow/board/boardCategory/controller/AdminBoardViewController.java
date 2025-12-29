@@ -20,7 +20,7 @@ public class AdminBoardViewController {
         model.addAttribute("pageTitle", "공용 게시판 관리");
         model.addAttribute("currentGNB", "admin");
         model.addAttribute("currentMenu", "common-board");
-        return "admin/admin-board-common";
+        return "admin/admin-board/admin-board-common";
     }
 
     /**
@@ -31,6 +31,6 @@ public class AdminBoardViewController {
         model.addAttribute("pageTitle", "부서 게시판 활성화");
         model.addAttribute("currentGNB", "admin");
         model.addAttribute("currentMenu", "dept-board");
-        return "admin/admin-board-dept";
+        return "admin/admin-board/admin-board-dept";
     }
 }
