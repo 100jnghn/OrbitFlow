@@ -196,7 +196,12 @@
 }
 
 .board-table th:nth-child(5) {
-    width: 100px;
+    width: 180px;
+    text-align: center !important;
+}
+
+.board-table th:nth-child(6) {
+    width: 180px;
     text-align: center !important;
 }
 
@@ -227,6 +232,16 @@
 .board-table td:nth-child(5) {
     text-align: center !important;
     color: var(--neutral-600);
+}
+
+.board-table td:nth-child(5) {
+    white-space: nowrap;
+}
+
+.board-table td:nth-child(6) {
+    text-align: center !important;
+    color: var(--neutral-600);
+    white-space: nowrap;
 }
 
 .board-table tbody tr {
