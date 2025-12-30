@@ -16,12 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================
     async function loadDefaultRule() {
         try {
-            const token = sessionStorage.getItem('accessToken');
-            const res = await fetch('/api/admin/rules/default', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const res = await apiFetch('/api/admin/rules/default');
+
             if (res.ok) {
                 const rule = await res.json();
                 if (rule.defaultStartTime) {
@@ -41,18 +37,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('saveDefaultRuleBtn').addEventListener('click', async () => {
         try {
-            const token = sessionStorage.getItem('accessToken');
             const data = {
                 defaultStartTime: document.getElementById('defaultStartTime').value + ":00",
                 defaultEndTime: document.getElementById('defaultEndTime').value + ":00",
                 lateThresholdMin: parseInt(document.getElementById('tardinessMinutes').value)
             };
 
-            const res = await fetch('/api/admin/rules/default', {
+            const res = await apiFetch('/api/admin/rules/default', {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(data)
             });
@@ -75,12 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================
     async function loadExceptionRules() {
         try {
-            const token = sessionStorage.getItem('accessToken');
-            const res = await fetch('/api/admin/rules/exception', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const res = await apiFetch('/api/admin/rules/exception');
 
             if (res.ok) {
                 const rules = await res.json();
@@ -374,12 +363,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const token = sessionStorage.getItem('accessToken');
-            const res = await fetch(`/api/admin/rules/employees/search?keyword=${encodeURIComponent(keyword)}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const res = await apiFetch(
+                `/api/employees/search?keyword=${encodeURIComponent(keyword)}`
+            );
 
             if (res.ok) {
                 const employees = await res.json();
@@ -588,7 +574,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const validTo = document.getElementById('validTo').value || null;
 
         try {
-            const token = sessionStorage.getItem('accessToken');
             const data = {
                 employeeId: parseInt(employeeId),
                 startTime: startTime ? startTime + ":00" : null,
@@ -599,11 +584,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 validTo: validTo
             };
 
-            const res = await fetch('/api/admin/rules/exception', {
+            const res = await apiFetch('/api/admin/rules/exception', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(data)
             });
@@ -646,12 +630,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================
     async function openEditModal(ruleId) {
         try {
-            const token = sessionStorage.getItem('accessToken');
-            const res = await fetch(`/api/admin/rules/exception/${ruleId}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const res = await apiFetch(`/api/admin/rules/exception/${ruleId}`);
 
             if (res.ok) {
                 const rule = await res.json();
@@ -879,7 +858,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const token = sessionStorage.getItem('accessToken');
             const ruleId = document.getElementById('editRuleId').value;
             const startTime = document.getElementById('editExceptionStartTime').value;
             const endTime = document.getElementById('editExceptionEndTime').value;
@@ -898,11 +876,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 isActive: true
             };
 
-            const res = await fetch(`/api/admin/rules/exception/${ruleId}`, {
+            const res = await apiFetch(`/api/admin/rules/exception/${ruleId}`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(data)
             });
@@ -942,12 +919,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const token = sessionStorage.getItem('accessToken');
-            const res = await fetch(`/api/admin/rules/exception/${ruleId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+            const res = await apiFetch(`/api/admin/rules/exception/${ruleId}`, {
+                method: 'DELETE'
             });
 
             if (res.ok) {

@@ -1,15 +1,14 @@
-package com.finalproj.orbitflow.attendance.default_rule.dto;
+package com.finalproj.orbitflow.hr.employee.dto;
 
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 
 /**
  * Please explain the class!!!
  *
- * @author : rlagkdus
+ * @author : seunga03
  * @filename : EmployeeSearchDto
- * @since : 2025. 12. 22. 월요일
+ * @since : 2025-12-30 화요일
  */
-
 public record EmployeeSearchDto(
         Long id,
         String name,
