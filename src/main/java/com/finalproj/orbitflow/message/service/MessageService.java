@@ -244,12 +244,56 @@ public class MessageService {
         
         // 보낸 메시지함인 경우 수신자 정보 추가
         // recipientId가 제공된 경우 (보낸 메시지함에서 특정 수신자 선택)
-        boolean isSentMessageDetail = recipientId != null || (mr.getMessageFolderType() == MessageFolderType.INBOX && 
-            mr.getMessage().getSender().getId().equals(employeeId));
+        // 또는 보관함에서 보낸 메시지(SENT 타입)인 경우
+        boolean isSentMessageDetail = recipientId != null || 
+            (mr.getMessageFolderType() == MessageFolderType.INBOX && 
+             mr.getMessage().getSender().getId().equals(employeeId)) ||
+            (mr.getMessageFolderType() == MessageFolderType.SENT && 
+             mr.getMessage().getSender().getId().equals(employeeId));
         
         if (isSentMessageDetail) {
-            // 보낸 메시지함: 현재 레코드가 INBOX이지만 발신자가 현재 사용자
-            // 즉, 보낸 메시지함에서 특정 수신자를 선택한 경우
+            // 보낸 메시지함 또는 보관함에서 보낸 메시지
+            Long recipientIdDetail = null;
+            String recipientName = null;
+            
+            if (recipientId != null && mr.getMessageFolderType() == MessageFolderType.INBOX) {
+                // 보낸 메시지함에서 특정 수신자 선택한 경우: 해당 수신자 정보만 표시
+                recipientIdDetail = mr.getEmployee().getId();
+                recipientName = mr.getEmployee().getName();
+            } else {
+                // 보관함에서 보낸 메시지(SENT 타입)인 경우: 모든 수신자 정보 조회하여 표시
+                List<MessageRecipient> inboxRecipients = messageRecipientRepository
+                        .findByMessage_IdAndMessageFolderTypeAndDeletedAtIsNull(
+                                mr.getMessage().getId(), MessageFolderType.INBOX);
+                
+                if (!inboxRecipients.isEmpty()) {
+                    if (inboxRecipients.size() == 1) {
+                        recipientIdDetail = inboxRecipients.get(0).getEmployee().getId();
+                        recipientName = inboxRecipients.get(0).getEmployee().getName();
+                    } else {
+                        // 여러 수신자인 경우: 첫 번째 수신자 ID와 모든 수신자 이름 표시
+                        recipientIdDetail = inboxRecipients.get(0).getEmployee().getId();
+                        recipientName = inboxRecipients.stream()
+                                .map(recipient -> recipient.getEmployee().getName())
+                                .collect(java.util.stream.Collectors.joining(", "));
+                    }
+                }
+            }
+            
+            // 읽은 일시: 수신자 중 읽은 수신자가 있으면 그 중 하나의 readAt 사용
+            Instant readAt = detail.getReadAt();
+            if (mr.getMessageFolderType() == MessageFolderType.SENT || recipientId == null) {
+                // 보관함에서 SENT 레코드를 조회한 경우 또는 보낸 메시지함에서 모든 수신자 정보를 표시하는 경우
+                List<MessageRecipient> inboxRecipients = messageRecipientRepository
+                        .findByMessage_IdAndMessageFolderTypeAndDeletedAtIsNull(
+                                mr.getMessage().getId(), MessageFolderType.INBOX);
+                readAt = inboxRecipients.stream()
+                        .filter(MessageRecipient::isRead)
+                        .findFirst()
+                        .map(MessageRecipient::getReadAt)
+                        .orElse(null);
+            }
+            
             // 발신자가 조회하는 경우이므로 읽음 처리하지 않음 (수신자의 readAt은 그대로 유지)
             return MessageResDto.Detail.builder()
                     .messageId(detail.getMessageId())
@@ -258,12 +302,12 @@ public class MessageService {
                     .content(detail.getContent())
                     .senderId(detail.getSenderId())
                     .senderName(detail.getSenderName())
-                    .recipientIdDetail(mr.getEmployee().getId())
-                    .recipientName(mr.getEmployee().getName())
+                    .recipientIdDetail(recipientIdDetail)
+                    .recipientName(recipientName)
                     .folderType(MessageFolderType.SENT)  // 보낸 메시지함으로 표시
                     .archived(detail.isArchived())
                     .read(detail.isRead())
-                    .readAt(detail.getReadAt())  // 수신자가 읽은 일시 (발신자가 조회해도 변경되지 않음)
+                    .readAt(readAt)  // 수신자가 읽은 일시 (발신자가 조회해도 변경되지 않음)
                     .fileId(detail.getFileId())
                     .createdAt(detail.getCreatedAt())
                     .build();
