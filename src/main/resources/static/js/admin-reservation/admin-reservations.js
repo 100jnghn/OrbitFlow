@@ -197,13 +197,15 @@ async function loadStatuses() {
         if(!res.ok) throw new Error();
 
         const {data} = await res.json();
-        statusList = data; // 상태 목록 저장
+
+        // 테스트용 status는 불러오지 않기
+        statusList = data.filter(status => status.id < 5);
         
         const select = document.getElementById("status-filter")
 
         select.innerHTML = '<option value="">전체</option>';
 
-        data.forEach(status => {
+        statusList.forEach(status => {
             const option = document.createElement('option');
             option.value = status.id;
             option.textContent = status.statusName;
@@ -278,6 +280,7 @@ async function loadReservations(page = 0) {
                 createCell(resourceName, true), // 자원 이름 (tooltip 적용)
                 createCell(reservationReason, true), // 예약 사유 (tooltip 적용)
                 createCell(formatDate(r.reservationDate)),
+                createCell(formatDate(r.endDate)),
                 createCell(r.typeCode === 'CAR' ? '-' : formatHour(r.startTime)),
                 createCell(r.typeCode === 'CAR' ? '-' : formatHour(r.endTime)),
                 createStatusCell(r),

@@ -226,6 +226,7 @@ async function loadReservations(page = 0) {
                 createCell(r.resourceName, true), // 이름 (tooltip 적용)
                 createCell(r.reservationReason, true), // 예약 사유 (tooltip 적용)
                 createCell(formatDate(r.reservationDate)),
+                createCell(formatDate(r.endDate)),
                 createCell(r.typeCode === 'CAR' ? '-' : formatHour(r.startTime)),
                 createCell(r.typeCode === 'CAR' ? '-' : formatHour(r.endTime)),
                 createStatusCell(r),

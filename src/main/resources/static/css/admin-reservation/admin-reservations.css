@@ -178,7 +178,7 @@
 .resource-table th,
 .resource-table td {
     padding: 14px 16px;
-    font-size: 14px;
+    font-size: 12px;
     text-align: left;
     border-bottom: 1px solid #f0f0f0;
 
@@ -188,6 +188,8 @@
     text-overflow: ellipsis;
 
     position: relative;
+    align-content: center;
+    justify-content: center;
 }
 
 .resource-table th {
@@ -224,15 +226,34 @@
 }
 
 /* 상태 열 - 중앙 정렬 */
-.resource-table th:nth-child(9),
-.resource-table td:nth-child(9) {
-    text-align: center;
-}
-
-/* 승인 열 - 중앙 정렬 */
 .resource-table th:nth-child(10),
 .resource-table td:nth-child(10) {
     text-align: center;
+}
+
+/* 상태 열 - 중앙 정렬 */
+.resource-table th:nth-child(10),
+.resource-table td:nth-child(10) {
+    text-align: center;
+}
+
+/* 승인 열 (마지막 열) - 중앙 정렬 */
+.resource-table th:last-child,
+.resource-table td:last-child {
+    text-align: center;
+}
+
+/* 승인 열 내부 버튼도 가운데 정렬 */
+.resource-table td:last-child .btn-approve {
+    display: inline-block;
+    max-width: 30px;
+    margin: 0;
+
+    max-width: 50px;
+
+    font-size: 10px;
+    text-align: center;
+    justify-content: center;
 }
 
 .resource-table tbody tr {
