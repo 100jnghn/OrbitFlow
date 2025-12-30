@@ -178,7 +178,7 @@
 .resource-table th,
 .resource-table td {
     padding: 14px 16px;
-    font-size: 12px;
+    font-size: 14px;
     text-align: left;
     border-bottom: 1px solid #f0f0f0;
 
@@ -320,57 +320,6 @@
     z-index: 1000;
 }
 
-/* 카테고리 셀 hover 지원 */
-.resource-table td[data-fulltext] .category-badge {
-    pointer-events: none;
-}
-
-/* =========================
-   Category Badge
-========================= */
-.category-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 90px;
-    height: 30px;
-
-    border-radius: 13px;
-    font-size: 12px;
-    font-weight: 600;
-
-    white-space: nowrap;
-}
-
-/* 하늘색 */
-.badge-meeting {
-    background-color: #e3f2fd;
-    color: #1e88e5;
-}
-
-/* 연두색 */
-.badge-car {
-    background-color: #e8f5e9;
-    color: #43a047;
-}
-
-/* 연노랑 */
-.badge-etc {
-    background-color: #fff8e1;
-    color: #f9a825;
-}
-
-/* =========================
-   Status Badge
-========================= */
-/*.status-badge {*/
-/*    display: inline-block;*/
-/*    padding: 4px 12px;*/
-/*    border-radius: 12px;*/
-/*    font-size: 13px;*/
-/*    font-weight: 600;*/
-/*}*/
 
 /* 상태 배지: 통일된 크기 스타일 */
 .status-badge {

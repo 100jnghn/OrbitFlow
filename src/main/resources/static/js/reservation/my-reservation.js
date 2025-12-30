@@ -71,21 +71,7 @@ function createCell(value = '-', tooltip = false) {
 
 function createCategoryCell(typeCode, typeName) {
     const td = document.createElement('td');
-    const badge = document.createElement('span');
-
-    badge.className = 'category-badge';
-
-    // typeCode에 따른 색상 분기
-    if (typeCode === 'MEETING') {
-        badge.classList.add('badge-meeting');
-    } else if (typeCode === 'CAR') {
-        badge.classList.add('badge-car');
-    } else {
-        badge.classList.add('badge-etc');
-    }
-
-    badge.textContent = typeName;
-    td.appendChild(badge);
+    td.textContent = typeName || '-';
     
     // hover 시 전체 텍스트 보기 기능
     if (typeName && typeName !== '-') {
