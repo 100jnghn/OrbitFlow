@@ -57,10 +57,52 @@
     font-size: 14px;
     font-weight: 600;
     color: var(--neutral-700);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.filter-label-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 32px; /* 버튼 높이에 맞춰 고정 높이 설정 (padding 6px * 2 + font-size 12px * line-height ≈ 32px) */
+}
+
+.checkbox-control-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-checkbox-control {
+    padding: 6px 12px;
+    max-height: 25px;
+    background: var(--neutral-100);
+    color: var(--neutral-700);
+    border: 1px solid var(--neutral-300);
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 500;
+
+    display: flex;
+    align-items: center;      /* 세로 가운데 */
+    justify-content: center;  /* 가로 가운데 */
+
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-checkbox-control:hover {
+    background: var(--neutral-200);
+    border-color: var(--neutral-400);
+}
+
+.btn-checkbox-control:active {
+    background: var(--neutral-300);
 }
 
 .filter-select {
     min-width: 200px;
+    min-height: 52px;
     padding: 10px 14px;
     border: 1px solid var(--neutral-300);
     border-radius: 8px;
@@ -69,6 +111,8 @@
     cursor: pointer;
     color: var(--neutral-700);
     transition: all 0.2s ease;
+    box-sizing: border-box;
+    height: 44px; /* padding 10px * 2 + border 1px * 2 + font-size 14px * line-height 1.5 ≈ 44px */
 }
 
 .filter-select:focus {
@@ -81,17 +125,17 @@
 .org-filter-checkbox-list {
     min-width: 400px;
     max-width: 800px;
+    min-height: 45px;
     width: 100%;
     padding: 8px;
     border: 1px solid var(--neutral-300);
     border-radius: 8px;
     background: white;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 12px;
-    align-content: flex-start;
-    align-items: flex-start;
+    box-sizing: border-box;
+    min-height: 44px; /* filter-select와 동일한 높이 */
 }
 
 .org-filter-checkbox-item {
@@ -105,7 +149,8 @@
     font-size: 14px;
     color: var(--neutral-700);
     white-space: nowrap;
-    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .org-filter-checkbox-item:hover {

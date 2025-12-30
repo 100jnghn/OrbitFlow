@@ -40,14 +40,21 @@
         <div class="schedule-controls">
             <div class="filter-section">
                 <div class="filter-group">
-                    <label for="orgCategorySelect" class="filter-label">조직 카테고리</label>
+                    <div class="filter-label-wrapper">
+                        <label for="orgCategorySelect" class="filter-label">조직 카테고리</label>
+                    </div>
                     <select id="orgCategorySelect" class="form-input filter-select">
                         <option value="">전체</option>
                         <!-- 조직 카테고리 목록은 JavaScript에서 동적으로 로드 -->
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label class="filter-label">조직</label>
+                    <div class="filter-label-wrapper">
+                        <label class="filter-label">조직</label>
+                        <div class="checkbox-control-buttons">
+                            <button type="button" class="btn-checkbox-control" id="toggleAllBtn">전체</button>
+                        </div>
+                    </div>
                     <div id="orgFilter" class="org-filter-checkbox-list">
                         <!-- 조직 목록은 JavaScript에서 동적으로 로드 -->
                     </div>

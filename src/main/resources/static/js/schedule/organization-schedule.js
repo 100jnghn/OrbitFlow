@@ -145,6 +145,9 @@
                 checkbox.addEventListener('change', handleOrgFilterChange);
             });
 
+            // 전체 선택/해제 버튼 이벤트 리스너 추가
+            setupCheckboxControlButtons();
+
             // 선택된 조직 ID 초기화
             selectedOrgIds = [];
 
@@ -174,6 +177,28 @@
         
         // 날짜가 선택되지 않았으면 일정 목록 초기화
         renderScheduleList([]);
+    }
+
+    // 전체 선택/해제 버튼 설정
+    function setupCheckboxControlButtons() {
+        const toggleAllBtn = document.getElementById('toggleAllBtn');
+        
+        if (toggleAllBtn) {
+            toggleAllBtn.addEventListener('click', handleToggleAll);
+        }
+    }
+
+    // 전체 선택/해제 토글 핸들러
+    function handleToggleAll() {
+        const checkboxes = document.querySelectorAll('#orgFilter .org-filter-checkbox');
+        const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+        
+        // 모두 선택되어 있으면 모두 해제, 그렇지 않으면 모두 선택
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = !allChecked;
+        });
+        
+        handleOrgFilterChange();
     }
 
     // 조직 필터 변경 핸들러
