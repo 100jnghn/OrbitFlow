@@ -8,8 +8,6 @@ import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateRepo
 import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
 import com.finalproj.orbitflow.approval.formTemplateGroup.entity.FormTemplateGroup;
 import com.finalproj.orbitflow.approval.formTemplateGroup.repository.FormTemplateGroupRepository;
-import com.finalproj.orbitflow.approval.templateCategory.entity.TemplateCategory;
-import com.finalproj.orbitflow.approval.templateCategory.enums.TemplateCategoryCode;
 import com.finalproj.orbitflow.approval.templateCategory.repository.TemplateCategoryRepository;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
@@ -77,23 +75,26 @@ public class FormTemplateService {
     @Transactional
     public Long saveFormTemplate(
             Long templateGroupId,
-            Long companyId,
-            TemplateCategoryCode categoryCode
+            Long companyId
     ) {
         FormTemplateGroup group = findGroupAndCheckCompany(templateGroupId, companyId);
 
+        if (!group.getActive()) {
+            throw new InvalidRequestException(
+                    "비활성화된 양식 그룹에서는 결재 양식을 생성할 수 없습니다."
+            );
+        }
+
         Optional<FormTemplate> existingDraft =
-                formTemplateRepository.findTopByTemplateGroup_IdAndStatusOrderByUpdatedAtDesc(
-                        templateGroupId,
-                        FormTemplateStatus.DRAFT
-                );
+                formTemplateRepository
+                        .findTopByTemplateGroup_IdAndStatusOrderByUpdatedAtDesc(
+                                templateGroupId,
+                                FormTemplateStatus.DRAFT
+                        );
 
         if (existingDraft.isPresent()) {
             return existingDraft.get().getId();
         }
-
-        TemplateCategory category = templateCategoryRepository.findByCode(categoryCode)
-                .orElseThrow(() -> new NotFoundException("양식 카테고리를 찾을 수 없습니다."));
 
         int baseVersion = formTemplateRepository
                 .findTopByTemplateGroup_IdAndStatusOrderByVersionDesc(
@@ -103,46 +104,65 @@ public class FormTemplateService {
                 .map(FormTemplate::getVersion)
                 .orElse(1);
 
+        List<AffectTag> affectTags = buildAffectTags(group);
+
         return createDraftTemplate(
                 group,
                 baseVersion,
-                category,
                 buildInitialTemplateJson(),
                 buildInitialApprovalRuleJson(),
-                null
+                affectTags
         );
     }
 
+
     @Transactional
-    public Long reviseFormTemplateByTemplateGroup(Long templateGroupId, Long companyId) {
-        FormTemplateGroup group = findGroupAndCheckCompany(templateGroupId, companyId);
+    public Long reviseFormTemplateByTemplateGroup(Long groupId, Long companyId) {
+        FormTemplateGroup group = findGroupAndCheckCompany(groupId, companyId);
 
-        Optional<FormTemplate> existingDraft =
-                formTemplateRepository.findTopByTemplateGroup_IdAndStatusOrderByUpdatedAtDesc(
-                        templateGroupId,
-                        FormTemplateStatus.DRAFT
-                );
-
-        if (existingDraft.isPresent()) {
-            return existingDraft.get().getId();
+        if (!group.getActive()) {
+            throw new InvalidRequestException(
+                    "비활성화된 양식 그룹에서는 결재 양식을 수정할 수 없습니다."
+            );
         }
 
-        FormTemplate active = formTemplateRepository
+        // 1. 기존 DRAFT 우선
+        Optional<FormTemplate> draft =
+                formTemplateRepository
+                        .findTopByTemplateGroup_IdAndStatusOrderByUpdatedAtDesc(
+                                groupId, FormTemplateStatus.DRAFT
+                        );
+
+        if (draft.isPresent()) {
+            return draft.get().getId();
+        }
+
+        // 2. ACTIVE 우선
+        Optional<FormTemplate> active =
+                formTemplateRepository
+                        .findTopByTemplateGroup_IdAndStatusOrderByVersionDesc(
+                                groupId, FormTemplateStatus.ACTIVE
+                        );
+
+        FormTemplate base;
+
+        // 3. ACTIVE 없으면 가장 최신 INACTIVE
+        base = active.orElseGet(() -> formTemplateRepository
                 .findTopByTemplateGroup_IdAndStatusOrderByVersionDesc(
-                        templateGroupId,
-                        FormTemplateStatus.ACTIVE
+                        groupId, FormTemplateStatus.INACTIVE
                 )
                 .orElseThrow(() ->
-                        new NotFoundException("ACTIVE 상태의 양식을 찾을 수 없습니다.")
-                );
+                        new InvalidRequestException(
+                                "복제할 기준 양식이 없습니다."
+                        )
+                ));
 
         return createDraftTemplate(
                 group,
-                active.getVersion(),
-                active.getTemplateCategory(),
-                active.getTemplateJson(),
-                active.getApprovalRuleJson(),
-                active.getAffectTags()
+                base.getVersion(),   // version은 publish 시 다시 재계산
+                base.getTemplateJson(),
+                base.getApprovalRuleJson(),
+                base.getAffectTags()
         );
     }
 
@@ -155,24 +175,17 @@ public class FormTemplateService {
     ) {
         FormTemplate formTemplate = findFormTemplate(formTemplateId);
         checkCompany(companyId, formTemplate);
+        checkStatusIsDraft(formTemplate);
 
-        if (reqDto.getCategoryCode() != null) {
-            TemplateCategory category = templateCategoryRepository
-                    .findByCode(reqDto.getCategoryCode())
-                    .orElseThrow(() ->
-                            new NotFoundException("양식 카테고리를 찾을 수 없습니다.")
-                    );
-            formTemplate.changeCategory(category);
-        }
 
-        if (reqDto.getTemplateJson() != null) {
-            formTemplate.updateTemplateJson(
-                    objectMapper.writeValueAsString(reqDto.getTemplateJson())
-            );
-        }
-
-        if (reqDto.getAffectTags() != null) {
-            formTemplate.updateAffectTags(reqDto.getAffectTags());
+        try {
+            if (reqDto.getTemplateJson() != null) {
+                formTemplate.updateTemplateJson(
+                        objectMapper.writeValueAsString(reqDto.getTemplateJson())
+                );
+            }
+        } catch (Exception e) {
+            throw new InvalidRequestException("templateJson 형식이 올바르지 않습니다.");
         }
     }
 
@@ -184,6 +197,8 @@ public class FormTemplateService {
     ) {
         FormTemplate formTemplate = findFormTemplate(formTemplateId);
         checkCompany(companyId, formTemplate);
+        checkStatusIsDraft(formTemplate);
+
 
         if (reqDto.getApprovalRuleJson() != null) {
             formTemplate.updateApprovalRuleJson(
@@ -198,14 +213,12 @@ public class FormTemplateService {
         FormTemplate draft = findFormTemplate(formTemplateId);
         checkCompany(companyId, draft);
 
-        if (draft.getStatus() != FormTemplateStatus.DRAFT) {
-            throw new InvalidRequestException(
-                    "DRAFT 상태의 결재 양식만 활성화할 수 있습니다."
-            );
-        }
+        checkStatusIsDraft(draft);
 
         int nextVersion =
                 calculateNextActiveVersion(draft.getTemplateGroup().getId());
+
+        log.info("nextVersion = {}", nextVersion);
 
         formTemplateRepository
                 .findTopByTemplateGroup_IdAndStatusOrderByVersionDesc(
@@ -219,6 +232,20 @@ public class FormTemplateService {
 
         draft.updateVersion(nextVersion);
         draft.updateStatus(FormTemplateStatus.ACTIVE);
+    }
+
+    private static void checkStatusIsDraft(FormTemplate draft) {
+        if (draft.getStatus() != FormTemplateStatus.DRAFT) {
+            throw new InvalidRequestException(
+                    "DRAFT 상태의 결재 양식만 수정 또는 활성화할 수 있습니다."
+            );
+        }
+
+        if (!draft.getTemplateGroup().getActive()) {
+            throw new InvalidRequestException(
+                    "활성 상태의 양식 그룹만 수정 또는 활성화할 수 있습니다."
+            );
+        }
     }
 
 
@@ -256,14 +283,18 @@ public class FormTemplateService {
             Long companyId,
             int size,
             int offset,
-            String keyword,
-            FormTemplateStatus status
+            FormTemplateAllListReqDto reqDto
     ) {
         Pageable pageable =
                 PageRequest.of(offset, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
 
+
+        if (reqDto.getKeyword() == null) {
+            reqDto.setKeyword("");
+        }
+
         return formTemplateRepository
-                .findAllWithDocumentCount(companyId, keyword, status, pageable)
+                .findAllWithDocumentCount(companyId, reqDto.getKeyword(), reqDto.getStatus(), reqDto.getTemplateCategoryCode(), pageable)
                 .map(FormTemplateAllListResDto::from);
     }
 
@@ -290,6 +321,15 @@ public class FormTemplateService {
     /* =====================================================
      * Private helpers
      * ===================================================== */
+
+    private List<AffectTag> buildAffectTags(FormTemplateGroup group) {
+        return switch (group.getTemplateCategory().getCode()) {
+            case GENERAL -> List.of();
+            case SCHEDULE -> List.of(AffectTag.SCHEDULE);
+            case ATTENDANCE -> List.of(AffectTag.ATTENDANCE);
+        };
+    }
+
 
     private FormTemplate findFormTemplate(Long formTemplateId) {
         return formTemplateRepository.findById(formTemplateId)
@@ -330,7 +370,6 @@ public class FormTemplateService {
     private Long createDraftTemplate(
             FormTemplateGroup group,
             int version,
-            TemplateCategory category,
             String templateJson,
             String approvalRuleJson,
             List<AffectTag> affectTags
@@ -339,7 +378,6 @@ public class FormTemplateService {
                 .company(group.getCompany())
                 .templateGroup(group)
                 .version(version)
-                .templateCategory(category)
                 .status(FormTemplateStatus.DRAFT)
                 .templateJson(templateJson)
                 .approvalRuleJson(approvalRuleJson)

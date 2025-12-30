@@ -49,11 +49,13 @@
 .secondary-btn:hover {
     background: #f7faff;
 }
-.filter-label {
-    font-size: 1rem;
-    color: #3c4155;
-    font-weight: 500;
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
+
 .status-filter-select {
     padding: 6px 14px;
     border: 1px solid #c7c9d9;
@@ -61,6 +63,12 @@
     background: #f9fafc;
     font-size: 1rem;
 }
+
+.status-filter-select option[value=""] {
+    color: #a5a7b4; /* placeholder 느낌 */
+}
+
+
 .search-input {
     padding: 7px 18px;
     font-size: 1rem;
@@ -110,6 +118,16 @@
     color: #18246e;
     margin-bottom: 10px;
 }
+
+.modal-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+
 .modal-form-group {
     display: flex;
     flex-direction: column;
@@ -160,6 +178,13 @@
     color: #fff;
     border: 1.4px solid #3563e9;
 }
+
+.modal-create-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+
 .modal-create-btn:hover {
     background: #264cbd;
 }
@@ -182,18 +207,31 @@
 }
 
 .update-desc-text {
-    padding: 8px 18px 16px 18px; /* 기존보다 상/좌우 여유 */
+    padding: 10px 16px;
+    min-height: 120px; /* ⭐️ box와 동일 */
     line-height: 1.6;
+
     white-space: pre-wrap;
     word-break: break-word;
     overflow-y: auto;
+
+    font-size: 1.01rem;
+    color: #2b2e46;
+
+    /* textarea 같은 기본 느낌 */
+    background: transparent;
+    cursor: default;
 }
 
 
-/* ----- 드롭다운 for 업데이트 팝업 ----- */
+/* ===============================
+   업데이트 팝업 드롭다운
+   =============================== */
+
 .dropdown-group {
     position: relative;
 }
+
 .modal-dropdown-list {
     position: absolute;
     left: 0;
@@ -207,46 +245,78 @@
     max-height: 210px;
     overflow-y: auto;
 }
+
 .modal-dropdown-item {
-    padding: 9px 15px;
-    cursor: pointer;
-    font-size: 1.04rem;
-    color: #294d91;
-    transition: background 0.11s;
-}
-.modal-dropdown-item:hover, .modal-dropdown-item.selected {
-    background: #ecf2fd;
-}
-#updateDropdown.modal-dropdown-list {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: calc(100% + 4px);
-    z-index: 105;
-    background: #fff;
-    border: 1.3px solid #bfc4e0;
-    box-shadow: 0 3px 18px rgba(80,87,149,0.15);
-    border-radius: 7px;
-    margin-top: 0;
-    max-height: 220px;
-    overflow-y: auto;
-    display: block;
-}
-#updateDropdown.modal-dropdown-list[style*="display: none"] {
-    display: none;
-}
-#updateDropdown .modal-dropdown-item {
     padding: 12px 16px;
     cursor: pointer;
     font-size: 1.05rem;
     color: #294d91;
-    border-radius: 3px;
     transition: background 0.13s;
 }
-#updateDropdown .modal-dropdown-item:hover,
-#updateDropdown .modal-dropdown-item.selected {
+
+.modal-dropdown-item:hover,
+.modal-dropdown-item.selected {
     background: #ecf2fd;
 }
+
+/* updatePopup 전용 우선순위 */
+#updateDropdown.modal-dropdown-list {
+    z-index: 105;
+    max-height: 220px;
+    display: block;
+}
+
+#updateDropdown.modal-dropdown-list[style*="display: none"] {
+    display: none;
+}
+
+/* ===============================
+   🔹 내부 레이아웃 (추가)
+   =============================== */
+
+/* 한 줄 정렬 */
+#updateDropdown .dropdown-item-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+/* 좌측 제목 */
+#updateDropdown .dropdown-title {
+    flex: 1;
+    min-width: 0; /* ellipsis 필수 */
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* 우측 상태 영역 */
+#updateDropdown .dropdown-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+/* 그룹 활성 상태 */
+#updateDropdown .group-status.active {
+    color: #2e7d32; /* 은은한 초록 */
+}
+
+#updateDropdown .group-status.inactive {
+    color: #9e9e9e; /* 회색 */
+}
+
+/* ACTIVE 문서 존재 여부 */
+#updateDropdown .doc-status.ok {
+    color: #1565c0; /* 차분한 블루 */
+}
+
+#updateDropdown .doc-status.none {
+    color: #b0b0b0;
+}
+
 
 /* ----- 테이블 영역 ----- */
 .approval-table-wrapper {
@@ -279,10 +349,6 @@
     background: #f2f7fe;
 }
 
-.col-title {
-    width: 24%;
-    white-space: normal; /* td는 기본 흐름 유지 */
-}
 
 /* 내부에서만 flex 사용 */
 .title-wrap {
@@ -299,13 +365,46 @@
     white-space: nowrap;
 }
 
+.col-title {
+    width: 24%;
+    white-space: normal;
+}
 
-.col-version  { width: 8%; }
-.col-usedoc   { width: 12%; }
-.col-updated  { width: 20%; }
-.col-attend   { width: 10%; }
-.col-schedule { width: 10%; }
-.col-status   { width: 11%; }
+.col-category {
+    width: 10%; /* 카테고리 텍스트 여유 */
+}
+
+.col-version {
+    width: 7%;
+}
+
+.col-usedoc {
+    width: 9%;
+}
+
+.col-updated {
+    width: 18%; /* ⭐ 시·분 표시 고려 */
+}
+
+.col-attend {
+    width: 8%;
+}
+
+.col-schedule {
+    width: 8%;
+}
+
+.col-status {
+    width: 8%;
+}
+
+/* 제목 컬럼 제외 전부 중앙 정렬 */
+.approval-table th:not(.col-title),
+.approval-table td:not(.col-title) {
+    text-align: center;
+    vertical-align: middle;
+}
+
 
 .status-badge {
     display: inline-block;
@@ -443,4 +542,332 @@
 
     /* 레이아웃 영향 제거 */
     pointer-events: none;
+}
+
+
+/* ===============================
+   작성 팝업 (approval-home 모달 스타일 재사용)
+   =============================== */
+
+.write-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(27, 32, 54, 0.36);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.write-popup {
+    width: 380px;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 6px 30px rgba(31, 36, 73, 0.17);
+    padding: 36px 32px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* 헤더 */
+.write-popup .popup-header h3 {
+    font-size: 1.22rem;
+    font-weight: 700;
+    color: #18246e;
+    margin-bottom: 10px;
+}
+
+.write-popup .close-btn {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    position: absolute;
+    top: 18px;
+    right: 22px;
+}
+
+/* form group */
+.write-popup .modal-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.write-popup input[type="text"] {
+    padding: 8px 13px;
+    border-radius: 7px;
+    border: 1.3px solid #bfc4e0;
+    font-size: 1.01rem;
+    background: #fafbff;
+}
+
+/* 힌트 */
+.write-popup .hint {
+    font-size: 12px;
+    margin-top: 6px;
+}
+
+/* 설명 박스 */
+.write-popup .selected-desc {
+    border: 1.4px solid #bfc4e0;
+    border-radius: 7px;
+    background: #fff;
+    min-height: 120px;
+    box-shadow: 0 3px 18px rgba(80, 87, 149, 0.11);
+    padding: 12px 16px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* ===============================
+   드롭다운 (검색 결과)
+   =============================== */
+
+.modal-dropdown {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    background: #fff;
+    border: 1.4px solid #bfc4e0;
+    box-shadow: 0 3px 18px rgba(80, 87, 149, 0.11);
+    z-index: 110;
+    border-radius: 8px;
+    max-height: 210px;
+    overflow-y: auto;
+}
+
+.modal-dropdown-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 1.05rem;
+    color: #294d91;
+    transition: background 0.13s;
+}
+
+.modal-dropdown-item:hover,
+.modal-dropdown-item.selected {
+    background: #ecf2fd;
+}
+
+/* ===============================
+   footer 버튼
+   =============================== */
+
+.write-popup .popup-footer {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.write-popup .btn-secondary {
+    background: #f4f6fa;
+    color: #4b515c;
+    border: 1.4px solid #c2c7d1;
+    padding: 8px 28px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.write-popup .btn-secondary:hover {
+    background: #eceef1;
+}
+
+.write-popup .btn-primary {
+    background: #3563e9;
+    color: #fff;
+    border: 1.4px solid #3563e9;
+    padding: 8px 28px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.write-popup .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ===============================
+   생성 팝업 Select (카테고리 / 일정 유형)
+   - modal-input / textarea와 통일
+=============================== */
+
+.modal-select {
+    width: 100%;
+    padding: 8px 36px 8px 13px; /* 오른쪽은 화살표 여유 */
+    border-radius: 7px;
+    border: 1.3px solid #bfc4e0;
+    font-size: 1.01rem;
+    font-family: 'Noto Sans KR', Arial, Helvetica, sans-serif;
+    background-color: #fafbff;
+    color: #2b2e46;
+
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+/* focus 시 input과 동일한 강조 */
+.modal-select:focus {
+    outline: none;
+    border-color: #3563e9;
+    box-shadow: 0 0 0 2px rgba(53, 99, 233, 0.15);
+}
+
+/* disabled (일정 유형 비활성 상태) */
+.modal-select:disabled {
+    background: #f1f2f6;
+    color: #a5a7b4;
+    cursor: not-allowed;
+}
+
+/* placeholder 역할 option */
+.modal-select option[value=""] {
+    color: #a5a7b4;
+}
+
+.modal-form-group:has(select.modal-select)::after {
+    content: "▾";
+    position: absolute;
+    right: 14px;
+    top: 38px; /* label + input 고려한 위치 */
+    font-size: 14px;
+    color: #6b70a6;
+    pointer-events: none;
+}
+
+/* ===============================
+   업데이트 팝업 버튼 공통
+   =============================== */
+
+.update-btn {
+    padding: 7px 20px; /* 🔹 기존보다 살짝 컴팩트 */
+    min-width: 96px; /* 🔹 글자 어긋남 방지 */
+    font-size: 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1.4px solid transparent;
+    transition: background 0.13s, color 0.13s, border 0.13s;
+}
+
+/* 업데이트 */
+.update-btn.primary {
+    background: #3563e9;
+    color: #fff;
+    border-color: #3563e9;
+}
+
+.update-btn.primary:hover {
+    background: #264cbd;
+}
+
+/* 수정 */
+.update-btn.secondary {
+    background: #f7faff;
+    color: #3563e9;
+    border-color: #bfc4e0;
+}
+
+.update-btn.secondary:hover {
+    background: #ecf2fd;
+}
+
+/* 취소 */
+.update-btn.cancel {
+    background: #f4f6fa;
+    color: #4b515c;
+    border-color: #c2c7d1;
+}
+
+.update-btn.cancel:hover {
+    background: #eceef1;
+}
+
+.update-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ===============================
+   슬라이드 토글
+   =============================== */
+
+.toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.toggle-label {
+    font-size: 0.95rem;
+    color: #3c4155;
+    font-weight: 500;
+}
+
+/* switch wrapper */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 22px;
+}
+
+/* hide checkbox */
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* slider */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: #cfd3e6;
+    transition: 0.2s;
+    border-radius: 22px;
+}
+
+/* knob */
+.slider::before {
+    content: "";
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: 0.2s;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+/* checked */
+.switch input:checked + .slider {
+    background-color: #3563e9;
+}
+
+.switch input:checked + .slider::before {
+    transform: translateX(22px);
+}
+
+/* disabled */
+.switch input:disabled + .slider {
+    opacity: 0.5;
+    cursor: not-allowed;
 }

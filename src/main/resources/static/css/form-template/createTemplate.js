@@ -20,8 +20,7 @@ const FORM_COMPONENT_TYPES = [
     "date-range",
     "radio",
     "checkbox",
-    "leave-date-range",
-    "schedule-date-range",
+    "event-date-range",
     "notice",
     "table",
     "image",
@@ -30,6 +29,14 @@ const FORM_COMPONENT_TYPES = [
     "employee-search",
     "department-search"
 ];
+
+const REQUIRED_TOGGLE_HIDDEN_TYPES = [
+    'divider',
+    'checkbox',
+    'notice',
+    'event-date-range'
+];
+
 
 // -- 타입별 기본 스키마: 공통필드+meta
 const FORM_COMPONENT_SCHEMAS = {
@@ -100,6 +107,29 @@ const FORM_COMPONENT_SCHEMAS = {
             endLabel: ""
         }
     },
+    "event-date-range": {
+        type: "event-date-range",
+        label: "일정",
+        required: true,
+        meta: {
+            startLabel: "시작일",
+            endLabel: "종료일",
+            // 관리자 고정 설정
+            baseRole: "COMPANY_EVENT",
+            // VACATION | BUSINESS_TRIP | OUTWORK | COMPANY_EVENT
+
+            affect: {
+                attendance: false,
+                schedule: true
+            },
+            // UI 표시 제어용
+            ui: {
+                requireReason: false,      // 휴가일 때 true
+                requireDescription: true,   // 회사 일정 등
+                requireTitle: true
+            }
+        }
+    },
     radio: {
         type: "radio",
         label: "라디오 버튼",
@@ -122,37 +152,6 @@ const FORM_COMPONENT_SCHEMAS = {
             ],
             minSelected: undefined,
             maxSelected: undefined
-        }
-    },
-    "leave-date-range": {
-        type: "leave-date-range",
-        label: "휴가 일정",
-        required: false,
-        meta: {
-            startLabel: "",
-            endLabel: ""
-        }
-    },
-    "leave-reason": {
-        type: "leave-reason",
-        label: "휴가 사유",
-        required: true,
-        meta: {
-            vacationTypeCode: null,     // 선택된 대분류 코드
-            vacationTypeName: null,     // 표시용
-            deductAttendance: null,     // ⭐ 서버 기준값
-            detailReason: "",           // 사용자 입력
-            options: []                 // 드롭다운 목록 (API)
-        }
-    },
-    "schedule-date-range": {
-        type: "schedule-date-range",
-        label: "일정",
-        required: false,
-        meta: {
-            startLabel: "시작일",
-            endLabel: "종료일",
-            description: ""   // ⬅️ 텍스트 입력
         }
     },
     notice: {
@@ -216,7 +215,7 @@ const FORM_COMPONENT_SCHEMAS = {
     },
     "department-search": {
         type: "department-search",
-        label: "부서 검색",
+        label: "조직 검색",
         required: false,
         meta: {
             multiple: false
@@ -262,10 +261,12 @@ let formComponents = [
 // -- 기타 전역 및 상수
 let selectedComponentId = null;            // 선택중인 컴포넌트 id(UI 상태)
 let dragSrcIdx = null;                    // 드래그 상태 index
-let documentSettings = {                  // 문서 전역 설정
-    autoReflectAttendance: false,
-    autoReflectSchedule: false
-};
+// =======================
+// 그룹 기준 정책 값 (전역)
+// =======================
+let templateGroupBaseRole = null;
+let templateGroupCategoryCode = null;
+
 
 // -- 입력 제한/정책 상수
 const DOCUMENT_TITLE_MAX = 50;
@@ -280,129 +281,64 @@ let dragBlockSize = 1;
 // 3. 유틸리티 함수
 // =====================
 
-function syncDocumentPolicyToggles() {
-    const hasLeave = formComponents.some(c =>
-        c.type === 'leave-date-range' || c.type === 'leave-reason'
-    );
-    const hasSchedule = formComponents.some(c =>
-        c.type === 'schedule-date-range'
-    );
-
-    const attToggle = document.getElementById('toggle-auto-attendance');
-    const schToggle = document.getElementById('toggle-auto-schedule');
-
-    /* =====================
-       근태 자동 반영
-       - 휴가 있으면 필수
-    ===================== */
-    if (hasLeave) {
-        documentSettings.autoReflectAttendance = true;
-        if (attToggle) {
-            attToggle.checked = true;
-            attToggle.disabled = true;
-        }
-    } else if (attToggle) {
-        attToggle.disabled = false;
-        attToggle.checked = documentSettings.autoReflectAttendance;
-    }
-
-    /* =====================
-       일정 자동 반영
-       - 휴가 or 일정 있으면 필수
-    ===================== */
-    if (hasLeave || hasSchedule) {
-        documentSettings.autoReflectSchedule = true;
-        if (schToggle) {
-            schToggle.checked = true;
-            schToggle.disabled = true;
-        }
-    } else if (schToggle) {
-        schToggle.disabled = false;
-        schToggle.checked = documentSettings.autoReflectSchedule;
-    }
-}
-
 
 function bindAutoClearInvalidFocus() {
+    const getScope = (target) =>
+        target.closest('#option-list-pane > div') ||
+        target.closest('#table-column-list > div') ||
+        target.closest('.setting-row');
 
-    const clearInvalid = (target) => {
+    /* =========================
+       입력 중: error만 제거
+    ========================= */
+    const clearError = (target) => {
         if (!(target instanceof HTMLElement)) return;
 
-        // 1. invalid-focus 제거
-        document
-            .querySelectorAll('.invalid-focus')
-            .forEach(el => el.classList.remove('invalid-focus'));
+        // invalid-focus 제거
+        target.classList.remove('invalid-focus');
+        target.closest('.invalid-focus')?.classList.remove('invalid-focus');
 
-        // 2. setting-row 내부 hint 제거 (컴포넌트 패널)
-        const row = target.closest('.setting-row');
-        if (row) {
-            const hint = row.querySelector('.hint.active');
-            if (hint) {
-                hint.className = 'hint';
-                hint.textContent = '';
-            }
-        }
-
-        // 3. 🔑 문서 설정 패널 전용 hint 제거 (ID 기반)
-        if (target.id === 'form-title-input') {
-            clearHint('title-hint');
-        }
-
-        if (target.id === 'form-category-input') {
-            clearHint('category-hint');
-        }
+        // error hint만 제거
+        const scope = getScope(target);
+        scope?.querySelectorAll('.hint.error').forEach(hint => {
+            hint.textContent = '';
+            hint.className = 'hint';
+        });
     };
 
-    document.addEventListener('input', e => clearInvalid(e.target));
-    document.addEventListener('change', e => clearInvalid(e.target));
-}
+    document.addEventListener('input', e => clearError(e.target));
+    document.addEventListener('change', e => clearError(e.target));
 
-
-function normalizeLeaveComponentSet(components) {
-    const hasLeaveDate = components.some(c => c.type === "leave-date-range");
-    const hasLeaveReason = components.some(c => c.type === "leave-reason");
-
-    // 휴가 사유만 있으면 제거
-    if (hasLeaveReason && !hasLeaveDate) {
-        components = components.filter(c => c.type !== "leave-reason");
-    }
-
-    // 휴가 일정만 있으면 사유 자동 생성
-    if (hasLeaveDate && !hasLeaveReason) {
-        const dateIdx = components.findIndex(c => c.type === "leave-date-range");
-        const groupId = generateId();
-
-        components[dateIdx]._groupId = groupId;
-
-        components.splice(dateIdx + 1, 0, {
-            id: generateId(),
-            type: "leave-reason",
-            label: "휴가 사유",
-            required: true,
-            fixed: false,
-            meta: {
-                vacationTypeCode: null,
-                vacationTypeName: null,
-                deductAttendance: null,
-                detailReason: "",
-                options: []
-            },
-            _groupId: groupId,
-            _linkedTo: components[dateIdx].id
+    /* =========================
+       포커스 이탈: success 제거
+    ========================= */
+    document.addEventListener('focusout', e => {
+        const scope = getScope(e.target);
+        scope?.querySelectorAll('.hint.success').forEach(hint => {
+            hint.textContent = '';
+            hint.className = 'hint';
         });
-    }
-
-    return components;
+    });
 }
 
 
 function focusComponentError({
                                  componentId,
-                                 panelField,      // selector or function
+                                 panelField,
                                  message,
                                  autoFocus = true
                              }) {
-    // 1. 중앙 패널 강조
+    // 🔒 실시간 입력 중(table 컬럼/옵션)은 포커스 이동 금지
+    if (
+        document.activeElement &&
+        (
+            document.activeElement.closest('#table-column-list') ||
+            document.activeElement.closest('#option-list-pane')
+        )
+    ) {
+        return;
+    }
+
     if (componentId) {
         highlightComponent(componentId);
         selectedComponentId = componentId;
@@ -410,45 +346,42 @@ function focusComponentError({
     }
 
     requestAnimationFrame(() => {
-        let field = null;
+        requestAnimationFrame(() => {
 
-        document.querySelectorAll('.invalid-focus')
-            .forEach(el => el.classList.remove('invalid-focus'));
+            // 🔑 이 줄이 핵심 (이전 코드에 있었음)
+            document
+                .querySelectorAll('.invalid-focus')
+                .forEach(el => el.classList.remove('invalid-focus'));
 
-        // 2. 필드 결정 방식 (핵심)
-        if (typeof panelField === "function") {
-            field = panelField();
-        } else if (typeof panelField === "string") {
-            field = document.querySelector(panelField);
-        }
+            let field = null;
 
-        // 3. fallback (패널 자체)
-        if (!field) {
-            field = document.getElementById('component-setting-content');
-        }
+            if (typeof panelField === "function") {
+                field = panelField();
+            } else if (typeof panelField === "string") {
+                field = document.querySelector(panelField);
+            }
 
-        // 4. 스타일 & 포커스
-        field.classList.add('invalid-focus');
+            if (!field) return;
 
-        if (autoFocus && typeof field.focus === 'function') {
-            field.focus({preventScroll: true});
-        }
+            field.classList.add('invalid-focus');
 
-        // 5. hint 처리
-        const hint =
-            field.closest('.setting-row')
-                ?.querySelector('.hint');
+            if (autoFocus && typeof field.focus === 'function') {
+                field.focus({preventScroll: true});
+            }
 
-        if (hint && message) {
-            hint.textContent = message;
-            hint.classList.add('active');
-        }
+            let hint =
+                field.closest('#option-list-pane > div')?.querySelector('.option-hint') ||
+                field.closest('#table-column-list > div')?.querySelector('.column-hint') ||
+                field.closest('.setting-row')?.querySelector('.hint');
+            if (hint && message) {
+                showMsg(hint, message, 'error');
+            }
+        });
     });
 }
 
 
 function focusDocumentSettingError({field, hintId, message}) {
-    // 기존 invalid-focus 제거
     document
         .querySelectorAll('.invalid-focus')
         .forEach(el => el.classList.remove('invalid-focus'));
@@ -491,8 +424,17 @@ function enforceMaxLength(inputEl, max) {
 function showMsg(el, message, type) {
     if (!el) return;
     el.textContent = message;
-    el.className = 'hint ' + type;
+    el.className = `hint active ${type}`;
 }
+
+
+function clearSuccessHint(hint) {
+    if (!hint) return;
+    hint.classList.remove('success');
+    hint.classList.remove('active');
+    hint.textContent = '';
+}
+
 
 function highlightComponent(componentId) {
     // 기존 invalid 제거
@@ -519,25 +461,7 @@ function removeComponent(componentId) {
     const comp = formComponents[idx];
     if (comp.fixed) return;
 
-    // 🚫 휴가 사유는 단독 삭제 불가
-    if (comp.type === "leave-reason") {
-        alert("휴가 사유는 휴가 일정과 함께 삭제됩니다.");
-        return;
-    }
-
-    // ✅ 휴가 일정 삭제 시 → 바로 뒤 휴가 사유도 같이 삭제
-    if (comp.type === "leave-date-range") {
-        const next = formComponents[idx + 1];
-        if (next && next.type === "leave-reason") {
-            formComponents.splice(idx, 2); // 두 개 같이 제거
-        } else {
-            // 이론상 없어야 하지만, 안전장치
-            formComponents.splice(idx, 1);
-        }
-    } else {
-        // 일반 컴포넌트
-        formComponents.splice(idx, 1);
-    }
+    formComponents.splice(idx, 1);
 
     // 선택 상태 정리
     if (selectedComponentId === componentId) {
@@ -549,24 +473,8 @@ function removeComponent(componentId) {
     }
 
     renderFormComponents();
-    updateLeaveComponentButtonState();
-    syncDocumentPolicyToggles();
 }
 
-
-function updateLeaveComponentButtonState() {
-    const btn = document.querySelector(
-        '.component-btn[data-type="leave-date-range"]'
-    );
-    if (!btn) return;
-
-    const hasLeave = hasLeaveComponentSet();
-
-    btn.classList.toggle('is-disabled', hasLeave);
-    btn.title = hasLeave
-        ? "이미 추가된 휴가 컴포넌트가 있습니다."
-        : "";
-}
 
 
 // =====================
@@ -618,8 +526,8 @@ function validateDocumentSettingPanel() {
     titleHint.textContent = '';
     titleHint.className = 'hint';
 
-    // 카테고리
-    if (!category) {
+    const finalCategory = templateGroupCategoryCode ?? category;
+    if (!finalCategory) {
         focusDocumentSettingError({field: categorySelect});
         showMsg(categoryHint, '카테고리를 선택하세요.', 'error');
         return false;
@@ -708,6 +616,9 @@ function validateAllComponentLabels() {
 
 function validateOptionComponent(comp) {
     const options = comp.meta?.options ?? [];
+    const min = comp.meta?.minSelected;
+    const max = comp.meta?.maxSelected;
+
     if (options.length === 0) {
         focusComponentError({
             componentId: comp.id,
@@ -716,6 +627,25 @@ function validateOptionComponent(comp) {
         });
         return false;
     }
+
+    if (min !== undefined && options.length < min) {
+        focusComponentError({
+            componentId: comp.id,
+            panelField: '#option-list-pane',
+            message: `옵션은 최소 ${min}개 이상이어야 합니다.`
+        });
+        return false;
+    }
+
+    if (max !== undefined && options.length > max) {
+        focusComponentError({
+            componentId: comp.id,
+            panelField: '#option-list-pane',
+            message: `옵션은 최대 ${max}개까지 가능합니다.`
+        });
+        return false;
+    }
+
     for (let i = 0; i < options.length; i++) {
         const label = options[i].label?.trim() ?? '';
         if (!label) {
@@ -737,11 +667,13 @@ function validateOptionComponent(comp) {
             return false;
         }
     }
+
     return true;
 }
 
 function validateTableComponent(comp) {
     const columns = comp.meta?.columns ?? [];
+
     if (columns.length === 0) {
         focusComponentError({
             componentId: comp.id,
@@ -750,19 +682,30 @@ function validateTableComponent(comp) {
         });
         return false;
     }
+
     for (let i = 0; i < columns.length; i++) {
         const col = columns[i];
         const label = col.label?.trim() ?? '';
+
         if (!label) {
             focusComponentError({
                 componentId: comp.id,
-                panelField: () =>
-                    document.querySelectorAll('#table-column-list input')[i],
+                panelField: () => {
+                    const list = document.getElementById('table-column-list');
+                    if (!list) return null;
+
+                    const rows = list.querySelectorAll('.table-column-row');
+                    const row = rows[i];
+                    if (!row) return null;
+
+                    return row.querySelector('.table-col-label-input');
+                },
                 message: `컬럼 ${i + 1}의 이름을 입력해주세요.`
             });
             return false;
         }
     }
+
     const {min, max} = comp.meta?.rowPolicy ?? {};
     if (max !== undefined && min > max) {
         focusComponentError({
@@ -772,6 +715,7 @@ function validateTableComponent(comp) {
         });
         return false;
     }
+
     return true;
 }
 
@@ -855,127 +799,91 @@ function validateNoticeMessage(inputEl, hintEl) {
     return true;
 }
 
-function bindDocumentTitleValidation() {
-    const titleInput = document.getElementById('form-title-input');
-    if (!titleInput) return;
-    titleInput.addEventListener('input', () => {
-        enforceMaxLength(titleInput, DOCUMENT_TITLE_MAX);
-        validateDocumentTitle();
-    });
-}
-
-
-function validateLeavePolicyContract() {
-
-    const hasLeave = formComponents.some(c =>
-        c.type === "leave-date-range" ||
-        c.type === "leave-reason"
-    );
-
-    const hasSchedule = formComponents.some(c =>
-        c.type === "schedule-date-range"
-    );
-
-    const attendanceOn = documentSettings.autoReflectAttendance === true;
-    const scheduleOn = documentSettings.autoReflectSchedule === true;
-
-    /* ==========================
-       1️⃣ 근태 자동 반영 → 휴가 필수
-       (일정만 있어도 ❌)
-    ========================== */
-    if (attendanceOn && !hasLeave) {
-        alert('근태 자동 반영을 사용하려면 휴가 컴포넌트가 필요합니다.');
-
-        focusComponentError({
-            componentId: null,
-            panelField: '#toggle-auto-attendance',
-            message: '근태 자동 반영은 휴가 컴포넌트와 함께 사용해야 합니다.',
-            autoFocus: false
-        });
-
-        return false;
-    }
-
-    /* ==========================
-       2️⃣ 휴가 사용 시 → 일정 자동 반영 필수
-    ========================== */
-    if (hasLeave && !scheduleOn) {
-        const leaveComp = formComponents.find(c =>
-            c.type === 'leave-date-range'
-        );
-
-        focusComponentError({
-            componentId: leaveComp?.id,
-            panelField: '#toggle-auto-schedule',
-            message: '휴가 컴포넌트 사용 시 일정 자동 반영은 필수입니다.',
-            autoFocus: false
-        });
-        return false;
-    }
-
-    /* ==========================
-       3️⃣ 일정 컴포넌트 사용 시 → 일정 자동 반영 필수
-    ========================== */
-    if (hasSchedule && !scheduleOn) {
-        const scheduleComp = formComponents.find(c =>
-            c.type === 'schedule-date-range'
-        );
-
-        focusComponentError({
-            componentId: scheduleComp?.id,
-            panelField: '#toggle-auto-schedule',
-            message: '일정 컴포넌트를 사용하는 경우 일정 자동 반영은 필수입니다.',
-            autoFocus: false
-        });
-        return false;
-    }
-
-    /* ==========================
-       4️⃣ 일정 자동 반영 ON → 일정 or 휴가 필요
-    ========================== */
-    if (scheduleOn && !hasLeave && !hasSchedule) {
-        alert('일정 자동 반영을 사용하려면 일정 또는 휴가 컴포넌트를 추가해야 합니다.');
-
-        focusComponentError({
-            componentId: null,
-            panelField: '.component-btn[data-type="schedule-date-range"]',
-            message: '일정 자동 반영을 사용하려면 일정 컴포넌트를 추가하세요.',
-            autoFocus: false
-        });
-        return false;
-    }
-
-    return true;
-}
-
-
 // ========================
 // 5. 컴포넌트 관리 관련 함수
 // ========================
 
+function applyGroupCategoryToDocumentSetting() {
+    const categorySelect = document.getElementById('form-category-input');
+    if (!categorySelect || !templateGroupCategoryCode) return;
+
+    // 값 반영
+    categorySelect.value = templateGroupCategoryCode;
+
+    // 수정 불가
+    categorySelect.disabled = true;
+
+    // 스타일로 읽기 전용 느낌 강화 (선택)
+    categorySelect.style.backgroundColor = '#f2f4f8';
+    categorySelect.style.color = '#555';
+    categorySelect.style.cursor = 'not-allowed';
+}
+
+
+function applyEventComponentPolicy(comp, baseRole) {
+    if (comp.type !== "event-date-range") return;
+
+    // 1️⃣ baseRole 고정
+    comp.meta.baseRole = baseRole ?? "COMPANY_EVENT";
+
+    // 2️⃣ UI 정책 (명확한 역할 분리)
+    comp.meta.ui ??= {};
+
+    if (comp.meta.baseRole === "VACATION") {
+        // 휴가
+        comp.meta.ui.requireTitle = false;        // ❌ 일정명 입력 불필요
+        comp.meta.ui.requireReason = true;        // ✅ 휴가 사유 필수
+        comp.meta.ui.requireDescription = false; // textarea는 사유로 대체
+    } else {
+        // 출장 / 외근 / 회사 일정
+        comp.meta.ui.requireTitle = true;         // ⭐ 일정명 필수
+        comp.meta.ui.requireReason = false;
+        comp.meta.ui.requireDescription = true;  // 설명(선택 or 필수는 UI에서)
+    }
+
+    // 3️⃣ affect 정책
+    switch (comp.meta.baseRole) {
+        case "VACATION":
+            comp.meta.affect = {attendance: true, schedule: true};
+            break;
+
+        case "BUSINESS_TRIP":
+        case "OUTWORK":
+            comp.meta.affect = {attendance: false, schedule: true};
+            break;
+
+        case "COMPANY_EVENT":
+        default:
+            comp.meta.affect = {attendance: false, schedule: true};
+            break;
+    }
+
+    // 4️⃣ 필수 보장 (event-date-range 자체는 항상 필수)
+    comp.required = true;
+}
+
+
 function addComponentByType(type) {
-    if (!FORM_COMPONENT_SCHEMAS.hasOwnProperty(type)) {
-        console.warn(`[FormTemplateBuilder] 컴포넌트 타입 '${type}'는 스키마에 정의되어 있지 않습니다.`);
-        return;
-    }
+    if (!FORM_COMPONENT_SCHEMAS[type]) return;
 
-    // 휴가 컴포넌트 (기존)
-    if (type === "leave-date-range") {
-        addLeaveDateRangeWithReason();
-        return;
+    // 🔒 일정 컴포넌트는 1개만 허용
+    if (type === "event-date-range") {
+        const exists = formComponents.some(c => c.type === "event-date-range");
+        if (exists) {
+            alert("일정 컴포넌트는 문서에 하나만 추가할 수 있습니다.");
+            return;
+        }
     }
-
 
     const schema = FORM_COMPONENT_SCHEMAS[type];
     const metaCopy = deepCopy(schema.meta);
 
     if (type === "radio" || type === "checkbox") {
-        metaCopy.options = metaCopy.options && metaCopy.options.length > 0
-            ? deepCopy(metaCopy.options.map(opt =>
-                typeof opt === "string"
-                    ? {id: generateOptionId(), label: opt}
-                    : {...opt, id: generateOptionId()}
-            ))
+        metaCopy.options = metaCopy.options?.length
+            ? metaCopy.options.map(opt => ({
+                ...opt,
+                id: generateOptionId()
+            }))
             : [{id: generateOptionId(), label: "옵션 1"}];
     }
 
@@ -988,73 +896,22 @@ function addComponentByType(type) {
         meta: metaCopy
     };
 
-    // document-meta 앞에 삽입
+    // ===============================
+    // 🔑 일정 컴포넌트: 그룹 baseRole 절대 고정
+    // ===============================
+    if (type === "event-date-range") {
+        applyEventComponentPolicy(
+            component,
+            templateGroupBaseRole || "COMPANY_EVENT"
+        );
+    }
+
+
     formComponents.splice(formComponents.length - 1, 0, component);
 
     selectedComponentId = component.id;
     renderFormComponents();
     showComponentSettingPanel(component.id);
-}
-
-function hasLeaveComponentSet() {
-    return formComponents.some(c =>
-        c.type === "leave-date-range" ||
-        c.type === "leave-reason"
-    );
-}
-
-function addLeaveDateRangeWithReason() {
-    if (hasLeaveComponentSet()) {
-        alert("휴가 컴포넌트는 문서에 한 번만 추가할 수 있습니다.");
-        return;
-    }
-
-    const groupId = generateId();
-
-    const leaveDateComp = {
-        id: generateId(),
-        type: "leave-date-range",
-        label: "휴가 일정",
-        required: true,
-        fixed: false,
-        meta: {
-            startLabel: "시작일",
-            endLabel: "종료일"
-        },
-        _groupId: groupId
-    };
-
-    const leaveReasonComp = {
-        id: generateId(),
-        type: "leave-reason",
-        label: "휴가 사유",
-        required: true,
-        fixed: false,
-        meta: {
-            vacationTypeCode: null,
-            vacationTypeName: null,
-            deductAttendance: null,
-            detailReason: "",
-            options: []
-        },
-        _groupId: groupId,
-        _linkedTo: leaveDateComp.id
-    };
-
-    // document-meta 앞에 세트 삽입
-    const insertIdx = formComponents.length - 1;
-    formComponents.splice(insertIdx, 0, leaveDateComp, leaveReasonComp);
-
-    selectedComponentId = leaveDateComp.id;
-
-    // 🔒 계약 강제 (상태)
-    documentSettings.autoReflectAttendance = true;
-    documentSettings.autoReflectSchedule = true;
-
-    renderFormComponents();
-    showComponentSettingPanel(leaveDateComp.id);
-    updateLeaveComponentButtonState();
-    syncDocumentPolicyToggles();
 }
 
 
@@ -1063,8 +920,6 @@ function initComponentListPanel() {
     const listContainer = document.getElementById("component-btn-list");
     if (!listContainer) return;
     listContainer.innerHTML = "";
-
-    const hasLeave = hasLeaveComponentSet(); // ⭐ 현재 상태 한번 계산
 
     FORM_COMPONENT_TYPES.forEach(function (type) {
         if (!FORM_COMPONENT_SCHEMAS[type]) return;
@@ -1077,33 +932,13 @@ function initComponentListPanel() {
 
 
         btn.addEventListener("click", function () {
-
-            // 🔒 휴가 컴포넌트는 1회만 허용
-            if (type === "leave-date-range" && hasLeaveComponentSet()) {
-                const leaveComp = formComponents.find(c =>
-                    c.type === "leave-date-range"
-                );
-
-                alert("휴가 컴포넌트는 문서에 한 번만 추가할 수 있습니다.");
-
-                // 👉 기존 휴가 컴포넌트로 이동 + 설정 패널 열기
-                if (leaveComp) {
-                    selectedComponentId = leaveComp.id;
-                    renderFormComponents();
-                    showComponentSettingPanel(leaveComp.id);
-                }
-                return;
-            }
-
             // 일반 컴포넌트 추가
             addComponentByType(type);
-            syncDocumentPolicyToggles();
         });
 
 
         listContainer.appendChild(btn);
     });
-    updateLeaveComponentButtonState();
 }
 
 // ============================
@@ -1112,9 +947,9 @@ function initComponentListPanel() {
 
 function renderFormComponents() {
     enforceSystemRequiredRules();
+
     const container = document.getElementById("form-edit-area");
     if (!container) return;
-
     container.innerHTML = "";
 
     const fixedFirstIdx = 0;
@@ -1125,32 +960,18 @@ function renderFormComponents() {
         row.className = "form-comp-row";
         row.dataset.compId = comp.id;
 
-        // 상태 class
         if (comp.fixed) row.classList.add("fixed");
         if (comp.id === selectedComponentId) row.classList.add("selected");
 
-        // Drag & Drop
+        /* ======================
+           Drag & Drop
+        ====================== */
         if (!comp.fixed) {
-
-            // 🚫 휴가 사유는 단독 드래그 불가
-            if (comp.type === "leave-reason") {
-                row.draggable = false;
-            } else {
-                row.draggable = true;
-            }
+            row.draggable = true;
 
             row.addEventListener("dragstart", e => {
                 dragSrcIdx = idx;
                 dragBlockSize = 1;
-
-                // ✅ 휴가 일정이면 + 휴가 사유까지 같이 이동
-                if (comp.type === "leave-date-range") {
-                    const next = formComponents[idx + 1];
-                    if (next && next.type === "leave-reason") {
-                        dragBlockSize = 2;
-                    }
-                }
-
                 row.classList.add("dragging");
                 e.dataTransfer.effectAllowed = "move";
                 try {
@@ -1165,6 +986,7 @@ function renderFormComponents() {
                 dragBlockSize = 1;
             });
         }
+
         row.addEventListener("dragover", e => {
             if (
                 dragSrcIdx === null ||
@@ -1176,9 +998,11 @@ function renderFormComponents() {
             e.preventDefault();
             row.classList.add("drag-hover");
         });
+
         row.addEventListener("dragleave", () => {
             row.classList.remove("drag-hover");
         });
+
         row.addEventListener("drop", e => {
             if (
                 dragSrcIdx === null ||
@@ -1190,23 +1014,15 @@ function renderFormComponents() {
             e.preventDefault();
             row.classList.remove("drag-hover");
 
-            // 🚫 휴가 사유 앞에 drop 금지
-            if (formComponents[idx]?.type === "leave-reason") {
-                return;
-            }
-
-            // 🔹 이동할 블록 추출
             const draggedBlock = formComponents.splice(dragSrcIdx, dragBlockSize);
-
-            // 🔹 삽입 위치 계산
             let insertIdx = idx;
+
             if (dragSrcIdx < idx) {
                 insertIdx = idx - dragBlockSize + 1;
             }
 
             formComponents.splice(insertIdx, 0, ...draggedBlock);
 
-            // 🔹 fixed 컴포넌트 재정렬
             const firstFixed = formComponents.find(c => c.type === "document-title");
             const lastFixed = formComponents.find(c => c.type === "document-meta");
 
@@ -1217,16 +1033,10 @@ function renderFormComponents() {
             ];
 
             renderFormComponents();
-
             selectedComponentId = draggedBlock[0].id;
             showComponentSettingPanel(draggedBlock[0].id);
-
-            dragSrcIdx = null;
-            dragBlockSize = 1;
         });
 
-
-        // 클릭 선택
         if (!comp.fixed) {
             row.addEventListener("click", () => {
                 if (row.classList.contains("dragging")) return;
@@ -1234,267 +1044,355 @@ function renderFormComponents() {
                 renderFormComponents();
                 showComponentSettingPanel(comp.id);
             });
-
         }
 
-        // 타입별 미리보기
-        if (comp.fixed) {
-            if (comp.type === "document-title") {
-                row.innerHTML = `
-                    <strong class="doc-title-label">${comp.label}</strong>
-                    <input
-                        type="text"
-                        disabled
-                        value="${comp.meta?.value ?? ""}"
-                        placeholder="${comp.meta?.placeholder ?? ""}"
-                        class="doc-title-input"
-                    />
-                `;
-            } else if (comp.type === "document-meta") {
-                row.innerHTML = `
-                    <span class="doc-meta-label">${comp.label}</span>
-                    <span class="doc-meta-auto">자동입력</span>
-                `;
-            }
-        } else {
-            let labelHtml = `
-<span class="comp-label ${comp.required ? 'is-required' : ''}">
-    ${comp.label || ""}
-  </span>
-`;
+        /* ======================
+           미리보기 렌더링
+        ====================== */
+        renderPreviewIntoRow(row, comp);
 
-            let inputHtml = "";
-            if (["text", "number", "currency"].includes(comp.type)) {
-                inputHtml = `
-                    <input
-                        type="${comp.type === "number" ? "number" : "text"}"
-                        disabled
-                        class="preview-input"
-                        placeholder="${comp.meta?.placeholder ?? ""}"
-                    />
-                    ${comp.type === "currency"
-                    ? `<span class="unit">${comp.meta?.unit ?? ""}</span>`
-                    : ""}
-                `;
-            } else if (comp.type === "textarea") {
-                inputHtml = `
-                    <textarea
-                        disabled
-                        class="preview-textarea"
-                        placeholder="${comp.meta?.placeholder ?? ""}">
-                    </textarea>
-                `;
-            } else if (comp.type === "radio" || comp.type === "checkbox") {
-                inputHtml = `
-                    <div class="option-preview">
-                        ${(comp.meta?.options ?? []).map(opt => `
-                            <label>
-                                <input type="${comp.type}" disabled />
-                                ${opt.label}
-                            </label>
-                        `).join("")}
-                    </div>
-                `;
-            } else if (comp.type === "date") {
-                inputHtml = `<input type="date" disabled class="preview-input" />`;
-            } else if (comp.type === "time") {
-                inputHtml = `<input type="time" disabled class="preview-input" />`;
-            } else if (["date-range", "leave-date-range"].includes(comp.type)) {
-                const left = comp.meta?.startLabel || "시작";
-                const right = comp.meta?.endLabel || "종료";
-                inputHtml = `
-                    <div class="range-preview">
-                        <input type="date" disabled placeholder="${left}" />
-                        <span class="range-sep">~</span>
-                        <input type="date" disabled placeholder="${right}" />
-                    </div>
-                `;
-            } else if (comp.type === "time-range") {
-                const left = comp.meta?.startLabel || "시작";
-                const right = comp.meta?.endLabel || "종료";
-                inputHtml = `
-                    <div class="range-preview">
-                        <input type="time" disabled placeholder="${left}" />
-                        <span class="range-sep">~</span>
-                        <input type="time" disabled placeholder="${right}" />
-                    </div>
-                `;
-            } else if (comp.type === "divider") {
-                row.innerHTML = `
-                    <div class="divider-preview">
-                        <span></span>
-                        <em>구분선</em>
-                        <span></span>
-                    </div>
-                `;
-            } else if (comp.type === "notice") {
-                const message =
-                    (comp.meta?.message ?? "안내 문구 예시")
-                        .replace(/\n/g, "<br>");
-
-                inputHtml = `
-<div class="notice-message-box ${comp.meta?.style ?? "info"}">${message}</div>
-`;//화면에서의 공백 문제때문에 일부러 들여쓰기 X
-            } else if (comp.type === "leave-reason") {
-                const options = comp.meta?.options ?? [];
-                const selectedCode = comp.meta?.vacationTypeCode;
-
-                inputHtml = `
-                        <div class="leave-reason-body">
-                            <select disabled>
-                                <option value="">휴가 유형 선택</option>
-                                ${options.map(opt => `
-                                    <option value="${opt.code}"
-                                        ${opt.code === selectedCode ? "selected" : ""}>
-                                        ${opt.name}
-                                    </option>
-                                `).join("")}
-                            </select>
-                
-                            <textarea
-                                disabled
-                                class="leave-reason-textarea"
-                                placeholder="상세 휴가 사유를 입력하세요.">
-                            </textarea>
-                        </div>
-                    `;
-            } else if (comp.type === "table") {
-                const cols = comp.meta?.columns ?? [];
-                const minRows = Math.max(1, comp.meta?.rowPolicy?.min ?? 1);
-                inputHtml = `
-                    <table class="table-preview">
-                        <thead>
-                            <tr>
-                                ${cols.map(col => `
-                                    <th class="${col.required ? 'is-required' : ''}">
-                                      ${col.label}
-                                    </th>
-                                `).join("")}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${Array.from({length: minRows}).map(() => `
-                                <tr>
-                                    ${cols.map(() => `
-                                        <td><input disabled /></td>
-                                    `).join("")}
-                                </tr>
-                            `).join("")}
-                        </tbody>
-                    </table>
-                `;
-            } else if (comp.type === "image") {
-                const src = comp.meta?.src;
-                const alt = comp.meta?.alt || "이미지 미리보기";
-                inputHtml = `
-                    <div class="image-preview-box">
-                        ${src
-                    ? `<img src="${src}" alt="${alt}" />`
-                    : `<span class="image-placeholder">이미지</span>`
-                }
-                    </div>
-                `;
-            } else if (comp.type === "file") {
-                inputHtml = `
-                    <button type="button" class="file-preview-btn" disabled>
-                        파일 선택
-                    </button>
-                `;
-            } else if (comp.type === "address") {
-                inputHtml = `
-                    <input
-                        type="text"
-                        disabled
-                        class="preview-input wide"
-                        placeholder="주소 입력 (형식 검증)"
-                    />
-                `;
-            } else if (comp.type === "employee-search") {
-                inputHtml = `
-                    <input
-                        type="text"
-                        disabled
-                        class="preview-input"
-                        placeholder="사원 검색"
-                    />
-                `;
-            } else if (comp.type === "department-search") {
-                inputHtml = `
-                    <input
-                        type="text"
-                        disabled
-                        class="preview-input"
-                        placeholder="부서 검색"
-                    />
-                `;
-            } else if (comp.type === "schedule-date-range") {
-                const left = comp.meta?.startLabel || "시작일";
-                const right = comp.meta?.endLabel || "종료일";
-
-                // ⬇️ inputHtml에는 우측 영역만!
-                inputHtml = `
-                        <div class="schedule-body">
-                            <div class="schedule-range">
-                                <input type="date" disabled placeholder="${left}" />
-                                <span class="range-sep">~</span>
-                                <input type="date" disabled placeholder="${right}" />
-                            </div>
-                
-                            <textarea
-                                disabled
-                                class="schedule-desc"
-                                placeholder="일정 내용을 입력하세요.">
-                            </textarea>
-                        </div>
-                    `;
-            }
-
-
-            if (!["divider"].includes(comp.type)) {
-                row.innerHTML = `
-                    <div class="preview-row">
-                        ${labelHtml}
-                        ${inputHtml}
-                    </div>
-                `;
-            }
-        }
-
-        // 삭제 버튼 (고정형 제외)
+        /* ======================
+           삭제 버튼
+        ====================== */
         if (!comp.fixed) {
             const deleteBtn = document.createElement("button");
             deleteBtn.className = "delete-btn";
-            deleteBtn.type = "button";
             deleteBtn.innerHTML = "🗑️";
-            deleteBtn.title = "컴포넌트 삭제";
-
-            deleteBtn.addEventListener("click", e => {
+            deleteBtn.onclick = e => {
                 e.stopPropagation();
                 if (confirm("이 컴포넌트를 삭제하시겠습니까?")) {
                     removeComponent(comp.id);
                 }
-            });
-
+            };
             row.appendChild(deleteBtn);
         }
+
         container.appendChild(row);
     });
-
-    syncDocumentPolicyToggles();
-
 }
+
+function renderPreviewIntoRow(row, comp) {
+    if (comp.fixed) {
+        renderFixedComponent(row, comp);
+        return;
+    }
+
+    if (comp.type === "divider") {
+        row.innerHTML = `
+           <div class="preview-row divider-preview">
+               <span class="divider-line"></span>
+               <em>${comp.label || "구분선"}</em>
+               <span class="divider-line"></span>
+           </div>
+       `;
+        return;
+    }
+
+    const labelHtml = `
+        <span class="comp-label ${comp.required ? "is-required" : ""}">
+            ${comp.label || ""}
+        </span>
+    `;
+
+    const inputHtml = renderPreviewInput(comp);
+
+    row.innerHTML = `
+        <div class="preview-row">
+            ${labelHtml}
+            ${inputHtml}
+        </div>
+    `;
+}
+
+
+function renderFixedComponent(row, comp) {
+    if (comp.type === "document-title") {
+        row.innerHTML = `
+            <div class="preview-row">
+                <span class="comp-label is-required">${comp.label}</span>
+                <input disabled
+                       class="preview-input input-long"
+                       value="${comp.meta?.value ?? ""}"
+                       placeholder="${comp.meta?.placeholder ?? ""}" />
+            </div>
+        `;
+    } else if (comp.type === "document-meta") {
+        row.innerHTML = `
+            <span class="doc-meta-label">${comp.label}</span>
+            <span class="doc-meta-auto">자동입력</span>
+        `;
+    }
+}
+
+
+function renderPreviewInput(comp) {
+    switch (comp.type) {
+
+        /* ===============================
+           일정 (최대 폭, 독립 레이아웃)
+        =============================== */
+        case "event-date-range":
+            return renderEventDateRangePreview(comp);
+
+        /* ===============================
+           텍스트 계열 (LONG)
+        =============================== */
+        case "text":
+            return `
+                <input disabled
+                       class="preview-input input-long"
+                       type="text"
+                       placeholder="${comp.meta?.placeholder ?? ""}" />
+            `;
+
+        case "textarea":
+            return `
+                <textarea disabled
+                          class="preview-textarea input-long"></textarea>
+            `;
+
+        /* ===============================
+           숫자 / 통화 (COMPACT)
+        =============================== */
+        case "number":
+            return `
+                <input disabled
+                       class="preview-input input-compact"
+                       type="number"
+                       placeholder="${comp.meta?.placeholder ?? ""}" />
+            `;
+
+        case "currency":
+            return `
+                <div class="currency-preview">
+                    <input disabled
+                           class="preview-input input-compact"
+                           type="text"
+                           placeholder="${comp.meta?.placeholder ?? ""}" />
+                    <span class="unit">${comp.meta?.unit ?? "KRW"}</span>
+                </div>
+            `;
+
+        /* ===============================
+           날짜 / 시간 (MEDIUM)
+        =============================== */
+        case "date":
+            return `
+                <input type="date"
+                       disabled
+                       class="preview-input input-medium" />
+            `;
+
+        case "time":
+            return `
+                <input type="time"
+                       disabled
+                       class="preview-input input-medium" />
+            `;
+
+        /* ===============================
+           날짜 / 시간 범위 (COMPACT)
+        =============================== */
+        case "date-range":
+            return `
+                <div class="range-preview input-compact">
+                    <input type="date" disabled />
+                    <span class="range-sep">~</span>
+                    <input type="date" disabled />
+                </div>
+            `;
+
+        case "time-range":
+            return `
+                <div class="range-preview input-compact">
+                    <input type="time" disabled />
+                    <span class="range-sep">~</span>
+                    <input type="time" disabled />
+                </div>
+            `;
+
+        /* ===============================
+           선택형 (라디오 / 체크)
+        =============================== */
+        case "radio":
+        case "checkbox":
+            return `
+                <div class="option-preview">
+                    ${(comp.meta?.options ?? []).map(opt => `
+                        <label>
+                            <input type="${comp.type}" disabled />
+                            ${opt.label}
+                        </label>
+                    `).join("")}
+                </div>
+            `;
+
+        /* ===============================
+           안내 문구
+        =============================== */
+        case "notice":
+            return `
+                <div class="notice-message-box ${comp.meta?.style ?? "info"}">${(comp.meta?.message ?? "안내 문구").trim().replace(/\n/g, "<br>")}</div>
+            `;
+
+        /* ===============================
+           테이블
+        =============================== */
+        case "table":
+            return `
+        <div class="table-preview-wrapper">
+            ${renderTablePreview(comp)}
+        </div>
+    `;
+
+        /* ===============================
+           이미지
+        =============================== */
+        case "image":
+            return renderImagePreview(comp);
+
+        /* ===============================
+           주소 (LONG)
+        =============================== */
+        case "address":
+            return `
+                <div class="address-preview">
+                    <input disabled class="preview-input input-long" placeholder="우편번호" />
+                    <input disabled class="preview-input input-long" placeholder="기본 주소" />
+                    <input disabled class="preview-input input-long" placeholder="상세 주소" />
+                </div>
+            `;
+
+        /* ===============================
+           검색 (MEDIUM)
+        =============================== */
+        case "employee-search":
+            return `
+                <div class="search-preview">
+                    <input disabled
+                           class="preview-input input-medium"
+                           placeholder="사원 선택" />
+                    <button disabled>🔍</button>
+                </div>
+            `;
+
+        case "department-search":
+            return `
+                <div class="search-preview">
+                    <input disabled
+                           class="preview-input input-medium"
+                           placeholder="조직 선택" />
+                    <button disabled>🔍</button>
+                </div>
+            `;
+
+        /* ===============================
+           fallback
+        =============================== */
+        default:
+            return `<div style="color:#aaa;">미리보기 미지원</div>`;
+    }
+}
+
+
+function renderEventDateRangePreview(comp) {
+    const isVacation = comp.meta?.baseRole === "VACATION";
+
+    return `
+        <div class="event-body preview-mode ${isVacation ? "vacation-preview" : ""}">
+            <div class="event-row event-range range-preview input-medium">
+                <input type="date" disabled />
+                <span class="range-sep">~</span>
+                <input type="date" disabled />
+            </div>
+
+            ${!isVacation ? `
+                <div class="event-row event-title">
+                    <input
+                        type="text"
+                        disabled
+                        class="preview-input input-long"
+                        placeholder="일정 제목을 입력하세요"
+                    />
+                </div>
+            ` : ""}
+
+            ${isVacation ? `
+                <div class="event-row event-vacation-type">
+                    <select disabled>
+                        <option>휴가 유형 선택</option>
+                    </select>
+                </div>
+            ` : ""}
+
+            <div class="event-row event-description">
+                <textarea
+                    disabled
+                    class="preview-textarea input-long"
+                    placeholder="${isVacation
+        ? "휴가 상세 사유를 입력하세요."
+        : "일정 설명을 입력하세요."
+    }"></textarea>
+            </div>
+        </div>
+    `;
+}
+
+
+function renderTablePreview(comp) {
+    const cols = comp.meta?.columns ?? [];
+    const minRows = Math.max(1, comp.meta?.rowPolicy?.min ?? 1);
+
+    return `
+        <table class="table-preview">
+            <thead>
+                <tr>
+                    ${cols.map(col => `
+                        <th class="${col.required ? 'is-required' : ''}">
+                            ${col.label ?? ''}
+                        </th>
+                    `).join("")}
+                </tr>
+            </thead>
+            <tbody>
+                ${Array.from({length: minRows}).map(() => `
+                    <tr>
+                        ${cols.map(() => `<td><input disabled /></td>`).join("")}
+                    </tr>
+                `).join("")}
+            </tbody>
+        </table>
+    `;
+}
+
+
+function renderImagePreview(comp) {
+    const src = comp.meta?.src;
+    const alt = comp.meta?.alt ?? "이미지";
+
+    if (!src) {
+        return `
+            <div class="image-preview placeholder">
+                이미지 미리보기
+            </div>
+        `;
+    }
+
+    return `
+        <div class="image-preview">
+            <img src="${src}" alt="${alt}" />
+        </div>
+    `;
+}
+
 
 function enforceSystemRequiredRules() {
     formComponents.forEach(comp => {
-        if (
-            comp.type === "leave-date-range" ||
-            comp.type === "leave-reason"
-        ) {
+        if (comp.type === "event-date-range") {
             comp.required = true;
         }
     });
 }
-
 
 // ================================
 // 7. 컴포넌트 설정 패널(사이드)
@@ -1503,15 +1401,17 @@ function enforceSystemRequiredRules() {
 function showComponentSettingPanel(componentId) {
     const comp = formComponents.find(c => c.id === componentId);
     const panel = document.getElementById('component-setting-content');
+
     if (!comp) {
         panel.innerHTML = `<span style="color:#9ab;">컴포넌트를 선택하세요.</span>`;
         return;
     }
 
     const isFixed = !!comp.fixed;
+    comp.meta ??= {};
 
     /* ======================
-       공통 정보 영역
+       1. 공통 정보 영역
     ====================== */
     let html = `
     <div style="margin-bottom:11px;">
@@ -1531,23 +1431,32 @@ function showComponentSettingPanel(componentId) {
     </div>
     `;
 
-    const isForceRequired =
-        comp.type === "leave-date-range" ||
-        comp.type === "leave-reason";
+    const isForceRequired = comp.type === "event-date-range";
+    const hideRequiredToggle = REQUIRED_TOGGLE_HIDDEN_TYPES.includes(comp.type);
 
-    if (!isFixed && !isForceRequired) {
+    if (!isFixed && !isForceRequired && !hideRequiredToggle) {
         html += `
         <div class="setting-row" style="margin-top:8px;">
             <label style="flex:1;">필수 입력</label>
             <input type="checkbox" id="toggle-required"
-                ${comp.required ? "checked" : ""}>
+                   ${comp.required ? "checked" : ""}>
         </div>`;
     }
 
     if (isForceRequired) {
         html += `
         <div class="setting-row" style="margin-top:8px;color:#888;font-size:0.9em;">
-            ⚠ 이 항목은 근태 반영을 위해 필수 입력 항목입니다.
+            ⚠ 이 항목은 일정/근태 정책에 따라 필수 입력 항목입니다.
+        </div>`;
+    }
+
+    /* ======================
+       divider
+    ====================== */
+    if (comp.type === "divider") {
+        html += `
+        <div class="setting-row" style="margin-top:12px;color:#888;font-size:0.9em;">
+            구분선은 문서의 시각적 영역을 나누는 용도입니다.
         </div>`;
     }
 
@@ -1561,26 +1470,36 @@ function showComponentSettingPanel(componentId) {
             <textarea
                 id="input-notice-message"
                 style="width:100%;min-height:60px;"
-            >${comp.meta?.message ?? ""}</textarea>
+            >${comp.meta.message ?? ""}</textarea>
             <div class="hint" id="notice-message-hint"></div>
         </div>`;
     }
-
-    /* ======================
-       schedule-date-range ✅ 추가
-    ====================== */
-
 
     /* ======================
        radio / checkbox
     ====================== */
     if (comp.type === "radio" || comp.type === "checkbox") {
         comp.meta.options ??= [{id: generateOptionId(), label: "옵션 1"}];
+
         html += `
         <div class="setting-row" style="margin-top:14px;">
             <div style="font-weight:600;">옵션 목록</div>
             <div id="option-list-pane"></div>
             <button type="button" id="add-option-btn">옵션 추가</button>
+        </div>
+
+        <div class="setting-row" style="margin-top:12px;">
+            <label>최소 선택 수</label>
+            <input type="number" id="option-min-selected"
+                   min="0"
+                   value="${comp.meta.minSelected ?? ''}">
+        </div>
+
+        <div class="setting-row">
+            <label>최대 선택 수</label>
+            <input type="number" id="option-max-selected"
+                   min="0"
+                   value="${comp.meta.maxSelected ?? ''}">
         </div>`;
     }
 
@@ -1589,7 +1508,13 @@ function showComponentSettingPanel(componentId) {
     ====================== */
     if (comp.type === "table") {
         comp.meta.columns ??= [];
-        comp.meta.rowPolicy ??= {min: 1, max: undefined, addable: true, removable: true};
+        comp.meta.rowPolicy ??= {
+            min: 1,
+            max: undefined,
+            addable: true,
+            removable: true
+        };
+
         html += `
         <div class="setting-row" style="margin-top:14px;">
             <div style="font-weight:600;">컬럼 목록</div>
@@ -1599,17 +1524,53 @@ function showComponentSettingPanel(componentId) {
 
         <div class="setting-row" style="margin-top:14px;">
             <div style="font-weight:600;">행 설정</div>
-            <label>최소 행 <input type="number" id="table-row-min" value="${comp.meta.rowPolicy.min}"></label><br>
-            <label>최대 행 <input type="number" id="table-row-max" value="${comp.meta.rowPolicy.max ?? ""}"></label><br>
-            <label><input type="checkbox" id="table-row-addable" ${comp.meta.rowPolicy.addable ? "checked" : ""}> 행 추가 가능</label><br>
-            <label><input type="checkbox" id="table-row-removable" ${comp.meta.rowPolicy.removable ? "checked" : ""}> 행 삭제 가능</label>
+            <label>최소 행
+                <input type="number" id="table-row-min"
+                       value="${comp.meta.rowPolicy.min}">
+            </label><br>
+            <label>최대 행
+                <input type="number" id="table-row-max"
+                       value="${comp.meta.rowPolicy.max ?? ""}">
+            </label><br>
+            <label>
+                <input type="checkbox" id="table-row-addable"
+                       ${comp.meta.rowPolicy.addable ? "checked" : ""}>
+                행 추가 가능
+            </label><br>
+            <label>
+                <input type="checkbox" id="table-row-removable"
+                       ${comp.meta.rowPolicy.removable ? "checked" : ""}>
+                행 삭제 가능
+            </label>
         </div>`;
     }
 
+    /* ======================
+       일정 유형 (읽기 전용)
+    ====================== */
+    if (comp.type === "event-date-range") {
+        html += `
+        <div class="setting-row" style="margin-top:14px;">
+            <div style="font-weight:600;">일정 유형</div>
+
+            <label><input type="radio" disabled ${comp.meta.baseRole === "VACATION" ? "checked" : ""}> 휴가</label>
+            <label><input type="radio" disabled ${comp.meta.baseRole === "BUSINESS_TRIP" ? "checked" : ""}> 출장</label>
+            <label><input type="radio" disabled ${comp.meta.baseRole === "OUTWORK" ? "checked" : ""}> 외근</label>
+            <label><input type="radio" disabled ${comp.meta.baseRole === "COMPANY_EVENT" ? "checked" : ""}> 회사 일정</label>
+
+            <div style="color:#888;font-size:0.85em;margin-top:6px;">
+                ※ 일정 유형은 문서 양식에서 고정됩니다.
+            </div>
+        </div>`;
+    }
+
+    /* ======================
+       2. DOM 반영 (단 1회)
+    ====================== */
     panel.innerHTML = html;
 
     /* ======================
-       공통 이벤트
+       3. 공통 이벤트
     ====================== */
     if (!isFixed) {
         const labelInput = document.getElementById("input-comp-label");
@@ -1630,7 +1591,7 @@ function showComponentSettingPanel(componentId) {
     }
 
     /* ======================
-       notice 이벤트
+       4. notice 이벤트
     ====================== */
     if (comp.type === "notice") {
         const textarea = document.getElementById("input-notice-message");
@@ -1644,25 +1605,31 @@ function showComponentSettingPanel(componentId) {
         });
     }
 
-
     /* ======================
-       radio / checkbox 옵션
+       5. radio / checkbox 이벤트
     ====================== */
     if (comp.type === "radio" || comp.type === "checkbox") {
         const pane = document.getElementById("option-list-pane");
+        const addBtn = document.getElementById("add-option-btn");
 
         const renderOptions = () => {
             pane.innerHTML = "";
             comp.meta.options.forEach((opt, idx) => {
                 const row = document.createElement("div");
                 row.innerHTML = `
-                <div style="display:flex;flex-direction:column;gap:4px;">
-                    <div style="display:flex;gap:6px;">
-                        <input value="${opt.label}" style="flex:1;">
-                        <button type="button">🗑️</button>
+                    <div class="option-row">
+                        <input
+                            class="option-label-input"
+                            value="${(opt.label ?? '').replace(/"/g, '&quot;')}"
+                        >
+                        <button
+                            type="button"
+                            class="option-delete-btn"
+                            aria-label="옵션 삭제"
+                        >🗑️</button>
                     </div>
                     <div class="hint option-hint"></div>
-                </div>`;
+                `;
 
                 const input = row.querySelector("input");
                 const hint = row.querySelector(".option-hint");
@@ -1675,87 +1642,129 @@ function showComponentSettingPanel(componentId) {
                     renderFormComponents();
                 });
 
-                del.onclick = () => {
-                    if (comp.meta.options.length > 1) {
-                        comp.meta.options.splice(idx, 1);
-                        renderOptions();
-                        renderFormComponents();
-                    }
-                };
+                del.addEventListener("click", () => {
+                    if (comp.meta.options.length <= 1) return;
+                    comp.meta.options.splice(idx, 1);
+                    renderOptions();
+                    renderFormComponents();
+                });
 
                 pane.appendChild(row);
             });
         };
 
         renderOptions();
-        document.getElementById("add-option-btn").onclick = () => {
+
+        addBtn.addEventListener("click", () => {
             comp.meta.options.push({id: generateOptionId(), label: "옵션"});
             renderOptions();
             renderFormComponents();
-        };
+        });
+
+        document.getElementById("option-min-selected")
+            ?.addEventListener("input", e => {
+                comp.meta.minSelected = e.target.value === ""
+                    ? undefined
+                    : Number(e.target.value);
+            });
+
+        document.getElementById("option-max-selected")
+            ?.addEventListener("input", e => {
+                comp.meta.maxSelected = e.target.value === ""
+                    ? undefined
+                    : Number(e.target.value);
+            });
     }
 
     /* ======================
-       table 이벤트
+       6. table 이벤트
     ====================== */
     if (comp.type === "table") {
         const list = document.getElementById("table-column-list");
+        const addBtn = document.getElementById("add-table-column-btn");
 
         const renderColumns = () => {
             list.innerHTML = "";
+
             comp.meta.columns.forEach((col, idx) => {
-                const row = document.createElement("div");
-                row.innerHTML = `
-                <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:6px;">
-                    <div style="display:flex;gap:6px;">
-                        <input value="${col.label}" style="flex:1;">
-                        <select>
-                            ${["text", "number", "currency"].map(t =>
+                const wrapper = document.createElement("div");
+
+                wrapper.innerHTML = `
+                <div class="table-column-row">
+                    <input
+                        class="table-col-label-input"
+                        value="${(col.label ?? '').replace(/"/g, '&quot;')}"
+                    >
+                    <select class="table-col-type-select">
+                        ${["text", "number", "currency"].map(t =>
                     `<option value="${t}" ${t === col.type ? "selected" : ""}>${t}</option>`
                 ).join("")}
-                        </select>
-                        <input type="checkbox" ${col.required ? "checked" : ""}>
-                        <button type="button">🗑️</button>
-                    </div>
-                    <div class="hint column-hint"></div>
-                </div>`;
+                    </select>
+                    <input
+                        type="checkbox"
+                        class="table-col-required-checkbox"
+                        ${col.required ? "checked" : ""}
+                    >
+                    <button
+                        type="button"
+                        class="table-col-delete-btn"
+                        aria-label="컬럼 삭제"
+                    >🗑️</button>
+                </div>
+                <div class="hint column-hint"></div>
+            `;
 
-                const label = row.querySelector("input");
-                const hint = row.querySelector(".column-hint");
-                const type = row.querySelector("select");
-                const req = row.querySelector('input[type="checkbox"]');
-                const del = row.querySelector("button");
+                const labelInput = wrapper.querySelector(".table-col-label-input");
+                const typeSelect = wrapper.querySelector(".table-col-type-select");
+                const reqCheck = wrapper.querySelector(".table-col-required-checkbox");
+                const delBtn = wrapper.querySelector(".table-col-delete-btn");
+                const hint = wrapper.querySelector(".column-hint");
 
-                label.addEventListener("input", () => {
-                    enforceMaxLength(label, COMPONENT_LABEL_MAX);
-                    col.label = label.value;
-                    validateComponentLabel(label, hint);
+                /* 🔒 checkbox는 포커스 체인 제거 */
+                reqCheck.tabIndex = -1;
+
+                /* =========================
+                   컬럼명 입력
+                ========================= */
+
+                // 입력 중: 데이터 + validation만
+                labelInput.addEventListener("input", () => {
+                    enforceMaxLength(labelInput, COMPONENT_LABEL_MAX);
+                    col.label = labelInput.value;
+                    validateComponentLabel(labelInput, hint);
+                });
+
+                // 값 확정 시점에만 렌더 (blur ❌)
+                labelInput.addEventListener("change", () => {
                     renderFormComponents();
                 });
 
-                type.onchange = e => {
+                /* =========================
+                   기타 컨트롤
+                ========================= */
+
+                typeSelect.addEventListener("change", e => {
                     col.type = e.target.value;
                     renderFormComponents();
-                };
+                });
 
-                req.onchange = e => {
+                reqCheck.addEventListener("change", e => {
                     col.required = e.target.checked;
                     renderFormComponents();
-                };
+                });
 
-                del.onclick = () => {
+                delBtn.addEventListener("click", () => {
                     comp.meta.columns.splice(idx, 1);
                     renderColumns();
                     renderFormComponents();
-                };
+                });
 
-                list.appendChild(row);
+                list.appendChild(wrapper);
             });
         };
-
         renderColumns();
 
-        document.getElementById("add-table-column-btn").onclick = () => {
+        addBtn.addEventListener("click", () => {
             if (comp.meta.columns.length >= TABLE_COLUMN_MAX) {
                 alert(`컬럼은 최대 ${TABLE_COLUMN_MAX}개까지 추가할 수 있습니다.`);
                 return;
@@ -1769,38 +1778,53 @@ function showComponentSettingPanel(componentId) {
             });
             renderColumns();
             renderFormComponents();
-        };
+        });
 
-        document.getElementById("table-row-min").oninput = e => {
+        const minEl = document.getElementById("table-row-min");
+        const maxEl = document.getElementById("table-row-max");
+        const addableEl = document.getElementById("table-row-addable");
+        const removableEl = document.getElementById("table-row-removable");
+
+        minEl.addEventListener("input", e => {
             let v = Number(e.target.value);
             if (!v || v < TABLE_ROW_MIN) v = TABLE_ROW_MIN;
             if (v > TABLE_ROW_MAX) v = TABLE_ROW_MAX;
             e.target.value = v;
             comp.meta.rowPolicy.min = v;
-            renderFormComponents();
-        };
 
-        document.getElementById("table-row-max").oninput = e => {
-            let max = Number(e.target.value);
+            if (comp.meta.rowPolicy.max !== undefined && comp.meta.rowPolicy.max < v) {
+                comp.meta.rowPolicy.max = v;
+                maxEl.value = String(v);
+            }
+            renderFormComponents();
+        });
+
+        maxEl.addEventListener("input", e => {
             if (e.target.value === "") {
                 comp.meta.rowPolicy.max = undefined;
                 renderFormComponents();
                 return;
             }
-            max = Math.min(TABLE_ROW_MAX, Math.max(TABLE_ROW_MIN, max));
-            if (max < comp.meta.rowPolicy.min) {
-                max = comp.meta.rowPolicy.min;
-            }
+
+            let max = Number(e.target.value);
+            if (!max || max < TABLE_ROW_MIN) max = TABLE_ROW_MIN;
+            if (max > TABLE_ROW_MAX) max = TABLE_ROW_MAX;
+            if (max < comp.meta.rowPolicy.min) max = comp.meta.rowPolicy.min;
+
             comp.meta.rowPolicy.max = max;
-            e.target.value = max;
+            e.target.value = String(max);
             renderFormComponents();
-        };
+        });
 
-        document.getElementById("table-row-addable").onchange =
-            e => comp.meta.rowPolicy.addable = e.target.checked;
+        addableEl.addEventListener("change", e => {
+            comp.meta.rowPolicy.addable = e.target.checked;
+            renderFormComponents();
+        });
 
-        document.getElementById("table-row-removable").onchange =
-            e => comp.meta.rowPolicy.removable = e.target.checked;
+        removableEl.addEventListener("change", e => {
+            comp.meta.rowPolicy.removable = e.target.checked;
+            renderFormComponents();
+        });
     }
 }
 
@@ -1808,12 +1832,54 @@ function showComponentSettingPanel(componentId) {
 // 8. 데이터 변환(저장/로드) 함수
 // ============================
 
-function buildAffectTags(settings) {
-    const tags = [];
-    if (settings.autoReflectAttendance) tags.push("ATTENDANCE");
-    if (settings.autoReflectSchedule) tags.push("SCHEDULE");
-    return tags;
+function buildAffectTagsFromComponents(components) {
+    const result = new Set();
+
+    components
+        .filter(c => c.type === "event-date-range")
+        .forEach(c => {
+            const baseRole = c.meta?.baseRole;
+            const affect = c.meta?.affect ?? {};
+
+            // 1️⃣ baseRole 태그 (문서 성격 식별용)
+            if (baseRole) {
+                result.add(baseRole);
+            }
+
+            // 2️⃣ 기본 정책 계산
+            let attendance = false;
+            let schedule = false;
+
+            switch (baseRole) {
+                case "VACATION":
+                    attendance = true;
+                    schedule = true;
+                    break;
+                case "BUSINESS_TRIP":
+                case "OUTWORK":
+                    schedule = true;
+                    break;
+                case "COMPANY_EVENT":
+                default:
+                    // 기본 false
+                    break;
+            }
+
+            // 3️⃣ 관리자 override 적용
+            if (affect.attendance === true) attendance = true;
+            if (affect.attendance === false) attendance = false;
+
+            if (affect.schedule === true) schedule = true;
+            if (affect.schedule === false) schedule = false;
+
+            // 4️⃣ 최종 태그 반영
+            if (attendance) result.add("ATTENDANCE");
+            if (schedule) result.add("SCHEDULE");
+        });
+
+    return Array.from(result);
 }
+
 
 function convertComponentsToFields(components) {
     return components.map((comp, index) => ({
@@ -1826,7 +1892,7 @@ function convertComponentsToFields(components) {
     }));
 }
 
-function loadTemplateJsonToFormComponents(templateJson) {
+function loadTemplateJsonToFormComponents(templateJson, templateBaseRole) {
     if (!templateJson || !Array.isArray(templateJson.fields)) return;
 
     const fields = [...templateJson.fields]
@@ -1849,8 +1915,16 @@ function loadTemplateJsonToFormComponents(templateJson) {
         });
     }
 
-    // 휴가 컴포넌트 계약 보정
-    components = normalizeLeaveComponentSet(components);
+    // 🔑 event-date-range만 보정
+    components.forEach(comp => {
+        if (comp.type !== "event-date-range") return;
+
+        applyEventComponentPolicy(
+            comp,
+            templateGroupBaseRole ?? templateBaseRole
+        );
+    });
+
 
     // document-meta 항상 마지막
     components = components.filter(c => c.type !== "document-meta");
@@ -1860,33 +1934,48 @@ function loadTemplateJsonToFormComponents(templateJson) {
     });
 
     formComponents = components;
-
-    // 휴가 정책 → 문서 설정 동기화
-    if (components.some(c => c.type === "leave-date-range")) {
-        documentSettings.autoReflectAttendance = true;
-        documentSettings.autoReflectSchedule = true;
-    }
-
-    if (components.some(c => c.type === "schedule-date-range")) {
-        documentSettings.autoReflectSchedule = true;
-    }
-
-    syncDocumentPolicyToggles();
 }
 
 // ================================
 // 9. 저장/로드 및 그룹정보 함수
 // ================================
+function bindDocumentTitleSync() {
+    const titleInput = document.getElementById('form-title-input');
+    if (!titleInput) return;
+
+    titleInput.addEventListener('input', () => {
+        enforceMaxLength(titleInput, DOCUMENT_TITLE_MAX);
+
+        // 🔑 상태 동기화
+        syncDocumentTitle(titleInput.value);
+
+        // 🔄 미리보기 즉시 반영
+        renderFormComponents();
+    });
+}
+
+function syncDocumentTitle(value) {
+    const titleComp = formComponents.find(c => c.type === "document-title");
+    if (!titleComp) return;
+
+    titleComp.meta ??= {};
+    titleComp.meta.value = value;
+}
+
 
 async function saveFormTemplateStructure(templateId) {
     if (!templateId) {
         alert('저장할 문서 양식 ID(templateId)가 존재하지 않습니다.');
         return false;
     }
+
+    const titleInput = document.getElementById('form-title-input');
+    syncDocumentTitle(titleInput?.value ?? '');
+
     // 검증
     if (!validateDocumentSettingPanel()) return false;
     if (!validateAllComponents()) return false;
-    if (!validateLeavePolicyContract()) return false;
+
 
     const filteredComponents = formComponents
         .filter(fc => fc.type !== 'document-meta')
@@ -1897,12 +1986,14 @@ async function saveFormTemplateStructure(templateId) {
             return comp;
         });
 
-    const categoryCode = document.getElementById('form-category-input')?.value;
+    const categoryCode =
+        templateGroupCategoryCode ??
+        document.getElementById('form-category-input')?.value;
     if (!categoryCode) {
         alert('카테고리를 선택해주세요.');
         return false;
     }
-    const affectTags = buildAffectTags(documentSettings);
+    const affectTags = buildAffectTagsFromComponents(formComponents);
     const payload = {
         categoryCode,
         affectTags,
@@ -1940,11 +2031,16 @@ async function loadFormTemplateGroupInfo(groupId) {
         const result = await res.json();
         const group = result?.data;
         if (!group) return;
+
+        templateGroupBaseRole = group.baseRole;
+        templateGroupCategoryCode = group.categoryCode;
+
         renderFormTemplateGroupInfo(group);
     } catch (e) {
         console.warn('[FormTemplateGroup] 그룹 정보 조회 실패', e);
     }
 }
+
 
 function renderFormTemplateGroupInfo(group) {
     const panel = document.getElementById('form-setting-panel');
@@ -1974,96 +2070,6 @@ function renderFormTemplateGroupInfo(group) {
 // 10. 이벤트 바인딩 관련 함수
 // ============================
 
-function bindDocumentSettingsPanel() {
-    const panel = document.getElementById('form-setting-panel');
-    if (!panel) return;
-    const insertedId = "document-global-toggles";
-    if (document.getElementById(insertedId)) return;
-
-    // -- 자동반영 토글 UI
-    const settingTogglesHTML = `
-      <div class="setting-row" style="margin-bottom:5px;align-items:center;display:flex;">
-        <label for="toggle-auto-attendance" style="flex:1;">
-          최종 승인 시 근태 자동 반영
-        </label>
-        <input
-          type="checkbox"
-          id="toggle-auto-attendance"
-          style="transform:scale(1.15);margin-left:7px;cursor:pointer;"
-        >
-      </div>
-      <div class="setting-row" style="margin-bottom:5px;align-items:center;display:flex;">
-        <label for="toggle-auto-schedule" style="flex:1;">
-          최종 승인 시 일정 자동 반영
-        </label>
-        <input
-          type="checkbox"
-          id="toggle-auto-schedule"
-          style="transform:scale(1.15);margin-left:7px;cursor:pointer;"
-        >
-      </div>
-    `;
-
-    const wrapper = document.createElement('div');
-    wrapper.id = insertedId;
-    wrapper.innerHTML = settingTogglesHTML;
-
-    const actionButtons = panel.querySelector('.form-action-buttons');
-    if (actionButtons) {
-        panel.insertBefore(wrapper, actionButtons);
-    } else {
-        panel.appendChild(wrapper);
-    }
-
-    /* ======================
-       컴포넌트 존재 여부 헬퍼
-    ====================== */
-    const hasLeaveComponent = () =>
-        formComponents.some(c =>
-            c.type === 'leave-date-range' || c.type === 'leave-reason'
-        );
-
-
-    const autoAttendanceToggle = document.getElementById('toggle-auto-attendance');
-    const autoScheduleToggle = document.getElementById('toggle-auto-schedule');
-
-    // 초기 상태 동기화
-    autoAttendanceToggle.checked = documentSettings.autoReflectAttendance;
-    autoScheduleToggle.checked = documentSettings.autoReflectSchedule;
-
-    /* ======================
-       근태 자동 반영 토글
-       - 휴가가 있으면 OFF 불가
-    ====================== */
-    autoAttendanceToggle.addEventListener('change', e => {
-        documentSettings.autoReflectAttendance = e.target.checked;
-        syncDocumentPolicyToggles();
-    });
-
-    autoScheduleToggle.addEventListener('change', e => {
-        documentSettings.autoReflectSchedule = e.target.checked;
-        syncDocumentPolicyToggles();
-    });
-
-    /* ======================
-       문서 제목 실시간 동기화
-    ====================== */
-    const titleInput = document.getElementById("form-title-input");
-    if (titleInput) {
-        const titleComp = formComponents.find(c => c.type === "document-title");
-        if (titleComp?.meta?.value !== undefined) {
-            titleInput.value = titleComp.meta.value;
-        }
-        titleInput.addEventListener("input", e => {
-            const titleComp = formComponents.find(c => c.type === "document-title");
-            if (!titleComp) return;
-            titleComp.meta.value = e.target.value;
-            renderFormComponents();
-        });
-    }
-
-    bindDocumentTitleValidation();
-}
 
 function bindSaveFormButton() {
     const saveBtn = document.getElementById('save-form-btn');
@@ -2144,33 +2150,31 @@ function bindPreviewButton() {
 
 document.addEventListener('DOMContentLoaded', async function () {
     let resolvedGroupId = null;
-    // templateId가 있으면 수정/복제/최신버전 로드
 
     bindAutoClearInvalidFocus();
 
-
+    // =====================================
+    // 1. 템플릿 로드 (구조만 사용)
+    // =====================================
     if (typeof templateId !== "undefined" && templateId) {
         try {
             const res = await apiFetch(`/api/form-templates/${templateId}`);
             if (res.ok) {
                 const result = await res.json();
                 const data = result?.data;
+
+                // 🔹 필드 구조만 로드
                 if (data?.templateJson) {
-                    loadTemplateJsonToFormComponents(data.templateJson);
+                    loadTemplateJsonToFormComponents(
+                        data.templateJson,
+                        data.baseRole // ⚠️ baseRole은 그룹 로드 후 덮어씀
+                    );
                 }
-                // groupId 확보
+
+                // 🔹 groupId 확보
                 resolvedGroupId = data?.templateGroupId ?? null;
-                // 카테고리 반영
-                const categorySelect = document.getElementById('form-category-input');
-                if (categorySelect && data?.templateCategoryCode) {
-                    categorySelect.value = data.templateCategoryCode;
-                }
-                // affectTags → documentSettings 변환
-                documentSettings.autoReflectAttendance =
-                    Array.isArray(data.affectTags) && data.affectTags.includes("ATTENDANCE");
-                documentSettings.autoReflectSchedule =
-                    Array.isArray(data.affectTags) && data.affectTags.includes("SCHEDULE");
-                // 문서 제목 input 초기 동기화
+
+                // 🔹 문서 제목 동기화
                 const titleComp = formComponents.find(c => c.type === "document-title");
                 const titleInput = document.getElementById("form-title-input");
                 if (titleComp && titleInput) {
@@ -2181,26 +2185,32 @@ document.addEventListener('DOMContentLoaded', async function () {
             console.warn('[FormTemplate] 상세 로드 실패', e);
         }
     }
-    // groupId 있으면 그룹 info 로드
+
+    // =====================================
+    // 2. 그룹 정보 로드 (정책 기준)
+    // =====================================
     if (resolvedGroupId && typeof loadFormTemplateGroupInfo === 'function') {
         await loadFormTemplateGroupInfo(resolvedGroupId);
+
+        // 🔑 카테고리 그룹 기준 고정 반영
+        applyGroupCategoryToDocumentSetting();
+        formComponents.forEach(comp => {
+            if (comp.type === "event-date-range") {
+                applyEventComponentPolicy(comp, templateGroupBaseRole);
+            }
+        });
     }
-    // 컴포넌트 목록 UI
+
+    // =====================================
+    // 3. UI 초기화
+    // =====================================
     initComponentListPanel();
-    // 설정패널 전역 옵션 바인딩
-    bindDocumentSettingsPanel();
-
-    syncDocumentPolicyToggles();
-
-    // 구성 요소 렌더링
     renderFormComponents();
-    // 저장 버튼 바인딩
     bindSaveFormButton();
-    // 이전/다음 버튼 바인딩
     bindStepNavigationButtons();
-    // 미리보기 버튼 바인딩
     bindPreviewButton();
-    // 컴포넌트 버튼 높이 정렬
     observeComponentButtonHeight();
+    bindDocumentTitleSync();
+
 });
 

@@ -1,6 +1,8 @@
 package com.finalproj.orbitflow.approval.formTemplateGroup.dto;
 
 import com.finalproj.orbitflow.approval.formTemplateGroup.entity.FormTemplateGroup;
+import com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole;
+import com.finalproj.orbitflow.approval.templateCategory.enums.TemplateCategoryCode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,6 +24,8 @@ public class FormTemplateGroupDetailResDto {
     private Long id;
     private String name;
     private String description;
+    private TemplateCategoryCode categoryCode;
+    private BaseRole baseRole;
     private Long createdBy;
     private Instant createdAt;
     private Instant updatedAt;
@@ -32,6 +36,8 @@ public class FormTemplateGroupDetailResDto {
                 .id(entity.getId())
                 .name(entity.getName())
                 .description(entity.getDescription())
+                .categoryCode(entity.getTemplateCategory().getCode())
+                .baseRole(entity.getBaseRole())
                 .createdBy(entity.getCreatedBy())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())

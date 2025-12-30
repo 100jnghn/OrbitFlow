@@ -1,5 +1,5 @@
 /* ======================================================
-   기본 레이아웃
+   App 기본 레이아웃
    ====================================================== */
 
 html, body {
@@ -30,7 +30,7 @@ html, body {
 }
 
 /* ======================================================
-   공통 패널
+   공통 패널 컨테이너
    ====================================================== */
 
 #component-list-panel,
@@ -99,8 +99,8 @@ html, body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    min-width: 400px;
-    align-items: center;
+    min-width: 0;
+    align-items: stretch;
 }
 
 #form-edit-title {
@@ -114,19 +114,25 @@ html, body {
 #form-edit-area {
     flex: 1;
     min-height: 0;
-    width: 90%;
+    min-width: 0;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
     background: #f6f8fc;
     border-radius: 4px;
     padding: 26px 18px;
     box-shadow: 0 1px 4px #e8ecf360;
+
     display: flex;
     flex-direction: column;
     gap: 14px;
+
     overflow-y: auto;
+    scrollbar-gutter: stable;
 }
 
 /* ======================================================
-   중앙 – 컴포넌트 미리보기
+   폼 컴포넌트 Row
    ====================================================== */
 
 .form-comp-row {
@@ -136,6 +142,7 @@ html, body {
     background: #fff;
     border-radius: 6px;
     transition: background 0.15s, border 0.15s;
+    min-width: 0;
 }
 
 .form-comp-row:not(.fixed) {
@@ -143,9 +150,13 @@ html, body {
 }
 
 .form-comp-row.fixed {
-    background: #f5f7fa;
-    border: 1px solid #e0e0ec;
+    background: #f6f8fc;
+    border-left: 4px solid #b7c6e6;
+    border-top: 1px solid #cfd8e7;
+    border-right: 1px solid #cfd8e7;
+    border-bottom: 1px solid #cfd8e7;
 }
+
 
 .form-comp-row.selected {
     border: 2px solid #196de7;
@@ -158,36 +169,13 @@ html, body {
 }
 
 
-.hint.active {
-    color: #e44;
-}
-
-.invalid-focus {
-    outline: none;
-    border-color: #e44 !important;
-    box-shadow: 0 0 0 2px rgba(228, 68, 68, 0.15);
-}
-
-#component-setting-content.invalid-focus {
-    box-shadow: inset 0 0 0 2px rgba(228, 68, 68, 0.35);
-}
-
-/* Drag 상태 */
-.form-comp-row.drag-hover {
-    background: #eaf4ff;
-}
-
-.form-comp-row.dragging {
-    opacity: 0.6;
-}
-
 /* ======================================================
    공통 미리보기 레이아웃
    ====================================================== */
 
 .preview-row {
     display: grid;
-    grid-template-columns: 140px 1fr;
+    grid-template-columns: 140px minmax(0, 1fr);
     column-gap: 12px;
     align-items: flex-start;
 }
@@ -198,42 +186,39 @@ html, body {
 
 .comp-label {
     display: inline-flex;
-    align-items: center;
+    align-items: flex-start; /* 🔑 여러 줄일 때 상단 정렬 */
     gap: 2px;
+
     font-weight: 500;
     color: #1f2949;
-    white-space: nowrap;
+
+    white-space: normal; /* 🔑 줄바꿈 허용 */
+    word-break: keep-all; /* 🔑 한글 단어 단위 유지 */
+    overflow-wrap: break-word; /* 🔑 영문/긴 문자열 대응 */
+    line-height: 1.4;
 }
 
 
+/* ======================================================
+   공통 입력 요소 규칙
+   ====================================================== */
 
-
-.comp-label.required::after,
-.doc-title-label.required::after {
-    content: " *";
-    color: #e22719;
-    font-size: 0.85em;
-    line-height: 1;
-}
-
-/* label / table header용 필수 표시 */
-.comp-label.is-required::after,
-.table-preview th.is-required::after {
-    content: " *";
-    color: #e22719;
-    font-weight: 600;
-}
-
-
-.preview-input {
-    width: 60%;
-    padding: 6px 8px;
-}
-
+.preview-input,
 .preview-textarea {
-    min-width: 170px;
-    min-height: 32px;
-    resize: none;
+    box-sizing: border-box;
+}
+
+/* 길이 계열 */
+.input-long {
+    max-width: 420px;
+}
+
+.input-medium {
+    max-width: 220px;
+}
+
+.input-compact {
+    max-width: 140px;
 }
 
 .unit {
@@ -241,59 +226,504 @@ html, body {
     color: #888;
 }
 
+/* ======================================================
+   날짜 / 시간 범위 (표준)
+   ====================================================== */
+
 .range-preview {
     display: flex;
     align-items: center;
     gap: 6px;
+    max-width: 320px;
 }
 
-.range-preview input[type="date"],
-.range-preview input[type="time"] {
-    width: 140px;
+.range-preview input {
+    flex: 1;
 }
 
 .range-sep {
     margin: 0 4px;
 }
 
-
 /* ======================================================
-   옵션 미리보기
+   테이블 미리보기
    ====================================================== */
 
-.option-preview {
+.table-preview-wrapper {
+    width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+}
+
+.table-preview {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    margin-top: 6px;
+    contain: layout;
+}
+
+.table-preview th,
+.table-preview td {
+    border: 1px solid #ddd;
+    padding: 6px;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.table-preview th {
+    background: #f7f8fa;
+    font-weight: 500;
+}
+
+.table-preview input,
+.table-preview textarea,
+.table-preview select {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* ===============================
+   ✅ 테이블 컬럼: hint는 아래줄
+   =============================== */
+
+#component-setting-panel #table-column-list > div {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto;
+    column-gap: 6px;
+    row-gap: 4px;
+    align-items: center;
+}
+
+/* row는 레이아웃 제거 */
+#component-setting-panel .table-column-row {
+    display: contents;
+}
+
+/* 위치 지정 */
+.table-col-label-input {
+    grid-column: 1;
+}
+
+.table-col-type-select {
+    grid-column: 2;
+}
+
+.table-col-required-checkbox {
+    grid-column: 3;
+}
+
+.table-col-delete-btn {
+    grid-column: 4;
+}
+
+/* ⭐ 힌트는 무조건 input 아래 */
+#component-setting-panel .column-hint {
+    grid-column: 1;
+    margin-top: 2px;
+}
+
+/* ======================================================
+   컴포넌트 설정 패널 전용 (문서 패널 영향 없음)
+   ====================================================== */
+
+
+
+/* 옵션 label input */
+#component-setting-panel .option-label-input,
+#component-setting-panel #option-list-pane input[type="text"] {
+    flex: 0 1 160px; /* 🔑 과도한 확장 차단 */
+    max-width: 160px;
+    min-width: 0;
+
+    height: 28px; /* 🔑 살짝 컴팩트 */
+    padding: 0 6px;
+    font-size: 0.9em;
+}
+
+/* 테이블 컬럼명 input */
+#component-setting-panel #table-column-list input[type="text"] {
+    flex: 0 1 100px; /* 🔑 기존 flex:1 제거 */
+    max-width: 100px;
+    min-width: 0;
+
+    height: 28px;
+    padding: 0 6px;
+    font-size: 0.9em;
+}
+
+/* 테이블 컬럼 타입 select */
+#component-setting-panel #table-column-list select {
+    flex: 0 0 90px;
+    width: 90px;
+
+    height: 28px;
+    padding: 0 6px;
+    font-size: 0.9em;
+}
+
+#component-setting-panel .table-col-label-input {
+    flex: 0 1 100px; /* 줄어들 수만 있음 */
+    max-width: 100px;
+    min-width: 0;
+
+    height: 28px;
+    padding: 0 6px;
+    font-size: 0.9em;
+}
+
+#component-setting-panel .table-col-type-select {
+    flex: 0 0 90px;
+    width: 90px;
+
+    height: 28px;
+    padding: 0 6px;
+    font-size: 0.9em;
+}
+
+#table-column-list input[type="text"] {
+    flex: 0 1 80px; /* 🔑 핵심 */
+    min-width: 0;
+    max-width: 80px;
+}
+
+#table-column-list select {
+    flex: 0 0 80px;
+}
+
+/* 옵션 input 아래로 hint가 반드시 내려오게 */
+#option-list-pane > div {
     display: flex;
     flex-direction: column;
+    align-items: stretch;
     gap: 4px;
 }
 
-.option-preview label {
+/* input+삭제 버튼 줄은 가로 유지 */
+#option-list-pane > div .option-row {
     display: flex;
     align-items: center;
     gap: 6px;
 }
 
+/* hint는 항상 한 줄 전체 차지 */
+#option-list-pane > div .option-hint {
+    display: block;
+    width: 100%;
+    margin: 0; /* 필요 시 2px 정도만 */
+}
+
 /* ======================================================
-   구분선
+   우측 설정 패널
    ====================================================== */
 
-.divider-preview {
+#right-panel {
+    flex: 0 0 360px;
+    width: 360px;
+    min-width: 360px;
+    max-width: 360px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-height: 0;
+}
+
+#component-setting-panel {
+    background: #f8fafc;
+    border-radius: 7px;
+    padding: 15px;
+    box-shadow: 0 0.5px 2px #e8ebf2a3;
+
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* ======================================================
+   이미지 / 주소 / 검색
+   ====================================================== */
+
+.image-preview {
+    max-width: 240px;
+}
+
+.image-preview img {
+    max-width: 100%;
+    border-radius: 4px;
+}
+
+.image-preview.placeholder {
+    width: 240px;
+    height: 140px;
+    border: 1px dashed #ccc;
+    color: #999;
     display: flex;
     align-items: center;
-    gap: 10px;
-    color: #999;
+    justify-content: center;
 }
 
-.divider-preview span {
+/* ======================================================
+   주소(Address) 미리보기 – 이벤트와 여백 통일
+   ====================================================== */
+
+.address-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* 🔑 event-body와 동일 */
+}
+
+.address-preview > * {
+    margin-top: 2px;
+    margin-bottom: 2px; /* 🔑 event-row와 동일 */
+}
+
+.address-preview input {
+    width: 100%;
+}
+
+
+.search-preview {
+    display: flex;
+    gap: 6px;
+}
+
+.search-preview input {
     flex: 1;
-    height: 1px;
-    background: #ddd;
 }
 
-.divider-preview em {
-    font-style: normal;
-    font-size: 0.9em;
+/* ======================================================
+   ✅ 미리보기 입력 요소 공통 (핵심)
+   ====================================================== */
+
+.preview-input,
+.preview-textarea,
+.range-preview input,
+.table-preview input,
+.table-preview textarea,
+.table-preview select,
+.event-body input,
+.event-body textarea,
+.event-body select {
+    height: 30px;
+    padding: 0 8px;
+    border: 1px solid #ccd5ff;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 0.95em;
+    color: #1f2949;
+    outline: none;
 }
+
+/* textarea는 높이/패딩 규칙 다름 */
+.preview-textarea,
+.event-body textarea,
+.table-preview textarea {
+    height: auto;
+    min-height: 44px;
+    padding: 6px 8px;
+    resize: none;
+}
+
+/* disabled 미리보기 일관성 */
+.preview-input:disabled,
+.preview-textarea:disabled,
+.range-preview input:disabled,
+.table-preview input:disabled,
+.table-preview textarea:disabled,
+.table-preview select:disabled,
+.event-body input:disabled,
+.event-body textarea:disabled,
+.event-body select:disabled {
+    background: #f6f7fb;
+    color: #6b7280;
+    border-color: #d7deee;
+    opacity: 1; /* 브라우저 기본 흐림 제거 */
+    -webkit-text-fill-color: #6b7280; /* 사파리 대응 */
+}
+
+
+
+
+/* ======================================================
+   ✅ 날짜/시간 범위 입력 정렬 보강
+   ====================================================== */
+
+.range-preview {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 320px; /* 기존 유지 */
+}
+
+.range-preview input {
+    flex: 1;
+    min-width: 0;
+}
+
+/* ======================================================
+   ✅ 이벤트(Event) 날짜 범위 = 일반 range-preview와 통일
+   ====================================================== */
+
+.event-row.event-range {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 320px; /* range-preview와 동일 */
+}
+
+.event-row.event-range input {
+    flex: 1;
+    min-width: 0;
+}
+
+/* event range의 구분자도 기존 range-sep 룰 재사용 */
+.event-row.event-range .range-sep {
+    margin: 0 4px;
+}
+
+/* ======================================================
+   ✅ 이벤트(Event) 내부 요소 폭 통일
+   ====================================================== */
+
+/* 휴가 유형 select = input-medium 룩 */
+.event-row.event-vacation-type select {
+    width: 100%;
+    max-width: 220px; /* input-medium */
+}
+
+/* 설명 textarea = input-long 룩 */
+.event-row.event-description textarea {
+    width: 100%;
+    max-width: 420px; /* input-long */
+}
+
+.event-body.preview-mode {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* 🔑 기존 6px → 8px로 미세 상향 */
+}
+
+/* event 내부 각 row 공통 */
+.event-body .event-row {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+.event-row.event-title input {
+    width: 100%;
+    color: #9aa3b2; /* 모든 필드 동일 */
+    font-weight: 400; /* bold/얇음 방지 */
+    font-size: 0.9em; /* input 텍스트와 동일 */
+    opacity: 1; /* 브라우저 기본 흐림 제거 */
+    max-width: 420px; /* input-long */
+}
+
+
+
+    /* ======================================================
+       ✅ 옵션 미리보기 보강
+       ====================================================== */
+
+.option-preview label {
+    font-size: 0.95em;
+    color: #1f2949;
+}
+
+.option-preview input[type="radio"],
+.option-preview input[type="checkbox"] {
+    max-width: 150px;
+    transform: translateY(1px);
+}
+
+/* 옵션 row 공통 */
+.option-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px; /* 🔑 미세 상단 여백 */
+    margin-bottom: 2px;
+}
+
+/* 옵션 입력칸 */
+.option-label-input {
+    flex: 0 1 160px; /* 🔑 핵심 */
+    max-width: 160px;
+    min-width: 0;
+
+    height: 30px;
+    padding: 0 8px;
+    border: 1px solid #ccd5ff;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 0.95em;
+}
+
+
+/* ======================================================
+   ✅ 통화 입력 미리보기 보강
+   ====================================================== */
+
+.currency-preview {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.currency-preview .preview-input {
+    width: 100%;
+    max-width: 320px;
+}
+
+.currency-preview .unit {
+    white-space: nowrap;
+    font-size: 0.9em;
+    color: #888;
+}
+
+/* ======================================================
+   삭제 버튼 – hover 노출 + 우측 중앙 고정
+   ====================================================== */
+
+.form-comp-row {
+    position: relative; /* 기준 컨테이너 */
+}
+
+/* 삭제 버튼 기본 */
+.delete-btn {
+    position: absolute;
+    top: 0;
+    right: 10px;
+    bottom: 0;
+
+    display: flex;
+    align-items: center;
+
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 16px;
+    color: #c33;
+
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+}
+
+/* 🔑 미리보기 + 컴포넌트 패널 hover 시 노출 */
+.form-comp-row:hover .delete-btn,
+.component-item:hover .delete-btn,
+.setting-row:hover .delete-btn {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+
 
 /* ======================================================
    안내 문구 (notice)
@@ -304,6 +734,8 @@ html, body {
     margin: 0;
     line-height: 1.6;
     white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
     border-radius: 6px;
 }
 
@@ -323,105 +755,65 @@ html, body {
     border: 1px solid #ffd6d6;
 }
 
-
 /* ======================================================
-   ✅ 테이블 미리보기 (핵심 수정)
+   구분선
    ====================================================== */
 
-.table-preview {
-    width: 100%;
-    table-layout: fixed; /* 🔑 컬럼 폭 균등 분배 */
-    border-collapse: collapse;
-    margin-top: 6px;
-}
-
-.table-preview th,
-.table-preview td {
-    border: 1px solid #ddd;
-    padding: 6px;
-    overflow: hidden; /* 🔑 */
-    text-overflow: ellipsis; /* 🔑 */
-    white-space: nowrap; /* 🔑 */
-}
-
-.table-preview th {
-    background: #f7f8fa;
-    font-weight: 500;
-}
-
-.table-preview input {
-    width: 100%;
-    box-sizing: border-box;
-}
-
-/* ======================================================
-   삭제 버튼
-   ====================================================== */
-
-.delete-btn {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    font-size: 16px;
-    color: #c33;
-    opacity: 0;
-    transition: opacity 0.15s ease;
-}
-
-.form-comp-row:hover .delete-btn {
-    opacity: 1;
-}
-
-/* ======================================================
-   우측 패널
-   ====================================================== */
-
-#right-panel {
-    min-width: 260px;
-    max-width: 350px;
-    flex-shrink: 0;
+.divider-preview {
     display: flex;
-    flex-direction: column;
-    gap: 24px;
-    min-height: 0;
-}
-
-/* ======================================================
-   설정 패널
-   ====================================================== */
-
-#component-setting-panel {
-    background: #f8fafc;
-    border-radius: 7px;
-    padding: 15px;
-    box-shadow: 0 0.5px 2px #e8ebf2a3;
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-}
-
-.setting-row {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 15px;
-}
-
-.setting-row.inline {
-    flex-direction: row;
     align-items: center;
+    gap: 10px;
+    color: black;
 }
 
-.setting-row input,
-.setting-row select,
-.setting-row textarea {
-    padding: 7px 8px;
-    border-radius: 4px;
-    border: 1px solid #cfd8e7;
+.divider-preview .divider-line {
+    flex: 1;
+    height: 1px;
+    background: black;
+}
+
+.divider-preview em {
+    font-style: normal;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+
+
+/* ======================================================
+   required 강조
+   ====================================================== */
+
+.comp-label.required::after,
+.doc-title-label.required::after {
+    content: " *";
+    color: #e22719;
+    font-size: 0.85em;
+    line-height: 1;
+}
+
+/* label / table header용 필수 표시 */
+.comp-label.is-required::after,
+.table-preview th.is-required::after {
+    content: " *";
+    color: #e22719;
+    font-weight: 600;
+}
+
+/* ======================================================
+   Validation Hint
+   ====================================================== */
+
+.hint {
+    font-size: 0.82rem;
+    line-height: 1.4;
+}
+
+.hint.error {
+    color: #e05353;
+}
+
+.hint.success {
+    color: #2e8b57;
 }
 
 /* ======================================================
@@ -505,146 +897,19 @@ html, body {
     opacity: 0.55;
 }
 
-
 /* ======================================================
-   Validation Hint
+   ❗ Validation Error Focus – clean border replacement
    ====================================================== */
 
-.hint {
-    font-size: 0.82rem;
-    line-height: 1.4;
-}
+.invalid-focus,
+.invalid-focus input,
+.invalid-focus textarea,
+.invalid-focus select {
+    outline: none;
 
-.hint.error {
-    color: #e05353;
-}
+    /* 기존 테두리 제거 */
+    border-color: transparent !important;
 
-.hint.success {
-    color: #2e8b57;
-}
-
-/* ======================================================
-   스크롤바
-   ====================================================== */
-
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #cfd8e7;
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #b9c5dc;
-}
-
-/* ======================================================
-   반응형
-   ====================================================== */
-
-@media (max-width: 1200px) {
-    .form-editor-container {
-        min-width: 870px;
-    }
-}
-
-@media (max-width: 900px) {
-    .form-editor-container {
-        flex-direction: column;
-    }
-}
-
-
-.schedule-comp {
-    display: grid;
-    grid-template-columns: 140px 1fr; /* ⬅️ 라벨 컬럼 고정 */
-    column-gap: 12px;
-
-    padding: 10px 12px;
-    border: 1.5px solid #2f6fff;
-    border-radius: 6px;
-    background: #f4f8ff;
-}
-
-
-/* 좌측 라벨 */
-.schedule-label {
-    font-weight: 600;
-    color: #1f3a8a;
-
-    display: flex;
-    align-items: center; /* 🔑 세로 중앙 */
-    justify-content: flex-start;
-
-    white-space: nowrap;
-}
-
-
-/* 우측 영역 */
-.schedule-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-/* 날짜 범위 */
-.schedule-range {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.schedule-range input {
-    height: 28px;
-    padding: 0 6px;
-    border: 1px solid #ccd5ff;
-    border-radius: 4px;
-    background: #fff;
-}
-
-.range-sep {
-    color: #666;
-    font-size: 0.9em;
-}
-
-/* 일정 설명 */
-.schedule-desc {
-    resize: none;
-    min-height: 44px;
-    padding: 6px 8px;
-    border: 1px solid #ccd5ff;
-    border-radius: 4px;
-    background: #fff;
-    font-size: 0.95em;
-}
-
-/* ======================================================
-   휴가 사유 컴포넌트
-   ====================================================== */
-
-.leave-reason-body {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.leave-reason-body select {
-    height: 30px;
-    padding: 0 6px;
-    border: 1px solid #ccd5ff;
-    border-radius: 4px;
-    background: #fff;
-}
-
-.leave-reason-textarea {
-    resize: none;
-    min-height: 44px;
-    padding: 6px 8px;
-    border: 1px solid #ccd5ff;
-    border-radius: 4px;
-    background: #fff;
-    font-size: 0.95em;
+    /* 에러 테두리 대체 */
+    box-shadow: inset 0 0 0 2px #e22719;
 }

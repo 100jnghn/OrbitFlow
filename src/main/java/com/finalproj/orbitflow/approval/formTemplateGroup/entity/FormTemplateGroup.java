@@ -9,10 +9,15 @@ package com.finalproj.orbitflow.approval.formTemplateGroup.entity;
  */
 
 
+import com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole;
+import com.finalproj.orbitflow.approval.templateCategory.entity.TemplateCategory;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(
@@ -41,8 +46,17 @@ public class FormTemplateGroup extends BaseEntity {
     @Column(nullable = false, length = 50)
     private String name;
 
-    @Column(columnDefinition = "TEXT") //TODO VARCHAR(200)으로 변경 필요
+    @Column(length = 200)
     private String description;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "template_category_id", nullable = false)
+    private TemplateCategory templateCategory;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "base_role", length = 30)
+    private BaseRole baseRole;               // ✅ 추가 (nullable)
+
 
     @Column(nullable = false)
     private Boolean active;

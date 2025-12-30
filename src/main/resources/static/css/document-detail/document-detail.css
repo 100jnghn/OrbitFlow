@@ -1,0 +1,429 @@
+/* ===============================
+   공통
+=============================== */
+.document-detail-page {
+    font-family: 'Noto Sans KR', sans-serif;
+    padding: 20px 24px 32px;
+    background-color: #f7f8fa;
+    box-sizing: border-box;
+}
+
+/* ===============================
+   문서 헤더
+=============================== */
+.document-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.document-header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.status-badge {
+    padding: 4px 10px;
+    font-size: 12px;
+    border-radius: 12px;
+    background-color: #e5e7eb;
+    color: #374151;
+}
+
+/* ===============================
+   본문 레이아웃
+=============================== */
+
+/* 문서 본문 제목 */
+.doc-content-title {
+    margin: 0 0 16px;
+    padding: 12px 0;
+
+    text-align: center;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+
+    border-bottom: 2px solid #000;
+}
+
+.document-body {
+    display: flex;
+    gap: 16px;
+}
+
+/* ===============================
+   좌측 문서 내용 패널
+=============================== */
+.document-content-panel {
+    flex: 1;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 0;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.05);
+    overflow: auto;
+    min-width: 0;
+}
+
+/* 문서 실제 렌더 영역 */
+.document-content-panel #documentContentContainer {
+    margin: 25px;
+    background-color: #ffffff;
+    display: block;
+}
+
+/* ===============================
+   우측 사이드 패널
+=============================== */
+.document-side-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+.side-panel-box {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.05);
+}
+
+.side-panel-box h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+/* ===============================
+   결재선 / 코멘트
+=============================== */
+#approvalLineList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.approval-line-item {
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 8px;
+}
+
+.approver-name {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.approver-status {
+    font-size: 12px;
+    margin-top: 2px;
+    color: #6b7280;
+}
+
+.approval-line-item.approved .approver-status {
+    color: #16a34a;
+}
+
+.approval-line-item.rejected .approver-status {
+    color: #dc2626;
+}
+
+.approval-line-item.waiting .approver-status {
+    color: #2563eb;
+}
+
+.approver-comment {
+    font-size: 12px;
+    margin-top: 4px;
+    color: #374151;
+}
+
+/* ===============================
+   첨부 / 참조 문서
+=============================== */
+#attachmentList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#attachmentList li {
+    margin-bottom: 6px;
+}
+
+#attachmentList a {
+    font-size: 13px;
+    color: #2563eb;
+    text-decoration: none;
+}
+
+#attachmentList a:hover {
+    text-decoration: underline;
+}
+
+/* ===============================
+   하단 액션 버튼
+=============================== */
+.document-action-bar {
+    margin-top: 16px;
+    padding-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.action-btn {
+    min-width: 80px;
+    padding: 8px 14px;
+    font-size: 13px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+}
+
+.action-btn.secondary {
+    background-color: #e5e7eb;
+    color: #111827;
+}
+
+.action-btn.primary {
+    background-color: #2563eb;
+    color: #ffffff;
+}
+
+.action-btn.danger {
+    background-color: #dc2626;
+    color: #ffffff;
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.action-right {
+    display: flex;
+    gap: 8px;
+}
+
+/* =========================================================
+   문서 필드 (표 레이아웃)
+   - doc-field / doc-field-row 호환
+========================================================= */
+.document-content-panel .doc-field,
+.document-content-panel .doc-field-row {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    border-left: 2px solid #000;
+    border-right: 2px solid #000;
+    border-bottom: 2px solid #000;
+    margin: 0;
+}
+
+/* 첫 필드 + 구분선 다음 필드만 상단선 */
+.document-content-panel .doc-field:first-of-type,
+.document-content-panel .doc-field-row:first-of-type,
+.document-content-panel hr.doc-divider + .doc-field,
+.document-content-panel hr.doc-divider + .doc-field-row {
+    border-top: 2px solid #000;
+}
+
+
+/* 좌측 라벨 */
+.document-content-panel .doc-field-label {
+    padding: 8px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #000;
+    background-color: #d1d5db;
+    border-right: 2px solid #000;
+
+    display: flex; /* ✅ 다시 flex */
+    align-items: center; /* ✅ 세로 중앙 */
+    justify-content: center; /* ✅ 가로 중앙 */
+    text-align: center; /* ✅ 여러 줄일 때 중앙 */
+
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+}
+
+
+/* 우측 값 */
+.document-content-panel .doc-field-value {
+    padding: 8px 10px;
+    font-size: 13px;
+    color: #000;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    text-align: left;
+}
+
+.document-content-panel .doc-field-value.empty {
+    color: #666;
+}
+
+/* ===============================
+   문서 구분선 (hr)
+=============================== */
+.document-content-panel hr.doc-divider {
+    border: none;
+    border-top: 2px solid #000;
+    margin: 24px 0;
+    height: 0;
+}
+
+/* =========================================================
+   일정 / 복합 필드 (event-date-range 공용)
+========================================================= */
+.document-content-panel .sub-field-table {
+    display: grid;
+    grid-template-rows: auto;
+    box-sizing: border-box;
+    border: none;
+}
+
+/* 내부 행 */
+.sub-field-row {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    align-items: start;
+    box-sizing: border-box;
+    border-bottom: 1px solid #000;
+}
+
+/* 마지막 행은 하단선 제거 */
+.sub-field-row:last-child {
+    border-bottom: none;
+}
+
+/* 내부 라벨 */
+.sub-field-label {
+    padding: 8px 10px;
+    font-weight: 600;
+    background-color: #e5e7eb;
+    border-right: 1px solid #000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+}
+
+
+/* 내부 값 */
+.sub-field-value {
+    padding: 8px 10px;
+    white-space: pre-wrap;
+    box-sizing: border-box;
+}
+
+/* =========================================================
+   문서 테이블 (read-only)
+========================================================= */
+.doc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    border: none;
+}
+
+.doc-table th,
+.doc-table td {
+    border: 1px solid #000;
+    padding: 6px 8px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.doc-table th {
+    font-weight: 600;
+    background-color: #ffffff;
+}
+
+/* 상단 외곽 제거 */
+.doc-table thead tr:first-child th {
+    border-top: none;
+}
+
+/* 하단 외곽 제거 */
+.doc-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* 좌측 외곽 제거 */
+.doc-table tr > :first-child {
+    border-left: none;
+}
+
+/* 우측 외곽 제거 */
+.doc-table tr > :last-child {
+    border-right: none;
+}
+
+.doc-field-value:has(.doc-table) {
+    padding: 0;
+}
+
+/* No 컬럼 */
+.doc-table .col-no {
+    width: 32px;
+    min-width: 32px;
+    max-width: 32px;
+
+    text-align: center;
+    white-space: nowrap;
+    padding: 6px 4px; /* 좌우 여백 최소화 */
+}
+
+/* 테이블 헤더 행 */
+.doc-table thead th {
+    background-color: #e5e7eb;
+}
+
+/* No 컬럼 배경 */
+.doc-table .col-no {
+    background-color: #e5e7eb;
+}
+
+
+/* =========================================================
+   안내 문구 (notice)
+========================================================= */
+.notice-box {
+    padding: 8px 10px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.notice-box.info {
+    color: #1f2937;
+}
+
+/* =========================================================
+   일정 / 복합 필드 내부 여백 제거
+========================================================= */
+.document-content-panel .doc-field-value:has(.sub-field-table) {
+    padding: 0;
+}
+
+/* =========================================================
+   버튼 상태
+========================================================= */
+
+button.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+button.active {
+    opacity: 1;
+}
+

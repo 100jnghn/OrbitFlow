@@ -3,6 +3,7 @@ package com.finalproj.orbitflow.approval.formTemplate.dto;
 import com.finalproj.orbitflow.approval.formTemplate.enums.AffectTag;
 import com.finalproj.orbitflow.approval.formTemplate.enums.FormTemplateStatus;
 import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateAllListView;
+import com.finalproj.orbitflow.approval.templateCategory.enums.TemplateCategoryCode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,6 +34,7 @@ public class FormTemplateAllListResDto {
     private Instant updatedAt;
     private List<AffectTag> affectTags;
     private FormTemplateStatus formTemplateStatus;
+    private TemplateCategoryCode templateCategoryCode;
 
     public static FormTemplateAllListResDto from(
             FormTemplateAllListView view
@@ -45,6 +47,7 @@ public class FormTemplateAllListResDto {
                 .updatedAt(view.getUpdatedAt())
                 .affectTags(view.getAffectTags())
                 .formTemplateStatus(view.getFormTemplateStatus())
+                .templateCategoryCode(view.getTemplateCategoryCode())
                 .build();
     }
 }

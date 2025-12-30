@@ -36,4 +36,15 @@ public class DocumentViewController {
         model.addAttribute("documentId", documentId);
         return "document-write/document-write";
     }
+
+    @GetMapping("/{documentId}")
+    public String readDocument(
+            Model model,
+            @PathVariable Long documentId
+    ) {
+        model.addAttribute("pageTitle", "문서 조회");
+        model.addAttribute("currentMenu", "approval");
+        model.addAttribute("documentId", documentId);
+        return "document-detail/document-detail";
+    }
 }

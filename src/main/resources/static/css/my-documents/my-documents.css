@@ -10,7 +10,18 @@
 }
 
 /* ===============================
-   검색 + 상태 필터 (한 줄)
+   검색 영역 + 작성 버튼 헤더
+   =============================== */
+
+.search-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+/* ===============================
+   검색 + 상태 필터
    =============================== */
 
 .search-area {
@@ -20,7 +31,7 @@
     padding: 12px;
     background: #f7f9fc;
     border-radius: 8px;
-    flex-wrap: wrap; /* 화면 작을 때 줄바꿈 */
+    flex-wrap: wrap;
 }
 
 .search-area select,
@@ -32,6 +43,13 @@
     border-radius: 4px;
     font-size: 13px;
     background: #fff;
+}
+
+/* 검색 input + hint 래퍼 */
+.search-group {
+    position: relative; /* ⭐️ hint 기준점 */
+    display: flex;
+    align-items: center;
 }
 
 #searchInputs {
@@ -53,6 +71,28 @@
 
 #searchBtn:hover {
     background: #255ad6;
+}
+
+/* ===============================
+   문서 작성 버튼
+   =============================== */
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background-color: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btn-primary:hover {
+    background-color: #1e4fd7;
 }
 
 /* ===============================
@@ -107,33 +147,200 @@
 }
 
 /* ===============================
-   페이지네이션
+   문서 작성 팝업 (approval-home 모달 스타일)
    =============================== */
 
-.pagination {
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(27, 32, 54, 0.36);
     display: flex;
     justify-content: center;
-    gap: 6px;
-    margin-top: 12px;
+    align-items: center;
+    z-index: 20;
 }
 
-.pagination button {
-    min-width: 32px;
-    height: 32px;
-    border: 1px solid #d0d7e2;
+.modal-content {
+    width: 380px;
+    max-height: 70vh;
     background: #fff;
-    border-radius: 4px;
-    font-size: 13px;
+    border-radius: 15px;
+    box-shadow: 0 6px 30px rgba(31, 36, 73, 0.17);
+    padding: 36px 32px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: hidden;
+}
+
+/* 타이틀 */
+.modal-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.22rem;
+    font-weight: 700;
+    color: #18246e;
+    margin-bottom: 10px;
+}
+
+
+/* form group */
+.modal-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.modal-input {
+    padding: 8px 13px;
+    border-radius: 7px;
+    border: 1.3px solid #bfc4e0;
+    font-size: 1.01rem;
+    background: #fafbff;
+}
+
+/* ===============================
+   hint (레이아웃 영향 제거)
+   =============================== */
+
+.hint {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.2;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.hint.success {
+    color: #3563e9;
+}
+
+.hint.error {
+    color: #d14343;
+}
+
+/* ===============================
+   설명 박스
+   =============================== */
+
+.update-descbox {
+    border: 1.4px solid #bfc4e0;
+    border-radius: 7px;
+    background: #fff;
+    margin-top: 10px;
+    min-height: 120px;
+    box-shadow: 0 3px 18px rgba(80, 87, 149, 0.11);
+}
+
+.update-desc-text {
+    padding: 8px 18px 16px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-y: auto;
+}
+
+/* ===============================
+   드롭다운
+   =============================== */
+
+.modal-dropdown-list {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    background: #fff;
+    border: 1.4px solid #bfc4e0;
+    box-shadow: 0 3px 18px rgba(80, 87, 149, 0.11);
+    z-index: 30;
+    border-radius: 8px;
+    max-height: 210px;
+    overflow-y: auto;
+}
+
+.modal-dropdown-item {
+    padding: 9px 15px;
+    cursor: pointer;
+    font-size: 1.04rem;
+    color: #294d91;
+}
+
+.modal-dropdown-item:hover,
+.modal-dropdown-item.selected {
+    background: #ecf2fd;
+}
+
+/* ===============================
+   모달 버튼
+   =============================== */
+
+.modal-actions {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.modal-cancel-btn,
+.modal-create-btn {
+    padding: 8px 28px;
+    font-size: 1.05rem;
+    border-radius: 8px;
+    border: none;
+    font-weight: 500;
     cursor: pointer;
 }
 
-.pagination button.active {
-    background: #2f6fed;
-    border-color: #2f6fed;
+.modal-cancel-btn {
+    background: #f4f6fa;
+    color: #4b515c;
+    border: 1.4px solid #c2c7d1;
+}
+
+.modal-create-btn {
+    background: #3563e9;
     color: #fff;
 }
 
-.pagination button:disabled {
+.modal-create-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+/* ===============================
+   approval-home 페이지네이션
+   =============================== */
+
+.approval-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 18px;
+    gap: 13px;
+}
+
+.pagination-btn {
+    padding: 6px 17px;
+    border-radius: 8px;
+    border: 1.2px solid #bfc4e0;
+    background: #f8fafd;
+    font-size: 1rem;
+    color: #2b2e46;
+    cursor: pointer;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.page-indicator {
+    font-weight: 600;
+    color: #324091;
 }

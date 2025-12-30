@@ -22,14 +22,16 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DocumentListResDto {
+    private Long documentId;
     private String title;
     private String templateGroupName;
     private int templateVersion;
     private Instant createdAt;
     private DocumentStatus status;
+
+    private String currentApproverOrgName;
+    private String currentApproverPositionName;
     private String approvalName;
+
     private Integer currentOrderNo;
-
-
-
 }

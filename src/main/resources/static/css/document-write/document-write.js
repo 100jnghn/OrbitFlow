@@ -10,6 +10,7 @@
  */
 
 let hasUnsavedChanges = false;
+let isInitializing = true;
 let documentFieldDefinitions = [];
 
 const MAX_LENGTH = {
@@ -19,7 +20,6 @@ const MAX_LENGTH = {
     textarea: 500,
     number: 10,
     currency: 15,
-    leaveReasonDetail: 300,
 
     /* table 전용 */
     table: {
@@ -29,19 +29,132 @@ const MAX_LENGTH = {
     }
 };
 
+const SCHEDULE_REASON_LABEL_MAP = {
+    VACATION: '휴가 사유',
+    BUSINESS_TRIP: '출장 사유',
+    OUTWORK: '외근 사유',
+    COMPANY_EVENT: '일정 사유'
+};
+
+
+let leaveTypeCache = null;
+
+async function loadLeaveTypes() {
+    if (leaveTypeCache) return leaveTypeCache;
+
+    const res = await apiFetch('/api/leave-types/all');
+    if (!res.ok) {
+        showToast('휴가 유형을 불러오지 못했습니다.', 'error');
+        return [];
+    }
+
+    const result = await res.json();
+    leaveTypeCache = result.data ?? [];
+    return leaveTypeCache;
+}
+
+async function searchEmployees(keyword) {
+    if (!keyword || keyword.length < 2) return [];
+
+    const res = await apiFetch(
+        `/api/admin/rules/employees/search?keyword=${encodeURIComponent(keyword)}`
+    );
+
+    if (!res.ok) {
+        showToast('사원 검색에 실패했습니다.', 'error');
+        return [];
+    }
+
+    const result = await res.json();
+    return Array.isArray(result)
+        ? result
+        : result.data ?? [];
+}
+
+
+/* =====================================================
+   Document Global Events
+===================================================== */
+
+/* 클릭 이벤트 */
+document.addEventListener('click', (e) => {
+    document
+        .querySelectorAll('.employee-search')
+        .forEach(wrapper => {
+            const dropdown = wrapper.querySelector('.employee-search-dropdown');
+            if (!dropdown) return;
+
+            if (!wrapper.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+    if (e.target.closest('.postcode-close-btn')) {
+        closePostcodeLayer();
+    }
+});
+
+
+/* 키보드 이벤트 */
+document.addEventListener('keydown', (e) => {
+
+    if (e.key !== 'Escape') return;
+
+    /* 1️⃣ employee search dropdown 닫기 */
+    document
+        .querySelectorAll('.employee-search-dropdown')
+        .forEach(dd => dd.classList.add('hidden'));
+
+    /* 2️⃣ 주소 검색 닫기 */
+    closePostcodeLayer();
+});
+
 
 // 문서 필드 변경 감지
 document.addEventListener('input', (e) => {
+    if (isInitializing) return;
+
+    const target = e.target;
+
     if (
-        e.target.matches(
+        target.matches(
             'input[data-field-id], textarea[data-field-id], select[data-field-id]'
         )
     ) {
         hasUnsavedChanges = true;
-        clearFieldError(e.target);
 
+        /* =========================
+           1️⃣ schedule 전용 처리
+        ========================= */
+        if (target.closest('.schedule-group')) {
+
+            if (target.dataset.rangeType) {
+                clearScheduleDateRangeError(target);
+            } else {
+                clearScheduleFieldError(target);
+            }
+            return;
+        }
+
+        /* =========================
+           2️⃣ 일반 range 처리 (🔥 추가)
+        ========================= */
+        if (target.dataset.rangeType) {
+            clearRangeFieldErrorByInput(target);
+            return;
+        }
+
+        /* =========================
+           3️⃣ 일반 필드
+        ========================= */
+        const wrapper = getFieldWrapperByFieldId(target.dataset.fieldId);
+
+        if (wrapper?.classList.contains('field-error')) {
+            clearFieldError(target);
+        }
     }
 });
+
 
 // 페이지 이탈 경고
 window.addEventListener('beforeunload', (e) => {
@@ -61,6 +174,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadDocumentDraft(DOCUMENT_ID);
         await loadApprovalLines(DOCUMENT_ID);
         bindEvents(DOCUMENT_ID);
+
+        hasUnsavedChanges = false;
+        isInitializing = false;
     } catch (e) {
         console.error(e);
         alert('문서 정보를 불러오는 중 오류가 발생했습니다.');
@@ -70,6 +186,45 @@ document.addEventListener('DOMContentLoaded', async () => {
 /* =====================================================
    유틸 함수
    ===================================================== */
+
+function renderFieldHint({inputEl, type, message}) {
+    const scheduleGroup = inputEl.closest('.schedule-group');
+    const fieldWrapper = inputEl.closest('.doc-field');
+
+    const host = scheduleGroup ?? fieldWrapper;
+    host.querySelector('.field-hint')?.remove();
+
+    if (!message) return;
+
+    const hint = document.createElement('div');
+    hint.className = `field-hint ${type}`;
+    hint.textContent = message;
+
+    host.appendChild(hint);
+}
+
+
+function labeled(labelText, inputEl) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'labeled-field';
+
+    const label = document.createElement('span');
+    label.className = 'inline-label';
+    label.textContent = labelText;
+
+    wrapper.append(label, inputEl);
+    return wrapper;
+}
+
+function confirmLeaveIfDirty() {
+    if (!hasUnsavedChanges) return true;
+
+    return confirm(
+        '저장되지 않은 변경 사항이 있습니다.\n' +
+        '정말로 이동하시겠습니까?'
+    );
+}
+
 
 function showToast(message, type = 'info', duration = 3000) {
     const container = document.getElementById('toast-container');
@@ -122,29 +277,36 @@ function hideCellTooltip(input) {
 
 
 function showLengthHint(inputEl, current, max) {
+    const scheduleGroup = inputEl.closest('.schedule-group');
     const fieldWrapper = inputEl.closest('.doc-field');
-    if (!fieldWrapper) return;
 
-    // 에러 힌트가 있으면 건드리지 않음
-    const errorHint = fieldWrapper.querySelector('.field-hint.error');
-    if (errorHint) return;
+    const hintHost = scheduleGroup ?? fieldWrapper;
+    if (!hintHost) return;
 
-    // 기존 info hint 제거
-    fieldWrapper.querySelector('.field-hint.info')?.remove();
+    // 에러 힌트가 있으면 info 힌트 표시 안 함
+    if (hintHost.querySelector('.field-hint.error')) return;
+
+    // 기존 info 힌트 제거
+    hintHost.querySelector('.field-hint.info')?.remove();
 
     const hint = document.createElement('div');
     hint.className = 'field-hint info';
     hint.textContent = `(${current}/${max})`;
 
-    fieldWrapper.appendChild(hint);
+    hintHost.appendChild(hint);
 }
+
 
 function hideLengthHint(inputEl) {
+    const scheduleGroup = inputEl.closest('.schedule-group');
     const fieldWrapper = inputEl.closest('.doc-field');
-    if (!fieldWrapper) return;
 
-    fieldWrapper.querySelector('.field-hint.info')?.remove();
+    const hintHost = scheduleGroup ?? fieldWrapper;
+    if (!hintHost) return;
+
+    hintHost.querySelector('.field-hint.info')?.remove();
 }
+
 
 function bindLengthCounter(inputEl, maxLength) {
     inputEl.maxLength = maxLength;
@@ -166,17 +328,94 @@ function showFieldError(inputEl, message) {
     const fieldWrapper = inputEl.closest('.doc-field');
     if (!fieldWrapper) return;
 
-    // 기존 error hint만 제거
+    fieldWrapper.dataset.hasError = 'true';
+    fieldWrapper.classList.add('field-error');
+    inputEl.classList.add('field-error');
+
+    renderFieldHint({
+        inputEl,
+        type: 'error',
+        message
+    });
+
+    fieldWrapper.scrollIntoView({behavior: 'smooth', block: 'center'});
+    requestAnimationFrame(() => inputEl.focus({preventScroll: true}));
+}
+
+
+function clearFieldError(inputEl) {
+    if (!inputEl) return;
+
+    const fieldId = inputEl.dataset?.fieldId;
+    if (!fieldId) return;
+
+    const fieldWrapper = getFieldWrapperByFieldId(fieldId);
+    if (!fieldWrapper) return;
+
+    fieldWrapper.classList.remove('field-error');
     fieldWrapper.querySelector('.field-hint.error')?.remove();
 
-    inputEl.classList.add('field-error');
-    inputEl.focus();
+    inputEl.classList.remove('field-error');
+    inputEl.closest('.schedule-group')?.classList.remove('field-error');
+    inputEl.closest('.schedule-input')?.classList.remove('field-error');
 
-    const hint = document.createElement('div');
-    hint.className = 'field-hint error';
-    hint.textContent = message;
+    // ⬇️ 타입별 보조 clear
+    clearFieldErrorByType(fieldWrapper, inputEl);
+}
 
-    fieldWrapper.appendChild(hint);
+function clearFieldErrorByType(fieldWrapper, inputEl) {
+
+    // radio
+    if (inputEl.type === 'radio') {
+        fieldWrapper
+            .querySelector('.radio-group')
+            ?.classList.remove('field-error');
+    }
+
+    // checkbox
+    if (inputEl.type === 'checkbox') {
+        fieldWrapper
+            .querySelector('.checkbox-group')
+            ?.classList.remove('field-error');
+    }
+
+    // range (date / time)
+    if (inputEl.dataset.rangeType) {
+        fieldWrapper
+            .querySelector('.date-range, .time-range')
+            ?.classList.remove('field-error');
+
+        fieldWrapper
+            .querySelectorAll('input[data-range-type]')
+            .forEach(el => el.classList.remove('field-error'));
+    }
+}
+
+function clearRangeFieldErrorByInput(inputEl) {
+    if (!inputEl) return;
+
+    const fieldWrapper = inputEl.closest('.doc-field');
+    if (!fieldWrapper) return;
+
+    const rangeWrapper = fieldWrapper.querySelector(
+        '.date-range, .time-range'
+    );
+    if (!rangeWrapper) return;
+
+    /* range wrapper 에러 제거 */
+    rangeWrapper.classList.remove('field-error');
+
+    rangeWrapper
+        .querySelectorAll('input[data-range-type]')
+        .forEach(inp => inp.classList.remove('field-error'));
+
+    /* hint 제거 */
+    fieldWrapper
+        .querySelector('.field-hint.error')
+        ?.remove();
+
+    /* wrapper 에러 제거 */
+    fieldWrapper.classList.remove('field-error');
 }
 
 
@@ -197,7 +436,7 @@ function showRadioGroupError(fieldId, message) {
 
     // hint는 doc-field 아래
     const hint = document.createElement('div');
-    hint.className = 'field-hint';
+    hint.className = 'field-hint error';
     hint.textContent = message;
     fieldWrapper.appendChild(hint);
 
@@ -214,6 +453,44 @@ function showRadioGroupError(fieldId, message) {
     if (firstRadio) {
         requestAnimationFrame(() =>
             firstRadio.focus({preventScroll: true})
+        );
+    }
+}
+
+
+function showCheckboxGroupError(fieldId, message) {
+    const fieldWrapper = getFieldWrapperByFieldId(fieldId);
+    if (!fieldWrapper) return;
+
+    const checkboxGroup = fieldWrapper.querySelector('.checkbox-group');
+    if (!checkboxGroup) return;
+
+    // 기존 hint 제거
+    fieldWrapper.querySelector('.field-hint')?.remove();
+
+    // 에러 클래스
+    fieldWrapper.classList.add('field-error');
+    checkboxGroup.classList.add('field-error');
+
+    // hint
+    const hint = document.createElement('div');
+    hint.className = 'field-hint error';
+    hint.textContent = message;
+    fieldWrapper.appendChild(hint);
+
+    // 스크롤
+    fieldWrapper.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+    });
+
+    // 포커스 → 첫 번째 checkbox
+    const firstCheckbox = checkboxGroup.querySelector(
+        'input[type="checkbox"]:not([disabled])'
+    );
+    if (firstCheckbox) {
+        requestAnimationFrame(() =>
+            firstCheckbox.focus({preventScroll: true})
         );
     }
 }
@@ -236,7 +513,7 @@ function showCurrencyFieldError(fieldId, message) {
 
     // hint는 doc-field 아래
     const hint = document.createElement('div');
-    hint.className = 'field-hint';
+    hint.className = 'field-hint error';
     hint.textContent = message;
     fieldWrapper.appendChild(hint);
 
@@ -255,36 +532,6 @@ function showCurrencyFieldError(fieldId, message) {
 }
 
 
-function clearFieldError(inputEl) {
-    if (!inputEl) return;
-
-    const fieldId = inputEl.dataset?.fieldId;
-    if (!fieldId) return;
-
-    const fieldWrapper = getFieldWrapperByFieldId(fieldId);
-
-    fieldWrapper?.classList.remove('field-error');
-
-    // ❗ error hint만 제거
-    fieldWrapper?.querySelector('.field-hint.error')?.remove();
-
-    // range
-    if (inputEl.dataset.rangeType) {
-        clearRangeFieldErrorByFieldId(fieldId);
-        return;
-    }
-
-    // radio
-    if (inputEl.type === 'radio') {
-        clearRadioGroupErrorByFieldId(fieldId);
-        return;
-    }
-
-    inputEl.classList.remove('field-error');
-    inputEl.parentElement?.classList.remove('field-error');
-}
-
-
 function clearRadioGroupErrorByFieldId(fieldId) {
     const fieldWrapper = getFieldWrapperByFieldId(fieldId);
     if (!fieldWrapper) return;
@@ -294,6 +541,17 @@ function clearRadioGroupErrorByFieldId(fieldId) {
 
     const radioGroup = fieldWrapper.querySelector('.radio-group');
     radioGroup?.classList.remove('field-error');
+}
+
+function clearCheckboxGroupErrorByFieldId(fieldId) {
+    const fieldWrapper = getFieldWrapperByFieldId(fieldId);
+    if (!fieldWrapper) return;
+
+    fieldWrapper.classList.remove('field-error');
+    fieldWrapper.querySelector('.field-hint')?.remove();
+
+    const checkboxGroup = fieldWrapper.querySelector('.checkbox-group');
+    checkboxGroup?.classList.remove('field-error');
 }
 
 
@@ -334,43 +592,115 @@ function clearTableFieldError(fieldId) {
 }
 
 
-function showLeaveReasonError(field) {
-    const value = field.value ?? {};
-    const vacationTypeCode = value.vacationTypeCode;
-    const detailReason = value.detailReason;
+function showScheduleFieldError(inputEl, message) {
+    if (!inputEl) return;
 
-    const selectEl = document.querySelector(
-        `select[data-field-id="${field.fieldId}"]`
+    const scheduleGroup = inputEl.closest('.schedule-group');
+    if (!scheduleGroup) return;
+
+    /* 1️⃣ 기존 에러 힌트 제거 (해당 group만) */
+    scheduleGroup
+        .querySelectorAll('.field-hint.error')
+        .forEach(el => el.remove());
+
+    /* 2️⃣ ❗ input 자신만 에러 */
+    inputEl.classList.add('field-error');
+
+    /* 3️⃣ hint */
+    const hint = document.createElement('div');
+    hint.className = 'field-hint error';
+    hint.textContent = message;
+    scheduleGroup.appendChild(hint);
+
+    /* 4️⃣ scroll + focus */
+    inputEl.scrollIntoView({behavior: 'smooth', block: 'center'});
+    requestAnimationFrame(() =>
+        inputEl.focus({preventScroll: true})
     );
-    const textareaEl = document.querySelector(
-        `textarea[data-field-id="${field.fieldId}"]`
+}
+
+function showScheduleDateRangeError(fieldId, message, focusRangeType = 'start') {
+    const fieldWrapper = getFieldWrapperByFieldId(fieldId);
+    if (!fieldWrapper) return;
+
+    // schedule-input 안의 date-range가 있는 group
+    const scheduleGroup = fieldWrapper.querySelector(
+        '.schedule-group .date-range'
+    )?.closest('.schedule-group');
+
+    if (!scheduleGroup) return;
+
+    const dateRange = scheduleGroup.querySelector('.date-range');
+    if (!dateRange) return;
+
+    // 기존 에러 제거
+    scheduleGroup
+        .querySelectorAll('.field-hint.error')
+        .forEach(el => el.remove());
+
+    // 에러 클래스
+    dateRange.classList.add('field-error');
+
+    dateRange
+        .querySelectorAll('input[data-range-type]')
+        .forEach(inp => inp.classList.add('field-error'));
+
+    // hint (✅ schedule-group 바로 아래)
+    const hint = document.createElement('div');
+    hint.className = 'field-hint error';
+    hint.textContent = message;
+
+    scheduleGroup.appendChild(hint);
+
+    // 스크롤
+    scheduleGroup.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+    });
+
+    // 포커스
+    const focusTarget = dateRange.querySelector(
+        `input[data-range-type="${focusRangeType}"]:not([disabled])`
     );
+    focusTarget?.focus({preventScroll: true});
+}
 
-    const isVacationTypeEmpty =
-        vacationTypeCode === null ||
-        vacationTypeCode === undefined ||
-        vacationTypeCode === '';
 
-    // 1️⃣ 휴가 유형 미선택 → select
-    if (isVacationTypeEmpty) {
-        showFieldError(
-            selectEl,
-            '휴가 유형을 선택해주세요.'
-        );
-        return;
-    }
+function clearScheduleFieldError(inputEl) {
+    if (!inputEl) return;
 
-    // 2️⃣ 유형은 선택됨 + 사유 미입력 → textarea
-    if (
-        typeof detailReason !== 'string' ||
-        detailReason.trim().length === 0
-    ) {
-        showFieldError(
-            textareaEl,
-            '휴가 사유를 입력해주세요.'
-        );
-        return;
-    }
+    const scheduleGroup = inputEl.closest('.schedule-group');
+    if (!scheduleGroup) return;
+
+    /* 1️⃣ 자신만 에러 제거 */
+    inputEl.classList.remove('field-error');
+
+    /* 2️⃣ 해당 group의 hint 제거 */
+    scheduleGroup
+        .querySelector('.field-hint.error')
+        ?.remove();
+}
+
+function clearScheduleDateRangeError(inputEl) {
+    if (!inputEl) return;
+
+    const scheduleGroup = inputEl.closest('.schedule-group');
+    if (!scheduleGroup) return;
+
+    const dateRange = scheduleGroup.querySelector('.date-range');
+    if (!dateRange) return;
+
+    /* 1️⃣ date-range 에러 제거 */
+    dateRange.classList.remove('field-error');
+
+    dateRange
+        .querySelectorAll('input[data-range-type]')
+        .forEach(inp => inp.classList.remove('field-error'));
+
+    /* 2️⃣ hint 제거 */
+    scheduleGroup
+        .querySelector('.field-hint.error')
+        ?.remove();
 }
 
 
@@ -395,6 +725,13 @@ async function loadDocumentDraft(documentId) {
 
     // 나머지 필드 렌더링
     await renderFields(documentFieldDefinitions);
+}
+
+
+async function loadEmployeeSearchComponent(targetEl) {
+    const res = await fetch('/css/document-write/employee-search.html');
+    const html = await res.text();
+    targetEl.innerHTML = html;
 }
 
 
@@ -467,46 +804,56 @@ async function createFieldComponent(field) {
     // label
     const label = document.createElement('label');
     label.textContent = field.label;
-    if (field.required) label.classList.add('required');
+
+    if (field.fieldType === 'checkbox') {
+        const min = field.meta?.minSelected ?? 0;
+
+        if (min > 0) {
+            label.classList.add('required');
+
+            const hint = document.createElement('span');
+            hint.className = 'label-hint';
+            hint.textContent = ` (최소 ${min}개 선택)`;
+
+            label.appendChild(hint);
+        }
+    } else {
+        if (field.required) {
+            label.classList.add('required');
+        }
+    }
+
     wrapper.appendChild(label);
 
     let input;
 
     switch (field.fieldType) {
-
         case 'text':
             input = document.createElement('input');
             input.type = 'text';
-            input.value = normalizeInputValue(field.value);   // ✅ 수정
+            input.value = normalizeInputValue(field.value);
             input.placeholder = field.meta?.placeholder ?? '';
             bindLengthCounter(input, MAX_LENGTH.text);
             break;
 
         case 'number':
             input = document.createElement('input');
-            input.type = 'text';              // ⭐ 핵심
+            input.type = 'text';
             input.inputMode = 'decimal';
             input.value = normalizeInputValue(field.value);
-
             bindLengthCounter(input, MAX_LENGTH.number);
-
             input.addEventListener('input', () => {
-                // 숫자만 허용
                 let v = input.value.replace(/[^0-9.-]/g, '');
-
-                // 길이 제한 강제
                 if (v.length > MAX_LENGTH.number) {
                     v = v.slice(0, MAX_LENGTH.number);
                 }
-
                 input.value = v;
             });
             break;
 
-
         case 'textarea':
             input = document.createElement('textarea');
-            input.value = normalizeInputValue(field.value);   // ✅ 수정
+            input.value = normalizeInputValue(field.value);
             input.placeholder = field.meta?.placeholder ?? '';
             bindLengthCounter(input, MAX_LENGTH.textarea);
             break;
@@ -514,23 +861,22 @@ async function createFieldComponent(field) {
         case 'date':
             input = document.createElement('input');
             input.type = 'date';
-            input.value = normalizeInputValue(field.value);   // ✅ 수정
+            input.value = normalizeInputValue(field.value);
             break;
 
         case 'time':
             input = document.createElement('input');
             input.type = 'time';
-            input.value = normalizeInputValue(field.value);   // ✅ 수정
+            input.value = normalizeInputValue(field.value);
             break;
 
         case 'date-range':
-        case 'schedule-date-range':
-        case 'leave-date-range':
             input = createDateRange(field);
             break;
 
-        case 'leave-reason':
-            input = await createLeaveReason(field);
+        case 'event-date-range':
+            wrapper.classList.add('schedule-field');
+            input = await createEventDateRange(field);
             break;
 
         case 'time-range':
@@ -559,13 +905,25 @@ async function createFieldComponent(field) {
             input = createCurrencyField(field);
             break;
 
+        case 'address':
+            input = createAddressField(field);
+            break;
+        case 'employee-search':
+            input = createEmployeeSearchField(field);
+            break;
+
         default:
             input = createPlaceholder(field);
     }
 
+    /* =========================
+       🔥 공통 editable 처리 (address 예외)
+    ========================= */
     if (input && input.dataset !== undefined) {
         input.dataset.fieldId = field.fieldId;
-        if (field.editable === false) {
+
+        // ❗ address는 wrapper에 disabled 금지
+        if (field.editable === false && field.fieldType !== 'address') {
             input.disabled = true;
         }
     }
@@ -601,7 +959,6 @@ function createTimeRange(field) {
     return container;
 }
 
-
 function createRadioGroup(field) {
     const wrapper = document.createElement('div');
     wrapper.className = 'radio-group'; // ✅ 추가
@@ -624,7 +981,6 @@ function createRadioGroup(field) {
 
     return wrapper;
 }
-
 
 function createCurrencyField(field) {
     const wrapper = document.createElement('div');
@@ -670,6 +1026,213 @@ function createCurrencyField(field) {
     return wrapper;
 }
 
+function createAddressField(field) {
+    const group = document.createElement('div');
+    group.className = 'address-group';
+    group.dataset.fieldId = field.fieldId;
+
+    const value = field.value ?? {};
+
+    /* ===== 1. 지번 / 우편번호 ===== */
+    const postcodeRow = document.createElement('div');
+    postcodeRow.className = 'address-row';
+
+    const postcodeLabel = document.createElement('span');
+    postcodeLabel.className = 'address-label';
+    postcodeLabel.textContent = '지번 / 우편번호';
+
+    const postcodeInput = document.createElement('input');
+    postcodeInput.type = 'text';
+    postcodeInput.readOnly = true;
+    postcodeInput.placeholder = '우편번호';
+    postcodeInput.dataset.fieldId = field.fieldId;
+    postcodeInput.dataset.subKey = 'postcode';
+    postcodeInput.value = value.postcode ?? '';
+
+    const searchBtn = document.createElement('button');
+    searchBtn.type = 'button';
+    searchBtn.textContent = '주소 검색';
+
+    searchBtn.addEventListener('click', () => {
+        openPostcodeSearch(field.fieldId);
+    });
+
+    const inline = document.createElement('div');
+    inline.className = 'address-inline';
+    inline.append(postcodeInput, searchBtn);
+
+    postcodeRow.append(postcodeLabel, inline);
+
+    /* ===== 2. 도로명 주소 ===== */
+    const roadRow = document.createElement('div');
+    roadRow.className = 'address-row';
+
+    const roadLabel = document.createElement('span');
+    roadLabel.className = 'address-label';
+    roadLabel.textContent = '도로명 주소';
+
+    const roadInput = document.createElement('input');
+    roadInput.type = 'text';
+    roadInput.readOnly = true;
+    roadInput.placeholder = '도로명 주소';
+    roadInput.dataset.fieldId = field.fieldId;
+    roadInput.dataset.subKey = 'roadAddress';
+    roadInput.value = value.roadAddress ?? '';
+
+    roadRow.append(roadLabel, roadInput);
+
+    /* ===== 3. 상세 주소 ===== */
+    const detailRow = document.createElement('div');
+    detailRow.className = 'address-row';
+
+    const detailLabel = document.createElement('span');
+    detailLabel.className = 'address-label';
+    detailLabel.textContent = '상세 주소';
+
+    const detailInput = document.createElement('input');
+    detailInput.type = 'text';
+    detailInput.placeholder = '상세 주소 입력';
+    detailInput.dataset.fieldId = field.fieldId;
+    detailInput.dataset.subKey = 'detailAddress';
+    detailInput.value = value.detailAddress ?? '';
+
+    detailRow.append(detailLabel, detailInput);
+
+    group.append(postcodeRow, roadRow, detailRow);
+
+    /* ===== editable ===== */
+    if (field.editable === false) {
+        group
+            .querySelectorAll('input, button')
+            .forEach(el => el.disabled = true);
+    }
+
+    return group;
+}
+
+function createEmployeeSearchField(field) {
+    const container = document.createElement('div');
+    container.className = 'employee-search';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = '사원명 또는 사번 검색';
+    input.autocomplete = 'off';
+    input.dataset.fieldId = field.fieldId;
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'employee-search-dropdown hidden';
+
+    const list = document.createElement('ul');
+    list.className = 'employee-list';
+    dropdown.appendChild(list);
+
+    let selectedEmployee = null;
+
+    /* =========================
+       🔹 초기 값 복원 (중요)
+    ========================= */
+    if (field.value?.id) {
+        selectedEmployee = field.value;
+        input.value = field.value.displayText
+            ?? `(${field.value.employeeNo}) ${field.value.name}`;
+    }
+
+    /* =========================
+       검색
+    ========================= */
+    input.addEventListener('input', async () => {
+        const keyword = input.value.trim();
+
+        dropdown.classList.add('hidden');
+        list.innerHTML = '';
+        selectedEmployee = null;
+
+        if (keyword.length < 2) return;
+
+        const employees = await searchEmployees(keyword);
+
+        if (employees.length === 0) {
+            list.innerHTML =
+                `<li class="no-results">검색 결과가 없습니다.</li>`;
+            dropdown.classList.remove('hidden');
+            return;
+        }
+
+        employees.forEach(emp => {
+            const li = document.createElement('li');
+            li.className = 'employee-item';
+            li.textContent = `(${emp.employeeNo}) ${emp.name}`;
+
+            li.addEventListener('click', () => {
+                selectedEmployee = {
+                    id: emp.id,
+                    employeeNo: emp.employeeNo,
+                    name: emp.name,
+                    departmentName: emp.organizationName ?? '',
+                    positionName: emp.positionName ?? '',
+                    displayText: `(${emp.employeeNo}) ${emp.name}`
+                };
+
+                input.value = selectedEmployee.displayText;
+                dropdown.classList.add('hidden');
+                clearFieldError(input);
+            });
+
+            list.appendChild(li);
+        });
+
+        dropdown.classList.remove('hidden');
+    });
+
+    /* =========================
+       값 접근 (⭐ 핵심)
+    ========================= */
+    container.getValue = () => selectedEmployee;
+
+    container.append(input, dropdown);
+    return container;
+}
+
+function openPostcodeSearch(fieldId) {
+    const overlay = document.getElementById('postcode-overlay');
+    const content = document.getElementById('postcode-content');
+    if (!overlay || !content) return;
+
+    overlay.style.display = 'flex';
+
+    new daum.Postcode({
+        oncomplete: function (data) {
+            const wrapper = getFieldWrapperByFieldId(fieldId);
+            if (!wrapper) return;
+
+            wrapper.querySelector('[data-sub-key="postcode"]').value =
+                data.zonecode || '';
+
+            wrapper.querySelector('[data-sub-key="roadAddress"]').value =
+                data.roadAddress || data.address || '';
+
+            closePostcodeLayer();
+
+            const detail = wrapper.querySelector('[data-sub-key="detailAddress"]');
+            detail?.focus();
+
+            hasUnsavedChanges = true;
+            clearFieldError(detail);
+        },
+        width: '100%',
+        height: '100%'
+    }).embed(content);
+}
+
+function closePostcodeLayer() {
+    const overlay = document.getElementById('postcode-overlay');
+    const content = document.getElementById('postcode-content');
+
+    if (overlay) overlay.style.display = 'none';
+    if (content) content.innerHTML = '';
+}
+
 function extractNumber(value) {
     if (!value) return '';
 
@@ -700,6 +1263,8 @@ function formatCurrency(value) {
 
 function createCheckboxGroup(field) {
     const wrapper = document.createElement('div');
+    wrapper.className = 'checkbox-group';
+    wrapper.dataset.fieldId = field.fieldId;
 
     const values = Array.isArray(field.value) ? field.value : [];
 
@@ -719,6 +1284,7 @@ function createCheckboxGroup(field) {
 
     return wrapper;
 }
+
 
 function createTableField(field) {
     const wrapper = document.createElement('div');
@@ -742,21 +1308,29 @@ function createTableField(field) {
         headerRow.appendChild(th);
     });
 
-
     if (field.meta.rowPolicy?.removable) {
         headerRow.appendChild(document.createElement('th'));
     }
 
     thead.appendChild(headerRow);
 
-    /* rows */
-    const initialRows = field.value ?? [];
-    if (initialRows.length === 0) {
-        addTableRow(tbody, field);
-    } else {
+    /* rows (🔥 minRows 반영) */
+    const initialRows = Array.isArray(field.value) ? field.value : [];
+    const minRows = field.meta?.rowPolicy?.min ?? 0;
+
+    const renderRowCount =
+        initialRows.length > 0
+            ? initialRows.length
+            : Math.max(minRows, 1);
+
+    if (initialRows.length > 0) {
         initialRows.forEach(row =>
             addTableRow(tbody, field, row)
         );
+    } else {
+        for (let i = 0; i < renderRowCount; i++) {
+            addTableRow(tbody, field);
+        }
     }
 
     table.append(thead, tbody);
@@ -885,6 +1459,10 @@ function addTableRow(tbody, field, rowData = {}) {
            입력 제어
         ========================= */
         input.addEventListener('input', () => {
+            if (!isInitializing) {
+                hasUnsavedChanges = true;
+            }
+
             let v = input.value;
 
             // 숫자 / 통화 → 숫자만
@@ -897,7 +1475,6 @@ function addTableRow(tbody, field, rowData = {}) {
                 v = v.slice(0, maxLength);
             }
 
-            // 비어있을 때
             if (v === '') {
                 input.value = '';
                 delete input.dataset.rawValue;
@@ -906,7 +1483,6 @@ function addTableRow(tbody, field, rowData = {}) {
                 return;
             }
 
-            // currency 포맷
             if (type === 'currency') {
                 input.value = formatCurrency(v);
                 input.dataset.rawValue = v;
@@ -914,9 +1490,7 @@ function addTableRow(tbody, field, rowData = {}) {
                 input.value = v;
             }
 
-            // ✅ 실시간 카운트 표시
             showTableCellHint(input, v.length, maxLength);
-
             clearTableFieldError(field.fieldId);
         });
 
@@ -985,70 +1559,6 @@ function createDateRange(field) {
     return container;
 }
 
-let leaveTypeCache = null;
-
-async function fetchLeaveTypes() {
-    if (leaveTypeCache) return leaveTypeCache;
-
-    const res = await apiFetch('/api/leave-types/all');
-    if (!res.ok) {
-        showToast('휴가 유형을 불러오지 못했습니다.', 'error');
-        return [];
-    }
-
-    const result = await res.json();
-    leaveTypeCache = result.data ?? [];
-    return leaveTypeCache;
-}
-
-
-async function createLeaveReason(field) {
-    const container = document.createElement('div');
-    container.className = 'leave-reason';
-
-    const select = document.createElement('select');
-    const textarea = document.createElement('textarea');
-
-    /* 기본 옵션 */
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = '휴가 유형 선택';
-    select.appendChild(defaultOption);
-
-    /* 휴가 유형 로딩 */
-    const leaveTypes = await fetchLeaveTypes();
-    leaveTypes.forEach(type => {
-        const option = document.createElement('option');
-        option.value = String(type.typeId);   // ← vacationTypeCode
-        option.textContent = type.typeName;  // ← name은 표시용
-        select.appendChild(option);
-    });
-
-    /* 기존 값 복원 */
-    if (
-        field.value?.vacationTypeCode !== undefined &&
-        field.value?.vacationTypeCode !== null
-    ) {
-        select.value = String(field.value.vacationTypeCode);
-    } else {
-        select.value = ''; // ✅ 기본 옵션
-    }
-
-    textarea.placeholder = '상세 사유 입력';
-    textarea.value = field.value?.detailReason ?? '';
-
-    bindLengthCounter(textarea, MAX_LENGTH.leaveReasonDetail);
-
-    /* fieldId + subKey */
-    select.dataset.fieldId = field.fieldId;
-    select.dataset.subKey = 'vacationTypeCode';
-
-    textarea.dataset.fieldId = field.fieldId;
-    textarea.dataset.subKey = 'detailReason';
-
-    container.append(select, textarea);
-    return container;
-}
 
 function normalizeInputValue(value) {
     if (value === null || value === undefined) return '';
@@ -1252,19 +1762,150 @@ async function reloadApprovalLines() {
 }
 
 
-function validateLeaveReasonField(field) {
-    const value = field.value ?? {};
+function createVacationDateUI(field) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'vacation-date-ui';
 
-    const vacationTypeValid =
-        value.vacationTypeCode !== null &&
-        value.vacationTypeCode !== '';
+    const start = document.createElement('input');
+    start.type = 'date';
 
-    const detailReasonValid =
-        typeof value.detailReason === 'string' &&
-        value.detailReason.trim().length > 0;
+    const end = document.createElement('input');
+    end.type = 'date';
 
-    return vacationTypeValid && detailReasonValid;
+    start.dataset.fieldId = field.fieldId;
+    start.dataset.rangeType = 'start';
+    end.dataset.fieldId = field.fieldId;
+    end.dataset.rangeType = 'end';
+
+    wrapper.append(
+        labeled('시작일', start),
+        labeled('종료일', end)
+    );
+
+    return wrapper;
 }
+
+async function createEventDateRange(field) {
+    const baseRole = field.meta?.baseRole;
+    const ui = field.meta?.ui ?? {};
+
+    const inputWrapper = document.createElement('div');
+    inputWrapper.className = 'schedule-input';
+    inputWrapper.dataset.fieldId = field.fieldId;
+
+    /* 1️⃣ 시작일 - 종료일 */
+    const rangeGroup = document.createElement('div');
+    rangeGroup.className = 'schedule-group';
+
+    const rangeLabel = document.createElement('div');
+    rangeLabel.className = 'schedule-group-label';
+    rangeLabel.textContent = '시작일 - 종료일';
+
+    const dateRange = document.createElement('div');
+    dateRange.className = 'date-range';
+
+    const start = document.createElement('input');
+    start.type = 'date';
+    start.dataset.fieldId = field.fieldId;
+    start.dataset.rangeType = 'start';
+    start.value = field.value?.start || '';
+
+    const end = document.createElement('input');
+    end.type = 'date';
+    end.dataset.fieldId = field.fieldId;
+    end.dataset.rangeType = 'end';
+    end.value = field.value?.end || '';
+
+    dateRange.append(start, document.createTextNode(' ~ '), end);
+    rangeGroup.append(rangeLabel, dateRange);
+    inputWrapper.appendChild(rangeGroup);
+
+    /* 2️⃣ 휴가 유형 (VACATION만) */
+    if (baseRole === 'VACATION') {
+        const leaveTypes = await loadLeaveTypes();
+
+        const typeGroup = document.createElement('div');
+        typeGroup.className = 'schedule-group';
+
+        const typeLabel = document.createElement('div');
+        typeLabel.className = 'schedule-group-label';
+        typeLabel.textContent = '휴가 유형';
+
+        const select = document.createElement('select');
+        select.dataset.fieldId = field.fieldId;
+        select.dataset.subKey = 'vacationTypeId';
+
+        const empty = document.createElement('option');
+        empty.value = '';
+        empty.textContent = '선택';
+        select.appendChild(empty);
+
+        leaveTypes.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = String(t.typeId);
+            opt.textContent = t.typeName;
+            opt.selected =
+                String(field.value?.vacationTypeId) === String(t.typeId);
+            select.appendChild(opt);
+        });
+
+        typeGroup.append(typeLabel, select);
+        inputWrapper.appendChild(typeGroup);
+    }
+
+    /* 3️⃣ 일정명 */
+    if (ui.requireTitle) {
+        const titleGroup = document.createElement('div');
+        titleGroup.className = 'schedule-group';
+
+        const titleLabel = document.createElement('div');
+        titleLabel.className = 'schedule-group-label';
+        titleLabel.textContent = '일정명';
+
+        const titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.placeholder = '일정 제목을 입력하세요';
+        titleInput.dataset.fieldId = field.fieldId;
+        titleInput.dataset.subKey = 'title';
+        titleInput.value = field.value?.title || '';
+
+        bindLengthCounter(titleInput, MAX_LENGTH.text);
+
+        titleGroup.append(titleLabel, titleInput);
+        inputWrapper.appendChild(titleGroup);
+    }
+
+    /* 4️⃣ 사유 / 설명 (하나의 textarea, 정책 분기) */
+    if (ui.requireReason || ui.requireDescription) {
+        const textGroup = document.createElement('div');
+        textGroup.className = 'schedule-group';
+
+        const textLabel = document.createElement('div');
+        textLabel.className = 'schedule-group-label';
+
+        const textarea = document.createElement('textarea');
+        textarea.dataset.fieldId = field.fieldId;
+        textarea.placeholder = '내용을 입력하세요.';
+
+        if (ui.requireReason) {
+            textLabel.textContent = SCHEDULE_REASON_LABEL_MAP[baseRole] ?? '사유';
+            textarea.dataset.subKey = 'reason';
+            textarea.value = field.value?.reason || '';
+        } else {
+            textLabel.textContent = '일정 설명';
+            textarea.dataset.subKey = 'description';
+            textarea.value = field.value?.description || '';
+        }
+
+        bindLengthCounter(textarea, MAX_LENGTH.textarea);
+
+        textGroup.append(textLabel, textarea);
+        inputWrapper.appendChild(textGroup);
+    }
+
+    return inputWrapper;
+}
+
 
 function validateTableField(fieldDef, rows) {
     const {required, label, meta} = fieldDef;
@@ -1274,55 +1915,146 @@ function validateTableField(fieldDef, rows) {
     const minRows = rowPolicy.min ?? 0;
     const maxRows = rowPolicy.max ?? Infinity;
 
-    // 1️⃣ 테이블 자체 required 검증
+    /* =========================
+       1️⃣ 테이블 자체 required
+    ========================= */
     if (required && (!Array.isArray(rows) || rows.length === 0)) {
         return {
             valid: false,
-            message: `${label}에 최소 1행 이상 입력해주세요.`
+            message: `${label}에 최소 1행 이상 입력해주세요.`,
+            reason: 'REQUIRED'
         };
     }
 
-    // table.required === false && 행 없음 → 통과
+    // required=false && 행 없음 → 통과
     if (!rows || rows.length === 0) {
         return {valid: true};
     }
 
-    // 2️⃣ 행 개수 검증
+    /* =========================
+       2️⃣ 행 개수 검증
+    ========================= */
     if (rows.length < minRows) {
         return {
             valid: false,
-            message: `${label}에 최소 ${minRows}행 이상 입력해주세요.`
+            message: `${label}에 최소 ${minRows}행 이상 입력해주세요.`,
+            reason: 'MIN_ROWS'
         };
     }
 
     if (rows.length > maxRows) {
         return {
             valid: false,
-            message: `${label}는 최대 ${maxRows}행까지 입력할 수 있습니다.`
+            message: `${label}는 최대 ${maxRows}행까지 입력할 수 있습니다.`,
+            reason: 'MAX_ROWS'
         };
     }
 
-    // 3️⃣ 행 내부 컬럼 검증
+    /* =========================
+       3️⃣ 행 · 컬럼 단위 검증
+    ========================= */
     for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
         const row = rows[rowIndex];
 
-        for (const col of columns) {
-            if (col.required !== true) continue;
+        // 🛡 완전히 빈 row 방어 (이론상 없어야 하지만 안전장치)
+        const hasAnyValue = Object.values(row).some(
+            v => v !== null && v !== undefined && String(v).trim() !== ''
+        );
+        if (!hasAnyValue) continue;
 
+        for (const col of columns) {
             const value = row[col.id];
+            const colType = col.type;
 
             const isEmpty =
                 value === null ||
                 value === undefined ||
                 (typeof value === 'string' && value.trim() === '');
 
-            if (isEmpty) {
+            /* --- required 컬럼 --- */
+            if (col.required === true && isEmpty) {
                 return {
                     valid: false,
                     message: `${label} ${rowIndex + 1}행의 "${col.label}"을(를) 입력해주세요.`,
                     rowIndex,
-                    colId: col.id
+                    colId: col.id,
+                    reason: 'REQUIRED_COLUMN'
                 };
+            }
+
+            // 값이 없으면 타입 검증은 스킵
+            if (isEmpty) continue;
+
+            /* =========================
+               타입별 검증
+            ========================= */
+
+            // 🔢 number
+            if (colType === 'number') {
+                if (isNaN(Number(value))) {
+                    return {
+                        valid: false,
+                        message: `${label} ${rowIndex + 1}행의 "${col.label}"은 숫자여야 합니다.`,
+                        rowIndex,
+                        colId: col.id,
+                        reason: 'INVALID_NUMBER'
+                    };
+                }
+
+                if (
+                    String(value).length >
+                    (MAX_LENGTH.table?.number ?? Infinity)
+                ) {
+                    return {
+                        valid: false,
+                        message: `${label} ${rowIndex + 1}행의 "${col.label}"은 최대 ${MAX_LENGTH.table.number}자리까지 입력할 수 있습니다.`,
+                        rowIndex,
+                        colId: col.id,
+                        reason: 'MAX_LENGTH'
+                    };
+                }
+            }
+
+            // 💰 currency
+            if (colType === 'currency') {
+                if (isNaN(Number(value))) {
+                    return {
+                        valid: false,
+                        message: `${label} ${rowIndex + 1}행의 "${col.label}"은 올바른 금액이 아닙니다.`,
+                        rowIndex,
+                        colId: col.id,
+                        reason: 'INVALID_CURRENCY'
+                    };
+                }
+
+                if (
+                    String(value).length >
+                    (MAX_LENGTH.table?.currency ?? Infinity)
+                ) {
+                    return {
+                        valid: false,
+                        message: `${label} ${rowIndex + 1}행의 "${col.label}"은 최대 ${MAX_LENGTH.table.currency}자리까지 입력할 수 있습니다.`,
+                        rowIndex,
+                        colId: col.id,
+                        reason: 'MAX_LENGTH'
+                    };
+                }
+            }
+
+            // 🔤 text
+            if (colType === 'text') {
+                if (
+                    String(value).length >
+                    (MAX_LENGTH.table?.text ?? Infinity)
+                ) {
+                    return {
+                        valid: false,
+                        message: `${label} ${rowIndex + 1}행의 "${col.label}"은 최대 ${MAX_LENGTH.table.text}자까지 입력할 수 있습니다.`,
+                        rowIndex,
+                        colId: col.id,
+                        reason: 'MAX_LENGTH'
+                    };
+                }
             }
         }
     }
@@ -1347,7 +2079,6 @@ function validateApprovalLines(lines) {
     return false;
 }
 
-
 function isEmptyValue(value) {
     if (value === null || value === undefined) return true;
 
@@ -1366,41 +2097,52 @@ function isEmptyValue(value) {
     return false;
 }
 
-function validateRequiredField(field) {
+function validateRequiredField(field, value) {
     if (!field.required) return true;
 
     switch (field.fieldType) {
 
         case 'currency':
-            return field.value !== null &&
-                field.value !== undefined &&
-                field.value !== '';
-
+            return value !== null &&
+                value !== undefined &&
+                value !== '';
 
         case 'checkbox':
             // checkbox는 기본적으로 0개 선택 허용
             return true;
-        case 'address':
+
+        case 'address': {
+            if (!value) return false;
+
+            const {postcode, roadAddress} = value;
+
+            return Boolean(
+                postcode && postcode.trim() &&
+                roadAddress && roadAddress.trim()
+            );
+        }
+
         case 'employee-search':
+            return value !== null && value !== undefined;
+
         case 'department-search':
         case 'image':
-            //아직 기능 미구현
+            // 아직 기능 미구현
             return true;
 
-        case 'leave-reason':
-            return validateLeaveReasonField(field);
+        case 'event-date-range': {
+            return true;
+        }
 
         case 'date-range':
-        case 'leave-date-range':
-        case 'schedule-date-range':
         case 'time-range':
-            return Boolean(field.value?.start && field.value?.end);
+            return Boolean(value?.start && value?.end);
 
         case 'table':
             return true; // table은 schema 기반 검증에서만 처리
 
         default:
-            return !isEmptyValue(field.value);
+            return !isEmptyValue(value);
     }
 }
 
@@ -1465,9 +2207,9 @@ function validateFieldsByTypeWithSchema(fieldDefs, valuesById) {
         const value = valuesById.get(field.fieldId);
 
         switch (field.fieldType) {
+
             case 'date-range':
-            case 'leave-date-range':
-            case 'schedule-date-range':
+            case 'time-range':
                 if (!validateRangeField(field, value)) {
                     return false;
                 }
@@ -1488,10 +2230,11 @@ function validateFieldsByTypeWithSchema(fieldDefs, valuesById) {
                         .forEach(el => el.classList.remove('field-error'));
 
                     // 2️⃣ hint 표시 (doc-field 하단)
-                    const hint = document.createElement('div');
-                    hint.className = 'field-hint';
-                    hint.textContent = result.message;
-                    fieldWrapper?.appendChild(hint);
+                    renderFieldHint({
+                        inputEl: fieldWrapper.querySelector('input'),
+                        type: 'error',
+                        message: result.message
+                    });
 
                     // 3️⃣ 특정 셀 하이라이트 + 포커스
                     if (
@@ -1522,6 +2265,55 @@ function validateFieldsByTypeWithSchema(fieldDefs, valuesById) {
                 }
                 break;
             }
+            case 'number': {
+                if (value == null) break;
+
+                if (!/^\d+$/.test(String(value))) {
+                    showFieldError(
+                        document.querySelector(`[data-field-id="${field.fieldId}"]`),
+                        `${field.label}에는 숫자만 입력할 수 있습니다.`
+                    );
+                    return false;
+                }
+                break;
+            }
+            case 'currency': {
+                if (value == null) break;
+
+                if (isNaN(Number(value))) {
+                    showCurrencyFieldError(
+                        field.fieldId,
+                        `${field.label}은(는) 올바른 금액이 아닙니다.`
+                    );
+                    return false;
+                }
+                break;
+            }
+            case 'checkbox': {
+                const opts = field.meta ?? {};
+                const min = opts.minSelected ?? 0;
+                const max = opts.maxSelected ?? Infinity;
+
+                const count = Array.isArray(value) ? value.length : 0;
+
+                if (count < min) {
+                    showCheckboxGroupError(
+                        field.fieldId,
+                        `${field.label}은 최소 ${min}개 이상 선택해야 합니다.`
+                    );
+                    return false;
+                }
+
+                if (count > max) {
+                    showCheckboxGroupError(
+                        field.fieldId,
+                        `${field.label}은 최대 ${max}개까지 선택할 수 있습니다.`
+                    );
+                    return false;
+                }
+
+                break;
+            }
 
 
         }
@@ -1547,59 +2339,50 @@ function validateRangeField(fieldDef, value) {
         return false;
     }
 
-    // ✅ 정상일 때 에러 제거
+    // ✅ start <= end 검증
+    if (start > end) {
+        showRangeFieldError(
+            fieldDef.fieldId,
+            '시작 값은 종료 값보다 클 수 없습니다.',
+            'start'
+        );
+        return false;
+    }
+
     clearRangeFieldErrorByFieldId(fieldDef.fieldId);
     return true;
 }
 
 
-function focusRangeInput(fieldId, rangeType, message) {
-    const inputEl = document.querySelector(
-        `input[data-field-id="${fieldId}"][data-range-type="${rangeType}"]`
-    );
-
-    if (!inputEl) return;
-
-    showFieldError(inputEl, message);
-
-    // 스크롤 보정
-    inputEl.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'
-    });
-}
-
-
 function validateRequiredFieldsWithSchema(fieldDefs, valuesById) {
     for (const field of fieldDefs) {
-        if (!field.required) continue;
-
         const value = valuesById.get(field.fieldId);
 
-        const valid = validateRequiredField({
-            fieldType: field.fieldType,
-            required: field.required,
-            value
-        });
-
-        if (!valid) {
-            if (field.fieldType === 'leave-reason') {
-                showLeaveReasonError({
-                    fieldId: field.fieldId,
-                    value
-                });
+        /* =========================
+           1️⃣ event-date-range는 항상 단독 검증
+           (무조건 required)
+        ========================= */
+        if (field.fieldType === 'event-date-range') {
+            if (!validateEventDateRange(field, value)) {
                 return false;
             }
+            continue;
+        }
 
+        /* =========================
+           2️⃣ required 아닌 필드는 스킵
+        ========================= */
+        if (!field.required) continue;
 
-            // ✅ range류는 wrapper 기준 처리
+        const valid = validateRequiredField(field, value);
+
+        if (!valid) {
+
+            /* range */
             if (
                 field.fieldType === 'date-range' ||
-                field.fieldType === 'leave-date-range' ||
-                field.fieldType === 'schedule-date-range' ||
                 field.fieldType === 'time-range'
             ) {
-                // start/end 중 뭘 비웠는지에 따라 포커스도 맞춤
                 const focusType = !value?.start ? 'start' : 'end';
                 showRangeFieldError(
                     field.fieldId,
@@ -1609,6 +2392,7 @@ function validateRequiredFieldsWithSchema(fieldDefs, valuesById) {
                 return false;
             }
 
+            /* radio */
             if (field.fieldType === 'radio') {
                 showRadioGroupError(
                     field.fieldId,
@@ -1617,6 +2401,7 @@ function validateRequiredFieldsWithSchema(fieldDefs, valuesById) {
                 return false;
             }
 
+            /* currency */
             if (field.fieldType === 'currency') {
                 showCurrencyFieldError(
                     field.fieldId,
@@ -1625,6 +2410,7 @@ function validateRequiredFieldsWithSchema(fieldDefs, valuesById) {
                 return false;
             }
 
+            /* default */
             const inputEl = document.querySelector(
                 `[data-field-id="${field.fieldId}"]`
             );
@@ -1640,6 +2426,119 @@ function validateRequiredFieldsWithSchema(fieldDefs, valuesById) {
 }
 
 
+function getScheduleGroupByFieldIdAndSubKey(fieldId, subKey) {
+    const fieldWrapper = getFieldWrapperByFieldId(fieldId);
+    if (!fieldWrapper) return null;
+
+    return fieldWrapper.querySelector(
+        `.schedule-group [data-sub-key="${subKey}"]`
+    )?.closest('.schedule-group') || null;
+}
+
+
+function validateEventDateRange(field, value) {
+    console.log('[EVENT] validateEventDateRange start', field.fieldId, value);
+
+    /* 날짜 */
+    if (!value?.start) {
+        showScheduleDateRangeError(
+            field.fieldId,
+            '필수 항목입니다. 시작일을 입력해주세요.',
+            'start'
+        );
+        return false;
+    }
+
+// 종료일 없음
+    if (!value?.end) {
+        showScheduleDateRangeError(
+            field.fieldId,
+            '필수 항목입니다. 종료일을 입력해주세요.',
+            'end'
+        );
+        return false;
+    }
+
+// 시작일 > 종료일
+    if (value.start > value.end) {
+        showScheduleDateRangeError(
+            field.fieldId,
+            '시작일은 종료일보다 클 수 없습니다.',
+            'start'
+        );
+        return false;
+    }
+
+    /* 휴가 유형 */
+    if (field.meta?.baseRole === 'VACATION' && !value?.vacationTypeId) {
+        const selectEl = document.querySelector(
+            `select[data-field-id="${field.fieldId}"][data-sub-key="vacationTypeId"]`
+        );
+
+        showScheduleFieldError(
+            selectEl,
+            '필수 항목입니다. 휴가 유형을 선택해주세요.'
+        );
+        return false;
+    }
+
+    /* 일정명 */
+    if (field.meta?.ui?.requireTitle && (!value?.title || !value.title.trim())) {
+        const group = getScheduleGroupByFieldIdAndSubKey(field.fieldId, 'title');
+        const input = group?.querySelector('[data-sub-key="title"]');
+
+        showScheduleFieldError(
+            input,
+            '필수 항목입니다. 일정명을 입력해주세요.'
+        );
+        return false;
+    }
+
+    /* 설명 */
+    if (
+        field.meta?.ui?.requireDescription &&
+        (!value?.description || !value.description.trim())
+    ) {
+        const group = getScheduleGroupByFieldIdAndSubKey(
+            field.fieldId,
+            'description'
+        );
+        const textarea = group?.querySelector(
+            '[data-sub-key="description"]'
+        );
+
+        showScheduleFieldError(
+            textarea,
+            '필수 항목입니다. 일정 설명을 입력해주세요.'
+        );
+        return false;
+    }
+
+    /* 휴가 사유 */
+    if (
+        field.meta?.baseRole === 'VACATION' &&
+        (!value?.reason || !value.reason.trim())
+    ) {
+        const group = getScheduleGroupByFieldIdAndSubKey(
+            field.fieldId,
+            'reason'
+        );
+        const textarea = group?.querySelector(
+            '[data-sub-key="reason"]'
+        );
+
+        showScheduleFieldError(
+            textarea,
+            '필수 항목입니다. 휴가 사유를 입력해주세요.'
+        );
+        return false;
+    }
+
+
+    return true;
+}
+
+
 function getFieldWrapperByFieldId(fieldId) {
     return document
         .querySelector(`[data-field-id="${fieldId}"]`)
@@ -1651,11 +2550,12 @@ function showRangeFieldError(fieldId, message, focusRangeType = 'start') {
     const fieldWrapper = getFieldWrapperByFieldId(fieldId);
     if (!fieldWrapper) return;
 
-    const rangeWrapper = fieldWrapper.querySelector('.date-range, .time-range');
+    const rangeWrapper =
+        fieldWrapper.querySelector('.date-range, .time-range');
     if (!rangeWrapper) return;
 
-    // 기존 hint 제거 (doc-field 기준)
-    fieldWrapper.querySelector('.field-hint')?.remove();
+    // 기존 hint 제거
+    fieldWrapper.querySelector('.field-hint.error')?.remove();
 
     // 에러 클래스
     fieldWrapper.classList.add('field-error');
@@ -1665,31 +2565,23 @@ function showRangeFieldError(fieldId, message, focusRangeType = 'start') {
         .querySelectorAll('input[data-range-type]')
         .forEach(inp => inp.classList.add('field-error'));
 
-    // ✅ hint는 doc-field 바로 아래
+    // ✅ error 힌트로 통일
     const hint = document.createElement('div');
-    hint.className = 'field-hint';
+    hint.className = 'field-hint error';
     hint.textContent = message;
     fieldWrapper.appendChild(hint);
 
-    // 스크롤
     fieldWrapper.scrollIntoView({
         behavior: 'smooth',
         block: 'center'
     });
 
-    // 포커스
-    const focusTarget =
-        rangeWrapper.querySelector(
-            `input[data-range-type="${focusRangeType}"]:not([disabled])`
-        ) ||
-        rangeWrapper.querySelector('input:not([disabled])');
-
-    if (focusTarget) {
-        requestAnimationFrame(() =>
-            focusTarget.focus({preventScroll: true})
-        );
-    }
+    const focusTarget = rangeWrapper.querySelector(
+        `input[data-range-type="${focusRangeType}"]:not([disabled])`
+    );
+    focusTarget?.focus({preventScroll: true});
 }
+
 
 function clearRangeFieldErrorByFieldId(fieldId) {
     const fieldWrapper = getFieldWrapperByFieldId(fieldId);
@@ -1699,10 +2591,11 @@ function clearRangeFieldErrorByFieldId(fieldId) {
     fieldWrapper.querySelector('.field-hint')?.remove();
 
     const rangeWrapper =
-        fieldWrapper.querySelector('.date-range, .time-range');
+        fieldWrapper.querySelector(
+            '.date-range, .time-range, .event-date-range'
+        );
 
     rangeWrapper?.classList.remove('field-error');
-
     rangeWrapper
         ?.querySelectorAll('input[data-range-type]')
         .forEach(inp => inp.classList.remove('field-error'));
@@ -1712,6 +2605,18 @@ function clearRangeFieldErrorByFieldId(fieldId) {
 /* =====================================================
    이벤트 바인딩
    ===================================================== */
+
+function goToPreviousPage() {
+    if (!confirmLeaveIfDirty()) return;
+
+    // history가 없을 경우 대비
+    if (window.history.length > 1) {
+        history.back();
+    } else {
+        // fallback (목록 페이지 등)
+        location.href = '/view/document/my-documents';
+    }
+}
 
 function bindEvents(documentId) {
 
@@ -1724,13 +2629,7 @@ function bindEvents(documentId) {
     // 이전
     document.getElementById('prevBtn')
         ?.addEventListener('click', () => {
-
-            const confirmed = confirm(
-                '지금까지 작성한 문서 내용은 저장되지 않습니다.\n' +
-                '이전 페이지로 이동하시겠습니까?'
-            );
-
-            if (!confirmed) return;
+            if (!confirmLeaveIfDirty()) return;
 
             history.back();
         });
@@ -1756,20 +2655,42 @@ function bindEvents(documentId) {
                 payload.fields.map(f => [f.fieldId, f.value])
             );
 
-            // 3️⃣ required 검증 (schema 기준)
+            // 3️⃣ required 검증
             if (!validateRequiredFieldsWithSchema(
                 documentFieldDefinitions,
                 valuesById
             )) return;
 
-            // 4️⃣ 타입별 검증 (schema 기준)
+            // 4️⃣ 타입별 검증
             if (!validateFieldsByTypeWithSchema(
                 documentFieldDefinitions,
                 valuesById
             )) return;
 
-            // ✅ 모든 검증 통과
-            alert('검증 통과! 다음 단계로 이동');
+
+            try {
+                // 5️⃣ 최종 저장
+                await apiFetch(`/api/document-contents/${DOCUMENT_ID}`, {
+                    method: 'PATCH',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+
+                hasUnsavedChanges = false;
+
+                // 6️⃣ 제출
+                await apiFetch(`/api/documents/${DOCUMENT_ID}/submit`, {
+                    method: 'POST'
+                });
+
+                // 7️⃣ 이동
+                alert('문서가 상신되었습니다.');
+                location.href = '/view/document/my-documents';
+
+            } catch (e) {
+                console.error(e);
+                alert('문서 상신 중 오류가 발생했습니다.');
+            }
         });
 
 
@@ -1912,7 +2833,19 @@ function collectDocumentValues() {
             return;
         }
 
-        /* ===== leave-reason (subKey object) ===== */
+        /* ===== employee-search ===== */
+        if (el.closest('.employee-search')) {
+            if (fieldMap.has(fieldId)) return;
+
+            const wrapper = el.closest('.employee-search');
+            const value = wrapper.getValue?.() ?? null;
+
+            fieldMap.set(fieldId, {fieldId, value});
+            return;
+        }
+
+
+        /* ===== object field (subKey 기반 값) ===== */
         if (el.dataset.subKey) {
             const existing = fieldMap.get(fieldId) ?? {
                 fieldId,

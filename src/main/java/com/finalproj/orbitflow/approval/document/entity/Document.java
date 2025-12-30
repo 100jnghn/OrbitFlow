@@ -10,6 +10,7 @@ package com.finalproj.orbitflow.approval.document.entity;
 
 
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
+import com.finalproj.orbitflow.approval.formTemplate.entity.FormTemplate;
 import com.finalproj.orbitflow.approval.formTemplateGroup.entity.FormTemplateGroup;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
@@ -19,6 +20,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.Instant;
 
 
 @Entity
@@ -62,11 +65,38 @@ public class Document extends BaseEntity {
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
 
+    @Column(name = "submitted_at", nullable = true)
+    private Instant submittedAt;
+
     public void updateTitle(String title) {
         this.title = title;
     }
 
     public void updateStatus(DocumentStatus status) {
         this.status = status;
+    }
+
+    public void submit() {
+        this.status = DocumentStatus.SUBMITTED;
+        this.submittedAt = Instant.now();
+    }
+
+
+    public static Document createDraft(
+            Company company,
+            Employee writer,
+            FormTemplate template,
+            String title,
+            Document beforeDocument
+    ) {
+        return Document.builder()
+                .company(company)
+                .templateGroup(template.getTemplateGroup())
+                .templateVersion(template.getVersion())
+                .writer(writer)
+                .title(title)
+                .status(DocumentStatus.DRAFT)
+                .beforeDocument(beforeDocument)
+                .build();
     }
 }
