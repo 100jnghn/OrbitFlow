@@ -6,6 +6,7 @@ import com.finalproj.orbitflow.approval.document.entity.Document;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Please explain the class!!!
@@ -22,4 +23,7 @@ public interface ApprovalLineRepository extends JpaRepository<ApprovalLine, Long
 
 
     List<ApprovalLine> findByDocument_IdOrderByOrderNoAsc(Long documentId);
+
+
+    Optional<ApprovalLine> findFirstByDocumentAndStatusOrderByOrderNoAsc(Document document, ApprovalStatus approvalStatus);
 }

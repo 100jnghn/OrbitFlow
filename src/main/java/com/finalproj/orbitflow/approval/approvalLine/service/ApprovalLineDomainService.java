@@ -48,6 +48,9 @@ public class ApprovalLineDomainService {
     private final OrgRepository orgRepository;
     private final PositionCategoryRepository positionCategoryRepository;
 
+    /**
+     * 결재선 DRAFT 초기화
+     */
     public void initializeDraftLines(
             Document document,
             FormTemplate formTemplate,
@@ -55,6 +58,7 @@ public class ApprovalLineDomainService {
     ) {
         Company company = document.getCompany();
 
+        // 기존 DRAFT 제거
         approvalLineRepository.deleteByDocumentAndStatus(
                 document,
                 ApprovalStatus.DRAFT
@@ -65,11 +69,6 @@ public class ApprovalLineDomainService {
                 orgService.findOrgsByEmployeeId(writer.getId());
 
         if (userOrgs == null || userOrgs.isEmpty()) {
-            log.error(
-                    "[ApprovalLine] user has no organizations. employeeId={}, documentId={}",
-                    writer.getId(),
-                    document.getId()
-            );
             throw new BusinessException("사용자 조직 정보가 비어 있습니다.");
         }
 
@@ -77,15 +76,14 @@ public class ApprovalLineDomainService {
                 approvalRuleParser.parse(formTemplate.getApprovalRuleJson());
 
         if (rawSteps.isEmpty()) {
-            throw new IllegalStateException(
-                    "Invalid state: approval rule was validated but contains no steps. templateId="
-                            + formTemplate.getId()
-            );
+            throw new BusinessException("결재 규칙에 step이 없습니다.");
         }
 
         ApprovalLineRuleDto rule =
                 approvalRuleMapper.convert(rawSteps);
 
+        // 1️⃣ 결재선 전체 생성 (DRAFT)
+        List<ApprovalLine> draftLines = new ArrayList<>();
         int orderNo = 1;
 
         for (ApprovalLineRuleStep ruleStep : rule.getSteps()) {
@@ -101,7 +99,7 @@ public class ApprovalLineDomainService {
                                 orderNo
                         );
 
-                approvalLineRepository.saveAll(lines);
+                draftLines.addAll(lines);
                 orderNo += lines.size();
                 continue;
             }
@@ -111,14 +109,29 @@ public class ApprovalLineDomainService {
                             document,
                             company,
                             ruleStep,
-                            orderNo
+                            orderNo++
                     );
 
-            approvalLineRepository.save(line);
-            orderNo++;
+            draftLines.add(line);
         }
+
+        // 2️⃣ 연속 중복 결재자 제거
+        List<ApprovalLine> normalized =
+                compressConsecutiveDuplicateApprovers(draftLines);
+
+        // 3️⃣ orderNo 재정렬
+        reorderOrderNo(normalized);
+
+        // 4️⃣ 저장
+        approvalLineRepository.saveAll(normalized);
+
+        // 5️⃣ 최초 WAITING 활성화
+        activateFirstWaitingLine(document);
     }
 
+    /**
+     * 결재 규칙 검증
+     */
     public void validateApprovalRule(FormTemplate formTemplate) {
         List<RawApprovalRuleStepDto> rawSteps =
                 approvalRuleParser.parse(formTemplate.getApprovalRuleJson());
@@ -130,7 +143,9 @@ public class ApprovalLineDomainService {
         approvalRuleMapper.convert(rawSteps);
     }
 
-
+    /**
+     * ORG_CATEGORY_CHAIN 처리
+     */
     private List<ApprovalLine> createOrgCategoryChainLines(
             Document document,
             Company company,
@@ -156,13 +171,6 @@ public class ApprovalLineDomainService {
                 .findFirst()
                 .orElse(userOrgs.get(0));
 
-        if (!referencedAsParent.contains(leaf.getId())) {
-            log.warn(
-                    "[ApprovalLine] ORG_CHAIN leaf fallback used. orgId={}",
-                    leaf.getId()
-            );
-        }
-
         List<OrgResDto> chain = new ArrayList<>();
         OrgResDto current = leaf;
 
@@ -173,26 +181,9 @@ public class ApprovalLineDomainService {
                 break;
             }
 
-            Long parentId = current.getParentOrgId();
-            if (parentId == null) break;
-
-            current = orgMap.get(parentId);
-            if (current == null) {
-                log.warn(
-                        "[ApprovalLine] ORG_CHAIN broken. missing parent. leafOrgId={}, missingParentId={}",
-                        leaf.getId(),
-                        parentId
-                );
-                break;
-            }
-        }
-
-        if (log.isDebugEnabled()) {
-            log.debug(
-                    "[ApprovalLine] ORG_CHAIN resolved. chainSize={}, targetCategoryId={}",
-                    chain.size(),
-                    targetCategoryId
-            );
+            current = current.getParentOrgId() == null
+                    ? null
+                    : orgMap.get(current.getParentOrgId());
         }
 
         List<ApprovalLine> result = new ArrayList<>();
@@ -208,14 +199,6 @@ public class ApprovalLineDomainService {
                             .findHeadPositionByOrgCategoryId(org.getCategoryId())
                             .orElse(null);
 
-            if (positionCategory == null) {
-                log.warn(
-                        "[ApprovalLine] no head position. orgId={}, orgCategoryId={}",
-                        org.getId(),
-                        org.getCategoryId()
-                );
-            }
-
             Employee head = null;
             if (positionCategory != null) {
                 head =
@@ -226,14 +209,6 @@ public class ApprovalLineDomainService {
                                         EmployeeStatus.ACTIVE
                                 )
                                 .orElse(null);
-            }
-
-            if (head == null) {
-                log.warn(
-                        "[ApprovalLine] no head employee. orgId={}, positionCategoryId={}",
-                        org.getId(),
-                        positionCategory == null ? null : positionCategory.getId()
-                );
             }
 
             result.add(
@@ -252,6 +227,9 @@ public class ApprovalLineDomainService {
         return result;
     }
 
+    /**
+     * 단일 결재선 생성
+     */
     private ApprovalLine createSingleDraftApprovalLine(
             Document document,
             Company company,
@@ -282,15 +260,6 @@ public class ApprovalLineDomainService {
                     );
 
             case FIXED_EMPLOYEE -> {
-
-                if (target.getEmployeeId() == null) {
-                    log.warn(
-                            "[ApprovalLine] FIXED_EMPLOYEE missing employeeId. ruleStep={}",
-                            ruleStep
-                    );
-                    break;
-                }
-
                 builder
                         .organization(
                                 orgRepository.getReferenceById(
@@ -310,18 +279,60 @@ public class ApprovalLineDomainService {
                                 target.getPositionId(),
                                 EmployeeStatus.ACTIVE
                         )
-                        .ifPresentOrElse(
-                                builder::approver,
-                                () -> log.warn(
-                                        "[ApprovalLine] FIXED_EMPLOYEE not found. employeeId={}, orgId={}, positionId={}",
-                                        target.getEmployeeId(),
-                                        target.getOrganizationId(),
-                                        target.getPositionId()
-                                )
-                        );
+                        .ifPresent(builder::approver);
             }
         }
 
         return builder.build();
+    }
+
+    /**
+     * 연속 중복 결재자 제거
+     */
+    private List<ApprovalLine> compressConsecutiveDuplicateApprovers(
+            List<ApprovalLine> lines
+    ) {
+        List<ApprovalLine> result = new ArrayList<>();
+        ApprovalLine prev = null;
+
+        for (ApprovalLine curr : lines) {
+
+            if (prev != null &&
+                    prev.getApprover() != null &&
+                    curr.getApprover() != null &&
+                    Objects.equals(
+                            prev.getApprover().getId(),
+                            curr.getApprover().getId()
+                    )) {
+                continue;
+            }
+
+            result.add(curr);
+            prev = curr;
+        }
+
+        return result;
+    }
+
+    /**
+     * orderNo 재정렬
+     */
+    private void reorderOrderNo(List<ApprovalLine> lines) {
+        int orderNo = 1;
+        for (ApprovalLine line : lines) {
+            line.changeOrderNo(orderNo++);
+        }
+    }
+
+    /**
+     * 최초 WAITING 활성화
+     */
+    private void activateFirstWaitingLine(Document document) {
+        approvalLineRepository
+                .findFirstByDocumentAndStatusOrderByOrderNoAsc(
+                        document,
+                        ApprovalStatus.DRAFT
+                )
+                .ifPresent(ApprovalLine::markWaiting);
     }
 }

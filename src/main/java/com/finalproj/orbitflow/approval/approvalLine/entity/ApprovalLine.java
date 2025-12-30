@@ -88,4 +88,8 @@ public class ApprovalLine extends BaseEntity {
     public void markInProgress() {
         this.status = ApprovalStatus.IN_PROGRESS;
     }
+
+    public void changeOrderNo(int orderNo) {
+        this.orderNo = orderNo;
+    }
 }

@@ -323,7 +323,8 @@ CREATE TABLE form_template_group
         UNIQUE (company_id, name)
 ) ENGINE = InnoDB;
 
-
+CREATE INDEX idx_template_group_name
+    ON form_template_group (name);
 
 -- =========================================================
 -- FORM TEMPLATE
@@ -510,6 +511,8 @@ CREATE INDEX idx_doc_company_status
 CREATE INDEX idx_doc_template
     ON document (template_group_id, template_version);
 
+CREATE INDEX idx_document_writer_created_at
+    ON document (writer_id, created_at DESC);
 
 -- =========================================================
 -- 7. DOCUMENT CONTENT
