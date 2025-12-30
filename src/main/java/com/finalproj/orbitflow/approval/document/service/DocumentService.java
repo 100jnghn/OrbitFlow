@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.approval.document.service;
 
 import com.finalproj.orbitflow.approval.approvalLine.dto.ApprovalLineViewResDto;
 import com.finalproj.orbitflow.approval.approvalLine.entity.ApprovalLine;
+import com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus;
 import com.finalproj.orbitflow.approval.approvalLine.repository.ApprovalLineRepository;
 import com.finalproj.orbitflow.approval.document.dto.*;
 import com.finalproj.orbitflow.approval.document.entity.Document;
@@ -153,12 +154,21 @@ public class DocumentService {
             throw new IllegalStateException("양식에 필드가 없습니다.");
         }
 
-        List<ApprovalLineViewResDto> list = approvalLineRepository
+
+        List<ApprovalLineViewResDto> lists = approvalLineRepository
                 .findByDocument_IdOrderByOrderNoAsc(documentId)
                 .stream()
                 .map(ApprovalLineViewResDto::from)
                 .toList();
 
-        return DocumentDetailResDto.from(document, schema, list);
+        boolean myApprovalOrder = approvalLineRepository
+                .findFirstByDocumentAndStatusOrderByOrderNoAsc(
+                        document,
+                        ApprovalStatus.IN_PROGRESS
+                )
+                .map(line -> line.getApprover().getId().equals(employeeId))
+                .orElse(false);
+
+        return DocumentDetailResDto.from(document, schema, lists, myApprovalOrder);
     }
 }

@@ -157,7 +157,7 @@ function renderDivider(field) {
     hr.className = "field-divider";
     line.appendChild(hr);
 
-    wrap.append(label, line);
+    wrap.append(label, line);z
     return wrap;
 }
 
