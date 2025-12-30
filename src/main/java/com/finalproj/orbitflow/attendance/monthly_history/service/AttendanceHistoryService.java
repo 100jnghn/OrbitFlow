@@ -78,7 +78,7 @@ public class AttendanceHistoryService {
             temp = temp.plusMonths(1);
         }
 
-        // 최신순으로 보여주기 위해 정렬 뒤집기 (선택사항)
+        // 최신순으로 보여주기 위해 정렬 뒤집기
         Collections.reverse(months);
         return months;
     }

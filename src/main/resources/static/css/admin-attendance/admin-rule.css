@@ -1,81 +1,133 @@
-/* 근태 규칙 관리 페이지 - 게시판 디자인과 통일 */
+/* 근태 규칙 관리 페이지 - 깔끔한 디자인 */
 
-/* 컬러 변수 (admin-board.css와 동일) */
+/* 컬러 변수 */
 :root {
+    --primary-color: #3B82F6;
+    --primary-hover: #2563EB;
     --danger-color: #DC2626;
+    --danger-hover: #B91C1C;
+    --warning-color: #F59E0B;
+    --success-color: #10B981;
+    --neutral-50: #F9FAFB;
+    --neutral-100: #F3F4F6;
+    --neutral-200: #E5E7EB;
+    --neutral-300: #D1D5DB;
+    --neutral-400: #9CA3AF;
+    --neutral-500: #6B7280;
+    --neutral-600: #4B5563;
+    --neutral-700: #374151;
+    --neutral-800: #1F2937;
+    --neutral-900: #111827;
 }
 
-/* 컨테이너 좌우 여백 - 화면 크기에 맞춤 */
+/* 컨테이너 */
 .board-admin-container {
-    padding: 24px 0;
+    padding: 28px;
     max-width: 100%;
     width: 100%;
+    background: var(--neutral-50);
+    min-height: calc(100vh - 200px);
 }
 
-/* 게시판 헤더 스타일 (대시보드와 통일) */
+/* 게시판 헤더 스타일 */
 .board-header {
-    margin-bottom: 28px;
+    margin-bottom: 32px;
     text-align: left;
 }
 
 .board-header h1 {
-    font-size: 26px;
-    font-weight: 600;
-    color: var(--neutral-800);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--neutral-900);
     margin: 0;
     letter-spacing: -0.02em;
 }
 
 /* 규칙 섹션 */
 .rule-section {
-    margin-bottom: 32px;
+    margin-bottom: 28px;
 }
 
 .rule-section:last-child {
     margin-bottom: 0;
 }
 
+.rule-section .section-header {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .section-title {
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 600;
     color: var(--neutral-800);
-    margin: 0 0 24px 0;
-    letter-spacing: -0.02em;
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+.rule-form-card .section-title {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
 }
 
 .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 .section-header .section-title {
     margin-bottom: 0;
 }
 
-/* 기본 규칙 폼 */
-.rule-form {
-    background: var(--neutral-50);
-    padding: 24px;
+/* 기본 규칙 폼 카드 */
+.rule-form-card {
+    background: #ffffff;
     border-radius: 12px;
     border: 1px solid var(--neutral-200);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    padding: 24px 28px;
+    margin-bottom: 24px;
+}
+
+.rule-form {
+    margin-top: 20px;
+}
+
+.form-row {
+    display: flex;
+    gap: 40px;
+    align-items: flex-end;
+    margin-bottom: 24px;
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 0;
+    flex: 1;
 }
 
 .form-group:last-of-type {
     margin-bottom: 0;
 }
 
-.form-group label {
+.form-label {
     display: block;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     font-weight: 600;
     color: var(--neutral-700);
-    font-size: 14px;
+    font-size: 13px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--neutral-700);
+    font-size: 13px;
 }
 
 .time-input-group {
@@ -85,13 +137,17 @@
 }
 
 .time-input {
-    padding: 10px 14px;
-    border: 1px solid var(--neutral-300);
+    padding: 10px 12px;
+    border: 1.5px solid var(--neutral-300);
     border-radius: 8px;
     font-size: 14px;
-    color: var(--neutral-700);
+    color: var(--neutral-800);
     transition: all 0.2s ease;
-    width: 140px;
+    width: 140px !important;
+    min-width: 140px;
+    max-width: 140px;
+    background: #ffffff;
+    box-sizing: border-box;
 }
 
 .time-input:focus {
@@ -112,13 +168,17 @@
 }
 
 .number-input {
-    padding: 10px 14px;
-    border: 1px solid var(--neutral-300);
+    padding: 10px 12px;
+    border: 1.5px solid var(--neutral-300);
     border-radius: 8px;
     font-size: 14px;
-    color: var(--neutral-700);
+    color: var(--neutral-800);
     transition: all 0.2s ease;
-    width: 100px;
+    width: 120px !important;
+    min-width: 120px;
+    max-width: 120px;
+    background: #ffffff;
+    box-sizing: border-box;
 }
 
 .number-input:focus {
@@ -135,68 +195,39 @@
 .form-actions {
     display: flex;
     justify-content: flex-end;
-    margin-top: 24px;
-    padding-top: 24px;
+    margin-top: 20px;
+    padding-top: 20px;
     border-top: 1px solid var(--neutral-200);
 }
 
-/* 버튼 스타일 (게시판과 통일) */
+/* 버튼 스타일 */
 .btn-primary {
     background: var(--primary-color);
     color: white;
     border: none;
-    padding: 10px 20px;
+    padding: 11px 24px;
     border-radius: 8px;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-primary:hover {
     background: var(--primary-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
 }
 
-.btn-add {
-    background: var(--primary-color);
-    border: none;
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: all 0.2s ease;
-    text-align: center;
-    line-height: 1.5;
-    width: auto;
-    min-width: fit-content;
-    vertical-align: middle;
+.btn-primary:active {
+    transform: translateY(0);
 }
 
-.btn-add i {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-    font-size: 13px;
-}
-
-.btn-add:hover {
-    background: var(--primary-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
 
 /* 테이블 컨테이너 스타일 (대시보드와 통일) */
 .board-table-container {
@@ -204,9 +235,9 @@
     background: white;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     border: 1px solid var(--neutral-200);
-    min-height: 550px;
+    min-height: 400px;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -227,22 +258,25 @@
 .board-table th {
     padding: 14px 16px;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 13px;
     color: var(--neutral-700);
-    border-bottom: 2px solid var(--neutral-200);
+    border-bottom: 1px solid var(--neutral-200);
     text-align: center;
+    background: var(--neutral-50);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .board-table td {
     padding: 14px 16px;
-    border-bottom: 1px solid var(--neutral-200);
+    border-bottom: 1px solid var(--neutral-100);
     font-size: 14px;
     color: var(--neutral-800);
     vertical-align: middle;
     word-wrap: break-word;
     overflow-wrap: break-word;
-    height: 48px;
     box-sizing: border-box;
+    text-align: center;
 }
 
 .board-table tbody tr {
@@ -261,7 +295,6 @@
 #exceptionTable th:nth-child(1),
 #exceptionTable td:nth-child(1) {
     text-align: left;
-    padding-left: 20px;
 }
 
 #exceptionTable th:nth-child(2),
@@ -288,18 +321,19 @@
 /* 테이블 액션 버튼 (대시보드와 통일) */
 .btn-edit,
 .btn-delete {
-    padding: 6px 12px;
+    padding: 6px 14px;
     border-radius: 6px;
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 12px;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 6px;
     border: none;
-    margin: 0 4px;
+    margin: 0 2px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-edit {
@@ -356,14 +390,24 @@
 
 /* 경고 박스 */
 .warning-box {
-    background: #FEF3C7;
-    border: 1px solid #F59E0B;
+    background: #FFFBEB;
+    border: 1px solid #FCD34D;
     border-radius: 8px;
-    padding: 16px;
-    margin-top: 16px;
-    font-size: 14px;
-    color: #92400E;
+    padding: 14px 18px;
+    margin-top: 20px;
+    font-size: 13px;
+    color: #78350F;
     line-height: 1.6;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.warning-box i {
+    color: #F59E0B;
+    margin-top: 2px;
+    flex-shrink: 0;
+    font-size: 16px;
 }
 
 .warning-box strong {
@@ -625,28 +669,59 @@
 
 /* 오버라이드 설정 섹션 */
 .override-section {
-    background: #FEF3C7;
-    padding: 20px;
-    border-radius: 8px;
-    border: 1px solid #F59E0B;
+    /* 노란색 배경 제거 - 깔끔한 스타일 */
 }
 
 .override-fields {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin: 0;
+    padding: 0;
+}
+
+.override-row {
+    display: flex;
+    align-items: flex-end;
     gap: 16px;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+}
+
+.override-row:last-child {
+    /* 휴게시간도 동일한 크기 유지 */
 }
 
 .override-field {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
 }
 
 .override-field label {
     font-size: 13px;
     color: var(--neutral-700);
-    font-weight: 500;
+    font-weight: 600;
+}
+
+.override-field .time-input,
+.override-field .number-input {
+    width: 180px;
+    padding: 10px 14px;
+    border: 1px solid var(--neutral-300);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--neutral-700);
+    transition: all 0.2s ease;
+    background: #ffffff;
+}
+
+.override-field .time-input:focus,
+.override-field .number-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 /* 사유 텍스트 영역 */
@@ -656,12 +731,33 @@
     font-family: inherit;
     width: 100%;
     padding: 10px 14px;
-    border: 1px solid var(--neutral-300);
+    border: 1.5px solid var(--neutral-300);
     border-radius: 8px;
     font-size: 14px;
     color: var(--neutral-800);
     transition: all 0.2s ease;
     box-sizing: border-box;
+    background: #ffffff;
+}
+
+.char-count-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.char-count {
+    font-size: 12px;
+    color: var(--neutral-500);
+    font-weight: 500;
+}
+
+.char-count.warning {
+    color: var(--warning-color);
+}
+
+.char-count.error {
+    color: var(--danger-color);
 }
 
 .reason-textarea:focus {

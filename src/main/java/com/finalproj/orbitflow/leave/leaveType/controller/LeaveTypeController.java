@@ -22,9 +22,18 @@ public class LeaveTypeController {
     /**
      * 모든 휴가 유형 조회
      */
-//    @GetMapping("/types")
-//    public ResponseEntity<ResponseDto<List<LeaveTypeResDto>>> getAllLeaveTypes() {
-//        List<LeaveTypeResDto> leaveTypes = leaveTypeService.getAllLeaveTypes();
-//        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "휴가 유형 조회 성공", leaveTypes));
-//    }
+    @GetMapping("/types")
+    public ResponseEntity<ResponseDto<List<LeaveTypeResDto>>> getAllLeaveTypes() {
+        List<LeaveTypeResDto> leaveTypes = leaveTypeService.getAllLeaveTypes();
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "휴가 유형 조회 성공", leaveTypes));
+    }
+    
+    /**
+     * 차감되는 휴가 유형만 조회 (연차 페이지용)
+     */
+    @GetMapping("/types/countable")
+    public ResponseEntity<ResponseDto<List<LeaveTypeResDto>>> getCountableLeaveTypes() {
+        List<LeaveTypeResDto> leaveTypes = leaveTypeService.getCountableLeaveTypes();
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "차감 휴가 유형 조회 성공", leaveTypes));
+    }
 }
