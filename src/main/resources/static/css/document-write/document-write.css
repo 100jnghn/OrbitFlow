@@ -117,6 +117,14 @@ button:not(.primary):hover {
     color: #374151;
 }
 
+.label-hint {
+    margin-left: 6px;
+    font-size: 12px;
+    color: #666;
+    font-weight: normal;
+}
+
+
 .required::after {
     content: ' *';
     color: #dc2626;
@@ -305,6 +313,8 @@ button:not(.primary):hover {
     font-size: 12px;
     color: #aaa;
 }
+
+
 
 /* =====================================================
    Approval Line
@@ -632,4 +642,247 @@ button:not(.primary):hover {
     font-size: 13px;
     font-weight: 500;
     color: #374151;
+}
+
+/* =====================================================
+   address
+   ===================================================== */
+
+.address-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.address-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.address-label {
+    width: 120px;
+    font-size: 13px;
+    font-weight: 500; /* 일정 라벨과 통일 */
+    color: #374151; /* schedule-group-label과 동일 */
+    flex-shrink: 0;
+}
+
+
+.address-row input {
+    flex: 1;
+}
+
+.address-inline {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+}
+
+.address-inline button {
+    white-space: nowrap;
+}
+
+.address-group {
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 12px 14px; /* ⭐ 일정과 동일 */
+}
+
+.address-row > input,
+.address-inline {
+    max-width: 400px; /* ⭐ 여기만 조절 */
+    width: 100%;
+}
+
+/* ===============================
+   주소 검색 팝업 (Overlay)
+   =============================== */
+
+#postcode-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 9999;
+
+    display: none; /* 기본 숨김 */
+    align-items: center;
+    justify-content: center;
+}
+
+/* ===============================
+   팝업 카드
+   =============================== */
+
+#postcode-modal {
+    width: 520px;
+    height: 600px;
+
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ===============================
+   팝업 헤더
+   =============================== */
+
+.postcode-header {
+    height: 52px;
+    padding: 0 16px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+
+.postcode-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+}
+
+/* 닫기 버튼 (⚠ 입력 삭제 X와 완전히 다른 위치) */
+.postcode-close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+
+    background: #e5e7eb;
+    color: #374151;
+    font-size: 18px;
+    line-height: 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.postcode-close-btn:hover {
+    background: #d1d5db;
+}
+
+/* ===============================
+   카카오 주소 검색 영역
+   =============================== */
+
+#postcode-content {
+    flex: 1; /* 🔥 헤더 제외한 나머지 영역 */
+    width: 100%;
+}
+
+
+/* =====================================================
+   Employee Search Component (FINAL)
+   ===================================================== */
+
+/* ===============================
+   비활성 상태
+   =============================== */
+.employee-search.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* ===============================
+   employee-search 기본 컨테이너
+   - dropdown 기준점
+   =============================== */
+.employee-search {
+    position: relative; /* 🔥 dropdown 기준 */
+    width: 100%;
+}
+
+/* ===============================
+   드롭다운
+   =============================== */
+.employee-search-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+
+    max-height: 240px;
+    overflow-y: auto;
+
+    z-index: 5000; /* 🔥 scroll / panel 위로 */
+}
+
+.employee-search-dropdown.hidden {
+    display: none;
+}
+
+/* ===============================
+   결과 리스트
+   =============================== */
+.employee-list {
+    list-style: none;
+    margin: 0;
+    padding: 4px 0;
+}
+
+.employee-item {
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.employee-item:hover {
+    background: #f3f6fa;
+}
+
+.no-results {
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #888;
+}
+
+/* ===============================
+   doc-field 안에서
+   라벨 : 입력박스 가로 배치
+   =============================== */
+.doc-field:has(.employee-search) {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+
+    flex-wrap: wrap; /* 🔥 hint 줄바꿈 */
+}
+
+/* 라벨 */
+.doc-field:has(.employee-search) > label {
+    width: 140px;
+    flex-shrink: 0;
+    margin: 0;
+}
+
+/* 입력 영역 */
+.doc-field:has(.employee-search) > .employee-search {
+    flex: 1;
+}
+
+/* ===============================
+   field-hint 위치 보정
+   =============================== */
+/*
+   구조:
+   [label][input]
+           [hint]
+*/
+.doc-field:has(.employee-search) > .field-hint {
+    flex-basis: 100%;
+    margin-left: 152px; /* label(140) + gap(12) */
+    margin-top: 4px;
 }

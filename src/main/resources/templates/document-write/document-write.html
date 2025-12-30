@@ -25,6 +25,12 @@
 
     <!-- 페이지별 JS -->
     <th:block th:fragment="pageScript">
+        <!-- 다음 주소 API -->
+        <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+
+        <!-- 직원 검색 컴포넌트 JS -->
+        <script th:src="@{/css/document-write/employee-search.js}"></script>
+
         <script th:src="@{/css/document-write/document-write.js}"></script>
     </th:block>
 </head>
@@ -95,6 +101,19 @@
             </div>
         </div>
     </section>
+    <div id="postcode-overlay" style="display:none;">
+        <div id="postcode-modal">
+            <div class="postcode-header">
+                <span class="postcode-title">주소 검색</span>
+                <button type="button"
+                        class="postcode-close-btn"
+                        aria-label="닫기">✕
+                </button>
+            </div>
+
+            <div id="postcode-content"></div>
+        </div>
+    </div>
     <div id="toast-container"></div>
 </div>
 </body>
