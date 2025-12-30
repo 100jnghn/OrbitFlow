@@ -3,7 +3,7 @@
       th:replace="~{layout/layout-admin :: layout(
         ~{::content},
         ~{fragments/header :: header},
-        ~{sidebar/admin-sidebar :: menu},
+        ~{sidebar/approval/user-approval-sidebar :: sidebar},
         ~{::pageCss},
         ~{::pageScript}
       )}">
@@ -38,11 +38,10 @@
     <!-- ===============================
          문서 헤더
     =============================== -->
-    <section class="document-header">
-        <h1 id="documentTitle">문서 제목</h1>
-        <span id="documentStatusBadge" class="status-badge">
-            결재중
-        </span>
+    <section class="document-header document-header--only-status">
+    <span id="documentStatusBadge" class="status-badge">
+        결재중
+    </span>
     </section>
 
     <!-- ===============================
@@ -120,7 +119,7 @@
     <section class="document-action-bar">
 
         <button type="button"
-                id="prevBtn"
+                id="backBtn"
                 class="action-btn secondary">
             이전
         </button>
