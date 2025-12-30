@@ -84,8 +84,20 @@
     color: #495057;
 }
 
+/* 6번째 열 (관리) - 상하좌우 가운데 정렬 */
+.resource-table th:nth-child(6) {
+    text-align: center;
+    vertical-align: middle;
+}
+
 .resource-table td {
     color: #555;
+}
+
+/* 6번째 열 td - 상하좌우 가운데 정렬 */
+.resource-table td:nth-child(6) {
+    text-align: center;
+    vertical-align: middle;
 }
 
 .resource-table td:first-child {
@@ -156,6 +168,8 @@
 ========================= */
 .action-btns {
     display: flex;
+    justify-content: center;
+    align-items: center;
     gap: 8px;
 }
 
