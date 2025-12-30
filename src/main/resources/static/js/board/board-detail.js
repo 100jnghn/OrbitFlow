@@ -275,7 +275,10 @@ async function loadBoardDetail() {
                 }
             }
             renderBoardDetail(board);
-            loadComments(currentCommentPage);
+            // 댓글이 활성화된 경우에만 댓글 로드
+            if (board.commentActivated !== false) {
+                loadComments(currentCommentPage);
+            }
         } else {
             showError('게시글 데이터가 없습니다.');
         }
@@ -300,6 +303,7 @@ function renderBoardDetail(board) {
     const createdAt = formatDateTime(board.createdAt || board.created_at);
     const updatedAt = formatDateTime(board.updatedAt || board.updated_at);
     const files = board.files || [];
+    const commentActivated = board.commentActivated !== false; // 기본값은 true (undefined인 경우도 허용)
 
     // 게시판 이름 표시
     const categoryNameElement = document.getElementById('boardCategoryName');
@@ -372,7 +376,8 @@ function renderBoardDetail(board) {
         </div>
 
         <!-- 댓글 섹션 -->
-        <div class="comment-section">
+        ${commentActivated ? `
+        <div class="comment-section" id="commentSection">
             <h3 class="comment-section-title">댓글</h3>
             
             <!-- 댓글 작성 영역 -->
@@ -392,6 +397,7 @@ function renderBoardDetail(board) {
                 <div class="loading-message">댓글을 불러오는 중...</div>
             </div>
         </div>
+        ` : ''}
     `;
 }
 
