@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.approval.formTemplate.repository;
 
 import com.finalproj.orbitflow.approval.formTemplate.enums.AffectTag;
 import com.finalproj.orbitflow.approval.formTemplate.enums.FormTemplateStatus;
+import com.finalproj.orbitflow.approval.templateCategory.enums.TemplateCategoryCode;
 
 import java.time.Instant;
 import java.util.List;
@@ -23,4 +24,5 @@ public interface FormTemplateAllListView {
     Instant getUpdatedAt();
     FormTemplateStatus getFormTemplateStatus();
     List<AffectTag> getAffectTags();
+    TemplateCategoryCode getTemplateCategoryCode();
 }

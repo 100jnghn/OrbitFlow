@@ -1,10 +1,6 @@
 package com.finalproj.orbitflow.approval.formTemplate.controller;
 
-import com.finalproj.orbitflow.approval.formTemplate.dto.FormTemplateAllListResDto;
-import com.finalproj.orbitflow.approval.formTemplate.dto.FormTemplateDetailResDto;
-import com.finalproj.orbitflow.approval.formTemplate.dto.FormTemplatePreviewResDto;
-import com.finalproj.orbitflow.approval.formTemplate.dto.FormTemplateUpdateReqDto;
-import com.finalproj.orbitflow.approval.formTemplate.enums.FormTemplateStatus;
+import com.finalproj.orbitflow.approval.formTemplate.dto.*;
 import com.finalproj.orbitflow.approval.formTemplate.service.FormTemplateService;
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUtils;
@@ -149,16 +145,14 @@ public class FormTemplateController {
     public ResponseEntity<ResponseDto> getAllFormTemplates(
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "") String keyword,
-            @RequestParam(required = false) FormTemplateStatus status
+            @ModelAttribute FormTemplateAllListReqDto reqDto
     ) {
         Page<FormTemplateAllListResDto> result =
                 formTemplateService.allFormTemplate(
                         SecurityUtils.getCompanyId(),
                         size,
                         offset,
-                        keyword,
-                        status
+                        reqDto
                 );
 
         return ResponseEntity.ok(

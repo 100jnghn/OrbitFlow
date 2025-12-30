@@ -218,6 +218,8 @@ public class FormTemplateService {
         int nextVersion =
                 calculateNextActiveVersion(draft.getTemplateGroup().getId());
 
+        log.info("nextVersion = {}", nextVersion);
+
         formTemplateRepository
                 .findTopByTemplateGroup_IdAndStatusOrderByVersionDesc(
                         draft.getTemplateGroup().getId(),
@@ -281,14 +283,18 @@ public class FormTemplateService {
             Long companyId,
             int size,
             int offset,
-            String keyword,
-            FormTemplateStatus status
+            FormTemplateAllListReqDto reqDto
     ) {
         Pageable pageable =
                 PageRequest.of(offset, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
 
+
+        if (reqDto.getKeyword() == null) {
+            reqDto.setKeyword("");
+        }
+
         return formTemplateRepository
-                .findAllWithDocumentCount(companyId, keyword, status, pageable)
+                .findAllWithDocumentCount(companyId, reqDto.getKeyword(), reqDto.getStatus(), reqDto.getTemplateCategoryCode(), pageable)
                 .map(FormTemplateAllListResDto::from);
     }
 
