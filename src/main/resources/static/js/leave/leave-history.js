@@ -1,5 +1,5 @@
 /**
- * 내 연차 현황 데이터 로드 및 렌더링
+ * 휴가 신청 현황 데이터 로드 및 렌더링 (모든 휴가 종류 포함)
  */
 let currentPage = 0;
 let totalPages = 1;
@@ -11,41 +11,12 @@ let currentFilters = {
 };
 
 document.addEventListener('DOMContentLoaded', function() {
-    loadLeaveBalance();
-    loadLeaveTypes(); // 항목 목록 로드 (isCountable=true 인 것만)
+    loadLeaveTypes(); // 모든 휴가 유형 로드
     loadLeaveHistory(currentPage);
 });
 
 /**
- * 1. 상단 요약 정보 로드
- */
-async function loadLeaveBalance() {
-    const token = sessionStorage.getItem('accessToken');
-    const currentYear = new Date().getFullYear();
-
-    try {
-        const response = await fetch(`/api/leave/my?year=${currentYear}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            const result = await response.json();
-            const balance = result.data;
-
-            document.getElementById('totalGranted').innerText = (balance.totalGranted || 0).toFixed(1);
-            document.getElementById('remainingDays').innerText = (balance.remainingDays || 0).toFixed(1);
-            document.getElementById('usedDays').innerText = (balance.usedDays || 0).toFixed(1);
-        }
-    } catch (error) {
-        console.error("연차 잔합 로드 중 시스템 오류:", error);
-    }
-}
-
-/**
- * 항목 목록 로드 (필터용) - 차감되는 휴가 유형만
+ * 항목 목록 로드 (필터용) - 모든 휴가 종류
  */
 async function loadLeaveTypes() {
     const select = document.getElementById('filterType');
@@ -55,8 +26,8 @@ async function loadLeaveTypes() {
     }
 
     try {
-        // 컨트롤러 경로: /api/leave/types/countable
-        const response = await apiFetch('/api/leave/types/countable');
+        // 컨트롤러 경로: /api/leave/types
+        const response = await apiFetch('/api/leave/types');
         
         console.log('API 호출 응답 상태:', response.status);
 
@@ -75,7 +46,6 @@ async function loadLeaveTypes() {
                 types.forEach((type, index) => {
                     console.log(`타입 ${index + 1}:`, type);
                     const option = document.createElement('option');
-                    // DB 컬럼 type_name 매핑
                     option.value = type.typeName || '';
                     option.textContent = type.typeName || '';
                     select.appendChild(option);
@@ -91,13 +61,13 @@ async function loadLeaveTypes() {
             console.error('에러 응답:', errorText);
         }
     } catch (error) {
-        console.error("차감 휴가 유형 로드 실패:", error);
+        console.error("전체 휴가 유형 로드 실패:", error);
         console.error('에러 상세:', error.stack);
     }
 }
 
 /**
- * 2. 상세 내역 로드
+ * 모든 휴가 이력 로드
  */
 async function loadLeaveHistory(page) {
     const token = sessionStorage.getItem('accessToken');
@@ -113,7 +83,7 @@ async function loadLeaveHistory(page) {
         if (currentFilters.startDate) params.append('startDate', currentFilters.startDate);
         if (currentFilters.endDate) params.append('endDate', currentFilters.endDate);
 
-        const response = await fetch(`/api/leave/history/annual?${params.toString()}`, {
+        const response = await fetch(`/api/leave/history/all?${params.toString()}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -125,7 +95,7 @@ async function loadLeaveHistory(page) {
             const pageData = result.data;
 
             if (!pageData || !pageData.content || pageData.content.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="padding: 50px; text-align: center;">데이터가 없습니다.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="padding: 50px; text-align: center;">데이터가 없습니다.</td></tr>';
                 document.getElementById('leavePagination').innerHTML = '';
                 return;
             }
@@ -134,21 +104,16 @@ async function loadLeaveHistory(page) {
             totalPages = pageData.totalPages;
 
             tbody.innerHTML = pageData.content.map(item => {
-                const isGrant = item.type === 'GRANT';
-                const countClass = isGrant ? 'count-plus' : 'count-minus';
-                const sign = isGrant ? '+' : '-';
                 const statusClass = (item.statusCode || 'submitted').toLowerCase();
-
                 return `
-                    <tr class="${isGrant ? 'row-grant' : ''}">
-                        <td>${item.title}</td>
-                        <td>${item.actionDate}</td>
+                    <tr>
+                        <td>${item.title || '-'}</td>
                         <td class="period-cell">${item.period || '-'}</td>
-                        <td class="${countClass}">${sign}${parseFloat(item.days).toFixed(1)}</td>
+                        <td>${parseFloat(item.days || 0).toFixed(1)}일</td>
                         <td>
                             <div class="status-wrapper">
                                 <span class="status-dot ${statusClass}"></span>
-                                <span class="status-text">${item.statusName}</span>
+                                <span class="status-text">${item.statusName || '대기'}</span>
                             </div>
                         </td>
                     </tr>
@@ -158,11 +123,11 @@ async function loadLeaveHistory(page) {
             renderPagination(pageData, loadLeaveHistory);
         }
     } catch (error) {
-        console.error("내역 로드 중 시스템 오류:", error);
+        console.error("이력 로드 중 시스템 오류:", error);
     }
 }
 
-/** 페이지네이션 및 필터 로직 공통 (생략 가능하나 구조상 유지) **/
+/** 필터 및 페이지네이션 로직 (annual-leave.js와 동일한 방식 사용) **/
 function applyFilters() {
     currentFilters.typeName = document.getElementById('filterType').value || null;
     currentFilters.status = document.getElementById('filterStatus').value || null;

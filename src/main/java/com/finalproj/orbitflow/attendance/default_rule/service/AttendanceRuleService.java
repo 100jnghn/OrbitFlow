@@ -61,10 +61,15 @@ public class AttendanceRuleService {
         List<EmployeeAttRule> rules = employeeRuleRepository.findByCompanyId(companyId);
 
         // N+1 방지를 위한 Bulk 조회 및 Map 변환
-        Map<Long, String> employeeMap = getEmployeeNameMap(rules);
+        Map<Long, Employee> employeeMap = getEmployeeMap(rules);
 
         return rules.stream()
-                .map(rule -> new EmpAttRuleResDto(rule, employeeMap.getOrDefault(rule.getEmployeeId(), "이름 미확인")))
+                .map(rule -> {
+                    Employee emp = employeeMap.getOrDefault(rule.getEmployeeId(), null);
+                    String name = emp != null ? emp.getName() : "이름 미확인";
+                    String employeeNo = emp != null ? emp.getEmployeeNo() : null;
+                    return new EmpAttRuleResDto(rule, name, employeeNo);
+                })
                 .toList();
     }
 
@@ -72,7 +77,10 @@ public class AttendanceRuleService {
         EmployeeAttRule rule = findExceptionRuleOrThrow(ruleId);
         validateCompanyAccess(companyId, rule.getCompanyId());
 
-        return new EmpAttRuleResDto(rule, getEmployeeName(rule.getEmployeeId()));
+        Employee employee = employeeRepository.findById(rule.getEmployeeId()).orElse(null);
+        String name = employee != null ? employee.getName() : "알 수 없음";
+        String employeeNo = employee != null ? employee.getEmployeeNo() : null;
+        return new EmpAttRuleResDto(rule, name, employeeNo);
     }
 
     @Transactional
@@ -93,7 +101,8 @@ public class AttendanceRuleService {
                 .appliedAt(LocalDateTime.now())
                 .build();
 
-        return new EmpAttRuleResDto(employeeRuleRepository.save(rule), employee.getName());
+        EmployeeAttRule savedRule = employeeRuleRepository.save(rule);
+        return new EmpAttRuleResDto(savedRule, employee.getName(), employee.getEmployeeNo());
     }
 
     @Transactional
@@ -113,7 +122,10 @@ public class AttendanceRuleService {
 
         rule.setAppliedAt(LocalDateTime.now());
 
-        return new EmpAttRuleResDto(rule, getEmployeeName(rule.getEmployeeId()));
+        Employee employee = employeeRepository.findById(rule.getEmployeeId()).orElse(null);
+        String name = employee != null ? employee.getName() : "알 수 없음";
+        String employeeNo = employee != null ? employee.getEmployeeNo() : null;
+        return new EmpAttRuleResDto(rule, name, employeeNo);
     }
 
     @Transactional
@@ -161,9 +173,9 @@ public class AttendanceRuleService {
                 .orElse("알 수 없음");
     }
 
-    private Map<Long, String> getEmployeeNameMap(List<EmployeeAttRule> rules) {
+    private Map<Long, Employee> getEmployeeMap(List<EmployeeAttRule> rules) {
         List<Long> employeeIds = rules.stream().map(EmployeeAttRule::getEmployeeId).toList();
         return employeeRepository.findAllByIdIn(employeeIds).stream()
-                .collect(Collectors.toMap(Employee::getId, Employee::getName));
+                .collect(Collectors.toMap(Employee::getId, emp -> emp));
     }
 }

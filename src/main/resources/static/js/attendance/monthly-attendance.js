@@ -132,7 +132,7 @@ function renderTable(recs) {
 
     tb.innerHTML = recs.map(r => `
         <tr>
-            <td style="font-weight:600;">${r.date}</td>
+            <td style="font-weight:600; white-space: nowrap;">${r.date}</td>
             <td>${r.commuteAt || '-'}</td>
             <td>${r.leaveAt || '-'}</td>
             <td>${r.workingTime || '0h 00m'}</td>
