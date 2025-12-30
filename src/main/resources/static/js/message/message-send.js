@@ -1,7 +1,7 @@
 // 메시지 보내기 페이지 JavaScript
 
 const MESSAGE_API = '/api/messages';
-const EMPLOYEE_SEARCH_API = '/api/admin/rules/employees/search';
+const EMPLOYEE_SEARCH_API = '/api/employees/search';
 
 let selectedRecipients = []; // {id, name, employeeNo, organizationName, positionName}
 let selectedFileId = null;

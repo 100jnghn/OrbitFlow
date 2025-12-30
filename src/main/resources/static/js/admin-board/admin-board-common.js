@@ -1,7 +1,7 @@
 // 공용 게시판 관리 페이지 JavaScript
 
 const API_BASE_URL = '/api/admin/board-categories';
-const EMPLOYEE_SEARCH_API = '/api/admin/rules/employees/search';
+const EMPLOYEE_SEARCH_API = '/api/employees/search';
 let currentBoardPage = 0;
 let totalBoardPages = 1;
 let isEditMode = false;
