@@ -1,17 +1,13 @@
 package com.finalproj.orbitflow.approval.document.service;
 
 import com.finalproj.orbitflow.approval.approvalLine.service.ApprovalLineDomainService;
-import com.finalproj.orbitflow.approval.approvalLine.service.ApprovalRuleMapper;
-import com.finalproj.orbitflow.approval.approvalLine.service.ApprovalRuleParser;
 import com.finalproj.orbitflow.approval.document.dto.DocumentCreateResDto;
-import com.finalproj.orbitflow.approval.document.dto.DocumentFormFieldDto;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
 import com.finalproj.orbitflow.approval.documentContent.entity.DocumentContent;
 import com.finalproj.orbitflow.approval.documentContent.repository.DocumentContentRepository;
 import com.finalproj.orbitflow.approval.formTemplate.entity.FormTemplate;
 import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateRepository;
-import com.finalproj.orbitflow.approval.formTemplate.schema.FormFieldSchema;
 import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
@@ -26,8 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
-import java.util.Comparator;
-import java.util.List;
 
 /**
  * Please explain the class!!!
@@ -107,11 +101,6 @@ public class DocumentApplicationService {
         );
 
         documentRepository.save(createdDocument);
-
-        List<DocumentFormFieldDto> fields = schema.getFields().stream()
-                .sorted(Comparator.comparing(FormFieldSchema::getOrder))
-                .map(DocumentFormFieldDto::from)
-                .toList();
 
 
         DocumentContent documentContent = DocumentContent.fromSchema(createdDocument, schema, objectMapper);
