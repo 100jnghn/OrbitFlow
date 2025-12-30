@@ -123,7 +123,7 @@ function displaySearchResults(employees) {
         item.className = 'search-result-item';
         item.innerHTML = `
             <div class="employee-name">${escapeHTML(emp.name)}</div>
-            <div class="employee-details">${escapeHTML(emp.employeeNo || '')} | ${escapeHTML(emp.organizationName || '')} | ${escapeHTML(emp.positionName || '')}</div>
+            <div class="employee-details">${escapeHTML(emp.employeeNo || '')} | ${escapeHTML(emp.email || '')} | ${escapeHTML(emp.organizationName || '')} | ${escapeHTML(emp.positionName || '')}</div>
         `;
         item.addEventListener('click', () => selectRecipient(emp));
         resultsDiv.appendChild(item);

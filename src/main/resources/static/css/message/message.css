@@ -601,12 +601,12 @@
 
 /* 메시지 보내기 폼 스타일 */
 .message-send-form {
-    max-width: 900px;
+    max-width: 100%;
     margin: 0 auto;
 }
 
-.form-group {
-    margin-bottom: 24px;
+.message-send-form .form-group {
+    margin-bottom: 20px;
 }
 
 .form-group label {
@@ -651,6 +651,14 @@
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.message-send-form .form-textarea {
+    min-height: 260px;
+}
+
+.board-detail-content .message-send-form {
+    padding: 0;
 }
 
 /* 수신자 검색 */
