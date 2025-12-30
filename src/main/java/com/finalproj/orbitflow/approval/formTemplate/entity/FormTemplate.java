@@ -81,4 +81,8 @@ public class FormTemplate extends BaseEntity {
     public boolean isActive() {
         return this.status == FormTemplateStatus.ACTIVE;
     }
+
+    public  void deActive() {
+        this.status = FormTemplateStatus.INACTIVE;
+    }
 }
