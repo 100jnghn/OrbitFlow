@@ -1,7 +1,10 @@
 package com.finalproj.orbitflow.global.main.controller;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import com.finalproj.orbitflow.global.security.SecurityUser;
 
 /**
  * 메인(홈) 화면 View를 반환하는 컨트롤러.
@@ -16,7 +19,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class MainViewController {
 
     @GetMapping("/")
-    public String main() {
+    public String main(Model model, @AuthenticationPrincipal SecurityUser user) {
+        // 레이아웃에 필요한 기본 정보 설정
+        model.addAttribute("companyName", "엠터캠피스");
+        model.addAttribute("pageTitle", "홈 대시보드");
+        model.addAttribute("currentGNB", "home");
+        
         return "main/index"; // templates/main/index.html
     }
 }

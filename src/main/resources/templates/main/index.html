@@ -1,28 +1,152 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-user :: layout(
+        ~{::content},
+        ~{fragments/header :: header},
+        ~{sidebar/main/main-sidebar :: menu},
+        ~{::pageCss},
+        ~{::pageScript}
+      )}">
 <head>
     <meta charset="UTF-8">
-    <title>Orbit Flow</title>
+    <title>홈 대시보드 | Orbit Flow</title>
 
-    <link rel="stylesheet" href="/css/header.css">
-<!--    -->
-<!--    <link rel="stylesheet"-->
-<!--          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">-->
+    <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/main/index.css}">
+    </th:block>
 
-    <script src="/js/common.js" defer></script>
+    <th:block th:fragment="pageScript">
+        <script th:src="@{/js/main/index.js}" defer></script>
+    </th:block>
 </head>
 <body>
 
-<!-- header fragment (경로 중요) -->
-<div th:replace="~{fragments/header :: header}"></div>
+<div th:fragment="content" class="dashboard-container">
+    <!-- 상단 위젯 행 -->
+    <div class="dashboard-row">
+        <!-- 사용자 프로필 위젯 -->
+        <div class="dashboard-widget widget-profile">
+            <div class="widget-header">
+                <h3>프로필</h3>
+            </div>
+            <div class="widget-content">
+                <div class="profile-avatar">
+                    <img src="/images/male.png" alt="프로필 사진" id="profileImage" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <i class="fas fa-user-circle" id="profileIcon" style="display: none;"></i>
+                </div>
+                <div class="profile-info">
+                    <div class="profile-dept" id="profileDept">-</div>
+                    <div class="profile-name-wrapper">
+                        <span class="profile-name" id="profileName">-</span>
+                        <span class="profile-rank" id="profileRank">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-<div class="main-content" style="padding: 20px;">
+        <!-- 공지사항 위젯 -->
+        <div class="dashboard-widget widget-notice widget-expanded">
+            <div class="widget-header">
+                <h3>공지사항</h3>
+                <a href="/view/board" class="widget-more">더보기 <i class="fas fa-chevron-right"></i></a>
+            </div>
+            <div class="widget-content">
+                <ul class="notice-list" id="noticeList">
+                    <li class="notice-item empty">공지사항을 불러오는 중...</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 
-    <h2>메인 페이지</h2>
+    <!-- 중간 위젯 행 -->
+    <div class="dashboard-row">
+        <!-- 근태관리 위젯 -->
+        <div class="dashboard-widget widget-attendance">
+            <div class="widget-header">
+                <h3>근태관리</h3>
+                <a href="/view/attendance/commute" class="widget-more">더보기 <i class="fas fa-chevron-right"></i></a>
+            </div>
+            <div class="widget-content">
+                <div class="attendance-time" id="attendanceTime">-</div>
+                <div class="attendance-date" id="attendanceDate">-</div>
+                <div class="attendance-status" id="attendanceStatus">-</div>
+                <div class="attendance-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-labels">
+                        <span>최소 40h</span>
+                        <span id="workTimeText">0h</span>
+                        <span>최대 52h</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    사용자 메인 페이지
+        <!-- 금주 일정 위젯 -->
+        <div class="dashboard-widget widget-schedule widget-expanded">
+            <div class="widget-header">
+                <h3>금주 일정</h3>
+                <a href="/view/schedule" class="widget-more">더보기 <i class="fas fa-chevron-right"></i></a>
+            </div>
+            <div class="widget-content">
+                <ul class="schedule-list" id="scheduleList">
+                    <li class="schedule-item empty">일정을 불러오는 중...</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 
+    <!-- 하단 통계 위젯 행 -->
+    <div class="dashboard-row dashboard-stats">
+        <!-- 대기 중인 결재 -->
+        <div class="dashboard-stat-card stat-pending">
+            <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="pendingApprovals">-</div>
+                <div class="stat-label">대기 중인 결재</div>
+                <div class="stat-change" id="pendingChange">-</div>
+            </div>
+        </div>
+
+        <!-- 작성한 문서 -->
+        <div class="dashboard-stat-card stat-created">
+            <div class="stat-icon">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="documentsCreated">-</div>
+                <div class="stat-label">작성한 문서</div>
+                <div class="stat-change" id="createdChange">-</div>
+            </div>
+        </div>
+
+        <!-- 이번 주 승인 -->
+        <div class="dashboard-stat-card stat-approved">
+            <div class="stat-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="approvedThisWeek">-</div>
+                <div class="stat-label">이번 주 승인</div>
+                <div class="stat-change" id="approvedChange">-</div>
+            </div>
+        </div>
+
+        <!-- 반려 -->
+        <div class="dashboard-stat-card stat-rejected">
+            <div class="stat-icon">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="rejected">-</div>
+                <div class="stat-label">반려</div>
+                <div class="stat-change" id="rejectedChange">-</div>
+            </div>
+        </div>
+    </div>
 </div>
-
 </body>
 </html>

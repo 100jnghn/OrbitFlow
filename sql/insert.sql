@@ -2138,7 +2138,7 @@ VALUES (1, 10, '2025-11-03', '2025-11-03 08:52:00', '2025-11-03 18:05:00', 'ON_T
 -- ==========================================
 -- 1~10: OrbitFlow(C1), 11~16: TechSolution(C2), 17~20: GlobalService(C3)
 INSERT INTO board_category (company_id, organization_id, board_name, board_type, is_activated, comment_activated)
-VALUES (1, NULL, '전사 공지사항', 'FREE', 1, 1),
+VALUES (1, NULL, '전사 공지사항', 'NOTICE', 1, 1),
        (1, NULL, '자유 게시판', 'FREE', 1, 1),
        (1, NULL, '사내 건의함', 'FREE', 1, 1),
        (1, NULL, '칭찬 게시판', 'FREE', 1, 1),
