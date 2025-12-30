@@ -38,70 +38,76 @@
         <!-- 메시지 작성 폼 -->
         <div class="board-detail-content">
             <div class="board-detail-card">
-            <form id="messageSendForm" class="message-send-form">
-                <!-- 제목 -->
-                <div class="form-group">
-                    <label for="messageTitle">제목</label>
-                    <input type="text" id="messageTitle" name="messageTitle" 
-                           class="form-input" placeholder="제목을 입력해주세요" 
-                           maxlength="200" required>
-                </div>
+                <form id="messageSendForm" class="message-send-form">
+                    <!-- 제목 -->
+                    <div class="form-group">
+                        <label for="messageTitle">제목</label>
+                        <input type="text" id="messageTitle" name="messageTitle"
+                               class="form-input" placeholder="제목을 입력해주세요"
+                               maxlength="100" required>
+                        <div id="titleCharCount" class="char-count" style="display: none;"></div>
+                    </div>
 
-                <!-- 수신자 -->
-                <div class="form-group">
-                    <label for="recipientSearch">수신자</label>
-                    <div class="recipient-search-container">
-                        <div class="recipient-input-wrapper">
-                            <input type="text" id="recipientSearch" 
-                                   class="form-input" 
-                                   placeholder="사원 이름, 사번 또는 이메일로 검색 (2자 이상)"
-                                   autocomplete="off">
-                            <div id="recipientSearchResults" class="search-results"></div>
-                        </div>
-                        <div id="selectedRecipients" class="selected-recipients">
-                            <!-- 선택된 수신자가 여기에 표시됨 -->
+                    <!-- 수신자 -->
+                    <div class="form-group">
+                        <label for="recipientSearch">수신자</label>
+                        <div class="recipient-search-container">
+                            <div class="recipient-input-wrapper">
+                                <input type="text" id="recipientSearch"
+                                       class="form-input"
+                                       placeholder="사원 이름, 사번 또는 이메일로 검색 (2자 이상)"
+                                       autocomplete="off"
+                                       maxlength="30">
+                                <div id="recipientSearchResults" class="search-results"></div>
+                            </div>
+                            <div id="selectedRecipients" class="selected-recipients">
+                                <!-- 선택된 수신자가 여기에 표시됨 -->
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- 파일 업로드 -->
-                <div class="form-group">
-                    <label>파일</label>
-                    <button type="button" class="btn-file-upload" onclick="document.getElementById('fileInput').click()">
-                        <i class="fas fa-camera"></i> 파일 업로드
-                    </button>
-                    <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelect(event)">
-                    <div id="selectedFile" class="selected-file" style="display: none;">
-                        <span id="fileName"></span>
-                        <button type="button" class="btn-remove-file" onclick="removeFile()">
-                            <i class="fas fa-times"></i>
+                    <!-- 파일 업로드 -->
+                    <div class="form-group">
+                        <label>파일</label>
+                        <button type="button" class="btn-file-upload"
+                                onclick="document.getElementById('fileInput').click()">
+                            <i class="fas fa-camera"></i> 파일 업로드
+                        </button>
+                        <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelect(event)">
+                        <div id="selectedFile" class="selected-file" style="display: none;">
+                            <span id="fileName"></span>
+                            <button type="button" class="btn-remove-file" onclick="removeFile()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 내용 -->
+                    <div class="form-group">
+                        <label for="messageContent">내용</label>
+                        <textarea id="messageContent" name="messageContent"
+                                  class="form-textarea"
+                                  placeholder="내용을 입력해주세요"
+                                  rows="10"
+                                  maxlength="3000"
+                                  required></textarea>
+                        <div id="contentCharCount" class="char-count" style="display: none;"></div>
+                    </div>
+
+                    <!-- 버튼 영역 -->
+                    <div class="form-actions">
+                        <button type="button" class="btn-cancel" onclick="goBack()">
+                            취소
+                        </button>
+                        <button type="submit" class="btn-send">
+                            전송
                         </button>
                     </div>
-                </div>
-
-                <!-- 내용 -->
-                <div class="form-group">
-                    <label for="messageContent">내용</label>
-                    <textarea id="messageContent" name="messageContent" 
-                              class="form-textarea" 
-                              placeholder="내용을 입력해주세요" 
-                              rows="10" required></textarea>
-                </div>
-
-                <!-- 버튼 영역 -->
-                <div class="form-actions">
-                    <button type="button" class="btn-cancel" onclick="goBack()">
-                        취소
-                    </button>
-                    <button type="submit" class="btn-send">
-                        전송
-                    </button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 </div>
-
 </body>
 </html>
 

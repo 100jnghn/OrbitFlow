@@ -468,8 +468,8 @@ function updateTitleCharCount() {
         
         // 50자 이상일 때만 표시
         if (currentLength >= 50) {
-            countElement.style.display = 'inline';
-            countElement.textContent = `${currentLength}/${maxLength}`;
+            countElement.style.display = 'block';
+            countElement.textContent = `${currentLength} / ${maxLength}`;
             
             // 80자 이상이면 경고 색상
             if (currentLength >= 80) {
@@ -493,8 +493,8 @@ function updateContentCharCount() {
         
         // 8000자 이상일 때만 표시
         if (currentLength >= 8000) {
-            countElement.style.display = 'inline';
-            countElement.textContent = `${currentLength}/${maxLength}`;
+            countElement.style.display = 'block';
+            countElement.textContent = `${currentLength} / ${maxLength}`;
             
             // 9500자 이상이면 경고 색상
             if (currentLength >= 9500) {

@@ -19,6 +19,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 답장 모드 확인 및 초기화
     initializeReplyMode();
+    
+    // 글자수 카운터 설정
+    setupCharCounters();
 });
 
 // 사이드바 선택 효과
@@ -50,9 +53,15 @@ function setupRecipientSearch() {
         
         clearTimeout(searchTimeout);
         
-        if (keyword.length < 1) {
+        // 최소 2자 이상 입력 시에만 검색
+        if (keyword.length < 2) {
             resultsDiv.innerHTML = '';
             resultsDiv.style.display = 'none';
+            return;
+        }
+        
+        // 최대 30자 제한 (maxlength로 이미 제한되지만 추가 확인)
+        if (keyword.length > 30) {
             return;
         }
         
@@ -106,6 +115,13 @@ async function searchEmployees(keyword) {
 function displaySearchResults(employees) {
     const resultsDiv = document.getElementById('recipientSearchResults');
     resultsDiv.innerHTML = '';
+    
+    // 검색 결과가 50건 이상이면 안내 메시지 표시
+    if (Array.isArray(employees) && employees.length >= 50) {
+        resultsDiv.innerHTML = '<div class="search-result-item no-results">검색 결과가 너무 많습니다. 검색어를 더 입력해주세요.</div>';
+        resultsDiv.style.display = 'block';
+        return;
+    }
     
     if (employees.length === 0) {
         resultsDiv.innerHTML = '<div class="search-result-item no-results">검색 결과가 없습니다.</div>';
@@ -207,6 +223,92 @@ function removeFile() {
     selectedFileId = null;
 }
 
+// 글자수 카운터 설정
+function setupCharCounters() {
+    const titleInput = document.getElementById('messageTitle');
+    const contentTextarea = document.getElementById('messageContent');
+    const titleCharCount = document.getElementById('titleCharCount');
+    const contentCharCount = document.getElementById('contentCharCount');
+    
+    // 제목 글자수 카운터
+    if (titleInput && titleCharCount) {
+        titleInput.addEventListener('input', function() {
+            updateTitleCharCount();
+        });
+    }
+    
+    // 내용 글자수 카운터
+    if (contentTextarea && contentCharCount) {
+        contentTextarea.addEventListener('input', function() {
+            updateContentCharCount();
+        });
+    }
+}
+
+// 제목 글자수 카운터 업데이트
+function updateTitleCharCount() {
+    const titleInput = document.getElementById('messageTitle');
+    const titleCharCount = document.getElementById('titleCharCount');
+    
+    if (!titleInput || !titleCharCount) return;
+    
+    const currentLength = titleInput.value.length;
+    const maxLength = 100;
+    
+    // 80자 이상부터 표시
+    if (currentLength >= 80) {
+        titleCharCount.style.display = 'block';
+        titleCharCount.textContent = `${currentLength} / ${maxLength}`;
+        
+        // 90자 이상부터 경고 색상
+        if (currentLength >= 90) {
+            titleCharCount.style.color = '#EF4444'; // 경고 색상
+        } else {
+            titleCharCount.style.color = '#6B7280'; // 기본 색상
+        }
+    } else {
+        titleCharCount.style.display = 'none';
+    }
+    
+    // 100자 초과 시 입력 차단
+    if (currentLength > maxLength) {
+        titleInput.value = titleInput.value.substring(0, maxLength);
+        updateTitleCharCount(); // 다시 업데이트
+    }
+}
+
+// 내용 글자수 카운터 업데이트
+function updateContentCharCount() {
+    const contentTextarea = document.getElementById('messageContent');
+    const contentCharCount = document.getElementById('contentCharCount');
+    
+    if (!contentTextarea || !contentCharCount) return;
+    
+    const currentLength = contentTextarea.value.length;
+    const maxLength = 3000;
+    
+    // 2,500자 이상부터 표시
+    if (currentLength >= 2500) {
+        contentCharCount.style.display = 'block';
+        contentCharCount.textContent = `${currentLength} / ${maxLength}`;
+        
+        // 2,800자 이상부터 경고 색상
+        if (currentLength >= 2800) {
+            contentCharCount.style.color = '#EF4444'; // 경고 색상
+        } else {
+            contentCharCount.style.color = '#6B7280'; // 기본 색상
+        }
+    } else {
+        contentCharCount.style.display = 'none';
+    }
+    
+    // 3,000자 초과 시 입력 차단
+    if (currentLength > maxLength) {
+        contentTextarea.value = contentTextarea.value.substring(0, maxLength);
+        updateContentCharCount(); // 다시 업데이트
+    }
+}
+
 // 폼 제출 처리
 async function handleSubmit(event) {
     event.preventDefault();
@@ -217,16 +319,40 @@ async function handleSubmit(event) {
     
     if (!title) {
         alert('제목을 입력해주세요.');
+        document.getElementById('messageTitle').focus();
+        return;
+    }
+    
+    // 제목 글자수 검증 (100자 초과)
+    if (title.length > 100) {
+        alert('제목은 100자 이하여야 합니다.');
+        document.getElementById('messageTitle').focus();
         return;
     }
     
     if (!content) {
         alert('내용을 입력해주세요.');
+        document.getElementById('messageContent').focus();
+        return;
+    }
+    
+    // 공백만 입력된 내용 검증
+    if (!content.replace(/\s/g, '').length) {
+        alert('공백만 입력된 내용은 전송할 수 없습니다.');
+        document.getElementById('messageContent').focus();
+        return;
+    }
+    
+    // 내용 글자수 검증 (3,000자 초과)
+    if (content.length > 3000) {
+        alert('내용은 3,000자 이하여야 합니다.');
+        document.getElementById('messageContent').focus();
         return;
     }
     
     if (selectedRecipients.length === 0) {
         alert('수신자를 최소 1명 이상 선택해주세요.');
+        document.getElementById('recipientSearch').focus();
         return;
     }
     
@@ -325,6 +451,8 @@ async function initializeReplyMode() {
         replyTitle = 'RE: ' + replyTitle;
     }
     document.getElementById('messageTitle').value = replyTitle;
+    // 답장 모드에서 제목 설정 후 글자수 카운터 업데이트
+    updateTitleCharCount();
     
     // 본문에 원문 인용 텍스트 추가
     if (originalContent) {
@@ -348,6 +476,8 @@ async function initializeReplyMode() {
         
         // 원문 앞에 "-----Original Message-----" 구분선 추가 (위에 두 줄 공백)
         document.getElementById('messageContent').value = `\n\n-----Original Message-----\n${quotedContent}\n\n`;
+        // 답장 모드에서 내용 설정 후 글자수 카운터 업데이트
+        updateContentCharCount();
     }
 }
 
