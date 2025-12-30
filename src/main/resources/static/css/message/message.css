@@ -563,7 +563,8 @@
 .btn-edit,
 .btn-delete,
 .btn-archive,
-.btn-unarchive {
+.btn-unarchive,
+.btn-reply {
     padding: 10px 20px;
     background: var(--primary-color);
     color: white;
@@ -581,7 +582,8 @@
 
 .btn-edit:hover,
 .btn-archive:hover,
-.btn-unarchive:hover {
+.btn-unarchive:hover,
+.btn-reply:hover {
     background: var(--primary-hover);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);

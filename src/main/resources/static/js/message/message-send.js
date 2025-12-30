@@ -16,6 +16,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 폼 제출 이벤트 리스너
     document.getElementById('messageSendForm').addEventListener('submit', handleSubmit);
+    
+    // 답장 모드 확인 및 초기화
+    initializeReplyMode();
 });
 
 // 사이드바 선택 효과
@@ -88,8 +91,9 @@ async function searchEmployees(keyword) {
             throw new Error('사원 검색에 실패했습니다.');
         }
         
-        const employees = await response.json();
-        displaySearchResults(employees);
+        const result = await response.json();
+        const employees = result.data || result;
+        displaySearchResults(Array.isArray(employees) ? employees : []);
     } catch (error) {
         console.error('Error searching employees:', error);
         const resultsDiv = document.getElementById('recipientSearchResults');
@@ -261,6 +265,105 @@ async function handleSubmit(event) {
     } catch (error) {
         console.error('Error sending message:', error);
         alert(error.message || '메시지 전송에 실패했습니다.');
+    }
+}
+
+// 답장 모드 초기화
+async function initializeReplyMode() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const replyTo = urlParams.get('replyTo');
+    
+    if (!replyTo) {
+        return; // 답장 모드가 아님
+    }
+    
+    const senderId = urlParams.get('senderId');
+    const originalTitle = urlParams.get('originalTitle') || '';
+    const originalContent = urlParams.get('originalContent') || '';
+    const originalSenderName = urlParams.get('originalSenderName') || '';
+    const originalCreatedAt = urlParams.get('originalCreatedAt') || '';
+    
+    if (!senderId) {
+        console.warn('답장 모드이지만 발신자 ID가 없습니다.');
+        return;
+    }
+    
+    // 발신자 정보를 사원 검색 API로 찾기
+    if (originalSenderName) {
+        try {
+            // 발신자 이름으로 검색
+            const response = await apiFetch(`${EMPLOYEE_SEARCH_API}?keyword=${encodeURIComponent(originalSenderName)}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                const employees = result.data || result;
+                
+                if (Array.isArray(employees)) {
+                    // senderId와 일치하는 사원 찾기
+                    const sender = employees.find(emp => emp.id && emp.id.toString() === senderId.toString());
+                    
+                    if (sender) {
+                        // 수신자로 자동 추가
+                        selectRecipient(sender);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error loading sender info for reply:', error);
+            // 에러가 발생해도 계속 진행 (수동 입력 가능)
+        }
+    }
+    
+    // 제목 자동 설정: "RE: {원문 제목}" (중복 RE: 방지)
+    let replyTitle = originalTitle;
+    if (replyTitle && !replyTitle.startsWith('RE: ')) {
+        replyTitle = 'RE: ' + replyTitle;
+    }
+    document.getElementById('messageTitle').value = replyTitle;
+    
+    // 본문에 원문 인용 텍스트 추가
+    if (originalContent) {
+        // HTML 태그 제거 (이스케이프 전에 처리)
+        let cleanContent = originalContent.replace(/<[^>]*>/g, ''); // HTML 태그 제거
+        cleanContent = cleanContent.replace(/&nbsp;/g, ' '); // &nbsp;를 공백으로
+        cleanContent = cleanContent.replace(/<br\s*\/?>/gi, '\n'); // <br>을 줄바꿈으로
+        
+        let quotedContent = '';
+        if (originalSenderName) {
+            quotedContent += `From: ${escapeHTML(originalSenderName)}\n`;
+        }
+        if (originalCreatedAt) {
+            const formattedDate = formatDateTime(originalCreatedAt);
+            quotedContent += `Date: ${formattedDate}\n`;
+        }
+        if (originalTitle) {
+            quotedContent += `Title: ${escapeHTML(originalTitle)}\n`;
+        }
+        quotedContent += '\n' + escapeHTML(cleanContent);
+        
+        // 원문 앞에 "-----Original Message-----" 구분선 추가 (위에 두 줄 공백)
+        document.getElementById('messageContent').value = `\n\n-----Original Message-----\n${quotedContent}\n\n`;
+    }
+}
+
+// 날짜 시간 포맷 (답장 모드용)
+function formatDateTime(dateString) {
+    if (!dateString) return '';
+    try {
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}`;
+    } catch (e) {
+        return dateString;
     }
 }
 
