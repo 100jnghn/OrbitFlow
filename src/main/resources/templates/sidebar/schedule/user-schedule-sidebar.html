@@ -1,12 +1,21 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-<ul th:fragment="menu" class="sidebar-menu">
-    <li class="sidebar-section-title">일정 관리</li>
-    <li th:classappend="${currentMenu == 'schedule'} ? 'selected' : ''">
-        <a th:href="@{/view/schedule}" class="sidebar-link">내 일정</a>
-    </li>
-</ul>
+<!-- 사이드바 메뉴 -->
+<th:block th:fragment="sidebar">
+    <ul class="sidebar-menu">
+        <li class="menu-item no-sub">
+            <a th:href="@{/view/schedule}" class="sidebar-link" id="scheduleCalender">
+                일정 캘린더
+            </a>
+        </li>
+        <li class="menu-item no-sub">
+            <a th:href="@{/view/schedule/organization}" class="sidebar-link" id="organizationSchedule">
+                조직 일정 검색
+            </a>
+        </li>
+    </ul>
+</th:block>
 </body>
 </html>
 
