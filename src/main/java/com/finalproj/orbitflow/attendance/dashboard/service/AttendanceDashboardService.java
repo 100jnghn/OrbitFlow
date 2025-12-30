@@ -6,6 +6,8 @@ import com.finalproj.orbitflow.attendance.commute.repository.AttendanceRepositor
 import com.finalproj.orbitflow.attendance.dashboard.dto.AdminAttendanceResDto;
 import com.finalproj.orbitflow.attendance.dashboard.dto.AdminSummaryResDto;
 import com.finalproj.orbitflow.attendance.dashboard.dto.AttendanceUpdateDto;
+import com.finalproj.orbitflow.attendance.default_rule.entity.AttendanceRule;
+import com.finalproj.orbitflow.attendance.default_rule.repository.AttendanceRuleRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration; // ✅ 근무 시간 계산을 위해 추가
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 @Service
@@ -27,6 +30,7 @@ public class AttendanceDashboardService {
 
     private final AttendanceRepository attendanceRepository;
     private final EmployeeRepository employeeRepository;
+    private final AttendanceRuleRepository attendanceRuleRepository;
 
     public Page<AdminAttendanceResDto> getCompanyAttendanceList(
             Long companyId, String start, String end, String status, String keyword, Pageable pageable) {
@@ -37,7 +41,12 @@ public class AttendanceDashboardService {
 
         AttendanceStatus statusEnum = (status == null || status.equals("ALL")) ? null : AttendanceStatus.valueOf(status);
 
-        // 2. 수정된 리포지토리 메서드 호출 (인자 5개 + pageable)
+        // 2. 기본 근태 규칙 조회 (출근/퇴근 시간 확인용)
+        AttendanceRule defaultRule = attendanceRuleRepository
+                .findByCompanyIdAndIsDefaultTrue(companyId)
+                .orElse(null);
+
+        // 3. 수정된 리포지토리 메서드 호출 (인자 5개 + pageable)
         return attendanceRepository.findAllEmployeesWithAttendance(
                         companyId, startDate, endDate, statusEnum, keyword, pageable)
                 .map(result -> {
@@ -45,7 +54,7 @@ public class AttendanceDashboardService {
                     Attendance att = (Attendance) result[1];
                     // 기록이 있으면 기록 날짜, 없으면 조회 시작일로 표시
                     LocalDate recordDate = (att != null) ? att.getWorkDate() : startDate;
-                    return convertToCombinedDto(emp, att, recordDate);
+                    return convertToCombinedDto(emp, att, recordDate, defaultRule);
                 });
     }
     /**
@@ -75,21 +84,44 @@ public class AttendanceDashboardService {
     /**
      * 엔티티 결합 및 DTO 변환 (근무 시간 계산 로직 추가)
      */
-    private AdminAttendanceResDto convertToCombinedDto(Employee emp, Attendance att, LocalDate date) {
-        // 출근 기록이 없는 경우: 오늘 날짜면 "근무예정", 과거 날짜면 "기록 누락"
+    private AdminAttendanceResDto convertToCombinedDto(Employee emp, Attendance att, LocalDate date, AttendanceRule defaultRule) {
+        // 출근 기록이 없는 경우: 시간에 따라 "근무예정" 또는 "결근" 판단
         String statusName;
         String statusCode;
         if (att != null) {
             statusName = att.getStatus().getDescription();
             statusCode = att.getStatus().name();
         } else {
-            // 오늘 날짜이고 출근 기록이 없으면 "근무예정", 과거 날짜면 "기록 누락"
-            if (date.equals(LocalDate.now())) {
+            // 출근 기록이 없는 경우
+            if (date.equals(LocalDate.now()) && defaultRule != null) {
+                // 오늘 날짜이고 기본 규칙이 있는 경우
+                LocalTime now = LocalTime.now();
+                LocalTime startTime = defaultRule.getDefaultStartTime();
+                LocalTime endTime = defaultRule.getDefaultEndTime();
+                
+                // 현재 시간이 출근 시간 이전이면 "근무예정"
+                if (now.isBefore(startTime)) {
+                    statusName = AttendanceStatus.BEFORE_WORK.getDescription();
+                    statusCode = AttendanceStatus.BEFORE_WORK.name();
+                } 
+                // 현재 시간이 퇴근 시간 이후이면 "결근"
+                else if (now.isAfter(endTime)) {
+                    statusName = AttendanceStatus.ABSENT.getDescription();
+                    statusCode = AttendanceStatus.ABSENT.name();
+                } 
+                // 출근 시간 이후, 퇴근 시간 이전이면 "근무예정" (아직 출근할 수 있는 시간)
+                else {
+                    statusName = AttendanceStatus.BEFORE_WORK.getDescription();
+                    statusCode = AttendanceStatus.BEFORE_WORK.name();
+                }
+            } else if (date.equals(LocalDate.now())) {
+                // 오늘 날짜이지만 기본 규칙이 없는 경우 기본값으로 "근무예정"
                 statusName = AttendanceStatus.BEFORE_WORK.getDescription();
                 statusCode = AttendanceStatus.BEFORE_WORK.name();
             } else {
-                statusName = "기록 누락";
-                statusCode = "ABSENT";
+                // 과거 날짜면 "결근"
+                statusName = AttendanceStatus.ABSENT.getDescription();
+                statusCode = AttendanceStatus.ABSENT.name();
             }
         }
 

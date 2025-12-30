@@ -24,17 +24,54 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 날짜 입력 필드 실시간 검증 제거 (에러 메시지 표시하지 않음)
 
-    // 정정 모달 정정 사유 실시간 검증
+    // 정정 모달 정정 사유 실시간 검증 및 글자 수 카운터
     const modalReasonInput = document.getElementById('modalReason');
+    const charCountElement = document.getElementById('charCount');
     if (modalReasonInput) {
         modalReasonInput.addEventListener('input', function() {
             clearFieldError('modalReasonError', 'modalReason');
-            const reason = this.value.trim();
-            if (reason && reason.length > 255) {
-                showError('modalReasonError', '정정 사유는 255자 이하여야 합니다.');
+            const reason = this.value;
+            const currentLength = reason.length;
+            const maxLength = 40;
+            
+            // 글자 수 업데이트
+            if (charCountElement) {
+                charCountElement.textContent = `${currentLength} / ${maxLength}`;
+                // 40자에 가까워지면 색상 변경
+                if (currentLength >= maxLength) {
+                    charCountElement.style.color = 'var(--danger-color)';
+                } else if (currentLength >= maxLength * 0.8) {
+                    charCountElement.style.color = '#f59e0b';
+                } else {
+                    charCountElement.style.color = 'var(--neutral-500)';
+                }
+            }
+            
+            if (reason.trim() && reason.length > maxLength) {
+                showError('modalReasonError', `정정 사유는 ${maxLength}자 이하여야 합니다.`);
             }
         });
     }
+
+    // 모달 외부 클릭 시 닫기
+    const modal = document.getElementById('correctionModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+    }
+
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('correctionModal');
+            if (modal && modal.style.display === 'flex') {
+                closeModal();
+            }
+        }
+    });
 
     // 초기 데이터 로드
     loadSummaryData();
@@ -243,13 +280,29 @@ function openCorrectionModal(id, status) {
     document.getElementById('targetAttendanceId').value = id;
     document.getElementById('modalStatus').value = status;
     document.getElementById('modalReason').value = '';
-    document.getElementById('correctionModal').style.display = 'flex';
+    
+    // 글자 수 카운터 초기화
+    const charCountElement = document.getElementById('charCount');
+    if (charCountElement) {
+        charCountElement.textContent = '0 / 40';
+        charCountElement.style.color = 'var(--neutral-500)';
+    }
+    
+    const modal = document.getElementById('correctionModal');
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    // 모달이 열릴 때 body 스크롤 방지
+    document.body.style.overflow = 'hidden';
 }
 
 function closeModal() {
-    document.getElementById('correctionModal').style.display = 'none';
+    const modal = document.getElementById('correctionModal');
+    modal.style.display = 'none';
     document.getElementById('modalReason').value = '';
     clearFieldError('modalReasonError', 'modalReason');
+    // 모달이 닫힐 때 body 스크롤 복원
+    document.body.style.overflow = '';
 }
 
 /**
@@ -264,8 +317,8 @@ function validateCorrectionForm() {
     if (!reason) {
         showError('modalReasonError', '정정 사유를 입력해주세요.');
         isValid = false;
-    } else if (reason.length > 255) {
-        showError('modalReasonError', '정정 사유는 255자 이하여야 합니다.');
+    } else if (reason.length > 40) {
+        showError('modalReasonError', '정정 사유는 40자 이하여야 합니다.');
         isValid = false;
     }
 
@@ -298,7 +351,8 @@ async function submitCorrection() {
             loadAttendanceList();
             loadSummaryData();
         } else {
-            alert("정정 처리에 실패했습니다.");
+            const errorData = await response.json().catch(() => ({}));
+            alert(errorData.message || "정정 처리에 실패했습니다.");
         }
     } catch (error) {
         console.error("정정 요청 중 오류:", error);

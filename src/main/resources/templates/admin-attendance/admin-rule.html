@@ -28,27 +28,31 @@
 
         <!-- 기본 규칙 섹션 -->
         <section class="rule-section">
-            <h2 class="section-title">1. 회사 전체 기본 규칙</h2>
-            <div class="rule-form">
-                <div class="form-group">
-                    <label><strong>기본 출퇴근 시간</strong></label>
-                    <div class="time-input-group">
-                        <input type="time" id="defaultStartTime" value="08:00" class="time-input">
-                        <span class="time-separator">~</span>
-                        <input type="time" id="defaultEndTime" value="17:00" class="time-input">
+            <div class="card rule-form-card">
+                <h2 class="section-title">회사 전체 기본 규칙</h2>
+                <div class="rule-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">기본 출퇴근 시간</label>
+                            <div class="time-input-group">
+                                <input type="time" id="defaultStartTime" value="08:00" class="time-input">
+                                <span class="time-separator">~</span>
+                                <input type="time" id="defaultEndTime" value="17:00" class="time-input">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">지각 허용 기준</label>
+                            <div class="judgment-input">
+                                <input type="number" id="tardinessMinutes" value="10" min="0" class="number-input">
+                                <span class="input-suffix">분</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label><strong>지각 허용 기준</strong></label>
-                    <div class="judgment-input">
-                        <input type="number" id="tardinessMinutes" value="10" min="0" class="number-input">
-                        <span class="input-suffix">분</span>
+                    <div class="form-actions">
+                        <button type="button" id="saveDefaultRuleBtn" class="btn-primary">
+                            <i class="fas fa-save"></i> 저장
+                        </button>
                     </div>
-                </div>
-                <div class="form-actions">
-                    <button type="button" id="saveDefaultRuleBtn" class="btn-primary">
-                        <i class="fas fa-save"></i> 저장
-                    </button>
                 </div>
             </div>
         </section>
@@ -56,8 +60,8 @@
         <!-- 예외 규칙 섹션 -->
         <section class="rule-section">
             <div class="section-header">
-                <h2 class="section-title">2. 사원별 예외 규칙 관리</h2>
-                <button type="button" id="addExceptionRuleBtn" class="btn-add">
+                <h2 class="section-title">사원별 예외 규칙 관리</h2>
+                <button type="button" id="addExceptionRuleBtn" class="btn-primary">
                     <i class="fas fa-plus"></i> 예외 규칙 추가
                 </button>
             </div>
@@ -78,9 +82,6 @@
                     <tbody id="exceptionRulesTableBody">
                     </tbody>
                 </table>
-            </div>
-            <div class="warning-box">
-                <strong>▲ 주의:</strong> 사원별 예외 규칙이 적용되면, <strong>회사 기본 규칙보다 우선</strong>합니다. (Override) NULL 값은 자동으로 회사 기본 규칙으로 대체됩니다.
             </div>
         </section>
     </div>
@@ -132,24 +133,28 @@
                     </div>
 
                     <!-- 3. 오버라이드 설정 -->
-                    <div class="form-section override-section">
+                    <div class="form-section">
                         <div class="section-content">
                             <label class="section-label">오버라이드 설정 (변경할 항목 입력)</label>
                             <div class="override-fields">
-                                <div class="override-field">
-                                    <label>출근 시간</label>
-                                    <input type="time" id="exceptionStartTime" name="startTime" class="time-input">
-                                    <span class="error-message" id="startTimeError"></span>
+                                <div class="override-row">
+                                    <div class="override-field">
+                                        <label>출근 시간</label>
+                                        <input type="time" id="exceptionStartTime" name="startTime" class="time-input">
+                                        <span class="error-message" id="startTimeError"></span>
+                                    </div>
+                                    <div class="override-field">
+                                        <label>퇴근 시간</label>
+                                        <input type="time" id="exceptionEndTime" name="endTime" class="time-input">
+                                        <span class="error-message" id="endTimeError"></span>
+                                    </div>
                                 </div>
-                                <div class="override-field">
-                                    <label>퇴근 시간</label>
-                                    <input type="time" id="exceptionEndTime" name="endTime" class="time-input">
-                                    <span class="error-message" id="endTimeError"></span>
-                                </div>
-                                <div class="override-field">
-                                    <label>휴게 시간 (분)</label>
-                                    <input type="number" id="exceptionBreakMinutes" name="breakMinutes" min="0" max="480" class="number-input">
-                                    <span class="error-message" id="breakMinutesError"></span>
+                                <div class="override-row">
+                                    <div class="override-field">
+                                        <label>휴게 시간 (분)</label>
+                                        <input type="number" id="exceptionBreakMinutes" name="breakMinutes" min="0" max="480" class="number-input">
+                                        <span class="error-message" id="breakMinutesError"></span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="error-message" id="overrideFieldsError" style="margin-top: 8px;"></div>
@@ -159,9 +164,13 @@
                     <!-- 4. 규칙 적용 사유 -->
                     <div class="form-section">
                         <div class="section-content">
-                            <label class="section-label">규칙 적용 사유</label>
+                            <label class="section-label">규칙 적용 사유 <span style="color: var(--danger-color);">*</span></label>
                             <textarea id="reason" name="reason" class="form-control reason-textarea" 
-                                      placeholder="40자 이내로 규칙 적용 사유 및 변경 시간 작성" maxlength="40" required></textarea>
+                                      placeholder="사유를 입력하세요 (예: 단말기 오류, 외근 후 퇴근 등)"
+                                      maxlength="40" required></textarea>
+                            <div class="char-count-wrapper">
+                                <span id="reasonCharCount" class="char-count">0 / 40</span>
+                            </div>
                             <span class="error-message" id="reasonError"></span>
                         </div>
                     </div>
@@ -180,7 +189,6 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>사원별 근태 예외 규칙 수정</h3>
-                <p class="modal-subtitle">규칙 수정 이력은 시스템에 기록됩니다.</p>
                 <span class="close">&times;</span>
             </div>
             <div class="modal-body">
@@ -211,7 +219,6 @@
                                 <div class="date-field">
                                     <label>적용 시작일:</label>
                                     <input type="date" id="editValidFrom" name="validFrom" class="date-input" readonly>
-                                    <span class="readonly-badge">수정 불가</span>
                                 </div>
                                 <div class="date-field">
                                     <label>적용 종료일 (수정 가능):</label>
@@ -223,24 +230,28 @@
                     </div>
 
                     <!-- 오버라이드 설정 수정 -->
-                    <div class="form-section override-section">
+                    <div class="form-section">
                         <div class="section-content">
                             <label class="section-label">오버라이드 설정 수정</label>
                             <div class="override-fields">
-                                <div class="override-field">
-                                    <label>출근 시간:</label>
-                                    <input type="time" id="editExceptionStartTime" name="startTime" class="time-input">
-                                    <span class="error-message" id="editStartTimeError"></span>
+                                <div class="override-row">
+                                    <div class="override-field">
+                                        <label>출근 시간:</label>
+                                        <input type="time" id="editExceptionStartTime" name="startTime" class="time-input">
+                                        <span class="error-message" id="editStartTimeError"></span>
+                                    </div>
+                                    <div class="override-field">
+                                        <label>퇴근 시간:</label>
+                                        <input type="time" id="editExceptionEndTime" name="endTime" class="time-input">
+                                        <span class="error-message" id="editEndTimeError"></span>
+                                    </div>
                                 </div>
-                                <div class="override-field">
-                                    <label>퇴근 시간:</label>
-                                    <input type="time" id="editExceptionEndTime" name="endTime" class="time-input">
-                                    <span class="error-message" id="editEndTimeError"></span>
-                                </div>
-                                <div class="override-field">
-                                    <label>휴게 시간:</label>
-                                    <input type="number" id="editExceptionBreakMinutes" name="breakMinutes" min="0" max="480" class="number-input">
-                                    <span class="error-message" id="editBreakMinutesError"></span>
+                                <div class="override-row">
+                                    <div class="override-field">
+                                        <label>휴게 시간:</label>
+                                        <input type="number" id="editExceptionBreakMinutes" name="breakMinutes" min="0" max="480" class="number-input">
+                                        <span class="error-message" id="editBreakMinutesError"></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -249,16 +260,20 @@
                     <!-- 규칙 수정 사유 -->
                     <div class="form-section">
                         <div class="section-content">
-                            <label class="section-label">규칙 수정 사유</label>
+                            <label class="section-label">규칙 수정 사유 <span style="color: var(--danger-color);">*</span></label>
                             <textarea id="editReason" name="reason" class="form-control reason-textarea" 
-                                      placeholder="40자 이내로 규칙 수정 사유 작성" maxlength="40" required></textarea>
+                                      placeholder="사유를 입력하세요 (예: 단말기 오류, 외근 후 퇴근 등)"
+                                      maxlength="40" required></textarea>
+                            <div class="char-count-wrapper">
+                                <span id="editReasonCharCount" class="char-count">0 / 40</span>
+                            </div>
                             <span class="error-message" id="editReasonError"></span>
                         </div>
                     </div>
 
                     <div class="form-actions">
                         <button type="button" class="btn-secondary" id="editCancelBtn">취소</button>
-                        <button type="submit" class="btn-warning" id="editSubmitBtn">규칙 수정</button>
+                        <button type="submit" class="btn-primary" id="editSubmitBtn">규칙 수정</button>
                     </div>
                 </form>
             </div>
