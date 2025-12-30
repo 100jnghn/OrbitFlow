@@ -242,10 +242,10 @@
 }
 
 .day-number {
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 10px;
+    font-weight: 500;
     color: var(--neutral-800);
-    margin-bottom: 4px;
+    margin-bottom: 1px;
 }
 
 .calendar-day.today .day-number {

@@ -245,15 +245,11 @@
 
 /* 승인 열 내부 버튼도 가운데 정렬 */
 .resource-table td:last-child .btn-approve {
-    display: inline-block;
-    max-width: 30px;
-    margin: 0;
-
-    max-width: 50px;
-
-    font-size: 10px;
-    text-align: center;
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
+    margin: 0;
+    height: 22px; /* status-badge와 동일한 height */
 }
 
 .resource-table tbody tr {
@@ -322,6 +318,7 @@
 
 
 /* 상태 배지: 통일된 크기 스타일 */
+
 .status-badge {
     display: inline-flex;
     align-items: center;
@@ -332,7 +329,7 @@
     border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
-    border: 1px solid transparent;
+    border: 1.2px solid transparent;
     line-height: 1;
     color: dimgray;
 }
@@ -457,14 +454,13 @@
     align-items: center;
     justify-content: center;
 
-    padding: 3px 14px;
+    padding: 6px 14px;
     border-radius: 20px;
     line-height: 1;
 
-    height: 22px;
+    height: 30px;
 
     font-size: 12px;
-    border: none;
     cursor: pointer;
     transition: background 0.2s;
     background: #ecfdf5;
