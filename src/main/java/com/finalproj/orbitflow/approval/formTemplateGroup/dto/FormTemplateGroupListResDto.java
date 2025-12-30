@@ -26,15 +26,6 @@ public class FormTemplateGroupListResDto {
     private String description;
     private TemplateCategoryCode categoryCode;
     private BaseRole baseRole;
-
-
-    public static FormTemplateGroupListResDto from(FormTemplateGroup formTemplateGroup) {
-        return FormTemplateGroupListResDto.builder()
-                .id(formTemplateGroup.getId())
-                .name(formTemplateGroup.getName())
-                .description(formTemplateGroup.getDescription())
-                .categoryCode(formTemplateGroup.getTemplateCategory().getCode())
-                .baseRole(formTemplateGroup.getBaseRole())
-                .build();
-    }
+    private Boolean active;
+    private Boolean hasActiveTemplate;
 }

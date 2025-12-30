@@ -1,5 +1,8 @@
 package com.finalproj.orbitflow.approval.formTemplateGroup.service;
 
+import com.finalproj.orbitflow.approval.formTemplate.entity.FormTemplate;
+import com.finalproj.orbitflow.approval.formTemplate.enums.FormTemplateStatus;
+import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateRepository;
 import com.finalproj.orbitflow.approval.formTemplateGroup.dto.*;
 import com.finalproj.orbitflow.approval.formTemplateGroup.entity.FormTemplateGroup;
 import com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole;
@@ -33,6 +36,7 @@ public class FormTemplateGroupService {
     private final FormTemplateGroupRepository formTemplateGroupRepository;
     private final CompanyRepository companyRepository;
     private final TemplateCategoryRepository templateCategoryRepository;
+    private final FormTemplateRepository formTemplateRepository;
 
     public List<FormTemplateGroupListResDto> getFormTemplateGroups(
             Long companyId,
@@ -40,11 +44,8 @@ public class FormTemplateGroupService {
     ) {
         String searchKeyword = (keyword == null) ? "" : keyword;
 
-        List<FormTemplateGroup> list = formTemplateGroupRepository
-                    .findByCompanyAndKeyword(companyId, searchKeyword);
-
-
-        return list.stream().map(FormTemplateGroupListResDto::from).toList();
+        return formTemplateGroupRepository
+                .findLatestGroupsWithActiveTemplate(companyId, searchKeyword);
     }
 
 
@@ -109,22 +110,34 @@ public class FormTemplateGroupService {
 
     @Transactional
     public void updateFormTemplateGroup(FormTemplateGroupUpdateReqDto dto, Long id) {
-        FormTemplateGroup target = formTemplateGroupRepository.findById(id).orElseThrow(
-                () -> new ResponseStatusException(
+
+        FormTemplateGroup group = formTemplateGroupRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "양식 그룹을 찾을 수 없습니다. formTemplateGroupId = " + id
-                )
-        );
+                ));
 
-        if (dto.getName() != null) {
-            target.changeName(dto.getName());
-        }
         if (dto.getDescription() != null) {
-            target.changeDescription(dto.getDescription());
+            group.changeDescription(dto.getDescription());
         }
+
         if (dto.getActive() != null) {
-            if (dto.getActive()) target.activate();
-            else target.deactivate();
+
+            if (!dto.getActive()) {
+
+                group.deactivate();
+
+                formTemplateRepository
+                        .findTopByTemplateGroup_IdAndStatusOrderByVersionDesc(
+                                group.getId(),
+                                FormTemplateStatus.ACTIVE
+                        )
+                        .ifPresent(FormTemplate::deActive);
+
+            }
+            else {
+                group.activate();
+            }
         }
     }
 

@@ -15,7 +15,7 @@ import java.util.List;
  **/
 
 
-public interface FormTemplateGroupRepository extends JpaRepository<FormTemplateGroup, Long> {
+public interface FormTemplateGroupRepository extends JpaRepository<FormTemplateGroup, Long>, FormTemplateGroupRepositoryCustom {
 
 
     @Query("""
