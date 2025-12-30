@@ -175,11 +175,8 @@
               new Date(result.data.refreshExpiresAt).getTime()
       );
 
-      /* 역할별 이동 */
-      location.href =
-              (me.role === 'ADMIN' || me.role === 'COMPANY_ADMIN')
-                      ? '/view/admin'
-                      : '/';
+      /* 홈 대시보드로 이동 */
+      location.href = '/';
 
     } catch (e) {
       console.error(e);
