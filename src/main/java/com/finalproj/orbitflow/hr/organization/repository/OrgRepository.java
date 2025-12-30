@@ -123,4 +123,7 @@ public interface OrgRepository extends JpaRepository<Organization, Long> {
             @Param("parentOrgId") Long parentOrgId
     );
 
+    // 부모 조회용
+    List<Organization> findByIdIn(List<Long> ids);
+
 }

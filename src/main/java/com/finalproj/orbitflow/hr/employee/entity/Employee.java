@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.hr.employee.entity;
 
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
+import com.finalproj.orbitflow.hr.employee.dto.EmployeeCreateReqDto;
 import com.finalproj.orbitflow.hr.employee.enums.*;
 import com.finalproj.orbitflow.hr.organization.entity.Organization;
 import com.finalproj.orbitflow.hr.positionCategory.entity.PositionCategory;
@@ -150,9 +151,92 @@ public class Employee extends BaseEntity {
         return employee;
     }
 
+    /**
+     * 사원 생성
+     **/
+    public static Employee create(
+            Company company,
+            Organization organization,
+            HrRank rank,
+            PositionCategory positionCategory,
+            EmployeeCreateReqDto dto,
+            String encodedPassword
+    ) {
+        Employee e = new Employee();
+        e.company = company;
+        e.organization = organization;
+        e.rank = rank;
+        e.positionCategory = positionCategory;
+
+        e.employeeNo = dto.getEmployeeNo();
+        e.name = dto.getName();
+        e.email = dto.getEmail();
+        e.password = encodedPassword;
+
+        e.gender = dto.getGender();
+        e.birthDate = dto.getBirthDate();
+        e.phone = dto.getPhone();
+        e.internalPhone = dto.getInternalPhone();
+
+        e.employmentType = dto.getEmploymentType();
+        e.status = EmployeeStatus.TEMP;
+        e.workStatus = WorkStatus.OFF_WORK;
+        e.hireDate = dto.getHireDate();
+        e.role = dto.getRole();
+
+        return e;
+    }
+
+
+    /* === 변경 메서드 === */
+
+    public void changeOrganization(Organization organization) {
+        this.organization = organization;
+    }
+
+    public void changeRank(HrRank rank) {
+        this.rank = rank;
+    }
+
+    public void changePosition(PositionCategory positionCategory) {
+        this.positionCategory = positionCategory;
+    }
+
+    public void changeEmploymentType(EmploymentType employmentType) {
+        this.employmentType = employmentType;
+    }
+
+    public void changeRole(EmployeeRole role) {
+        this.role = role;
+    }
+
+    public void changeEmail(String email) {
+        this.email = email;
+    }
+
+    public void changePassword(String password) {
+        this.password = password;
+    }
 
     public void updateWorkStatus(WorkStatus workStatus) {
         this.workStatus = workStatus;
+    }
+
+    public void resign() {
+        this.status = EmployeeStatus.RESIGNED;
+    }
+
+    public void suspend() {
+        this.status = EmployeeStatus.SUSPENDED;
+    }
+
+    public void activate() {
+        this.status = EmployeeStatus.ACTIVE;
+    }
+
+    public void clearContactInfo() {
+        this.phone = null;
+        this.internalPhone = null;
     }
 
 }

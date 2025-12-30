@@ -53,4 +53,26 @@ public class AuditLog extends BaseEntity {
     @Lob
     @Column(name = "after_data")
     private String afterData; // JSON
+
+
+    public static AuditLog create(
+            Company company,
+            Employee actor,
+            AuditEntityType entityType,
+            Long entityId,
+            AuditEventType eventType,
+            String beforeData,
+            String afterData
+    ) {
+        AuditLog log = new AuditLog();
+        log.company = company;
+        log.actor = actor;
+        log.entityType = entityType;
+        log.entityId = entityId;
+        log.eventType = eventType;
+        log.beforeData = beforeData;
+        log.afterData = afterData;
+        return log;
+    }
+
 }

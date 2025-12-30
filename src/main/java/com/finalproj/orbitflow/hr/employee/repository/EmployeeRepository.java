@@ -2,6 +2,8 @@ package com.finalproj.orbitflow.hr.employee.repository;
 
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -164,6 +166,26 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     );
 
     List<Employee> findByStatus(EmployeeStatus employeeStatus);
+
+    @Query("""
+    select e
+    from Employee e
+    join e.organization o
+    where e.company.id = :companyId
+      and (:status is null or e.status = :status)
+      and (
+        :keyword is null
+        or e.name like concat('%', :keyword, '%')
+        or e.email like concat('%', :keyword, '%')
+      )
+""")
+    Page<Employee> searchAdmin(
+            @Param("companyId") Long companyId,
+            @Param("keyword") String keyword,
+            @Param("status") EmployeeStatus status,
+            Pageable pageable
+    );
+
 
     List<Employee> findByCompanyIdAndStatus(Long companyId, EmployeeStatus employeeStatus);
 }
