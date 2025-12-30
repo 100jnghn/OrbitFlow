@@ -32,6 +32,7 @@
 .sidebar-menu-wrapper {
     flex: 1;
     overflow-y: auto;
+    min-height: 0; /* flexbox에서 스크롤이 작동하도록 */
 }
 
 .sidebar-menu {
@@ -95,11 +96,80 @@
 
 .sidebar-footer {
     margin-top: auto;
-    background: #fff;
-    min-height: 80px;
-    padding: 15px 24px;
+    background: #0f1729;
+    padding: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0; /* footer가 축소되지 않도록 */
+}
+
+.sidebar-organization {
+    padding: 16px 24px;
+    color: #c9ccdd;
+    max-height: 300px;
+    overflow-y: auto;
+    min-height: 200px; /* 최소 높이 보장 */
+}
+
+.organization-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.organization-tree {
     font-size: 13px;
-    color: #333;
+    line-height: 1.6;
+}
+
+.organization-tree .org-item {
+    padding: 4px 0;
+    color: #c9ccdd;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.organization-tree .org-item:hover {
+    color: #ffffff;
+}
+
+.organization-tree .org-item.expanded {
+    color: #ffffff;
+}
+
+.organization-tree .org-item .org-name {
+    display: inline-block;
+}
+
+.organization-tree .org-item .org-toggle {
+    display: inline-block;
+    width: 16px;
+    margin-right: 4px;
+    text-align: center;
+    font-size: 10px;
+}
+
+.organization-tree .org-children {
+    margin-left: 20px;
+    margin-top: 4px;
+    display: none;
+}
+
+.organization-tree .org-item.expanded + .org-children,
+.organization-tree .org-item.expanded ~ .org-children {
+    display: block;
+}
+
+.organization-tree .org-employee {
+    padding: 2px 0 2px 20px;
+    color: #9ca3af;
+    font-size: 12px;
+}
+
+.organization-tree .org-employee:hover {
+    color: #c9ccdd;
 }
 
 
