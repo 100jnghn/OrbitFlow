@@ -24,6 +24,9 @@
         selectedDate = new Date();
         selectedDate.setHours(0, 0, 0, 0);
         
+        // 초기 로드 시 list-title 업데이트
+        updateScheduleListTitle();
+        
         loadSchedules();
         renderCalendar();
         
@@ -422,10 +425,26 @@
         return item;
     }
 
+    // 일정 목록 제목 업데이트
+    function updateScheduleListTitle() {
+        const listTitle = document.getElementById('scheduleListTitle');
+        if (selectedDate) {
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            listTitle.textContent = `${year}년 ${month}월 ${day}일 일정 목록`;
+        } else {
+            listTitle.textContent = '일정 목록';
+        }
+    }
+
     // 일정 목록 렌더링
     function renderScheduleList(filteredSchedules = schedules) {
         const listContainer = document.getElementById('scheduleList');
         listContainer.innerHTML = '';
+
+        // 선택된 날짜에 따라 제목 업데이트
+        updateScheduleListTitle();
 
         if (filteredSchedules.length === 0) {
             listContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--neutral-500);">일정이 없습니다.</div>';

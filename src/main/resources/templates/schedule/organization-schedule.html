@@ -21,12 +21,7 @@
         <script th:src="@{/js/schedule/organization-schedule.js}"></script>
     </th:block>
 
-    <!-- 사이드바 메뉴 -->
-    <th:block th:fragment="sidebar">
-        <ul class="sidebar-menu" id="boardSidebar">
-            <!-- 동적으로 로드됨 -->
-        </ul>
-    </th:block>
+
 </head>
 <body>
 <div th:fragment="content">
@@ -96,7 +91,7 @@
 
             <!-- 일정 목록 -->
             <div class="schedule-list-section">
-                <h3 class="list-title">일정 목록</h3>
+                <h3 class="list-title" id="scheduleListTitle">일정 목록</h3>
                 <div class="schedule-list" id="scheduleList">
                     <!-- 일정 목록은 JavaScript에서 동적으로 생성 -->
                 </div>

@@ -21,12 +21,6 @@
         <script th:src="@{/js/schedule/schedule.js}"></script>
     </th:block>
 
-    <!-- 사이드바 메뉴 -->
-    <th:block th:fragment="sidebar">
-        <ul class="sidebar-menu" id="boardSidebar">
-            <!-- 동적으로 로드됨 -->
-        </ul>
-    </th:block>
 </head>
 <body>
 <div th:fragment="content">
@@ -56,7 +50,6 @@
         <div class="schedule-controls">
             <div class="filter-section">
                 <div class="filter-group">
-                    <label class="filter-label">조직</label>
                     <div id="orgFilter" class="org-filter-checkbox-list">
                         <!-- 조직 목록은 JavaScript에서 동적으로 로드 -->
                     </div>
@@ -109,7 +102,7 @@
 
             <!-- 일정 목록 -->
             <div class="schedule-list-section">
-                <h3 class="list-title">일정 목록</h3>
+                <h3 class="list-title" id="scheduleListTitle">일정 목록</h3>
                 <div class="schedule-list" id="scheduleList">
                     <!-- 일정 목록은 JavaScript에서 동적으로 생성 -->
                 </div>
@@ -130,7 +123,8 @@
                     <!-- 제목 -->
                     <div class="form-group">
                         <label for="scheduleTitle" class="form-label">
-                            제목 <span class="char-count" id="titleCharCount">(0/20)</span> <span class="required">*</span>
+                            제목 <span class="char-count" id="titleCharCount">(0/20)</span> <span
+                                class="required">*</span>
                         </label>
                         <input type="text"
                                id="scheduleTitle"
@@ -171,9 +165,11 @@
                                 시작 시간 <span class="required">*</span>
                             </label>
                             <div class="time-select-wrapper">
-                                <select id="scheduleStartHour" name="startHour" class="form-input time-select" required></select>
+                                <select id="scheduleStartHour" name="startHour" class="form-input time-select"
+                                        required></select>
                                 <span class="time-separator">:</span>
-                                <select id="scheduleStartMinute" name="startMinute" class="form-input time-select" required></select>
+                                <select id="scheduleStartMinute" name="startMinute" class="form-input time-select"
+                                        required></select>
                             </div>
                         </div>
                     </div>
@@ -193,9 +189,11 @@
                                 종료 시간 <span class="required">*</span>
                             </label>
                             <div class="time-select-wrapper">
-                                <select id="scheduleEndHour" name="endHour" class="form-input time-select" required></select>
+                                <select id="scheduleEndHour" name="endHour" class="form-input time-select"
+                                        required></select>
                                 <span class="time-separator">:</span>
-                                <select id="scheduleEndMinute" name="endMinute" class="form-input time-select" required></select>
+                                <select id="scheduleEndMinute" name="endMinute" class="form-input time-select"
+                                        required></select>
                             </div>
                         </div>
                     </div>
