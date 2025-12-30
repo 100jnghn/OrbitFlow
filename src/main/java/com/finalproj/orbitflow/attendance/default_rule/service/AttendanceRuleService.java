@@ -2,18 +2,16 @@ package com.finalproj.orbitflow.attendance.default_rule.service;
 
 import com.finalproj.orbitflow.attendance.default_rule.dto.AttRuleResDto;
 import com.finalproj.orbitflow.attendance.default_rule.dto.AttRuleUpdateReqDto;
-import com.finalproj.orbitflow.attendance.default_rule.dto.EmployeeSearchDto;
+import com.finalproj.orbitflow.attendance.default_rule.entity.AttendanceRule;
+import com.finalproj.orbitflow.attendance.default_rule.repository.AttendanceRuleRepository;
 import com.finalproj.orbitflow.attendance.exception_rule.dto.EmpAttRuleCreateReqDto;
 import com.finalproj.orbitflow.attendance.exception_rule.dto.EmpAttRuleResDto;
 import com.finalproj.orbitflow.attendance.exception_rule.dto.EmpAttRuleUpdateReqDto;
-import com.finalproj.orbitflow.attendance.default_rule.entity.AttendanceRule;
 import com.finalproj.orbitflow.attendance.exception_rule.entity.EmployeeAttRule;
-import com.finalproj.orbitflow.attendance.default_rule.repository.AttendanceRuleRepository;
 import com.finalproj.orbitflow.attendance.exception_rule.repository.EmployeeAttRuleRepository;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -134,12 +132,6 @@ public class AttendanceRuleService {
         validateCompanyAccess(admin.getCompanyId(), rule.getCompanyId());
 
         employeeRuleRepository.delete(rule);
-    }
-
-    public List<EmployeeSearchDto> searchEmployees(Long companyId, String keyword) {
-        return employeeRepository.searchByCompanyIdAndKeyword(companyId, keyword).stream()
-                .map(EmployeeSearchDto::from)
-                .collect(Collectors.toList());
     }
 
     // =======================================================

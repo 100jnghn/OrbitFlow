@@ -368,4 +368,11 @@ public class EmployeeService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<EmployeeSearchDto> searchEmployees(Long companyId, String keyword) {
+        return employeeRepository.searchByCompanyIdAndKeyword(companyId, keyword).stream()
+                .map(EmployeeSearchDto::from)
+                .toList();
+    }
+
 }

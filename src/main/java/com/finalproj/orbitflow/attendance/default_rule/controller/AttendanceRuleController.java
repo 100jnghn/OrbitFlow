@@ -2,11 +2,10 @@ package com.finalproj.orbitflow.attendance.default_rule.controller;
 
 import com.finalproj.orbitflow.attendance.default_rule.dto.AttRuleResDto;
 import com.finalproj.orbitflow.attendance.default_rule.dto.AttRuleUpdateReqDto;
-import com.finalproj.orbitflow.attendance.default_rule.dto.EmployeeSearchDto;
+import com.finalproj.orbitflow.attendance.default_rule.service.AttendanceRuleService;
 import com.finalproj.orbitflow.attendance.exception_rule.dto.EmpAttRuleCreateReqDto;
 import com.finalproj.orbitflow.attendance.exception_rule.dto.EmpAttRuleResDto;
 import com.finalproj.orbitflow.attendance.exception_rule.dto.EmpAttRuleUpdateReqDto;
-import com.finalproj.orbitflow.attendance.default_rule.service.AttendanceRuleService;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import com.finalproj.orbitflow.global.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -80,20 +79,5 @@ public class AttendanceRuleController {
             @PathVariable Long ruleId) {
         attendanceRuleService.deleteExceptionRule(admin, ruleId);
         return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/employees/search")
-    public ResponseEntity<List<EmployeeSearchDto>> searchEmployees(
-            @AuthenticationPrincipal SecurityUser admin,
-            @RequestParam String keyword) {
-        // Validation: 최소 2자, 최대 30자, trim 처리
-        String trimmedKeyword = keyword != null ? keyword.trim() : "";
-        if (trimmedKeyword.length() < 2) {
-            throw new IllegalArgumentException("검색어는 최소 2자 이상이어야 합니다.");
-        }
-        if (trimmedKeyword.length() > 30) {
-            throw new IllegalArgumentException("검색어는 30자 이하여야 합니다.");
-        }
-        return ResponseEntity.ok(attendanceRuleService.searchEmployees(admin.getCompanyId(), trimmedKeyword));
     }
 }
