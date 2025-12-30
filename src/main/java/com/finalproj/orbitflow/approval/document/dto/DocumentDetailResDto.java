@@ -28,23 +28,30 @@ public class DocumentDetailResDto {
     private Long documentId;
     private String title;
     private DocumentStatus status;
+
+    private String submittedBy;
+
     private Instant submittedAt;
 
     private FormTemplateSchema contentSchema;
     private List<ApprovalLineViewResDto> approvalLines;
 
+    boolean myApprovalOrder;
+
     public static DocumentDetailResDto from(
             Document document,
             FormTemplateSchema schema,
-            List<ApprovalLineViewResDto> approvalLines
-    ) {
+            List<ApprovalLineViewResDto> approvalLines,
+            boolean myApprovalOrder) {
         return DocumentDetailResDto.builder()
                 .documentId(document.getId())
                 .title(document.getTitle())
                 .status(document.getStatus())
+                .submittedBy(document.getWriter().getName())
                 .submittedAt(document.getSubmittedAt())
                 .contentSchema(schema)
                 .approvalLines(approvalLines)
+                .myApprovalOrder(myApprovalOrder)
                 .build();
     }
 }
