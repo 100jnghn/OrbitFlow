@@ -364,14 +364,28 @@
 /* =========================
    Status Badge
 ========================= */
+/*.status-badge {*/
+/*    display: inline-block;*/
+/*    padding: 4px 12px;*/
+/*    border-radius: 12px;*/
+/*    font-size: 13px;*/
+/*    font-weight: 600;*/
+/*}*/
+
+/* 상태 배지: 통일된 크기 스타일 */
 .status-badge {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 56px;
+    height: 22px;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-size: 12px;
     font-weight: 600;
-    background: #d4edda;
-    color: #155724;
+    border: 1px solid transparent;
+    line-height: 1;
+    color: dimgray;
 }
 
 /* 상태 셀에 rejectReason tooltip이 있을 때 cursor 변경 */
@@ -390,8 +404,48 @@
     position: relative;
 }
 
-.status-badge-clickable:hover {
-    background: #c3e6cb;
+/* 상태별 배경색 */
+.status-badge-clickable.status-confirmed {
+    background: #f0f9ff; /* 하늘색 */
+    border: 1.2px solid #38bdf8
+}
+
+.status-badge-clickable.status-pending {
+    background: #fffbeb; /* 연노랑색 */
+    border: 1.2px solid #f5c417;
+}
+
+.status-badge-clickable.status-rejected {
+    background: #fef2f2; /* 연분홍 */
+    border: 1.2px solid #f87171;
+}
+
+.status-badge-clickable.status-cancelled {
+    background: #e0e0e0; /* 회색 */
+    border: 1.2px solid #2b2b2b;
+}
+
+/* hover 효과 - 상태별로 어두운 색상 */
+.status-badge-clickable.status-confirmed:hover {
+    background: #bbdefb;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.status-badge-clickable.status-pending:hover {
+    background: #fff59d;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.status-badge-clickable.status-rejected:hover {
+    background: #ef9a9a;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.status-badge-clickable.status-cancelled:hover {
+    background: #bdbdbd;
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -450,18 +504,28 @@
 }
 
 .btn-approve {
-    padding: 6px 12px;
-    border-radius: 4px;
-    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 3px 14px;
+    border-radius: 20px;
+    line-height: 1;
+
+    height: 22px;
+
+    font-size: 12px;
     border: none;
     cursor: pointer;
     transition: background 0.2s;
-    background: #e8f5e9;
-    color: #2e7d32;
+    background: #ecfdf5;
+    color: dimgray;
+
+    border: 1.2px solid #10b981;
 }
 
 .btn-approve:hover {
-    background: #c8e6c9;
+    background: #8ee091;
 }
 
 .btn-approve:disabled {

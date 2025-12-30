@@ -108,6 +108,18 @@ function createStatusCell(reservation) {
     badge.dataset.reservationId = reservation.reservationId;
     badge.dataset.currentStatusId = reservation.reservationStatusId;
     
+    // 상태별 클래스 추가
+    const statusName = reservation.reservationStatusName;
+    if (statusName === '예약 확정') {
+        badge.classList.add('status-confirmed');
+    } else if (statusName === '승인 대기') {
+        badge.classList.add('status-pending');
+    } else if (statusName === '예약 반려') {
+        badge.classList.add('status-rejected');
+    } else if (statusName === '예약 취소') {
+        badge.classList.add('status-cancelled');
+    }
+    
     badge.addEventListener('click', (e) => {
         e.stopPropagation();
         // tooltip 숨기기
