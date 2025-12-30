@@ -67,7 +67,11 @@ async function loadOrganizations() {
 
     const json = await res.json();
     allOrgList = json.data || [];
-    applyFilterAndRender();
+    filteredOrgList = allOrgList;
+
+    expandedSet.clear();
+    renderTree();
+    initSortable();
     resetOrderChanged();
 }
 
@@ -76,49 +80,6 @@ async function loadOrgCategories() {
     const json = await res.json();
     orgCategories = (json.data || []).filter(c => c.isActive === true);
 }
-
-/* ======================
-   Filter + Render
-====================== */
-function applyFilterAndRender() {
-    const keyword = els.search().value.trim().toLowerCase();
-    const includeInactive = els.includeInactive().checked;
-
-    // 검색어 없을 때 → 기존 전체 트리
-    if (!keyword) {
-        filteredOrgList = allOrgList.filter(o =>
-            includeInactive || normalizeActive(o)
-        );
-
-        renderTree();
-        initSortable();
-        return;
-    }
-
-    // 검색어 있을 때
-    const includeDescendants = els.includeDescendants().checked;
-    const visibleIds = collectMatchedOrgIds(keyword, includeDescendants);
-
-    filteredOrgList = allOrgList.filter(o => {
-        // 회사(최상위 parent=null)는 제외
-        if (o.parentOrgId === null) return false;
-
-        if (!includeInactive && !normalizeActive(o)) return false;
-
-        return visibleIds.has(o.id);
-    });
-
-    // 부모 자동 펼침
-    filteredOrgList.forEach(o => expandParents(o));
-
-    renderTree();
-
-    // 검색 중 정렬 비활성화
-    destroySortable();
-    els.btnSaveOrder().disabled = true;
-    isOrderChanged = false;
-}
-
 
 /* ======================
    Render Tree
@@ -276,17 +237,16 @@ async function saveOrder() {
    Events
 ====================== */
 function bindEvents() {
-    els.search().addEventListener('input', applyFilterAndRender);
-    els.includeInactive().addEventListener('change', loadOrganizations);
-    els.btnSearch().addEventListener('click', applyFilterAndRender);
+    els.search().addEventListener('input', loadOrganizationsWithSearch);
+    els.btnSearch().addEventListener('click', loadOrganizationsWithSearch);
+    els.includeDescendants().addEventListener('change', loadOrganizationsWithSearch);
+    els.includeInactive().addEventListener('change', loadOrganizationsWithSearch);
 
     els.btnCreate().addEventListener('click', openCreate);
     els.btnSaveOrder().addEventListener('click', saveOrder);
     els.btnCloseIcon().addEventListener('click', closeModal);
     els.btnCancel().addEventListener('click', closeModal);
     els.btnSave().addEventListener('click', saveOrg);
-
-    els.includeDescendants().addEventListener('change', applyFilterAndRender);
 }
 
 /* ======================
@@ -515,74 +475,6 @@ function focusFirstMatch(keyword) {
     setTimeout(() => el.classList.remove('org-focus'), 1500);
 }
 
-function groupHasKeyword(root, keyword) {
-    const stack = [root];
-
-    while (stack.length) {
-        const cur = stack.pop();
-
-        if (cur.name.toLowerCase().includes(keyword)) {
-            return true;
-        }
-
-        const children = allOrgList.filter(o => o.parentOrgId === cur.id);
-        stack.push(...children);
-    }
-
-    return false;
-}
-
-function expandParentsByKeyword(root, keyword) {
-    const stack = [root];
-
-    while (stack.length) {
-        const cur = stack.pop();
-
-        if (cur.name.toLowerCase().includes(keyword)) {
-            expandParents(cur);
-        }
-
-        const children = allOrgList.filter(o => o.parentOrgId === cur.id);
-        stack.push(...children);
-    }
-}
-
-function collectMatchedOrgIds(keyword, includeDescendants) {
-    const result = new Set();
-
-    allOrgList.forEach(org => {
-        if (!org.name.toLowerCase().includes(keyword)) return;
-
-        // 1. 자기 자신
-        result.add(org.id);
-
-        // 2. 부모 체인
-        let cur = org;
-        while (cur.parentOrgId) {
-            const parent = allOrgList.find(o => o.id === cur.parentOrgId);
-            if (!parent) break;
-            result.add(parent.id);
-            cur = parent;
-        }
-
-        // 3. 하위 조직 (옵션 ON일 때만)
-        if (includeDescendants) {
-            collectDescendants(org.id, result);
-        }
-    });
-
-    return result;
-}
-
-function collectDescendants(parentId, set) {
-    allOrgList
-        .filter(o => o.parentOrgId === parentId)
-        .forEach(child => {
-            if (set.has(child.id)) return;
-            set.add(child.id);
-            collectDescendants(child.id, set);
-        });
-}
 
 async function loadPositionPolicies(orgId, orgCategoryId) {
 
@@ -683,3 +575,33 @@ document.getElementById('policyHeadFilter')
     .addEventListener('change', () =>
         renderPolicyTable(currentOrgCategoryId)
     );
+
+
+
+async function loadOrganizationsWithSearch() {
+    const keyword = els.search().value.trim();
+    const includeInactive = els.includeInactive().checked;
+    const includeDescendants = els.includeDescendants().checked;
+
+    const params = new URLSearchParams({
+        includeInactive,
+        includeDescendants
+    });
+
+    if (keyword) {
+        params.append('keyword', keyword);
+    }
+
+    const res = await apiFetch(`${API_BASE}?${params.toString()}`);
+    const json = await res.json();
+
+    allOrgList = json.data || [];
+    filteredOrgList = allOrgList;
+
+    expandedSet.clear();
+    allOrgList.forEach(o => expandParents(o));
+
+    renderTree();
+    destroySortable();
+    resetOrderChanged();
+}

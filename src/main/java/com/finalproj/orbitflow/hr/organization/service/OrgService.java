@@ -92,6 +92,79 @@ public class OrgService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<OrgResDto> search(
+            Long companyId,
+            String keyword,
+            boolean includeInactive,
+            boolean includeDescendants
+    ) {
+        String normalized = keyword.trim().toLowerCase();
+
+        // 기준 데이터 로딩
+        List<Organization> baseList = includeInactive
+                ? orgRepository.findByCompanyIdOrderByIsActiveDescParentOrgIdAscOrderIndexAsc(companyId)
+                : orgRepository.findByCompanyIdAndIsActiveTrueOrderByParentOrgIdAscOrderIndexAsc(companyId);
+
+        // 빠른 탐색용 Map
+        var orgMap = baseList.stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        Organization::getId,
+                        o -> o
+                ));
+
+        // 검색 히트 조직
+        var matched = baseList.stream()
+                .filter(o -> o.getName().toLowerCase().contains(normalized))
+                .toList();
+
+        java.util.Set<Long> resultIds = new java.util.HashSet<>();
+
+        for (Organization org : matched) {
+
+            // 2-1) 자기 자신
+            resultIds.add(org.getId());
+
+            // 2-2) 부모 체인 포함
+            Long cursor = org.getParentOrgId();
+            while (cursor != null) {
+                Organization parent = orgMap.get(cursor);
+                if (parent == null) break;
+                resultIds.add(parent.getId());
+                cursor = parent.getParentOrgId();
+            }
+
+            // 2-3) 하위 조직 포함 (옵션)
+            if (includeDescendants) {
+                collectDescendants(org.getId(), orgMap, resultIds);
+            }
+        }
+
+        // 결과 DTO 변환
+        return baseList.stream()
+                .filter(o -> resultIds.contains(o.getId()))
+                .map(OrgResDto::from)
+                .toList();
+    }
+
+    /**
+     * 하위 조직 재귀 수집
+     */
+    private void collectDescendants(
+            Long parentId,
+            java.util.Map<Long, Organization> orgMap,
+            java.util.Set<Long> result
+    ) {
+        orgMap.values().stream()
+                .filter(o -> parentId.equals(o.getParentOrgId()))
+                .forEach(child -> {
+                    if (result.add(child.getId())) {
+                        collectDescendants(child.getId(), orgMap, result);
+                    }
+                });
+    }
+
+
     /* ================= 수정 ================= */
     public void update(Long companyId, Long organizationId, OrgUpdateReqDto request) {
 
