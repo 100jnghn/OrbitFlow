@@ -281,6 +281,20 @@ public class MessageService {
     @Transactional
     public Long sendMessage(Long companyId, Long senderEmployeeId, MessageReqDto.Send request) {
 
+        // 제목 및 내용 글자수 검증
+        if (request.getMessageTitle() != null && request.getMessageTitle().length() > 100) {
+            throw new InvalidRequestException("제목은 100자 이하여야 합니다.");
+        }
+        
+        if (request.getMessageContent() != null && request.getMessageContent().length() > 3000) {
+            throw new InvalidRequestException("내용은 3,000자 이하여야 합니다.");
+        }
+        
+        // 공백만 입력된 내용 검증
+        if (request.getMessageContent() != null && request.getMessageContent().trim().isEmpty()) {
+            throw new InvalidRequestException("공백만 입력된 내용은 전송할 수 없습니다.");
+        }
+
         // 발신자
         Employee sender = employeeRepository.findById(senderEmployeeId)
                 .orElseThrow(() -> new NotFoundException("발신자 정보를 찾을 수 없습니다."));
