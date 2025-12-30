@@ -35,10 +35,14 @@ public class ScheduleSummary extends BaseEntity {
     private Employee employee;
 
     // MySQL의 TEXT 타입 매핑
-    @Column(name = "week_summary", columnDefinition = "TEXT")
-    private String weekSummary;
+    @Column(name = "daily_summary", columnDefinition = "TEXT")
+    private String dailySummary;
 
-    @Column(name = "month_summary", columnDefinition = "TEXT")
-    private String monthSummary;
+    @Column(name = "weekly_summary", columnDefinition = "TEXT")
+    private String weeklySummary;
 
+    public void update(String dailySummary, String weeklySummary) {
+        this.dailySummary = dailySummary;
+        this.weeklySummary = weeklySummary;
+    }
 }

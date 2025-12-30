@@ -22,17 +22,29 @@ public class QScheduleSummary extends EntityPathBase<ScheduleSummary> {
 
     public static final QScheduleSummary scheduleSummary = new QScheduleSummary("scheduleSummary");
 
+    public final com.finalproj.orbitflow.global.common.QBaseEntity _super = new com.finalproj.orbitflow.global.common.QBaseEntity(this);
+
     public final com.finalproj.orbitflow.hr.company.entity.QCompany company;
 
-    public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
+    //inherited
+    public final DateTimePath<java.time.Instant> createdAt = _super.createdAt;
+
+    //inherited
+    public final NumberPath<Long> createdBy = _super.createdBy;
+
+    public final StringPath dailySummary = createString("dailySummary");
 
     public final com.finalproj.orbitflow.hr.employee.entity.QEmployee employee;
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
-    public final StringPath monthSummary = createString("monthSummary");
+    //inherited
+    public final NumberPath<Long> modifiedBy = _super.modifiedBy;
 
-    public final StringPath weekSummary = createString("weekSummary");
+    //inherited
+    public final DateTimePath<java.time.Instant> updatedAt = _super.updatedAt;
+
+    public final StringPath weeklySummary = createString("weeklySummary");
 
     public QScheduleSummary(String variable) {
         this(ScheduleSummary.class, forVariable(variable), INITS);

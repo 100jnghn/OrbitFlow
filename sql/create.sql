@@ -1131,8 +1131,8 @@ CREATE TABLE schedule_summary
     id            BIGINT AUTO_INCREMENT,
     company_id    BIGINT NOT NULL,
     employee_id   BIGINT NOT NULL,
-    week_summary  TEXT,
-    month_summary TEXT,
+    daily_summary TEXT,
+    weekly_summary  TEXT,
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     CONSTRAINT fk_schedule_summary_company
