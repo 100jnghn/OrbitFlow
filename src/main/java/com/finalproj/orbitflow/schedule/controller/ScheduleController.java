@@ -111,6 +111,20 @@ public class ScheduleController {
         );
     }
 
+    @GetMapping("/schedules/organizations/schedule")
+    public ResponseEntity<ResponseDto> getDateOrganizationSchedules(
+            @AuthenticationPrincipal SecurityUser user,
+            @RequestParam List<Long> orgIds,
+            @RequestParam LocalDate date
+    ) {
+        Long companyId = user.getCompanyId();
+        List<ScheduleResDto> schedules = scheduleService.getDateOrganizationSchedules(companyId, orgIds, date);
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, "조직 일정 검색 성공", schedules)
+        );
+    }
+
     /**
      * 사용자 - 개인 일정 조회
      * 월 단위 조회, 주 단위 검색

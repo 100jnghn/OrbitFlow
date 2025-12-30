@@ -333,14 +333,12 @@ function searchMessages() {
 // 날짜 필터 설정 및 검색 입력 엔터 키 이벤트
 function setupDateFilter() {
     const dateFilter = document.getElementById('dateFilter');
-    if (!dateFilter) return;
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    
+    if (!dateFilter || !startDateInput || !endDateInput) return;
     
     dateFilter.addEventListener('change', function() {
-        const startDateInput = document.getElementById('startDate');
-        const endDateInput = document.getElementById('endDate');
-        
-        if (!startDateInput || !endDateInput) return;
-        
         if (this.value === 'custom') {
             startDateInput.style.display = 'inline-block';
             endDateInput.style.display = 'inline-block';
@@ -361,9 +359,36 @@ function setupDateFilter() {
             }
             
             if (this.value !== '') {
-                startDateInput.value = startDate.toISOString().split('T')[0];
-                endDateInput.value = today.toISOString().split('T')[0];
+                const startDateStr = startDate.toISOString().split('T')[0];
+                const endDateStr = today.toISOString().split('T')[0];
+                startDateInput.value = startDateStr;
+                endDateInput.value = endDateStr;
+                // 시작일 설정 시 종료일의 최소값 설정
+                endDateInput.min = startDateStr;
             }
+        }
+    });
+    
+    // 시작일 변경 시 종료일의 최소값 설정
+    startDateInput.addEventListener('change', function() {
+        const startDate = this.value;
+        if (startDate) {
+            // 종료일의 최소값을 시작일로 설정
+            endDateInput.min = startDate;
+            // 종료일이 시작일보다 이전이면 시작일로 변경
+            if (endDateInput.value && endDateInput.value < startDate) {
+                endDateInput.value = startDate;
+            }
+        }
+    });
+    
+    // 종료일 변경 시 시작일보다 이전인지 확인
+    endDateInput.addEventListener('change', function() {
+        const endDate = this.value;
+        const startDate = startDateInput.value;
+        if (startDate && endDate && endDate < startDate) {
+            alert('종료일은 시작일보다 이전일 수 없습니다.');
+            this.value = startDate;
         }
     });
     

@@ -24,4 +24,9 @@ public class ScheduleViewController {
     public String getSchedulePage() {
         return "schedule/schedule";
     }
+
+    @GetMapping("/schedule/organization")
+    public String getOrganizationSchedulePage() {
+        return "schedule/organization-schedule";
+    }
 }

@@ -48,6 +48,7 @@ public class BoardPermissionResDto {
             private Long employeeId;
             private String employeeNumber; // 사번 (Employee.employeeNo)
             private String name; // 이름 (Employee.name)
+            private String email; // 이메일 (Employee.email)
             private String departmentName; // 부서 이름 (Employee.organization.name)
             private String rankName; // 직급 이름 (Employee.rank.name)
 
@@ -56,6 +57,7 @@ public class BoardPermissionResDto {
                         .employeeId(employee.getId())
                         .employeeNumber(employee.getEmployeeNo())
                         .name(employee.getName())
+                        .email(employee.getEmail() != null ? employee.getEmail() : "")
                         // Organization과 Rank 엔티티에서 이름을 가져온다고 가정
                         .departmentName(employee.getOrganization() != null ? employee.getOrganization().getName() : "부서 정보 없음")
                         .rankName(employee.getRank() != null ? employee.getRank().getName() : "직급 정보 없음")

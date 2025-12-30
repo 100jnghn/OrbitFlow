@@ -285,6 +285,7 @@ async function openEditBoardModal(boardId) {
                     id: p.employeeInfo.employeeId,
                     name: p.employeeInfo.name,
                     employeeNo: p.employeeInfo.employeeNumber,
+                    email: p.employeeInfo.email || '',
                     rankName: p.employeeInfo.rankName,
                     departmentName: p.employeeInfo.departmentName,
                     permissionId: p.permissionId // 권한 제거를 위한 ID 저장
@@ -506,7 +507,7 @@ function displayEmployeeSearchResults(employees) {
         item.className = 'employee-item';
         item.innerHTML = `
             <div class="employee-name">${escapeHTML(emp.name)}</div>
-            <div class="employee-details">${escapeHTML(emp.employeeNo)} | ${escapeHTML(emp.organizationName || '')} | ${escapeHTML(emp.positionName || '')}</div>
+            <div class="employee-details">${escapeHTML(emp.employeeNo)} | ${escapeHTML(emp.email || '')} | ${escapeHTML(emp.organizationName || '')} | ${escapeHTML(emp.positionName || '')}</div>
         `;
         item.addEventListener('click', () => selectEmployee(emp));
         list.appendChild(item);
@@ -556,6 +557,7 @@ async function selectEmployee(employee) {
                     id: employee.id,
                     name: employee.name,
                     employeeNo: employee.employeeNo,
+                    email: employee.email || '',
                     rankName: employee.positionName || '',
                     departmentName: employee.organizationName || '',
                     permissionId: permission.permissionId // 권한 ID 저장
@@ -567,6 +569,7 @@ async function selectEmployee(employee) {
                     id: employee.id,
                     name: employee.name,
                     employeeNo: employee.employeeNo,
+                    email: employee.email || '',
                     rankName: employee.positionName || '',
                     departmentName: employee.organizationName || '',
                     permissionId: null
@@ -583,6 +586,7 @@ async function selectEmployee(employee) {
             id: employee.id,
             name: employee.name,
             employeeNo: employee.employeeNo,
+            email: employee.email || '',
             rankName: employee.positionName || '',
             departmentName: employee.organizationName || '',
             permissionId: null
@@ -667,10 +671,11 @@ function renderSelectedEmployees() {
         const permissionIdValue = emp.permissionId ? emp.permissionId : 'null';
         console.log('Rendering employee:', emp.name, 'permissionId:', permissionIdValue, 'isEditMode:', isEditMode);
         
-        // 사원 정보를 한 줄로 표시: 이름 | 사번 | 부서 | 직급
+        // 사원 정보를 한 줄로 표시: 이름 | 사번 | 이메일 | 부서 | 직급
         const employeeInfoText = [
             escapeHTML(emp.name || ''),
             escapeHTML(emp.employeeNo || ''),
+            escapeHTML(emp.email || ''),
             escapeHTML(emp.departmentName || ''),
             escapeHTML(emp.rankName || '')
         ].filter(item => item).join(' | ');

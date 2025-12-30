@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
@@ -37,6 +38,20 @@ public class OrgUserController {
 
         return ResponseEntity.ok(
                 new ResponseDto<>(HttpStatus.OK, "소속 조직도 조회 성공", orgsByEmployeeId)
+        );
+    }
+
+    // 특정 조직 카테고리에 해당하는 조직들 조회
+    @GetMapping("/by-category/{categoryId}")
+    public ResponseEntity<ResponseDto<List<OrgResDto>>> listByCategory(
+            @PathVariable Long categoryId
+    ) {
+        return ResponseEntity.ok(
+                new ResponseDto<>(
+                        HttpStatus.OK,
+                        "조직 카테고리별 조직 조회 성공",
+                        orgService.findByCategory(SecurityUtils.getCompanyId(), categoryId)
+                )
         );
     }
 }
