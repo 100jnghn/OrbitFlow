@@ -176,6 +176,8 @@
         document.getElementById('personalToggle').classList.toggle('active', showPersonal);
         selectedDate = null; // 날짜 선택 초기화
         loadSchedules();
+        // 날짜가 선택되지 않았으면 일정 목록 초기화
+        renderScheduleList([]);
     }
 
     // 전사 일정 토글
@@ -184,35 +186,54 @@
         document.getElementById('companyToggle').classList.toggle('active', showCompany);
         selectedDate = null; // 날짜 선택 초기화
         loadSchedules();
+        // 날짜가 선택되지 않았으면 일정 목록 초기화
+        renderScheduleList([]);
     }
 
     // 조직 필터 변경 핸들러
     function handleOrgFilterChange() {
         const checkedBoxes = document.querySelectorAll('#orgFilter .org-filter-checkbox:checked');
         selectedOrgIds = Array.from(checkedBoxes).map(cb => cb.value);
-        selectedDate = null; // 날짜 선택 초기화
+        
         loadSchedules();
+        
+        // 날짜가 선택되어 있으면 해당 날짜의 일정 다시 로드
+        if (selectedDate) {
+            loadDateSchedules(selectedDate);
+        } else {
+            // 날짜가 선택되지 않았으면 일정 목록 초기화
+            renderScheduleList([]);
+        }
     }
 
-    // 날짜별 일정 로드
+    // 날짜별 일정 로드 (캘린더에 표시된 일정 중에서 필터링)
     async function loadDateSchedules(date) {
         try {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const dateStr = `${year}-${month}-${day}`;
+            // 캘린더에 표시된 일정 필터링
+            let filtered = [...schedules];
 
-            const response = await apiFetch(`/api/schedules/schedule?date=${dateStr}`);
-            if (!response.ok) {
-                if (response.status === 401) {
-                    location.href = '/login';
-                    return;
+            // 개인/전사 일정 필터 적용
+            filtered = filtered.filter(s => {
+                if (s.company) {
+                    return showCompany;
+                } else if (s.orgId) {
+                    // 조직 일정은 선택된 조직만 표시
+                    return selectedOrgIds.includes(String(s.orgId));
+                } else {
+                    return showPersonal;
                 }
-                throw new Error('일정을 불러오는데 실패했습니다.');
-            }
+            });
 
-            const result = await response.json();
-            const dateSchedules = result.data || [];
+            // 선택된 날짜의 일정만 필터링
+            const dateSchedules = filtered.filter(s => {
+                const start = new Date(s.startAt);
+                const end = new Date(s.endAt);
+                const dayStart = new Date(date);
+                dayStart.setHours(0, 0, 0, 0);
+                const dayEnd = new Date(date);
+                dayEnd.setHours(23, 59, 59, 999);
+                return start <= dayEnd && end >= dayStart;
+            });
 
             // 선택된 날짜의 일정만 목록에 표시
             renderScheduleList(dateSchedules);
@@ -296,8 +317,8 @@
             if (s.company) {
                 return showCompany;
             } else if (s.orgId) {
-                // 조직 일정은 항상 표시 (이미 selectedOrgIds로 필터링됨)
-                return true;
+                // 조직 일정은 선택된 조직만 표시
+                return selectedOrgIds.includes(String(s.orgId));
             } else {
                 return showPersonal;
             }
@@ -305,10 +326,13 @@
 
         renderCalendar(filtered);
         
-        // // 날짜가 선택되지 않은 경우에만 필터링된 일정 표시
-        // if (!selectedDate) {
-        //     renderScheduleList(filtered);
-        // }
+        // 날짜가 선택되지 않은 경우 일정 목록 초기화
+        if (!selectedDate) {
+            renderScheduleList([]);
+        } else {
+            // 날짜가 선택되어 있으면 해당 날짜의 일정 다시 로드
+            loadDateSchedules(selectedDate);
+        }
     }
 
     // 캘린더 렌더링
