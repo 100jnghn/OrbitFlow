@@ -348,12 +348,48 @@ function updateReservationForm() {
     }
     
     // 신청 버튼 활성화/비활성화
-    const submitBtn = document.getElementById('btn-submit');
-    if (selectedRoom && selectedStartHour !== null && selectedEndHour !== null) {
-        submitBtn.disabled = false;
-    } else {
-        submitBtn.disabled = true;
+    updateSubmitButtonState();
+}
+
+/* ==========================
+   Validation Functions
+========================== */
+function showMsg(el, message, type) {
+    el.textContent = message;
+    el.className = 'hint ' + type;
+}
+
+function validateReservationReason(showEmptyMessage = true) {
+    const reasonInput = document.getElementById('reservation-reason');
+    const reasonMsg = document.getElementById('reservation-reason-msg');
+    const v = reasonInput.value.trim();
+
+    if (!v) {
+        if (showEmptyMessage) {
+            showMsg(reasonMsg, '신청 사유를 입력해주세요.', 'error');
+        } else {
+            reasonMsg.textContent = '';
+            reasonMsg.className = 'hint';
+        }
+        return false;
     }
+
+    if (v.length > 200) {
+        showMsg(reasonMsg, `최대 200자까지 입력 가능합니다. (${v.length}/200)`, 'error');
+        return false;
+    }
+
+    showMsg(reasonMsg, `${v.length}/200`, 'success');
+    return true;
+}
+
+function updateSubmitButtonState() {
+    const submitBtn = document.getElementById('btn-submit');
+    const isValid = selectedRoom &&
+                    selectedStartHour !== null &&
+                    selectedEndHour !== null &&
+                    validateReservationReason(false);
+    submitBtn.disabled = !isValid;
 }
 
 /* ==========================
@@ -367,8 +403,7 @@ async function submitReservation() {
     
     const reason = document.getElementById('reservation-reason').value.trim();
     
-    if (!reason) {
-        alert('신청 사유를 입력해주세요.');
+    if (!validateReservationReason()) {
         return;
     }
     
@@ -399,6 +434,11 @@ async function submitReservation() {
         
         // 입력 초기화
         document.getElementById('reservation-reason').value = '';
+        const reasonMsg = document.getElementById('reservation-reason-msg');
+        if (reasonMsg) {
+            reasonMsg.textContent = '';
+            reasonMsg.className = 'hint';
+        }
         clearSelection();
         loadReservations(selectedDate);
         
@@ -429,9 +469,14 @@ function initEventListeners() {
         btnSubmit.disabled = true;
     }
     
-    // Enter 키로 예약
+    // 신청 사유 입력 필드
     const reasonInput = document.getElementById('reservation-reason');
     if (reasonInput) {
+        reasonInput.addEventListener('input', () => {
+            validateReservationReason();
+            updateSubmitButtonState();
+        });
+
         reasonInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !btnSubmit.disabled) {
                 submitReservation();

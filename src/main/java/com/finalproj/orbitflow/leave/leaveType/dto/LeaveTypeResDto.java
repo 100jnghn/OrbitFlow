@@ -1,19 +1,15 @@
 package com.finalproj.orbitflow.leave.leaveType.dto;
 
 import com.finalproj.orbitflow.leave.leaveType.entity.LeaveType;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-/**
- * Please explain the class!!!
- *
- * @author : Choi MinHyeok
- * @filename : LeaveTypeResDto
- * @since : 25. 12. 27. 토요일
- **/
-
-@Data
+@Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class LeaveTypeResDto {
     private Long typeId;
     private String typeName;

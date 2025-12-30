@@ -47,31 +47,51 @@
         <div class="board-search-section">
             <div class="search-filters">
                 <div class="date-field-wrapper">
+                    <label for="startDate">
+                        <i class="fas fa-calendar-alt" style="margin-right: 6px; color: var(--neutral-500);"></i>
+                        시작일
+                    </label>
                     <input type="date" id="startDate" class="date-input">
                     <span class="error-message" id="startDateError"></span>
                 </div>
                 <div class="date-field-wrapper">
+                    <label for="endDate">
+                        <i class="fas fa-calendar-alt" style="margin-right: 6px; color: var(--neutral-500);"></i>
+                        종료일
+                    </label>
                     <input type="date" id="endDate" class="date-input">
                     <span class="error-message" id="endDateError"></span>
                 </div>
                 
-                <select id="statusFilter" class="filter-select">
-                    <option value="ALL">전체 상태</option>
-                    <option value="ON_TIME">정상</option>
-                    <option value="LATE">지각</option>
-                    <option value="ABSENT">결근</option>
-                </select>
+                <div class="filter-select-wrapper">
+                    <label for="statusFilter">
+                        <i class="fas fa-filter" style="margin-right: 6px; color: var(--neutral-500);"></i>
+                        상태 필터
+                    </label>
+                    <select id="statusFilter" class="filter-select">
+                        <option value="ALL">전체 상태</option>
+                        <option value="ON_TIME">정상</option>
+                        <option value="LATE">지각</option>
+                        <option value="ABSENT">결근</option>
+                    </select>
+                </div>
                 
                 <div class="search-input-wrapper">
+                    <label for="searchKeyword">
+                        <i class="fas fa-user" style="margin-right: 6px; color: var(--neutral-500);"></i>
+                        검색
+                    </label>
                     <input type="text" id="searchKeyword" class="search-input" 
                            placeholder="이름 또는 사번 입력" maxlength="100"
                            onkeyup="if(window.event.keyCode==13){handleSearch()}">
                     <span class="error-message" id="searchKeywordError"></span>
                 </div>
                 
-                <button type="button" class="btn-search" onclick="handleSearch()">
-                    <i class="fas fa-search"></i> 검색
-                </button>
+                <div style="display: flex; align-items: end;">
+                    <button type="button" class="btn-search" onclick="handleSearch()">
+                        <i class="fas fa-search"></i> 검색
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -107,32 +127,36 @@
         </div>
     </div>
 
-    <div id="correctionModal" class="modal-overlay" style="display: none;">
-        <div class="modal-window">
+    <!-- 근태 기록 정정 모달 -->
+    <div id="correctionModal" class="modal" style="display: none;">
+        <div class="modal-content">
             <div class="modal-header">
                 <h3>근태 기록 정정</h3>
-                <button class="close-btn" onclick="closeModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="targetAttendanceId">
-                <div class="form-item">
-                    <label>변경할 상태</label>
+                <div class="form-group">
+                    <label for="modalStatus">변경할 상태</label>
                     <select id="modalStatus" class="form-select">
                         <option value="ON_TIME">정상 출근</option>
                         <option value="LATE">지각</option>
                         <option value="ABSENT">결근</option>
                     </select>
                 </div>
-                <div class="form-item">
-                    <label>정정 사유 <small class="text-danger">*</small></label>
+                <div class="form-group">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <label for="modalReason" style="margin: 0;">정정 사유 <span style="color: var(--danger-color);">*</span></label>
+                        <span id="charCount" style="font-size: 12px; color: var(--neutral-500);">0 / 40</span>
+                    </div>
                     <textarea id="modalReason" class="form-textarea"
-                              placeholder="사유를 입력하세요 (예: 단말기 오류, 외근 후 퇴근 등)" maxlength="255"></textarea>
+                              placeholder="사유를 입력하세요 (예: 단말기 오류, 외근 후 퇴근 등)" 
+                              maxlength="40" rows="4"></textarea>
                     <span class="error-message" id="modalReasonError"></span>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn-cancel" onclick="closeModal()">닫기</button>
-                <button class="btn-save" onclick="submitCorrection()">저장하기</button>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()" type="button">닫기</button>
+                <button class="btn-submit" onclick="submitCorrection()" type="button">저장하기</button>
             </div>
         </div>
     </div>

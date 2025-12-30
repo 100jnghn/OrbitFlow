@@ -13,7 +13,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class DailyAttRecordResDto {
-    private String date;           // "12월 01일 (월)"
+    private String date;           // "12월 29일(월)"
     private String commuteAt;      // "08:58"
     private String leaveAt;        // "18:05" 또는 "미기록"
     private String workingTime;    // "8h 07m"

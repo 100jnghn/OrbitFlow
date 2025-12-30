@@ -1,77 +1,31 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-<!-- 예약 영역 전용 사이드바 메뉴 -->
-<ul th:fragment="menu">
-    <li class="sidebar-section-title">내 예약</li>
-    <li th:classappend="${currentMenu} == 'my-reservation' ? ' selected' : ''">
-        <a th:href="@{/view/reservation/me}" class="sidebar-link">
-            <i class="fas fa-calendar-check"></i>
-            내 예약 현황
-        </a>
-    </li>
-
-    <li class="sidebar-section-title">자원 예약</li>
-    <li class="sidebar-toggle-item">
-        <div class="sidebar-toggle-header" onclick="toggleSidebarMenu(this)">
-            <i class="fas fa-calendar-plus"></i>
-            <span>자원 예약</span>
-            <i class="fas fa-chevron-down toggle-icon"></i>
-        </div>
-        <ul class="sidebar-submenu">
-            <li th:classappend="${currentMenu} == 'meeting-reservation' ? ' selected' : ''">
-                <a th:href="@{/view/reservation/meetingroom}" class="sidebar-link">
-                    <i class="fas fa-door-open"></i>
-                    회의실 예약
-                </a>
-            </li>
-            <li th:classappend="${currentMenu} == 'car-reservation' ? ' selected' : ''">
-                <a th:href="@{/view/reservation/car}" class="sidebar-link">
-                    <i class="fas fa-car"></i>
-                    차량 예약
-                </a>
-            </li>
-            <li th:classappend="${currentMenu} == 'item-reservation' ? ' selected' : ''">
-                <a th:href="@{/view/reservation/item}" class="sidebar-link">
-                    <i class="fas fa-box"></i>
-                    기타 자원 예약
-                </a>
-            </li>
-        </ul>
-    </li>
-</ul>
-
-<script th:inline="javascript">
-    function toggleSidebarMenu(element) {
-        const parentLi = element.parentElement;
-        const submenu = parentLi.querySelector('.sidebar-submenu');
-        const icon = element.querySelector('.toggle-icon');
-
-        // 토글
-        if (submenu.style.maxHeight && submenu.style.maxHeight !== '0px') {
-            submenu.style.maxHeight = '0px';
-            icon.style.transform = 'rotate(0deg)';
-            parentLi.classList.remove('expanded');
-        } else {
-            submenu.style.maxHeight = submenu.scrollHeight + 'px';
-            icon.style.transform = 'rotate(180deg)';
-            parentLi.classList.add('expanded');
-        }
-    }
-
-    // 페이지 로드 시 현재 메뉴가 서브메뉴에 있으면 자동으로 펼치기
-    document.addEventListener('DOMContentLoaded', function() {
-        const currentMenu = /*[[${currentMenu}]]*/ '';
-        const reservationMenus = ['meeting-reservation', 'car-reservation', 'item-reservation'];
-
-        if (reservationMenus.includes(currentMenu)) {
-            const toggleHeader = document.querySelector('.sidebar-toggle-header');
-            if (toggleHeader) {
-                toggleSidebarMenu(toggleHeader);
-            }
-        }
-    });
-</script>
+<!-- 사이드바 메뉴 -->
+<th:block th:fragment="sidebar">
+    <ul class="sidebar-menu">
+        <li class="menu-item no-sub">
+            <a th:href="@{/view/reservation/me}" class="sidebar-link" id="myReservationLink">
+                나의 예약 현황
+            </a>
+        </li>
+        <li class="menu-item no-sub">
+            <a th:href="@{/view/reservation/meetingroom}" class="sidebar-link" id="meetingRoomLink">
+                회의실 예약
+            </a>
+        </li>
+        <li class="menu-item no-sub">
+            <a th:href="@{/view/reservation/car}" class="sidebar-link" id="carLink">
+                차량 예약
+            </a>
+        </li>
+        <li class="menu-item no-sub">
+            <a th:href="@{/view/reservation/item}" class="sidebar-link" id="otherResourceLink">
+                기타 자원 예약
+            </a>
+        </li>
+    </ul>
+</th:block>
 </body>
 </html>
 

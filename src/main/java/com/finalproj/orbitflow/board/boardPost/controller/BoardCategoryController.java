@@ -36,8 +36,8 @@ public class BoardCategoryController {
             throw new UnauthorizedException("인증 정보가 없습니다.");
         }
 
-        List<BoardCategoryResDto.Category> boards =
-                boardCategoryService.getAccessibleBoards(user.getCompanyId(), user.getEmployeeId());
+        List<BoardCategoryResDto.Category> boards = 
+                boardCategoryService.getAccessibleBoards(user.getCompanyId(), user.getEmployeeId(), user.getRole());
 
         return ResponseEntity.ok(
                 new ResponseDto<>(HttpStatus.OK, "권한이 있는 게시판 목록 조회 성공", boards)

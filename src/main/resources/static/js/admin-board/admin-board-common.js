@@ -285,6 +285,7 @@ async function openEditBoardModal(boardId) {
                     id: p.employeeInfo.employeeId,
                     name: p.employeeInfo.name,
                     employeeNo: p.employeeInfo.employeeNumber,
+                    email: p.employeeInfo.email || '',
                     rankName: p.employeeInfo.rankName,
                     departmentName: p.employeeInfo.departmentName,
                     permissionId: p.permissionId // 권한 제거를 위한 ID 저장
@@ -422,28 +423,27 @@ async function handleBoardSubmit(e) {
 }
 
 // 사원 검색
-async function searchEmployee() {
-    const searchInput = document.getElementById('employeeSearchInput');
-    const keyword = searchInput?.value.trim(); // trim은 하지만 공백 포함 검색 허용을 위해 원본 값 사용
+async function searchEmployee(keyword) {
+    // keyword 파라미터가 없으면 input에서 가져오기 (기존 호출 방식 지원)
+    if (!keyword) {
+        const searchInput = document.getElementById('employeeSearchInput');
+        keyword = searchInput?.value.trim();
+    }
     
-    // 에러 메시지 초기화
-    hideError('employeeSearchError');
-    const resultsDiv = document.getElementById('employeeSearchResults');
-    if (resultsDiv) {
-        resultsDiv.innerHTML = '';
-    }
-
-    // Validation: 최소 2자, 최대 30자
     if (!keyword || keyword.length < 2) {
-        showError('employeeSearchError', '검색어는 최소 2자 이상 입력해주세요.');
         return;
     }
-
+    
+    // 최대 30자 제한
     if (keyword.length > 30) {
-        showError('employeeSearchError', '검색어는 30자 이하여야 합니다.');
         return;
     }
-
+    
+    const resultsDiv = document.getElementById('employeeSearchResults');
+    if (!resultsDiv) {
+        return;
+    }
+    
     try {
         const response = await apiFetch(`${EMPLOYEE_SEARCH_API}?keyword=${encodeURIComponent(keyword)}`, {
             method: 'GET',
@@ -463,22 +463,12 @@ async function searchEmployee() {
         const result = await response.json();
         // ResponseDto 구조인 경우 data 추출, 아니면 직접 사용
         const employees = result.data || result;
-        
-        // 검색 결과가 50건 이상이면 안내 메시지만 표시 (검색 결과는 표시하지 않음)
-        if (Array.isArray(employees) && employees.length >= 50) {
-            showError('employeeSearchError', '검색 결과가 너무 많습니다. 검색어를 더 입력해주세요.');
-            if (resultsDiv) {
-                resultsDiv.innerHTML = '';
-            }
-        } else {
-            displayEmployeeSearchResults(employees);
-            // 검색 성공 시 에러 메시지 숨김
-            hideError('employeeSearchError');
-        }
+        displayEmployeeSearchResults(Array.isArray(employees) ? employees : []);
     } catch (error) {
         console.error('Error searching employees:', error);
-        if (error.message !== 'SESSION_EXPIRED') {
-            showError('employeeSearchError', '사원 검색에 실패했습니다.');
+        if (resultsDiv) {
+            resultsDiv.innerHTML = '<div class="no-results error">검색 중 오류가 발생했습니다.</div>';
+            resultsDiv.style.display = 'block';
         }
     }
 }
@@ -486,10 +476,22 @@ async function searchEmployee() {
 // 사원 검색 결과 표시
 function displayEmployeeSearchResults(employees) {
     const resultsDiv = document.getElementById('employeeSearchResults');
+    if (!resultsDiv) {
+        return;
+    }
+    
     resultsDiv.innerHTML = '';
-
+    
+    // 검색 결과가 50건 이상이면 안내 메시지 표시
+    if (Array.isArray(employees) && employees.length >= 50) {
+        resultsDiv.innerHTML = '<div class="no-results">검색 결과가 너무 많습니다. 검색어를 더 입력해주세요.</div>';
+        resultsDiv.style.display = 'block';
+        return;
+    }
+    
     if (employees.length === 0) {
         resultsDiv.innerHTML = '<div class="no-results">검색 결과가 없습니다.</div>';
+        resultsDiv.style.display = 'block';
         return;
     }
 
@@ -506,13 +508,14 @@ function displayEmployeeSearchResults(employees) {
         item.className = 'employee-item';
         item.innerHTML = `
             <div class="employee-name">${escapeHTML(emp.name)}</div>
-            <div class="employee-details">${escapeHTML(emp.employeeNo)} | ${escapeHTML(emp.organizationName || '')} | ${escapeHTML(emp.positionName || '')}</div>
+            <div class="employee-details">${escapeHTML(emp.employeeNo)} | ${escapeHTML(emp.email || '')} | ${escapeHTML(emp.organizationName || '')} | ${escapeHTML(emp.positionName || '')}</div>
         `;
         item.addEventListener('click', () => selectEmployee(emp));
         list.appendChild(item);
     });
 
     resultsDiv.appendChild(list);
+    resultsDiv.style.display = 'block';
 }
 
 // 사원 선택
@@ -556,6 +559,7 @@ async function selectEmployee(employee) {
                     id: employee.id,
                     name: employee.name,
                     employeeNo: employee.employeeNo,
+                    email: employee.email || '',
                     rankName: employee.positionName || '',
                     departmentName: employee.organizationName || '',
                     permissionId: permission.permissionId // 권한 ID 저장
@@ -567,6 +571,7 @@ async function selectEmployee(employee) {
                     id: employee.id,
                     name: employee.name,
                     employeeNo: employee.employeeNo,
+                    email: employee.email || '',
                     rankName: employee.positionName || '',
                     departmentName: employee.organizationName || '',
                     permissionId: null
@@ -583,6 +588,7 @@ async function selectEmployee(employee) {
             id: employee.id,
             name: employee.name,
             employeeNo: employee.employeeNo,
+            email: employee.email || '',
             rankName: employee.positionName || '',
             departmentName: employee.organizationName || '',
             permissionId: null
@@ -667,10 +673,11 @@ function renderSelectedEmployees() {
         const permissionIdValue = emp.permissionId ? emp.permissionId : 'null';
         console.log('Rendering employee:', emp.name, 'permissionId:', permissionIdValue, 'isEditMode:', isEditMode);
         
-        // 사원 정보를 한 줄로 표시: 이름 | 사번 | 부서 | 직급
+        // 사원 정보를 한 줄로 표시: 이름 | 사번 | 이메일 | 부서 | 직급
         const employeeInfoText = [
             escapeHTML(emp.name || ''),
             escapeHTML(emp.employeeNo || ''),
+            escapeHTML(emp.email || ''),
             escapeHTML(emp.departmentName || ''),
             escapeHTML(emp.rankName || '')
         ].filter(item => item).join(' | ');
@@ -793,25 +800,63 @@ window.onclick = function(event) {
     }
 }
 
-// Enter 키로 사원 검색 및 실시간 validation
+// 사원 검색 실시간 검색 설정 (메시지 수신자 검색과 동일한 방식)
 document.addEventListener('DOMContentLoaded', function() {
+    setupEmployeeSearch();
+});
+
+// 사원 검색 실시간 검색 설정
+function setupEmployeeSearch() {
     const searchInput = document.getElementById('employeeSearchInput');
-    if (searchInput) {
-        // Enter 키로 검색
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                searchEmployee();
-            }
-        });
+    const resultsDiv = document.getElementById('employeeSearchResults');
+    
+    if (!searchInput || !resultsDiv) {
+        return;
+    }
+    
+    let searchTimeout;
+    
+    searchInput.addEventListener('input', function() {
+        const keyword = this.value.trim();
         
-        // 입력 시 에러 메시지 초기화 (2자 이상 입력 시에만)
-        searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        
+        // 최소 2자 이상 입력 시에만 검색
+        if (keyword.length < 2) {
+            resultsDiv.innerHTML = '';
+            resultsDiv.style.display = 'none';
+            hideError('employeeSearchError');
+            return;
+        }
+        
+        // 최대 30자 제한
+        if (keyword.length > 30) {
+            hideError('employeeSearchError');
+            return;
+        }
+        
+        searchTimeout = setTimeout(() => {
+            searchEmployee(keyword);
+        }, 300);
+    });
+    
+    // Enter 키로도 검색 가능 (기존 기능 유지)
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            clearTimeout(searchTimeout);
             const keyword = this.value.trim();
             if (keyword.length >= 2 && keyword.length <= 30) {
-                hideError('employeeSearchError');
+                searchEmployee(keyword);
             }
-        });
-    }
-});
+        }
+    });
+    
+    // 외부 클릭 시 검색 결과 닫기
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) {
+            resultsDiv.style.display = 'none';
+        }
+    });
+}
 

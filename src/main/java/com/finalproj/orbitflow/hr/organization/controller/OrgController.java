@@ -124,6 +124,7 @@ public class OrgController {
         );
     }
 
+
     @GetMapping("/{id}/deactivate-check")
     public ResponseEntity<ResponseDto<OrgDeactivateCheckResDto>> checkDeactivate(
             @PathVariable Long id

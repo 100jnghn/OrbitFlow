@@ -20,4 +20,6 @@ public interface LeaveGrantRepository extends JpaRepository<LeaveGrant,Long> {
     boolean existsByEmployeeIdAndGrantTypeAndGrantDate(Long id, String annualRegular, LocalDate today);
 
     List<LeaveGrant> findByCompanyIdAndEmployeeIdOrderByGrantDateDesc(Long companyId, Long employeeId);
+
+    List<LeaveGrant> findByExpirationDateBeforeAndIsExpiredFalse(LocalDate today);
 }

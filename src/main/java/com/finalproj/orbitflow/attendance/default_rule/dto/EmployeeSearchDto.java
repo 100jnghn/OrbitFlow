@@ -14,6 +14,7 @@ public record EmployeeSearchDto(
         Long id,
         String name,
         String employeeNo,
+        String email,
         String organizationName,
         String positionName
 ) {
@@ -23,6 +24,7 @@ public record EmployeeSearchDto(
                 emp.getId(),
                 emp.getName(),
                 emp.getEmployeeNo(),
+                emp.getEmail() != null ? emp.getEmail() : "",
                 emp.getOrganization() != null ? emp.getOrganization().getName() : "",
                 emp.getPositionCategory() != null ? emp.getPositionCategory().getName() : ""
         );

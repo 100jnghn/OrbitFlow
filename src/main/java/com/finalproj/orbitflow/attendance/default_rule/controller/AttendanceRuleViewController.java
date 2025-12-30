@@ -16,7 +16,7 @@ public class AttendanceRuleViewController {
     public String attendanceRulesPage(Model model) {
         model.addAttribute("currentGNB", "admin");
         model.addAttribute("currentMenu", "attendance-rules"); // 규칙 관리 활성화
-        return "admin-attendance/rule";
+        return "admin-attendance/admin-rule";
     }
 
 

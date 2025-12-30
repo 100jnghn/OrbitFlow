@@ -140,8 +140,11 @@ function renderMessageDetail(message) {
             </button>
         `;
     } else if (folderType === 'INBOX') {
-        // 받은 메시지함인 경우 보관함 이동 버튼
+        // 받은 메시지함인 경우 답장 버튼, 보관함 이동 버튼
         actionButtons = `
+            <button type="button" class="btn-reply" onclick="replyMessage()">
+                <i class="fas fa-reply"></i> 답장
+            </button>
             <button type="button" class="btn-archive" onclick="archiveMessage()">
                 <i class="fas fa-archive"></i> 보관함 이동
             </button>
@@ -391,6 +394,37 @@ function formatDateTime(dateString) {
     const minutes = String(date.getMinutes()).padStart(2, '0');
     const seconds = String(date.getSeconds()).padStart(2, '0');
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+// 답장하기
+function replyMessage() {
+    if (!messageDetailData) {
+        alert('메시지 정보를 불러올 수 없습니다.');
+        return;
+    }
+    
+    const senderId = messageDetailData.senderId;
+    const originalTitle = messageDetailData.title || '';
+    const originalContent = messageDetailData.content || '';
+    const originalSenderName = messageDetailData.senderName || '';
+    const originalCreatedAt = messageDetailData.createdAt || '';
+    
+    if (!senderId) {
+        alert('발신자 정보가 없습니다.');
+        return;
+    }
+    
+    // URL 파라미터로 원문 정보 전달
+    const params = new URLSearchParams({
+        replyTo: messageId,
+        senderId: senderId,
+        originalTitle: originalTitle,
+        originalContent: originalContent,
+        originalSenderName: originalSenderName,
+        originalCreatedAt: originalCreatedAt
+    });
+    
+    window.location.href = `/view/message/send?${params.toString()}`;
 }
 
 // HTML 이스케이프

@@ -6,16 +6,17 @@ import com.finalproj.orbitflow.leave.leaveBalance.dto.LeaveBalanceResDto;
 import com.finalproj.orbitflow.leave.leaveBalance.dto.LeaveHistoryResDto;
 import com.finalproj.orbitflow.leave.leaveBalance.entity.LeaveBalance;
 import com.finalproj.orbitflow.leave.leaveBalance.repository.LeaveBalanceRepository;
-import com.finalproj.orbitflow.leave.leaveGrant.entity.LeaveGrant;
-import com.finalproj.orbitflow.leave.leaveGrant.repository.LeaveGrantRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,11 +26,10 @@ import java.util.stream.Collectors;
 public class LeaveBalanceService {
 
     private final LeaveBalanceRepository leaveBalanceRepository;
-    private final LeaveGrantRepository leaveGrantRepository;
     private final AttendanceRecordRepository attendanceRecordRepository;
 
     /**
-     * 특정 사원의 연차 요약 정보 조회 (도안 왼쪽 상단 카드용)
+     * 내 연차 요약 정보 조회
      */
     public LeaveBalanceResDto getMySummary(Long companyId, Long employeeId, Integer year) {
         int targetYear = (year != null) ? year : LocalDate.now().getYear();
@@ -37,11 +37,10 @@ public class LeaveBalanceService {
         LeaveBalance balance = leaveBalanceRepository.findByCompanyIdAndEmployeeIdAndYear(companyId, employeeId, targetYear)
                 .orElseGet(() -> LeaveBalance.builder()
                         .companyId(companyId).employeeId(employeeId).year(targetYear)
-                        .totalGranted(BigDecimal.ZERO).remainingDays(BigDecimal.ZERO)
-                        .build());
+                        .totalGranted(BigDecimal.ZERO).remainingDays(BigDecimal.ZERO).build());
 
-        BigDecimal total = balance.getTotalGranted() != null ? balance.getTotalGranted() : BigDecimal.ZERO;
-        BigDecimal remaining = balance.getRemainingDays() != null ? balance.getRemainingDays() : BigDecimal.ZERO;
+        BigDecimal total = balance.getTotalGranted();
+        BigDecimal remaining = balance.getRemainingDays();
 
         return LeaveBalanceResDto.builder()
                 .year(targetYear)
@@ -51,28 +50,37 @@ public class LeaveBalanceService {
                 .build();
     }
 
+
     /**
-     * [도안 왼쪽] 내 연차 상세 내역 (isCountable == true 인 항목들)
+     *  나의 연차 사용 내역 조회 (차감 항목들) - 페이지네이션
+     * 연차 잔액에서 실제로 차감된 내역(연차, 반차 등)만 조회
      */
-    public List<LeaveHistoryResDto> getAnnualLeaveHistory(Long companyId, Long employeeId) {
-        // 1. 부여 내역 (GRANT)
-        List<LeaveHistoryResDto> history = leaveGrantRepository.findByCompanyIdAndEmployeeIdOrderByGrantDateDesc(companyId, employeeId)
-                .stream().map(this::mapGrantToDto).collect(Collectors.toCollection(ArrayList::new));
-
-        // 2. 사용 내역 중 차감되는 항목만 필터링 (AttendanceRecordRepository에서 명확한 타입 반환 필요)
-        List<LeaveHistoryResDto> usage = attendanceRecordRepository.findByCompanyIdAndEmployeeIdOrderByStartDateDesc(companyId, employeeId)
-                .stream()
-                .filter(r -> r.getLeaveType() != null && Boolean.TRUE.equals(r.getLeaveType().getIsCountable()))
-                .map(this::mapRecordToDto)
-                .collect(Collectors.toList());
-
-        history.addAll(usage);
-        history.sort((a, b) -> b.getActionDate().compareTo(a.getActionDate()));
-        return history;
+    public Page<LeaveHistoryResDto> getAnnualLeaveHistory(Long companyId, Long employeeId, Pageable pageable) {
+        return attendanceRecordRepository.findAnnualLeaveHistory(companyId, employeeId, pageable)
+                .map(this::mapRecordToDto);
     }
 
     /**
-     * [도안 오른쪽] 나의 휴가 신청 현황 조회 (isCountable == false 인 항목들)
+     * [도안 왼쪽] 나의 연차 사용 내역 조회 (차감 항목들) - 필터링 지원
+     * 연차 잔액에서 실제로 차감된 내역(연차, 반차 등)만 조회
+     */
+    public Page<LeaveHistoryResDto> getAnnualLeaveHistory(
+            Long companyId, 
+            Long employeeId, 
+            String typeName,
+            DocumentStatus status,
+            LocalDate startDate,
+            LocalDate endDate,
+            Pageable pageable) {
+        return attendanceRecordRepository.findAnnualLeaveHistoryWithFilters(
+                companyId, employeeId, typeName, status, startDate, endDate, pageable)
+                .map(this::mapRecordToDto);
+    }
+
+
+    /**
+     * [도안 오른쪽] 나의 휴가 신청 현황 조회 (비차감 항목들)
+     * 연차 잔액에 영향을 주지 않는 휴가들(병가, 경조사 등)만 필터링하여 반환
      */
     public List<LeaveHistoryResDto> getOtherLeaveHistory(Long companyId, Long employeeId) {
         return attendanceRecordRepository.findByCompanyIdAndEmployeeIdOrderByStartDateDesc(companyId, employeeId)
@@ -81,47 +89,74 @@ public class LeaveBalanceService {
                 .map(this::mapRecordToDto)
                 .collect(Collectors.toList());
     }
-
-    private LeaveHistoryResDto mapGrantToDto(LeaveGrant grant) {
-        return LeaveHistoryResDto.builder()
-                .title("발생 (" + (grant.getGrantType().contains("REGULAR") ? "정기" : "신입") + " 부여)")
-                .actionDate(grant.getGrantDate().toString())
-                .period("-")
-                .days(grant.getGrantedDays())
-                .type("GRANT")
-                .statusName(grant.getIsExpired() ? "소멸" : "완료")
-                .statusCode(grant.getIsExpired() ? "REJECTED" : "APPROVED")
-                .build();
+    
+    /**
+     * 모든 휴가 이력 조회 (차감/비차감 구분 없이 모든 휴가 종류 포함)
+     */
+    public Page<LeaveHistoryResDto> getAllLeaveHistory(
+            Long companyId,
+            Long employeeId,
+            String typeName,
+            DocumentStatus status,
+            LocalDate startDate,
+            LocalDate endDate,
+            Pageable pageable
+    ) {
+        Page<AttendanceRecord> records;
+        
+        // 필터가 하나라도 있으면 필터링 메서드 사용
+        if (typeName != null || status != null || startDate != null || endDate != null) {
+            records = attendanceRecordRepository.findAllLeaveHistoryWithFilters(
+                    companyId,
+                    employeeId,
+                    typeName,
+                    status,
+                    startDate,
+                    endDate,
+                    pageable
+            );
+        } else {
+            // 필터가 없으면 기본 메서드 사용
+            records = attendanceRecordRepository.findByCompanyIdAndEmployeeIdOrderByStartDateDesc(
+                    companyId,
+                    employeeId,
+                    pageable
+            );
+        }
+        
+        return records.map(this::mapRecordToDto);
     }
 
     private LeaveHistoryResDto mapRecordToDto(AttendanceRecord r) {
-        String typeName = r.getLeaveType().getTypeName();
-        String displayPeriod = r.getStartDate().toString();
+        // LeaveType 정보 추출
+        String typeName = r.getLeaveType() != null ? r.getLeaveType().getTypeName() : "미지정";
+        String typeDescription = r.getLeaveType() != null ? r.getLeaveType().getDescription() : null;
 
-        // 도안 반영: 반차 명칭 및 기간 텍스트 처리
-        if (typeName.contains("반차")) {
-            displayPeriod += " (" + typeName.substring(0, 2) + ")";
-        } else if (r.getEndDate() != null && !r.getStartDate().equals(r.getEndDate())) {
-            displayPeriod = r.getStartDate() + " ~ " + r.getEndDate();
+        // 기간 포맷팅: 하루여도 시작일~종료일 형식으로 표시 (공백 없음)
+        String displayPeriod;
+        if (r.getEndDate() != null) {
+            displayPeriod = r.getStartDate() + "~" + r.getEndDate();
+        } else {
+            displayPeriod = r.getStartDate() + "~" + r.getStartDate();
         }
 
-        // [해결] Instant 타입의 createdAt을 한국 시간대 LocalDate로 변환하여 '신청일' 생성
+        // 신청일 추출 (Instant -> LocalDate 변환)
         String actionDate = r.getCreatedAt()
                 .atZone(ZoneId.of("Asia/Seoul"))
                 .toLocalDate()
                 .toString();
 
-        // Enum 상태값을 문자열로 변환하여 처리
-        String statusNameStr = (r.getStatus() != null) ? r.getStatus().name() : "SUBMITTED";
-
+        // AttendanceRecord의 reason 필드 포함
         return LeaveHistoryResDto.builder()
-                .title(typeName)
-                .actionDate(actionDate) // 변환된 신청일 매핑
-                .period(displayPeriod)
-                .days(r.getDays())
+                .title(typeName)                      // LeaveType.typeName
+                .actionDate(actionDate)               // AttendanceRecord.createdAt
+                .period(displayPeriod)                // AttendanceRecord.startDate ~ endDate
+                .days(r.getDays())                    // AttendanceRecord.days
                 .type("USED")
-                .statusName(mapStatusText(statusNameStr))
-                .statusCode(statusNameStr)
+                .statusName(mapStatusText(r.getStatus().name()))  // AttendanceRecord.status
+                .statusCode(r.getStatus().name())
+                .reason(r.getReason())                // AttendanceRecord.reason
+                .typeDescription(typeDescription)     // LeaveType.description
                 .build();
     }
 
