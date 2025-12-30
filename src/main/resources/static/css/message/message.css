@@ -609,6 +609,18 @@
     margin-bottom: 20px;
 }
 
+/* 파일 업로드 섹션 간격 조정 */
+.message-send-form .form-group:nth-of-type(3) {
+    margin-top: -8px;
+    margin-bottom: 20px;
+}
+
+/* 내용 섹션 간격 조정 - 제목, 수신자, 파일과 동일한 간격 */
+.message-send-form .form-group:nth-of-type(4) {
+    margin-top: 8px;
+    margin-bottom: 20px;
+}
+
 .form-group label {
     display: block;
     font-size: 16px;
