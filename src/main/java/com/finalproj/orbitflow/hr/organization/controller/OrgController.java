@@ -47,17 +47,31 @@ public class OrgController {
                 ));
     }
 
-    @GetMapping()
-    public ResponseEntity<ResponseDto<List<OrgResDto>>> list(
-            @RequestParam(defaultValue = "false") boolean includeInactive
+    @GetMapping
+    public ResponseEntity<ResponseDto<List<OrgResDto>>> listOrSearch(
+            @RequestParam(defaultValue = "false") boolean includeInactive,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "false") boolean includeDescendants
     ) {
         Long companyId = SecurityUtils.getCompanyId();
 
+        // 검색어 없으면 기존 목록
+        if (keyword == null || keyword.isBlank()) {
+            return ResponseEntity.ok(
+                    new ResponseDto<>(
+                            HttpStatus.OK,
+                            "조직 목록 조회",
+                            orgService.findAll(companyId, includeInactive)
+                    )
+            );
+        }
+
+        // 검색어 있으면 검색
         return ResponseEntity.ok(
                 new ResponseDto<>(
                         HttpStatus.OK,
-                        "조직 목록 조회",
-                        orgService.findAll(companyId, includeInactive)
+                        "조직 검색 결과 조회",
+                        orgService.search(companyId, keyword, includeInactive, includeDescendants)
                 )
         );
     }
