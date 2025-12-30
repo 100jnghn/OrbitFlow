@@ -3,7 +3,7 @@
       th:replace="~{layout/layout-user :: layout(
         ~{::content},
         ~{fragments/header :: header},
-        ~{::sidebar},
+        ~{sidebar/schedule/user-schedule-sidebar :: sidebar},
         ~{::pageCss},
         ~{::pageScript}
       )}">
@@ -21,12 +21,7 @@
         <script th:src="@{/js/schedule/organization-schedule.js}"></script>
     </th:block>
 
-    <!-- 사이드바 메뉴 -->
-    <th:block th:fragment="sidebar">
-        <ul class="sidebar-menu" id="boardSidebar">
-            <!-- 동적으로 로드됨 -->
-        </ul>
-    </th:block>
+
 </head>
 <body>
 <div th:fragment="content">
@@ -40,14 +35,21 @@
         <div class="schedule-controls">
             <div class="filter-section">
                 <div class="filter-group">
-                    <label for="orgCategorySelect" class="filter-label">조직 카테고리</label>
+                    <div class="filter-label-wrapper">
+                        <label for="orgCategorySelect" class="filter-label">조직 카테고리</label>
+                    </div>
                     <select id="orgCategorySelect" class="form-input filter-select">
                         <option value="">전체</option>
                         <!-- 조직 카테고리 목록은 JavaScript에서 동적으로 로드 -->
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label class="filter-label">조직</label>
+                    <div class="filter-label-wrapper">
+                        <label class="filter-label">조직</label>
+                        <div class="checkbox-control-buttons">
+                            <button type="button" class="btn-checkbox-control" id="toggleAllBtn">전체</button>
+                        </div>
+                    </div>
                     <div id="orgFilter" class="org-filter-checkbox-list">
                         <!-- 조직 목록은 JavaScript에서 동적으로 로드 -->
                     </div>
@@ -89,7 +91,7 @@
 
             <!-- 일정 목록 -->
             <div class="schedule-list-section">
-                <h3 class="list-title">일정 목록</h3>
+                <h3 class="list-title" id="scheduleListTitle">일정 목록</h3>
                 <div class="schedule-list" id="scheduleList">
                     <!-- 일정 목록은 JavaScript에서 동적으로 생성 -->
                 </div>

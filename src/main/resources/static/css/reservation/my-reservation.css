@@ -191,19 +191,21 @@
 .resource-table th:nth-child(6),
 .resource-table td:nth-child(6),
 .resource-table th:nth-child(7),
-.resource-table td:nth-child(7) {
-    text-align: center;
-}
-
-/* 상태 열 - 중앙 정렬 */
+.resource-table td:nth-child(7),
 .resource-table th:nth-child(8),
 .resource-table td:nth-child(8) {
     text-align: center;
 }
 
-/* 취소 열 - 중앙 정렬 */
+/* 상태 열 - 중앙 정렬 */
 .resource-table th:nth-child(9),
 .resource-table td:nth-child(9) {
+    text-align: center;
+}
+
+/* 취소 열 (마지막 열) - 중앙 정렬 */
+.resource-table th:last-child,
+.resource-table td:last-child {
     text-align: center;
 }
 
@@ -219,53 +221,45 @@
     border-bottom: none;
 }
 
-/* =========================
-   Category Badge
-========================= */
-.category-badge {
-    display: inline-flex;        /* 중앙 정렬을 더 안정적으로 */
-    align-items: center;
-    justify-content: center;
-
-    width: 90px;                 /* 모든 badge 동일한 너비 */
-    height: 30px;                /* 동일한 높이 */
-
-    border-radius: 13px;
-    font-size: 12px;
-    font-weight: 600;
-
-    white-space: nowrap;         /* 줄바꿈 방지 */
-}
-
-/* 하늘색 */
-.badge-meeting {
-    background-color: #e3f2fd;
-    color: #1e88e5;
-}
-
-/* 연두색 */
-.badge-car {
-    background-color: #e8f5e9;
-    color: #43a047;
-}
-
-/* 연노랑 */
-.badge-etc {
-    background-color: #fff8e1;
-    color: #f9a825;
-}
 
 /* =========================
    Status Badge
 ========================= */
+/* 상태 배지: 통일된 크기 스타일 */
 .status-badge {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 56px;
+    height: 22px;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-size: 12px;
     font-weight: 600;
-    background: #d4edda;
-    color: #155724;
+    border: 1px solid transparent;
+    line-height: 1;
+    color: dimgray;
+}
+
+/* 상태별 배경색 */
+.status-badge.status-confirmed {
+    background: #f0f9ff; /* 하늘색 */
+    border: 1.2px solid #38bdf8;
+}
+
+.status-badge.status-pending {
+    background: #fffbeb; /* 연노랑색 */
+    border: 1.2px solid #f5c417;
+}
+
+.status-badge.status-rejected {
+    background: #fef2f2; /* 연분홍 */
+    border: 1.2px solid #f87171;
+}
+
+.status-badge.status-cancelled {
+    background: #e0e0e0; /* 회색 */
+    border: 1.2px solid #2b2b2b;
 }
 
 /* 상태 셀에 rejectReason tooltip이 있을 때 cursor 변경 */
@@ -282,12 +276,19 @@
 }
 
 .btn-cancel {
-    padding: 6px 12px;
-    border-radius: 4px;
-    font-size: 13px;
-    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 56px;
+    height: 22px;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1.2px solid #c62828;
+    line-height: 1;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s;
     background: #ffebee;
     color: #c62828;
 }
@@ -431,6 +432,56 @@
 }
 
 /* 카테고리 셀 hover 지원 */
-.resource-table td[data-fulltext] .category-badge {
-    pointer-events: none;
+
+/* 사이드바 메뉴 스타일 (message.css와 동일) */
+.sidebar {
+    width: 250px;
+    background: #0b1220 !important;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+}
+
+.sidebar-menu {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 16px 30px !important;
+}
+
+.menu-item.no-sub {
+    position: relative;
+    list-style: none;
+    margin-bottom: 2px;
+}
+
+.menu-item.no-sub a {
+    text-decoration: none;
+    color: #c9ccdd !important;
+    font-size: 15px;
+    display: block;
+    padding: 12px 0;
+    transition: all 0.2s ease;
+}
+
+.menu-item.no-sub a:hover {
+    color: #ffffff !important;
+}
+
+.menu-item.no-sub.selected a {
+    color: #5dade2 !important;
+    font-weight: 700 !important;
+    padding-left: 8px;
+}
+
+.menu-item.no-sub.selected a::before {
+    content: '';
+    position: absolute;
+    left: -2px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 4px;
+    background-color: #5dade2;
+    border-radius: 50%;
 }

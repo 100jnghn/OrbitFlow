@@ -27,12 +27,18 @@
         selectedDate = new Date();
         selectedDate.setHours(0, 0, 0, 0);
         
+        // 초기 로드 시 list-title 업데이트
+        updateScheduleListTitle();
+        
         loadSchedules();
         renderCalendar();
         
         // 오늘 날짜의 일정 로드
         if (selectedOrgIds.length > 0) {
             loadDateSchedules(selectedDate);
+        } else {
+            // 조직이 선택되지 않았어도 list-title은 업데이트
+            renderScheduleList([]);
         }
     });
 
@@ -145,6 +151,9 @@
                 checkbox.addEventListener('change', handleOrgFilterChange);
             });
 
+            // 전체 선택/해제 버튼 이벤트 리스너 추가
+            setupCheckboxControlButtons();
+
             // 선택된 조직 ID 초기화
             selectedOrgIds = [];
 
@@ -174,6 +183,28 @@
         
         // 날짜가 선택되지 않았으면 일정 목록 초기화
         renderScheduleList([]);
+    }
+
+    // 전체 선택/해제 버튼 설정
+    function setupCheckboxControlButtons() {
+        const toggleAllBtn = document.getElementById('toggleAllBtn');
+        
+        if (toggleAllBtn) {
+            toggleAllBtn.addEventListener('click', handleToggleAll);
+        }
+    }
+
+    // 전체 선택/해제 토글 핸들러
+    function handleToggleAll() {
+        const checkboxes = document.querySelectorAll('#orgFilter .org-filter-checkbox');
+        const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+        
+        // 모두 선택되어 있으면 모두 해제, 그렇지 않으면 모두 선택
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = !allChecked;
+        });
+        
+        handleOrgFilterChange();
     }
 
     // 조직 필터 변경 핸들러
@@ -379,10 +410,26 @@
         return item;
     }
 
+    // 일정 목록 제목 업데이트
+    function updateScheduleListTitle() {
+        const listTitle = document.getElementById('scheduleListTitle');
+        if (selectedDate) {
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            listTitle.textContent = `${year}년 ${month}월 ${day}일 일정 목록`;
+        } else {
+            listTitle.textContent = '일정 목록';
+        }
+    }
+
     // 일정 목록 렌더링
     function renderScheduleList(filteredSchedules = schedules) {
         const listContainer = document.getElementById('scheduleList');
         listContainer.innerHTML = '';
+
+        // 선택된 날짜에 따라 제목 업데이트
+        updateScheduleListTitle();
 
         if (filteredSchedules.length === 0) {
             listContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--neutral-500);">일정이 없습니다.</div>';

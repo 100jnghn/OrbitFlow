@@ -114,10 +114,16 @@
    Table Container
 ========================= */
 .table-container {
-    background: #fff;
+    margin-bottom: 24px;
+    background: white;
     border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    min-height: 550px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 /* =========================
@@ -125,9 +131,10 @@
 ========================= */
 .resource-table {
     width: 100%;
-    margin-top: 16px;
     border-collapse: collapse;
+    background: #fff;
     table-layout: fixed;
+    height: 100%;
 }
 
 .resource-table thead {
@@ -155,8 +162,20 @@
     color: #495057;
 }
 
+/* 6번째 열 (관리) - 상하좌우 가운데 정렬 */
+.resource-table th:nth-child(6) {
+    text-align: center;
+    vertical-align: middle;
+}
+
 .resource-table td {
     color: #555;
+}
+
+/* 6번째 열 td - 상하좌우 가운데 정렬 */
+.resource-table td:nth-child(6) {
+    text-align: center;
+    vertical-align: middle;
 }
 
 .resource-table td:first-child {
@@ -227,6 +246,8 @@
 ========================= */
 .action-btns {
     display: flex;
+    justify-content: center;
+    align-items: center;
     gap: 8px;
 }
 
@@ -286,15 +307,14 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 24px;
-    padding-top: 20px;
-    border-top: 1px solid #f0f0f0;
 }
 
 .pagination {
     display: flex;
-    gap: 8px;
+    justify-content: center;
     align-items: center;
+    gap: 8px;
+    margin-top: 24px;
 }
 
 .pagination button {

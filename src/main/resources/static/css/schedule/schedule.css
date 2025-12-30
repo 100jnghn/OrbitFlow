@@ -109,14 +109,9 @@
 
 .filter-group {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.filter-label {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--neutral-700);
+    flex-direction: row;
+    gap: 12px;
+    align-items: flex-start;
 }
 
 .filter-select.multi-select {
@@ -139,16 +134,18 @@
 
 /* 조직 필터 체크박스 리스트 */
 .org-filter-checkbox-list {
-    min-width: 200px;
-    max-height: 200px;
+    min-width: 300px;
+    max-width: 600px;
+    width: 100%;
     padding: 8px;
     border: 1px solid var(--neutral-300);
     border-radius: 8px;
     background: white;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    box-sizing: border-box;
+    min-height: 44px;
 }
 
 .org-filter-checkbox-item {
@@ -161,6 +158,9 @@
     transition: background-color 0.2s ease;
     font-size: 14px;
     color: var(--neutral-700);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .org-filter-checkbox-item:hover {
@@ -176,7 +176,6 @@
 }
 
 .org-filter-checkbox-item span {
-    flex: 1;
     user-select: none;
 }
 
@@ -423,10 +422,10 @@
 }
 
 .day-number {
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 10px;
+    font-weight: 500;
     color: var(--neutral-800);
-    margin-bottom: 4px;
+    margin-bottom: 1px;
 }
 
 .calendar-day.today .day-number {
