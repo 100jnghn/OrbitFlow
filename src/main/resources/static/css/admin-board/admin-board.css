@@ -641,13 +641,11 @@
 }
 
 .permission-search {
-    display: flex;
-    gap: 10px;
     margin-bottom: 20px;
 }
 
 .permission-search .form-input {
-    flex: 1;
+    width: 100%;
 }
 
 .btn-search {

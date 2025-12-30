@@ -44,6 +44,7 @@ public class BoardController {
                         user.getCompanyId(),
                         user.getOrganizationId(),
                         categoryId,
+                        user.getRole(),
                         startDate,
                         endDate,
                         searchType,
@@ -70,7 +71,8 @@ public class BoardController {
                 boardService.getBoardDetail(
                         user.getCompanyId(),
                         user.getOrganizationId(), // 없으면 null
-                        boardId
+                        boardId,
+                        user.getRole()
                 );
 
         return ResponseEntity.ok(
