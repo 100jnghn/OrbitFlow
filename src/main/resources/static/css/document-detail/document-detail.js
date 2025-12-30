@@ -77,7 +77,7 @@ function initDocumentDetailPage(data) {
 const vacationTypeMap = new Map();
 
 async function fetchVacationTypes() {
-    const res = await apiFetch('/api/leave-types/all');
+    const res = await apiFetch('/api/leave/types');
     if (!res.ok) return;
 
     const json = await res.json();
@@ -91,10 +91,7 @@ async function fetchVacationTypes() {
    문서 헤더
 =============================== */
 function renderDocumentHeader(data) {
-    const titleEl = document.getElementById("documentTitle");
     const badgeEl = document.getElementById("documentStatusBadge");
-
-    if (titleEl) titleEl.textContent = data.title ?? "-";
 
     if (badgeEl) {
         badgeEl.textContent = getStatusText(data.status);
