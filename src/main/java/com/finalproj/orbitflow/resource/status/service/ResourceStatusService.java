@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.resource.status.service;
 
+import com.finalproj.orbitflow.resource.enums.ResourceStatusCode;
 import com.finalproj.orbitflow.resource.status.dto.ResourceStatusResDto;
 import com.finalproj.orbitflow.resource.status.repository.ResourceStatusRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,10 @@ public class ResourceStatusService {
     public List<ResourceStatusResDto> getResourceStatus() {
         return resourceStatusRepository.findAll()
                 .stream()
+                .filter(resourceStatus ->
+                        resourceStatus.getResourceStatusCode() != ResourceStatusCode.DELETED &&
+                                resourceStatus.getResourceStatusCode() != ResourceStatusCode.ETC
+                )
                 .map(resourceStatus -> ResourceStatusResDto.builder()
                         .id(resourceStatus.getId())
                         .resourceStatusCode(resourceStatus.getResourceStatusCode())

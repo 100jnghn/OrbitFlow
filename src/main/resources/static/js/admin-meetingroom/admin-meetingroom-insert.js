@@ -205,7 +205,11 @@ function handleCancel() {
  */
 async function loadStatusOptions() {
     try {
-        const response = await fetch('/api/admin/resource-status');
+        const response = await apiFetch(
+            '/api/admin/resource-status',
+            {method: 'GET'}
+        );
+
         if (!response.ok) throw new Error();
 
         const result = await response.json();
