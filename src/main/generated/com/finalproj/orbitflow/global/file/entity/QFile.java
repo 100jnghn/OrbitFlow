@@ -22,23 +22,33 @@ public class QFile extends EntityPathBase<File> {
 
     public static final QFile file = new QFile("file");
 
+    public final com.finalproj.orbitflow.global.common.QBaseEntity _super = new com.finalproj.orbitflow.global.common.QBaseEntity(this);
+
     public final com.finalproj.orbitflow.hr.company.entity.QCompany company;
 
     public final StringPath contentType = createString("contentType");
 
-    public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
+    //inherited
+    public final DateTimePath<java.time.Instant> createdAt = _super.createdAt;
 
-    public final com.finalproj.orbitflow.hr.employee.entity.QEmployee createdBy;
+    //inherited
+    public final NumberPath<Long> createdBy = _super.createdBy;
 
     public final NumberPath<Long> fileSize = createNumber("fileSize", Long.class);
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
+
+    //inherited
+    public final NumberPath<Long> modifiedBy = _super.modifiedBy;
 
     public final StringPath objectKey = createString("objectKey");
 
     public final StringPath originFile = createString("originFile");
 
     public final StringPath sysFile = createString("sysFile");
+
+    //inherited
+    public final DateTimePath<java.time.Instant> updatedAt = _super.updatedAt;
 
     public QFile(String variable) {
         this(File.class, forVariable(variable), INITS);
@@ -59,7 +69,6 @@ public class QFile extends EntityPathBase<File> {
     public QFile(Class<? extends File> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.company = inits.isInitialized("company") ? new com.finalproj.orbitflow.hr.company.entity.QCompany(forProperty("company")) : null;
-        this.createdBy = inits.isInitialized("createdBy") ? new com.finalproj.orbitflow.hr.employee.entity.QEmployee(forProperty("createdBy"), inits.get("createdBy")) : null;
     }
 
 }
