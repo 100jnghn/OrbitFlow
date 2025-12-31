@@ -169,7 +169,7 @@ async function handleEdit() {
     };
 
     try {
-        const response = await fetch(
+        const response = await apiFetch(
             `/api/admin/meetingrooms/${currentRoomId}`,
             {
                 method: 'PUT',
@@ -204,7 +204,7 @@ async function handleDelete() {
     }
 
     try {
-        const response = await fetch(
+        const response = await apiFetch(
             `/api/admin/meetingrooms/${currentRoomId}/delete`,
             { method: 'PATCH' }
         );
@@ -223,7 +223,7 @@ async function handleDelete() {
 
 async function loadStatusOptions(selectedStatusId) {
     try {
-        const response = await fetch('/api/admin/resource-status');
+        const response = await apiFetch('/api/admin/resource-status');
 
         if (!response.ok) throw new Error();
 
@@ -253,7 +253,7 @@ async function loadStatusOptions(selectedStatusId) {
 
 async function loadRoomDetail() {
     try {
-        const response = await fetch(`/api/meetingrooms/${currentRoomId}`);
+        const response = await apiFetch(`/api/meetingrooms/${currentRoomId}`);
         if (!response.ok) throw new Error();
 
         const result = await response.json();

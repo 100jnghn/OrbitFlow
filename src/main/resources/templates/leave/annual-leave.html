@@ -8,7 +8,7 @@
       ~{::pageCss}, ~{::pageScript})}">
 <head>
     <th:block th:fragment="pageCss">
-        <link rel="stylesheet" th:href="@{/css/board.css}">
+        <link rel="stylesheet" th:href="@{/css/board/board.css}">
         <link rel="stylesheet" th:href="@{/css/leave/leave.css}">
     </th:block>
 </head>
@@ -39,6 +39,47 @@
             <p class="summary-count count-remaining"><span id="remainingDays">0.0</span> <span class="unit">일</span></p>
         </div>
     </div>
+
+        <!-- 필터 섹션 -->
+        <div class="board-search-section">
+            <div class="search-filters">
+                <div class="filter-select-wrapper">
+                    <label for="filterType" class="filter-label">항목</label>
+                    <select id="filterType" class="filter-select">
+                        <option value="">전체</option>
+                    </select>
+                </div>
+                <div class="filter-select-wrapper">
+                    <label for="filterStatus" class="filter-label">상태</label>
+                    <select id="filterStatus" class="filter-select">
+                        <option value="">전체</option>
+                        <option value="APPROVED">승인</option>
+                        <option value="SUBMITTED">대기</option>
+                        <option value="REJECTED">반려</option>
+                    </select>
+                </div>
+                <div class="date-field-wrapper">
+                    <label for="startDate" class="filter-label">시작일</label>
+                    <input type="date" id="startDate" class="date-input">
+                </div>
+                <div class="date-field-wrapper">
+                    <label for="endDate" class="filter-label">종료일</label>
+                    <input type="date" id="endDate" class="date-input">
+                </div>
+                <div class="button-wrapper">
+                    <label class="filter-label" style="opacity: 0;">버튼</label>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="btn-search" onclick="applyFilters()">
+                            <i class="fas fa-search" style="margin-right: 6px;"></i>
+                            검색
+                        </button>
+                        <button type="button" class="btn-reset" onclick="resetFilters()">
+                            초기화
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- 연차 상세 내역 -->
         <div class="board-table-container">

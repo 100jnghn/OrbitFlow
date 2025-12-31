@@ -3,7 +3,7 @@
       th:replace="~{layout/layout-user :: layout(
         ~{::content},
         ~{fragments/header :: header},
-        ~{::sidebar},
+        ~{sidebar/reservation/user-reservation-sidebar :: sidebar},
         ~{::pageCss},
         ~{::pageScript}
       )}">
@@ -62,11 +62,6 @@
                 <span class="toggle-slider"></span>
             </label>
         </div>
-
-        <!--        <button type="button" class="btn-search" id="btn-search">-->
-        <!--            <i class="fas fa-search"></i>-->
-        <!--            검색-->
-        <!--        </button>-->
     </div>
 
     <!-- Table Container -->
@@ -75,9 +70,10 @@
             <colgroup>
                 <col style="width:5%">
                 <col style="width:10%">
-                <col style="width:16%">
-                <col style="width:30%">
-                <col style="width:10%">
+                <col style="width:15%">
+                <col style="width:22%">
+                <col style="width:8%">
+                <col style="width:8%">
                 <col style="width:7%">
                 <col style="width:7%">
                 <col style="width:10%">
@@ -89,7 +85,8 @@
                 <th>카테고리</th>
                 <th>이름</th>
                 <th>예약 사유</th>
-                <th>예약일</th>
+                <th>시작일</th>
+                <th>종료일</th>
                 <th>시작시간</th>
                 <th>종료시간</th>
                 <th>상태</th>

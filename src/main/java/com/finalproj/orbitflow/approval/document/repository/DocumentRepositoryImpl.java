@@ -180,11 +180,11 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
                                 ApprovalStatus.APPROVED,
                                 ApprovalStatus.REJECTED
                         ))
-                        .then((Integer) null)
+                        .then(0)
 
                         // 현재 결재자가 없는 경우 (완료 상태 등)
                         .when(currentLine.orderNo.isNull())
-                        .then((Integer) null)
+                        .then(0)
 
                         // 정상 계산
                         .otherwise(

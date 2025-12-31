@@ -18,16 +18,17 @@ public class PositionCategoryResDto {
     private Long id;
     private String name;
     private Integer orderIndex;
+    private Boolean isHead;
     private Boolean isActive;
 
 
     public static PositionCategoryResDto from(PositionCategory entity) {
-        return PositionCategoryResDto.builder()
-                .id(entity.getId())
-                .name(entity.getName())
-                .orderIndex(entity.getOrderIndex())
-                .isActive(entity.getIsActive())
-                .build();
+        return new PositionCategoryResDto(
+                entity.getId(),
+                entity.getName(),
+                entity.getOrderIndex(),
+                entity.getIsHead(),
+                entity.getIsActive()
+        );
     }
-
 }

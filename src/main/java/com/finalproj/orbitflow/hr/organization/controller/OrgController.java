@@ -48,16 +48,30 @@ public class OrgController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponseDto<List<OrgResDto>>> list(
-            @RequestParam(defaultValue = "false") boolean includeInactive
+    public ResponseEntity<ResponseDto<List<OrgResDto>>> listOrSearch(
+            @RequestParam(defaultValue = "false") boolean includeInactive,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "false") boolean includeDescendants
     ) {
         Long companyId = SecurityUtils.getCompanyId();
 
+        // 검색어 없으면 기존 목록
+        if (keyword == null || keyword.isBlank()) {
+            return ResponseEntity.ok(
+                    new ResponseDto<>(
+                            HttpStatus.OK,
+                            "조직 목록 조회",
+                            orgService.findAll(companyId, includeInactive)
+                    )
+            );
+        }
+
+        // 검색어 있으면 검색
         return ResponseEntity.ok(
                 new ResponseDto<>(
                         HttpStatus.OK,
-                        "조직 목록 조회",
-                        orgService.findAll(companyId, includeInactive)
+                        "조직 검색 결과 조회",
+                        orgService.search(companyId, keyword, includeInactive, includeDescendants)
                 )
         );
     }
@@ -107,7 +121,9 @@ public class OrgController {
         );
     }
 
-
+    /**
+     * 사용자가 소속한 조직 Hierarchy를 불러오는 api -> 별도의 컨트롤러로 분리
+     */
     @GetMapping("/include-orgs")
     public ResponseEntity<ResponseDto> listByIncludeOrgs() {
         log.info("[include-orgs] API called");
@@ -121,6 +137,7 @@ public class OrgController {
                 new ResponseDto<>(HttpStatus.OK, "소속 조직도 조회 성공", orgsByEmployeeId)
         );
     }
+
 
     @GetMapping("/{id}/deactivate-check")
     public ResponseEntity<ResponseDto<OrgDeactivateCheckResDto>> checkDeactivate(

@@ -299,7 +299,7 @@
 .reservation-input-section {
     display: flex;
     gap: 16px;
-    align-items: flex-end;
+    align-items: flex-start;
 }
 
 .input-wrapper {
@@ -321,12 +321,13 @@
 }
 
 .form-input {
-    width: 95%;
+    width: 100%;
     padding: 12px 14px;
     border: 1px solid #ddd;
     border-radius: 8px;
     font-size: 14px;
     transition: all 0.2s;
+    box-sizing: border-box;
 }
 
 .form-input:focus {
@@ -353,6 +354,8 @@
     color: #fff;
     transition: all 0.2s;
     white-space: nowrap;
+    align-self: flex-start;
+    margin-top: 28px;
 }
 
 .btn-submit:hover {

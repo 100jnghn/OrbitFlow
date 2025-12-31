@@ -95,6 +95,27 @@
     color: #111827;
 }
 
+/* 메시지 배지 */
+.message-badge {
+    position: absolute;
+    top: 2px;
+    right: -14px;
+    background-color: #ef4444;
+    color: #ffffff;
+    border-radius: 10px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    border: 2px solid #ffffff;
+    box-sizing: border-box;
+}
+
 /* 사용자 정보 */
 .header-bar .profile .user-info {
     display: flex;
@@ -119,4 +140,5 @@
 .header-bar .profile .logout:hover {
     color: #ef4444;
 }
+
 

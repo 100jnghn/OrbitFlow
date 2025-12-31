@@ -26,26 +26,24 @@ public class QMessage extends EntityPathBase<Message> {
 
     public final NumberPath<Long> companyId = createNumber("companyId", Long.class);
 
-    public final StringPath content = createString("content");
-
     //inherited
     public final DateTimePath<java.time.Instant> createdAt = _super.createdAt;
 
     //inherited
     public final NumberPath<Long> createdBy = _super.createdBy;
 
-    public final com.finalproj.orbitflow.global.file.entity.QFile file;
+    public final NumberPath<Long> fileId = createNumber("fileId", Long.class);
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
+
+    public final StringPath messageContent = createString("messageContent");
+
+    public final StringPath messageTitle = createString("messageTitle");
 
     //inherited
     public final NumberPath<Long> modifiedBy = _super.modifiedBy;
 
-    public final ListPath<MessageRecipient, QMessageRecipient> recipients = this.<MessageRecipient, QMessageRecipient>createList("recipients", MessageRecipient.class, QMessageRecipient.class, PathInits.DIRECT2);
-
     public final com.finalproj.orbitflow.hr.employee.entity.QEmployee sender;
-
-    public final StringPath title = createString("title");
 
     //inherited
     public final DateTimePath<java.time.Instant> updatedAt = _super.updatedAt;
@@ -68,7 +66,6 @@ public class QMessage extends EntityPathBase<Message> {
 
     public QMessage(Class<? extends Message> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.file = inits.isInitialized("file") ? new com.finalproj.orbitflow.global.file.entity.QFile(forProperty("file"), inits.get("file")) : null;
         this.sender = inits.isInitialized("sender") ? new com.finalproj.orbitflow.hr.employee.entity.QEmployee(forProperty("sender"), inits.get("sender")) : null;
     }
 

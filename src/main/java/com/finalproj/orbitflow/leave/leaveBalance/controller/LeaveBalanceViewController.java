@@ -22,15 +22,17 @@ public class LeaveBalanceViewController {
     public String myLeavePage(Model model) {
         model.addAttribute("currentGNB", "work");
         model.addAttribute("currentMenu", "annual-leave");
+        model.addAttribute("pageTitle", "내 연차 현황");
         return "leave/annual-leave";
     }
-
-    // 기타 휴가 조회
-    @GetMapping("/attendance/other-leave")
-    public String otherLeavePage(Model model) {
+    
+    // 휴가 신청 현황 조회
+    @GetMapping("/attendance/leave-history")
+    public String leaveHistoryPage(Model model) {
         model.addAttribute("currentGNB", "work");
-        model.addAttribute("currentMenu", "other-leave");
-
-        return "leave/other-leave";
+        model.addAttribute("currentMenu", "leave-history");
+        model.addAttribute("pageTitle", "휴가 신청 현황");
+        return "leave/leave-history";
     }
+
 }

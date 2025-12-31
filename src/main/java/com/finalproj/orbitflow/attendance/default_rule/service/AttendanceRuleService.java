@@ -2,18 +2,16 @@ package com.finalproj.orbitflow.attendance.default_rule.service;
 
 import com.finalproj.orbitflow.attendance.default_rule.dto.AttRuleResDto;
 import com.finalproj.orbitflow.attendance.default_rule.dto.AttRuleUpdateReqDto;
-import com.finalproj.orbitflow.attendance.default_rule.dto.EmployeeSearchDto;
+import com.finalproj.orbitflow.attendance.default_rule.entity.AttendanceRule;
+import com.finalproj.orbitflow.attendance.default_rule.repository.AttendanceRuleRepository;
 import com.finalproj.orbitflow.attendance.exception_rule.dto.EmpAttRuleCreateReqDto;
 import com.finalproj.orbitflow.attendance.exception_rule.dto.EmpAttRuleResDto;
 import com.finalproj.orbitflow.attendance.exception_rule.dto.EmpAttRuleUpdateReqDto;
-import com.finalproj.orbitflow.attendance.default_rule.entity.AttendanceRule;
 import com.finalproj.orbitflow.attendance.exception_rule.entity.EmployeeAttRule;
-import com.finalproj.orbitflow.attendance.default_rule.repository.AttendanceRuleRepository;
 import com.finalproj.orbitflow.attendance.exception_rule.repository.EmployeeAttRuleRepository;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,10 +59,15 @@ public class AttendanceRuleService {
         List<EmployeeAttRule> rules = employeeRuleRepository.findByCompanyId(companyId);
 
         // N+1 방지를 위한 Bulk 조회 및 Map 변환
-        Map<Long, String> employeeMap = getEmployeeNameMap(rules);
+        Map<Long, Employee> employeeMap = getEmployeeMap(rules);
 
         return rules.stream()
-                .map(rule -> new EmpAttRuleResDto(rule, employeeMap.getOrDefault(rule.getEmployeeId(), "이름 미확인")))
+                .map(rule -> {
+                    Employee emp = employeeMap.getOrDefault(rule.getEmployeeId(), null);
+                    String name = emp != null ? emp.getName() : "이름 미확인";
+                    String employeeNo = emp != null ? emp.getEmployeeNo() : null;
+                    return new EmpAttRuleResDto(rule, name, employeeNo);
+                })
                 .toList();
     }
 
@@ -72,7 +75,10 @@ public class AttendanceRuleService {
         EmployeeAttRule rule = findExceptionRuleOrThrow(ruleId);
         validateCompanyAccess(companyId, rule.getCompanyId());
 
-        return new EmpAttRuleResDto(rule, getEmployeeName(rule.getEmployeeId()));
+        Employee employee = employeeRepository.findById(rule.getEmployeeId()).orElse(null);
+        String name = employee != null ? employee.getName() : "알 수 없음";
+        String employeeNo = employee != null ? employee.getEmployeeNo() : null;
+        return new EmpAttRuleResDto(rule, name, employeeNo);
     }
 
     @Transactional
@@ -93,7 +99,8 @@ public class AttendanceRuleService {
                 .appliedAt(LocalDateTime.now())
                 .build();
 
-        return new EmpAttRuleResDto(employeeRuleRepository.save(rule), employee.getName());
+        EmployeeAttRule savedRule = employeeRuleRepository.save(rule);
+        return new EmpAttRuleResDto(savedRule, employee.getName(), employee.getEmployeeNo());
     }
 
     @Transactional
@@ -113,7 +120,10 @@ public class AttendanceRuleService {
 
         rule.setAppliedAt(LocalDateTime.now());
 
-        return new EmpAttRuleResDto(rule, getEmployeeName(rule.getEmployeeId()));
+        Employee employee = employeeRepository.findById(rule.getEmployeeId()).orElse(null);
+        String name = employee != null ? employee.getName() : "알 수 없음";
+        String employeeNo = employee != null ? employee.getEmployeeNo() : null;
+        return new EmpAttRuleResDto(rule, name, employeeNo);
     }
 
     @Transactional
@@ -122,12 +132,6 @@ public class AttendanceRuleService {
         validateCompanyAccess(admin.getCompanyId(), rule.getCompanyId());
 
         employeeRuleRepository.delete(rule);
-    }
-
-    public List<EmployeeSearchDto> searchEmployees(Long companyId, String keyword) {
-        return employeeRepository.searchByCompanyIdAndKeyword(companyId, keyword).stream()
-                .map(EmployeeSearchDto::from)
-                .collect(Collectors.toList());
     }
 
     // =======================================================
@@ -161,9 +165,9 @@ public class AttendanceRuleService {
                 .orElse("알 수 없음");
     }
 
-    private Map<Long, String> getEmployeeNameMap(List<EmployeeAttRule> rules) {
+    private Map<Long, Employee> getEmployeeMap(List<EmployeeAttRule> rules) {
         List<Long> employeeIds = rules.stream().map(EmployeeAttRule::getEmployeeId).toList();
         return employeeRepository.findAllByIdIn(employeeIds).stream()
-                .collect(Collectors.toMap(Employee::getId, Employee::getName));
+                .collect(Collectors.toMap(Employee::getId, emp -> emp));
     }
 }

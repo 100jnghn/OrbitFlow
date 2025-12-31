@@ -42,7 +42,7 @@ let leaveTypeCache = null;
 async function loadLeaveTypes() {
     if (leaveTypeCache) return leaveTypeCache;
 
-    const res = await apiFetch('/api/leave-types/all');
+    const res = await apiFetch('/api/leave/types');
     if (!res.ok) {
         showToast('휴가 유형을 불러오지 못했습니다.', 'error');
         return [];

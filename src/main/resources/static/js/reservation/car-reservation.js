@@ -210,11 +210,18 @@ function renderGrid() {
    Check Reservation
 ========================== */
 function checkReservation(carId, dateString) {
-    const reservation = reservations.find(r =>
-        r.resourceId === carId &&
-        r.reservationDate === dateString &&
-        (r.reservationStatusId === 1 || r.reservationStatusId === 2) // 대기 or 확정
-    );
+    const reservation = reservations.find(r => {
+        if (r.resourceId !== carId) return false;
+        if (r.reservationStatusId !== 1 && r.reservationStatusId !== 2) return false; // 대기 or 확정만
+        
+        // 예약 시작 날짜
+        const startDate = r.reservationDate;
+        // 예약 종료 날짜 (없으면 시작 날짜와 동일)
+        const endDate = r.endDate || r.reservationDate;
+        
+        // 날짜 범위 내에 있는지 확인
+        return dateString >= startDate && dateString <= endDate;
+    });
 
     if (reservation) {
         return {

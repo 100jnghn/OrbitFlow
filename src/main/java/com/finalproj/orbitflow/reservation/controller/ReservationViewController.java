@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class ReservationViewController {
 
     // 내 예약 리스트 조회 페이지
-    @GetMapping("reservation/me")
+    @GetMapping("/reservation/me")
     public String getMyReservationPage(Model model) {
         model.addAttribute("pageTitle", "내 예약 현황");
         model.addAttribute("currentGNB", "reservation");
@@ -26,7 +26,7 @@ public class ReservationViewController {
     }
 
     // 회의실 예약 페이지
-    @GetMapping("reservation/meetingroom")
+    @GetMapping("/reservation/meetingroom")
     public String getMeetingReservationPage(Model model) {
         model.addAttribute("pageTitle", "회의실 예약");
         model.addAttribute("currentGNB", "reservation");
@@ -35,7 +35,7 @@ public class ReservationViewController {
     }
 
     // 차량 예약 페이지
-    @GetMapping("reservation/car")
+    @GetMapping("/reservation/car")
     public String getCarReservationPage(Model model) {
         model.addAttribute("pageTitle", "차량 예약");
         model.addAttribute("currentGNB", "reservation");
@@ -44,7 +44,7 @@ public class ReservationViewController {
     }
 
     // 기타 자원 예약 페이지
-    @GetMapping("reservation/item")
+    @GetMapping("/reservation/item")
     public String getItemReservationPage(Model model) {
         model.addAttribute("pageTitle", "기타 자원 예약");
         model.addAttribute("currentGNB", "reservation");

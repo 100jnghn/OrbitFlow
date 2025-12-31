@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- 사이드바 메뉴 -->
+<th:block th:fragment="sidebar">
+    <ul class="sidebar-menu">
+        <li class="menu-item no-sub">
+            <a th:href="@{/view/document/my-documents}" class="sidebar-link" id="myDocumentsLink">
+                기안함
+            </a>
+        </li>
+        <li class="menu-item no-sub">
+            <a th:href="@{/view/document/inbox}" class="sidebar-link" id="inboxLink">
+                결재 대기함
+            </a>
+        </li>
+    </ul>
+</th:block>
+</body>
+</html>
+

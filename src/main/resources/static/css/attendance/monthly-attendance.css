@@ -22,30 +22,67 @@
     width: 100%;
 }
 
-/* 테이블 컬럼 정렬 (근태조회 페이지용) */
+/* 테이블 스타일 통일 (게시판과 동일) */
+#attendanceTable th,
+#attendanceTable td {
+    padding: 14px 16px;
+    font-size: 14px;
+}
+
+#attendanceTable th {
+    font-weight: 600;
+    color: var(--neutral-700);
+    border-bottom: 2px solid var(--neutral-200);
+}
+
+#attendanceTable td {
+    border-bottom: 1px solid var(--neutral-200);
+    color: var(--neutral-600);
+}
+
+#attendanceTable tbody tr:hover {
+    background: var(--neutral-50);
+}
+
+#attendanceTable tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* 테이블 컬럼 정렬 및 너비 (근태조회 페이지용) */
 #attendanceTable th:nth-child(1),
 #attendanceTable td:nth-child(1) {
     text-align: center !important;
+    white-space: nowrap;
+    width: 140px;
+    min-width: 140px;
 }
 
 #attendanceTable th:nth-child(2),
 #attendanceTable td:nth-child(2) {
     text-align: center !important;
+    width: 120px;
+    min-width: 120px;
 }
 
 #attendanceTable th:nth-child(3),
 #attendanceTable td:nth-child(3) {
     text-align: center !important;
+    width: 120px;
+    min-width: 120px;
 }
 
 #attendanceTable th:nth-child(4),
 #attendanceTable td:nth-child(4) {
     text-align: center !important;
+    width: 120px;
+    min-width: 120px;
 }
 
 #attendanceTable th:nth-child(5),
 #attendanceTable td:nth-child(5) {
     text-align: center !important;
+    width: 120px;
+    min-width: 120px;
 }
 
 /* 요약 카드 디자인 */
@@ -97,12 +134,16 @@
     color: #DC2626; 
 }
 
-/* 상태 배지 */
+/* 상태 배지 - 크기 통일 */
 .status-badge {
+    display: inline-block;
     padding: 4px 10px;
     border-radius: 4px;
     font-size: 12px;
     font-weight: 700;
+    min-width: 60px;
+    text-align: center;
+    box-sizing: border-box;
 }
 
 .badge-late { 

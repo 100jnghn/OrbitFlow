@@ -32,6 +32,7 @@
 .sidebar-menu-wrapper {
     flex: 1;
     overflow-y: auto;
+    min-height: 0; /* flexbox에서 스크롤이 작동하도록 */
 }
 
 .sidebar-menu {
@@ -95,11 +96,108 @@
 
 .sidebar-footer {
     margin-top: auto;
-    background: #fff;
-    min-height: 80px;
-    padding: 15px 24px;
-    font-size: 13px;
-    color: #333;
+    background: #0f1729;
+    padding: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0; /* footer가 축소되지 않도록 */
 }
+
+.sidebar-organization {
+    padding: 16px 24px;
+    color: #c9ccdd;
+    max-height: 300px;
+    overflow-y: auto;
+    min-height: 200px; /* 최소 높이 보장 */
+}
+
+.organization-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.organization-tree {
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.organization-tree .org-item {
+    padding: 4px 0;
+    color: #c9ccdd;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.organization-tree .org-item:hover {
+    color: #ffffff;
+}
+
+.organization-tree .org-item.expanded {
+    color: #ffffff;
+}
+
+.organization-tree .org-item .org-name {
+    display: inline-block;
+}
+
+.organization-tree .org-item .org-toggle {
+    display: inline-block;
+    width: 16px;
+    margin-right: 4px;
+    text-align: center;
+    font-size: 10px;
+}
+
+.organization-tree .org-children {
+    margin-left: 20px;
+    margin-top: 4px;
+    display: none;
+}
+
+.organization-tree .org-item.expanded + .org-children,
+.organization-tree .org-item.expanded ~ .org-children {
+    display: block;
+}
+
+.organization-tree .org-employee {
+    padding: 2px 0 2px 20px;
+    color: #9ca3af;
+    font-size: 12px;
+}
+
+.organization-tree .org-employee:hover {
+    color: #c9ccdd;
+}
+
+
+/* 사이드바 내 모든 링크의 기본 스타일 완전 제거 및 흰색 계열 고정 */
+.sidebar-menu li a,
+.sidebar-menu li a:link,
+.sidebar-menu li a:visited,
+.sidebar-menu li a:active,
+.sidebar-menu li a:focus {
+    text-decoration: none !important; /* 밑줄 절대 금지 */
+    color: #c9ccdd !important;       /* 기본 연회색 고정 */
+    outline: none !important;        /* 클릭 시 테두리 제거 */
+    display: block;
+    padding: 8px 0;
+    transition: color 0.2s;
+}
+
+/* 호버 시 흰색으로 밝아짐 */
+.sidebar-menu li:hover a {
+    color: #ffffff !important;
+}
+
+/* 선택된 메뉴는 항상 밝은 흰색 유지 */
+.sidebar-menu li.selected a,
+.sidebar-menu li.selected a:visited {
+    color: #ffffff !important;
+    font-weight: bold;
+}
+
 
 

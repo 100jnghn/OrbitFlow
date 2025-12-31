@@ -16,12 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================
     async function loadDefaultRule() {
         try {
-            const token = sessionStorage.getItem('accessToken');
-            const res = await fetch('/api/admin/rules/default', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const res = await apiFetch('/api/admin/rules/default');
+
             if (res.ok) {
                 const rule = await res.json();
                 if (rule.defaultStartTime) {
@@ -41,18 +37,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('saveDefaultRuleBtn').addEventListener('click', async () => {
         try {
-            const token = sessionStorage.getItem('accessToken');
             const data = {
                 defaultStartTime: document.getElementById('defaultStartTime').value + ":00",
                 defaultEndTime: document.getElementById('defaultEndTime').value + ":00",
                 lateThresholdMin: parseInt(document.getElementById('tardinessMinutes').value)
             };
 
-            const res = await fetch('/api/admin/rules/default', {
+            const res = await apiFetch('/api/admin/rules/default', {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(data)
             });
@@ -75,12 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================
     async function loadExceptionRules() {
         try {
-            const token = sessionStorage.getItem('accessToken');
-            const res = await fetch('/api/admin/rules/exception', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const res = await apiFetch('/api/admin/rules/exception');
 
             if (res.ok) {
                 const rules = await res.json();
@@ -136,6 +125,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // 글자수 카운터 업데이트 함수
+    function updateCharCount(inputId, countId, maxLength) {
+        const inputElement = document.getElementById(inputId);
+        const countElement = document.getElementById(countId);
+        
+        if (!inputElement || !countElement) return;
+        
+        const currentLength = inputElement.value.length;
+        countElement.textContent = `${currentLength} / ${maxLength}`;
+        
+        // 색상 변경
+        countElement.classList.remove('warning', 'error');
+        if (currentLength >= maxLength) {
+            countElement.classList.add('error');
+            countElement.style.color = 'var(--danger-color)';
+        } else if (currentLength >= maxLength * 0.8) {
+            countElement.classList.add('warning');
+            countElement.style.color = 'var(--warning-color)';
+        } else {
+            countElement.style.color = 'var(--neutral-500)';
+        }
+    }
+
     // 모달 열기/닫기 헬퍼 함수
     function openModal(modalElement) {
         modalElement.style.display = 'block';
@@ -145,22 +157,35 @@ document.addEventListener('DOMContentLoaded', () => {
     function closeModal(modalElement) {
         modalElement.style.display = 'none';
         document.body.style.overflow = ''; // 배경 스크롤 복원
+        // 글자수 카운터 초기화
+        if (modalElement.id === 'exceptionRuleModal') {
+            updateCharCount('reason', 'reasonCharCount', 40);
+        } else if (modalElement.id === 'editExceptionRuleModal') {
+            updateCharCount('editReason', 'editReasonCharCount', 40);
+        }
     }
 
     // ============================================
     // 예외 규칙 추가 모달
     // ============================================
-    document.getElementById('addExceptionRuleBtn').addEventListener('click', () => {
-        form.reset();
-        document.getElementById('ruleId').value = '';
-        document.getElementById('selectedEmployeeId').value = '';
-        document.getElementById('selectedEmployeeInfo').style.display = 'none';
-        document.getElementById('employeeSearchResults').innerHTML = '';
-        document.getElementById('employeeSearchInput').value = '';
-        document.getElementById('modalTitle').innerText = '사원별 근태 예외 규칙 추가';
-        clearAllErrors();
-        openModal(modal);
-    });
+    const addBtn = document.getElementById('addExceptionRuleBtn');
+    if (addBtn) {
+        addBtn.addEventListener('click', () => {
+            form.reset();
+            document.getElementById('ruleId').value = '';
+            document.getElementById('selectedEmployeeId').value = '';
+            document.getElementById('selectedEmployeeInfo').style.display = 'none';
+            document.getElementById('employeeSearchResults').innerHTML = '';
+            document.getElementById('employeeSearchInput').value = '';
+            document.getElementById('modalTitle').innerText = '사원별 근태 예외 규칙 추가';
+            clearAllErrors();
+            // 글자수 카운터 초기화
+            setTimeout(() => {
+                updateCharCount('reason', 'reasonCharCount', 40);
+            }, 0);
+            openModal(modal);
+        });
+    }
 
     document.querySelector('#exceptionRuleModal .close').addEventListener('click', () => {
         closeModal(modal);
@@ -239,6 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('reason').addEventListener('input', function() {
         clearFieldError('reasonError', 'reason');
         validateReason();
+        updateCharCount('reason', 'reasonCharCount', 40);
     });
 
     // 개별 필드 에러 초기화 함수
@@ -337,12 +363,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const token = sessionStorage.getItem('accessToken');
-            const res = await fetch(`/api/admin/rules/employees/search?keyword=${encodeURIComponent(keyword)}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const res = await apiFetch(
+                `/api/employees/search?keyword=${encodeURIComponent(keyword)}`
+            );
 
             if (res.ok) {
                 const employees = await res.json();
@@ -551,7 +574,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const validTo = document.getElementById('validTo').value || null;
 
         try {
-            const token = sessionStorage.getItem('accessToken');
             const data = {
                 employeeId: parseInt(employeeId),
                 startTime: startTime ? startTime + ":00" : null,
@@ -562,11 +584,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 validTo: validTo
             };
 
-            const res = await fetch('/api/admin/rules/exception', {
+            const res = await apiFetch('/api/admin/rules/exception', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(data)
             });
@@ -609,12 +630,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================
     async function openEditModal(ruleId) {
         try {
-            const token = sessionStorage.getItem('accessToken');
-            const res = await fetch(`/api/admin/rules/exception/${ruleId}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const res = await apiFetch(`/api/admin/rules/exception/${ruleId}`);
 
             if (res.ok) {
                 const rule = await res.json();
@@ -633,7 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearAllErrors();
         document.getElementById('editRuleId').value = rule.overrideId;
         document.getElementById('editEmployeeInfo').textContent = 
-            `${rule.employeeName || '알 수 없음'} (ID: ${rule.employeeId})`;
+            `${rule.employeeName || '알 수 없음'} (${rule.employeeNo || '사번 없음'})`;
         
         if (rule.validTo) {
             document.getElementById('editOriginalValidTo').textContent = rule.validTo;
@@ -658,6 +674,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.getElementById('editExceptionBreakMinutes').value = rule.breakMinutes || '';
         document.getElementById('editReason').value = rule.reason || '';
+        // 글자수 카운터 업데이트
+        updateCharCount('editReason', 'editReasonCharCount', 40);
     }
 
     document.querySelector('#editExceptionRuleModal .close').addEventListener('click', () => {
@@ -808,6 +826,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (reason && reason.length > 40) {
             showError('editReasonError', '규칙 수정 사유는 40자 이하여야 합니다.');
         }
+        updateCharCount('editReason', 'editReasonCharCount', 40);
     });
 
     function validateEditTimeRange() {
@@ -839,7 +858,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const token = sessionStorage.getItem('accessToken');
             const ruleId = document.getElementById('editRuleId').value;
             const startTime = document.getElementById('editExceptionStartTime').value;
             const endTime = document.getElementById('editExceptionEndTime').value;
@@ -858,11 +876,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 isActive: true
             };
 
-            const res = await fetch(`/api/admin/rules/exception/${ruleId}`, {
+            const res = await apiFetch(`/api/admin/rules/exception/${ruleId}`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(data)
             });
@@ -902,12 +919,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const token = sessionStorage.getItem('accessToken');
-            const res = await fetch(`/api/admin/rules/exception/${ruleId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+            const res = await apiFetch(`/api/admin/rules/exception/${ruleId}`, {
+                method: 'DELETE'
             });
 
             if (res.ok) {

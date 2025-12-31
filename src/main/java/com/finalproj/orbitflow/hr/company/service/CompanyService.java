@@ -183,19 +183,19 @@ public class CompanyService {
             OrgCategory teamCat
     ) {
         positionCategoryRepository.save(
-                PositionCategory.create(company, companyCat, "사장", 1, true)
+                PositionCategory.create(company, companyCat, null, "사장", 1, true)
         );
         positionCategoryRepository.save(
-                PositionCategory.create(company, hqCat, "본부장", 2, true)
+                PositionCategory.create(company, hqCat, null, "본부장", 2, true)
         );
         positionCategoryRepository.save(
-                PositionCategory.create(company, deptCat, "부장", 3, true)
+                PositionCategory.create(company, deptCat, null, "부장", 3, true)
         );
         positionCategoryRepository.save(
-                PositionCategory.create(company, teamCat, "팀장", 4, true)
+                PositionCategory.create(company, teamCat, null, "팀장", 4, true)
         );
         positionCategoryRepository.save(
-                PositionCategory.create(company, teamCat, "팀원", 5, true)
+                PositionCategory.create(company, teamCat, null, "팀원", 5, false)
         );
     }
 

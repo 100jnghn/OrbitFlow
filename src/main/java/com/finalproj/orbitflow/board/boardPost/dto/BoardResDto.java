@@ -101,6 +101,7 @@ public class BoardResDto {
         private Instant createdAt;
         private Instant updatedAt;
         private List<FileInfo> files;
+        private boolean commentActivated; // 댓글 기능 활성화 여부
 
         public static DetailInfo from(Board board) {
             return DetailInfo.builder()
@@ -113,6 +114,7 @@ public class BoardResDto {
                     .createdAt(board.getCreatedAt())
                     .updatedAt(board.getUpdatedAt())
                     .files(FileInfo.fromFiles(board.getFiles()))
+                    .commentActivated(board.getCategory() != null ? board.getCategory().isCommentActivated() : true)
                     .build();
         }
     }

@@ -3,9 +3,10 @@ package com.finalproj.orbitflow.approval.document.dto;
 import com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 /**
  * Please explain the class!!!
@@ -15,7 +16,7 @@ import java.time.Instant;
  * @since : 25. 12. 23. 화요일
  **/
 
-@Getter
+@Data
 @AllArgsConstructor
 @Builder
 public class DocumentMyApprovalListResDto {
@@ -38,4 +39,39 @@ public class DocumentMyApprovalListResDto {
 
     /* ===== 진행 상태 보조 정보 ===== */
     private Integer remainingBeforeMyTurn; // 0이면 내 차례, 완료 문서는 null
+
+    public DocumentMyApprovalListResDto(
+            Long documentId,
+            String documentTitle,
+            String templateName,
+            String writerName,
+            Instant createdAt,
+
+            LocalDateTime decidedAt,   // ← QueryDSL 타입 그대로 받기
+
+            String displayApproverOrgName,
+            String displayApproverPositionName,
+            String displayApproverName,
+
+            ApprovalStatus myApprovalStatus,
+            Integer remainingBeforeMyTurn
+    ) {
+        this.documentId = documentId;
+        this.documentTitle = documentTitle;
+        this.templateName = templateName;
+        this.writerName = writerName;
+        this.createdAt = createdAt;
+
+        // LocalDateTime → Instant 변환
+        this.processedAt = decidedAt != null
+                ? decidedAt.atZone(java.time.ZoneId.systemDefault()).toInstant()
+                : null;
+
+        this.displayApproverOrgName = displayApproverOrgName;
+        this.displayApproverPositionName = displayApproverPositionName;
+        this.displayApproverName = displayApproverName;
+
+        this.myApprovalStatus = myApprovalStatus;
+        this.remainingBeforeMyTurn = remainingBeforeMyTurn;
+    }
 }

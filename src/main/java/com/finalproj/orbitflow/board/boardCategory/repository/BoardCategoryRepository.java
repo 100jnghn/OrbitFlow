@@ -69,6 +69,9 @@ public interface BoardCategoryRepository extends JpaRepository<BoardCategory, Lo
     /** [사용자용] 본인 소속 조직 게시판 조회 (활성화된 게시판만) */
     List<BoardCategory> findByOrganization_IdAndIsActivatedTrueAndDeletedAtIsNull(Long orgId);
 
+    /** [ADMIN용] 활성화된 모든 공용 게시판 조회 */
+    List<BoardCategory> findByCompany_IdAndOrganizationIsNullAndIsActivatedTrueAndDeletedAtIsNull(Long companyId);
+
 
     /** [관리자용] 조직게시판 자동생성  */
     boolean existsByCompany_IdAndOrganization_IdAndDeletedAtIsNull(Long companyId, Long organizationId);

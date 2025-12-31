@@ -154,10 +154,16 @@
    Table Container
 ========================= */
 .table-container {
-    background: #fff;
+    margin-bottom: 24px;
+    background: white;
     border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    min-height: 550px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 /* =========================
@@ -165,9 +171,10 @@
 ========================= */
 .resource-table {
     width: 100%;
-    margin-top: 16px;
     border-collapse: collapse;
+    background: #fff;
     table-layout: fixed;
+    height: 100%;
 }
 
 .resource-table thead {
@@ -188,6 +195,8 @@
     text-overflow: ellipsis;
 
     position: relative;
+    align-content: center;
+    justify-content: center;
 }
 
 .resource-table th {
@@ -224,15 +233,30 @@
 }
 
 /* 상태 열 - 중앙 정렬 */
-.resource-table th:nth-child(9),
-.resource-table td:nth-child(9) {
-    text-align: center;
-}
-
-/* 승인 열 - 중앙 정렬 */
 .resource-table th:nth-child(10),
 .resource-table td:nth-child(10) {
     text-align: center;
+}
+
+/* 상태 열 - 중앙 정렬 */
+.resource-table th:nth-child(10),
+.resource-table td:nth-child(10) {
+    text-align: center;
+}
+
+/* 승인 열 (마지막 열) - 중앙 정렬 */
+.resource-table th:last-child,
+.resource-table td:last-child {
+    text-align: center;
+}
+
+/* 승인 열 내부 버튼도 가운데 정렬 */
+.resource-table td:last-child .btn-approve {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    height: 22px; /* status-badge와 동일한 height */
 }
 
 .resource-table tbody tr {
@@ -299,58 +323,22 @@
     z-index: 1000;
 }
 
-/* 카테고리 셀 hover 지원 */
-.resource-table td[data-fulltext] .category-badge {
-    pointer-events: none;
-}
 
-/* =========================
-   Category Badge
-========================= */
-.category-badge {
+/* 상태 배지: 통일된 크기 스타일 */
+
+.status-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
-    width: 90px;
-    height: 30px;
-
-    border-radius: 13px;
+    min-width: 56px;
+    height: 22px;
+    padding: 3px 14px;
+    border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
-
-    white-space: nowrap;
-}
-
-/* 하늘색 */
-.badge-meeting {
-    background-color: #e3f2fd;
-    color: #1e88e5;
-}
-
-/* 연두색 */
-.badge-car {
-    background-color: #e8f5e9;
-    color: #43a047;
-}
-
-/* 연노랑 */
-.badge-etc {
-    background-color: #fff8e1;
-    color: #f9a825;
-}
-
-/* =========================
-   Status Badge
-========================= */
-.status-badge {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 13px;
-    font-weight: 600;
-    background: #d4edda;
-    color: #155724;
+    border: 1.2px solid transparent;
+    line-height: 1;
+    color: dimgray;
 }
 
 /* 상태 셀에 rejectReason tooltip이 있을 때 cursor 변경 */
@@ -369,8 +357,48 @@
     position: relative;
 }
 
-.status-badge-clickable:hover {
-    background: #c3e6cb;
+/* 상태별 배경색 */
+.status-badge-clickable.status-confirmed {
+    background: #f0f9ff; /* 하늘색 */
+    border: 1.2px solid #38bdf8
+}
+
+.status-badge-clickable.status-pending {
+    background: #fffbeb; /* 연노랑색 */
+    border: 1.2px solid #f5c417;
+}
+
+.status-badge-clickable.status-rejected {
+    background: #fef2f2; /* 연분홍 */
+    border: 1.2px solid #f87171;
+}
+
+.status-badge-clickable.status-cancelled {
+    background: #e0e0e0; /* 회색 */
+    border: 1.2px solid #2b2b2b;
+}
+
+/* hover 효과 - 상태별로 어두운 색상 */
+.status-badge-clickable.status-confirmed:hover {
+    background: #bbdefb;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.status-badge-clickable.status-pending:hover {
+    background: #fff59d;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.status-badge-clickable.status-rejected:hover {
+    background: #ef9a9a;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.status-badge-clickable.status-cancelled:hover {
+    background: #bdbdbd;
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -429,18 +457,27 @@
 }
 
 .btn-approve {
-    padding: 6px 12px;
-    border-radius: 4px;
-    font-size: 13px;
-    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 6px 14px;
+    border-radius: 20px;
+    line-height: 1;
+
+    height: 30px;
+
+    font-size: 12px;
     cursor: pointer;
     transition: background 0.2s;
-    background: #e8f5e9;
-    color: #2e7d32;
+    background: #ecfdf5;
+    color: dimgray;
+
+    border: 1.2px solid #10b981;
 }
 
 .btn-approve:hover {
-    background: #c8e6c9;
+    background: #8ee091;
 }
 
 .btn-approve:disabled {
@@ -476,15 +513,14 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 24px;
-    padding-top: 20px;
-    border-top: 1px solid #f0f0f0;
 }
 
 .pagination {
     display: flex;
-    gap: 8px;
+    justify-content: center;
     align-items: center;
+    gap: 8px;
+    margin-top: 24px;
 }
 
 .pagination button {

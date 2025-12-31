@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-admin :: layout(
+        ~{::content},
+        ~{fragments/header :: header},
+        ~{sidebar/admin-sidebar :: menu},
+        ~{::pageCss},
+        ~{::pageScript}
+      )}">
+
+<!-- ================= 페이지별 CSS ================= -->
+<th:block th:fragment="pageCss">
+    <link rel="stylesheet" th:href="@{/css/admin-employee.css}">
+</th:block>
+
+<th:block th:fragment="content">
+
+    <!-- JS에서 읽을 employeeId -->
+    <input type="hidden" id="employeeId" th:value="${employeeId}">
+
+    <!-- ===== Page Head ===== -->
+    <div class="page-head">
+        <div>
+            <h1 class="orgcat-title">사원 상세</h1>
+            <p class="page-sub">사원 정보 확인 및 상태 변경, 변경 이력 조회</p>
+        </div>
+
+        <a class="btn btn-outline" href="/view/admin/employees">목록으로</a>
+    </div>
+
+    <!-- ===== Hero Card ===== -->
+    <section class="emp-hero">
+        <div class="emp-avatar">
+            <i class="fa-solid fa-user"></i>
+        </div>
+
+        <div class="emp-hero-main">
+            <div class="emp-hero-top">
+                <div>
+                    <div class="emp-name" id="empName">-</div>
+                    <div class="emp-meta">
+                        <span id="empEmail">-</span>
+                        <span class="dot">•</span>
+                        사번 <b id="empEmpNo">-</b>
+                    </div>
+                </div>
+
+                <div id="empStatus"></div>
+            </div>
+
+            <div class="emp-actions">
+                <button id="btnActive" class="btn btn-outline">재직</button>
+                <button id="btnSuspend" class="btn btn-outline">정지</button>
+                <button id="btnResign" class="btn btn-danger">퇴사</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== Info Cards ===== -->
+    <section class="grid-2">
+        <div class="card">
+            <div class="card-title">소속 정보</div>
+            <div class="kv">
+                <div class="k">조직</div>
+                <div class="v" id="empOrg">-</div>
+
+                <div class="k">직급</div>
+                <div class="v" id="empRank">-</div>
+
+                <div class="k">직책</div>
+                <div class="v" id="empPosition">-</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">근무 정보</div>
+            <div class="kv">
+                <div class="k">입사일</div>
+                <div class="v" id="empHireDate">-</div>
+
+                <div class="k">고용 형태</div>
+                <div class="v" id="empEmploymentType">-</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== Audit Logs ===== -->
+    <section class="card">
+        <div class="card-title-row">
+            <div class="card-title">변경 이력</div>
+            <div class="card-sub">최근 변경 내역</div>
+        </div>
+
+        <ul id="auditLogList" class="audit-list">
+            <li class="audit-empty">이력을 불러오는 중입니다…</li>
+        </ul>
+    </section>
+
+</th:block>
+
+<th:block th:fragment="pageScript">
+    <script th:src="@{/js/admin-employee-detail.js}"></script>
+</th:block>
+
+</html>

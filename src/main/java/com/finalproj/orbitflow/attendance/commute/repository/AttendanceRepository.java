@@ -24,10 +24,11 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
         return findByCompanyIdAndEmployeeIdAndWorkDate(companyId, employeeId, LocalDate.now());
     }
 
-    // [사원용] 월별 페이징 조회
+    // [사원용] 월별 페이징 조회 (최신순 정렬)
     @Query("SELECT a FROM Attendance a WHERE a.employeeId = :empId " +
             "AND a.workDate BETWEEN :start AND :end " +
-            "AND (:status IS NULL OR a.status = :status)")
+            "AND (:status IS NULL OR a.status = :status) " +
+            "ORDER BY a.workDate DESC")
     Page<Attendance> findHistoryWithPaging(
             @Param("empId") Long employeeId,
             @Param("start") LocalDate startDate,

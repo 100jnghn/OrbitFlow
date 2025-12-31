@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.approval.formTemplate.repository;
 
 import com.finalproj.orbitflow.approval.formTemplate.entity.FormTemplate;
 import com.finalproj.orbitflow.approval.formTemplate.enums.FormTemplateStatus;
+import com.finalproj.orbitflow.approval.templateCategory.enums.TemplateCategoryCode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -49,31 +50,37 @@ public interface FormTemplateRepository extends JpaRepository<FormTemplate, Long
         count(d.id) as useDocument,
         t.updatedAt as updatedAt,
         t.status as formTemplateStatus,
-        t.affectTags as affectTags
+        t.affectTags as affectTags,
+        c.code as templateCategoryCode
     from FormTemplate t
     join t.templateGroup g
+    join g.templateCategory c
     left join Document d
       on d.templateGroup.id = g.id
      and d.templateVersion = t.version
     where g.company.id = :companyId
       and (:keyword is null or g.name like concat('%', :keyword, '%'))
       and (:status is null or t.status = :status)
+      and (:categoryCode is null or c.code = :categoryCode)
     group by
-        t.id, g.name, t.version, t.updatedAt, t.status, t.affectTags
+        t.id, g.name, t.version, t.updatedAt,
+        t.status, t.affectTags, c.code
     """)
     Page<FormTemplateAllListView> findAllWithDocumentCount(
             Long companyId,
             String keyword,
             FormTemplateStatus status,
+            TemplateCategoryCode categoryCode,
             Pageable pageable
     );
 
+
     @Query("""
-            
-                    select max(ft.version)
-            from FormTemplate ft
-            where ft.templateGroup.id = :templateGroupId and ft.status = "ACTIVE"
-            """)
+    select max(ft.version)
+    from FormTemplate ft
+    where ft.templateGroup.id = :templateGroupId
+      and ft.status <> 'DRAFT'
+    """)
     Optional<Integer> findMaxVersionByTemplateGroupId(
             @Param("templateGroupId") Long templateGroupId
     );

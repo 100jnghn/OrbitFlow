@@ -71,21 +71,7 @@ function createCell(value = '-', tooltip = false) {
 
 function createCategoryCell(typeCode, typeName) {
     const td = document.createElement('td');
-    const badge = document.createElement('span');
-
-    badge.className = 'category-badge';
-
-    // typeCode에 따른 색상 분기
-    if (typeCode === 'MEETING') {
-        badge.classList.add('badge-meeting');
-    } else if (typeCode === 'CAR') {
-        badge.classList.add('badge-car');
-    } else {
-        badge.classList.add('badge-etc');
-    }
-
-    badge.textContent = typeName;
-    td.appendChild(badge);
+    td.textContent = typeName || '-';
     
     // hover 시 전체 텍스트 보기 기능
     if (typeName && typeName !== '-') {
@@ -103,6 +89,19 @@ function createStatusCell(reservation) {
     const badge = document.createElement('span');
     badge.className = 'status-badge';
     badge.textContent = reservation.reservationStatusName;
+    
+    // 상태별 클래스 추가
+    const statusName = reservation.reservationStatusName;
+    if (statusName === '예약 확정') {
+        badge.classList.add('status-confirmed');
+    } else if (statusName === '승인 대기') {
+        badge.classList.add('status-pending');
+    } else if (statusName === '예약 반려') {
+        badge.classList.add('status-rejected');
+    } else if (statusName === '예약 취소') {
+        badge.classList.add('status-cancelled');
+    }
+    
     td.appendChild(badge);
     
     // '예약 반려' 또는 '예약 취소'일 때 rejectReason tooltip 추가
@@ -226,6 +225,7 @@ async function loadReservations(page = 0) {
                 createCell(r.resourceName, true), // 이름 (tooltip 적용)
                 createCell(r.reservationReason, true), // 예약 사유 (tooltip 적용)
                 createCell(formatDate(r.reservationDate)),
+                createCell(formatDate(r.endDate)),
                 createCell(r.typeCode === 'CAR' ? '-' : formatHour(r.startTime)),
                 createCell(r.typeCode === 'CAR' ? '-' : formatHour(r.endTime)),
                 createStatusCell(r),

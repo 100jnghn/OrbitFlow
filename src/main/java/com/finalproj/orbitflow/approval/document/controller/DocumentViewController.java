@@ -25,6 +25,12 @@ public class DocumentViewController {
         model.addAttribute("currentMenu", "approval");
         return "my-documents/my-documents";
     }
+    @GetMapping("/inbox")
+    public String approvalInboxList(Model model) {
+        model.addAttribute("pageTitle", "결재대기함");
+        model.addAttribute("currentMenu", "approval");
+        return "approval-inbox/approval-inbox";
+    }
 
     @GetMapping("/write/{documentId}")
     public String writeDocument(
@@ -47,4 +53,5 @@ public class DocumentViewController {
         model.addAttribute("documentId", documentId);
         return "document-detail/document-detail";
     }
+
 }

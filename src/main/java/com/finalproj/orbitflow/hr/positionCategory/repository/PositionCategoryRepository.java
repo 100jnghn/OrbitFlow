@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.hr.positionCategory.repository;
 
+import com.finalproj.orbitflow.hr.positionCategory.dto.PositionCategoryListDto;
 import com.finalproj.orbitflow.hr.positionCategory.entity.PositionCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -23,8 +24,6 @@ public interface PositionCategoryRepository extends JpaRepository<PositionCatego
 
     long countByCompanyIdAndIsActiveTrue(Long companyId);
 
-    boolean existsByCompanyIdAndName(Long companyId, String name);
-
     @Query("""
                 select max(pc.orderIndex)
                 from PositionCategory pc
@@ -47,4 +46,46 @@ public interface PositionCategoryRepository extends JpaRepository<PositionCatego
             @Param("orgCategoryId") Long orgCategoryId
     );
 
+    /* 목록 */
+    List<PositionCategory> findByCompanyIdAndIsActiveTrueOrderByOrderIndexAsc(Long companyId);
+
+    /* 중복 */
+    boolean existsByCompanyIdAndName(Long companyId, String name);
+
+    boolean existsByCompanyIdAndNameAndIdNot(
+            Long companyId,
+            String name,
+            Long id
+    );
+
+    /* 직책 부여 인원수 */
+    @Query("""
+            select new com.finalproj.orbitflow.hr.positionCategory.dto.PositionCategoryListDto(
+                pc.id, pc.name, oc.id, oc.name, parent.id, parent.name, 
+                pc.isHead, pc.isActive, count(e.id), pc.orderIndex
+                )
+            from PositionCategory pc
+            join pc.orgCategory oc
+            left join pc.parent parent
+            left join Employee e
+                on e.positionCategory.id = pc.id
+               and e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE
+            where pc.company.id = :companyId
+              and (:includeInactive = true or pc.isActive = true)
+            group by
+                pc.id,
+                pc.name,
+                oc.id,
+                oc.name,
+                parent.id,
+                parent.name,
+                pc.isHead,
+                pc.isActive,
+                pc.orderIndex
+            order by pc.orderIndex asc
+                """)
+    List<PositionCategoryListDto> findAllWithAssignedCount(
+            @Param("companyId") Long companyId,
+            @Param("includeInactive") boolean includeInactive
+    );
 }

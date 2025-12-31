@@ -19,11 +19,12 @@
     <th:block th:fragment="pageCss">
         <link rel="stylesheet" th:href="@{/css/layout.css}">
         <link rel="stylesheet" th:href="@{/css/layout-user.css}">
-        <link rel="stylesheet" th:href="@{/css/board.css}">
+        <link rel="stylesheet" th:href="@{/css/board/board-sidebar.css}">
+        <link rel="stylesheet" th:href="@{/css/board/board.css}">
     </th:block>
 
     <th:block th:fragment="pageScript">
-        <script th:src="@{/js/board-write.js}"></script>
+        <script th:src="@{/js/board/board-write.js}"></script>
     </th:block>
 </head>
 <body>
@@ -42,10 +43,9 @@
 
             <!-- 제목 입력 -->
             <div class="form-group">
-                <label for="boardTitleInput" class="form-label">
-                    제목 <span id="titleCharCount" class="char-count" style="display: none;"></span>
-                </label>
+                <label for="boardTitleInput" class="form-label">제목</label>
                 <input type="text" id="boardTitleInput" class="form-input" placeholder="제목을 입력해주세요" required maxlength="100" oninput="updateTitleCharCount()">
+                <div id="titleCharCount" class="char-count" style="display: none;"></div>
                 <div id="boardTitleError" class="error-message" style="display: none;"></div>
             </div>
 
@@ -63,10 +63,9 @@
 
             <!-- 내용 입력 -->
             <div class="form-group">
-                <label for="boardContent" class="form-label">
-                    내용 <span id="contentCharCount" class="char-count" style="display: none;"></span>
-                </label>
+                <label for="boardContent" class="form-label">내용</label>
                 <textarea id="boardContent" class="form-textarea" placeholder="내용을 입력해주세요" required maxlength="10000" oninput="updateContentCharCount()"></textarea>
+                <div id="contentCharCount" class="char-count" style="display: none;"></div>
                 <div id="boardContentError" class="error-message" style="display: none;"></div>
             </div>
 

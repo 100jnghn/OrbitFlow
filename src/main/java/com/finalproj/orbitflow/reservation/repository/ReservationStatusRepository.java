@@ -4,8 +4,6 @@ import com.finalproj.orbitflow.reservation.entity.ReservationStatus;
 import com.finalproj.orbitflow.reservation.enums.ReservationStatusCode;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Optional;
-
 /**
  * Please explain the class!!!
  *

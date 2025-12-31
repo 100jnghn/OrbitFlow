@@ -1,0 +1,58 @@
+/* 메시지 사이드바 전용 스타일 */
+/* sidebar.css의 기본 스타일을 오버라이드하여 메시지 전용 디자인 적용 */
+
+/* 기본 사이드바 컨테이너 오버라이드 */
+.sidebar {
+    width: 250px;
+    background: #0b1220 !important;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+}
+
+/* 사이드바 메뉴 오버라이드 */
+.sidebar-menu {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 16px 30px !important;
+}
+
+/* 단일 메뉴 (하위 메뉴가 없는 경우) */
+.menu-item.no-sub {
+    position: relative;
+    list-style: none;
+    margin-bottom: 2px;
+}
+
+.menu-item.no-sub a {
+    text-decoration: none;
+    color: #c9ccdd !important;
+    font-size: 15px;
+    display: block;
+    padding: 12px 0;
+    transition: all 0.2s ease;
+}
+
+.menu-item.no-sub a:hover {
+    color: #ffffff !important;
+}
+
+.menu-item.no-sub.selected a {
+    color: #5dade2 !important;
+    font-weight: 700 !important;
+    padding-left: 8px;
+}
+
+.menu-item.no-sub.selected a::before {
+    content: '';
+    position: absolute;
+    left: -2px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 4px;
+    background-color: #5dade2;
+    border-radius: 50%;
+}
+
