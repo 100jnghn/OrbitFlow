@@ -151,7 +151,7 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--neutral-200);
 
-    min-height: 500px;
+    min-height: 300px;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -174,19 +174,25 @@
     font-size: 14px;
     color: var(--neutral-700);
     border-bottom: 2px solid var(--neutral-200);
+
+    height: 48px; /* 선택 */
+    box-sizing: border-box;
 }
 
 .approval-table td {
-    padding: 14px 16px;
+    padding: 0 16px;
     border-bottom: 1px solid var(--neutral-200);
     font-size: 14px;
     color: var(--neutral-800);
     vertical-align: middle;
+
+    height: 48px; /* ⭐ 추가 */
+    box-sizing: border-box; /* ⭐ 추가 (padding 포함) */
 }
 
 /* 번호 */
-.approval-table th:nth-child(1),
-.approval-table td:nth-child(1) {
+.approval-container .approval-table th:nth-child(1),
+.approval-container .approval-table td:nth-child(1) {
     width: 70px;
     text-align: center;
     color: var(--neutral-500);
