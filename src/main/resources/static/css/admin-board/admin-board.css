@@ -24,33 +24,47 @@
 .board-admin-container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 24px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    min-height: calc(100vh - 200px);
+    min-height: calc(103vh - 180px);
 }
 
 .admin-section {
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    padding: 32px;
+    padding: 20px;
     margin-bottom: 32px;
     display: flex;
     flex-direction: column;
     flex: 1;
 }
 
+/* 게시판 관리 페이지 - section 높이 늘리기 및 고정 */
+.admin-section:has(#boardTableBody) {
+    height: calc(100vh - 280px);
+    min-height: calc(100vh - 280px);
+    margin-bottom: 0;
+}
+
+/* 부서 게시판 활성화 페이지 - section 높이 고정 */
+.admin-section:has(#organizationTableBody) {
+    height: calc(100vh - 280px);
+    min-height: calc(100vh - 280px);
+    margin-bottom: 0;
+}
+
 .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
     position: relative;
 }
 
 .section-title {
-    font-size: 22px;
+    font-size: 26px;
     font-weight: 600;
     color: var(--neutral-800);
     margin: 0;
@@ -307,7 +321,8 @@
     justify-content: center;
     align-items: center;
     gap: 8px;
-    margin-top: 24px;
+    margin-top: 12px;
+    margin-bottom: 12px;
 }
 
 .pagination button,
@@ -373,6 +388,18 @@
 /* 부서 게시판 활성화 테이블 전용 - 페이지네이션 중앙과 부서명 열 정렬 맞추기 */
 .admin-section:has(#organizationTableBody) .admin-table th:first-child {
     width: 60px;
+}
+
+/* 게시판 관리 페이지 - 페이징 버튼 상하 여백 줄이기 */
+.admin-section:has(#boardTableBody) .pagination {
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+/* 부서 게시판 활성화 페이지 - 페이징 버튼 상하 여백 줄이기 */
+.admin-section:has(#organizationTableBody) .pagination {
+    margin-top: 4px;
+    margin-bottom: 4px;
 }
 
 .admin-section:has(#organizationTableBody) .admin-table th:nth-child(2) {
