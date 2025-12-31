@@ -4,6 +4,7 @@ import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
 import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
 import com.finalproj.orbitflow.attendance.commute.repository.AttendanceRepository;
 import com.finalproj.orbitflow.attendance.monthly_history.dto.*;
+import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +42,10 @@ public class AttendanceHistoryService {
 
         // 기간 우선순위 결정
         if (startDate != null && endDate != null) {
+            // 시작일이 종료일보다 늦은 경우 검증
+            if (startDate.isAfter(endDate)) {
+                throw new InvalidRequestException("시작일이 종료일보다 늦을 수 없습니다.");
+            }
             finalStart = startDate;
             finalEnd = endDate;
         } else {

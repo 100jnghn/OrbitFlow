@@ -41,6 +41,12 @@ public class AttendanceHistoryController {
             @RequestParam(defaultValue = "ALL") String status,
             @PageableDefault(size = 31) Pageable pageable) { // 월별 조회이므로 기본 사이즈를 31로 권장
 
+        // 기간 유효성 검사: 시작일이 종료일보다 늦은 경우
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+            return ResponseEntity.badRequest()
+                    .body(new ResponseDto<>(HttpStatus.BAD_REQUEST, "시작일이 종료일보다 늦을 수 없습니다.", null));
+        }
+
         // 서비스에서 기간 우선순위 로직 처리
         MonthlyHistoryResDto data = attendanceHistoryService.getMonthlyHistoryData(
                 user.getEmployeeId(), year, month, startDate, endDate, status, pageable);
