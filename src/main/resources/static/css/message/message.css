@@ -269,7 +269,6 @@
 
 .board-title-link:hover {
     color: var(--primary-color);
-    text-decoration: underline;
 }
 
 /* 페이지네이션 */
