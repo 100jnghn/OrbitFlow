@@ -11,8 +11,25 @@
     let isSubmitting = false; // 제출 중 플래그 (중복 제출 방지)
     let selectedDate = null; // 선택된 날짜
 
+    function updateApprovalSidebarSelection() {
+        // 모든 no-sub 메뉴 선택 해제
+        document.querySelectorAll('.menu-item.no-sub').forEach(item => {
+            item.classList.remove('selected');
+        });
+
+        // 결재 대기함 선택
+        const inboxLink = document.getElementById('scheduleCalender');
+        if (inboxLink) {
+            const menuItem = inboxLink.closest('.menu-item.no-sub');
+            if (menuItem) {
+                menuItem.classList.add('selected');
+            }
+        }
+    }
+
     // js 로드될 때 초기화
     document.addEventListener('DOMContentLoaded', function () {
+        updateApprovalSidebarSelection();
         initializeTimeSelects();
         setupEventListeners();
 
