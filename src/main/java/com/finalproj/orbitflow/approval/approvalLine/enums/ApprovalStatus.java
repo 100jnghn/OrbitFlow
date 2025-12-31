@@ -14,5 +14,6 @@ public enum ApprovalStatus {
     WAITING,
     IN_PROGRESS,
     APPROVED,
-    REJECTED
+    REJECTED,
+    CANCELLED
 }

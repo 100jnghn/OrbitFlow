@@ -71,7 +71,7 @@
    좌측 문서 내용 패널
 =============================== */
 .document-content-panel {
-    flex: 1;
+    flex: 3;
     background-color: #ffffff;
     border-radius: 8px;
     padding: 0;
@@ -91,7 +91,7 @@
    우측 사이드 패널
 =============================== */
 .document-side-panel {
-    flex: 1;
+    flex: 2;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -445,3 +445,38 @@ button.active {
     opacity: 1;
 }
 
+/* =========================================================
+   팝업
+========================================================= */
+/* ===== 모달 전체 ===== */
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+}
+
+/* 숨김 처리 */
+.modal.hidden {
+    display: none;
+}
+
+/* 어두운 배경 */
+.modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+}
+
+/* 중앙 박스 */
+.modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    background: #ffffff;
+    width: 420px;
+    max-width: calc(100% - 40px);
+    padding: 20px;
+    border-radius: 8px;
+}

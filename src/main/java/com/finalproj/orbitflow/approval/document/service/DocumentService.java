@@ -10,13 +10,10 @@ import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
 import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
 import com.finalproj.orbitflow.approval.documentContent.entity.DocumentContent;
 import com.finalproj.orbitflow.approval.documentContent.repository.DocumentContentRepository;
-import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateRepository;
 import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
-import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
-import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,10 +38,7 @@ import java.util.List;
 public class DocumentService {
 
     private final DocumentRepository documentRepository;
-    private final FormTemplateRepository formTemplateRepository;
     private final ObjectMapper objectMapper;
-    private final CompanyRepository companyRepository;
-    private final EmployeeRepository employeeRepository;
     private final DocumentContentRepository documentContentRepository;
     private final ApprovalLineRepository approvalLineRepository;
 
@@ -96,6 +90,13 @@ public class DocumentService {
         return document;
     }
 
+    private Document getDocumentForRead(Long documentId) {
+        return documentRepository.findById(documentId)
+                .orElseThrow(() ->
+                        new NotFoundException("문서를 찾지 못했습니다. documentId: " + documentId)
+                );
+    }
+
     private FormTemplateSchema parseSchema(String templateJson) {
         try {
             return objectMapper.readValue(templateJson, FormTemplateSchema.class);
@@ -145,7 +146,11 @@ public class DocumentService {
     }
 
     public DocumentDetailResDto getDocumentDetail(Long employeeId, Long documentId) {
-        Document document = getDocument(employeeId, documentId);
+        Document document = getDocumentForRead(documentId);
+
+        validateViewPermission(employeeId, document);
+
+
         DocumentContent byDocumentId = documentContentRepository.findByDocument_Id(documentId)
                 .orElseThrow(() -> new NotFoundException("Document with id: " + documentId + " not found"));
 
@@ -171,4 +176,36 @@ public class DocumentService {
 
         return DocumentDetailResDto.from(document, schema, lists, myApprovalOrder);
     }
+
+
+    private void validateViewPermission(
+            Long employeeId,
+            Document document
+    ) {
+        switch (document.getStatus()) {
+            case DRAFT -> {
+                if (!document.getWriter().getId().equals(employeeId)) {
+                    throw new ForbiddenException("임시 문서는 작성자만 조회할 수 있습니다.");
+                }
+            }
+
+            case IN_PROGRESS -> {
+                boolean isWriter = document.getWriter().getId().equals(employeeId);
+                boolean isApprover =
+                        approvalLineRepository.existsByDocumentIdAndApproverId(
+                                document.getId(), employeeId
+                        );
+
+                if (!isWriter && !isApprover) {
+                    throw new ForbiddenException("결재 중인 문서는 결재자만 조회할 수 있습니다.");
+                }
+            }
+
+            default -> {
+                // APPROVED, REJECTED 등
+                // 기본적으로 조회 허용
+            }
+        }
+    }
+
 }

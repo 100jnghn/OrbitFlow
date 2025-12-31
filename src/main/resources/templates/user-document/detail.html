@@ -142,6 +142,32 @@
 
     </section>
 
+    <!-- ===============================
+         승인 / 반려 모달
+    =============================== -->
+    <div id="approvalModal" class="modal hidden">
+        <div class="modal-overlay"></div>
+
+        <div class="modal-content">
+            <h3 id="approvalModalTitle">승인</h3>
+
+            <textarea
+                    id="approvalComment"
+                    class="modal-textarea"
+                    placeholder="의견을 입력하세요 (선택)"
+                    rows="4"
+            ></textarea>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="approvalCancelBtn">
+                    취소
+                </button>
+                <button type="button" class="btn btn-primary" id="approvalConfirmBtn">
+                    승인
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 </body>

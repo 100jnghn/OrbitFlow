@@ -77,7 +77,7 @@ public class Document extends BaseEntity {
     }
 
     public void submit() {
-        this.status = DocumentStatus.SUBMITTED;
+        this.status = DocumentStatus.IN_PROGRESS;
         this.submittedAt = Instant.now();
     }
 
@@ -98,5 +98,13 @@ public class Document extends BaseEntity {
                 .status(DocumentStatus.DRAFT)
                 .beforeDocument(beforeDocument)
                 .build();
+    }
+
+    public void reject() {
+        this.status = DocumentStatus.REJECTED;
+    }
+
+    public void approve() {
+        this.status = DocumentStatus.APPROVED;
     }
 }

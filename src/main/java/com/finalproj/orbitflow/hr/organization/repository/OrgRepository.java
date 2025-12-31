@@ -126,4 +126,5 @@ public interface OrgRepository extends JpaRepository<Organization, Long> {
     // 부모 조회용
     List<Organization> findByIdIn(List<Long> ids);
 
+    Optional<Organization> findFirstByCompanyIdAndParentOrgId(Long companyId, Long parentId);
 }

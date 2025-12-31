@@ -1,3 +1,6 @@
+let currentActionType = null;   // "approve" | "reject"
+let currentDocumentId = null;
+
 const fieldRenderers = {
     divider: renderDivider,
     radio: renderRadio,
@@ -38,6 +41,92 @@ function bindBackButton() {
     });
 }
 
+/* ===============================
+   모달
+=============================== */
+
+function openApprovalModal(type) {
+    currentActionType = type;
+
+    const modal = document.getElementById("approvalModal");
+    const title = document.getElementById("approvalModalTitle");
+    const confirmBtn = document.getElementById("approvalConfirmBtn");
+    const comment = document.getElementById("approvalComment");
+
+    // 초기화
+    comment.value = "";
+    confirmBtn.disabled = false;
+
+    // 버튼 스타일 초기화
+    confirmBtn.classList.remove("btn-primary", "btn-danger");
+
+    if (type === "approve") {
+        title.textContent = "문서 승인";
+        confirmBtn.textContent = "승인";
+        confirmBtn.classList.add("btn-primary");
+        comment.placeholder = "의견을 입력하세요 (선택)";
+    } else {
+        title.textContent = "문서 반려";
+        confirmBtn.textContent = "반려";
+        confirmBtn.classList.add("btn-danger");
+        comment.placeholder = "반려 사유를 입력하세요 (필수)";
+        comment.focus();
+    }
+
+    modal.classList.remove("hidden");
+}
+
+function closeApprovalModal() {
+    const modal = document.getElementById("approvalModal");
+    modal.classList.add("hidden");
+}
+
+async function submitApprovalAction() {
+    if (!currentDocumentId || !currentActionType) return;
+
+    const comment = document
+        .getElementById("approvalComment")
+        .value
+        .trim();
+
+    if (currentActionType === "reject" && !comment) {
+        alert("반려 사유를 입력해주세요.");
+        return;
+    }
+
+    const url =
+        currentActionType === "approve"
+            ? `/api/documents/${currentDocumentId}/approve`
+            : `/api/documents/${currentDocumentId}/reject`;
+
+    try {
+        const res = await apiFetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({comment})
+        });
+
+        if (!res.ok) {
+            throw new Error("결재 처리 실패");
+        }
+
+        alert(
+            currentActionType === "approve"
+                ? "승인되었습니다."
+                : "반려되었습니다."
+        );
+
+        closeApprovalModal();
+        location.reload(); // 상태 갱신
+
+    } catch (e) {
+        console.error(e);
+        alert("처리 중 오류가 발생했습니다.");
+    }
+}
+
 
 /* =========================================================
    detail.js
@@ -48,6 +137,14 @@ function bindBackButton() {
 
 document.addEventListener("DOMContentLoaded", async () => {
     await fetchVacationTypes();
+
+    document
+        .getElementById("approvalCancelBtn")
+        ?.addEventListener("click", closeApprovalModal);
+
+    document
+        .getElementById("approvalConfirmBtn")
+        ?.addEventListener("click", submitApprovalAction);
 
     const documentId = getDocumentIdFromPath();
     if (!documentId) return;
@@ -60,6 +157,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         alert("문서 정보를 불러오지 못했습니다.");
     }
 });
+
 
 /* ===============================
    초기화
@@ -618,7 +716,7 @@ function renderAttachments() {
 }
 
 /* ===============================
-   하단 버튼 제어 (임시)
+   하단 버튼 제어
 =============================== */
 function controlActionButtons(data) {
     const approveBtn = document.getElementById("approveBtn");
@@ -626,31 +724,25 @@ function controlActionButtons(data) {
     const aiSummaryBtn = document.getElementById("aiSummaryBtn");
 
     const isMyTurn = data?.myApprovalOrder === true;
+    currentDocumentId = data?.documentId;
 
-    /* =========================
-       승인 / 반려 버튼
-    ========================= */
+    // 승인
     if (approveBtn) {
         approveBtn.style.display = isMyTurn ? "inline-block" : "none";
+        approveBtn.onclick = () => openApprovalModal("approve");
     }
 
+    // 반려
     if (rejectBtn) {
         rejectBtn.style.display = isMyTurn ? "inline-block" : "none";
+        rejectBtn.onclick = () => openApprovalModal("reject");
     }
 
-    /* =========================
-       AI 요약 버튼
-    ========================= */
+    // AI 요약
     if (aiSummaryBtn) {
-        if (isMyTurn) {
-            aiSummaryBtn.disabled = false;
-            aiSummaryBtn.classList.add("active");
-            aiSummaryBtn.classList.remove("disabled");
-        } else {
-            aiSummaryBtn.disabled = true;
-            aiSummaryBtn.classList.remove("active");
-            aiSummaryBtn.classList.add("disabled");
-        }
+        aiSummaryBtn.disabled = !isMyTurn;
+        aiSummaryBtn.classList.toggle("active", isMyTurn);
+        aiSummaryBtn.classList.toggle("disabled", !isMyTurn);
     }
 }
 

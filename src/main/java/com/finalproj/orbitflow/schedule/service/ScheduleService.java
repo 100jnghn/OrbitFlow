@@ -11,6 +11,7 @@ import com.finalproj.orbitflow.schedule.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -295,6 +296,11 @@ public class ScheduleService {
 
         Schedule schedule = ScheduleMapper.toEntity(companyId, employeeId, dto);
         scheduleRepository.save(schedule);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void newTransactionInsertSchedule(Long companyId, Long employeeId, ScheduleReqDto dto) {
+        insertSchedule(companyId, employeeId, dto);
     }
 
 }

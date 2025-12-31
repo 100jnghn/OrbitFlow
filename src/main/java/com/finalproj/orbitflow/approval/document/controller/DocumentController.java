@@ -76,7 +76,7 @@ public class DocumentController {
     ) {
         documentService.submitDocument(SecurityUtils.getEmployeeId(), documentId);
 
-        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "문서 상신 성공",  null));
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "문서 상신 성공", null));
     }
 
     @GetMapping("/{documentId}/detail")
@@ -85,6 +85,44 @@ public class DocumentController {
     ) {
         DocumentDetailResDto result = documentService.getDocumentDetail(SecurityUtils.getEmployeeId(), documentId);
 
-        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "문서 상세 조회 성공",  result));
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "문서 상세 조회 성공", result));
     }
+
+    @PostMapping("/{documentId}/approve")
+    public ResponseEntity<ResponseDto> approveDocument(
+            @PathVariable Long documentId,
+            @RequestBody(required = false) DocumentCommentReqDto reqDto
+    ) {
+        String comment = reqDto != null ? reqDto.getComment() : null;
+
+        documentApplicationService.approve(
+                SecurityUtils.getEmployeeId(),
+                documentId,
+                comment
+        );
+
+        return ResponseEntity.ok(
+                new ResponseDto<>(HttpStatus.OK, "승인 처리 성공", null)
+        );
+    }
+
+
+    @PostMapping("/{documentId}/reject")
+    public ResponseEntity<ResponseDto> rejectDocument(
+            @PathVariable Long documentId,
+            @RequestBody(required = false) DocumentCommentReqDto reqDto
+    ) {
+        String comment = reqDto != null ? reqDto.getComment() : null;
+
+        documentApplicationService.reject(
+                SecurityUtils.getEmployeeId(),
+                documentId,
+                comment
+        );
+
+        return ResponseEntity.ok(
+                new ResponseDto<>(HttpStatus.OK, "반려 처리 성공", null)
+        );
+    }
+
 }
