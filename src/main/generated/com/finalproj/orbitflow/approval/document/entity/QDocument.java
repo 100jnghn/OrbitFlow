@@ -1,3 +1,4 @@
+
 package com.finalproj.orbitflow.approval.document.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
@@ -81,4 +82,3 @@ public class QDocument extends EntityPathBase<Document> {
     }
 
 }
-

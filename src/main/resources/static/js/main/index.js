@@ -123,7 +123,17 @@ async function loadNotices() {
         }
         
         noticeList.innerHTML = boards.map(board => {
-            const date = formatDate(board.createdAt);
+            // createdAt이 없거나 유효하지 않은 경우 처리
+            let date = '-';
+            if (board.createdAt) {
+                try {
+                    date = formatDate(board.createdAt);
+                } catch (error) {
+                    console.error('날짜 포맷팅 오류:', error, board.createdAt);
+                    // 날짜 파싱 실패 시 원본 값 표시
+                    date = board.createdAt;
+                }
+            }
             const author = board.writer?.name || '작성자';
             const title = board.boardTitle || board.title || '제목 없음';
             return `
@@ -281,31 +291,53 @@ async function loadApprovalStats() {
 }
 
 
-// 날짜 포맷팅
+// 날짜 포맷팅 (시간 전 형식으로만 표시)
 function formatDate(dateString) {
     if (!dateString) return '-';
     
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
-    if (diffMins < 1) {
-        return '방금 전';
-    } else if (diffMins < 60) {
-        return `${diffMins}분 전`;
-    } else if (diffHours < 24) {
-        return `${diffHours}시간 전`;
-    } else if (diffDays < 7) {
-        return `${diffDays}일 전`;
-    } else {
-        return date.toLocaleDateString('ko-KR', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
+    try {
+        // Instant 형식 (ISO 8601) 또는 일반 날짜 문자열 처리
+        const date = new Date(dateString);
+        
+        // 유효하지 않은 날짜인 경우
+        if (isNaN(date.getTime())) {
+            console.warn('유효하지 않은 날짜:', dateString);
+            return '-';
+        }
+        
+        const now = new Date();
+        const diffMs = now - date;
+        
+        // 미래 날짜인 경우 "방금 전"으로 표시
+        if (diffMs < 0) {
+            return '방금 전';
+        }
+        
+        const diffMins = Math.floor(diffMs / (1000 * 60));
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        const diffWeeks = Math.floor(diffDays / 7);
+        const diffMonths = Math.floor(diffDays / 30);
+        const diffYears = Math.floor(diffDays / 365);
+        
+        if (diffMins < 1) {
+            return '방금 전';
+        } else if (diffMins < 60) {
+            return `${diffMins}분 전`;
+        } else if (diffHours < 24) {
+            return `${diffHours}시간 전`;
+        } else if (diffDays < 7) {
+            return `${diffDays}일 전`;
+        } else if (diffWeeks < 4) {
+            return `${diffWeeks}주 전`;
+        } else if (diffMonths < 12) {
+            return `${diffMonths}개월 전`;
+        } else {
+            return `${diffYears}년 전`;
+        }
+    } catch (error) {
+        console.error('날짜 포맷팅 오류:', error, dateString);
+        return '-';
     }
 }
 
