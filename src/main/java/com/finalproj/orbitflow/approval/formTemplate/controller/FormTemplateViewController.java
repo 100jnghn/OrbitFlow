@@ -19,8 +19,8 @@ public class FormTemplateViewController {
         model.addAttribute("pageTitle", "결재 양식 관리");
         model.addAttribute("currentGNB", "admin");
         model.addAttribute("currentMenu", "approval");
-        // templates/approval-home/approval-home.html 반환
-        return "approval-home/approval-home";
+        // templates/approval-home/home.html 반환
+        return "admin-approval/home";
     }
 
     @GetMapping("/admin/create-template")
@@ -29,7 +29,7 @@ public class FormTemplateViewController {
             Model model
     ) {
         model.addAttribute("templateId", templateId);
-        return "form-template/createTemplate";
+        return "admin-form-template/build-structure";
     }
 
 
@@ -42,7 +42,7 @@ public class FormTemplateViewController {
         model.addAttribute("currentGNB", "admin");
         model.addAttribute("currentMenu", "approval");
         model.addAttribute("templateId", templateId);
-        return "approval-rule/approval-rule";
+        return "admin-form-template/build-rule";
     }
 
 
@@ -56,6 +56,6 @@ public class FormTemplateViewController {
         model.addAttribute("currentGNB", "admin");
         model.addAttribute("currentMenu", "approval");
         model.addAttribute("templateId", templateId);
-        return "form-template/preview-template";
+        return "admin-form-template/preview";
     }
 }

@@ -1,5 +1,5 @@
 /**
- * approval-inbox.js
+ * inbox.js
  * - 내 결재함 목록 조회
  * - 검색 / 필터
  * - 페이지네이션
@@ -18,7 +18,25 @@ let totalPages = 1;
    초기화
 ========================= */
 
+function updateApprovalSidebarSelection() {
+    // 모든 no-sub 메뉴 선택 해제
+    document.querySelectorAll('.menu-item.no-sub').forEach(item => {
+        item.classList.remove('selected');
+    });
+
+    // 결재 대기함 선택
+    const inboxLink = document.getElementById('inboxLink');
+    if (inboxLink) {
+        const menuItem = inboxLink.closest('.menu-item.no-sub');
+        if (menuItem) {
+            menuItem.classList.add('selected');
+        }
+    }
+}
+
+
 document.addEventListener('DOMContentLoaded', () => {
+    updateApprovalSidebarSelection(); // ⭐ 추가
     loadApprovalList(0);
     bindDateFilterEvents();
 });

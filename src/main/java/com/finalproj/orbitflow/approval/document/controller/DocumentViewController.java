@@ -23,13 +23,13 @@ public class DocumentViewController {
     public String myWrittenDocumentList(Model model) {
         model.addAttribute("pageTitle", "기안함");
         model.addAttribute("currentMenu", "approval");
-        return "my-documents/my-documents";
+        return "user-document/my-submit";
     }
     @GetMapping("/inbox")
     public String approvalInboxList(Model model) {
         model.addAttribute("pageTitle", "결재대기함");
         model.addAttribute("currentMenu", "approval");
-        return "approval-inbox/approval-inbox";
+        return "user-document/inbox";
     }
 
     @GetMapping("/write/{documentId}")
@@ -40,7 +40,7 @@ public class DocumentViewController {
         model.addAttribute("pageTitle", "문서 작성");
         model.addAttribute("currentMenu", "approval");
         model.addAttribute("documentId", documentId);
-        return "document-write/document-write";
+        return "user-document/write";
     }
 
     @GetMapping("/{documentId}")
@@ -51,7 +51,7 @@ public class DocumentViewController {
         model.addAttribute("pageTitle", "문서 조회");
         model.addAttribute("currentMenu", "approval");
         model.addAttribute("documentId", documentId);
-        return "document-detail/document-detail";
+        return "user-document/detail";
     }
 
 }

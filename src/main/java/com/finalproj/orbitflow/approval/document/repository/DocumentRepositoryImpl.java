@@ -165,6 +165,7 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
                                 ApprovalStatus.APPROVED,
                                 ApprovalStatus.REJECTED
                         ))
+                        .and(document.status.ne(DocumentStatus.DRAFT))
                         .and(keywordCondition(reqDto))
                         .and(createdAtBetween(reqDto))
                         .and(documentStatusEq(reqDto.getDocumentStatus()))
