@@ -34,28 +34,26 @@
    Buttons
 ========================= */
 .btn-add {
+    height: 42px;
+    padding: 0 16px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 
-    background: #4a69bd;
+    background: #2563eb;
     color: #fff;
-    border: none;
-
-    /* 🔥 크기 통일 */
-    padding: 12px 18px;
-    font-size: 14px;
-    font-weight: 600;
-
-    border-radius: 8px; /* manage 버튼과 동일 */
-    cursor: pointer;
-    transition: background 0.2s;
+    box-shadow: 0 8px 22px rgba(37, 99, 235, .25);
 
     margin-left: auto;
 }
 
 .btn-add:hover {
-    background: #3a5aa0;
+    filter: brightness(0.97);
 }
 
 /* =========================
