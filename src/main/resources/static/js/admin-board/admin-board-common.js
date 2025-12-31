@@ -142,8 +142,10 @@ function renderBoardTable(boards) {
             <td>${escapeHTML(board.boardName || board.name || '')}</td>
             <td>${createdAt}</td>
             <td>
-                <button class="btn-action btn-modify" onclick="openEditBoardModal(${board.id})">수정</button>
-                <button class="btn-action btn-delete" onclick="deleteBoard(${board.id})">삭제</button>
+                <div class="action-btns">
+                    <button class="btn-edit" onclick="openEditBoardModal(${board.id})">수정</button>
+                    <button class="btn-delete" onclick="deleteBoard(${board.id})">삭제</button>
+                </div>
             </td>
         `;
         tbody.appendChild(row);

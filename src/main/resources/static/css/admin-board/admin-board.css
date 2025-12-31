@@ -185,41 +185,40 @@
 }
 
 /* 버튼 스타일 */
-.btn-action {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    margin: 0 4px;
-    display: inline-flex;
-    align-items: center;
+.action-btns {
+    display: flex;
     justify-content: center;
-    gap: 6px;
+    align-items: center;
+    gap: 8px;
 }
 
-.btn-modify {
-    background: var(--primary-color);
-    color: #fff;
+.btn-edit,
+.btn-delete {
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s;
 }
 
-.btn-modify:hover {
-    background: var(--primary-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+.btn-edit {
+    background: #e3f2fd;
+    border: 1.2px solid #6d8cdc;
+    color: #1976d2;
+}
+
+.btn-edit:hover {
+    background: #bbdefb;
 }
 
 .btn-delete {
-    background: var(--danger-color);
-    color: #fff;
+    background: #ffebee;
+    border: 1.2px solid #e79898;
+    color: #c62828;
 }
 
 .btn-delete:hover {
-    background: var(--danger-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+    background: #ffcdd2;
 }
 
 /* 토글 스위치 스타일 */
