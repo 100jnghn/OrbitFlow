@@ -2,9 +2,11 @@
    Page Layout
 ========================= */
 .content-wrapper {
-    min-height: calc(100vh - 120px);
+    flex: 1;
     display: flex;
     justify-content: center;
+    overflow-y: auto;
+    min-height: 0;
 }
 
 .left-column {
@@ -214,7 +216,9 @@
 .app-content {
     flex: 1;
     padding: 24px 40px 16px;
-    overflow-y: auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 /* =========================
