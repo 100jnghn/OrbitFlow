@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.SortDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,10 +44,11 @@ public class ReservationController {
             @RequestParam(defaultValue = "false") boolean showPast,
             @RequestParam(required = false) Long statusId,
             @RequestParam(required = false) String typeCode,
-            @SortDefault.SortDefaults({
-                    @SortDefault(sort = "reservationDate", direction = Sort.Direction.ASC),
-                    @SortDefault(sort = "startTime", direction = Sort.Direction.ASC)
-            }) Pageable pageable
+            @PageableDefault(
+                    size = 5,
+                    sort = {"reservationDate", "startTime"},
+                    direction = Sort.Direction.ASC
+            ) Pageable pageable
     ) {
         Page<ReservationResDto> result = reservationService.getMyReservations(
                 user.getEmployeeId(),
