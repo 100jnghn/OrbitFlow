@@ -11,7 +11,7 @@ use orbitflow;
 START TRANSACTION;
 
 SET @pw := '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK';
--- test1234!
+-- 12345678
 
 /* =====================================================
    공통 템플릿: 회사 1세트 생성 (회사별로 변수만 다르게)
@@ -625,6 +625,19 @@ ON DUPLICATE KEY UPDATE internal_phone=VALUES(internal_phone),
                         work_status=VALUES(work_status),
                         hire_date=VALUES(hire_date),
                         updated_at=NOW();
+
+/* =====================================================
+   정다은 → 재무부 부장으로 조직 변경
+===================================================== */
+
+UPDATE employee
+SET org_id = @c1_dept_fin,
+    hr_rank_id = @c1_rank_head,
+    position_category_id = @c1_pos_dept,
+    updated_at = NOW()
+WHERE company_id = @c1
+  AND name = '정다은';
+
 
 /* =========================
    [COMPANY #2] TechSolution 테크솔루션
