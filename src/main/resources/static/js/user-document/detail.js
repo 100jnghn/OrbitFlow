@@ -40,7 +40,7 @@ function bindBackButton() {
 
 
 /* =========================================================
-   document-detail.js
+   detail.js
    - 문서 상세 조회
    - 문서 내용 readonly 렌더
    - 결재선 표시

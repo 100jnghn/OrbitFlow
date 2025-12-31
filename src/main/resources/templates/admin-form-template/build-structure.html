@@ -20,7 +20,7 @@
 
     <!-- 페이지별 CSS -->
     <th:block th:fragment="pageCss">
-        <link rel="stylesheet" href="/css/form-template/createTemplate.css">
+        <link rel="stylesheet" href="/css/admin-form-template/build-structure.css">
         <style>
             /* 2*n 형태의 세로 2줄(2열) 그리드 레이아웃 */
             #component-list-panel .component-btn-list {
@@ -33,7 +33,7 @@
 
     <!-- 페이지별 JS -->
     <th:block th:fragment="pageScript">
-        <script src="/css/form-template/createTemplate.js"></script>
+        <script src="/js/admin-form-template/build-structure.js"></script>
         <script th:inline="javascript">
             const templateId = /*[[${templateId}]]*/ null
         </script>

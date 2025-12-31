@@ -18,7 +18,7 @@
 
     <!-- 페이지별 CSS -->
     <th:block th:fragment="pageCss">
-        <link rel="stylesheet" th:href="@{/css/form-template/preview-template.css}">
+        <link rel="stylesheet" th:href="@{/css/admin-form-template/preview.css}">
     </th:block>
 
     <!-- 페이지별 JS -->
@@ -26,7 +26,7 @@
         <script th:inline="javascript">
             const templateId = /*[[${templateId}]]*/ null
         </script>
-        <script th:src="@{/css/form-template/preview-template.js}"></script>
+        <script th:src="@{/js/admin-form-template/preview.js}"></script>
     </th:block>
 </head>
 
