@@ -3,6 +3,8 @@ package com.finalproj.orbitflow.schedule.repository;
 import com.finalproj.orbitflow.schedule.entity.ScheduleSummary;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 /**
  * Please explain the class!!!
  *
@@ -11,4 +13,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * @since : 2025-12-16 오후 1:19 화요일
  */
 public interface ScheduleSummaryRepository extends JpaRepository<ScheduleSummary, Long> {
+
+    Optional<ScheduleSummary> findByEmployee_Id(Long employeeId);
 }

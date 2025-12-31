@@ -86,9 +86,9 @@ public class ScheduleService {
                     .atStartOfDay()
                     .minusNanos(1);
         }
-        // 주 단위
+        // 주 단위 (일정 요약에 사용) (내일 날짜부터 +7일)
         else {
-            startOfDate = LocalDate.now().atStartOfDay();
+            startOfDate = LocalDate.now().atStartOfDay().plusDays(1);
             endOfDate = startOfDate.plusDays(7);
         }
 

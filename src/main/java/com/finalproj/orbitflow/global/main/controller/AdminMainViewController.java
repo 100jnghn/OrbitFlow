@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class AdminMainViewController {
 
     /**
-     * 관리자 진입점 → 관리자 메뉴로 리다이렉트
+     * 관리자 진입점 → 사원 관리로 바로 이동
      */
     @GetMapping("/admin")
     public String adminRoot() {
-        return "redirect:/view/admin/menu";
+        return "redirect:/view/admin/employees";
     }
 
     /**
