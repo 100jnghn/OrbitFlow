@@ -2,9 +2,11 @@ package com.finalproj.orbitflow.message.controller;
 
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUser;
+import com.finalproj.orbitflow.message.dto.MessageReqDto;
 import com.finalproj.orbitflow.message.dto.MessageResDto;
 import com.finalproj.orbitflow.message.enums.MessageFolderType;
 import com.finalproj.orbitflow.message.service.MessageService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -52,6 +54,52 @@ public class MessageController {
         );
 
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "메시지 상세 조회 성공", result));
+    }
+
+    /** 메시지 전송 */
+    @PostMapping
+    public ResponseEntity<ResponseDto<Long>> sendMessage(
+            @AuthenticationPrincipal SecurityUser user,
+            @RequestBody @Valid MessageReqDto.Send request
+    ) {
+        Long messageId = messageService.sendMessage(
+                user.getCompanyId(),
+                user.getEmployeeId(),
+                request
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ResponseDto<>(HttpStatus.CREATED, "메시지 전송 성공", messageId));
+    }
+
+    /** 메시지 삭제(소프트 삭제) */
+    @DeleteMapping("/{messageId}")
+    public ResponseEntity<ResponseDto<Void>> deleteMessage(
+            @AuthenticationPrincipal SecurityUser user,
+            @PathVariable Long messageId
+    ) {
+        messageService.deleteMessage(user.getCompanyId(), user.getEmployeeId(), messageId);
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "메시지 삭제 성공", null));
+    }
+
+    /** 보관함 이동 */
+    @PatchMapping("/{messageId}/archive")
+    public ResponseEntity<ResponseDto<Void>> archiveMessage(
+            @AuthenticationPrincipal SecurityUser user,
+            @PathVariable Long messageId
+    ) {
+        messageService.archiveMessage(user.getCompanyId(), user.getEmployeeId(), messageId);
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "보관함 이동 성공", null));
+    }
+
+    /** 보관함 해제 */
+    @PatchMapping("/{messageId}/unarchive")
+    public ResponseEntity<ResponseDto<Void>> unarchiveMessage(
+            @AuthenticationPrincipal SecurityUser user,
+            @PathVariable Long messageId
+    ) {
+        messageService.unarchiveMessage(user.getCompanyId(), user.getEmployeeId(), messageId);
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "보관함 해제 성공", null));
     }
 
 }
