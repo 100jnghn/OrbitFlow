@@ -1,8 +1,7 @@
 .dashboard-container {
     width: 100%;
-    padding: 18px;
-    height: calc(100vh - 56px); /* 헤더 높이 제외 */
-    overflow: hidden; /* 스크롤바 방지 */
+    padding: 0 18px 18px 18px;
+    height: 100%; /* 헤더 높이 제외 */
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -14,6 +13,10 @@
     gap: 18px;
     margin-bottom: 18px;
     flex-shrink: 0;
+}
+
+.dashboard-row:first-child {
+    margin-top: 0;
 }
 
 .dashboard-row:last-child {
