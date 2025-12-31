@@ -4,6 +4,8 @@ import com.finalproj.orbitflow.chatbot.manual.entity.ManualMetadata;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  * Please explain the class!!!
  *
@@ -14,4 +16,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ManualRepository extends JpaRepository<ManualMetadata, Long> {
+    List<ManualMetadata> findAllByCompanyIdOrderByIdDesc(Long companyId);
+    
+    List<ManualMetadata> findByCompanyIdAndCategoryIdOrderByIdDesc(Long companyId, Long categoryId);
 }

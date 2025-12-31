@@ -31,24 +31,20 @@
 
         <section class="rule-section">
             <h2>1. 매뉴얼 카테고리 선택</h2>
-            <div class="category-buttons">
-                <button type="button" class="category-btn" data-category="attendance">근태</button>
-                <button type="button" class="category-btn" data-category="approval">결재</button>
-                <button type="button" class="category-btn" data-category="resource">자원관리</button>
-                <button type="button" class="category-btn" data-category="schedule">일정</button>
-                <button type="button" class="category-btn" data-category="other">기타</button>
+            <div class="category-buttons" id="categoryButtons">
+                <!-- 동적으로 카테고리 버튼이 생성됩니다 -->
             </div>
         </section>
 
         <section class="rule-section">
-            <h2>2. 매뉴얼 파일 첨부 (.txt)</h2>
+            <h2>2. 매뉴얼 파일 첨부 (.txt, .pdf)</h2>
             <div class="file-upload-area" id="fileUploadArea">
                 <div class="upload-content">
                     <i class="fas fa-cloud-upload-alt upload-icon"></i>
                     <p>파일을 드래그하여 여기에 놓거나, 클릭하여 파일을 선택하세요.</p>
-                    <p class="upload-hint">최대 10MB (TXT)</p>
+                    <p class="upload-hint">최대 10MB (TXT, PDF)</p>
                 </div>
-                <input type="file" id="fileInput" accept=".txt" style="display: none;">
+                <input type="file" id="fileInput" accept=".txt,.pdf,application/pdf,text/plain" style="display: none;">
             </div>
             <div class="upload-actions">
                 <button type="button" id="uploadBtn" class="btn-primary">업로드</button>
@@ -56,7 +52,7 @@
         </section>
 
         <section class="rule-section">
-            <h2 id="manualListTitle">3. 등록된 매뉴얼 목록 (카테고리: <span id="selectedCategoryName">근태</span>)</h2>
+            <h2 id="manualListTitle">3. 등록된 매뉴얼 목록 (카테고리: <span id="selectedCategoryName">선택 중...</span>)</h2>
             <div class="table-container">
                 <table class="exception-table">
                     <thead>

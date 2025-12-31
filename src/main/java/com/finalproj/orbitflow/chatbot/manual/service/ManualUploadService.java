@@ -4,6 +4,7 @@ import com.finalproj.orbitflow.chatbot.manual.entity.ManualMetadata;
 import com.finalproj.orbitflow.chatbot.manual.repository.ManualRepository;
 import com.finalproj.orbitflow.chatbot.manualCategory.entity.ManualCategory;
 import com.finalproj.orbitflow.chatbot.manualCategory.repository.ManualCategoryRepository;
+
 import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.global.file.repository.FileRepository;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
@@ -46,6 +47,34 @@ public class ManualUploadService {
     @Value("${file.upload-dir}")
     private String uploadDir;
 
+    /**
+     * 특정 회사의 매뉴얼 목록 조회
+     */
+    @Transactional(readOnly = true)
+    public List<ManualMetadata> findAllByCompany(Long companyId) {
+        // 최신 등록순으로 해당 회사의 매뉴얼 메타데이터를 가져옵니다.
+        return manualMetadataRepository.findAllByCompanyIdOrderByIdDesc(companyId);
+    }
+
+    /**
+     * 특정 회사의 특정 카테고리 매뉴얼 목록 조회
+     */
+    @Transactional(readOnly = true)
+    public List<ManualMetadata> findByCompanyAndCategory(Long companyId, Long categoryId) {
+        return manualMetadataRepository.findByCompanyIdAndCategoryIdOrderByIdDesc(companyId, categoryId);
+    }
+
+    /**
+     * 특정 회사의 활성 카테고리 목록 조회
+     */
+    @Transactional(readOnly = true)
+    public List<ManualCategory> findActiveCategoriesByCompany(Long companyId) {
+        return manualCategoryRepository.findByCompanyIdAndIsActiveTrueOrderBySortOrderAsc(companyId);
+    }
+
+    /**
+     * 매뉴얼 파일 업로드 및 벡터 인덱싱 (학습)
+     */
     @Transactional
     public void uploadAndIndexingManual(MultipartFile file, Long categoryId, Long employeeId) {
         Employee employee = employeeRepository.findById(employeeId)
@@ -62,10 +91,10 @@ public class ManualUploadService {
             // 1. 맥북 로컬 경로에 파일 물리 저장 및 File 엔티티 생성
             File savedFile = processFileStorage(file, employee);
 
-            // 2. AI 학습 (벡터 인덱싱)
+            // 2. AI 학습 (벡터 인덱싱) - ChromaDB에 저장
             processVectorIndexing(file, category, employee);
 
-            // 3. 매뉴얼 메타데이터 저장
+            // 3. 매뉴얼 메타데이터 저장 (DB)
             saveManualMetadata(file, category, employee, savedFile);
 
         } catch (IOException e) {
@@ -77,19 +106,15 @@ public class ManualUploadService {
         String originalFileName = file.getOriginalFilename();
         String systemFileName = UUID.randomUUID() + "_" + originalFileName;
 
-        // S3 전환을 대비한 Object Key 구조 (폴더 경로 포함)
         String objectKey = "manuals/" + systemFileName;
 
-        // 맥북 경로 처리
         Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
         if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath); // 폴더가 없으면 생성
+            Files.createDirectories(uploadPath);
         }
 
-        // 파일 복사
         Files.copy(file.getInputStream(), uploadPath.resolve(systemFileName), StandardCopyOption.REPLACE_EXISTING);
 
-        // object_key 포함하여 DB 저장
         return fileRepository.save(File.builder()
                 .company(employee.getCompany())
                 .originFile(originalFileName)
@@ -104,20 +129,21 @@ public class ManualUploadService {
         DocumentParser parser = new ApachePdfBoxDocumentParser();
         Document document = parser.parse(file.getInputStream());
 
+        // 텍스트를 500자 단위로 쪼개고 100자씩 겹치게 설정하여 문맥 유지
         DocumentSplitter splitter = DocumentSplitters.recursive(500, 100);
         List<TextSegment> segments = splitter.split(document);
 
+        // 메타데이터에 회사ID와 카테고리ID를 넣어 나중에 필터링 가능하게 함
         segments.forEach(segment -> {
             segment.metadata().add("company_id", employee.getCompany().getId());
             segment.metadata().add("category_id", category.getId());
         });
 
-        // 벡터 변환 및 저장
+        // 벡터로 변환하여 ChromaDB에 저장
         embeddingStore.addAll(embeddingModel.embedAll(segments).content(), segments);
     }
 
     private void saveManualMetadata(MultipartFile file, ManualCategory category, Employee employee, File savedFile) {
-        // 맥북의 물리적 경로를 포함하여 저장
         String fullPath = Paths.get(uploadDir).resolve(savedFile.getSysFile()).toString();
 
         ManualMetadata metadata = ManualMetadata.builder()
@@ -126,10 +152,26 @@ public class ManualUploadService {
                 .file(savedFile)
                 .fileName(file.getOriginalFilename())
                 .filePath(fullPath)
-                .status("SUCCESS")
+                .status("SUCCESS") // 학습 성공 상태로 저장
                 .isActive(true)
                 .build();
 
         manualMetadataRepository.save(metadata);
+    }
+
+    /**
+     * 매뉴얼 삭제
+     */
+    @Transactional
+    public void deleteManual(Long manualId, Long companyId) {
+        ManualMetadata manual = manualMetadataRepository.findById(manualId)
+                .orElseThrow(() -> new NotFoundException("매뉴얼을 찾을 수 없습니다."));
+
+        // 회사 ID 검증
+        if (!manual.getCompany().getId().equals(companyId)) {
+            throw new InvalidRequestException("해당 매뉴얼을 삭제할 권한이 없습니다.");
+        }
+
+        manualMetadataRepository.delete(manual);
     }
 }
