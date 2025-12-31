@@ -44,5 +44,6 @@ public class ScheduleSummary extends BaseEntity {
     public void update(String dailySummary, String weeklySummary) {
         this.dailySummary = dailySummary;
         this.weeklySummary = weeklySummary;
+
     }
 }

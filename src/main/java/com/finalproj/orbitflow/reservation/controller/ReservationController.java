@@ -12,7 +12,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.data.web.SortDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -126,7 +125,6 @@ public class ReservationController {
         );
     }
 
-
     // ----------------------------------------------------------------------- //
     // 관리자 예약 관리 기능 //
 
@@ -137,10 +135,11 @@ public class ReservationController {
             @RequestParam(defaultValue = "false") boolean showPast,
             @RequestParam(required = false) Long statusId,
             @RequestParam(required = false) String typeCode,
-            @SortDefault.SortDefaults({
-                    @SortDefault(sort = "reservationDate", direction = Sort.Direction.ASC),
-                    @SortDefault(sort = "startTime", direction = Sort.Direction.ASC)
-            }) Pageable pageable
+            @PageableDefault(
+                    size = 7,
+                    sort = {"reservationDate", "startTime"},
+                    direction = Sort.Direction.ASC
+            ) Pageable pageable
     ) {
         Page<ReservationResDto> reservations = reservationService.getReservations(
                 user.getCompanyId(),

@@ -35,7 +35,7 @@
 ========================= */
 .filter-section {
     display: flex;
-    align-items: flex-end;
+    align-items: flex-start;
     gap: 12px;
     margin-bottom: 24px;
     padding: 20px 24px;
@@ -51,11 +51,20 @@
     flex: 0 0 20%;
 }
 
+.filter-item.toggle-wrapper {
+    flex: 0 0 auto;
+    align-items: center;
+}
+
 .filter-label {
     font-size: 12px;
     font-weight: 600;
     color: #888;
     text-transform: uppercase;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    line-height: 1;
 }
 
 .filter-select {
@@ -90,7 +99,7 @@
 
 .toggle-switch {
     position: relative;
-    display: inline-block;
+    display: block;
     width: 50px;
     height: 28px;
     cursor: pointer;
@@ -179,7 +188,8 @@
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border: 1px solid #e5e7eb;
-    min-height: 550px;
+    min-height: 470px;
+    max-height: 470px;
     flex: 1;
     display: flex;
     flex-direction: column;

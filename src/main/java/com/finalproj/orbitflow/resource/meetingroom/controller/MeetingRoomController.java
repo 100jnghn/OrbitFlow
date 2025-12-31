@@ -37,7 +37,7 @@ public class MeetingRoomController {
             @AuthenticationPrincipal SecurityUser user,
             @PageableDefault(
                     page = 0,
-                    size = 8,
+                    size = 5,
                     sort = "id",
                     direction = Sort.Direction.ASC
             ) Pageable pageable

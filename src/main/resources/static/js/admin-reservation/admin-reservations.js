@@ -173,7 +173,7 @@ function createActionCell(reservation) {
 ========================== */
 let currentPage = 0;
 let totalPages = 0;
-let pageSize = 10;
+let pageSize = 7;
 let currentFilters = {
     showPast: false,
     statusId: null,
