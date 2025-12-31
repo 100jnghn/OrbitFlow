@@ -152,7 +152,6 @@ function initEventListeners() {
 
 /**
  * 수정 버튼
- * (아직 edit 화면이 없으므로 id 유지)
  */
 async function handleEdit() {
     // validation 검증

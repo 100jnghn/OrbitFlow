@@ -38,5 +38,4 @@ public class ScheduleResDto {
     private LocalDateTime endAt;
 
     private ScheduleStatus status;
-
 }
