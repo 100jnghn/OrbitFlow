@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-admin :: layout(
+        ~{::content},
+        ~{fragments/header :: header},
+        ~{sidebar/approval/user-approval-sidebar :: sidebar},
+        ~{::pageCss},
+        ~{::pageScript}
+      )}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>결재 양식 관리</title>
+
+    <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/admin-form-template/build-rule.css}">
+    </th:block>
+
+    <th:block th:fragment="pageScript">
+        <script th:src="@{/js/admin-form-template/build-rule.js}"></script>
+    </th:block>
+</head>
+
+<body>
+
+<!-- ✅ 반드시 content fragment 안 -->
+<div th:fragment="content">
+    <div class="approval-rule-container">
+        <h2>결재선 설정</h2>
+
+        <form id="approvalRuleForm"
+              th:data-template-id="${templateId}">
+
+            <!-- ✅ Step 스크롤 영역 -->
+            <div class="approval-steps-wrapper">
+                <div id="approvalStepsContainer">
+                    <!-- JS가 approval-step을 여기에 생성 -->
+                </div>
+                <button
+                        type="button"
+                        id="addStepBtn"
+                        class="add-step-btn">
+                    + add Step
+                </button>
+            </div>
+
+            <!-- ✅ 하단 고정 버튼 영역 (딱 1개만) -->
+            <div class="footer-btns footer-fixed">
+                <div class="footer-left">
+                    <button
+                            type="button"
+                            class="prev-btn">
+                        이전
+                    </button>
+                </div>
+
+                <div class="footer-right">
+                    <button
+                            type="submit"
+                            class="save-btn">
+                        저장
+                    </button>
+                    <button
+                            type="button"
+                            class="activate-btn">
+                        활성
+                    </button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+
+</body>
+</html>

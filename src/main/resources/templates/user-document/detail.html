@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-admin :: layout(
+        ~{::content},
+        ~{fragments/header :: header},
+        ~{sidebar/approval/user-approval-sidebar :: sidebar},
+        ~{::pageCss},
+        ~{::pageScript}
+      )}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>결재 문서 상세</title>
+
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- 페이지별 CSS -->
+    <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/user-document/detail.css}">
+    </th:block>
+
+    <!-- 페이지별 JS -->
+    <th:block th:fragment="pageScript">
+        <script th:src="@{/js/user-document/detail.js}"></script>
+    </th:block>
+</head>
+
+<body>
+
+<!-- ===============================
+     Main Content
+=============================== -->
+<div th:fragment="content" class="document-detail-page">
+
+    <!-- ===============================
+         문서 헤더
+    =============================== -->
+    <section class="document-header document-header--only-status">
+    <span id="documentStatusBadge" class="status-badge">
+        결재중
+    </span>
+    </section>
+
+    <!-- ===============================
+         본문 영역 (좌 / 우)
+    =============================== -->
+    <section class="document-body">
+
+        <!-- ===============================
+             좌측 : 문서 내용 패널
+        =============================== -->
+        <div class="document-content-panel">
+
+            <!-- document-content 렌더링 영역 -->
+            <div id="documentContentContainer">
+                <!-- JS로 document-content 렌더링 -->
+            </div>
+
+        </div>
+
+        <!-- ===============================
+             우측 : 결재 / 부가 정보 패널
+        =============================== -->
+        <aside class="document-side-panel">
+
+            <!-- ===== 결재선 / 코멘트 ===== -->
+            <section class="side-panel-box" id="approvalLinePanel">
+                <h3>결재 정보</h3>
+
+                <div id="approvalLineList">
+                    <!--
+                    <div class="approval-line-item">
+                        <div class="approver-name">영업본부 / 본부장 / 홍길동</div>
+                        <div class="approver-status approved">승인</div>
+                        <div class="approver-comment">검토 완료</div>
+                    </div>
+                    -->
+                </div>
+            </section>
+
+            <!-- ===== 첨부 / 참조 문서 ===== -->
+            <section class="side-panel-box" id="attachmentPanel">
+                <h3>첨부 / 참조 문서</h3>
+
+                <ul id="attachmentList">
+                    <!--
+                    <li>
+                        <a href="#">사업계획서.pdf</a>
+                    </li>
+                    -->
+                </ul>
+            </section>
+
+            <!-- ===== AI 요약 ===== -->
+            <section class="side-panel-box" id="aiSummaryPanel">
+                <h3>AI 문서 요약</h3>
+                <div class="panel-placeholder">
+                    아직 생성되지 않았습니다.
+                </div>
+            </section>
+
+            <!-- ===== AI 비교 ===== -->
+            <section class="side-panel-box" id="aiComparePanel">
+                <h3>AI 문서 비교</h3>
+                <div class="panel-placeholder">
+                    비교 대상이 없습니다.
+                </div>
+            </section>
+
+        </aside>
+    </section>
+
+    <!-- ===============================
+         하단 액션 버튼 영역
+    =============================== -->
+    <section class="document-action-bar">
+
+        <button type="button"
+                id="backBtn"
+                class="action-btn secondary">
+            이전
+        </button>
+
+        <div class="action-right">
+            <button type="button"
+                    id="rejectBtn"
+                    class="action-btn danger"
+                    style="display: none;">
+                반려
+            </button>
+
+            <button type="button"
+                    id="approveBtn"
+                    class="action-btn primary"
+                    style="display: none;">
+                승인
+            </button>
+        </div>
+
+    </section>
+
+</div>
+
+</body>
+</html>

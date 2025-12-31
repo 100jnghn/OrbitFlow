@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-admin :: layout(
+        ~{::content},
+        ~{fragments/header :: header},
+        ~{sidebar/approval/user-approval-sidebar :: sidebar},
+        ~{::pageCss},
+        ~{::pageScript}
+      )}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>결재 양식 미리보기</title>
+
+    <!-- 공통 폰트 -->
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
+
+    <!-- 페이지별 CSS -->
+    <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/admin-form-template/preview.css}">
+    </th:block>
+
+    <!-- 페이지별 JS -->
+    <th:block th:fragment="pageScript">
+        <script th:inline="javascript">
+            const templateId = /*[[${templateId}]]*/ null
+        </script>
+        <script th:src="@{/js/admin-form-template/preview.js}"></script>
+    </th:block>
+</head>
+
+<body>
+
+<!-- Main Content -->
+<div th:fragment="content">
+    <div class="preview-container">
+
+        <!-- 📄 결재 문서 전체 래퍼 -->
+        <div class="document-wrapper">
+            <button
+                    type="button"
+                    class="preview-back-button"
+                    onclick="handlePreviewBack()">
+                ← 이전 페이지
+            </button>
+
+            <!-- 🧾 문서 헤더 (제목 / 기본정보용) -->
+            <!-- ※ 1페이지만 표시되도록 JS/CSS에서 제어 예정 -->
+            <div class="document-header">
+                <!-- JS에서 문서 제목, 작성자, 작성일 등을 채울 영역 -->
+            </div>
+
+            <!-- 📄 본문 페이지 루트 -->
+            <div id="document-root" class="document-root">
+                <!--
+                  JS 결과 구조:
+                  <div class="page">
+                    <div class="page-content">
+                      ...
+                    </div>
+                  </div>
+                -->
+            </div>
+
+            <!-- ✍️ 결재선 / 푸터 (추후 확장용) -->
+            <div class="document-footer">
+                <!-- 결재선, 페이지 번호 등 -->
+            </div>
+
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

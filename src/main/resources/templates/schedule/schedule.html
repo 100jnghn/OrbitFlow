@@ -14,6 +14,7 @@
     <!-- 페이지별 CSS -->
     <th:block th:fragment="pageCss">
         <link rel="stylesheet" th:href="@{/css/schedule/schedule.css}">
+        <link rel="stylesheet" th:href="@{/css/user-sidebar/user-sidebar.css}">
     </th:block>
 
     <!-- 페이지별 JS -->
@@ -35,13 +36,13 @@
             <div class="summary-card">
                 <div class="summary-content">
                     <div class="summary-label">오늘 일정</div>
-                    <div class="summary-value"></div>
+                    <div class="summary-value" id="todaySummary"></div>
                 </div>
             </div>
             <div class="summary-card">
                 <div class="summary-content">
                     <div class="summary-label">이번 주 일정</div>
-                    <div class="summary-value"></div>
+                    <div class="summary-value" id="weekSummary"></div>
                 </div>
             </div>
         </div>

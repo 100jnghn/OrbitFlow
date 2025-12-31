@@ -77,7 +77,7 @@ function createActionCell(id) {
 ========================== */
 let currentPage = 0;
 let totalPages = 0;
-let pageSize = 10;
+let pageSize = 5;
 let currentCategoryId = null;
 
 /* ==========================

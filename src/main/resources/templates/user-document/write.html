@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-admin :: layout(
+        ~{::content},
+        ~{fragments/header :: header},
+        ~{sidebar/approval/user-approval-sidebar :: sidebar},
+        ~{::pageCss},
+        ~{::pageScript}
+      )}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>결재 문서 작성</title>
+
+    <!-- 공통 폰트 / 아이콘 -->
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- 페이지별 CSS -->
+    <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/user-document/write.css}">
+    </th:block>
+
+    <!-- 페이지별 JS -->
+    <th:block th:fragment="pageScript">
+        <!-- 다음 주소 API -->
+        <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+
+        <!-- 직원 검색 컴포넌트 JS -->
+        <script th:src="@{/css/document-write/employee-search.js}"></script>
+
+        <script th:src="@{/js/user-document/write.js}"></script>
+    </th:block>
+</head>
+
+<body>
+<!-- =========================
+     Main Content Fragment
+     ========================= -->
+<div th:fragment="content">
+    <script th:inline="javascript">
+        const DOCUMENT_ID = /*[[${documentId}]]*/ null
+    </script>
+    <section class="document-write">
+        <!-- =========================
+             좌측: 문서 입력 패널
+             ========================= -->
+        <div class="doc-left-panel">
+            <!-- 문서 제목 -->
+            <div class="doc-field doc-title-area">
+                <label id="documentTitleLabel" class="required">
+                    문서 제목
+                </label>
+                <input type="text"
+                       id="documentTitle"/>
+            </div>
+
+            <!-- 문서 필드 영역 (동적 렌더링) -->
+            <div id="documentFields" class="doc-fields">
+                <!-- JS에서 fields 렌더링 -->
+            </div>
+            <!-- 결재선 지정 -->
+            <div class="approval-line-area">
+                <h3>결재선 지정</h3>
+                <p class="approval-guide">
+                    ℹ️ 결재선은 변경 즉시 저장됩니다.
+                </p>
+                <div id="approvalLineContainer">
+                    <!-- 결재선 step 렌더링 -->
+                </div>
+            </div>
+
+        </div>
+        <!-- =========================
+             우측: 부가 패널
+             ========================= -->
+        <div class="doc-right-panel">
+            <!-- 첨부 파일 -->
+            <div class="side-panel">
+                <h4>첨부 파일</h4>
+                <div id="attachmentList"></div>
+                <button type="button" id="addAttachmentBtn">
+                    첨부 파일 추가
+                </button>
+            </div>
+            <!-- 참조 문서 -->
+            <div class="side-panel">
+                <h4>참조 문서</h4>
+                <div id="referenceDocList"></div>
+                <button type="button" id="addReferenceBtn">
+                    참조 문서 추가
+                </button>
+            </div>
+            <!-- 하단 버튼 -->
+            <div class="side-panel footer-buttons">
+                <button id="tempSaveBtn">임시저장</button>
+                <button id="prevBtn">이전</button>
+                <button id="nextBtn" class="primary">상신</button>
+            </div>
+        </div>
+    </section>
+    <div id="postcode-overlay" style="display:none;">
+        <div id="postcode-modal">
+            <div class="postcode-header">
+                <span class="postcode-title">주소 검색</span>
+                <button type="button"
+                        class="postcode-close-btn"
+                        aria-label="닫기">✕
+                </button>
+            </div>
+
+            <div id="postcode-content"></div>
+        </div>
+    </div>
+    <div id="toast-container"></div>
+</div>
+</body>
+</html>

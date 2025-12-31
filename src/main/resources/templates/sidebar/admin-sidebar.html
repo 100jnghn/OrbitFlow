@@ -4,15 +4,18 @@
 <ul th:fragment="menu" class="sidebar-menu">
 
     <li class="menu-item">
-        <div class="menu-title" role="button" onclick="toggleAdminMenu(this)">
+<!--        <div class="menu-title" role="button" onclick="toggleAdminMenu(this)">-->
+<!--            <span>사원 관리</span>-->
+<!--            <i class="fas fa-chevron-down arrow"></i>-->
+<!--        </div>-->
+<!--        <ul class="sub-menu">-->
+<!--            <li th:classappend="${currentMenu == 'employee'} ? 'selected' : ''">-->
+<!--                <a th:href="@{/view/admin/employees}">사원 관리</a>-->
+<!--            </li>-->
+<!--        </ul>-->
+        <a th:href="@{/view/admin/employees}" class="menu-title" style="text-decoration:none;">
             <span>사원 관리</span>
-            <i class="fas fa-chevron-down arrow"></i>
-        </div>
-        <ul class="sub-menu">
-            <li th:classappend="${currentMenu == 'employee'} ? 'selected' : ''">
-                <a th:href="@{/view/admin/employees}">사원 관리</a>
-            </li>
-        </ul>
+        </a>
     </li>
 
     <li class="menu-item no-sub">

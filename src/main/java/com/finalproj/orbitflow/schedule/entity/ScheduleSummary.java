@@ -1,12 +1,10 @@
 package com.finalproj.orbitflow.schedule.entity;
 
+import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.time.LocalDateTime;
 
 /**
  * Please explain the class!!!
@@ -21,7 +19,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class ScheduleSummary {
+public class ScheduleSummary extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,14 +35,15 @@ public class ScheduleSummary {
     private Employee employee;
 
     // MySQL의 TEXT 타입 매핑
-    @Column(name = "week_summary", columnDefinition = "TEXT")
-    private String weekSummary;
+    @Column(name = "daily_summary", columnDefinition = "TEXT")
+    private String dailySummary;
 
-    @Column(name = "month_summary", columnDefinition = "TEXT")
-    private String monthSummary;
+    @Column(name = "weekly_summary", columnDefinition = "TEXT")
+    private String weeklySummary;
 
-    // BaseEntity를 상속받지 않고 createdAt만 사용
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+    public void update(String dailySummary, String weeklySummary) {
+        this.dailySummary = dailySummary;
+        this.weeklySummary = weeklySummary;
+
+    }
 }

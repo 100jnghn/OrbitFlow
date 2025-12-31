@@ -11,28 +11,97 @@
     let isSubmitting = false; // 제출 중 플래그 (중복 제출 방지)
     let selectedDate = null; // 선택된 날짜
 
-    // 초기화
+    function updateApprovalSidebarSelection() {
+        // 모든 no-sub 메뉴 선택 해제
+        document.querySelectorAll('.menu-item.no-sub').forEach(item => {
+            item.classList.remove('selected');
+        });
+
+        // 결재 대기함 선택
+        const inboxLink = document.getElementById('scheduleCalender');
+        if (inboxLink) {
+            const menuItem = inboxLink.closest('.menu-item.no-sub');
+            if (menuItem) {
+                menuItem.classList.add('selected');
+            }
+        }
+    }
+
+    // js 로드될 때 초기화
     document.addEventListener('DOMContentLoaded', function () {
+        updateApprovalSidebarSelection();
         initializeTimeSelects();
         setupEventListeners();
+
         // 초기 토글 상태 설정
         document.getElementById('personalToggle').classList.toggle('active', showPersonal);
         document.getElementById('companyToggle').classList.toggle('active', showCompany);
         loadOrganizations();
-        
+
         // 오늘 날짜를 선택된 날짜로 설정
         selectedDate = new Date();
         selectedDate.setHours(0, 0, 0, 0);
-        
+
+        // AI 일정 요약 기능 호출
+        // 시간은 백엔드에서 계산
+        loadScheduleSummary();
+
+
         // 초기 로드 시 list-title 업데이트
         updateScheduleListTitle();
-        
+
         loadSchedules();
         renderCalendar();
-        
+
         // 오늘 날짜의 일정 로드
         loadDateSchedules(selectedDate);
     });
+
+    function renderMarkdown(text) {
+        if (!text) return '';
+
+        return text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // **굵게**
+            .replace(/\n/g, '<br>');                          // 줄바꿈
+    }
+
+    async function loadScheduleSummary() {
+
+        const todayEl = document.getElementById('todaySummary');
+        const weekEl = document.getElementById('weekSummary');
+
+        try {
+
+            todayEl.textContent = 'AI가 오늘의 일정을 요약 중입니다..';
+            weekEl.textContent = 'AI가 주간 일정을 요약 중입니다..';
+
+            const response = await apiFetch('/api/schedule/summary');
+            if (!response.ok) {
+                if (response.status === 401) {
+                    location.href = '/login';
+                    return;
+                }
+                if (response.status === 403) {
+                    throw new Error("권한 없음");
+                }
+                throw new Error('일정 요약을 진행할 수 없습니다');
+            }
+
+            const result = await response.json()
+            console.log(result);
+
+            const { dailySummary, weeklySummary } = result.data;
+
+            todayEl.innerHTML = renderMarkdown(dailySummary);
+            weekEl.innerHTML = renderMarkdown(weeklySummary);
+
+        } catch (error) {
+            console.error('일정 요약 중 에러 발생 : ', error);
+
+            todayEl.textContent = '일정 요약에 실패했습니다.';
+            weekEl.textContent = '일정 요약에 실패했습니다.';
+        }
+    }
 
     // 이벤트 리스너 설정
     function setupEventListeners() {
@@ -159,7 +228,7 @@
                 .map(org => `<option value="${org.id}">${org.name}</option>`)
                 .join('');
             orgSelect.innerHTML = orgOptions;
-            
+
             // 기본값을 첫 번째 조직으로 설정
             if (childOrgs.length > 0) {
                 orgSelect.value = childOrgs[0].id;
@@ -194,9 +263,9 @@
     function handleOrgFilterChange() {
         const checkedBoxes = document.querySelectorAll('#orgFilter .org-filter-checkbox:checked');
         selectedOrgIds = Array.from(checkedBoxes).map(cb => cb.value);
-        
+
         loadSchedules();
-        
+
         // 날짜가 선택되어 있으면 해당 날짜의 일정 다시 로드
         if (selectedDate) {
             loadDateSchedules(selectedDate);
@@ -325,7 +394,7 @@
         });
 
         renderCalendar(filtered);
-        
+
         // 날짜가 선택되지 않은 경우 일정 목록 초기화
         if (!selectedDate) {
             renderScheduleList([]);
@@ -431,7 +500,7 @@
     function createScheduleItem(schedule) {
         const item = document.createElement('div');
         item.className = 'schedule-item';
-        
+
         // 일정 유형에 따라 클래스 추가
         if (schedule.company) {
             item.classList.add('company');
@@ -440,7 +509,7 @@
         } else {
             item.classList.add('personal');
         }
-        
+
         item.textContent = schedule.title;
         item.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -488,7 +557,7 @@
     function createScheduleListItem(schedule) {
         const item = document.createElement('div');
         item.className = 'schedule-item-list';
-        
+
         // 일정 유형에 따라 클래스 추가
         if (schedule.company) {
             item.classList.add('company');
@@ -547,7 +616,7 @@
         return item;
     }
 
-// 날짜/시간 포맷
+    // 날짜/시간 포맷
     function formatDateTime(date) {
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
@@ -556,7 +625,7 @@
         return `${month}/${day} ${hours}:${minutes}`;
     }
 
-// 일정 추가 모달 열기
+    // 일정 추가 모달 열기
     function openAddScheduleModal() {
         document.getElementById('modalTitle').textContent = '일정 등록';
         document.getElementById('submitBtn').textContent = '등록';
@@ -735,7 +804,7 @@
 
         const orgId = isPersonal ? '' : document.getElementById('scheduleOrg').value;
         let orgCategoryId = null;
-        
+
         // 조직을 선택한 경우 해당 조직의 categoryId 가져오기
         if (orgId) {
             const selectedOrg = orgList.find(org => org.id == orgId);
