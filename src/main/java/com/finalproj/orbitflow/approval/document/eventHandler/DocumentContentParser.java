@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow.approval.document.eventHandler;
 
-import com.finalproj.orbitflow.approval.document.dto.CompanyEventPayload;
+import com.finalproj.orbitflow.approval.document.dto.CommonPayload;
 import com.finalproj.orbitflow.approval.document.dto.VacationPayload;
 import com.finalproj.orbitflow.approval.document.schema.DocumentField;
 import com.finalproj.orbitflow.approval.documentContent.entity.DocumentContent;
@@ -21,16 +21,16 @@ import java.util.Map;
 
 public class DocumentContentParser {
 
-    public CompanyEventPayload extractCompanyEvent(DocumentContent content) {
+    public CommonPayload extractCommon(DocumentContent content) {
 
         DocumentField eventField = content.findFirstByType("event-date-range")
                 .orElseThrow(() ->
-                        new IllegalStateException("회사 일정 필드를 찾을 수 없습니다.")
+                        new IllegalStateException("일정 필드를 찾을 수 없습니다.")
                 );
 
         Map<String, Object> value = eventField.getValue();
 
-        return new CompanyEventPayload(
+        return new CommonPayload(
                 (String) value.get("title"),
                 (String) value.get("description"),
                 LocalDate.parse((String) value.get("start")),

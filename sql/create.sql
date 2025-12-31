@@ -656,19 +656,33 @@ CREATE INDEX idx_ai_summary_type
 CREATE TABLE attendance_record
 (
     id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
-    employee_id        BIGINT                                                         NULL,
-    company_id         BIGINT                                                         NOT NULL,
-    start_date         DATE                                                           NOT NULL,
-    end_date           DATE                                                           NOT NULL,
-    days               DECIMAL(4, 1)                                                  NOT NULL,
-    type_id            BIGINT                                                         NOT NULL,
+
+    employee_id        BIGINT        NULL,
+    company_id         BIGINT        NOT NULL,
+
+    -- 근태 기간 (날짜 단위)
+    start_date         DATE          NOT NULL,
+    end_date           DATE          NOT NULL,
+
+    days               DECIMAL(4, 1) NOT NULL,
+
+    type_id            BIGINT        NOT NULL,
     reason             VARCHAR(255),
-    source_document_id BIGINT                                                         NULL,
-    status             ENUM ('DRAFT','SUBMITTED','IN_PROGRESS','APPROVED','REJECTED') NOT NULL,
-    approved_at        TIMESTAMP,
-    created_at         TIMESTAMP                                                      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at         TIMESTAMP                                                      NOT NULL DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP,
+
+    source_document_id BIGINT        NULL,
+
+    status             ENUM (
+        'DRAFT',
+        'SUBMITTED',
+        'IN_PROGRESS',
+        'APPROVED',
+        'REJECTED'
+        )                            NOT NULL,
+
+    approved_at        TIMESTAMP     NULL,
+
+    created_at         TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_att_employee
         FOREIGN KEY (employee_id)
@@ -692,6 +706,7 @@ CREATE TABLE attendance_record
             ON UPDATE CASCADE
 ) ENGINE = InnoDB;
 
+
 CREATE INDEX idx_att_company_period
     ON attendance_record (company_id, start_date, end_date);
 
@@ -703,6 +718,58 @@ CREATE INDEX idx_att_document
 
 CREATE INDEX idx_att_status
     ON attendance_record (status);
+
+
+
+CREATE TABLE attendance_event
+(
+    id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    employee_id        BIGINT      NOT NULL,
+    company_id         BIGINT      NOT NULL,
+
+    -- BUSINESS_TRIP / OUTWORK
+    base_role          VARCHAR(20) NOT NULL,
+
+    -- 근태 상태 적용 기간
+    start_date         DATE        NOT NULL,
+    end_date           DATE        NOT NULL,
+
+    source_document_id BIGINT      NULL,
+
+    created_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_attendance_event_employee
+        FOREIGN KEY (employee_id)
+            REFERENCES employee (id)
+            ON DELETE RESTRICT,
+
+    CONSTRAINT fk_attendance_event_company
+        FOREIGN KEY (company_id)
+            REFERENCES company (id)
+            ON DELETE RESTRICT,
+
+    CONSTRAINT fk_attendance_event_document
+        FOREIGN KEY (source_document_id)
+            REFERENCES document (id)
+            ON DELETE SET NULL,
+
+    CONSTRAINT chk_attendance_event_role
+        CHECK (base_role IN ('BUSINESS_TRIP', 'OUTWORK'))
+) ENGINE = InnoDB;
+
+-- 배치 핵심 (이거 하나로 대부분 해결)
+CREATE INDEX idx_att_event_employee_period
+    ON attendance_event (employee_id, start_date, end_date);
+
+-- 회사 단위 조회용 (옵션)
+CREATE INDEX idx_att_event_company_period
+    ON attendance_event (company_id, start_date, end_date);
+
+-- 문서 추적용
+CREATE INDEX idx_att_event_document
+    ON attendance_event (source_document_id);
 
 
 -- =========================================================
@@ -957,14 +1024,14 @@ CREATE TABLE message
 
 CREATE TABLE message_recipient
 (
-    id                  BIGINT       NOT NULL AUTO_INCREMENT,
-    company_id          BIGINT       NOT NULL,
-    message_id          BIGINT       NOT NULL,
-    employee_id         BIGINT       NOT NULL,
-    is_read             TINYINT(1)   NOT NULL DEFAULT 0,
-    message_folder_type VARCHAR(20)  NOT NULL DEFAULT 'INBOX', -- INBOX, SEND 구분용 컬럼 추가
-    read_at             TIMESTAMP    NULL,
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id                  BIGINT      NOT NULL AUTO_INCREMENT,
+    company_id          BIGINT      NOT NULL,
+    message_id          BIGINT      NOT NULL,
+    employee_id         BIGINT      NOT NULL,
+    is_read             TINYINT(1)  NOT NULL DEFAULT 0,
+    message_folder_type VARCHAR(20) NOT NULL DEFAULT 'INBOX', -- INBOX, SEND 구분용 컬럼 추가
+    read_at             TIMESTAMP   NULL,
+    created_at          TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uk_message_recipient (company_id, message_id, employee_id),
     FOREIGN KEY (message_id) REFERENCES message (id)
@@ -1149,12 +1216,12 @@ CREATE TABLE schedule
 -- 9. 일정 요약
 CREATE TABLE schedule_summary
 (
-    id            BIGINT AUTO_INCREMENT,
-    company_id    BIGINT NOT NULL,
-    employee_id   BIGINT NOT NULL,
-    daily_summary TEXT,
-    weekly_summary  TEXT,
-    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    id             BIGINT AUTO_INCREMENT,
+    company_id     BIGINT NOT NULL,
+    employee_id    BIGINT NOT NULL,
+    daily_summary  TEXT,
+    weekly_summary TEXT,
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     CONSTRAINT fk_schedule_summary_company
         FOREIGN KEY (company_id) REFERENCES company (id)

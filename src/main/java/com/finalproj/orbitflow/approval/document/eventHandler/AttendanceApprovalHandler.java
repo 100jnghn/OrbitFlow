@@ -1,13 +1,13 @@
 package com.finalproj.orbitflow.approval.document.eventHandler;
 
+import com.finalproj.orbitflow.approval.attendanceEvent.entity.AttendanceEvent;
+import com.finalproj.orbitflow.approval.attendanceEvent.repository.AttendanceEventRepository;
 import com.finalproj.orbitflow.approval.document.dto.CommonPayload;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
 import com.finalproj.orbitflow.approval.documentContent.entity.DocumentContent;
 import com.finalproj.orbitflow.approval.documentContent.repository.DocumentContentRepository;
 import com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole;
-import com.finalproj.orbitflow.attendance.default_rule.entity.AttendanceRule;
-import com.finalproj.orbitflow.attendance.default_rule.repository.AttendanceRuleRepository;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.organization.entity.Organization;
@@ -19,68 +19,96 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import java.time.LocalTime;
-
 /**
  * Please explain the class!!!
  *
  * @author : Choi MinHyeok
- * @filename : CompanyEventApprovalHandler
+ * @filename : AttendanceApprovalHandler
  * @since : 25. 12. 31. 수요일
  **/
 
 @Component
 @RequiredArgsConstructor
-public class CompanyEventApprovalHandler {
+public class AttendanceApprovalHandler {
+
 
     private final DocumentRepository documentRepository;
     private final DocumentContentRepository documentContentRepository;
     private final DocumentContentParser documentContentParser;
     private final ScheduleService scheduleService;
     private final OrgRepository orgRepository;
-    private final AttendanceRuleRepository attendanceRuleRepository;
+    private final AttendanceEventRepository attendanceEventRepository;
+
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(Long documentId) {
 
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new NotFoundException("문서를 찾을 수 없습니다."));
+                .orElseThrow();
 
-        // COMPANY_EVENT가 아니면 무시
-        if (document.getTemplateGroup().getBaseRole() != BaseRole.COMPANY_EVENT) {
+        BaseRole baseRole = document.getTemplateGroup().getBaseRole();
+
+        // 출장 / 외근만 처리
+        if (baseRole != BaseRole.BUSINESS_TRIP &&
+                baseRole != BaseRole.OUTWORK) {
             return;
         }
 
         DocumentContent content = documentContentRepository
-                .findByDocument_Id(document.getId())
-                .orElseThrow(() ->
-                        new NotFoundException("문서 내용을 찾을 수 없습니다.")
-                );
+                .findByDocument_Id(documentId)
+                .orElseThrow();
 
         CommonPayload payload =
                 documentContentParser.extractCommon(content);
 
         Employee writer = document.getWriter();
 
-
-        Organization org = orgRepository.findFirstByCompanyIdAndParentOrgId(writer.getCompany().getId(), null)
+        Organization org = orgRepository
+                .findFirstByCompanyIdAndParentOrgId(
+                        writer.getCompany().getId(), null
+                )
                 .orElseThrow(() -> new NotFoundException("작성자의 최상위 조직 조회 실패"));
 
-        AttendanceRule rule = attendanceRuleRepository.findByCompanyIdAndIsDefaultTrue(writer.getCompany().getId()).orElseThrow(() -> new NotFoundException("회사의 출퇴근 시간 조회 실패"));
-
-        LocalTime st = rule.getDefaultStartTime();
-        LocalTime et = rule.getDefaultEndTime();
+        String title = switch (baseRole) {
+            case BUSINESS_TRIP -> "출장";
+            case OUTWORK -> "외근";
+            default -> payload.title();
+        };
+        
+        /* =========================
+           1. 캘린더 일정 생성
+        ========================= */
 
         ScheduleReqDto scheduleReqDto = ScheduleReqDto.builder()
                 .isCompany(true)
                 .orgCategoryId(org.getCategoryId())
-                .title(payload.title())
+                .orgId(org.getId())
+                .title(title)
                 .description(payload.description())
-                .startAt(payload.startDate().atTime(st.getHour(), st.getMinute(), st.getSecond()))
-                .endAt(payload.endDate().atTime(et.getHour(), et.getMinute(), et.getSecond()))
+                .startAt(payload.startDate().atStartOfDay())
+                .endAt(payload.endDate().atTime(23, 59, 59))
                 .status("RELEASE")
                 .build();
 
-        scheduleService.newTransactionInsertSchedule(writer.getCompany().getId(), writer.getId(), scheduleReqDto);
+        scheduleService.newTransactionInsertSchedule(
+                writer.getCompany().getId(),
+                writer.getId(),
+                scheduleReqDto
+        );
+
+        /* =========================
+           2. 근태 반영용 기록 저장
+        ========================= */
+        attendanceEventRepository.save(
+                AttendanceEvent.builder()
+                        .employee(writer)
+                        .company(writer.getCompany())
+                        .baseRole(baseRole) // BUSINESS_TRIP / OUTWORK
+                        .startDate(payload.startDate())
+                        .endDate(payload.endDate())
+                        .sourceDocument(document)
+                        .build()
+        );
+
     }
 }

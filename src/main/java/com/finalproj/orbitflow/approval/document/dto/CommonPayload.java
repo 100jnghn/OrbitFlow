@@ -11,7 +11,7 @@ import java.time.LocalDate;
  **/
 
 
-public record CompanyEventPayload(
+public record CommonPayload(
         String title,
         String description,
         LocalDate startDate,
