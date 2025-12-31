@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.chatbot.controller;
+package com.finalproj.orbitflow.chatbot.chatbot.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,7 +16,7 @@ public class ChatbotViewController {
     public String chatbotManualPage(Model model) {
         model.addAttribute("currentGNB", "admin");
         model.addAttribute("currentMenu", "chatbot");
-        return "admin/admin-chatbot-manual";
+        return "admin-chatbot/admin-chatbot-manual";
     }
 }
 

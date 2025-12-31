@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.chatbot.manualFileLink.entity;
+package com.finalproj.orbitflow.chatbot.manual.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 

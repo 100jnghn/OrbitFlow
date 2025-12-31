@@ -10,6 +10,7 @@
 <head>
     <th:block th:fragment="pageCss">
         <link rel="stylesheet" th:href="@{/css/board/board.css}">
+        <link rel="stylesheet" th:href="@{/css/leave/leave.css}">
         <link rel="stylesheet" th:href="@{/css/attendance/monthly-attendance.css}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     </th:block>
@@ -25,40 +26,38 @@
         <!-- 검색 및 필터 -->
         <div class="board-search-section">
             <div class="search-filters">
-                <select id="searchType" class="filter-select">
-                    <option value="MONTH">월별 선택</option>
-                    <option value="RANGE">기간 설정</option>
-                </select>
-
-                <div id="monthPickerWrapper" class="input-area">
-                    <div class="custom-dropdown" id="monthDropdown">
-                        <div class="dropdown-selected">
-                            <span id="selectedMonthText">연도 선택</span>
-                            <i class="fas fa-calendar-alt"></i>
-                        </div>
-                        <ul class="dropdown-list" id="monthList"></ul>
-                    </div>
+                <div class="filter-select-wrapper">
+                    <label for="statusFilter" class="filter-label">상태</label>
+                    <select id="statusFilter" class="filter-select">
+                        <option value="ALL">전체</option>
+                        <option value="ON_TIME">정상출근</option>
+                        <option value="LATE">지각</option>
+                        <option value="ABSENT">결근</option>
+                        <option value="VACATION">휴가</option>
+                    </select>
                 </div>
-
-                <div id="rangePickerWrapper" class="input-area range-inputs" style="display: none;">
+                <div class="date-field-wrapper">
+                    <label for="startDate" class="filter-label">시작일</label>
                     <input type="date" id="startDate" class="date-input">
+                </div>
+                <div class="date-field-wrapper">
+                    <label for="endDate" class="filter-label">종료일</label>
                     <input type="date" id="endDate" class="date-input">
                 </div>
-
-                <select id="statusFilter" class="filter-select">
-                    <option value="ALL">전체 목록</option>
-                    <option value="ON_TIME">정상출근</option>
-                    <option value="LATE">지각</option>
-                    <option value="ABSENT">결근</option>
-                    <option value="VACATION">휴가</option>
-                </select>
-
-                <button type="button" class="btn-search" id="rangeSearchBtn">
-                    <i class="fas fa-search"></i> 검색
-                </button>
+                <div class="button-wrapper">
+                    <label class="filter-label" style="opacity: 0;">버튼</label>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="btn-search" id="searchBtn">
+                            <i class="fas fa-search" style="margin-right: 6px;"></i>
+                            검색
+                        </button>
+                        <button type="button" class="btn-reset" id="resetBtn">
+                            초기화
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
-        <input type="hidden" id="monthSelect" value="">
 
         <!-- 요약 카드 -->
         <div class="card summary-card" style="margin-bottom: 24px;">

@@ -7,6 +7,7 @@ import com.querydsl.core.types.dsl.*;
 import com.querydsl.core.types.PathMetadata;
 import javax.annotation.processing.Generated;
 import com.querydsl.core.types.Path;
+import com.querydsl.core.types.dsl.PathInits;
 
 
 /**
@@ -17,13 +18,15 @@ public class QManualCategory extends EntityPathBase<ManualCategory> {
 
     private static final long serialVersionUID = -652443902L;
 
+    private static final PathInits INITS = PathInits.DIRECT2;
+
     public static final QManualCategory manualCategory = new QManualCategory("manualCategory");
 
     public final com.finalproj.orbitflow.global.common.QBaseEntity _super = new com.finalproj.orbitflow.global.common.QBaseEntity(this);
 
     public final StringPath categoryName = createString("categoryName");
 
-    public final NumberPath<Long> companyId = createNumber("companyId", Long.class);
+    public final com.finalproj.orbitflow.hr.company.entity.QCompany company;
 
     //inherited
     public final DateTimePath<java.time.Instant> createdAt = _super.createdAt;
@@ -46,15 +49,24 @@ public class QManualCategory extends EntityPathBase<ManualCategory> {
     public final DateTimePath<java.time.Instant> updatedAt = _super.updatedAt;
 
     public QManualCategory(String variable) {
-        super(ManualCategory.class, forVariable(variable));
+        this(ManualCategory.class, forVariable(variable), INITS);
     }
 
     public QManualCategory(Path<? extends ManualCategory> path) {
-        super(path.getType(), path.getMetadata());
+        this(path.getType(), path.getMetadata(), PathInits.getFor(path.getMetadata(), INITS));
     }
 
     public QManualCategory(PathMetadata metadata) {
-        super(ManualCategory.class, metadata);
+        this(metadata, PathInits.getFor(metadata, INITS));
+    }
+
+    public QManualCategory(PathMetadata metadata, PathInits inits) {
+        this(ManualCategory.class, metadata, inits);
+    }
+
+    public QManualCategory(Class<? extends ManualCategory> type, PathMetadata metadata, PathInits inits) {
+        super(type, metadata, inits);
+        this.company = inits.isInitialized("company") ? new com.finalproj.orbitflow.hr.company.entity.QCompany(forProperty("company")) : null;
     }
 
 }
