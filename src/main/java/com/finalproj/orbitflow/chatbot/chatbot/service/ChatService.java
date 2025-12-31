@@ -6,6 +6,7 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,34 +19,40 @@ import java.util.stream.Collectors;
  * @filename : ChatbotService
  * @since : 2025. 12. 30. 화요일
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatService {
 
-    private final ChatLanguageModel chatLanguageModel; // ChatbotConfig에 추가 필요
+    private final ChatLanguageModel chatLanguageModel;
     private final EmbeddingModel embeddingModel;
     private final EmbeddingStore<TextSegment> embeddingStore;
 
     public String askQuestion(String question, Long companyId) {
-        // 1. 질문을 벡터로 변환 (Embedding)
         var questionEmbedding = embeddingModel.embed(question).content();
 
-        // 2. 벡터 DB에서 가장 유사한 매뉴얼 조각 3개 검색 (Retrieval)
-        // 실제 운영 시에는 metadata 필터링(company_id 등)을 추가하는 것이 좋습니다.
-        List<EmbeddingMatch<TextSegment>> relevant = embeddingStore.findRelevant(questionEmbedding, 3);
+        // 상위 10개로 검색 범위를 넓혀 필터링 후에도 충분한 데이터가 남도록 함
+        List<EmbeddingMatch<TextSegment>> matches = embeddingStore.findRelevant(questionEmbedding, 10);
 
-        // 3. 검색된 내용을 하나의 컨텍스트로 합침
-        String context = relevant.stream()
+        String context = matches.stream()
+                .filter(match -> {
+                    Object storedId = match.embedded().metadata().toMap().get("company_id");
+                    return storedId != null && storedId.toString().equals(companyId.toString());
+                })
                 .map(match -> match.embedded().text())
                 .collect(Collectors.joining("\n\n"));
 
-        // 4. 프롬프트 생성 및 LLM 답변 요청 (Generation)
+        if (context.trim().isEmpty()) {
+            log.warn("검색 결과 없음 - 회사ID: {}, 질문: {}", companyId, question);
+            return "해당 질문에 대한 정보를 매뉴얼에서 찾을 수 없습니다.";
+        }
+
+        // AI에게 명확한 역할 부여
         String prompt = String.format(
-                "당신은 회사의 매뉴얼 전문가입니다. 아래 제공된 [매뉴얼 내용]을 바탕으로 사용자의 [질문]에 친절하게 답하세요.\n\n" +
+                "당신은 사내 규정 전문가입니다. 아래 [매뉴얼 내용]에 근거하여 답변하세요.\n\n" +
                         "[매뉴얼 내용]:\n%s\n\n" +
-                        "[질문]:\n%s\n\n" +
-                        "정답을 모를 경우 '매뉴얼에 해당 내용이 없습니다'라고 답하세요.",
-                context, question);
+                        "[사용자 질문]: %s\n\n" +
+                        "답변 (매뉴얼에 내용이 없으면 아는 척하지 말고 모른다고 하세요):", context, question);
 
         return chatLanguageModel.generate(prompt);
     }
