@@ -40,7 +40,8 @@
     border: 1px solid var(--neutral-200);
     border-radius: 12px;
     padding: 20px 24px;
-    min-height: 160px;
+    min-height: 300px;
+    max-height: 300px;
     display: flex;
     align-items: flex-start;
     transition: all 0.2s ease;
@@ -52,19 +53,6 @@
     transform: translateY(-2px);
 }
 
-.summary-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 24px;
-    flex-shrink: 0;
-}
-
 .summary-content {
     flex: 1;
     display: flex;
@@ -72,18 +60,41 @@
     align-items: flex-start;
 }
 
+/* "오늘 일정", "이번 주 일정" */
 .summary-label {
-    font-size: 14px;
-    color: var(--neutral-600);
-    margin-bottom: 8px;
-    font-weight: 500;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--neutral-500);
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
 }
 
+/* AI 요약 본문 */
 .summary-value {
-    font-size: 28px;
-    font-weight: 700;
+    font-size: 14.5px;
+    font-weight: 400;
     color: var(--neutral-800);
-    line-height: 1;
+    line-height: 1.65;
+    white-space: pre-line;
+
+    /* 카드 안에서 읽기 좋게 */
+    max-width: 100%;
+}
+
+/* 강조 텍스트 (Markdown ** 처리) */
+.summary-value strong {
+    font-weight: 600;
+    color: var(--neutral-900);
+}
+
+/* 리스트(-)가 있을 경우 */
+.summary-value ul {
+    padding-left: 18px;
+    margin: 8px 0;
+}
+
+.summary-value li {
+    margin-bottom: 6px;
 }
 
 /* 필터 및 컨트롤 */
