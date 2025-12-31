@@ -1,4 +1,19 @@
 /* =========================
+   Board Container
+========================= */
+.board-container {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 200px);
+}
+
+/* =========================
    Page Header
 ========================= */
 .page-header {
@@ -132,14 +147,18 @@
 
 .btn-batch-approve {
     padding: 12px 24px;
-    background: #4a69bd;
     color: #fff;
     border: none;
-    border-radius: 8px;
+    border-radius: 20px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
+
+    background: #ecfdf5;
+    color: dimgray;
+
+    border: 1.2px solid #10b981;
 }
 
 .btn-batch-approve:hover {
@@ -153,6 +172,19 @@
 /* =========================
    Table Container
 ========================= */
+.board-table-container {
+    margin-bottom: 24px;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    min-height: 550px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
 .table-container {
     margin-bottom: 24px;
     background: white;
@@ -256,7 +288,7 @@
     align-items: center;
     justify-content: center;
     margin: 0;
-    height: 22px; /* status-badge와 동일한 height */
+    /*height: 22px; !* status-badge와 동일한 height *!*/
 }
 
 .resource-table tbody tr {
@@ -520,41 +552,62 @@
     justify-content: center;
     align-items: center;
     gap: 8px;
+    flex: 1;
     margin-top: 24px;
 }
 
+.page-btn,
+.page-number,
 .pagination button {
-    min-width: 36px;
+    min-width: 32px;
     height: 36px;
-    padding: 0 12px;
+    padding: 0 8px;
     border: 1px solid #ddd;
     background: #fff;
-    color: #555;
     border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
     cursor: pointer;
+    font-size: 14px;
+    color: #555;
+    text-align: center;
+    font-weight: 500;
     transition: all 0.2s;
     display: inline-flex;
     align-items: center;
     justify-content: center;
 }
 
+.page-btn:hover:not(:disabled),
+.page-number:hover:not(.active),
 .pagination button:hover:not(:disabled) {
     background: #f8f9fa;
     border-color: #4a69bd;
     color: #4a69bd;
 }
 
+.page-btn:disabled,
+.pagination button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.page-number.active,
 .pagination button.active {
     background: #4a69bd;
     color: #fff;
     border-color: #4a69bd;
+    font-weight: 500;
 }
 
-.pagination button:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+.ellipsis {
+    min-width: 32px;
+    height: 36px;
+    padding: 0 4px;
+    color: #9ca3af;
+    border: none;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .pagination-info {
