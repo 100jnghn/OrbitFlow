@@ -138,7 +138,7 @@ function createActionCell(reservation) {
 ========================== */
 let currentPage = 0;
 let totalPages = 0;
-let pageSize = 10;
+let pageSize = 5;
 let currentFilters = {
     showPast: false,
     statusId: null,
@@ -339,6 +339,22 @@ function initFilters() {
     }
 }
 
+function updateApprovalSidebarSelection() {
+    // 모든 no-sub 메뉴 선택 해제
+    document.querySelectorAll('.menu-item.no-sub').forEach(item => {
+        item.classList.remove('selected');
+    });
+
+    // 결재 대기함 선택
+    const inboxLink = document.getElementById('myReservationLink');
+    if (inboxLink) {
+        const menuItem = inboxLink.closest('.menu-item.no-sub');
+        if (menuItem) {
+            menuItem.classList.add('selected');
+        }
+    }
+}
+
 /* ==========================
    Init
 ========================== */
@@ -346,4 +362,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initFilters();
     loadReservations();
     loadStatuses();
+    updateApprovalSidebarSelection();
 });

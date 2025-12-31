@@ -15,6 +15,7 @@
     <!-- 페이지별 CSS -->
     <th:block th:fragment="pageCss">
         <link rel="stylesheet" th:href="@{/css/reservation/my-reservation.css}">
+        <link rel="stylesheet" th:href="@{/css/user-sidebar/user-sidebar.css}">
     </th:block>
 
     <!-- 페이지별 JS -->
@@ -33,68 +34,70 @@
 <body>
 <!-- Main Content -->
 <div th:fragment="content">
-    <div class="page-header">
-        <h1 class="page-title">내 예약 현황</h1>
-    </div>
-
-    <!-- Filter Section -->
-    <div class="filter-section">
-        <div class="filter-item">
-            <label class="filter-label">리소스 카테고리</label>
-            <select class="filter-select" id="resource-category-filter">
-                <option value="">전체</option>
-                <option value="MEETING">회의실</option>
-                <option value="CAR">차량</option>
-                <option value="ITEM">기타 자원</option>
-
-            </select>
+    <div class="board-container">
+        <div class="page-header">
+            <h1 class="page-title">내 예약 현황</h1>
         </div>
 
-        <div class="filter-item">
-            <label class="filter-label">상태</label>
-            <select class="filter-select" id="status-filter"></select>
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="filter-item">
+                <label class="filter-label">리소스 카테고리</label>
+                <select class="filter-select" id="resource-category-filter">
+                    <option value="">전체</option>
+                    <option value="MEETING">회의실</option>
+                    <option value="CAR">차량</option>
+                    <option value="ITEM">기타 자원</option>
+
+                </select>
+            </div>
+
+            <div class="filter-item">
+                <label class="filter-label">상태</label>
+                <select class="filter-select" id="status-filter"></select>
+            </div>
+
+            <div class="filter-item toggle-wrapper">
+                <label class="filter-label">지난 예약 보기</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="past-reservations-toggle">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
         </div>
 
-        <div class="filter-item toggle-wrapper">
-            <label class="filter-label">지난 예약 보기</label>
-            <label class="toggle-switch">
-                <input type="checkbox" id="past-reservations-toggle">
-                <span class="toggle-slider"></span>
-            </label>
+        <!-- Table Container -->
+        <div class="board-table-container">
+            <table class="resource-table">
+                <colgroup>
+                    <col style="width:5%">
+                    <col style="width:10%">
+                    <col style="width:15%">
+                    <col style="width:22%">
+                    <col style="width:8%">
+                    <col style="width:8%">
+                    <col style="width:7%">
+                    <col style="width:7%">
+                    <col style="width:10%">
+                    <col style="width:8%">
+                </colgroup>
+                <thead>
+                <tr>
+                    <th>번호</th>
+                    <th>카테고리</th>
+                    <th>이름</th>
+                    <th>예약 사유</th>
+                    <th>시작일</th>
+                    <th>종료일</th>
+                    <th>시작시간</th>
+                    <th>종료시간</th>
+                    <th>상태</th>
+                    <th>취소</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
         </div>
-    </div>
-
-    <!-- Table Container -->
-    <div class="table-container">
-        <table class="resource-table">
-            <colgroup>
-                <col style="width:5%">
-                <col style="width:10%">
-                <col style="width:15%">
-                <col style="width:22%">
-                <col style="width:8%">
-                <col style="width:8%">
-                <col style="width:7%">
-                <col style="width:7%">
-                <col style="width:10%">
-                <col style="width:8%">
-            </colgroup>
-            <thead>
-            <tr>
-                <th>번호</th>
-                <th>카테고리</th>
-                <th>이름</th>
-                <th>예약 사유</th>
-                <th>시작일</th>
-                <th>종료일</th>
-                <th>시작시간</th>
-                <th>종료시간</th>
-                <th>상태</th>
-                <th>취소</th>
-            </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
 
         <!-- Pagination -->
         <div class="pagination-container" id="pagination-container">

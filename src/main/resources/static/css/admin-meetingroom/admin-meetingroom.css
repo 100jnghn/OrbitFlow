@@ -2,9 +2,11 @@
    Page Layout
 ========================= */
 .content-wrapper {
-    min-height: calc(100vh - 120px);
+    flex: 1;
     display: flex;
     justify-content: center;
+    overflow-y: auto;
+    min-height: 0;
 }
 
 .left-column {
@@ -224,6 +226,42 @@
     color: #666;
 }
 
+.action-btns {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-edit,
+.btn-delete {
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-edit {
+    background: #e3f2fd;
+    border: 1.2px solid #6d8cdc;
+    color: #1976d2;
+}
+
+.btn-edit:hover {
+    background: #bbdefb;
+}
+
+.btn-delete {
+    background: #ffebee;
+    border: 1.2px solid #e79898;
+    color: #c62828;
+}
+
+.btn-delete:hover {
+    background: #ffcdd2;
+}
+
 .creator-item i {
     color: #4a69bd;
     font-size: 14px;
@@ -242,7 +280,9 @@
 .app-content {
     flex: 1;
     padding: 24px 40px 16px;
-    overflow-y: auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 /* =========================
