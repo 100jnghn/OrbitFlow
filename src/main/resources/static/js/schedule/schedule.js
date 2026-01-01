@@ -7,6 +7,7 @@
     let selectedOrgIds = [];
     let showPersonal = true; // 개인 일정 표시 여부
     let showCompany = true; // 전사 일정 표시 여부
+    let showApproval = false; // 결재 일정 표시 여부
     let orgList = [];
     let isSubmitting = false; // 제출 중 플래그 (중복 제출 방지)
     let selectedDate = null; // 선택된 날짜
@@ -36,6 +37,7 @@
         // 초기 토글 상태 설정
         document.getElementById('personalToggle').classList.toggle('active', showPersonal);
         document.getElementById('companyToggle').classList.toggle('active', showCompany);
+        document.getElementById('approvalToggle').classList.toggle('active', showApproval);
         loadOrganizations();
 
         // 오늘 날짜를 선택된 날짜로 설정
@@ -140,6 +142,10 @@
             toggleCompany();
         });
 
+        document.getElementById('approvalToggle').addEventListener('click', () => {
+            toggleApproval();
+        });
+
         // 조직 필터는 loadOrganizations에서 동적으로 추가됨
 
         // 폼 제출
@@ -165,6 +171,21 @@
                 }
             }
         });
+
+        // 시작 날짜 변경 시 종료 날짜 min 설정
+        const startDateInput = document.getElementById('scheduleStartDate');
+        const endDateInput = document.getElementById('scheduleEndDate');
+        if (startDateInput && endDateInput) {
+            startDateInput.addEventListener('change', function() {
+                if (this.value) {
+                    endDateInput.min = this.value;
+                    // 종료 날짜가 시작 날짜보다 이전이면 시작 날짜로 설정
+                    if (endDateInput.value && endDateInput.value < this.value) {
+                        endDateInput.value = this.value;
+                    }
+                }
+            });
+        }
     }
 
     // 시간 선택 옵션 초기화
@@ -259,6 +280,16 @@
         renderScheduleList([]);
     }
 
+    // 결재 일정 토글
+    function toggleApproval() {
+        showApproval = !showApproval;
+        document.getElementById('approvalToggle').classList.toggle('active', showApproval);
+        selectedDate = null; // 날짜 선택 초기화
+        loadSchedules();
+        // 날짜가 선택되지 않았으면 일정 목록 초기화
+        renderScheduleList([]);
+    }
+
     // 조직 필터 변경 핸들러
     function handleOrgFilterChange() {
         const checkedBoxes = document.querySelectorAll('#orgFilter .org-filter-checkbox:checked');
@@ -324,7 +355,6 @@
             if (showPersonal) {
                 try {
                     const personalResponse = await apiFetch(`/api/schedules/personal?year=${year}&month=${month}`);
-                    console.log("개인 일정 조회 요청")
 
                     if (personalResponse.ok) {
                         const personalResult = await personalResponse.json();
@@ -340,7 +370,7 @@
             // 전사 일정 로드
             if (showCompany) {
                 try {
-                    const companyResponse = await apiFetch(`/api/schedules/company?year=${year}&month=${month}&status=RELEASE`);
+                    const companyResponse = await apiFetch(`/api/schedules/user-company?year=${year}&month=${month}&status=RELEASE`);
                     if (companyResponse.ok) {
                         const companyResult = await companyResponse.json();
                         if (companyResult.data) {
@@ -365,6 +395,21 @@
                     }
                 } catch (error) {
                     console.error('Error loading organization schedules:', error);
+                }
+            }
+
+            // 결재 일정 로드
+            if (showApproval) {
+                try {
+                    const approvalResponse = await apiFetch(`/api/schedules/company-employee?year=${year}&month=${month}`);
+                    if (approvalResponse.ok) {
+                        const approvalResult = await approvalResponse.json();
+                        if (approvalResult.data) {
+                            allSchedules.push(...approvalResult.data);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading approval schedules:', error);
                 }
             }
 
@@ -640,8 +685,11 @@
         const month = String(today.getMonth() + 1).padStart(2, '0');
         const day = String(today.getDate()).padStart(2, '0');
 
-        document.getElementById('scheduleStartDate').value = `${year}-${month}-${day}`;
-        document.getElementById('scheduleEndDate').value = `${year}-${month}-${day}`;
+        const startDateValue = `${year}-${month}-${day}`;
+        document.getElementById('scheduleStartDate').value = startDateValue;
+        document.getElementById('scheduleEndDate').value = startDateValue;
+        // 종료 날짜의 min을 시작 날짜로 설정
+        document.getElementById('scheduleEndDate').min = startDateValue;
         document.getElementById('scheduleStartHour').value = '09';
         document.getElementById('scheduleStartMinute').value = '00';
         document.getElementById('scheduleEndHour').value = '18';
@@ -845,8 +893,11 @@
         const startAt = toLocalDateTimeString(startDateTime);
         const endAt = toLocalDateTimeString(endDateTime);
 
+        console.log("개인 일정 : " + isPersonal);
+
         const scheduleData = {
             isCompany: false,
+            isPersonal: isPersonal,
             title: title,
             description: description || null,
             startAt: startAt,

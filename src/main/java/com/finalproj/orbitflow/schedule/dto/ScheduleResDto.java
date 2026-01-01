@@ -25,6 +25,7 @@ public class ScheduleResDto {
 
     private Long companyId;
     private boolean isCompany;
+    private boolean isPersonal;
 
     private Long orgCategoryId;   // null = 개인 일정
     private Long orgId;           // null = 개인 일정
