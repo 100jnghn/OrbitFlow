@@ -1,11 +1,15 @@
 // ===============================
-// 상태 관리 (page는 0-based)
+// 상태 관리 (offset는 0-based)
 // ===============================
 let mydocState = {
     status: "ALL",
-    searchType: "date",
-    searchParams: {},
-    page: 0,
+    searchType: "TITLE",
+    searchParams: {
+        keyword: "",
+        startDate: "",
+        endDate: ""
+    },
+    offset: 0,
     size: 10,
     totalPages: 1
 };
@@ -25,28 +29,69 @@ let writePopupState = {
 const SEARCH_TEXT_MAX = 50;
 
 
+function updateApprovalSidebarSelection() {
+    // 모든 no-sub 메뉴 선택 해제
+    document.querySelectorAll('.menu-item.no-sub').forEach(item => {
+        item.classList.remove('selected');
+    });
+
+    // 결재 대기함 선택
+    const inboxLink = document.getElementById('mySubmitLink');
+    if (inboxLink) {
+        const menuItem = inboxLink.closest('.menu-item.no-sub');
+        if (menuItem) {
+            menuItem.classList.add('selected');
+        }
+    }
+}
+
 // ===============================
 // 초기화
 // ===============================
-function initMyDocumentsPage() {
+function initMyDocumentPage() {
+    updateApprovalSidebarSelection();
     bindFilterEvents();
     bindWriteButton();
-    renderSearchInputs("date");
     fetchAndRender();
 }
 
 // ===============================
 // 이벤트 바인딩
 // ===============================
+function executeSearch() {
+    const input = document.getElementById('keyword');
+    const hint = document.getElementById('searchTextHint');
+
+    if (input) {
+        const v = input.value.trim();
+        if (v && v.length > SEARCH_TEXT_MAX) {
+            showHint(
+                hint,
+                `검색어는 ${SEARCH_TEXT_MAX}자 이내여야 합니다.`,
+                'error'
+            );
+            return;
+        }
+    }
+
+    updateSearchParams();
+    mydocState.offset = 0;
+    fetchAndRender();
+}
+
+
 function bindFilterEvents() {
     const statusEl = document.getElementById("statusFilter");
     const searchTypeEl = document.getElementById("searchType");
     const searchBtnEl = document.getElementById("searchBtn");
+    const keywordEl = document.getElementById("keyword");
+    const startDateEl = document.getElementById("startDate");
+    const endDateEl = document.getElementById("endDate");
 
     if (statusEl) {
         statusEl.addEventListener("change", function () {
             mydocState.status = this.value;
-            mydocState.page = 0;
+            mydocState.offset = 0;
             fetchAndRender();
         });
     }
@@ -54,35 +99,38 @@ function bindFilterEvents() {
     if (searchTypeEl) {
         searchTypeEl.addEventListener("change", function () {
             mydocState.searchType = this.value;
-            renderSearchInputs(this.value);
         });
     }
 
-    if (searchBtnEl) {
-        searchBtnEl.addEventListener("click", function () {
-            if (mydocState.searchType !== 'date') {
-                const input = document.getElementById('textInput');
-                const hint = document.getElementById('searchTextHint');
-
-                if (input) {
-                    const v = input.value.trim();
-                    if (v && v.length > SEARCH_TEXT_MAX) {
-                        showHint(
-                            hint,
-                            `검색어는 ${SEARCH_TEXT_MAX}자 이내여야 합니다.`,
-                            'error'
-                        );
-                        return;
-                    }
-                }
-            }
-
+    if (startDateEl) {
+        startDateEl.addEventListener("change", () => {
             updateSearchParams();
-            mydocState.page = 0;
+            mydocState.offset = 0;
             fetchAndRender();
         });
     }
 
+    if (endDateEl) {
+        endDateEl.addEventListener("change", () => {
+            updateSearchParams();
+            mydocState.offset = 0;
+            fetchAndRender();
+        });
+    }
+
+    if (searchBtnEl) {
+        searchBtnEl.addEventListener("click", executeSearch);
+    }
+
+    // ⭐ Enter 키 검색
+    if (keywordEl) {
+        keywordEl.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                executeSearch();
+            }
+        });
+    }
 }
 
 // ===============================
@@ -203,21 +251,6 @@ async function showSelectedTemplateDescription(groupId) {
     }
 }
 
-function bindSearchEnterKey() {
-    const input = document.getElementById('textInput');
-    if (!input) return;
-
-    input.addEventListener('keyup', e => {
-        if (e.key !== 'Enter') return;
-
-        const v = input.value.trim();
-        if (v && v.length > SEARCH_TEXT_MAX) return;
-
-        updateSearchParams();
-        mydocState.page = 0;
-        fetchAndRender();
-    });
-}
 
 
 function bindWritePopupEvents() {
@@ -291,81 +324,16 @@ function bindWritePopupEvents() {
 // ===============================
 // 검색 UI
 // ===============================
-function renderSearchInputs(type) {
-    const area = document.getElementById("searchInputs");
-    if (!area) return;
-
-    if (type === "date") {
-        area.innerHTML = `
-            <input type="date" id="startDate">
-            <span>~</span>
-            <input type="date" id="endDate">
-        `;
-        return;
-    }
-
-    const placeholder =
-        type === "formName"
-            ? "양식명을 입력하세요"
-            : "문서 제목을 입력하세요";
-
-    area.innerHTML = `
-        <div class="search-group">
-            <input type="text"
-                   id="textInput"
-                   placeholder="${placeholder}"
-                   maxlength="${SEARCH_TEXT_MAX}">
-            <div class="hint" id="searchTextHint"></div>
-        </div>
-    `;
-
-    bindSearchTextValidation();
-}
-
-function bindSearchTextValidation() {
-    const input = document.getElementById('textInput');
-    const hint = document.getElementById('searchTextHint');
-    if (!input || !hint) return;
-
-    input.addEventListener('input', () => {
-        enforceMaxLength(input, SEARCH_TEXT_MAX);
-
-        const v = input.value.trim();
-        if (!v) {
-            clearHint(hint);
-            return;
-        }
-
-        if (v.length > SEARCH_TEXT_MAX) {
-            showHint(
-                hint,
-                `검색어는 ${SEARCH_TEXT_MAX}자 이내여야 합니다. (${v.length}/${SEARCH_TEXT_MAX})`,
-                'error'
-            );
-            return;
-        }
-
-        showHint(
-            hint,
-            `입력됨 (${v.length}/${SEARCH_TEXT_MAX})`,
-            'success'
-        );
-    });
-}
 
 
 function updateSearchParams() {
-    if (mydocState.searchType === "date") {
-        mydocState.searchParams = {
-            startDate: document.getElementById("startDate")?.value,
-            endDate: document.getElementById("endDate")?.value
-        };
-    } else {
-        mydocState.searchParams = {
-            keyword: document.getElementById("textInput")?.value
-        };
-    }
+    mydocState.searchParams = {
+        keyword: document.getElementById("keyword")?.value?.trim() || "",
+        startDate: document.getElementById("startDate")?.value || "",
+        endDate: document.getElementById("endDate")?.value || ""
+    };
 }
+
 
 // ===============================
 // API 호출
@@ -377,25 +345,23 @@ function fetchMyDocuments(params) {
         query.append("documentStatus", params.status);
     }
 
-    query.append("page", String(params.page));
+    query.append("offset", String(params.offset));
     query.append("size", String(params.size));
 
-    if (params.searchType === "date") {
-        if (params.startDate) query.append("startDate", params.startDate);
-        if (params.endDate) query.append("endDate", params.endDate);
-    } else {
-        const keyword = (params.keyword || "").trim();
-        if (keyword.length > 0) {
-            query.append("keyword", keyword);
-            query.append("searchType", params.searchType);
-        }
+    const {keyword, startDate, endDate} = params;
+
+    if (keyword) {
+        query.append("keyword", keyword);
+        const type = params.searchType || "TITLE";
+        query.append("searchType", type);
     }
 
-    const url = `/api/documents/my-written?${query.toString()}`;
+    if (startDate) query.append("startDate", startDate);
+    if (endDate) query.append("endDate", endDate);
 
-    return apiFetch(url)
+    return apiFetch(`/api/documents/my-written?${query.toString()}`)
         .then(res => res.json())
-        .then(json => json.data); // ✅ 항상 data만 반환
+        .then(json => json.data);
 }
 
 
@@ -407,7 +373,7 @@ function fetchAndRender() {
         status: mydocState.status,
         searchType: mydocState.searchType,
         ...mydocState.searchParams,
-        page: mydocState.page,
+        offset: mydocState.offset,
         size: mydocState.size
     };
 
@@ -417,6 +383,7 @@ function fetchAndRender() {
         renderPagination();
     });
 }
+
 
 function getProgressText(status) {
     switch (status) {
@@ -463,44 +430,76 @@ function formatCurrentApprover(doc) {
     return "-";
 }
 
+/* =========================
+   초기화 버튼
+========================= */
+
+function clearSearchFilters() {
+    // 1. UI 초기화
+    document.getElementById("statusFilter").value = "ALL";
+    document.getElementById("searchType").value = "TITLE";
+    document.getElementById("keyword").value = "";
+    document.getElementById("startDate").value = "";
+    document.getElementById("endDate").value = "";
+
+    // 2. 상태 초기화
+    mydocState.status = "ALL";
+    mydocState.searchType = "TITLE";
+    mydocState.searchParams = {
+        keyword: "",
+        startDate: "",
+        endDate: ""
+    };
+    mydocState.offset = 0;
+
+    // 3. 정상 재조회
+    fetchAndRender(); // ⭐ 이것만 호출
+}
+
+
 function renderTable(docs) {
     const tbody = document.getElementById("mydocTbody");
-    const nodata = document.getElementById("nodataMsg");
-
-    if (!tbody || !nodata) return;
+    if (!tbody) return;
 
     tbody.innerHTML = "";
 
     if (!docs.length) {
-        nodata.style.display = "block";
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="approval-empty-row">
+                    조회된 문서가 없습니다.
+                </td>
+            </tr>
+        `;
         return;
     }
-
-    nodata.style.display = "none";
 
     docs.forEach(doc => {
         const tr = document.createElement("tr");
 
         tr.innerHTML = `
-            <td>${doc.title}</td>
-            <td>${doc.templateGroupName}</td>
+            <td class="title-col ellipsis" title="${doc.title}">
+                ${doc.title}
+            </td>
+            <td class="title-col ellipsis" title="${doc.templateGroupName}">
+                ${doc.templateGroupName}
+            </td>
             <td>v${doc.templateVersion}</td>
-            <td>${formatDate(doc.createdAt)}</td>
+            <td>${formatDateTime(doc.createdAt)}</td>
             <td>${getStatusText(doc.status)}</td>
             <td>${getProgressText(doc.status)}</td>
-            <td>${formatCurrentApprover(doc)}</td>
+            <td class="ellipsis" title="${formatCurrentApprover(doc)}">
+                ${formatCurrentApprover(doc)}
+            </td>
         `;
 
         tr.classList.add("clickable");
+        tr.onclick = () => {
+            location.href = doc.status === "DRAFT"
+                ? `/view/document/write/${doc.documentId}`
+                : `/view/document/${doc.documentId}`;
+        };
 
-        tr.addEventListener("click", () => {
-            if (doc.status === "DRAFT") {
-                location.href = `/view/document/write/${doc.documentId}`;
-                return;
-            }
-
-            location.href = `/view/document/${doc.documentId}`;
-        });
         tbody.appendChild(tr);
     });
 }
@@ -510,38 +509,72 @@ function renderTable(docs) {
 // 페이지네이션
 // ===============================
 function renderPagination() {
-    const prevBtn = document.getElementById("prevPageBtn");
-    const nextBtn = document.getElementById("nextPageBtn");
-    const indicator = document.getElementById("pageIndicator");
+    const pagination = document.getElementById('approvalPagination');
+    if (!pagination) return;
 
-    if (!prevBtn || !nextBtn || !indicator) return;
+    pagination.innerHTML = '';
 
-    const cur = mydocState.page;
+    const offset = mydocState.offset;
     const total = mydocState.totalPages;
 
-    // 페이지 표시 (1-based)
-    indicator.textContent = total > 0
-        ? `${cur + 1} / ${total}`
-        : "0 / 0";
-
-    // 버튼 활성/비활성
-    prevBtn.disabled = cur <= 0;
-    nextBtn.disabled = cur >= total - 1;
-
-    // 이벤트 (중복 방지 위해 onclick 사용)
-    prevBtn.onclick = () => {
-        if (cur > 0) {
-            mydocState.page--;
-            fetchAndRender();
-        }
+    const prev = document.createElement('button');
+    prev.className = 'page-btn';
+    prev.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prev.disabled = offset === 0;
+    prev.onclick = () => {
+        mydocState.offset--;
+        fetchAndRender();
     };
+    pagination.appendChild(prev);
 
-    nextBtn.onclick = () => {
-        if (cur < total - 1) {
-            mydocState.page++;
-            fetchAndRender();
-        }
+    const maxVisible = 5;
+    let start = Math.max(0, offset - Math.floor(maxVisible / 2));
+    let end = Math.min(total - 1, start + maxVisible - 1);
+
+    if (start > 0) {
+        addPageBtn(pagination, 0);
+        if (start > 1) addEllipsis(pagination);
+    }
+
+    for (let i = start; i <= end; i++) {
+        addPageBtn(pagination, i, i === offset);
+    }
+
+    if (end < total - 1) {
+        if (end < total - 2) addEllipsis(pagination);
+        addPageBtn(pagination, total - 1);
+    }
+
+    const next = document.createElement('button');
+    next.className = 'page-btn';
+    next.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    next.disabled = offset >= total - 1;
+    next.onclick = () => {
+        mydocState.offset++;
+        fetchAndRender();
     };
+    pagination.appendChild(next);
+}
+
+
+function addPageBtn(container, page, active = false) {
+    const btn = document.createElement('button');
+    btn.className = 'page-number';
+    if (active) btn.classList.add('active');
+    btn.textContent = page + 1;
+    btn.onclick = () => {
+        mydocState.offset = page;
+        fetchAndRender();
+    };
+    container.appendChild(btn);
+}
+
+
+function addEllipsis(container) {
+    const span = document.createElement('span');
+    span.className = 'ellipsis';
+    span.textContent = '...';
+    container.appendChild(span);
 }
 
 // ===============================
@@ -585,18 +618,29 @@ function getStatusText(status) {
     }
 }
 
-function formatDate(isoString) {
+function formatDateTime(isoString) {
     if (!isoString) return "-";
     const d = new Date(isoString);
-    return d.toLocaleDateString("ko-KR");
+    return d.toLocaleString("ko-KR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+    });
 }
 
 // ===============================
 // fragment 안전 실행
 // ===============================
 document.addEventListener("DOMContentLoaded", () => {
+    const clearBtn = document.getElementById("clearBtn");
+    if (clearBtn) {
+        clearBtn.addEventListener("click", clearSearchFilters);
+    }
+
     if (document.querySelector(".my-documents-page")) {
-        initMyDocumentsPage();
+        initMyDocumentPage();
         bindWritePopupEvents();
     }
 });

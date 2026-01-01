@@ -1,153 +1,33 @@
 /* ===============================
-   페이지 래퍼
-   =============================== */
-
-.my-documents-page {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    font-family: 'Noto Sans KR', sans-serif;
-}
-
-/* ===============================
-   검색 영역 + 작성 버튼 헤더
-   =============================== */
-
-.search-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-/* ===============================
-   검색 + 상태 필터
-   =============================== */
-
-.search-area {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px;
-    background: #f7f9fc;
-    border-radius: 8px;
-    flex-wrap: wrap;
-}
-
-.search-area select,
-.search-area input[type="text"],
-.search-area input[type="date"] {
-    height: 32px;
-    padding: 0 8px;
-    border: 1px solid #d0d7e2;
-    border-radius: 4px;
-    font-size: 13px;
-    background: #fff;
-}
-
-/* 검색 input + hint 래퍼 */
-.search-group {
-    position: relative; /* ⭐️ hint 기준점 */
-    display: flex;
-    align-items: center;
-}
-
-#searchInputs {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-#searchBtn {
-    height: 32px;
-    padding: 0 14px;
-    background: #2f6fed;
-    border: none;
-    border-radius: 4px;
-    color: #fff;
-    font-size: 13px;
-    cursor: pointer;
-}
-
-#searchBtn:hover {
-    background: #255ad6;
-}
-
-/* ===============================
-   문서 작성 버튼
+   문서 작성 버튼 (공통)
    =============================== */
 
 .btn-primary {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 14px;
-    background-color: #2563eb;
+    padding: 0 18px;
+    height: 36px; /* 페이지네이션 버튼과 동일 */
+    background-color: var(--primary-color);
     color: #fff;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
     white-space: nowrap;
+    transition: all 0.2s ease;
 }
 
 .btn-primary:hover {
-    background-color: #1e4fd7;
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
+
 
 /* ===============================
-   문서 테이블
-   =============================== */
-
-.document-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: #fff;
-}
-
-.document-table th {
-    background: #f2f4f8;
-    font-size: 13px;
-    font-weight: 600;
-    padding: 10px;
-    border-bottom: 1px solid #e2e6ed;
-    text-align: center;
-}
-
-.document-table td {
-    font-size: 13px;
-    padding: 10px;
-    border-bottom: 1px solid #e2e6ed;
-    text-align: center;
-}
-
-.document-table tbody tr:hover {
-    background: #f9fbff;
-}
-
-.document-table a.doc-link {
-    color: #2f6fed;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.document-table a.doc-link:hover {
-    text-decoration: underline;
-}
-
-/* ===============================
-   No Data
-   =============================== */
-
-.nodata {
-    padding: 40px 0;
-    text-align: center;
-    font-size: 14px;
-    color: #888;
-}
-
-/* ===============================
-   문서 작성 팝업 (approval-home 모달 스타일)
+   문서 작성 팝업
    =============================== */
 
 .modal-backdrop {
@@ -173,19 +53,13 @@
     overflow: hidden;
 }
 
-/* 타이틀 */
 .modal-title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     font-size: 1.22rem;
     font-weight: 700;
     color: #18246e;
     margin-bottom: 10px;
 }
 
-
-/* form group */
 .modal-form-group {
     display: flex;
     flex-direction: column;
@@ -202,38 +76,30 @@
     background: #fafbff;
 }
 
-/* ===============================
-   hint (레이아웃 영향 제거)
-   =============================== */
-
+/* hint */
 .hint {
     position: absolute;
     top: 100%;
     left: 0;
     margin-top: 4px;
     font-size: 12px;
-    line-height: 1.2;
     white-space: nowrap;
     pointer-events: none;
 }
 
 .hint.success {
-    color: #3563e9;
+    color: var(--primary-color);
 }
 
 .hint.error {
-    color: #d14343;
+    color: var(--danger-color);
 }
 
-/* ===============================
-   설명 박스
-   =============================== */
-
+/* 설명 박스 */
 .update-descbox {
     border: 1.4px solid #bfc4e0;
     border-radius: 7px;
     background: #fff;
-    margin-top: 10px;
     min-height: 120px;
     box-shadow: 0 3px 18px rgba(80, 87, 149, 0.11);
 }
@@ -246,10 +112,7 @@
     overflow-y: auto;
 }
 
-/* ===============================
-   드롭다운
-   =============================== */
-
+/* 드롭다운 */
 .modal-dropdown-list {
     position: absolute;
     left: 0;
@@ -271,15 +134,11 @@
     color: #294d91;
 }
 
-.modal-dropdown-item:hover,
-.modal-dropdown-item.selected {
+.modal-dropdown-item:hover {
     background: #ecf2fd;
 }
 
-/* ===============================
-   모달 버튼
-   =============================== */
-
+/* 팝업 버튼 */
 .modal-actions {
     margin-top: 15px;
     display: flex;
@@ -304,7 +163,7 @@
 }
 
 .modal-create-btn {
-    background: #3563e9;
+    background: var(--primary-color);
     color: #fff;
 }
 
@@ -313,34 +172,173 @@
     cursor: not-allowed;
 }
 
+
 /* ===============================
-   approval-home 페이지네이션
+   테이블 레이아웃
    =============================== */
 
-.approval-pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 18px;
-    gap: 13px;
+.approval-container .approval-table {
+    table-layout: fixed;
+    width: 100%;
 }
 
-.pagination-btn {
-    padding: 6px 17px;
-    border-radius: 8px;
-    border: 1.2px solid #bfc4e0;
-    background: #f8fafd;
-    font-size: 1rem;
-    color: #2b2e46;
+/* 기본 셀 처리 */
+.approval-container .approval-table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ===============================
+   테이블 정렬 규칙 (핵심)
+   =============================== */
+
+/* 기본: 전부 중앙 */
+.approval-container .approval-table th,
+.approval-container .approval-table td {
+    text-align: center;
+}
+
+/* 제목 계열 컬럼 (문서 제목, 양식명)
+   - 헤더 + 값 모두 좌측 */
+.approval-container .approval-table th:nth-child(1),
+.approval-container .approval-table th:nth-child(2),
+.approval-container .approval-table td.title-col {
+    text-align: left;
+}
+
+/* 제목 컬럼 강조 */
+.approval-container .approval-table td.title-col {
+    font-weight: 500;
+    color: var(--neutral-800);
     cursor: pointer;
 }
 
-.pagination-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+.approval-container .approval-table tr:hover td.title-col {
+    color: var(--primary-color);
+    text-decoration: underline;
 }
 
-.page-indicator {
-    font-weight: 600;
-    color: #324091;
+
+/* ===============================
+   테이블 컬럼 폭 (colgroup 보조)
+   =============================== */
+
+.approval-container .approval-table th:nth-child(1),
+.approval-container .approval-table td:nth-child(1) {
+    width: 20%;
+}
+
+.approval-container .approval-table th:nth-child(2),
+.approval-container .approval-table td:nth-child(2) {
+    width: 20%;
+}
+
+.approval-container .approval-table th:nth-child(3),
+.approval-container .approval-table td:nth-child(3) {
+    width: 10%;
+}
+
+.approval-container .approval-table th:nth-child(4),
+.approval-container .approval-table td:nth-child(4) {
+    width: 16%;
+    white-space: nowrap;
+}
+
+.approval-container .approval-table th:nth-child(5),
+.approval-container .approval-table td:nth-child(5) {
+    width: 8%;
+}
+
+.approval-container .approval-table th:nth-child(6),
+.approval-container .approval-table td:nth-child(6) {
+    width: 10%;
+}
+
+.approval-container .approval-table th:nth-child(7),
+.approval-container .approval-table td:nth-child(7) {
+    width: 24%;
+}
+
+
+/* ===============================
+   하단 액션 영역 (페이지네이션 + 작성 버튼)
+   =============================== */
+
+.approval-bottom-actions {
+    position: relative; /* 기준점 */
+    margin-top: 16px;
+    min-height: 36px; /* 버튼 / 페이지네이션 높이 */
+}
+
+/* 페이지네이션: 컨테이너 기준 중앙 */
+.approval-bottom-actions .approval-pagination {
+    display: flex;
+    justify-content: center;
+}
+
+/* 문서 작성 버튼: 우측 끝 고정 */
+.approval-write-action {
+    position: absolute;
+    right: 0;
+    top: 0;
+
+    display: flex;
+    align-items: center;
+}
+
+/* ===============================
+   Primary 버튼 (문서 작성)
+   =============================== */
+
+.approval-btn-primary {
+    height: 40px;
+    padding: 0 20px;
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    transition: all 0.2s ease;
+}
+
+.approval-btn-primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* ===============================
+   Secondary 버튼 (초기화)
+   =============================== */
+
+.approval-btn-secondary {
+    height: 40px;
+    padding: 0 16px;
+    background: #fff;
+    color: var(--neutral-700);
+    border: 1px solid var(--neutral-300);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    transition: all 0.2s ease;
+}
+
+.approval-btn-secondary:hover {
+    background: var(--neutral-50);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }

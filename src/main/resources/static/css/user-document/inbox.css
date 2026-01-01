@@ -190,19 +190,17 @@
     box-sizing: border-box; /* ⭐ 추가 (padding 포함) */
 }
 
-/* 번호 */
-.approval-container .approval-table th:nth-child(1),
-.approval-container .approval-table td:nth-child(1) {
+.approval-table th.index-col,
+.approval-table td.index-col {
     width: 70px;
     text-align: center;
     color: var(--neutral-500);
     font-weight: 500;
 }
 
-/* 문서 제목 */
-.approval-table th:nth-child(2),
-.approval-table td:nth-child(2) {
-    width: auto;
+/* 문서 제목 컬럼 */
+.approval-table th.title-col,
+.approval-table td.title-col {
     min-width: 320px;
     text-align: left;
 }
@@ -267,10 +265,6 @@
     padding-left: 4px;
 }
 
-.approval-table tbody tr:hover .approval-title {
-    color: var(--primary-color);
-    text-decoration: underline;
-}
 
 
 /* ===== 빈 상태 ===== */
