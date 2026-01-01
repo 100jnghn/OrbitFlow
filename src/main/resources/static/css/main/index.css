@@ -90,7 +90,8 @@
 .widget-profile {
     display: flex;
     flex-direction: column;
-    min-height: 170px;
+    min-height: 140px !important;
+    padding: 14px !important;
 }
 
 .widget-profile .widget-content {
@@ -98,23 +99,24 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
+    min-height: 0;
 }
 
 .profile-avatar {
     text-align: center;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .profile-avatar img {
-    width: 80px;
-    height: 80px;
+    width: 75px;
+    height: 75px;
     border-radius: 50%;
     object-fit: cover;
     border: 3px solid #e5e7eb;
 }
 
 .profile-avatar i {
-    font-size: 64px;
+    font-size: 60px;
     color: #9ca3af;
 }
 
@@ -123,9 +125,9 @@
 }
 
 .profile-dept {
-    font-size: 13px;
+    font-size: 12px;
     color: #6b7280;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
     font-weight: 500;
 }
 
@@ -138,20 +140,21 @@
 }
 
 .profile-name {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 600;
     color: #111827;
 }
 
 .profile-rank {
-    font-size: 13px;
+    font-size: 12px;
     color: #6b7280;
     font-weight: 500;
 }
 
 /* 공지사항 위젯 */
 .widget-notice {
-    min-height: 170px;
+    min-height: 140px !important;
+    padding: 14px !important;
 }
 
 .widget-notice .widget-content {
@@ -159,6 +162,12 @@
     overflow-y: auto;
     overflow-x: hidden;
     word-wrap: break-word;
+    min-height: 0;
+}
+
+.widget-notice .widget-header {
+    margin-bottom: 10px;
+    padding-bottom: 8px;
 }
 
 .notice-list {
@@ -168,7 +177,7 @@
 }
 
 .notice-item {
-    padding: 11px 0;
+    padding: 9px 0;
     border-bottom: 1px solid #f3f4f6;
     cursor: pointer;
     transition: background-color 0.2s;
