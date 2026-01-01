@@ -104,4 +104,11 @@ public class DocumentContent extends BaseEntity {
         }
     }
 
+
+    public static DocumentContent revise(Document rejected, DocumentContent before) {
+        return DocumentContent.builder()
+                .document(rejected)
+                .contentJson(before.contentJson)
+                .build();
+    }
 }

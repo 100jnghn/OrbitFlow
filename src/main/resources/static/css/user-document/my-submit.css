@@ -214,10 +214,7 @@
     cursor: pointer;
 }
 
-.approval-container .approval-table tr:hover td.title-col {
-    color: var(--primary-color);
-    text-decoration: underline;
-}
+
 
 
 /* ===============================
@@ -341,4 +338,18 @@
     background: var(--neutral-50);
     border-color: var(--primary-color);
     color: var(--primary-color);
+}
+
+.revision-badge {
+    margin-left: 6px;
+    padding: 2px 6px;
+    font-size: 11px;
+    border-radius: 6px;
+    background: var(--neutral-200);
+    color: var(--neutral-600);
+    font-weight: 500;
+
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
 }

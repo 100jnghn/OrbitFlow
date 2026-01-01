@@ -477,20 +477,21 @@ function renderTable(docs) {
     docs.forEach(doc => {
         const tr = document.createElement("tr");
 
+        const revisionBadge = doc.hasRevision
+            ? `<span class="revision-badge">재기안됨</span>`
+            : '';
+
         tr.innerHTML = `
             <td class="title-col ellipsis" title="${doc.title}">
-                ${doc.title}
+                <span class="title-text">${doc.title}</span>
+                ${revisionBadge}
             </td>
-            <td class="title-col ellipsis" title="${doc.templateGroupName}">
-                ${doc.templateGroupName}
-            </td>
+            <td class="title-col ellipsis">${doc.templateGroupName}</td>
             <td>v${doc.templateVersion}</td>
             <td>${formatDateTime(doc.createdAt)}</td>
             <td>${getStatusText(doc.status)}</td>
             <td>${getProgressText(doc.status)}</td>
-            <td class="ellipsis" title="${formatCurrentApprover(doc)}">
-                ${formatCurrentApprover(doc)}
-            </td>
+            <td class="ellipsis">${formatCurrentApprover(doc)}</td>
         `;
 
         tr.classList.add("clickable");

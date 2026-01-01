@@ -1,5 +1,6 @@
 let currentActionType = null;   // "approve" | "reject"
 let currentDocumentId = null;
+const MAX_COMMENT_LENGTH = 200;
 
 const fieldRenderers = {
     divider: renderDivider,
@@ -21,6 +22,86 @@ const fieldRenderers = {
     notice: renderNotice,
     default: renderDefaultField
 };
+
+
+function updateApprovalSidebarSelection() {
+    // 모든 no-sub 메뉴 선택 해제
+    document.querySelectorAll('.menu-item.no-sub').forEach(item => {
+        item.classList.remove('selected');
+    });
+
+    // 결재 대기함 선택
+    const inboxLink = document.getElementById('mySubmitLink');
+    if (inboxLink) {
+        const menuItem = inboxLink.closest('.menu-item.no-sub');
+        if (menuItem) {
+            menuItem.classList.add('selected');
+        }
+    }
+}
+
+function hideApprovalCommentHint() {
+    const hint = document.getElementById("approvalCommentHint");
+    if (!hint) return;
+
+    hint.textContent = "";
+    hint.classList.remove("error", "success");
+    hint.style.display = "none";   // ⭐ 완전 숨김
+}
+
+function showApprovalCommentHint() {
+    const textarea = document.getElementById("approvalComment");
+    const hint = document.getElementById("approvalCommentHint");
+    if (!textarea || !hint) return;
+
+    const length = textarea.value.length;
+
+    hint.textContent = `(${length} / ${MAX_COMMENT_LENGTH})`;
+    hint.classList.remove("error", "success");
+    hint.style.display = "block"; // ⭐ 다시 표시
+}
+
+
+function bindApprovalOutsideClickOnce() {
+    const modal = document.getElementById("approvalModal");
+    const textarea = document.getElementById("approvalComment");
+    const modalContent = modal?.querySelector(".approval-modal");
+
+    if (!modal || !textarea || !modalContent) return;
+
+    document.addEventListener("mousedown", (e) => {
+        // 모달 닫혀 있으면 무시
+        if (modal.classList.contains("hidden")) return;
+
+        // modal 내부 클릭이면 무시
+        if (modalContent.contains(e.target)) return;
+
+        // 진짜 바깥 클릭
+        resetApprovalCommentHint();
+    });
+}
+
+
+function bindApprovalCommentInput() {
+    const textarea = document.getElementById("approvalComment");
+    const hint = document.getElementById("approvalCommentHint");
+    if (!textarea || !hint) return;
+
+    textarea.maxLength = MAX_COMMENT_LENGTH;
+
+    textarea.addEventListener("focus", () => {
+        showApprovalCommentHint();   // ⭐ 포커스 진입
+    });
+
+    textarea.addEventListener("input", () => {
+        showApprovalCommentHint();   // 입력 시에도 갱신
+    });
+
+    textarea.addEventListener("blur", () => {
+        hideApprovalCommentHint();   // ⭐ 포커스 이탈
+    });
+}
+
 
 /* ===============================
    이전 버튼
@@ -52,29 +133,34 @@ function openApprovalModal(type) {
     const title = document.getElementById("approvalModalTitle");
     const confirmBtn = document.getElementById("approvalConfirmBtn");
     const comment = document.getElementById("approvalComment");
+    const hint = document.getElementById("approvalCommentHint");
 
-    // 초기화
     comment.value = "";
     confirmBtn.disabled = false;
 
-    // 버튼 스타일 초기화
-    confirmBtn.classList.remove("btn-primary", "btn-danger");
+    hint.textContent = `(0 / ${MAX_COMMENT_LENGTH})`;
+    hint.classList.remove("error", "success");
+
+    confirmBtn.classList.remove("approve", "reject");
 
     if (type === "approve") {
         title.textContent = "문서 승인";
         confirmBtn.textContent = "승인";
-        confirmBtn.classList.add("btn-primary");
+        confirmBtn.classList.add("approve");
         comment.placeholder = "의견을 입력하세요 (선택)";
     } else {
         title.textContent = "문서 반려";
         confirmBtn.textContent = "반려";
-        confirmBtn.classList.add("btn-danger");
+        confirmBtn.classList.add("reject");
         comment.placeholder = "반려 사유를 입력하세요 (필수)";
         comment.focus();
     }
 
     modal.classList.remove("hidden");
+
+    bindApprovalCommentInput();
 }
+
 
 function closeApprovalModal() {
     const modal = document.getElementById("approvalModal");
@@ -89,8 +175,14 @@ async function submitApprovalAction() {
         .value
         .trim();
 
+    const hint = document.getElementById("approvalCommentHint");
+
     if (currentActionType === "reject" && !comment) {
-        alert("반려 사유를 입력해주세요.");
+        const hint = document.getElementById("approvalCommentHint");
+        hint.textContent = "반려 사유는 필수 입력입니다.";
+        hint.classList.add("error");
+        hint.style.display = "block";
+        document.getElementById("approvalComment").focus();
         return;
     }
 
@@ -146,6 +238,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         .getElementById("approvalConfirmBtn")
         ?.addEventListener("click", submitApprovalAction);
 
+    bindApprovalOutsideClickOnce();
+
     const documentId = getDocumentIdFromPath();
     if (!documentId) return;
 
@@ -167,7 +261,10 @@ function initDocumentDetailPage(data) {
     renderDocumentContent(data.contentSchema);
     renderApprovalLines(data.approvalLines);
     renderAttachments();
+
+    updateApprovalSidebarSelection();
     controlActionButtons(data);
+    setupRevisionButtons(data);
     bindBackButton();
 }
 
@@ -721,28 +818,21 @@ function renderAttachments() {
 function controlActionButtons(data) {
     const approveBtn = document.getElementById("approveBtn");
     const rejectBtn = document.getElementById("rejectBtn");
-    const aiSummaryBtn = document.getElementById("aiSummaryBtn");
 
-    const isMyTurn = data?.myApprovalOrder === true;
     currentDocumentId = data?.documentId;
 
-    // 승인
+    const canApproveOrReject =
+        data?.myApprovalOrder === true &&
+        data?.status !== "REJECTED";
+
     if (approveBtn) {
-        approveBtn.style.display = isMyTurn ? "inline-block" : "none";
+        approveBtn.style.display = canApproveOrReject ? "inline-block" : "none";
         approveBtn.onclick = () => openApprovalModal("approve");
     }
 
-    // 반려
     if (rejectBtn) {
-        rejectBtn.style.display = isMyTurn ? "inline-block" : "none";
+        rejectBtn.style.display = canApproveOrReject ? "inline-block" : "none";
         rejectBtn.onclick = () => openApprovalModal("reject");
-    }
-
-    // AI 요약
-    if (aiSummaryBtn) {
-        aiSummaryBtn.disabled = !isMyTurn;
-        aiSummaryBtn.classList.toggle("active", isMyTurn);
-        aiSummaryBtn.classList.toggle("disabled", !isMyTurn);
     }
 }
 
@@ -750,18 +840,112 @@ function controlActionButtons(data) {
 /* ===============================
    API
 =============================== */
+async function fetchRevisionInfo(documentId) {
+    console.log("[REVISION API] request documentId:", documentId);
+
+    const res = await apiFetch(`/api/documents/${documentId}/revision`);
+    if (!res.ok) {
+        console.warn("[REVISION API] response not ok");
+        return null;
+    }
+
+    const json = await res.json();
+
+    console.group("[REVISION API]");
+    console.log("raw response:", json);
+    console.log("data:", json.data);
+    console.groupEnd();
+
+    return json.data;
+}
+
+
 async function fetchDocumentDetail(documentId) {
     const res = await apiFetch(`/api/documents/${documentId}/detail`);
     if (!res.ok) {
         throw new Error("문서 상세 조회 실패");
     }
     const json = await res.json();
+
+    console.group("[DETAIL API]");
+    console.log("raw response:", json);
+    console.log("data:", json.data);
+    console.groupEnd();
+
     return json.data;
 }
 
 /* ===============================
    유틸
 =============================== */
+async function setupRevisionButtons(docData) {
+    const reviseBtn = document.getElementById("reviseBtn");
+    const goRevisionBtn = document.getElementById("goRevisionBtn");
+    const goOriginalBtn = document.getElementById("goOriginalBtn");
+
+    // 초기 상태 (존재하는 버튼만)
+    reviseBtn && (reviseBtn.style.display = "none");
+    goRevisionBtn && (goRevisionBtn.style.display = "none");
+    goOriginalBtn && (goOriginalBtn.style.display = "none");
+
+    const revisionInfo = await fetchRevisionInfo(docData.documentId);
+    if (!revisionInfo || !revisionInfo.isMine) return;
+
+    const {
+        beforeDocumentId,
+        nextDocumentId,
+        nextDocumentStatus
+    } = revisionInfo;
+
+    /* ===============================
+       1️⃣ 원본 문서로 이동
+       =============================== */
+    if (goOriginalBtn && beforeDocumentId != null) {
+        goOriginalBtn.style.display = "inline-flex";
+        goOriginalBtn.onclick = () => {
+            location.href = `/view/document/${beforeDocumentId}`;
+        };
+    }
+
+    /* ===============================
+       2️⃣ 재기안 관련 버튼
+       =============================== */
+    if (docData.status !== "REJECTED") return;
+
+    // 2-1️⃣ 재기안 문서 없음
+    if (nextDocumentId == null) {
+        if (!reviseBtn) return;
+
+        reviseBtn.style.display = "inline-flex";
+        reviseBtn.onclick = async () => {
+            if (!confirm("반려 문서를 재기안하시겠습니까?")) return;
+
+            const res = await apiFetch(
+                `/api/documents/${docData.documentId}/revise`,
+                {method: "POST"}
+            );
+
+            const json = await res.json();
+            const newDocId = json.data.documentId;
+
+            location.href = `/view/document/write/${newDocId}`;
+        };
+        return;
+    }
+
+    // 2-2️⃣ 재기안 문서 존재
+    if (!goRevisionBtn) return;
+
+    goRevisionBtn.style.display = "inline-flex";
+    goRevisionBtn.onclick = () => {
+        location.href =
+            nextDocumentStatus === "DRAFT"
+                ? `/view/document/write/${nextDocumentId}`
+                : `/view/document/${nextDocumentId}`;
+    };
+}
+
+
 function getDocumentIdFromPath() {
     const parts = window.location.pathname.split("/");
     return parts[parts.length - 1];

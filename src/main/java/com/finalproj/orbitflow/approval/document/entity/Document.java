@@ -22,6 +22,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.List;
 
 
 @Entity
@@ -62,6 +63,9 @@ public class Document extends BaseEntity {
     @JoinColumn(name = "before_document_id")
     private Document beforeDocument;
 
+    @OneToMany(mappedBy = "beforeDocument")
+    private List<Document> revisedDocuments;
+
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
 
@@ -95,6 +99,19 @@ public class Document extends BaseEntity {
                 .templateVersion(template.getVersion())
                 .writer(writer)
                 .title(title)
+                .status(DocumentStatus.DRAFT)
+                .beforeDocument(beforeDocument)
+                .build();
+    }
+
+
+    public static Document reviseDraft(Document beforeDocument) {
+        return Document.builder()
+                .company(beforeDocument.getCompany())
+                .templateGroup(beforeDocument.getTemplateGroup())
+                .templateVersion(beforeDocument.getTemplateVersion())
+                .writer(beforeDocument.getWriter())
+                .title(beforeDocument.getTitle()+"(재기안)")
                 .status(DocumentStatus.DRAFT)
                 .beforeDocument(beforeDocument)
                 .build();

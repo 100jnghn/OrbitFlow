@@ -5,6 +5,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 /**
  * Please explain the class!!!
  *
@@ -19,4 +21,7 @@ public interface DocumentRepository extends JpaRepository<Document, Long>, Docum
 
     Page<Document> getDocumentByWriter_Id(Long writerId, Pageable pageable);
 
+    Optional<Document> findTopByBeforeDocument_IdOrderByCreatedAtDesc(Long beforeDocumentId);
+
+    boolean existsByBeforeDocument_Id(Long id);
 }

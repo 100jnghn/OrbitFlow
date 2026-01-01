@@ -1,3 +1,25 @@
+/* 컬러 팔레트 */
+:root {
+    --primary-color: #3B82F6;
+    --primary-hover: #2563EB;
+    --secondary-color: #6366F1;
+    --success-color: #10B981;
+    --danger-color: #DC2626;
+    --danger-hover: #DC2626;
+    --warning-color: #F59E0B;
+    --neutral-50: #F9FAFB;
+    --neutral-100: #F3F4F6;
+    --neutral-200: #E5E7EB;
+    --neutral-300: #D1D5DB;
+    --neutral-400: #9CA3AF;
+    --neutral-500: #6B7280;
+    --neutral-600: #4B5563;
+    --neutral-700: #374151;
+    --neutral-800: #1F2937;
+    --neutral-900: #111827;
+}
+
+
 /* ===============================
    공통
 =============================== */
@@ -184,14 +206,10 @@
 .document-action-bar {
     margin-top: 16px;
     padding: 12px 0 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 
     flex-shrink: 0;
     background: #f7f8fa;
 }
-
 
 .action-btn {
     min-width: 80px;
@@ -224,8 +242,17 @@
 
 .action-right {
     display: flex;
+    justify-content: space-between; /* ⭐ 핵심 */
+    align-items: center;
+}
+
+.action-left,
+.action-right-group {
+    display: flex;
+    align-items: center;
     gap: 8px;
 }
+
 
 /* =========================================================
    문서 필드 (표 레이아웃)
@@ -445,38 +472,131 @@ button.active {
     opacity: 1;
 }
 
-/* =========================================================
-   팝업
-========================================================= */
-/* ===== 모달 전체 ===== */
-.modal {
+/* ===============================
+   (추가) inbox 작성 팝업 스타일을 승인/반려 모달에 적용
+=============================== */
+.modal-backdrop {
     position: fixed;
     inset: 0;
-    z-index: 9999;
+    background: rgba(27, 32, 54, 0.36);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* 기존 modal보다 높게 */
 }
 
-/* 숨김 처리 */
-.modal.hidden {
+.modal-backdrop.hidden {
     display: none;
 }
 
-/* 어두운 배경 */
-.modal-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.45);
+.approval-modal {
+    width: 380px;
+    max-height: 70vh;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 6px 30px rgba(31, 36, 73, 0.17);
+    padding: 36px 32px 32px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    overflow: hidden;
 }
 
-/* 중앙 박스 */
-.modal-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+.modal-title {
+    font-size: 1.22rem;
+    font-weight: 700;
+    color: #18246e;
+    margin-bottom: 10px;
+}
 
-    background: #ffffff;
-    width: 420px;
-    max-width: calc(100% - 40px);
-    padding: 20px;
+.modal-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.modal-input {
+    padding: 8px 13px;
+    border-radius: 7px;
+    border: 1.3px solid #bfc4e0;
+    font-size: 1.01rem;
+    background: #fafbff;
+
+    width: 100%;
+    box-sizing: border-box;
+    resize: none;
+}
+
+.modal-actions {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.modal-cancel-btn,
+.modal-create-btn {
+    padding: 8px 28px;
+    font-size: 1.05rem;
     border-radius: 8px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.modal-cancel-btn {
+    background: #f4f6fa;
+    color: #4b515c;
+    border: 1.4px solid #c2c7d1;
+}
+
+.modal-create-btn {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.modal-create-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* hint (선택) */
+.hint {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.hint.success {
+    color: var(--success-color);
+}
+
+.hint.error {
+    color: var(--danger-color);
+}
+
+.modal-create-btn.approve {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.modal-create-btn.reject {
+    background: var(--danger-color);
+    color: #fff;
+}
+
+.modal-create-btn.approve:hover {
+    background: var(--primary-hover);
+}
+
+.modal-create-btn.reject:hover {
+    background: #b91c1c; /* danger hover */
 }

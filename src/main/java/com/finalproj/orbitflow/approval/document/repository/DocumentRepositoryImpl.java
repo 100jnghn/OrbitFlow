@@ -65,6 +65,8 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
         QOrganization currentOrg = new QOrganization("currentOrg");
         QPositionCategory currentPosition = new QPositionCategory("currentPosition");
 
+        QDocument revisionDoc = new QDocument("revisionDoc");
+
         BooleanExpression whereCondition =
                 document.company.id.eq(companyId)
                         .and(document.writer.id.eq(employeeId))
@@ -109,7 +111,13 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
                                 currentPosition.name,
                                 currentApprover.name,
 
-                                approvalLine.orderNo
+                                approvalLine.orderNo,
+
+                                JPAExpressions
+                                        .selectOne()
+                                        .from(revisionDoc)
+                                        .where(revisionDoc.beforeDocument.id.eq(document.id))
+                                        .exists()
                         ))
                         .orderBy(document.createdAt.desc())
                         .offset(pageable.getOffset())

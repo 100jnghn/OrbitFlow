@@ -68,9 +68,13 @@ public class DocumentApplicationService {
 
         FormTemplate formTemplate = formTemplateRepository.findByIdAndCompany_id(formTemplateId, companyId).orElseThrow(() -> new InvalidRequestException("사용할 수 없는 양식입니다."));
 
+        if (!formTemplate.getTemplateGroup().getActive()) {
+            throw new InvalidRequestException("해당 양식은 현재 사용 불가 상태입니다.");
+        }
+
         // ✅ 1. 활성화 여부
         if (!formTemplate.isActive()) {
-            throw new InvalidRequestException("아직 활성화되지 않은 양식입니다.");
+            throw new InvalidRequestException("활성화되지 않은 양식입니다.");
         }
 
         // ✅ 2. 결재 규칙 존재 여부
@@ -99,7 +103,7 @@ public class DocumentApplicationService {
 
         Document beforeDocument = null;
         if (beforeDocumentId != null) {
-            beforeDocument = getDocumentForWriter(employeeId, beforeDocumentId);
+            beforeDocument = getDocumentForWriter(employee, beforeDocumentId);
         }
 
         Document createdDocument = Document.createDraft(
@@ -130,7 +134,7 @@ public class DocumentApplicationService {
     public void approve(Long employeeId, Long documentId, String comment) {
 
         // 1. 문서 조회 + 상태 검증
-        Document document = getDocumentForApprover(employeeId, documentId);
+        Document document = getDocumentForApprover(documentId);
 
         if (document.getStatus() != DocumentStatus.IN_PROGRESS) {
             throw new InvalidRequestException("진행중인 결재 문서만 승인할 수 있습니다.");
@@ -138,17 +142,6 @@ public class DocumentApplicationService {
 
         // 2. 결재선 조회
         List<ApprovalLine> lines = getApprovalLines(documentId);
-
-        log.info("[APPROVE/REJECT] employeeId={}, documentId={}", employeeId, documentId);
-
-        lines.forEach(l ->
-                log.info(
-                        "[LINE] order={}, approverId={}, status={}",
-                        l.getOrderNo(),
-                        l.getApprover().getId(),
-                        l.getStatus()
-                )
-        );
 
 
         // 3. 내 결재선 찾기
@@ -195,7 +188,7 @@ public class DocumentApplicationService {
     public void reject(Long employeeId, Long documentId, String comment) {
 
         // 1. 문서 조회 + 상태 검증
-        Document document = getDocumentForApprover(employeeId, documentId);
+        Document document = getDocumentForApprover(documentId);
 
         if (document.getStatus() != DocumentStatus.IN_PROGRESS) {
             throw new InvalidRequestException("진행중인 결재 문서만 반려할 수 있습니다.");
@@ -203,17 +196,6 @@ public class DocumentApplicationService {
 
         // 2. 결재선 조회
         List<ApprovalLine> lines = getApprovalLines(documentId);
-
-        log.info("[APPROVE/REJECT] employeeId={}, documentId={}", employeeId, documentId);
-
-        lines.forEach(l ->
-                log.info(
-                        "[LINE] order={}, approverId={}, status={}",
-                        l.getOrderNo(),
-                        l.getApprover().getId(),
-                        l.getStatus()
-                )
-        );
 
 
         // 3. 내 결재선 찾기
@@ -257,11 +239,63 @@ public class DocumentApplicationService {
         return lines;
     }
 
+    @Transactional
+    public DocumentCreateResDto reviseDocument(Long employeeId, Long documentId) {
 
-    /* *
-     *
-     *
-     * */
+        // 1. 작성자 조회
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new NotFoundException("사원을 찾지 못했습니다."));
+
+        // 2. 원본 문서 조회 (작성자 검증 포함)
+        Document rejected = getDocumentForWriter(employee, documentId);
+
+        // 3. 상태 검증
+        if (rejected.getStatus() != DocumentStatus.REJECTED) {
+            throw new InvalidRequestException("반려 상태의 문서만 재기안할 수 있습니다.");
+        }
+
+        // 4. 이미 재기안 문서 존재 여부 확인
+        boolean existsRevision =
+                documentRepository.existsByBeforeDocument_Id(rejected.getId());
+
+        if (existsRevision) {
+            throw new InvalidRequestException("이미 재기안 문서가 존재합니다.");
+        }
+
+        // 5. 사용된 양식 조회 (당시 버전 기준)
+        FormTemplate rejectedTemplate =
+                formTemplateRepository
+                        .findByTemplateGroup_idAndVersion(
+                                rejected.getTemplateGroup().getId(),
+                                rejected.getTemplateVersion()
+                        )
+                        .orElseThrow(() -> new NotFoundException("문서 양식 조회 실패"));
+
+        // 6. 재기안 문서 생성 (DRAFT)
+        Document reviseDraft = Document.reviseDraft(rejected);
+        documentRepository.save(reviseDraft);
+
+        // 7. 문서 내용 복사
+        DocumentContent rejectedContent =
+                documentContentRepository.findByDocument_Id(rejected.getId())
+                        .orElseThrow(() -> new NotFoundException("문서 내용을 찾을 수 없습니다."));
+
+        DocumentContent reviseContent =
+                DocumentContent.revise(reviseDraft, rejectedContent);
+
+        documentContentRepository.save(reviseContent);
+
+        // 8. 결재선 초안 초기화
+        approvalLineDomainService.initializeDraftLines(
+                reviseDraft,
+                rejectedTemplate,
+                employee
+        );
+
+        // 9. 결과 반환
+        return DocumentCreateResDto.from(reviseDraft.getId());
+    }
+
 
     private FormTemplateSchema parseSchema(String templateJson) {
         try {
@@ -286,17 +320,17 @@ public class DocumentApplicationService {
                 .orElse("제목 없음");
     }
 
-    private Document getDocumentForWriter(Long employeeId, Long documentId) {
+    private Document getDocumentForWriter(Employee employee, Long documentId) {
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new NotFoundException("문서를 찾지 못했습니다."));
 
-        if (!document.getWriter().getId().equals(employeeId)) {
+        if (!document.getWriter().equals(employee)) {
             throw new ForbiddenException("작성자만 접근할 수 있습니다.");
         }
         return document;
     }
 
-    private Document getDocumentForApprover(Long employeeId, Long documentId) {
+    private Document getDocumentForApprover(Long documentId) {
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new NotFoundException("문서를 찾지 못했습니다."));
 

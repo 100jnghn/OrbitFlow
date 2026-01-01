@@ -208,4 +208,45 @@ public class DocumentService {
         }
     }
 
+    public DocumentRevisionInfoResDto getDocumentRevision(
+            Long employeeId,
+            Long curDocId
+    ) {
+        Document current = documentRepository.findById(curDocId)
+                .orElseThrow(() -> new NotFoundException("문서를 찾을 수 없습니다."));
+
+        boolean isMine = current.getWriter().getId().equals(employeeId);
+
+        Long beforeId = current.getBeforeDocument() != null
+                ? current.getBeforeDocument().getId()
+                : null;
+
+        // 내 문서가 아니거나 반려가 아니면
+        if (!isMine || current.getStatus() != DocumentStatus.REJECTED) {
+            return DocumentRevisionInfoResDto.builder()
+                    .beforeDocumentId(beforeId)
+                    .nextDocumentId(null)
+                    .nextDocumentStatus(null)
+                    .mine(isMine)
+                    .build();
+        }
+
+        return documentRepository
+                .findTopByBeforeDocument_IdOrderByCreatedAtDesc(curDocId)
+                .map(doc -> DocumentRevisionInfoResDto.builder()
+                        .beforeDocumentId(beforeId)
+                        .nextDocumentId(doc.getId())
+                        .nextDocumentStatus(doc.getStatus())
+                        .mine(true)
+                        .build()
+                )
+                .orElse(
+                        DocumentRevisionInfoResDto.builder()
+                                .beforeDocumentId(beforeId)
+                                .nextDocumentId(null)
+                                .nextDocumentStatus(null)
+                                .mine(true)
+                                .build()
+                );
+    }
 }

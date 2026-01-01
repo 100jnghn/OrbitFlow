@@ -265,7 +265,9 @@
     padding-left: 4px;
 }
 
-
+.approval-container .approval-table tr:hover td.title-col {
+    color: var(--primary-color);
+}
 
 /* ===== 빈 상태 ===== */
 .approval-empty-row {

@@ -59,6 +59,24 @@ public class DocumentController {
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.CREATED, "결재 문서 초안 생성 성공", result));
     }
 
+    @PostMapping("/{documentId}/revise")
+    public ResponseEntity<ResponseDto> reviseDocument(
+            @PathVariable Long documentId
+    ) {
+        DocumentCreateResDto result = documentApplicationService.reviseDocument(SecurityUtils.getEmployeeId(), documentId);
+
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.CREATED, "반려 결재 문서 복제 성공",  result));
+    }
+
+    @GetMapping("/{documentId}/revision")
+    public ResponseEntity<ResponseDto> getDocumentRevision(
+            @PathVariable Long documentId
+    ) {
+        DocumentRevisionInfoResDto result = documentService.getDocumentRevision(SecurityUtils.getEmployeeId(), documentId);
+
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "재기안 문서 조회 성공",  result));
+    }
+
     @PatchMapping("/update/{DocumentId}")
     public ResponseEntity<ResponseDto> updateDocument(
             @PathVariable Long DocumentId,
