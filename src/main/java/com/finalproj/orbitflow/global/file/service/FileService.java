@@ -102,8 +102,6 @@ public class FileService {
                     .sysFile(extractSysFile(objectKey))
                     .contentType(multipartFile.getContentType())
                     .fileSize(multipartFile.getSize())
-                    .createdBy(uploader)
-                    .createdAt(LocalDateTime.now())
                     .build();
 
             return fileRepository.save(file);
