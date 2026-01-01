@@ -783,6 +783,7 @@ async function handleScheduleSubmit(e) {
 
     const scheduleData = {
         isCompany: true,  // 전사 일정
+        isPersonal: false,
         title: title,
         description: description || null,
         startAt: startAt,
