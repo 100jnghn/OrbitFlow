@@ -171,6 +171,21 @@
                 }
             }
         });
+
+        // 시작 날짜 변경 시 종료 날짜 min 설정
+        const startDateInput = document.getElementById('scheduleStartDate');
+        const endDateInput = document.getElementById('scheduleEndDate');
+        if (startDateInput && endDateInput) {
+            startDateInput.addEventListener('change', function() {
+                if (this.value) {
+                    endDateInput.min = this.value;
+                    // 종료 날짜가 시작 날짜보다 이전이면 시작 날짜로 설정
+                    if (endDateInput.value && endDateInput.value < this.value) {
+                        endDateInput.value = this.value;
+                    }
+                }
+            });
+        }
     }
 
     // 시간 선택 옵션 초기화
@@ -670,8 +685,11 @@
         const month = String(today.getMonth() + 1).padStart(2, '0');
         const day = String(today.getDate()).padStart(2, '0');
 
-        document.getElementById('scheduleStartDate').value = `${year}-${month}-${day}`;
-        document.getElementById('scheduleEndDate').value = `${year}-${month}-${day}`;
+        const startDateValue = `${year}-${month}-${day}`;
+        document.getElementById('scheduleStartDate').value = startDateValue;
+        document.getElementById('scheduleEndDate').value = startDateValue;
+        // 종료 날짜의 min을 시작 날짜로 설정
+        document.getElementById('scheduleEndDate').min = startDateValue;
         document.getElementById('scheduleStartHour').value = '09';
         document.getElementById('scheduleStartMinute').value = '00';
         document.getElementById('scheduleEndHour').value = '18';

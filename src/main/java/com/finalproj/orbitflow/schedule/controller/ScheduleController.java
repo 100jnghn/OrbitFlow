@@ -232,19 +232,19 @@ public class ScheduleController {
 
     /**
      * 사용자 - 일정 등록
-     * <p>
+     *
      * -- 전사 일정 --
      * 관리자 - isCompany : TRUE / isPersonal : FALSE / companyId : NOT NULL / orgCategoryId : NOT NULL / orgId : NULL
-     * <p>
+     *
      * -- 개인 일정 + 전사 일정 --
      * 사용자 - isCompany : TRUE / isPersonal : TRUE / companyId : NOT NULL / orgCategoryId : NOT NULL / orgId : NOT NULL
-     * <p>
+     *
      * -- 개인 일정 --
      * 사용자 - isCompany : FALSE / isPersonal : TRUE / companyId : NOT NULL / orgCategoryId : NULL / orgId : NULL
-     * <p>
+     *
      * -- 조직 일정 --
      * 사용자 - isCompany : FALSE / isPersonal : FALSE / companyId : NOT NULL / orgCategoryId : NOT NULL / orgId : NOT NULL
-     * <p>
+     *
      * 사용자의 예약의 status는 'RELEASE' OR 삭제
      * 관리자의 예약의 status는 'RELEASE' OR 'HOLD' OR 삭제
      */

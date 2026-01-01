@@ -86,6 +86,9 @@ function setupEventListeners() {
             openAddScheduleModal();
         });
     }
+
+    // 시작 날짜 변경 시 종료 날짜 min 설정 (모달이 열렸을 때 동적으로 추가)
+    // 모달이 열릴 때 이벤트 리스너를 추가하도록 openAddScheduleModal과 openEditScheduleModal에서 처리
 }
 
 /**
@@ -419,8 +422,19 @@ async function openEditScheduleModal(schedule) {
     const startDate = new Date(schedule.startAt);
     const endDate = new Date(schedule.endAt);
 
-    document.getElementById('scheduleStartDate').value = formatDateForInput(startDate);
-    document.getElementById('scheduleEndDate').value = formatDateForInput(endDate);
+    const startDateInput = document.getElementById('scheduleStartDate');
+    const endDateInput = document.getElementById('scheduleEndDate');
+    const startDateStr = formatDateForInput(startDate);
+    const endDateStr = formatDateForInput(endDate);
+    
+    startDateInput.value = startDateStr;
+    endDateInput.value = endDateStr;
+    // 종료 날짜의 min을 시작 날짜로 설정
+    endDateInput.min = startDateStr;
+
+    // 시작 날짜 변경 시 종료 날짜 min 설정
+    startDateInput.removeEventListener('change', handleStartDateChange);
+    startDateInput.addEventListener('change', handleStartDateChange);
 
     // 시간/분 추출 (10분 단위로 반올림)
     const startHour = String(startDate.getHours()).padStart(2, '0');
@@ -513,6 +527,22 @@ function hideLoading() {
 }
 
 /**
+ * 시작 날짜 변경 핸들러
+ */
+function handleStartDateChange() {
+    const startDateInput = document.getElementById('scheduleStartDate');
+    const endDateInput = document.getElementById('scheduleEndDate');
+    
+    if (startDateInput && endDateInput && startDateInput.value) {
+        endDateInput.min = startDateInput.value;
+        // 종료 날짜가 시작 날짜보다 이전이면 시작 날짜로 설정
+        if (endDateInput.value && endDateInput.value < startDateInput.value) {
+            endDateInput.value = startDateInput.value;
+        }
+    }
+}
+
+/**
  * 일정 등록 모달 열기
  */
 async function openAddScheduleModal() {
@@ -536,8 +566,16 @@ async function openAddScheduleModal() {
     // 오늘 날짜로 기본값 설정
     const today = new Date();
     const todayStr = formatDateForInput(today);
-    document.getElementById('scheduleStartDate').value = todayStr;
-    document.getElementById('scheduleEndDate').value = todayStr;
+    const startDateInput = document.getElementById('scheduleStartDate');
+    const endDateInput = document.getElementById('scheduleEndDate');
+    startDateInput.value = todayStr;
+    endDateInput.value = todayStr;
+    // 종료 날짜의 min을 시작 날짜로 설정
+    endDateInput.min = todayStr;
+
+    // 시작 날짜 변경 시 종료 날짜 min 설정
+    startDateInput.removeEventListener('change', handleStartDateChange);
+    startDateInput.addEventListener('change', handleStartDateChange);
 
     // 기본 시간 설정 (09:00, 18:00)
     document.getElementById('scheduleStartHour').value = '09';
