@@ -19,23 +19,19 @@
     margin-top: 0;
 }
 
-.dashboard-row:last-child {
-    margin-bottom: 0;
-}
-
-/* 상단 행: 프로필 + 공지사항 (4/5:1.8 비율) */
+/* 상단 행: 프로필 + 공지사항 (비율 조정 - 프로필 확대) */
 .dashboard-row:first-child {
-    grid-template-columns: 0.8fr 1.8fr;
+    grid-template-columns: 1fr 2fr;
 }
 
-/* 중간 행: 근태관리 + 금주 일정 (4/5:1.8 비율) */
+/* 중간 행: 근태관리 + 금주 일정 (비율 조정 - 근태관리 확대) */
 .dashboard-row:nth-child(2) {
-    grid-template-columns: 0.8fr 1.8fr;
+    grid-template-columns: 1fr 2fr;
 }
 
 /* 확장된 위젯 스타일 */
 .widget-expanded {
-    min-height: 300px;
+    min-height: 240px;
 }
 
 .dashboard-row:last-child {
@@ -46,17 +42,20 @@
     background: white;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    padding: 20px;
-    min-height: 220px;
+    padding: 18px;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
 }
 
 .widget-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
     padding-bottom: 10px;
     border-bottom: 1px solid #e5e7eb;
+    flex-shrink: 0;
 }
 
 .widget-header h3 {
@@ -81,30 +80,41 @@
 }
 
 .widget-content {
-    min-height: 160px;
+    flex: 1;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
 }
 
 /* 프로필 위젯 */
 .widget-profile {
     display: flex;
     flex-direction: column;
+    min-height: 170px;
+}
+
+.widget-profile .widget-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .profile-avatar {
     text-align: center;
-    margin-bottom: 18px;
+    margin-bottom: 12px;
 }
 
 .profile-avatar img {
-    width: 110px;
-    height: 110px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     object-fit: cover;
     border: 3px solid #e5e7eb;
 }
 
 .profile-avatar i {
-    font-size: 90px;
+    font-size: 64px;
     color: #9ca3af;
 }
 
@@ -113,9 +123,9 @@
 }
 
 .profile-dept {
-    font-size: 16px;
+    font-size: 13px;
     color: #6b7280;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
     font-weight: 500;
 }
 
@@ -128,20 +138,27 @@
 }
 
 .profile-name {
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 600;
     color: #111827;
 }
 
 .profile-rank {
-    font-size: 17px;
+    font-size: 13px;
     color: #6b7280;
     font-weight: 500;
 }
 
 /* 공지사항 위젯 */
 .widget-notice {
-    min-height: 300px;
+    min-height: 170px;
+}
+
+.widget-notice .widget-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    word-wrap: break-word;
 }
 
 .notice-list {
@@ -193,6 +210,8 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     font-weight: 500;
+    word-wrap: break-word;
+    max-width: 100%;
 }
 
 .notice-meta {
@@ -216,7 +235,7 @@
     font-size: 26px;
     font-weight: 700;
     color: #111827;
-    margin-bottom: 7px;
+    margin-bottom: 8px;
     text-align: center;
 }
 
@@ -236,7 +255,7 @@
 }
 
 .attendance-progress {
-    margin-top: 14px;
+    margin-top: 16px;
 }
 
 .progress-bar {
@@ -267,9 +286,20 @@
     color: #111827;
 }
 
+/* 근태관리 위젯 높이 증가 */
+.widget-attendance {
+    min-height: 270px;
+}
+
 /* 일정 위젯 */
 .widget-schedule {
-    min-height: 300px;
+    min-height: 270px;
+}
+
+.widget-schedule .widget-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .schedule-list {
@@ -305,20 +335,30 @@
     color: #9ca3af;
 }
 
-/* 통계 카드 */
+/* 금주일정 및 결재 통계 영역 */
+.schedule-approval-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* 통계 카드 - 금주일정 가로 폭 안쪽으로 배치 */
 .dashboard-stats {
+    display: grid;
     grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
 }
 
 .dashboard-stat-card {
     background: white;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    padding: 18px;
+    padding: 16px;
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
     transition: transform 0.2s, box-shadow 0.2s;
+    min-height: 70px;
 }
 
 .dashboard-stat-card:hover {
@@ -327,13 +367,14 @@
 }
 
 .stat-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 21px;
+    font-size: 20px;
+    flex-shrink: 0;
 }
 
 .stat-pending .stat-icon {
@@ -361,7 +402,7 @@
 }
 
 .stat-value {
-    font-size: 25px;
+    font-size: 22px;
     font-weight: 700;
     color: #111827;
     margin-bottom: 4px;
@@ -370,7 +411,7 @@
 .stat-label {
     font-size: 13px;
     color: #6b7280;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
 }
 
 .stat-change {
@@ -395,6 +436,10 @@
     
     .dashboard-stats {
         grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .schedule-approval-wrapper {
+        gap: 18px;
     }
 }
 

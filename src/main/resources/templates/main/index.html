@@ -83,67 +83,70 @@
             </div>
         </div>
 
-        <!-- 금주 일정 위젯 -->
-        <div class="dashboard-widget widget-schedule widget-expanded">
-            <div class="widget-header">
-                <h3>금주 일정</h3>
-                <a href="/view/schedule" class="widget-more">더보기 <i class="fas fa-chevron-right"></i></a>
+        <!-- 금주 일정 및 결재 통계 영역 -->
+        <div class="schedule-approval-wrapper">
+            <!-- 금주 일정 위젯 -->
+            <div class="dashboard-widget widget-schedule widget-expanded">
+                <div class="widget-header">
+                    <h3>금주 일정</h3>
+                    <a href="/view/schedule" class="widget-more">더보기 <i class="fas fa-chevron-right"></i></a>
+                </div>
+                <div class="widget-content">
+                    <ul class="schedule-list" id="scheduleList">
+                        <li class="schedule-item empty">일정을 불러오는 중...</li>
+                    </ul>
+                </div>
             </div>
-            <div class="widget-content">
-                <ul class="schedule-list" id="scheduleList">
-                    <li class="schedule-item empty">일정을 불러오는 중...</li>
-                </ul>
-            </div>
-        </div>
-    </div>
 
-    <!-- 하단 통계 위젯 행 -->
-    <div class="dashboard-row dashboard-stats">
-        <!-- 대기 중인 결재 -->
-        <div class="dashboard-stat-card stat-pending">
-            <div class="stat-icon">
-                <i class="fas fa-clock"></i>
-            </div>
-            <div class="stat-content">
-                <div class="stat-value" id="pendingApprovals">-</div>
-                <div class="stat-label">대기 중인 결재</div>
-                <div class="stat-change" id="pendingChange">-</div>
-            </div>
-        </div>
+            <!-- 하단 통계 위젯 행 -->
+            <div class="dashboard-stats">
+                <!-- 대기 중인 결재 -->
+                <div class="dashboard-stat-card stat-pending">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="pendingApprovals">-</div>
+                        <div class="stat-label">대기 중인 결재</div>
+                        <div class="stat-change" id="pendingChange">-</div>
+                    </div>
+                </div>
 
-        <!-- 작성한 문서 -->
-        <div class="dashboard-stat-card stat-created">
-            <div class="stat-icon">
-                <i class="fas fa-file-alt"></i>
-            </div>
-            <div class="stat-content">
-                <div class="stat-value" id="documentsCreated">-</div>
-                <div class="stat-label">작성한 문서</div>
-                <div class="stat-change" id="createdChange">-</div>
-            </div>
-        </div>
+                <!-- 작성한 문서 -->
+                <div class="dashboard-stat-card stat-created">
+                    <div class="stat-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="documentsCreated">-</div>
+                        <div class="stat-label">작성한 문서</div>
+                        <div class="stat-change" id="createdChange">-</div>
+                    </div>
+                </div>
 
-        <!-- 이번 주 승인 -->
-        <div class="dashboard-stat-card stat-approved">
-            <div class="stat-icon">
-                <i class="fas fa-check-circle"></i>
-            </div>
-            <div class="stat-content">
-                <div class="stat-value" id="approvedThisWeek">-</div>
-                <div class="stat-label">이번 주 승인</div>
-                <div class="stat-change" id="approvedChange">-</div>
-            </div>
-        </div>
+                <!-- 이번 주 승인 -->
+                <div class="dashboard-stat-card stat-approved">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="approvedThisWeek">-</div>
+                        <div class="stat-label">이번 주 승인</div>
+                        <div class="stat-change" id="approvedChange">-</div>
+                    </div>
+                </div>
 
-        <!-- 반려 -->
-        <div class="dashboard-stat-card stat-rejected">
-            <div class="stat-icon">
-                <i class="fas fa-times-circle"></i>
-            </div>
-            <div class="stat-content">
-                <div class="stat-value" id="rejected">-</div>
-                <div class="stat-label">반려</div>
-                <div class="stat-change" id="rejectedChange">-</div>
+                <!-- 반려 -->
+                <div class="dashboard-stat-card stat-rejected">
+                    <div class="stat-icon">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="rejected">-</div>
+                        <div class="stat-label">반려</div>
+                        <div class="stat-change" id="rejectedChange">-</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
