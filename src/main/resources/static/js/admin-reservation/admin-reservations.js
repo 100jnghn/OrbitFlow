@@ -173,7 +173,7 @@ function createActionCell(reservation) {
 ========================== */
 let currentPage = 0;
 let totalPages = 0;
-let pageSize = 10;
+let pageSize = 7;
 let currentFilters = {
     showPast: false,
     statusId: null,
@@ -373,14 +373,29 @@ function showStatusDropdown(badge, reservation) {
         dropdown.appendChild(item);
     });
 
+    // 먼저 DOM에 추가하여 실제 높이를 계산할 수 있도록 함
+    dropdown.style.position = 'fixed';
+    dropdown.style.visibility = 'hidden'; // 위치 계산을 위해 임시로 숨김
+    dropdown.style.zIndex = '1000';
+    document.body.appendChild(dropdown);
+
     // 배지 위치 기준으로 드롭다운 위치 설정
     const rect = badge.getBoundingClientRect();
-    dropdown.style.position = 'fixed';
-    dropdown.style.top = `${rect.bottom + 4}px`;
-    dropdown.style.left = `${rect.left}px`;
-    dropdown.style.zIndex = '1000';
+    const dropdownHeight = dropdown.offsetHeight;
+    const windowHeight = window.innerHeight;
+    const spaceBelow = windowHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const gap = 4; // 배지와 드롭다운 사이 간격
 
-    document.body.appendChild(dropdown);
+    // 아래 공간이 부족하고 위 공간이 충분하면 위에 표시
+    if (spaceBelow < dropdownHeight + gap && spaceAbove > dropdownHeight + gap) {
+        dropdown.style.top = `${rect.top - dropdownHeight - gap}px`;
+    } else {
+        dropdown.style.top = `${rect.bottom + gap}px`;
+    }
+
+    dropdown.style.left = `${rect.left}px`;
+    dropdown.style.visibility = 'visible'; // 위치 설정 후 표시
     activeDropdown = dropdown;
 
     // 외부 클릭 시 드롭다운 닫기

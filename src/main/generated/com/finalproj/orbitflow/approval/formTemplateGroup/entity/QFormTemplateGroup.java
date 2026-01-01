@@ -26,6 +26,8 @@ public class QFormTemplateGroup extends EntityPathBase<FormTemplateGroup> {
 
     public final BooleanPath active = createBoolean("active");
 
+    public final EnumPath<com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole> baseRole = createEnum("baseRole", com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole.class);
+
     public final com.finalproj.orbitflow.hr.company.entity.QCompany company;
 
     //inherited
@@ -42,6 +44,8 @@ public class QFormTemplateGroup extends EntityPathBase<FormTemplateGroup> {
     public final NumberPath<Long> modifiedBy = _super.modifiedBy;
 
     public final StringPath name = createString("name");
+
+    public final com.finalproj.orbitflow.approval.templateCategory.entity.QTemplateCategory templateCategory;
 
     //inherited
     public final DateTimePath<java.time.Instant> updatedAt = _super.updatedAt;
@@ -65,6 +69,7 @@ public class QFormTemplateGroup extends EntityPathBase<FormTemplateGroup> {
     public QFormTemplateGroup(Class<? extends FormTemplateGroup> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.company = inits.isInitialized("company") ? new com.finalproj.orbitflow.hr.company.entity.QCompany(forProperty("company")) : null;
+        this.templateCategory = inits.isInitialized("templateCategory") ? new com.finalproj.orbitflow.approval.templateCategory.entity.QTemplateCategory(forProperty("templateCategory")) : null;
     }
 
 }

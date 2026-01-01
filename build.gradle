@@ -59,6 +59,24 @@ dependencies {
 
     implementation platform("software.amazon.awssdk:bom:2.25.20")
     implementation "software.amazon.awssdk:s3"
+
+
+
+
+// 1. LangChain4j BOM (버전 관리 통합)
+    implementation platform('dev.langchain4j:langchain4j-bom:0.35.0')
+
+    // 2. 핵심 라이브러리 및 스프링 부트 통합
+    implementation 'dev.langchain4j:langchain4j'
+    implementation 'dev.langchain4j:langchain4j-spring-boot-starter'
+
+    // 3. 모델 및 벡터 DB 연동
+    implementation 'dev.langchain4j:langchain4j-open-ai'
+    implementation 'dev.langchain4j:langchain4j-chroma'
+
+    // 4. 문서 파싱 (PDF)
+    implementation 'dev.langchain4j:langchain4j-document-parser-apache-pdfbox'
+
 }
 
 tasks.named('test') {

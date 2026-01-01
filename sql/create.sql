@@ -1188,6 +1188,7 @@ CREATE TABLE schedule
     id                   BIGINT AUTO_INCREMENT,
     company_id           BIGINT       NOT NULL,
     is_company           BOOLEAN      NOT NULL, -- TRUE -> 전사 일정
+    is_personal          BOOLEAN      NOT NULL,
     org_category_id      BIGINT,                -- null -> 개인 일정
     org_id               BIGINT,                -- null -> 개인 일정
     employee_id          BIGINT       NOT NULL, -- 작성자 id
@@ -1350,30 +1351,6 @@ CREATE TABLE leave_balance
 
 
 
-CREATE TABLE manual_category
-(
-    id            BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '카테고리 아이디',
-    company_id    BIGINT      NOT NULL,
-    category_name VARCHAR(50) NOT NULL COMMENT '카테고리 이름',
-    description   VARCHAR(255) COMMENT '카테고리 설명',
-    is_active     BOOLEAN     NOT NULL DEFAULT TRUE COMMENT '카테고리 사용 여부',
-    sort_order    INT COMMENT '정렬 순서',
-    created_at    TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (company_id) REFERENCES company (id)
-);
-CREATE TABLE manual_link
-(
-    id            BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '연결 고유 아이디',
-    file_id       BIGINT  NOT NULL COMMENT '파일 아이디 (첨부파일 테이블 참조)',
-    category_id   BIGINT  NOT NULL COMMENT '카테고리 아이디',
-    company_id    BIGINT  NOT NULL,
-    status        VARCHAR(50) COMMENT '파일 처리 상태 (UPLOADED, PROCESSING, READY, FAILED)',
-    is_active     BOOLEAN NOT NULL DEFAULT TRUE COMMENT '사용할지 여부',
-    vectorized_at DATETIME COMMENT '벡터화 처리 시각',
-    FOREIGN KEY (file_id) REFERENCES file (id),
-    FOREIGN KEY (category_id) REFERENCES manual_category (id),
-    FOREIGN KEY (company_id) REFERENCES company (id)
-);
 CREATE TABLE grant_history
 (
     id              BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '아이디',
@@ -1388,3 +1365,74 @@ CREATE TABLE grant_history
     FOREIGN KEY (employee_id) REFERENCES employee (id),
     FOREIGN KEY (company_id) REFERENCES company (id)
 );
+
+
+CREATE TABLE manual_category (
+                                 id            BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '카테고리 ID (PK)',
+                                 company_id    BIGINT       NOT NULL COMMENT '회사 ID (FK)',
+                                 category_name VARCHAR(255) NOT NULL COMMENT '카테고리 이름 (APPROVAL, ATTENDANCE 등)',
+                                 description   VARCHAR(255) NULL     COMMENT '카테고리 설명',
+                                 is_active     BOOLEAN      NOT NULL DEFAULT TRUE COMMENT '사용 여부',
+                                 sort_order    INT          NOT NULL COMMENT 'UI 정렬 순서',
+
+                                 created_by    BIGINT       NULL     COMMENT '등록자 사원 ID',
+                                 modified_by   BIGINT       NULL     COMMENT '수정자 사원 ID',
+                                 created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일',
+                                 updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일',
+
+                                 CONSTRAINT fk_manual_cat_company
+                                     FOREIGN KEY (company_id) REFERENCES company (id),
+                                 CONSTRAINT fk_manual_cat_creator
+                                     FOREIGN KEY (created_by) REFERENCES employee (id),
+                                 CONSTRAINT fk_manual_cat_modifier
+                                     FOREIGN KEY (modified_by) REFERENCES employee (id),
+
+                                 CONSTRAINT uk_manual_cat_company_name
+                                     UNIQUE (company_id, category_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_manual_cat_company ON manual_category(company_id);
+
+
+
+CREATE TABLE manual_metadata (
+                                 id          BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '매뉴얼 ID (PK)',
+                                 company_id  BIGINT       NOT NULL COMMENT '회사 아이디 (참조)',
+
+                                 file_id     BIGINT       NOT NULL COMMENT '파일 아이디 (file 테이블 FK)',
+
+                                 category_id BIGINT       NOT NULL COMMENT '카테고리 아이디 (manual_category 테이블 FK)',
+
+                                 status      VARCHAR(50)  DEFAULT 'READY' COMMENT '파일 상태 (READY, PROCESSING, FAILED 등)',
+                                 is_active   BOOLEAN      NOT NULL DEFAULT TRUE COMMENT '사용 여부',
+
+                                 created_by  BIGINT       NULL COMMENT '등록자 사원 ID',
+                                 modified_by BIGINT       NULL COMMENT '수정자 사원 ID',
+                                 created_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP COMMENT '등록일',
+                                 updated_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일',
+
+
+                                 CONSTRAINT fk_manual_company
+                                     FOREIGN KEY (company_id) REFERENCES company (id)
+                                         ON DELETE CASCADE,
+
+                                 CONSTRAINT fk_manual_file
+                                     FOREIGN KEY (file_id) REFERENCES file (id)
+                                         ON DELETE CASCADE,
+
+                                 CONSTRAINT fk_manual_category_rel
+                                     FOREIGN KEY (category_id) REFERENCES manual_category (id)
+                                         ON DELETE CASCADE,
+
+                                 CONSTRAINT fk_manual_created_by
+                                     FOREIGN KEY (created_by) REFERENCES employee (id)
+                                         ON DELETE SET NULL,
+
+                                 CONSTRAINT fk_manual_modified_by
+                                     FOREIGN KEY (modified_by) REFERENCES employee (id)
+                                         ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_manual_comp_category ON manual_metadata(company_id, category_id);
+
+

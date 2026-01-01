@@ -177,7 +177,7 @@ body {
 }
 
 .sidebar-menu li.selected {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.2);
     margin-left: -36px;
     padding: 8px 36px;
     border-left: 4px solid #4a69bd;

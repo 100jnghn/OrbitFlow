@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 public class ScheduleReqDto {
 
     private boolean isCompany;
+    private boolean isPersonal;
 
     private Long orgCategoryId;
     private Long orgId;

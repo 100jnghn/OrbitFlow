@@ -9,6 +9,7 @@ package com.finalproj.orbitflow.global.file.entity;
  */
 
 
+import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.global.file.enums.FileDomain;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
@@ -26,7 +27,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @Builder
-public class File {
+public class File extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -55,10 +56,5 @@ public class File {
     @Column(name = "file_size")
     private Long fileSize;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by")
-    private Employee createdBy;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
 }

@@ -37,7 +37,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class ScheduleSummaryService {
 
-    private static final Duration COOL_TIME = Duration.ofMinutes(1 * 60 * 2);    // 2시간
+    private static final Duration COOL_TIME = Duration.ofMinutes(60 * 24);    // 60분
 
     private final ScheduleSummaryRepository scheduleSummaryRepository;
     private final OpenAiSummaryModelService aiService;
@@ -55,14 +55,17 @@ public class ScheduleSummaryService {
 
         // 새로운 사용자가 요약 시도
         if (summaryRecord == null) {
+            log.info("새로운 사용자 요약");
             result = doSummary(companyId, orgId, employeeId, false);
         }
         // 기존 사용자가 요약 시도 + 시간 충족
         else if (summaryRecord != null && getCoolTime(employeeId)) {
+            log.info("기존 요약 업데이트 시도");
             result = doSummary(companyId, orgId, employeeId, true);
         }
         // 기존 사용자가 요약 시도 + 시간 불충족
         else {
+            log.info("시간 불충족. 업데이트 패스");
             ScheduleSummary scheduleSummary = scheduleSummaryRepository.findByEmployee_Id(employeeId).get();
             result.setDailySummary(scheduleSummary.getDailySummary());
             result.setWeeklySummary(scheduleSummary.getWeeklySummary());
@@ -73,8 +76,12 @@ public class ScheduleSummaryService {
 
     // 시간 충족하면 true 반환
     private boolean getCoolTime(Long employeeId) {
+
         Instant updatedAt = scheduleSummaryRepository.findByEmployee_Id(employeeId).get().getUpdatedAt();
         Instant now = Instant.now();
+
+        log.info("현재 시간 : " + now);
+        log.info("마지막 업데이트 시간 : " + updatedAt);
 
         return now.isAfter(updatedAt.plus(COOL_TIME));
     }

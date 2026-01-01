@@ -41,7 +41,11 @@ public class QDocument extends EntityPathBase<Document> {
     //inherited
     public final NumberPath<Long> modifiedBy = _super.modifiedBy;
 
+    public final ListPath<Document, QDocument> revisedDocuments = this.<Document, QDocument>createList("revisedDocuments", Document.class, QDocument.class, PathInits.DIRECT2);
+
     public final EnumPath<com.finalproj.orbitflow.approval.document.enums.DocumentStatus> status = createEnum("status", com.finalproj.orbitflow.approval.document.enums.DocumentStatus.class);
+
+    public final DateTimePath<java.time.Instant> submittedAt = createDateTime("submittedAt", java.time.Instant.class);
 
     public final com.finalproj.orbitflow.approval.formTemplateGroup.entity.QFormTemplateGroup templateGroup;
 

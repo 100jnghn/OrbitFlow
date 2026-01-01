@@ -1,48 +1,19 @@
-let currentParams = { page: 0, size: 10, status: 'ALL' }; // ✅ 기본값 변경
+let currentParams = { page: 0, size: 31, status: 'ALL' };
 
 document.addEventListener('DOMContentLoaded', function() {
-    const dropdown = document.getElementById('monthDropdown');
-    const monthList = document.getElementById('monthList');
-    const selectedText = document.getElementById('selectedMonthText');
-    const searchType = document.getElementById('searchType');
-
-    // 1. 방식 전환 (월별 vs 기간설정)
-    searchType.addEventListener('change', function(e) {
-        const isRange = e.target.value === 'RANGE';
-        document.getElementById('monthPickerWrapper').style.display = isRange ? 'none' : 'block';
-        document.getElementById('rangePickerWrapper').style.display = isRange ? 'flex' : 'none';
-        // 검색 타입 변경 시 자동 검색하지 않음 (검색 버튼 클릭 시에만 검색)
-    });
-
-    // ✅ statusFilter 초기값을 currentParams에 동기화
-    const statusFilter = document.getElementById('statusFilter');
-    if (statusFilter && statusFilter.value) {
-        currentParams.status = statusFilter.value;
-    }
-
-    // 2. 월 선택 초기화 및 데이터 로드
-    initCustomMonthSelector(monthList, selectedText);
+    // 초기 상태: 날짜 필드를 빈 값으로 설정 (연차 조회와 동일)
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
     
-    // 3. 초기 페이지 로드 시 현재 월의 근태 목록 자동 로드
-    const initialMonthValue = document.getElementById('monthSelect').value;
-    if (initialMonthValue) {
-        const [y, m] = initialMonthValue.split('-');
-        loadAttendanceData(y, m);
-    }
-
-    // 4. 드롭다운 토글
-    dropdown.addEventListener('click', (e) => {
-        dropdown.classList.toggle('show');
-        e.stopPropagation();
-    });
-    document.addEventListener('click', () => dropdown.classList.remove('show'));
-
-    // 5. 상태 필터 변경 시 자동 검색 제거 (검색 버튼 클릭 시에만 적용)
-    // 상태 필터는 검색 버튼 클릭 시 currentParams에 반영됨
-
-    // 6. 검색 버튼 클릭 이벤트 (월별/기간 설정 + 상태 필터 함께 적용)
-    document.getElementById('rangeSearchBtn').addEventListener('click', () => {
-        // 상태 필터 값을 currentParams에 반영
+    // 날짜 필드는 초기 상태(빈 값)로 설정
+    startDateInput.value = '';
+    endDateInput.value = '';
+    
+    // 초기 데이터 로드 (날짜가 없으므로 백엔드에서 현재 월로 처리하여 목록 표시)
+    executeSearch();
+    
+    // 검색 버튼 클릭 이벤트
+    document.getElementById('searchBtn').addEventListener('click', () => {
         const statusFilter = document.getElementById('statusFilter');
         if (statusFilter) {
             currentParams.status = statusFilter.value;
@@ -50,76 +21,76 @@ document.addEventListener('DOMContentLoaded', function() {
         currentParams.page = 0;
         executeSearch();
     });
+
+    // 초기화 버튼 클릭 이벤트
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        resetFilters();
+    });
 });
 
-/** 36개월 선택기 로직 및 데이터 매핑 */
-function initCustomMonthSelector(list, text) {
-    const now = new Date();
-    const hidden = document.getElementById('monthSelect');
-    const dropdown = document.getElementById('monthDropdown');
-
-    for (let i = 0; i < 36; i++) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const y = d.getFullYear(), m = d.getMonth() + 1;
-        const val = `${y}-${m < 10 ? '0' + m : m}`, txt = `${y}년 ${m}월`;
-
-        const li = document.createElement('li');
-        li.textContent = txt;
-
-        if (i === 0) {
-            li.classList.add('active');
-            text.textContent = txt;
-            hidden.value = val;
-            // 초기 로드는 검색 버튼을 통해서만 실행
-        }
-
-        li.onclick = () => {
-            list.querySelectorAll('li').forEach(el => el.classList.remove('active'));
-            li.classList.add('active');
-            text.textContent = txt;
-            hidden.value = val;
-            dropdown.classList.remove('show');
-            // 월 선택 시 자동 검색하지 않음 (검색 버튼 클릭 시에만 검색)
-        };
-        list.appendChild(li);
-    }
-}
-
 function executeSearch() {
-    const mode = document.getElementById('searchType').value;
-    if (mode === 'RANGE') {
-        const start = document.getElementById('startDate').value;
-        const end = document.getElementById('endDate').value;
-        if (!start || !end) return;
-        loadAttendanceData(null, null, start, end);
-    } else {
-        const val = document.getElementById('monthSelect').value;
-        if(!val) return;
-        const [y, m] = val.split('-');
-        loadAttendanceData(y, m);
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    const start = startDateInput.value || null;
+    const end = endDateInput.value || null;
+    
+    // 시작일이 종료일보다 늦은 경우 검증 (잘못된 기간설정 알림)
+    if (start && end && start > end) {
+        alert('잘못된 기간설정입니다.');
+        return;
     }
+    
+    loadAttendanceData(start, end);
 }
 
-async function loadAttendanceData(year, month, start = null, end = null) {
+function resetFilters() {
+    // 필터 초기화 (연차 조회와 동일 - 기간을 완전히 빈 값으로 초기화)
+    document.getElementById('statusFilter').value = 'ALL';
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+    
+    // 파라미터 초기화
+    currentParams.status = 'ALL';
+    currentParams.page = 0;
+    
+    // 초기 상태로 되돌린 후 데이터 다시 로드 (연차 조회와 동일)
+    executeSearch();
+}
+
+async function loadAttendanceData(start, end) {
     const { page, size, status } = currentParams;
 
     let url = `/api/attendance/history/monthly?status=${status}&page=${page}&size=${size}`;
-    if (start && end) url += `&startDate=${start}&endDate=${end}`;
-    else url += `&year=${year}&month=${month}`;
+    
+    // 기간이 있으면 추가 (연차 조회와 동일한 방식)
+    if (start) url += `&startDate=${start}`;
+    if (end) url += `&endDate=${end}`;
 
-    const response = await fetch(url, {
-        headers: { 'Authorization': `Bearer ${sessionStorage.getItem('accessToken')}` }
-    });
+    try {
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${sessionStorage.getItem('accessToken')}` }
+        });
 
-    const res = await response.json();
-    const data = res.data;
+        const res = await response.json();
+        
+        // 에러 응답 처리
+        if (!response.ok) {
+            alert(res.message || '근태 내역을 조회하는 중 오류가 발생했습니다.');
+            return;
+        }
 
-    if (data) {
-        document.getElementById('totalWorkHours').innerText = data.summary.totalWorkTimeDisplay || '0h 00m';
-        document.getElementById('lateCount').innerText = data.summary.lateCount || 0;
-        document.getElementById('absentCount').innerText = data.summary.leaveAbsentCount || 0;
-        renderTable(data.pagedData.content);
-        renderPagination(data.pagedData);
+        const data = res.data;
+
+        if (data) {
+            document.getElementById('totalWorkHours').innerText = data.summary.totalWorkTimeDisplay || '0h 00m';
+            document.getElementById('lateCount').innerText = data.summary.lateCount || 0;
+            document.getElementById('absentCount').innerText = data.summary.leaveAbsentCount || 0;
+            renderTable(data.pagedData.content);
+            renderPagination(data.pagedData);
+        }
+    } catch (error) {
+        console.error('근태 내역 조회 오류:', error);
+        alert('근태 내역을 조회하는 중 오류가 발생했습니다.');
     }
 }
 
@@ -143,8 +114,8 @@ function renderTable(recs) {
 function getBadgeClass(c) {
     if (c === 'LATE') return 'badge-late';
     if (c === 'ABSENT') return 'badge-absent';
-    if (c === 'ON_TIME') return 'badge-normal'; // 정상 출근 스타일
-    if (c === 'VACATION') return 'badge-vacation'; // 휴가 스타일 (필요 시 CSS 추가)
+    if (c === 'ON_TIME') return 'badge-normal';
+    if (c === 'VACATION') return 'badge-vacation';
     return 'badge-normal';
 }
 
