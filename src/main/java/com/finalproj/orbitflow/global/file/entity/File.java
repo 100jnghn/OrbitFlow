@@ -9,6 +9,7 @@ package com.finalproj.orbitflow.global.file.entity;
  */
 
 
+import com.finalproj.orbitflow.global.file.enums.FileDomain;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import jakarta.persistence.*;
@@ -43,6 +44,10 @@ public class File {
 
     @Column(name = "sys_file", length = 255)
     private String sysFile;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "domain", length = 30, nullable = false)
+    private FileDomain domain;
 
     @Column(name = "content_type", length = 50)
     private String contentType;
