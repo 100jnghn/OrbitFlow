@@ -1789,100 +1789,100 @@ COMMIT;
 use orbitflow;
 
 INSERT INTO schedule
-(company_id, is_company, org_category_id, org_id, employee_id,
+(company_id, is_company, is_personal, org_category_id, org_id, employee_id,
  schedule_title, schedule_description,
  start_at, end_at, schedule_status)
 VALUES
 -- 1. 개인 일정
-(1, false, NULL, NULL, 1,
+(1, false, true, NULL, NULL, 1,
  '개인 업무 정리', '주간 업무 정리 및 회고',
  '2025-01-06 09:00:00', '2025-01-06 10:00:00', 'RELEASE'),
 
-(1, false, NULL, NULL, 1,
+(1, false, true, NULL, NULL, 1,
  '병원 방문', '정기 건강검진',
  '2025-01-07 15:00:00', '2025-01-07 17:00:00', 'RELEASE'),
 
 -- 3. 백엔드팀
-(1, false, @c1_cat_team, @c1_team_be, 1,
+(1, false, false, @c1_cat_team, @c1_team_be, 1,
  '백엔드팀 스크럼', '주간 스크럼 회의',
  '2025-01-06 10:00:00', '2025-01-06 10:30:00', 'RELEASE'),
 
-(1, false, @c1_cat_team, @c1_team_be, 1,
+(1, false, false, @c1_cat_team, @c1_team_be, 1,
  'API 설계 회의', '신규 API 설계 논의',
  '2025-01-08 14:00:00', '2025-01-08 16:00:00', 'RELEASE'),
 
 -- 5. 프론트엔드팀
-(1, false, @c1_cat_team, @c1_team_fe, 1,
+(1, false, false, @c1_cat_team, @c1_team_fe, 1,
  '프론트엔드 기획 회의', 'UI/UX 개선 논의',
  '2025-01-09 13:00:00', '2025-01-09 15:00:00', 'RELEASE'),
 
 -- 6. 개발부
-(1, false, @c1_cat_dept, @c1_dept_dev, 1,
+(1, false, false, @c1_cat_dept, @c1_dept_dev, 1,
  '개발부 월간 회의', '월간 개발 현황 공유',
  '2025-01-10 10:00:00', '2025-01-10 12:00:00', 'RELEASE'),
 
 -- 7. 플랫폼본부
-(1, false, @c1_cat_hq, @c1_hq_platform, 1,
+(1, false, false, @c1_cat_hq, @c1_hq_platform, 1,
  '플랫폼본부 전략회의', '분기 전략 수립',
  '2025-01-13 13:00:00', '2025-01-13 16:00:00', 'RELEASE'),
 
 -- 8. 인사부
-(1, false, @c1_cat_dept, @c1_dept_hr, 1,
+(1, false, false, @c1_cat_dept, @c1_dept_hr, 1,
  '인사 정책 회의', '평가 제도 개선 논의',
  '2025-01-14 10:00:00', '2025-01-14 12:00:00', 'RELEASE'),
 
 -- 9. 인사기획팀
-(1, false, @c1_cat_team, @c1_team_hrp, 1,
+(1, false, false, @c1_cat_team, @c1_team_hrp, 1,
  '인사기획팀 회의', '조직 개편 검토',
  '2025-01-15 14:00:00', '2025-01-15 15:00:00', 'RELEASE'),
 
 -- 10. 서비스기획팀
-(1, false, @c1_cat_team, @c1_team_plan, 1,
+(1, false, false, @c1_cat_team, @c1_team_plan, 1,
  '서비스 로드맵 회의', '상반기 로드맵 논의',
  '2025-01-16 10:00:00', '2025-01-16 13:00:00', 'RELEASE'),
 
 -- 11. 영업전략팀
-(1, false, @c1_cat_team, @c1_team_sales, 1,
+(1, false, false, @c1_cat_team, @c1_team_sales, 1,
  '영업 전략 회의', '신규 고객 전략',
  '2025-01-20 10:00:00', '2025-01-20 12:00:00', 'RELEASE'),
 
 -- 12. CS팀
-(1, false, @c1_cat_team, @c1_team_cs, 1,
+(1, false, false, @c1_cat_team, @c1_team_cs, 1,
  'CS 이슈 회의', '주요 고객 이슈 공유',
  '2025-01-21 14:00:00', '2025-01-21 15:30:00', 'RELEASE'),
 
 -- 13. 개인 일정
-(1, false, NULL, NULL, 1,
+(1, false, false, NULL, NULL, 1,
  '외부 미팅', '외부 파트너 미팅',
  '2025-01-22 13:00:00', '2025-01-22 15:00:00', 'RELEASE'),
 
 -- 14. 재무부
-(1, false, @c1_cat_dept, @c1_dept_fin, 1,
+(1, false, false, @c1_cat_dept, @c1_dept_fin, 1,
  '예산 검토 회의', '분기 예산 검토',
  '2025-01-23 10:00:00', '2025-01-23 12:00:00', 'RELEASE'),
 
 -- 15. 서비스본부
-(1, false, @c1_cat_hq, @c1_hq_service, 1,
+(1, false, false, @c1_cat_hq, @c1_hq_service, 1,
  '서비스본부 회의', '서비스 품질 개선',
  '2025-01-24 13:00:00', '2025-01-24 15:00:00', 'RELEASE'),
 
 -- 16. 영업본부
-(1, false, @c1_cat_hq, @c1_hq_sales, 1,
+(1, false, false, @c1_cat_hq, @c1_hq_sales, 1,
  '영업본부 주간회의', '영업 실적 공유',
  '2025-01-27 10:00:00', '2025-01-27 11:00:00', 'RELEASE'),
 
 -- 17. 개인 일정
-(1, false, NULL, NULL, 1,
+(1, false, true, NULL, NULL, 1,
  '자기계발 시간', '기술 서적 독서',
  '2025-01-28 17:00:00', '2025-01-28 19:00:00', 'RELEASE'),
 
 -- 18. 전사 일정
-(1, true, @c1_cat_company, @c1_root, 1,
+(1, true, false, @c1_cat_company, @c1_root, 1,
  '전사 타운홀 미팅', 'CEO 타운홀',
  '2025-01-29 10:00:00', '2025-01-29 12:00:00', 'RELEASE'),
 
 -- 19. 개인 일정 (하루 종일)
-(1, false, NULL, NULL, 1,
+(1, false, true, NULL, NULL, 1,
  '연차', '개인 연차 사용',
  '2025-01-30 00:00:00', '2025-01-31 00:00:00', 'RELEASE');
 

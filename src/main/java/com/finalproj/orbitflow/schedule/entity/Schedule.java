@@ -33,6 +33,9 @@ public class Schedule extends BaseEntity {
     @Column(name = "is_company", nullable = false)
     private boolean isCompany;
 
+    @Column(name = "is_personal", nullable = false)
+    private boolean isPersonal;
+
     @Column(name = "org_category_id")
     private Long orgCategoryId;
 

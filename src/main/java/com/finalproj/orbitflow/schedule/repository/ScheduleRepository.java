@@ -26,6 +26,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
                 FROM Schedule s
                 WHERE s.companyId = :companyId
                     AND s.isCompany = true
+                    AND s.isPersonal = false 
                     AND s.orgCategoryId IS NOT NULL
                     AND s.orgId IS NULL
                     AND s.startAt <= :endOfMonth
@@ -46,6 +47,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
                 FROM Schedule s
                 WHERE s.companyId = :companyId
                     AND s.isCompany = true
+                    AND s.isPersonal = false
                     AND s.status = :status
                     AND s.orgCategoryId IS NOT NULL
                     AND s.orgId IS NULL
@@ -68,6 +70,9 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
                 FROM Schedule s
                 WHERE s.companyId = :companyId
                     AND s.isCompany = true
+                    AND s.isPersonal = false
+                    AND s.orgCategoryId IS NOT NULL
+                    AND s.orgId IS NOT NULL 
                     AND s.status = :scheduleStatus
                     AND s.startAt <= :endOfDate
                     AND s.endAt >= :startOfDate
@@ -98,6 +103,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
                 FROM Schedule s
                 WHERE s.companyId = :companyId
                     AND s.isCompany = false
+                    AND s.isPersonal = false
                     AND s.orgCategoryId IS NOT NULL
                     AND s.orgId IN :orgIds
                     AND s.status = :scheduleStatus
@@ -117,6 +123,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
                 FROM Schedule s
                 WHERE s.companyId = :companyId
                     AND s.isCompany = false
+                    AND s.isPersonal = false
                     AND s.orgCategoryId IS NOT NULL
                     AND s.orgId IN :orgIds
                     AND s.status = :scheduleStatus
@@ -138,6 +145,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
                 WHERE s.companyId = :companyId
                     AND s.status = :scheduleStatus
                     AND s.isCompany = true
+                    AND s.isPersonal = false
                     AND s.startAt < :endOfDay
                     AND s.endAt > :startOfDay
             """)
@@ -154,6 +162,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
                 WHERE s.companyId = :companyId
                     AND s.status = :scheduleStatus
                     AND s.isCompany = false
+                    AND s.isPersonal = true
                     AND s.employeeId = :employeeId
                     AND s.orgId IS NULL
                     AND s.orgCategoryId IS NULL
@@ -161,6 +170,27 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
                     AND s.endAt > :startOfDay
             """)
     List<Schedule> findDateEmployeeSchedules(
+            Long companyId,
+            ScheduleStatus scheduleStatus,
+            Long employeeId,
+            LocalDateTime startOfDay,
+            LocalDateTime endOfDay
+    );
+
+    @Query("""
+                SELECT s
+                FROM Schedule s
+                WHERE s.companyId = :companyId
+                    AND s.status = :scheduleStatus
+                    AND s.isCompany = true
+                    AND s.isPersonal = true
+                    AND s.employeeId = :employeeId
+                    AND s.orgId IS NOT NULL
+                    AND s.orgCategoryId IS NULL
+                    AND s.startAt < :endOfDay
+                    AND s.endAt > :startOfDay
+            """)
+    List<Schedule> findDateCompanyEmployeeSchedules(
             Long companyId,
             ScheduleStatus scheduleStatus,
             Long employeeId,
@@ -178,6 +208,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
                 WHERE s.companyId = :companyId
                     AND s.status = :scheduleStatus
                     AND s.isCompany = false
+                    AND s.isPersonal = true
                     AND s.employeeId = :employeeId
                     AND s.orgId IS NULL
                     AND s.orgCategoryId IS NULL
@@ -191,4 +222,26 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             LocalDateTime startOfDate,
             LocalDateTime endOfDate
     );
+
+    @Query("""
+                    SELECT s
+                    FROM Schedule s
+                    WHERE s.companyId = :companyId
+                        AND s.status = :scheduleStatus
+                        AND s.isCompany = true
+                        AND s.isPersonal = true
+                        AND s.employeeId = :employeeId
+                        AND s.orgId IS NOT NULL
+                        AND s.orgCategoryId IS NULL
+                        AND s.startAt < :endOfDate
+                        AND s.endAt > :startOfDate
+            """)
+    List<Schedule> findCompanyEmployeeSchedules(
+            Long companyId,
+            Long employeeId,
+            LocalDateTime startOfDate,
+            LocalDateTime endOfDate,
+            ScheduleStatus scheduleStatus
+    );
+
 }

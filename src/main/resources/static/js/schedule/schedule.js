@@ -340,7 +340,7 @@
             // 전사 일정 로드
             if (showCompany) {
                 try {
-                    const companyResponse = await apiFetch(`/api/schedules/company?year=${year}&month=${month}&status=RELEASE`);
+                    const companyResponse = await apiFetch(`/api/schedules/user-company?year=${year}&month=${month}&status=RELEASE`);
                     if (companyResponse.ok) {
                         const companyResult = await companyResponse.json();
                         if (companyResult.data) {

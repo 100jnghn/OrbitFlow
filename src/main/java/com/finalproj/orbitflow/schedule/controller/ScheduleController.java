@@ -33,7 +33,7 @@ public class ScheduleController {
     /**
      * 관리자 - 전사 일정 조회
      * <p>
-     * isCompany : TRUE / companyId : NOT NULL / orgCategoryId : NULL / orgId : NULL
+     * isCompany : TRUE / isPersonal : FALSE / companyId : NOT NULL / orgCategoryId : NOT NULL / orgId : NULL
      * <p>
      * status ['RELEASE', 'HOLD', 'DELETED', 'ETC']
      * showPast [true, false]
@@ -55,7 +55,7 @@ public class ScheduleController {
 
     /**
      * 사용자 - 전사 일정 조회
-     * isCompany = TRUE 전체 조회
+     * isCompany = TRUE, isPersonal = FALSE 전체 조회
      */
     @GetMapping("/schedules/user-company")
     public ResponseEntity<ResponseDto> getUserCompanySchedule(
@@ -64,6 +64,7 @@ public class ScheduleController {
             @RequestParam int month,
             @RequestParam(defaultValue = "false") boolean isWeekly
     ) {
+        log.info("사용자 전사 일정");
         Long companyId = user.getCompanyId();
         List<ScheduleResDto> schedules = scheduleService.getUserCompanySchedule(companyId, year, month, isWeekly);
 
@@ -126,7 +127,7 @@ public class ScheduleController {
     }
 
     /**
-     * 사용자 - 개인 일정 조회
+     * 사용자 - 진짜 개인 일정 조회
      * 월 단위 조회, 주 단위 검색
      */
     @GetMapping("/schedules/personal")
@@ -145,6 +146,28 @@ public class ScheduleController {
                 new ResponseDto(HttpStatus.OK, "개인 일정 조회 성공", schedules)
         );
     }
+
+    /**
+     * 사용자 - 휴가, 출장 등의 [개인 + 전사] 일정 조회
+     * isCompany TRUE / isPersonal TRUE / orgCategoryIs NULL / orgId NOT NULL
+     */
+    @GetMapping("/schedules/company-employee")
+    public ResponseEntity<ResponseDto> getCompanyEmployeeSchedules(
+            @AuthenticationPrincipal SecurityUser user,
+            @RequestParam int year,
+            @RequestParam int month,
+            @RequestParam(defaultValue = "false") boolean isWeekly
+    ) {
+        Long companyId = user.getCompanyId();
+        Long employeeId = user.getEmployeeId();
+
+        List<ScheduleResDto> schedules = scheduleService.getCompanyEmployeeSchedules(companyId, employeeId, year, month, isWeekly);
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, "일정 조회 성공", schedules)
+        );
+    }
+
 
     /**
      * 사용자 - 일 단위 일정 조회
@@ -211,17 +234,16 @@ public class ScheduleController {
      * 사용자 - 일정 등록
      * <p>
      * -- 전사 일정 --
-     * 관리자 - isCompany : TRUE / companyId : NOT NULL / orgCategoryId : NOT NULL / orgId : NULL
+     * 관리자 - isCompany : TRUE / isPersonal : FALSE / companyId : NOT NULL / orgCategoryId : NOT NULL / orgId : NULL
+     * <p>
+     * -- 개인 일정 + 전사 일정 --
+     * 사용자 - isCompany : TRUE / isPersonal : TRUE / companyId : NOT NULL / orgCategoryId : NOT NULL / orgId : NOT NULL
      * <p>
      * -- 개인 일정 --
-     * -> 개인 일정이지만 전사 일정에 나타낼 일정. (결재에서 등록되는 일정 ex: 휴가, 출장)
-     * 사용자 - isCompany : TRUE / companyId : NOT NULL / orgCategoryId : NOT NULL / orgId : NOT NULL
-     * <p>
-     * -- 개인 일정 --
-     * 사용자 - isCompany : FALSE / companyId : NOT NULL / orgCategoryId : NULL / orgId : NULL
+     * 사용자 - isCompany : FALSE / isPersonal : TRUE / companyId : NOT NULL / orgCategoryId : NULL / orgId : NULL
      * <p>
      * -- 조직 일정 --
-     * 사용자 - isCompany : FALSE / companyId : NOT NULL / orgCategoryId : NOT NULL / orgId : NOT NULL
+     * 사용자 - isCompany : FALSE / isPersonal : FALSE / companyId : NOT NULL / orgCategoryId : NOT NULL / orgId : NOT NULL
      * <p>
      * 사용자의 예약의 status는 'RELEASE' OR 삭제
      * 관리자의 예약의 status는 'RELEASE' OR 'HOLD' OR 삭제
