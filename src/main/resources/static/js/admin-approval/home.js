@@ -27,6 +27,8 @@ let approvalState = {
     pageSize: 10
 };
 
+let currentPage = 0;
+let totalPages = 1;
 
 // ========================
 // 업데이트 팝업 상태
@@ -39,9 +41,7 @@ let updatePopupState = {
 };
 
 
-let lastSelectedUpdateTemplateId = null;
-let lastSelectedUpdateId = null;
-let lastUpdateDropdownItems = [];
+
 let updatePopupDebounce;
 
 const LIST_TITLE_MAX = 30; // 또는 35
@@ -372,14 +372,35 @@ function renderActionIcon(status) {
     return `<span class="action-icon view-icon" title="상세 보기">🔍</span>`;
 }
 
+function getApplyStatusByCategory(categoryCode) {
+    if (!categoryCode) {
+        return {schedule: false, attendance: false};
+    }
+
+    switch (categoryCode) {
+        case 'ATTENDANCE':
+            return {schedule: true, attendance: true};
+
+        case 'SCHEDULE':
+            return {schedule: true, attendance: false};
+
+        case 'GENERAL':
+        default:
+            return {schedule: false, attendance: false};
+    }
+}
+
+
 function renderAttend(categoryCode) {
-    return categoryCode === 'ATTENDANCE'
+    const {attendance} = getApplyStatusByCategory(categoryCode);
+    return attendance
         ? '<span class="tag-on">O</span>'
         : '<span class="tag-off">X</span>';
 }
 
 function renderSchedule(categoryCode) {
-    return categoryCode === 'SCHEDULE'
+    const {schedule} = getApplyStatusByCategory(categoryCode);
+    return schedule
         ? '<span class="tag-on">O</span>'
         : '<span class="tag-off">X</span>';
 }
@@ -415,16 +436,68 @@ function truncateText(text, max) {
 }
 
 // ========================
-// 렌더/페이지네이션/데이터로드
+// 페이지네이션
 // ========================
-function renderPagination(page, totalPages) {
-    const prevBtn = document.getElementById('prevPageBtn');
-    const nextBtn = document.getElementById('nextPageBtn');
-    const indicator = document.getElementById('pageIndicator');
-    prevBtn.disabled = (page <= 0);
-    nextBtn.disabled = (page >= totalPages - 1);
-    indicator.textContent = `${page + 1} / ${totalPages}`;
+function renderPagination(page) {
+    const pagination = document.getElementById('approvalPagination');
+    pagination.innerHTML = '';
+
+    // 이전
+    const prev = document.createElement('button');
+    prev.className = 'page-btn';
+    prev.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prev.disabled = page === 0;
+    prev.onclick = () => loadAndRender({page: page - 1});
+    pagination.appendChild(prev);
+
+    const maxVisible = 5;
+    let start = Math.max(0, page - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages - 1, start + maxVisible - 1);
+
+    if (end - start < maxVisible - 1) {
+        start = Math.max(0, end - maxVisible + 1);
+    }
+
+    if (start > 0) {
+        addPageBtn(pagination, 0);
+        if (start > 1) addEllipsis(pagination);
+    }
+
+    for (let i = start; i <= end; i++) {
+        addPageBtn(pagination, i, i === page);
+    }
+
+    if (end < totalPages - 1) {
+        if (end < totalPages - 2) addEllipsis(pagination);
+        addPageBtn(pagination, totalPages - 1);
+    }
+
+    // 다음
+    const next = document.createElement('button');
+    next.className = 'page-btn';
+    next.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    next.disabled = page >= totalPages - 1;
+    next.onclick = () => loadAndRender({page: page + 1});
+    pagination.appendChild(next);
 }
+
+
+function addPageBtn(container, page, active = false) {
+    const btn = document.createElement('button');
+    btn.className = 'page-number';
+    if (active) btn.classList.add('active');
+    btn.textContent = page + 1;
+    btn.onclick = () => loadAndRender({page});
+    container.appendChild(btn);
+}
+
+function addEllipsis(container) {
+    const span = document.createElement('span');
+    span.className = 'ellipsis';
+    span.textContent = '...';
+    container.appendChild(span);
+}
+
 
 async function loadAndRender(override = {}) {
     const req = {
@@ -450,16 +523,29 @@ async function loadAndRender(override = {}) {
     };
 
     try {
-        const {content, totalPages = 1, number = 0} =
-            await fetchApprovalDocs(req);
+        const {
+            content = [],
+            totalPages: tp = 1,
+            number = 0
+        } = await fetchApprovalDocs(req);
+
+        // ✅ inbox와 동일한 전역 상태 갱신
+        currentPage = number;
+        totalPages = tp;
 
         renderTableRows(content);
-        renderPagination(number, totalPages);
+        renderPagination(currentPage);
+
+        // 검색 상태 유지를 위해 page만 반영
         approvalState.page = number;
 
     } catch (e) {
+        currentPage = 0;
+        totalPages = 1;
+
         renderTableRows([]);
-        renderPagination(0, 1);
+        renderPagination(0);
+
         console.error('[fetch error]', e);
     }
 }
@@ -837,21 +923,6 @@ function bindEventHandlers() {
         clearHint(keywordInputMsg);
     });
 
-    document
-        .getElementById('prevPageBtn')
-        ?.addEventListener('click', function () {
-            if (approvalState.page > 0) {
-                approvalState.page -= 1;
-                loadAndRender({page: approvalState.page});
-            }
-        });
-
-    document
-        .getElementById('nextPageBtn')
-        ?.addEventListener('click', function () {
-            approvalState.page += 1;
-            loadAndRender({page: approvalState.page});
-        });
 
     document
         .getElementById('createTemplateBtn')
@@ -974,11 +1045,14 @@ function bindUpdateEditButton() {
     const editBtn = document.getElementById('popupEditBtn');
     const descEl = document.getElementById('updateSelectedDescText');
     const toggleEl = document.getElementById('groupStatusToggle');
+    const searchInput = document.getElementById('updateTemplateSearch');
 
     editBtn.addEventListener('click', async () => {
         if (!updatePopupState.groupId) return;
 
-        // 수정 진입
+        /* ======================
+           수정 진입
+        ====================== */
         if (!updatePopupState.isEditMode) {
             updatePopupState.isEditMode = true;
 
@@ -986,11 +1060,18 @@ function bindUpdateEditButton() {
             toggleEl.disabled = false;
             editBtn.textContent = '수정 완료';
 
+            // ⭐ 양식 이름 검색 비활성
+            if (searchInput) {
+                searchInput.disabled = true;
+            }
+
             updateUpdateButtonState();
             return;
         }
 
-        // 수정 완료
+        /* ======================
+           수정 완료
+        ====================== */
         try {
             const newDesc = descEl.innerText.trim();
             const newActive = toggleEl.checked;
@@ -1007,19 +1088,42 @@ function bindUpdateEditButton() {
                 }
             );
 
-            if (!res.ok) throw new Error();
+            if (!res.ok) {
+                throw new Error('PATCH failed');
+            }
 
+            // 상태 반영
             updatePopupState.groupActive = newActive;
+            updatePopupState.isEditMode = false;
+
+            // UI 복구
+            descEl.contentEditable = 'false';
+            toggleEl.disabled = true;
+            editBtn.textContent = '수정';
+
+            // ⭐ 검색 input 다시 활성
+            if (searchInput) {
+                searchInput.disabled = false;
+            }
+
+            updateUpdateButtonState();
+
+        } catch (e) {
+            alert('수정 중 오류가 발생했습니다.');
+            console.error(e);
+
+            // ❗ 에러 시에도 UI는 반드시 복구
             updatePopupState.isEditMode = false;
 
             descEl.contentEditable = 'false';
             toggleEl.disabled = true;
             editBtn.textContent = '수정';
 
+            if (searchInput) {
+                searchInput.disabled = false;
+            }
+
             updateUpdateButtonState();
-        } catch (e) {
-            alert('수정 중 오류가 발생했습니다.');
-            console.error(e);
         }
     });
 }

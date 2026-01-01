@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 @Slf4j
+@Transactional(readOnly = true)
 public class DocumentContentService {
     private final DocumentContentRepository documentContentRepository;
     private final ObjectMapper objectMapper;
@@ -51,7 +52,7 @@ public class DocumentContentService {
     }
 
 
-    private FormTemplateSchema parseSchema(String templateJson) {
+    public FormTemplateSchema parseSchema(String templateJson) {
         try {
             return objectMapper.readValue(templateJson, FormTemplateSchema.class);
         } catch (Exception e) {

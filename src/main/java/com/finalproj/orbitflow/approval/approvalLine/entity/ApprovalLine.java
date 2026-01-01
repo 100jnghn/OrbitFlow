@@ -89,7 +89,22 @@ public class ApprovalLine extends BaseEntity {
         this.status = ApprovalStatus.IN_PROGRESS;
     }
 
+    public void markCancelled() {
+        this.status = ApprovalStatus.CANCELLED;
+    }
+
+    public void markApproved(String comment) {
+        this.status = ApprovalStatus.APPROVED;
+        this.comment = comment;
+    }
+
     public void changeOrderNo(int orderNo) {
         this.orderNo = orderNo;
+    }
+
+
+    public void reject(String comment) {
+        this.comment = comment;
+        this.status = ApprovalStatus.REJECTED;
     }
 }

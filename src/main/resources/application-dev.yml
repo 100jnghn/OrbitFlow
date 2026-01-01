@@ -36,3 +36,9 @@ external:
 business:
   validation:
     strict: false   # 시연용 (true = 운영)
+
+openai:
+  model: gpt-4o-mini
+  api-key: ${OPENAI_API_KEY}
+  api-url:
+    completion: https://api.openai.com/v1/chat/completions

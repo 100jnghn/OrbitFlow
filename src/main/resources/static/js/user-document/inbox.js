@@ -125,14 +125,15 @@ function renderApprovalTable(list) {
         const statusText = formatApprovalStatus(item.myApprovalStatus);
 
         row.innerHTML = `
-            <td>${number}</td>
-            <td class="approval-title">${escapeHTML(item.documentTitle)}</td>
+            <td class="index-col">${number}</td>
+            <td class="approval-title title-col">${escapeHTML(item.documentTitle)}</td>
             <td>${escapeHTML(item.writerName)}</td>
             <td>${escapeHTML(item.templateName)}</td>
             <td>${escapeHTML(item.displayApproverName)}</td>
             <td>${statusText}</td>
             <td>${createdAt}</td>
         `;
+
 
         row.addEventListener('click', () => {
             location.href = `/view/document/${item.documentId}`;

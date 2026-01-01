@@ -87,6 +87,8 @@ public interface FormTemplateRepository extends JpaRepository<FormTemplate, Long
 
 
     Optional<FormTemplate> findByIdAndCompany_id(Long id, Long id1);
+
+    Optional<FormTemplate> findByTemplateGroup_idAndVersion(Long templateGroupId, int version);
 }
 
 
