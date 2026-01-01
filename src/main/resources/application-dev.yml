@@ -6,6 +6,10 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   config:
     import: optional:file:.env[.properties]
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
   jpa:
     hibernate:
@@ -42,3 +46,9 @@ openai:
   api-key: ${OPENAI_API_KEY}
   api-url:
     completion: https://api.openai.com/v1/chat/completions
+
+cloud:
+  aws:
+    region: ${REGION}
+    s3:
+      bucket: ${BUCKET}
