@@ -257,10 +257,13 @@ document.addEventListener("DOMContentLoaded", async () => {
    초기화
 =============================== */
 function initDocumentDetailPage(data) {
+    currentDocumentId = data.documentId
+
     renderDocumentHeader(data);
     renderDocumentContent(data.contentSchema);
     renderApprovalLines(data.approvalLines);
-    renderAttachments();
+
+    loadAndRenderAttachments(data.documentId);
 
     updateApprovalSidebarSelection();
     controlActionButtons(data);
@@ -791,26 +794,79 @@ function renderApprovalLines(lines) {
 }
 
 /* ===============================
-   첨부 / 참조 문서 (더미)
+   첨부 / 참조 문서
 =============================== */
-function renderAttachments() {
+async function loadAndRenderAttachments(documentId) {
+    try {
+        console.log("[ATTACHMENT] load start, documentId:", documentId);
+
+        const files = await fetchDocumentFiles(documentId);
+
+        console.log("[ATTACHMENT] files:", files);
+
+        renderAttachments(files);
+
+    } catch (e) {
+        console.error("[ATTACHMENT] load failed", e);
+    }
+}
+
+
+function renderAttachments(files = []) {
     const listEl = document.getElementById("attachmentList");
     if (!listEl) return;
 
     listEl.innerHTML = "";
 
-    // TODO: 실제 API 연동 예정
-    const attachments = [
-        {name: "출장계획서.pdf", url: "#"},
-        {name: "영수증.zip", url: "#"}
-    ];
-
-    attachments.forEach(file => {
+    if (!files.length) {
         const li = document.createElement("li");
-        li.innerHTML = `<a href="${file.url}">${file.name}</a>`;
+        li.className = "attachment-empty";
+        li.textContent = "첨부된 파일이 없습니다.";
+        listEl.appendChild(li);
+        return;
+    }
+
+    files.forEach(file => {
+        const li = document.createElement("li");
+        li.className = "attachment-item";
+
+        const typeSpan = document.createElement("span");
+        typeSpan.className = "attachment-type attachment";
+        typeSpan.textContent = "첨부";
+
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "attachment-name";
+        nameSpan.textContent = file.fileName;
+
+        const sizeSpan = document.createElement("span");
+        sizeSpan.className = "attachment-size";
+        sizeSpan.textContent = formatFileSize(file.fileSize);
+
+        li.addEventListener("click", (e) => {
+            downloadAttachmentByFileId(
+                file.fileId,
+                file.fileName,
+                e
+            );
+        });
+
+        li.append(typeSpan, nameSpan, sizeSpan);
         listEl.appendChild(li);
     });
 }
+
+
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function formatFileSize(size) {
+    if (size == null) return "-";
+    if (size < 1024) return `${size} B`;
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 
 /* ===============================
    하단 버튼 제어
@@ -841,7 +897,6 @@ function controlActionButtons(data) {
    API
 =============================== */
 async function fetchRevisionInfo(documentId) {
-    console.log("[REVISION API] request documentId:", documentId);
 
     const res = await apiFetch(`/api/documents/${documentId}/revision`);
     if (!res.ok) {
@@ -851,12 +906,98 @@ async function fetchRevisionInfo(documentId) {
 
     const json = await res.json();
 
-    console.group("[REVISION API]");
+    return json.data;
+}
+
+async function fetchDocumentFiles(documentId) {
+    console.group("[ATTACHMENT API] fetchDocumentFiles");
+
+    console.log("request documentId:", documentId);
+
+    const res = await apiFetch(`/api/document-file/${documentId}/files`);
+    console.log("response status:", res.status);
+
+    if (!res.ok) {
+        console.error("response not ok");
+        console.groupEnd();
+        throw new Error("첨부 파일 목록 조회 실패");
+    }
+
+    const json = await res.json();
+
     console.log("raw response:", json);
     console.log("data:", json.data);
+    console.log("data length:", Array.isArray(json.data) ? json.data.length : "not array");
+
     console.groupEnd();
 
-    return json.data;
+    return json.data ?? [];
+}
+
+
+async function fetchPresignedDownloadUrlByFileId(fileId) {
+    const res = await apiFetch(`/api/files/${fileId}/presigned`);
+
+    if (!res.ok) {
+        throw new Error("다운로드 URL 생성 실패");
+    }
+
+    const json = await res.json();
+    return json.data?.url;
+}
+
+
+let downloadingFileId = null;
+
+async function downloadAttachmentByFileId(fileId, fileName, event) {
+    const itemEl = event.currentTarget;
+    if (!itemEl) return;
+
+    if (downloadingFileId === fileId) return;
+    downloadingFileId = fileId;
+
+    const spinner = document.createElement("span");
+    spinner.className = "attachment-spinner";
+
+    const nameEl = itemEl.querySelector(".attachment-name");
+    if (!nameEl) return;
+
+    itemEl.insertBefore(spinner, nameEl);
+
+    const startTime = Date.now();
+
+    try {
+        const url = await fetchPresignedDownloadUrlByFileId(fileId);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName ?? "";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        const elapsed = Date.now() - startTime;
+        if (elapsed < 600) {
+            await new Promise(r => setTimeout(r, 600 - elapsed));
+        }
+
+        spinner.remove();
+
+        const check = document.createElement("span");
+        check.className = "attachment-check";
+        check.textContent = "✓";
+        itemEl.insertBefore(check, nameEl);
+
+        await new Promise(r => setTimeout(r, 2000));
+        check.remove();
+
+    } catch (e) {
+        console.error(e);
+        alert("파일 다운로드 중 오류가 발생했습니다.");
+        spinner.remove();
+    } finally {
+        downloadingFileId = null;
+    }
 }
 
 
@@ -866,11 +1007,6 @@ async function fetchDocumentDetail(documentId) {
         throw new Error("문서 상세 조회 실패");
     }
     const json = await res.json();
-
-    console.group("[DETAIL API]");
-    console.log("raw response:", json);
-    console.log("data:", json.data);
-    console.groupEnd();
 
     return json.data;
 }

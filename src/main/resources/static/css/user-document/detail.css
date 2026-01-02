@@ -190,6 +190,76 @@
     margin-bottom: 6px;
 }
 
+/* ===============================
+   확장된 첨부 아이템 구조
+=============================== */
+#attachmentList .attachment-item {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* 전체 간격 조정 */
+    font-size: 13px;
+    line-height: 1.4;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+}
+
+/* hover 시 row 강조 */
+#attachmentList .attachment-item:hover {
+    background: #f9fafb;
+}
+
+/* ===== 타입 라벨 ===== */
+#attachmentList .attachment-type {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+#attachmentList .attachment-type.attachment {
+    background: #eef4ff;
+    color: #2563eb;
+}
+
+#attachmentList .attachment-type.reference {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+/* ===== 파일명 ===== */
+#attachmentList .attachment-name {
+    color: #2563eb;
+    word-break: break-all;
+}
+
+/* hover 시 파일명 강조 */
+#attachmentList .attachment-item:hover .attachment-name {
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+/* ===== 파일 사이즈 ===== */
+#attachmentList .attachment-size {
+    font-size: 12px;
+    color: #9ca3af;
+    white-space: nowrap;
+}
+
+/* ===============================
+   비어있음 / 오류 상태
+=============================== */
+#attachmentList .attachment-empty,
+#attachmentList .attachment-error {
+    font-size: 13px;
+    color: #9ca3af;
+    padding: 4px 6px;
+}
+
+/* ===============================
+   (기존 링크 스타일 유지 – 혹시 a 태그 사용 시)
+=============================== */
 #attachmentList a {
     font-size: 13px;
     color: #2563eb;
@@ -198,6 +268,35 @@
 
 #attachmentList a:hover {
     text-decoration: underline;
+}
+
+/* ===============================
+   다운로드 로딩 Spinner
+=============================== */
+.attachment-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid #c7d2fe;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+}
+
+/* ===============================
+   다운로드 완료 체크 아이콘
+=============================== */
+.attachment-check {
+    font-size: 14px;
+    color: #16a34a; /* green-600 */
+    flex-shrink: 0;
+}
+
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* ===============================
