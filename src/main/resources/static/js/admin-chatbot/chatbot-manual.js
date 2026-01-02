@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function selectCategory(categoryId, categoryName) {
         selectedCategoryId = categoryId;
         
-        // 모든 버튼에서 active 클래스 제거
+            // 모든 버튼에서 active 클래스 제거
         document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
         
         // 선택한 버튼에 active 클래스 추가
@@ -69,8 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 카테고리 이름 업데이트
         document.getElementById('selectedCategoryName').textContent = categoryName || '선택 중...';
-        
-        // 해당 카테고리의 매뉴얼 목록 로드
+            
+            // 해당 카테고리의 매뉴얼 목록 로드
         loadManualList(categoryId);
     }
 
