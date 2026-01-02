@@ -214,10 +214,9 @@ public class Employee extends BaseEntity {
         this.email = email;
     }
 
-    public void changePassword(String password) {
-        this.password = password;
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
     }
-
     public void updateWorkStatus(WorkStatus workStatus) {
         this.workStatus = workStatus;
     }
@@ -237,6 +236,21 @@ public class Employee extends BaseEntity {
     public void clearContactInfo() {
         this.phone = null;
         this.internalPhone = null;
+    }
+
+    /* ==============================
+       관리자 수정용 기본 정보 변경
+       ============================== */
+    public void updateBasicInfo(
+            String name,
+            String phone,
+            String internalPhone,
+            LocalDate birthDate
+    ) {
+        if (name != null) this.name = name;
+        if (phone != null) this.phone = phone;
+        if (internalPhone != null) this.internalPhone = internalPhone;
+        if (birthDate != null) this.birthDate = birthDate;
     }
 
 }
