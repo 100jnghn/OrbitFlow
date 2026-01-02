@@ -10,21 +10,30 @@ import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
 import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
 import com.finalproj.orbitflow.approval.documentContent.entity.DocumentContent;
 import com.finalproj.orbitflow.approval.documentContent.repository.DocumentContentRepository;
+import com.finalproj.orbitflow.approval.documentFile.entity.DocumentFile;
+import com.finalproj.orbitflow.approval.documentFile.enums.DocumentFileStatus;
+import com.finalproj.orbitflow.approval.documentFile.repository.DocumentFileRepository;
 import com.finalproj.orbitflow.approval.formTemplate.entity.FormTemplate;
 import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateRepository;
 import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
+import com.finalproj.orbitflow.global.file.repository.FileRepository;
+import com.finalproj.orbitflow.global.file.service.FileService;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
@@ -53,7 +62,13 @@ public class DocumentApplicationService {
     private final ObjectMapper objectMapper;
     private final ApprovalLineRepository approvalLineRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final DocumentFileRepository documentFileRepository;
+    private final FileRepository fileRepository;
+    private final FileService fileService;
 
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Transactional
     public DocumentCreateResDto createDraft(
@@ -72,18 +87,18 @@ public class DocumentApplicationService {
             throw new InvalidRequestException("해당 양식은 현재 사용 불가 상태입니다.");
         }
 
-        // ✅ 1. 활성화 여부
+        // 1. 활성화 여부
         if (!formTemplate.isActive()) {
             throw new InvalidRequestException("활성화되지 않은 양식입니다.");
         }
 
-        // ✅ 2. 결재 규칙 존재 여부
+        // 2. 결재 규칙 존재 여부
         if (formTemplate.getApprovalRuleJson() == null
                 || formTemplate.getApprovalRuleJson().isBlank()) {
             throw new InvalidRequestException("결재 규칙이 설정되지 않은 양식입니다.");
         }
 
-        // ✅ 3. 결재 규칙 사전 검증 (강력 추천)
+        // 3. 결재 규칙 사전 검증 (강력 추천)
         try {
             approvalLineDomainService.validateApprovalRule(formTemplate);
         } catch (Exception e) {
@@ -229,16 +244,6 @@ public class DocumentApplicationService {
         document.reject();
     }
 
-    private List<ApprovalLine> getApprovalLines(Long documentId) {
-        List<ApprovalLine> lines =
-                approvalLineRepository.findByDocument_IdOrderByOrderNoAsc(documentId);
-
-        if (lines.isEmpty()) {
-            throw new NotFoundException("문서의 결재선을 찾을 수 없습니다.");
-        }
-        return lines;
-    }
-
     @Transactional
     public DocumentCreateResDto reviseDocument(Long employeeId, Long documentId) {
 
@@ -297,6 +302,98 @@ public class DocumentApplicationService {
     }
 
 
+    @Transactional
+    public void submitDocument(Long employeeId, Long documentId) {
+
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new NotFoundException("요청한 사원 정보를 찾을 수 없습니다."));
+
+        Document document = getDocumentForWriter(employee, documentId);
+
+        if (document.getStatus() != DocumentStatus.DRAFT) {
+            throw new InvalidRequestException(
+                    "이미 상신되었거나 처리 중인 문서는 다시 상신할 수 없습니다."
+            );
+        }
+
+        // 문서 상태 변경
+        document.submit();
+
+        // 결재선 처리
+        List<ApprovalLine> lines =
+                approvalLineRepository.findByDocument_IdOrderByOrderNoAsc(documentId);
+
+        if (lines.isEmpty()) {
+            throw new InvalidRequestException(
+                    "결재선이 지정되지 않은 문서는 상신할 수 없습니다."
+            );
+        }
+
+        lines.forEach(ApprovalLine::markWaiting);
+        lines.get(0).markInProgress();
+
+        // 첨부파일 조회
+        List<DocumentFile> documentFiles =
+                documentFileRepository.findByDocument_Id(documentId);
+
+        // 상태별 분리
+        List<DocumentFile> deletedFiles = documentFiles.stream()
+                .filter(df -> df.getStatus() == DocumentFileStatus.DELETED)
+                .toList();
+
+        List<DocumentFile> tempFiles = documentFiles.stream()
+                .filter(df -> df.getStatus() == DocumentFileStatus.TEMP)
+                .toList();
+
+        // TEMP → FINAL
+        tempFiles.forEach(df -> df.updateStatus(DocumentFileStatus.FINAL));
+
+        // DELETED → objectKey 확보
+        List<String> deletedObjectKeys = deletedFiles.stream()
+                .map(df -> df.getFile().getObjectKey())
+                .toList();
+
+        // DELETED → DB 삭제
+        documentFileRepository.deleteAll(deletedFiles);
+        fileRepository.deleteAll(
+                deletedFiles.stream().map(DocumentFile::getFile).toList()
+        );
+
+        // DB 먼저 반영
+        entityManager.flush();
+
+        // afterCommit에서 S3 삭제 등록
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        for (String objectKey : deletedObjectKeys) {
+                            try {
+                                fileService.deleteObject(objectKey);
+                            } catch (Exception e) {
+                                log.error(
+                                        "[S3_DELETE_FAIL] documentId={}, objectKey={}",
+                                        documentId,
+                                        objectKey,
+                                        e
+                                );
+                            }
+                        }
+                    }
+                }
+        );
+    }
+
+    private List<ApprovalLine> getApprovalLines(Long documentId) {
+        List<ApprovalLine> lines =
+                approvalLineRepository.findByDocument_IdOrderByOrderNoAsc(documentId);
+
+        if (lines.isEmpty()) {
+            throw new NotFoundException("문서의 결재선을 찾을 수 없습니다.");
+        }
+        return lines;
+    }
+
     private FormTemplateSchema parseSchema(String templateJson) {
         try {
             return objectMapper.readValue(templateJson, FormTemplateSchema.class);
@@ -331,11 +428,7 @@ public class DocumentApplicationService {
     }
 
     private Document getDocumentForApprover(Long documentId) {
-        Document document = documentRepository.findById(documentId)
+        return documentRepository.findById(documentId)
                 .orElseThrow(() -> new NotFoundException("문서를 찾지 못했습니다."));
-
-        return document;
     }
-
-
 }

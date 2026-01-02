@@ -10,9 +10,13 @@ package com.finalproj.orbitflow.approval.documentFile.entity;
 
 
 import com.finalproj.orbitflow.approval.document.entity.Document;
+import com.finalproj.orbitflow.approval.documentFile.enums.DocumentFileStatus;
 import com.finalproj.orbitflow.approval.documentFile.enums.ReferenceType;
+import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.global.file.entity.File;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -32,7 +36,9 @@ import lombok.NoArgsConstructor;
 )
 @Getter
 @NoArgsConstructor
-public class DocumentFile {
+@AllArgsConstructor
+@Builder
+public class DocumentFile extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -55,4 +61,13 @@ public class DocumentFile {
 
     @Column(name = "reference_url", length = 255)
     private String referenceUrl;
+
+    //TODO
+    // TEMP + 7일 경과 → S3 삭제 + DB 정리
+    @Column
+    private DocumentFileStatus status = DocumentFileStatus.TEMP;
+
+    public void updateStatus(DocumentFileStatus status) {
+        this.status = status;
+    }
 }

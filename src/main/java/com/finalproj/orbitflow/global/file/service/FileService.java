@@ -19,6 +19,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriUtils;
 import software.amazon.awssdk.core.ResponseInputStream;
@@ -80,7 +82,7 @@ public class FileService {
         String objectKey = createObjectKey(company.getId(), domain, origin);
 
         try {
-            // 1️⃣ S3 업로드 (외부 시스템)
+            // 1️⃣ S3 업로드
             s3Client.putObject(
                     PutObjectRequest.builder()
                             .bucket(bucket)
@@ -104,11 +106,27 @@ public class FileService {
                     .fileSize(multipartFile.getSize())
                     .build();
 
-            return fileRepository.save(file);
+            File savedFile = fileRepository.save(file);
+
+            // 3️⃣ 트랜잭션 롤백 시 S3 보상 삭제
+            if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                TransactionSynchronizationManager.registerSynchronization(
+                        new TransactionSynchronization() {
+                            @Override
+                            public void afterCompletion(int status) {
+                                if (status == STATUS_ROLLED_BACK) {
+                                    deleteObject(objectKey);
+                                }
+                            }
+                        }
+                );
+            }
+
+            return savedFile;
 
         } catch (Exception e) {
-            // 3️⃣ DB 실패 시 S3 롤백 (보상 트랜잭션)
-            rollbackS3(objectKey);
+            // S3 업로드 자체 실패
+            deleteObject(objectKey);
             throw new RuntimeException("파일 업로드 처리 중 오류 발생", e);
         }
     }
@@ -168,11 +186,7 @@ public class FileService {
         );
     }
 
-
-    /*
-    * helper
-    * */
-    private void rollbackS3(String objectKey) {
+    public void deleteObject(String objectKey) {
         try {
             s3Client.deleteObject(
                     DeleteObjectRequest.builder()
@@ -181,9 +195,13 @@ public class FileService {
                             .build()
             );
         } catch (Exception ex) {
-            log.error("S3 rollback failed. objectKey={}", objectKey, ex);
+            log.error("S3 delete failed. objectKey={}", objectKey, ex);
         }
     }
+
+    /*
+    * helper
+    * */
 
     private String createObjectKey(Long companyId, FileDomain domain, String originFileName) {
         String uuid = UUID.randomUUID().toString();

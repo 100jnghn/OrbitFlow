@@ -1,7 +1,6 @@
 package com.finalproj.orbitflow.approval.document.service;
 
 import com.finalproj.orbitflow.approval.approvalLine.dto.ApprovalLineViewResDto;
-import com.finalproj.orbitflow.approval.approvalLine.entity.ApprovalLine;
 import com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus;
 import com.finalproj.orbitflow.approval.approvalLine.repository.ApprovalLineRepository;
 import com.finalproj.orbitflow.approval.document.dto.*;
@@ -122,28 +121,6 @@ public class DocumentService {
         }
     }
 
-    @Transactional
-    public void submitDocument(Long employeeId, Long documentId) {
-        Document document = getDocument(employeeId, documentId);
-        if (document.getStatus() != DocumentStatus.DRAFT) {
-            throw new InvalidRequestException("DRAFT 상태의 문서만 제출할 수 있습니다");
-        }
-
-        document.submit();
-
-        List<ApprovalLine> lines = approvalLineRepository.findByDocument_IdOrderByOrderNoAsc(documentId);
-
-        if(lines.isEmpty()) {
-            throw new IllegalStateException("결재선이 존재하지 않습니다");
-        }
-
-        for (ApprovalLine line : lines) {
-            line.markWaiting();
-        }
-
-        lines.get(0).markInProgress();
-
-    }
 
     public DocumentDetailResDto getDocumentDetail(Long employeeId, Long documentId) {
         Document document = getDocumentForRead(documentId);
