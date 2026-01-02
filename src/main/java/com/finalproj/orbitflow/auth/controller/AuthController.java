@@ -63,7 +63,7 @@ public class AuthController {
         }
 
         if (user.getStatus() != EmployeeStatus.ACTIVE) {
-            throw new ForbiddenException("로그인할 수 없는 계정 상태입니다.");
+            throw new ForbiddenException("계정이 활성 상태가 아닙니다.");
         }
 
         // 동시 로그인 차단하려면 주석 풀기
@@ -124,11 +124,6 @@ public class AuthController {
         );
     }
 
-    /**
-     * 세션 연장 (사용자 명시적 선택 시)
-     * - Refresh Token Rotation
-     * - 만료 20시간 재설정
-     */
     /**
      * 세션 연장 (사용자 명시적 선택 시)
      * - Refresh Token Rotation
