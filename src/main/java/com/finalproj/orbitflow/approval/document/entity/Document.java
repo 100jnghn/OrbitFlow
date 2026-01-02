@@ -22,6 +22,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.List;
 
 
 @Entity
@@ -62,6 +63,9 @@ public class Document extends BaseEntity {
     @JoinColumn(name = "before_document_id")
     private Document beforeDocument;
 
+    @OneToMany(mappedBy = "beforeDocument")
+    private List<Document> revisedDocuments;
+
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
 
@@ -77,7 +81,7 @@ public class Document extends BaseEntity {
     }
 
     public void submit() {
-        this.status = DocumentStatus.SUBMITTED;
+        this.status = DocumentStatus.IN_PROGRESS;
         this.submittedAt = Instant.now();
     }
 
@@ -98,5 +102,26 @@ public class Document extends BaseEntity {
                 .status(DocumentStatus.DRAFT)
                 .beforeDocument(beforeDocument)
                 .build();
+    }
+
+
+    public static Document reviseDraft(Document beforeDocument) {
+        return Document.builder()
+                .company(beforeDocument.getCompany())
+                .templateGroup(beforeDocument.getTemplateGroup())
+                .templateVersion(beforeDocument.getTemplateVersion())
+                .writer(beforeDocument.getWriter())
+                .title(beforeDocument.getTitle()+"(재기안)")
+                .status(DocumentStatus.DRAFT)
+                .beforeDocument(beforeDocument)
+                .build();
+    }
+
+    public void reject() {
+        this.status = DocumentStatus.REJECTED;
+    }
+
+    public void approve() {
+        this.status = DocumentStatus.APPROVED;
     }
 }

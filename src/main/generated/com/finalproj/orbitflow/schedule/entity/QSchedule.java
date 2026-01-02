@@ -39,6 +39,8 @@ public class QSchedule extends EntityPathBase<Schedule> {
 
     public final BooleanPath isCompany = createBoolean("isCompany");
 
+    public final BooleanPath isPersonal = createBoolean("isPersonal");
+
     //inherited
     public final NumberPath<Long> modifiedBy = _super.modifiedBy;
 

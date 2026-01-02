@@ -4,20 +4,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // 초기 상태: 날짜 필드를 빈 값으로 설정 (연차 조회와 동일)
     const startDateInput = document.getElementById('startDate');
     const endDateInput = document.getElementById('endDate');
-    
+
     // 날짜 필드는 초기 상태(빈 값)로 설정
     startDateInput.value = '';
     endDateInput.value = '';
     
     // 초기 데이터 로드 (날짜가 없으므로 백엔드에서 현재 월로 처리하여 목록 표시)
-    executeSearch();
-    
+        executeSearch();
+
     // 검색 버튼 클릭 이벤트
     document.getElementById('searchBtn').addEventListener('click', () => {
-        const statusFilter = document.getElementById('statusFilter');
+    const statusFilter = document.getElementById('statusFilter');
         if (statusFilter) {
-            currentParams.status = statusFilter.value;
-        }
+        currentParams.status = statusFilter.value;
+    }
         currentParams.page = 0;
         executeSearch();
     });
@@ -61,17 +61,17 @@ async function loadAttendanceData(start, end) {
     const { page, size, status } = currentParams;
 
     let url = `/api/attendance/history/monthly?status=${status}&page=${page}&size=${size}`;
-    
+
     // 기간이 있으면 추가 (연차 조회와 동일한 방식)
     if (start) url += `&startDate=${start}`;
     if (end) url += `&endDate=${end}`;
 
     try {
-        const response = await fetch(url, {
-            headers: { 'Authorization': `Bearer ${sessionStorage.getItem('accessToken')}` }
-        });
+    const response = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${sessionStorage.getItem('accessToken')}` }
+    });
 
-        const res = await response.json();
+    const res = await response.json();
         
         // 에러 응답 처리
         if (!response.ok) {
@@ -79,14 +79,14 @@ async function loadAttendanceData(start, end) {
             return;
         }
 
-        const data = res.data;
+    const data = res.data;
 
-        if (data) {
-            document.getElementById('totalWorkHours').innerText = data.summary.totalWorkTimeDisplay || '0h 00m';
-            document.getElementById('lateCount').innerText = data.summary.lateCount || 0;
-            document.getElementById('absentCount').innerText = data.summary.leaveAbsentCount || 0;
-            renderTable(data.pagedData.content);
-            renderPagination(data.pagedData);
+    if (data) {
+        document.getElementById('totalWorkHours').innerText = data.summary.totalWorkTimeDisplay || '0h 00m';
+        document.getElementById('lateCount').innerText = data.summary.lateCount || 0;
+        document.getElementById('absentCount').innerText = data.summary.leaveAbsentCount || 0;
+        renderTable(data.pagedData.content);
+        renderPagination(data.pagedData);
         }
     } catch (error) {
         console.error('근태 내역 조회 오류:', error);

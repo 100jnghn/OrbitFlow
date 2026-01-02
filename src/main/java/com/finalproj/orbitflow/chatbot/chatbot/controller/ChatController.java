@@ -30,21 +30,29 @@ public class ChatController {
     private final ChatService chatService;
 
     @PostMapping("/ask")
-    public ResponseEntity<ResponseDto> askQuestion(
+    public ResponseEntity<ResponseDto<String>> askQuestion(
             @AuthenticationPrincipal SecurityUser user,
-            @RequestBody Map<String, String> request) {
+            @RequestBody Map<String, Object> request) {
 
-        // 1. JSON 바디에서 질문 추출
-        String question = request.get("question");
+        // 1. JSON 바디에서 질문과 카테고리 ID 추출
+        String question = (String) request.get("question");
+        Long categoryId = null;
+        if (request.get("categoryId") != null) {
+            // Integer나 Long으로 올 수 있으므로 변환 처리
+            Object categoryIdObj = request.get("categoryId");
+            if (categoryIdObj instanceof Number) {
+                categoryId = ((Number) categoryIdObj).longValue();
+            } else if (categoryIdObj instanceof String) {
+                categoryId = Long.parseLong((String) categoryIdObj);
+            }
+        }
 
         // 2. 로그인한 사용자의 회사 ID를 기반으로 답변 생성
-        // SecurityUser 내부에 getCompanyId() 메서드가 있다면 사용하세요.
-        // 없다면 user.getEmployee().getCompany().getId() 형태로 호출해야 합니다.
-        String answer = chatService.askQuestion(question, user.getCompanyId());
+        String answer = chatService.askQuestion(question, user.getCompanyId(), categoryId);
 
         // 3. 일관된 응답 형식으로 반환
         return ResponseEntity.ok(
-                new ResponseDto(HttpStatus.OK, "챗봇 답변 생성 완료", answer)
+                new ResponseDto<>(HttpStatus.OK, "챗봇 답변 생성 완료", answer)
         );
     }
 

@@ -34,4 +34,5 @@ public class DocumentListResDto {
     private String approvalName;
 
     private Integer currentOrderNo;
+    private boolean hasRevision;
 }

@@ -11,6 +11,7 @@ import com.finalproj.orbitflow.schedule.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -246,13 +247,48 @@ public class ScheduleService {
                 endOfDay
         );
 
+        // 전사 + 개인 일정 (휴가, 출장 등)
+        List<Schedule> companyEmployeeSchedules = scheduleRepository.findDateCompanyEmployeeSchedules(
+                companyId,
+                scheduleStatus,
+                employeeId,
+                startOfDay,
+                endOfDay
+        );
+
         // 일정 병합 + 정렬
         List<Schedule> schedules = Stream
-                .of(companySchedules, orgSchedules, employeeSchedules)
+                .of(companySchedules, orgSchedules, employeeSchedules, companyEmployeeSchedules)
                 .flatMap(List::stream)
                 .sorted(Comparator.comparing(Schedule::getStartAt))
                 .toList();
 
+        return schedules.stream().map(ScheduleMapper::toDto).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ScheduleResDto> getCompanyEmployeeSchedules(Long companyId, Long employeeId, int year, int month, boolean isWeekly) {
+
+        List<Schedule> schedules;
+        LocalDateTime startOfDate;
+        LocalDateTime endOfDate;
+        ScheduleStatus scheduleStatus = ScheduleStatus.RELEASE;
+
+        // 월 단위
+        if (!isWeekly) {
+            startOfDate = LocalDate.of(year, month, 1).atStartOfDay();
+            endOfDate = LocalDate.of(year, month, 1)
+                    .plusMonths(1)
+                    .atStartOfDay()
+                    .minusNanos(1);
+        }
+        // 주 단위 (일정 요약에 사용) (내일 날짜부터 +7일)
+        else {
+            startOfDate = LocalDate.now().atStartOfDay().plusDays(1);
+            endOfDate = startOfDate.plusDays(7);
+        }
+
+        schedules = scheduleRepository.findCompanyEmployeeSchedules(companyId, employeeId, startOfDate, endOfDate, scheduleStatus);
         return schedules.stream().map(ScheduleMapper::toDto).toList();
     }
 
@@ -295,6 +331,11 @@ public class ScheduleService {
 
         Schedule schedule = ScheduleMapper.toEntity(companyId, employeeId, dto);
         scheduleRepository.save(schedule);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void newTransactionInsertSchedule(Long companyId, Long employeeId, ScheduleReqDto dto) {
+        insertSchedule(companyId, employeeId, dto);
     }
 
 }

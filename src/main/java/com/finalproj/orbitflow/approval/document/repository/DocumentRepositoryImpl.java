@@ -65,6 +65,8 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
         QOrganization currentOrg = new QOrganization("currentOrg");
         QPositionCategory currentPosition = new QPositionCategory("currentPosition");
 
+        QDocument revisionDoc = new QDocument("revisionDoc");
+
         BooleanExpression whereCondition =
                 document.company.id.eq(companyId)
                         .and(document.writer.id.eq(employeeId))
@@ -109,7 +111,13 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
                                 currentPosition.name,
                                 currentApprover.name,
 
-                                approvalLine.orderNo
+                                approvalLine.orderNo,
+
+                                JPAExpressions
+                                        .selectOne()
+                                        .from(revisionDoc)
+                                        .where(revisionDoc.beforeDocument.id.eq(document.id))
+                                        .exists()
                         ))
                         .orderBy(document.createdAt.desc())
                         .offset(pageable.getOffset())
@@ -156,38 +164,55 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
     /* ===============================
        WHERE 조건
     =============================== */
-        BooleanExpression whereCondition =
-                document.company.id.eq(companyId)
-                        .and(myLine.approver.id.eq(employeeId))
-                        .and(myLine.status.in(
+        BooleanExpression visibleMyLine =
+                myLine.status.in(
                                 ApprovalStatus.WAITING,
                                 ApprovalStatus.IN_PROGRESS,
                                 ApprovalStatus.APPROVED,
                                 ApprovalStatus.REJECTED
-                        ))
+                        )
+                        .or(
+                                myLine.status.eq(ApprovalStatus.CANCELLED)
+                                        .and(document.status.eq(DocumentStatus.REJECTED))
+                        );
+
+        BooleanExpression whereCondition =
+                document.company.id.eq(companyId)
+                        .and(myLine.approver.id.eq(employeeId))
+                        .and(visibleMyLine)
                         .and(document.status.ne(DocumentStatus.DRAFT))
                         .and(keywordCondition(reqDto))
                         .and(createdAtBetween(reqDto))
                         .and(documentStatusEq(reqDto.getDocumentStatus()))
                         .and(myApprovalStatusEq(reqDto.getApprovalStatus(), myLine));
 
+
     /* ===============================
        내 차례까지 남은 결재 인원 수
        =============================== */
         NumberExpression<Integer> remainingBeforeMyTurn =
                 new CaseBuilder()
-                        // 이미 내가 결재 완료
-                        .when(myLine.status.in(
-                                ApprovalStatus.APPROVED,
-                                ApprovalStatus.REJECTED
+
+                        // 1. 문서가 이미 반려/승인 → 결재 흐름 종료
+                        .when(document.status.in(
+                                DocumentStatus.REJECTED,
+                                DocumentStatus.APPROVED
                         ))
                         .then(0)
 
-                        // 현재 결재자가 없는 경우 (완료 상태 등)
+                        // 2. 내 결재선이 이미 의미 없는 상태
+                        .when(myLine.status.in(
+                                ApprovalStatus.APPROVED,
+                                ApprovalStatus.REJECTED,
+                                ApprovalStatus.CANCELLED
+                        ))
+                        .then(0)
+
+                        // 3. 현재 결재자가 없는 경우
                         .when(currentLine.orderNo.isNull())
                         .then(0)
 
-                        // 정상 계산
+                        // 4. 정상 계산
                         .otherwise(
                                 myLine.orderNo.subtract(currentLine.orderNo)
                         );
@@ -324,10 +349,16 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
             ApprovalStatus status,
             QApprovalLine myLine
     ) {
-        return status != null
-                ? myLine.status.eq(status)
-                : null;
+        if (status == null) return null;
+
+        return switch (status) {
+            case CANCELLED -> myLine.status.eq(ApprovalStatus.CANCELLED)
+                    .and(document.status.eq(DocumentStatus.REJECTED));
+
+            default -> myLine.status.eq(status);
+        };
     }
+
 
     private BooleanExpression keywordCondition(
             DocumentListReqDto reqDto

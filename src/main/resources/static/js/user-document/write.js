@@ -72,6 +72,22 @@ async function searchEmployees(keyword) {
 }
 
 
+function updateApprovalSidebarSelection() {
+    // 모든 no-sub 메뉴 선택 해제
+    document.querySelectorAll('.menu-item.no-sub').forEach(item => {
+        item.classList.remove('selected');
+    });
+
+    // 결재 대기함 선택
+    const inboxLink = document.getElementById('mySubmitLink');
+    if (inboxLink) {
+        const menuItem = inboxLink.closest('.menu-item.no-sub');
+        if (menuItem) {
+            menuItem.classList.add('selected');
+        }
+    }
+}
+
 /* =====================================================
    Document Global Events
 ===================================================== */
@@ -165,9 +181,12 @@ window.addEventListener('beforeunload', (e) => {
 
 document.addEventListener('DOMContentLoaded', async () => {
 
+    updateApprovalSidebarSelection();
+
     if (typeof DOCUMENT_ID === 'undefined' || !DOCUMENT_ID) {
         alert('문서 정보가 올바르지 않습니다.');
         return;
+
     }
 
     try {

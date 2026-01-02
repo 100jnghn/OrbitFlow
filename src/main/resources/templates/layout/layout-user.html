@@ -15,6 +15,7 @@
     <link rel="stylesheet" th:href="@{/css/layout.css}">
     <link rel="stylesheet" th:href="@{/css/layout-user.css}">
     <link rel="stylesheet" th:href="@{/css/user-sidebar/user-sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/chatbot/chatbot.css}">
 
     <!-- 페이지별 CSS 삽입 위치 -->
     <th:block th:replace="${pageCss}"></th:block>
@@ -36,7 +37,11 @@
 <!-- 세션 모달 (공통) -->
 <div th:replace="~{fragments/session-modal :: body}"></div>
 
+<!-- 챗봇 (공통) -->
+<div th:replace="~{fragments/chatbot :: body}"></div>
+
 <script th:src="@{/js/common.js}"></script>
+<script th:src="@{/js/chatbot/chatbot.js}"></script>
 
 <!-- 페이지별 JS 삽입 위치 -->
 <th:block th:if="${pageScript}" th:replace="${pageScript}"></th:block>
