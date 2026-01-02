@@ -55,6 +55,7 @@ dependencies {
     annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
     annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
 
+    // gpt api 사용 (요약) 의존성
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
     implementation platform("software.amazon.awssdk:bom:2.25.20")
@@ -76,6 +77,9 @@ dependencies {
 
     // 4. 문서 파싱 (PDF)
     implementation 'dev.langchain4j:langchain4j-document-parser-apache-pdfbox'
+
+    // redis 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
 }
 

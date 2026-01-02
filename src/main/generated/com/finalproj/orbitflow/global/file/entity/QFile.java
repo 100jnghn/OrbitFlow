@@ -34,6 +34,8 @@ public class QFile extends EntityPathBase<File> {
     //inherited
     public final NumberPath<Long> createdBy = _super.createdBy;
 
+    public final EnumPath<com.finalproj.orbitflow.global.file.enums.FileDomain> domain = createEnum("domain", com.finalproj.orbitflow.global.file.enums.FileDomain.class);
+
     public final NumberPath<Long> fileSize = createNumber("fileSize", Long.class);
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
