@@ -104,17 +104,17 @@ async function loadLeaveHistory(page) {
             totalPages = pageData.totalPages;
 
             tbody.innerHTML = pageData.content.map(item => {
-                const statusClass = (item.statusCode || 'submitted').toLowerCase();
+                const statusCode = (item.statusCode || 'submitted').toUpperCase();
+                const badgeClass = statusCode === 'APPROVED' ? 'badge-approved' : 
+                                  statusCode === 'REJECTED' ? 'badge-rejected' : 
+                                  'badge-submitted';
                 return `
                     <tr>
                         <td>${item.title || '-'}</td>
                         <td class="period-cell">${item.period || '-'}</td>
                         <td>${parseFloat(item.days || 0).toFixed(1)}일</td>
                         <td>
-                            <div class="status-wrapper">
-                                <span class="status-dot ${statusClass}"></span>
-                                <span class="status-text">${item.statusName || '대기'}</span>
-                            </div>
+                            <span class="status-badge ${badgeClass}">${item.statusName || '대기'}</span>
                         </td>
                     </tr>
                 `;

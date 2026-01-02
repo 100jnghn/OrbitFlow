@@ -273,6 +273,27 @@ function handleSearch() {
 }
 
 /**
+ * 필터 초기화
+ */
+function resetFilters() {
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+    document.getElementById('statusFilter').value = 'ALL';
+    document.getElementById('searchKeyword').value = '';
+    
+    currentSearchParams = {
+        page: 0,
+        size: 10,
+        startDate: '',
+        endDate: '',
+        status: 'ALL',
+        keyword: ''
+    };
+    
+    loadAttendanceList();
+}
+
+/**
  * 모달 및 정정 제출
  */
 function openCorrectionModal(id, status) {

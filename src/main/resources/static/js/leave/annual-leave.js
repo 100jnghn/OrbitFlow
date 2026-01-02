@@ -137,7 +137,10 @@ async function loadLeaveHistory(page) {
                 const isGrant = item.type === 'GRANT';
                 const countClass = isGrant ? 'count-plus' : 'count-minus';
                 const sign = isGrant ? '+' : '-';
-                const statusClass = (item.statusCode || 'submitted').toLowerCase();
+                const statusCode = (item.statusCode || 'submitted').toUpperCase();
+                const badgeClass = statusCode === 'APPROVED' ? 'badge-approved' : 
+                                  statusCode === 'REJECTED' ? 'badge-rejected' : 
+                                  'badge-submitted';
 
                 return `
                     <tr class="${isGrant ? 'row-grant' : ''}">
@@ -146,10 +149,7 @@ async function loadLeaveHistory(page) {
                         <td class="period-cell">${item.period || '-'}</td>
                         <td class="${countClass}">${sign}${parseFloat(item.days).toFixed(1)}</td>
                         <td>
-                            <div class="status-wrapper">
-                                <span class="status-dot ${statusClass}"></span>
-                                <span class="status-text">${item.statusName}</span>
-                            </div>
+                            <span class="status-badge ${badgeClass}">${item.statusName}</span>
                         </td>
                     </tr>
                 `;

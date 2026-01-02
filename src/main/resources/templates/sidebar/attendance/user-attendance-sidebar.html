@@ -1,34 +1,73 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <body>
-<ul th:fragment="menu" class="sidebar-menu">
-    <link rel="stylesheet" th:href="@{/css/user-sidebar/attendance-sidebar.css}">
-    <li>
-        <span class="attendance-section-title">출퇴근</span>
-        <ul class="attendance-sub-menu">
-            <li th:classappend="${currentMenu == 'commute'} ? 'selected' : ''">
-                <a th:href="@{/view/attendance/commute}">출퇴근기록</a>
-            </li>
+<!-- 사이드바 메뉴 -->
+<th:block th:fragment="sidebar">
+    <ul class="sidebar-menu">
+        <li class="menu-item active">
+            <div class="menu-title" role="button" onclick="toggleAttendanceMenu(this)" aria-expanded="true">
+                <span>출퇴근</span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </div>
+            <ul class="sub-menu">
+                <li th:classappend="${currentMenu == 'commute'} ? 'selected' : ''">
+                    <a th:href="@{/view/attendance/commute}" class="sidebar-link" id="commuteLink">
+                        출퇴근기록
+                    </a>
+                </li>
+                <li th:classappend="${currentMenu == 'monthly'} ? 'selected' : ''">
+                    <a th:href="@{/view/attendance/monthly}" class="sidebar-link" id="monthlyLink">
+                        월별 근태 현황
+                    </a>
+                </li>
+            </ul>
+        </li>
+        <li class="menu-item active">
+            <div class="menu-title" role="button" onclick="toggleAttendanceMenu(this)" aria-expanded="true">
+                <span>휴가</span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </div>
+            <ul class="sub-menu">
+                <li th:classappend="${currentMenu == 'annual-leave'} ? 'selected' : ''">
+                    <a th:href="@{/view/attendance/annual-leave}" class="sidebar-link" id="annualLeaveLink">
+                        내 연차 현황
+                    </a>
+                </li>
+                <li th:classappend="${currentMenu == 'leave-history'} ? 'selected' : ''">
+                    <a th:href="@{/view/attendance/leave-history}" class="sidebar-link" id="leaveHistoryLink">
+                        휴가 신청 현황
+                    </a>
+                </li>
+            </ul>
+        </li>
+    </ul>
+    <script>
+        // 근태 메뉴 아코디언 토글 함수
+        function toggleAttendanceMenu(element) {
+            const menuItem = element.closest('.menu-item');
+            if (!menuItem) return;
 
-            <li th:classappend="${currentMenu == 'monthly'} ? 'selected' : ''">
-                <a th:href="@{/view/attendance/monthly}">월별 근태 현황</a>
-            </li>
-        </ul>
-    </li>
+            const isOpen = menuItem.classList.contains('active');
 
-    <li>
-        <span class="attendance-section-title">휴가</span>
-        <ul class="attendance-sub-menu">
-            <li th:classappend="${currentMenu == 'annual-leave'} ? 'selected' : ''">
-                <a th:href="@{/view/attendance/annual-leave}">내 연차 현황</a>
-            </li>
+            // 다른 메뉴 닫기
+            document.querySelectorAll('.sidebar-menu .menu-item').forEach(item => {
+                if (item !== menuItem) {
+                    item.classList.remove('active');
+                    const title = item.querySelector('.menu-title');
+                    if (title) title.setAttribute('aria-expanded', 'false');
+                }
+            });
 
-
-            <li th:classappend="${currentMenu == 'leave-history'} ? 'selected' : ''">
-                <a th:href="@{/view/attendance/leave-history}">휴가 신청 현황</a>
-            </li>
-        </ul>
-    </li>
-</ul>
+            // 현재 메뉴 토글
+            if (isOpen) {
+                menuItem.classList.remove('active');
+                element.setAttribute('aria-expanded', 'false');
+            } else {
+                menuItem.classList.add('active');
+                element.setAttribute('aria-expanded', 'true');
+            }
+        }
+    </script>
+</th:block>
 </body>
 </html>

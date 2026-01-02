@@ -83,83 +83,139 @@
 
 /* 검색 섹션: 개선된 디자인 */
 .board-search-section {
-    margin-bottom: 32px;
-    padding: 28px;
-    background: #ffffff;
+    margin-bottom: 12px;
+    padding: 16px;
+    background: var(--neutral-50);
     border-radius: 12px;
     border: 1px solid var(--neutral-200);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: visible;
+    z-index: 1;
 }
 
 .search-filters {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    align-items: end;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    position: relative;
+    overflow: visible;
+    z-index: 1;
 }
 
-/* 필드 그룹 스타일 */
-.date-field-wrapper, .search-input-wrapper {
+/* 필터 섹션 스타일 (내 연차 현황과 동일) */
+.filter-select-wrapper,
+.date-field-wrapper,
+.search-input-wrapper,
+.button-wrapper {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    align-items: flex-start;
+    height: 72px; /* label(20px) + gap(8px) + input(44px) = 72px */
+    position: relative;
+    z-index: 1000;
+    overflow: visible;
 }
 
-.date-field-wrapper label,
-.search-input-wrapper label {
+.filter-label {
     font-size: 13px;
+    color: var(--neutral-600);
     font-weight: 600;
-    color: var(--neutral-700);
+    height: 20px;
+    line-height: 20px;
     margin: 0;
-}
-
-.filter-select-wrapper {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    align-items: center;
 }
 
-.filter-select-wrapper label {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--neutral-700);
-    margin: 0;
-}
-
-/* 입력 필드 스타일 개선 */
-.filter-select, .date-input, .search-input {
+.filter-select {
+    min-width: 120px;
     width: 100%;
     height: 44px;
-    padding: 10px 16px;
-    border: 1.5px solid var(--neutral-300);
+    padding: 10px 14px;
+    padding-right: 40px;
+    border: 1px solid var(--neutral-300);
     border-radius: 8px;
     font-size: 14px;
-    color: var(--neutral-800);
-    background: #ffffff;
+    background: white !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6L8 10L12 6' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 14px center !important;
+    background-size: 16px 16px !important;
+    cursor: pointer;
+    color: #1F2937 !important;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    box-sizing: border-box;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    position: relative;
+    z-index: 1001;
+    overflow: visible;
+}
+
+.filter-select::-ms-expand {
+    display: block;
+}
+
+.filter-select option {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #1F2937 !important;
+    padding: 10px 14px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    display: block !important;
+    min-height: 36px;
+    line-height: 1.5;
+    cursor: pointer;
+}
+
+.filter-select:hover,
+.filter-select:focus {
+    background: white !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6L8 10L12 6' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 14px center !important;
+    background-size: 16px 16px !important;
+    color: #1F2937 !important;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.date-input, .search-input {
+    min-width: 150px;
+    width: 100%;
+    height: 44px;
+    padding: 10px 14px;
+    border: 1px solid var(--neutral-300);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--neutral-700);
     transition: all 0.2s ease;
     box-sizing: border-box;
 }
 
-.filter-select:focus, .date-input:focus, .search-input:focus {
+.date-input:focus, .search-input:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.filter-select:hover, .date-input:hover, .search-input:hover {
-    border-color: var(--neutral-400);
-}
-
-/* 검색 버튼 스타일 개선 */
 .btn-search {
-    height: 44px;
-    padding: 10px 24px;
+    padding: 10px 20px;
     background: var(--primary-color);
-    color: #ffffff;
+    color: white;
     border: none;
     border-radius: 8px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -167,21 +223,39 @@
     gap: 8px;
     transition: all 0.2s ease;
     white-space: nowrap;
-    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.15);
+    box-sizing: border-box;
+    line-height: 1;
+    height: 44px;
 }
 
 .btn-search:hover {
     background: var(--primary-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-.btn-search:active {
-    transform: translateY(0);
-}
-
-.btn-search i {
+.btn-reset {
+    padding: 10px 20px;
+    background: var(--neutral-100);
+    color: var(--neutral-700);
+    border: 1px solid var(--neutral-300);
+    border-radius: 8px;
     font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    line-height: 1;
+    white-space: nowrap;
+    height: 44px;
+}
+
+.btn-reset:hover {
+    background: var(--neutral-200);
+    border-color: var(--neutral-400);
 }
 
 /* 에러 메시지 스타일 */
@@ -244,10 +318,10 @@
     line-height: 1;
 }
 
-.ON_TIME { background-color: #ecfdf5; color: #059669; border: 1px solid #10b981; }
-.LATE { background-color: #fffbeb; color: #d97706; border: 1px solid #fbbf24; }
-.ABSENT { background-color: #fef2f2; color: #dc2626; border: 1px solid #f87171; }
-.BEFORE_WORK { background-color: #f0f9ff; color: #0284c7; border: 1px solid #38bdf8; }
+.ON_TIME { background-color: #ecfdf5; color: dimgray; border: 1px solid #10b981; }
+.LATE { background-color: #fffbeb; color: dimgray; border: 1px solid #fbbf24; }
+.ABSENT { background-color: #fef2f2; color: dimgray; border: 1px solid #f87171; }
+.BEFORE_WORK { background-color: #f0f9ff; color: dimgray; border: 1px solid #38bdf8; }
 
 /* 정정 버튼: 텍스트 위주 디자인 */
 .btn-table-action {
