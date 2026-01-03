@@ -385,3 +385,94 @@ function showSessionExtendModalOnce() {
     sessionStorage.setItem('sessionWarningShown', 'true');
     showSessionExtendModal();
 }
+
+/**
+ * 알림 관련 코드
+ */
+
+// sse 연결 확인 변수
+let eventSource = null;
+
+// sse 연결 시도 & 안 읽은 알림 수 불러오기
+document.addEventListener("DOMContentLoaded", () => {
+
+    // 로그인 화면에서는 알림 관련 메소드 호출 X
+    if (window.location.pathname === "/login") return;
+
+    connectSse();
+    refreshUnreadCount(); // 초기 상태 동기화
+});
+
+// sse 연결 함수
+function connectSse() {
+    if (eventSource) return;
+
+    eventSource = new EventSource(
+        "/api/notifications/stream",
+        { withCredentials: true } // same-origin이면 생략 가능
+    );
+
+    eventSource.addEventListener("notification", (event) => {
+        const dto = JSON.parse(event.data);
+        showToast(dto.content);
+        refreshUnreadCount();
+    });
+
+    eventSource.onopen = () => {
+        console.log("SSE 연결 성공");
+    };
+
+    eventSource.onerror = () => {
+        eventSource.close();
+        eventSource = null;
+
+        // 세션 기준으로 판단 (SSE 전용)
+        setTimeout(connectSse, 5000);
+    };
+}
+
+// 알림 토스트 메시지 표시 함수
+function showToast(message) {
+    const container = document.getElementById("notification-toast-container");
+    if (!container) return;
+
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.innerText = message;
+
+    container.appendChild(toast);
+
+    // 3초 후 제거
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+
+// 읽지 않은 메시지 수 불러오는 함수
+async function refreshUnreadCount() {
+    try {
+        const res = await apiFetch("/api/notifications/unread");
+        if (!res.ok) return;
+
+        const list = await res.json();
+        const badge = document.getElementById("notificationBadge");
+
+        if (!badge) return;
+
+        if (list.length > 0) {
+            badge.innerText = list.length;
+            badge.classList.remove("hidden");
+        } else {
+            badge.classList.add("hidden");
+        }
+    } catch (e) {
+        console.error("읽지 않은 알림 불러오기 실패", e);
+    }
+}
+
+window.addEventListener("beforeunload", () => {
+    if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+    }
+});
