@@ -466,6 +466,7 @@ async function refreshUnreadCount() {
 
             badge.innerText = list.length;
             badge.classList.remove("hidden");
+            badge.style.display = "flex";
         } else {
             badge.classList.add("hidden");
         }
