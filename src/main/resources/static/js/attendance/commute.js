@@ -9,6 +9,9 @@
         updateClock();
         setInterval(updateClock, 1000);
 
+        // 초기 상태 벳지 표시
+        updateWorkStatusBadge();
+
         loadActiveWorkHours(); // 사원별 맞춤 시간 로드
         loadTodayAttendance(); // 오늘 현황 로드
         setupEventListeners();
@@ -33,7 +36,10 @@
     // 1. 기준 근무 시간 로드
     async function loadActiveWorkHours() {
         const token = getAuthToken();
-        if (!token) return;
+        if (!token) {
+            console.warn('토큰이 없어 기준 근무 시간을 로드할 수 없습니다.');
+            return;
+        }
 
         try {
             const response = await fetch(`${ATTENDANCE_API_BASE_URL}/active-rule`, {
@@ -46,13 +52,44 @@
 
             if (response.ok) {
                 const data = await response.json();
-                const start = data.startTime.substring(0, 5);
-                const end = data.endTime.substring(0, 5);
-                document.getElementById('workHours').textContent = `${start} ~ ${end}`;
+                
+                // ResponseDto 구조 확인 (data 필드가 있으면 사용, 없으면 직접 사용)
+                const ruleData = data.data || data;
+                
+                if (!ruleData || !ruleData.startTime || !ruleData.endTime) {
+                    console.error('기준 근무 시간 데이터가 올바르지 않습니다:', ruleData);
+                    const workHoursEl = document.getElementById('workHours');
+                    if (workHoursEl) {
+                        workHoursEl.textContent = '조회 실패';
+                    }
+                    return;
+                }
+                
+                // LocalTime 형식 처리 (HH:mm:ss 또는 HH:mm)
+                let startTimeStr = ruleData.startTime;
+                let endTimeStr = ruleData.endTime;
+                
+                // 문자열이면 그대로 사용, 아니면 변환
+                if (typeof startTimeStr !== 'string') {
+                    console.error('startTime이 문자열이 아닙니다:', startTimeStr);
+                    const workHoursEl = document.getElementById('workHours');
+                    if (workHoursEl) {
+                        workHoursEl.textContent = '조회 실패';
+                    }
+                    return;
+                }
+                
+                const start = startTimeStr.substring(0, 5);
+                const end = endTimeStr.substring(0, 5);
+                
+                const workHoursEl = document.getElementById('workHours');
+                if (workHoursEl) {
+                    workHoursEl.textContent = `${start} ~ ${end}`;
+                }
                 
                 // 출근시간이 퇴근시간보다 늦은지 확인
-                const startTime = new Date(`2000-01-01T${data.startTime}`);
-                const endTime = new Date(`2000-01-01T${data.endTime}`);
+                const startTime = new Date(`2000-01-01T${startTimeStr}`);
+                const endTime = new Date(`2000-01-01T${endTimeStr}`);
                 if (startTime >= endTime) {
                     // 오류 배너 표시
                     const banner = document.getElementById('ruleErrorBanner');
@@ -66,9 +103,19 @@
                         banner.style.display = 'none';
                     }
                 }
+            } else {
+                console.error('기준 근무 시간 API 응답 오류:', response.status, response.statusText);
+                const workHoursEl = document.getElementById('workHours');
+                if (workHoursEl) {
+                    workHoursEl.textContent = '조회 실패';
+                }
             }
         } catch (error) {
             console.error('기준 시간 로드 실패:', error);
+            const workHoursEl = document.getElementById('workHours');
+            if (workHoursEl) {
+                workHoursEl.textContent = '조회 실패';
+            }
         }
     }
 
@@ -82,8 +129,10 @@
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (response.ok) {
-                currentAttendance = await response.json();
-                isAway = currentAttendance.isAway;
+                const result = await response.json();
+                // ResponseDto 구조 확인
+                currentAttendance = result.data || result;
+                isAway = currentAttendance ? (currentAttendance.isAway || false) : false;
                 updateUI();
             }
         } catch (error) {
@@ -143,16 +192,27 @@
     // 근무상태 벳지 업데이트 (홈화면)
     function updateWorkStatusBadge() {
         const badgeEl = document.getElementById('workStatusBadge');
-        if (!badgeEl || !currentAttendance) return;
+        if (!badgeEl) return;
+
+        // currentAttendance가 없으면 기본 상태 표시
+        if (!currentAttendance) {
+            badgeEl.style.display = 'inline-block';
+            badgeEl.className = 'work-status-badge badge-before-work';
+            badgeEl.textContent = '근무예정';
+            return;
+        }
 
         badgeEl.style.display = 'inline-block';
         badgeEl.className = 'work-status-badge';
 
-        if (!currentAttendance.commuteAt) {
+        const commuteAt = currentAttendance.commuteAt;
+        const leaveAt = currentAttendance.leaveAt;
+
+        if (!commuteAt) {
             // 출근 전
             badgeEl.textContent = '근무예정';
             badgeEl.classList.add('badge-before-work');
-        } else if (!currentAttendance.leaveAt) {
+        } else if (!leaveAt) {
             // 출근 후, 퇴근 전
             if (isAway) {
                 badgeEl.textContent = '자리비움';
@@ -187,15 +247,22 @@
                 }
             });
 
-            const data = await response.json();
+            const result = await response.json();
+            const data = result.data || result;
 
             if (!response.ok) {
-                alert(data.message || "요청을 처리할 수 없습니다.");
+                const message = result.message || data.message || "요청을 처리할 수 없습니다.";
+                alert(message);
                 return;
             }
 
+            // 즉시 UI 업데이트
+            currentAttendance = data;
+            isAway = data ? (data.isAway || false) : false;
+            updateUI();
+            
+            // 최신 데이터 다시 로드
             await loadTodayAttendance();
-            alert("처리가 완료되었습니다.");
             
             // 홈화면인 경우 대시보드 데이터 새로고침
             if (window.location.pathname === '/' || window.location.pathname === '/view/main') {

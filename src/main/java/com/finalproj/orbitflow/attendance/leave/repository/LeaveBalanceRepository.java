@@ -1,6 +1,6 @@
-package com.finalproj.orbitflow.attendance.leave.leaveBalance.repository;
+package com.finalproj.orbitflow.attendance.leave.repository;
 
-import com.finalproj.orbitflow.attendance.leave.leaveBalance.entity.LeaveBalance;
+import com.finalproj.orbitflow.attendance.leave.entity.LeaveBalance;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

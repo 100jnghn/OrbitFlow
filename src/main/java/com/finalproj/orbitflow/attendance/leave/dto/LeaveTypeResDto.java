@@ -1,6 +1,6 @@
-package com.finalproj.orbitflow.attendance.leave.leaveType.dto;
+package com.finalproj.orbitflow.attendance.leave.dto;
 
-import com.finalproj.orbitflow.attendance.leave.leaveType.entity.LeaveType;
+import com.finalproj.orbitflow.attendance.leave.entity.LeaveType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

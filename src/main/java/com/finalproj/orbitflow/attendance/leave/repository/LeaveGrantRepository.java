@@ -1,6 +1,6 @@
-package com.finalproj.orbitflow.attendance.leave.leaveGrant.repository;
+package com.finalproj.orbitflow.attendance.leave.repository;
 
-import com.finalproj.orbitflow.attendance.leave.leaveGrant.entity.LeaveGrant;
+import com.finalproj.orbitflow.attendance.leave.entity.LeaveGrant;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

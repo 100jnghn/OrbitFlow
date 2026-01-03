@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.leave.leaveType.entity;
+package com.finalproj.orbitflow.attendance.leave.entity;
 
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import jakarta.persistence.*;

@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.leave.leaveGrant.entity;
+package com.finalproj.orbitflow.attendance.leave.entity;
 
 
 import com.finalproj.orbitflow.global.common.BaseEntity;

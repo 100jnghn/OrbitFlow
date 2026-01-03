@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.leave.leaveBalance.entity;
+package com.finalproj.orbitflow.attendance.leave.entity;
 
 
 import com.finalproj.orbitflow.global.common.BaseEntity;
@@ -47,5 +47,10 @@ public class LeaveBalance extends BaseEntity {
         // 기존 잔합에 부여된 일수를 더함
         this.totalGranted = this.totalGranted.add(days);
         this.remainingDays = this.remainingDays.add(days);
+    }
+
+    public void updateBalanceFromActualUsage(BigDecimal actualUsedDays) {
+        if (this.totalGranted == null) this.totalGranted = BigDecimal.ZERO;
+        this.remainingDays = this.totalGranted.subtract(actualUsedDays);
     }
 }

@@ -20,13 +20,18 @@
     --neutral-900: #111827;
 }
 
-/* 컨테이너 */
+/* 컨테이너: 게시판과 동일한 크기 */
 .board-admin-container {
-    padding: 28px;
-    max-width: 100%;
-    width: 100%;
-    background: var(--neutral-50);
-    min-height: calc(100vh - 200px);
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(103vh - 180px);
+    box-sizing: border-box;
 }
 
 /* 게시판 헤더 스타일 */

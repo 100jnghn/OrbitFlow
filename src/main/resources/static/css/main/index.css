@@ -173,7 +173,7 @@
 .profile-attendance-buttons {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     margin-top: 20px;
     padding-top: 20px;
     border-top: 1px solid #e5e7eb;
@@ -181,59 +181,79 @@
 
 .btn-attendance {
     width: 100%;
-    padding: 12px;
+    padding: 14px 16px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.btn-attendance i {
+    font-size: 16px;
 }
 
 .btn-attendance:disabled {
     background: #f3f4f6 !important;
     color: #9ca3af !important;
     cursor: not-allowed;
-    opacity: 0.6;
+    opacity: 0.5;
+    box-shadow: none;
+    transform: none !important;
+}
+
+.btn-attendance:not(:disabled):active {
+    transform: translateY(0) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .btn-attendance.btn-checkin {
-    background: #EDF2FF;
-    color: #3b82f6;
-    border: 1px solid #DBE4FF;
+    background: linear-gradient(135deg, #EDF2FF 0%, #DBE4FF 100%);
+    color: #2563eb;
+    border: 1.5px solid #3b82f6;
 }
 
 .btn-attendance.btn-checkin:hover:not(:disabled) {
-    background: #3b82f6;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     color: #fff;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
+    border-color: #2563eb;
 }
 
 .btn-attendance.btn-away {
-    background: #FFF9DB;
-    color: #F08C00;
-    border: 1px solid #FFF3BF;
+    background: linear-gradient(135deg, #FFF9DB 0%, #FFF3BF 100%);
+    color: #d97706;
+    border: 1.5px solid #f59e0b;
 }
 
 .btn-attendance.btn-away:hover:not(:disabled),
 .btn-attendance.btn-away.active {
-    background: #FAB005;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
     color: #fff;
     transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(245, 158, 11, 0.35);
+    border-color: #d97706;
 }
 
 .btn-attendance.btn-checkout {
-    background: #FFF5F5;
-    color: #ef4444;
-    border: 1px solid #FFE3E3;
+    background: linear-gradient(135deg, #FFF5F5 0%, #FFE3E3 100%);
+    color: #dc2626;
+    border: 1.5px solid #ef4444;
 }
 
 .btn-attendance.btn-checkout:hover:not(:disabled) {
-    background: #ef4444;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
     color: #fff;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+    border-color: #dc2626;
 }
 
 /* 출퇴근 정보 */

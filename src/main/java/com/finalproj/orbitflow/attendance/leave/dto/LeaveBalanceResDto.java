@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.leave.leaveBalance.dto;
+package com.finalproj.orbitflow.attendance.leave.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /**
  * Please explain the class!!!
@@ -23,4 +24,5 @@ public class LeaveBalanceResDto {
     private BigDecimal totalGranted; // 총 발생 연차
     private BigDecimal usedDays;     // 사용 연차 (totalGranted - remainingDays 계산값)
     private BigDecimal remainingDays; // 잔여 연차
+    private LocalDate hireDate;      // 사원 입사일
 }

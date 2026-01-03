@@ -37,26 +37,34 @@ async function loadUserProfile() {
         
         document.getElementById('profileName').textContent = user.name || '-';
         
-        // 2. 부서명과 직책명 조회를 위해 사원 검색 API 사용 (본인 이름으로 검색)
+        // 2. 부서명과 직책명 조회 (관리자 권한이 필요한 API이므로 제거)
+        // 일반 사용자는 부서명과 직책명을 조회할 수 있는 별도 API가 필요합니다.
+        // 현재는 기본값으로 표시합니다.
         let organizationName = '-';
         let positionName = '';
         
-        try {
-            // 사원 검색 API를 사용하여 본인 정보 조회 (이름으로 검색, 최소 2자 필요)
-            if (user.name && user.name.length >= 2) {
-                const searchResponse = await apiFetch(`/api/admin/rules/employees/search?keyword=${encodeURIComponent(user.name)}`);
-                if (searchResponse.ok) {
-                    const employees = await searchResponse.json();
-                    // 본인 employeeId와 일치하는 사원 찾기
-                    const currentEmployee = employees.find(emp => emp.id === user.employeeId);
-                    if (currentEmployee) {
-                        organizationName = currentEmployee.organizationName || '-';
-                        positionName = currentEmployee.positionName || '';
+        // 관리자 권한이 있는 경우에만 사원 검색 API 사용
+        if (user.role === 'ADMIN' || user.role === 'COMPANY_ADMIN') {
+            try {
+                if (user.name && user.name.length >= 2) {
+                    const searchResponse = await apiFetch(`/api/admin/rules/employees/search?keyword=${encodeURIComponent(user.name)}`);
+                    if (searchResponse.ok) {
+                        const result = await searchResponse.json();
+                        const employees = result.data || result;
+                        if (Array.isArray(employees)) {
+                            // 본인 employeeId와 일치하는 사원 찾기
+                            const currentEmployee = employees.find(emp => emp.id === user.employeeId);
+                            if (currentEmployee) {
+                                organizationName = currentEmployee.organizationName || '-';
+                                positionName = currentEmployee.positionName || '';
+                            }
+                        }
                     }
                 }
+            } catch (searchError) {
+                // 403 에러 등은 조용히 처리 (콘솔에 표시하지 않음)
+                // console.warn('사원 정보 검색 실패, 기본값 사용:', searchError);
             }
-        } catch (searchError) {
-            console.warn('사원 정보 검색 실패, 기본값 사용:', searchError);
         }
         
         document.getElementById('profileDept').textContent = organizationName;
