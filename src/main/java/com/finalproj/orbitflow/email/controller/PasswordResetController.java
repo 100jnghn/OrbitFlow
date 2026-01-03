@@ -1,6 +1,7 @@
 package com.finalproj.orbitflow.email.controller;
 
 import com.finalproj.orbitflow.email.dto.PasswordResetReqDto;
+import com.finalproj.orbitflow.email.entity.EmailVerificationToken;
 import com.finalproj.orbitflow.email.enums.EmailTokenType;
 import com.finalproj.orbitflow.email.service.EmailVerificationService;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
@@ -47,10 +48,15 @@ public class PasswordResetController {
             @RequestParam String token,
             @RequestBody @Valid PasswordResetReqDto dto
     ) {
-        Employee employee =
-                emailService.verifyAndGetEmployee(token, EmailTokenType.RESET_PASSWORD);
+        EmailVerificationToken verificationToken =
+                emailService.verify(token, EmailTokenType.ACTIVATE_ACCOUNT);
+
+        Employee employee = verificationToken.getEmployee();
 
         employeeService.resetPassword(employee, dto.getPassword());
+
+        // 여기서 토큰 사용 처리
+        emailService.markTokenUsed(verificationToken);
 
         auditLogService.log(
                 employee.getCompany(),

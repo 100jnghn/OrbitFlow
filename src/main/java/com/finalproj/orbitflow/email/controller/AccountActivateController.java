@@ -3,6 +3,7 @@ package com.finalproj.orbitflow.email.controller;
 import com.finalproj.orbitflow.email.enums.EmailTokenType;
 import com.finalproj.orbitflow.email.service.EmailVerificationService;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
+import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.service.EmployeeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,22 @@ public class AccountActivateController {
                 emailService.verifyAndGetEmployee(token, EmailTokenType.ACTIVATE_ACCOUNT);
 
         employeeService.activate(employee);
+
+        return ResponseEntity.ok().build();
+    }
+
+
+    @PostMapping("/activate/resend")
+    public ResponseEntity<?> resendActivateMail(@RequestParam Long employeeId) {
+
+        Employee employee = employeeService.findById(employeeId);
+
+        // 이미 ACTIVE면 재전송 불가
+        if (employee.getStatus() != EmployeeStatus.TEMP) {
+            throw new IllegalStateException("이미 활성화된 계정입니다.");
+        }
+
+        emailService.sendActivateMail(employee);
 
         return ResponseEntity.ok().build();
     }
