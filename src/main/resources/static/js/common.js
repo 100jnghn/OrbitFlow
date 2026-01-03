@@ -460,6 +460,9 @@ async function refreshUnreadCount() {
         if (!badge) return;
 
         if (list.length > 0) {
+
+            console.log("안 읽은 메시지 수 : " + list.length);
+
             badge.innerText = list.length;
             badge.classList.remove("hidden");
         } else {

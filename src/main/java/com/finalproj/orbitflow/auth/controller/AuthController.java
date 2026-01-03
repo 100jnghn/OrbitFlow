@@ -81,6 +81,16 @@ public class AuthController {
                 .sameSite("Lax")
                 .build();
 
+        // 수정 : sse 연결 요청을 위해 쿠키에 access token을 저장 (sse_token으로 저장)
+        ResponseCookie sseCookie = ResponseCookie.from("sse_token", accessToken)
+                .httpOnly(true)
+                .secure(false)          // HTTPS면 true
+                .path("/api/notifications") // 가능하면 SSE 경로로 제한 (권장)
+                .sameSite("Lax")
+                .maxAge(Duration.ofMinutes(10)) // SSE용이니 짧게
+                .build();
+
+        response.addHeader("Set-Cookie", sseCookie.toString()); // 쿠키에 sse_token 저장
         response.addHeader("Set-Cookie", cookie.toString());
 
         LoginResDto res = new LoginResDto(
@@ -97,7 +107,8 @@ public class AuthController {
      */
     @PostMapping("/refresh")
     public ResponseEntity<ResponseDto> refresh(
-            @CookieValue(value = "refreshToken", required = false) String token
+            @CookieValue(value = "refreshToken", required = false) String token,
+            HttpServletResponse response
     ) {
 
         if (token == null) {
@@ -113,8 +124,23 @@ public class AuthController {
             throw new ForbiddenException("로그인할 수 없는 계정 상태입니다.");
         }
 
+        // 새 토큰 발급
+        // Cookie에 sse_token 새로 저장
+
+        String newAccessToken = jwtProvider.createToken(user);
+
+        ResponseCookie sseCookie = ResponseCookie.from("sse_token", newAccessToken)
+                .httpOnly(true)
+                .secure(false)
+                .path("/api/notifications")
+                .maxAge(Duration.ofMinutes(10))
+                .sameSite("Lax")
+                .build();
+
+        response.addHeader("Set-Cookie", sseCookie.toString());
+
         LoginResDto res = new LoginResDto(
-                jwtProvider.createToken(user),
+                newAccessToken,
                 null,
                 refreshToken.getExpiresAt()
         );
@@ -166,12 +192,24 @@ public class AuthController {
         response.addHeader("Set-Cookie", cookie.toString());
 
         // 새 Access Token 발급
+        String newAccessToken = jwtProvider.createToken(user);
+
+        // SSE 전용 Cookie 재설정
+        ResponseCookie sseCookie = ResponseCookie.from("sse_token", newAccessToken)
+                .httpOnly(true)
+                .secure(false)
+                .path("/api/notifications")
+                .maxAge(Duration.ofMinutes(10))
+                .sameSite("Lax")
+                .build();
+
+        response.addHeader("Set-Cookie", sseCookie.toString());
+
         LoginResDto res = new LoginResDto(
-                jwtProvider.createToken(user),
+                newAccessToken,
                 null,
                 newRefreshToken.getExpiresAt()
         );
-
         return ResponseEntity.ok(
                 new ResponseDto(HttpStatus.OK, "세션 연장 완료", res)
         );
@@ -195,7 +233,14 @@ public class AuthController {
                 .httpOnly(true)
                 .build();
 
+        ResponseCookie sseCookie = ResponseCookie.from("sse_token", "")
+                .path("/api/notifications")
+                .maxAge(0)
+                .httpOnly(true)
+                .build();
+
         response.addHeader("Set-Cookie", cookie.toString());
+        response.addHeader("Set-Cookie", sseCookie.toString());
 
         return ResponseEntity.ok(new ResponseDto(HttpStatus.OK, "로그아웃 완료", null));
     }
