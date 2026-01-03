@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- 알림 모달 -->
+<div th:fragment="body">
+<div id="notificationModal" class="notification-modal hidden">
+    <div class="notification-modal-backdrop" onclick="closeNotificationModal()"></div>
+    <div class="notification-modal-panel">
+        <div class="notification-modal-head">
+            <h2>알림</h2>
+            <button class="notification-modal-close-btn" onclick="closeNotificationModal()">✕</button>
+        </div>
+        
+        <div class="notification-modal-toggle">
+            <label class="notification-toggle-label">
+                <input type="checkbox" id="showAllNotifications" onchange="toggleNotificationView()">
+                <span class="notification-toggle-text">모든 알림</span>
+            </label>
+        </div>
+        
+        <div class="notification-modal-body" id="notificationList">
+            <!-- 알림 목록이 여기에 동적으로 추가됩니다 -->
+        </div>
+    </div>
+</div>
+</div>
+
+</body>
+</html>
+

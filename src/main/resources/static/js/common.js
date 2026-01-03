@@ -415,7 +415,7 @@ function connectSse() {
         return;
     }
 
-    console.log("EventSourcePolyFill : " + window.EventSourcePolyfill);
+    // console.log("EventSourcePolyFill : " + window.EventSourcePolyfill);
 
     // access token 사용해서 sse 연결 요청
     eventSource = new EventSourcePolyfill(
