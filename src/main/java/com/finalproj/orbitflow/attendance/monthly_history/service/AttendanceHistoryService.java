@@ -2,7 +2,7 @@ package com.finalproj.orbitflow.attendance.monthly_history.service;
 
 import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
 import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
-import com.finalproj.orbitflow.attendance.commute.repository.AttendanceRepository;
+import com.finalproj.orbitflow.attendance.commute.repository.CommuteRepository;
 import com.finalproj.orbitflow.attendance.monthly_history.dto.*;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
@@ -25,7 +25,7 @@ import java.util.Locale;
 @Transactional(readOnly = true)
 public class AttendanceHistoryService {
 
-    private final AttendanceRepository attendanceRepository;
+    private final CommuteRepository commuteRepository;
     private final EmployeeRepository employeeRepository;
 
     /**
@@ -99,12 +99,12 @@ public class AttendanceHistoryService {
         }
 
         // Repository에 추가한 findHistoryWithPaging 호출
-        return attendanceRepository.findHistoryWithPaging(empId, start, end, attStatus, pageable)
+        return commuteRepository.findHistoryWithPaging(empId, start, end, attStatus, pageable)
                 .map(this::convertToDto);
     }
 
     private MonthlyAttHistoryResDto getMonthlySummary(Long empId, LocalDate start, LocalDate end) {
-        List<Attendance> records = attendanceRepository.findByEmployeeIdAndWorkDateBetweenOrderByWorkDateAsc(empId, start, end);
+        List<Attendance> records = commuteRepository.findByEmployeeIdAndWorkDateBetweenOrderByWorkDateAsc(empId, start, end);
         long totalMin = 0, lateCount = 0, absentCount = 0;
 
         for (Attendance a : records) {

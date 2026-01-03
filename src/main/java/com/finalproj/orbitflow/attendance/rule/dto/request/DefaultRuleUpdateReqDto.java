@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.default_rule.dto;
+package com.finalproj.orbitflow.attendance.rule.dto.request;
 
 import java.time.LocalTime;
 
@@ -10,7 +10,7 @@ import java.time.LocalTime;
  * @since : 2025. 12. 18. 목요일
  */
 
-public record AttRuleUpdateReqDto(
+public record DefaultRuleUpdateReqDto(
         LocalTime defaultStartTime,
         LocalTime defaultEndTime,
         Integer defaultBreakMinutes

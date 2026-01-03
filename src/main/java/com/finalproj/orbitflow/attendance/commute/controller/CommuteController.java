@@ -72,17 +72,28 @@ public class CommuteController {
 
 
     @PostMapping("/away/start")
-    public ResponseEntity<TodayAttResDto> startAway(
-            @AuthenticationPrincipal SecurityUser user) {
+    public ResponseEntity<?> startAway(@AuthenticationPrincipal SecurityUser user) {
         commuteService.startAway(user.getCompanyId(), user.getEmployeeId());
-        return ResponseEntity.ok(commuteService.getTodayAttendance(user.getCompanyId(), user.getEmployeeId()));
+        TodayAttResDto result = commuteService.getTodayAttendance(user.getCompanyId(), user.getEmployeeId());
+
+        ResponseDto<TodayAttResDto> response = new ResponseDto<>(
+                HttpStatus.OK,
+                "자리비움 시작 처리가 완료되었습니다.",
+                result
+        );
+        return ResponseEntity.ok(response);
     }
 
-
     @PostMapping("/away/end")
-    public ResponseEntity<TodayAttResDto> endAway(
-            @AuthenticationPrincipal SecurityUser user) {
+    public ResponseEntity<?> endAway(@AuthenticationPrincipal SecurityUser user) {
         commuteService.endAway(user.getCompanyId(), user.getEmployeeId());
-        return ResponseEntity.ok(commuteService.getTodayAttendance(user.getCompanyId(), user.getEmployeeId()));
+        TodayAttResDto result = commuteService.getTodayAttendance(user.getCompanyId(), user.getEmployeeId());
+
+        ResponseDto<TodayAttResDto> response = new ResponseDto<>(
+                HttpStatus.OK,
+                "자리비움 해제 처리가 완료되었습니다.",
+                result
+        );
+        return ResponseEntity.ok(response);
     }
 }

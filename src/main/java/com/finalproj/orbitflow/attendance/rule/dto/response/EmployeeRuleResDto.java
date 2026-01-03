@@ -1,6 +1,6 @@
-package com.finalproj.orbitflow.attendance.exception_rule.dto;
+package com.finalproj.orbitflow.attendance.rule.dto.response;
 
-import com.finalproj.orbitflow.attendance.exception_rule.entity.EmployeeAttRule;
+import com.finalproj.orbitflow.attendance.rule.entity.EmployeeRule;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -15,7 +15,7 @@ import java.time.LocalTime;
  */
 
 // 규칙 응답 DTO (Response)
-public record EmpAttRuleResDto(
+public record EmployeeRuleResDto(
         Long overrideId,
         Long employeeId,
         String employeeName,
@@ -28,7 +28,7 @@ public record EmpAttRuleResDto(
         LocalDate validTo,
         LocalDateTime appliedAt
 ) {
-    public EmpAttRuleResDto(EmployeeAttRule rule, String employeeName, String employeeNo) {
+    public EmployeeRuleResDto(EmployeeRule rule, String employeeName, String employeeNo) {
         this(
                 rule.getId(),
                 rule.getEmployeeId(),

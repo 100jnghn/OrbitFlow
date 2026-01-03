@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.default_rule.entity;
+package com.finalproj.orbitflow.attendance.rule.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 

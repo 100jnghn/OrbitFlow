@@ -157,13 +157,25 @@ function renderAttendanceTable(list) {
             leaveTimeDisplay = '-';
         }
 
+        // 정정 사유 표시 아이콘
+        const correctionIcon = item.isCorrected && item.correctionReason 
+            ? `<i class="fas fa-info-circle correction-info-icon" 
+                  data-reason="${escapeHtml(item.correctionReason)}" 
+                  onmouseenter="showCorrectionTooltip(event)" 
+                  onmouseleave="hideCorrectionTooltip(event)"
+                  style="margin-left: 6px; color: #6b7280; cursor: help; font-size: 14px;"></i>` 
+            : '';
+
         return `
             <tr>
                 <td><strong>${item.employeeName}</strong><br><small>${item.employeeNum}</small></td>
                 <td style="${commuteStyle}">${item.commuteAt || '-'}</td>
                 <td>${leaveTimeDisplay}</td>
                 <td>${item.workingTime || '-'}</td>
-                <td><span class="status-badge ${item.statusCode}">${item.statusName}</span></td>
+                <td style="position: relative;">
+                    <span class="status-badge ${item.statusCode}">${item.statusName}</span>
+                    ${correctionIcon}
+                </td>
                 <td>${item.workDate || '-'}</td>
                 <td>
                     <button class="btn-table-action" onclick="openCorrectionModal(${item.attendanceId}, '${item.statusCode}')">
@@ -481,4 +493,74 @@ function renderPagination(pageData) {
         }
     };
     pagination.appendChild(nextBtn);
+}
+
+/**
+ * HTML 이스케이프 함수
+ */
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+/**
+ * 정정 사유 툴팁 표시
+ */
+function showCorrectionTooltip(event) {
+    const icon = event.target;
+    const reason = icon.getAttribute('data-reason');
+    if (!reason) return;
+
+    // 기존 툴팁 제거
+    const existingTooltip = document.getElementById('correction-tooltip');
+    if (existingTooltip) {
+        existingTooltip.remove();
+    }
+
+    // 툴팁 생성
+    const tooltip = document.createElement('div');
+    tooltip.id = 'correction-tooltip';
+    tooltip.className = 'correction-tooltip';
+    tooltip.innerHTML = `
+        <div class="tooltip-header">
+            <i class="fas fa-info-circle" style="margin-right: 6px;"></i>
+            <strong>정정 사유</strong>
+        </div>
+        <div class="tooltip-content">${escapeHtml(reason)}</div>
+    `;
+
+    document.body.appendChild(tooltip);
+
+    // 툴팁 위치 계산
+    const iconRect = icon.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+    // 아이콘 오른쪽에 표시, 화면 밖이면 왼쪽으로
+    let left = iconRect.right + scrollLeft + 8;
+    if (left + tooltipRect.width > window.innerWidth + scrollLeft) {
+        left = iconRect.left + scrollLeft - tooltipRect.width - 8;
+    }
+
+    // 아이콘 위에 표시, 화면 밖이면 아래로
+    let top = iconRect.top + scrollTop - tooltipRect.height - 8;
+    if (top < scrollTop) {
+        top = iconRect.bottom + scrollTop + 8;
+    }
+
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
+}
+
+/**
+ * 정정 사유 툴팁 숨기기
+ */
+function hideCorrectionTooltip(event) {
+    const tooltip = document.getElementById('correction-tooltip');
+    if (tooltip) {
+        tooltip.remove();
+    }
 }

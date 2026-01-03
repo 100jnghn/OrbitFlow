@@ -1,6 +1,6 @@
-package com.finalproj.orbitflow.attendance.default_rule.repository;
+package com.finalproj.orbitflow.attendance.rule.repository;
 
-import com.finalproj.orbitflow.attendance.default_rule.entity.AttendanceRule;
+import com.finalproj.orbitflow.attendance.rule.entity.AttendanceRule;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

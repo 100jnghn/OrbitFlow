@@ -1,6 +1,6 @@
-package com.finalproj.orbitflow.attendance.default_rule.dto;
+package com.finalproj.orbitflow.attendance.rule.dto.response;
 
-import com.finalproj.orbitflow.attendance.default_rule.entity.AttendanceRule;
+import com.finalproj.orbitflow.attendance.rule.entity.AttendanceRule;
 
 import java.time.LocalTime;
 
@@ -11,12 +11,12 @@ import java.time.LocalTime;
  * @filename : AttendanceRuleResDto
  * @since : 2025. 12. 18. 목요일
  */
-public record AttRuleResDto(
+public record DefaultRuleResDto(
         LocalTime defaultStartTime,
         LocalTime defaultEndTime,
         Integer defaultBreakMinutes
 ) {
-    public AttRuleResDto(AttendanceRule rule) {
+    public DefaultRuleResDto(AttendanceRule rule) {
         this(
                 rule.getDefaultStartTime(),
                 rule.getDefaultEndTime(),

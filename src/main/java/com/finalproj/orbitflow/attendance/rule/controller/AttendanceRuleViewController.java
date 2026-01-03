@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.default_rule.controller;
+package com.finalproj.orbitflow.attendance.rule.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

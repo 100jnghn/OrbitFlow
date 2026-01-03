@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.exception_rule.dto;
+package com.finalproj.orbitflow.attendance.rule.dto.request;
 
 import java.time.LocalDate;
 import java.time.LocalTime;

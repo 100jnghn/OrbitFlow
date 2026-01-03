@@ -1,7 +1,7 @@
-package com.finalproj.orbitflow.attendance.default_rule.initializer;
+package com.finalproj.orbitflow.attendance.rule.initializer;
 
-import com.finalproj.orbitflow.attendance.default_rule.entity.AttendanceRule;
-import com.finalproj.orbitflow.attendance.default_rule.repository.AttendanceRuleRepository;
+import com.finalproj.orbitflow.attendance.rule.entity.AttendanceRule;
+import com.finalproj.orbitflow.attendance.rule.repository.AttendanceRuleRepository;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import lombok.RequiredArgsConstructor;

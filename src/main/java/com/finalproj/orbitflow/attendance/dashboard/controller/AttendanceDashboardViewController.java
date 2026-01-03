@@ -16,12 +16,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/view/admin")
 public class AttendanceDashboardViewController {
 
-
-
     @GetMapping("/attendance/dashboard")
     public String attendanceDashboard(Model model) {
         model.addAttribute("currentGNB", "admin");
-        model.addAttribute("currentMenu", "attendance-dashboard"); // 대시보드 활성화
+        model.addAttribute("currentMenu", "attendance-dashboard");
         return "admin-attendance/admin-dashboard";
     }
 

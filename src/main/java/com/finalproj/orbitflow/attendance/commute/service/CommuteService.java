@@ -3,12 +3,10 @@ package com.finalproj.orbitflow.attendance.commute.service;
 import com.finalproj.orbitflow.attendance.commute.dto.ActiveRuleResDto;
 import com.finalproj.orbitflow.attendance.commute.dto.TodayAttResDto;
 import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
-import com.finalproj.orbitflow.attendance.default_rule.entity.AttendanceRule;
-import com.finalproj.orbitflow.attendance.exception_rule.entity.EmployeeAttRule;
 import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
-import com.finalproj.orbitflow.attendance.commute.repository.AttendanceRepository;
-import com.finalproj.orbitflow.attendance.default_rule.repository.AttendanceRuleRepository;
-import com.finalproj.orbitflow.attendance.exception_rule.repository.EmployeeAttRuleRepository;
+import com.finalproj.orbitflow.attendance.commute.repository.CommuteRepository;
+import com.finalproj.orbitflow.attendance.rule.repository.AttendanceRuleRepository;
+import com.finalproj.orbitflow.attendance.rule.repository.EmployeeRuleRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.WorkStatus;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
@@ -20,131 +18,121 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CommuteService {
 
-    private final AttendanceRepository attendanceRepository;
+    private final CommuteRepository commuteRepository;
     private final AttendanceRuleRepository attendanceRuleRepository;
-    private final EmployeeAttRuleRepository employeeAttRuleRepository;
+    private final EmployeeRuleRepository employeeRuleRepository;
     private final EmployeeRepository employeeRepository;
 
-    @Transactional(readOnly = true)
+
     public ActiveRuleResDto getActiveRule(Long companyId, Long employeeId) {
         LocalDate today = LocalDate.now();
-        return employeeAttRuleRepository.findActiveRuleByEmployeeIdAndDate(employeeId, today)
-                .map(exceptionRule -> new ActiveRuleResDto(
-                        exceptionRule.getStartTime(),
-                        exceptionRule.getEndTime(),
-                        "EXCEPTION"
-                ))
+
+        return employeeRuleRepository.findActiveRuleByEmployeeIdAndDate(employeeId, today)
+                .map(rule -> new ActiveRuleResDto(rule.getStartTime(), rule.getEndTime(), "EXCEPTION"))
                 .orElseGet(() -> attendanceRuleRepository.findByCompanyIdAndIsDefaultTrue(companyId)
-                        .map(defaultRule -> new ActiveRuleResDto(
-                                defaultRule.getDefaultStartTime(),
-                                defaultRule.getDefaultEndTime(),
-                                "DEFAULT"
-                        ))
+                        .map(rule -> new ActiveRuleResDto(rule.getDefaultStartTime(), rule.getDefaultEndTime(), "DEFAULT"))
                         .orElse(new ActiveRuleResDto(LocalTime.of(9, 0), LocalTime.of(18, 0), "SYSTEM")));
     }
 
+
     public TodayAttResDto getTodayAttendance(Long companyId, Long employeeId) {
-        Optional<Attendance> attendance = attendanceRepository.findToday(companyId, employeeId);
-        Employee employee = employeeRepository.findById(employeeId).orElse(null);
-        boolean isAway = employee != null && employee.getWorkStatus() == WorkStatus.AWAY;
-        return new TodayAttResDto(attendance.orElse(null), isAway);
+        Attendance attendance = commuteRepository.findToday(companyId, employeeId).orElse(null);
+        Employee employee = findEmployee(employeeId);
+
+        return new TodayAttResDto(attendance, employee.getWorkStatus() == WorkStatus.AWAY);
     }
+
 
     @Transactional
     public TodayAttResDto checkIn(Long companyId, Long employeeId) {
-        LocalDate today = LocalDate.now();
-        LocalDateTime now = LocalDateTime.now();
-
-        attendanceRepository.findToday(companyId, employeeId)
+        // 이미 출근했는지 검증
+        commuteRepository.findToday(companyId, employeeId)
                 .ifPresent(a -> { throw new BusinessException("이미 출근 처리되었습니다."); });
 
-        LocalTime startTimeThreshold = getApplicableStartTime(companyId, employeeId, today);
-
-        Attendance attendance = new Attendance();
-        attendance.setCompanyId(companyId);
-        attendance.setEmployeeId(employeeId);
-        attendance.setWorkDate(today);
-        attendance.setCommuteAt(now);
-        attendance.setIsCorrected(false);
-
-        AttendanceStatus status = now.toLocalTime().withNano(0).isAfter(startTimeThreshold)
-                ? AttendanceStatus.LATE : AttendanceStatus.ON_TIME;
-        attendance.setStatus(status);
-
-        updateEmployeeWorkStatus(employeeId, WorkStatus.WORKING);
-        return new TodayAttResDto(attendanceRepository.save(attendance), false);
-    }
-
-    /**
-     * 퇴근 처리 수정
-     * ✅ IllegalStateException 대신 BusinessException을 던져 팝업 메시지 출력 유도
-     */
-    @Transactional
-    public TodayAttResDto checkOut(Long companyId, Long employeeId) {
-        LocalDate today = LocalDate.now();
+        ActiveRuleResDto rule = getActiveRule(companyId, employeeId);
         LocalDateTime now = LocalDateTime.now();
 
-        Attendance attendance = attendanceRepository.findToday(companyId, employeeId)
+        Attendance attendance = Attendance.builder()
+                .companyId(companyId)
+                .employeeId(employeeId)
+                .workDate(now.toLocalDate())
+                .commuteAt(now)
+                .isCorrected(false)
+                .status(determineAttendanceStatus(now.toLocalTime(), rule.getStartTime()))
+                .build();
+
+        updateEmployeeWorkStatus(employeeId, WorkStatus.WORKING);
+        return new TodayAttResDto(commuteRepository.save(attendance), false);
+    }
+
+
+    @Transactional
+    public TodayAttResDto checkOut(Long companyId, Long employeeId) {
+        Attendance attendance = commuteRepository.findToday(companyId, employeeId)
                 .orElseThrow(() -> new BusinessException("출근 기록이 없습니다."));
 
         if (attendance.getLeaveAt() != null) {
             throw new BusinessException("이미 퇴근 처리되었습니다.");
         }
 
-        LocalTime endTimeThreshold = getApplicableEndTime(companyId, employeeId, today);
-        LocalTime nowTime = now.toLocalTime().withNano(0);
-        LocalTime thresholdTime = endTimeThreshold.withNano(0);
+        ActiveRuleResDto rule = getActiveRule(companyId, employeeId);
+        validateCheckOutTime(rule.getEndTime());
 
-        // ✅ 핵심: 퇴근 시간 이전 체크 시 BusinessException 사용
-        if (nowTime.isBefore(thresholdTime)) {
-            throw new BusinessException(
-                    "퇴근 시간(" + thresholdTime + ") 이전이라서 퇴근할 수 없습니다."
-            );
-        }
-
-        attendance.setLeaveAt(now);
+        attendance.setLeaveAt(LocalDateTime.now());
         updateEmployeeWorkStatus(employeeId, WorkStatus.OFF_WORK);
-        return new TodayAttResDto(attendanceRepository.save(attendance), false);
+
+        return new TodayAttResDto(commuteRepository.save(attendance), false);
     }
+
 
     @Transactional
     public void startAway(Long companyId, Long employeeId) {
-        attendanceRepository.findToday(companyId, employeeId)
-                .orElseThrow(() -> new BusinessException("출근 기록이 없습니다."));
-        updateEmployeeWorkStatus(employeeId, WorkStatus.AWAY);
+        validateAttendanceRecord(companyId, employeeId);
+
+        Employee employee = findEmployee(employeeId);
+        if (employee.getWorkStatus() == WorkStatus.AWAY) {
+            throw new BusinessException("이미 자리비움 상태입니다.");
+        }
+
+        employee.updateWorkStatus(WorkStatus.AWAY);
     }
+
 
     @Transactional
     public void endAway(Long companyId, Long employeeId) {
         updateEmployeeWorkStatus(employeeId, WorkStatus.WORKING);
     }
 
-    private void updateEmployeeWorkStatus(Long employeeId, WorkStatus status) {
-        Employee employee = employeeRepository.findById(employeeId)
+
+    private Employee findEmployee(Long employeeId) {
+        return employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new BusinessException("사원 정보를 찾을 수 없습니다."));
-        employee.updateWorkStatus(status);
     }
 
-    public LocalTime getApplicableStartTime(Long companyId, Long employeeId, LocalDate date) {
-        return employeeAttRuleRepository.findActiveRuleByEmployeeIdAndDate(employeeId, date)
-                .map(EmployeeAttRule::getStartTime)
-                .orElseGet(() -> attendanceRuleRepository.findByCompanyIdAndIsDefaultTrue(companyId)
-                        .map(AttendanceRule::getDefaultStartTime)
-                        .orElse(LocalTime.of(9, 0)));
+    private void updateEmployeeWorkStatus(Long employeeId, WorkStatus status) {
+        findEmployee(employeeId).updateWorkStatus(status);
     }
 
-    public LocalTime getApplicableEndTime(Long companyId, Long employeeId, LocalDate date) {
-        return employeeAttRuleRepository.findActiveRuleByEmployeeIdAndDate(employeeId, date)
-                .map(EmployeeAttRule::getEndTime)
-                .orElseGet(() -> attendanceRuleRepository.findByCompanyIdAndIsDefaultTrue(companyId)
-                        .map(AttendanceRule::getDefaultEndTime)
-                        .orElse(LocalTime.of(18, 0)));
+    private void validateAttendanceRecord(Long companyId, Long employeeId) {
+        commuteRepository.findToday(companyId, employeeId)
+                .orElseThrow(() -> new BusinessException("출근 기록이 없습니다. 자리비움은 출근 후에 가능합니다."));
+    }
+
+    private AttendanceStatus determineAttendanceStatus(LocalTime now, LocalTime startTimeThreshold) {
+        return now.withNano(0).isAfter(startTimeThreshold.withNano(0))
+                ? AttendanceStatus.LATE : AttendanceStatus.ON_TIME;
+    }
+
+    private void validateCheckOutTime(LocalTime endTimeThreshold) {
+        LocalTime now = LocalTime.now().withNano(0);
+        if (now.isBefore(endTimeThreshold.withNano(0))) {
+            throw new BusinessException("퇴근 시간(" + endTimeThreshold + ") 이전이라서 퇴근할 수 없습니다.");
+        }
     }
 }
