@@ -454,7 +454,8 @@ async function refreshUnreadCount() {
         const res = await apiFetch("/api/notifications/unread");
         if (!res.ok) return;
 
-        const list = await res.json();
+        const result = await res.json();
+        const list = result.data;
         const badge = document.getElementById("notificationBadge");
 
         if (!badge) return;
