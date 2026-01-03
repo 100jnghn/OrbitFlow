@@ -139,6 +139,128 @@
     font-weight: 500;
 }
 
+/* 근무상태 벳지 */
+.work-status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.work-status-badge.badge-before-work {
+    background-color: #DBEAFE;
+    color: #1E40AF;
+}
+
+.work-status-badge.badge-working {
+    background-color: #D1FAE5;
+    color: #065F46;
+}
+
+.work-status-badge.badge-away {
+    background-color: #FEF3C7;
+    color: #92400E;
+}
+
+.work-status-badge.badge-off-work {
+    background-color: #E5E7EB;
+    color: #374151;
+}
+
+/* 출퇴근 버튼 그룹 */
+.profile-attendance-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.btn-attendance {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-attendance:disabled {
+    background: #f3f4f6 !important;
+    color: #9ca3af !important;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn-attendance.btn-checkin {
+    background: #EDF2FF;
+    color: #3b82f6;
+    border: 1px solid #DBE4FF;
+}
+
+.btn-attendance.btn-checkin:hover:not(:disabled) {
+    background: #3b82f6;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-attendance.btn-away {
+    background: #FFF9DB;
+    color: #F08C00;
+    border: 1px solid #FFF3BF;
+}
+
+.btn-attendance.btn-away:hover:not(:disabled),
+.btn-attendance.btn-away.active {
+    background: #FAB005;
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.btn-attendance.btn-checkout {
+    background: #FFF5F5;
+    color: #ef4444;
+    border: 1px solid #FFE3E3;
+}
+
+.btn-attendance.btn-checkout:hover:not(:disabled) {
+    background: #ef4444;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* 출퇴근 정보 */
+.profile-attendance-info {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.attendance-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 13px;
+}
+
+.attendance-info-item .info-label {
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.attendance-info-item .info-value {
+    color: #111827;
+    font-weight: 600;
+}
+
 /* 공지사항 위젯 */
 .widget-notice {
     min-height: 300px;

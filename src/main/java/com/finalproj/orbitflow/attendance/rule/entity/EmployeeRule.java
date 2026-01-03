@@ -2,7 +2,6 @@ package com.finalproj.orbitflow.attendance.rule.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -56,6 +55,7 @@ public class EmployeeRule {
 
         validateDateRange(validFrom, validTo);
         validateWorkTimes(startTime, endTime);
+        validateBreakMinutes(breakMinutes);
 
         this.startTime = startTime;
         this.endTime = endTime;
@@ -63,7 +63,7 @@ public class EmployeeRule {
         this.reason = reason;
         this.validFrom = validFrom;
         this.validTo = validTo;
-        this.isActive = isActive != null ? isActive : this.isActive;
+        this.isActive = (isActive != null) ? isActive : this.isActive;
         this.appliedAt = LocalDateTime.now();
     }
 
@@ -79,12 +79,14 @@ public class EmployeeRule {
     }
 
     private void validateWorkTimes(LocalTime start, LocalTime end) {
-        if (start != null && end != null && end.isBefore(start)) {
-            throw new IllegalArgumentException("퇴근 시간은 출근 시간보다 빨라야 합니다.");
+        if (start != null && end != null && !end.isAfter(start)) {
+            throw new IllegalArgumentException("퇴근 시간은 출근 시간보다 이후여야 합니다.");
         }
     }
 
-    public void setAppliedAt(LocalDateTime appliedAt) {
-        this.appliedAt = appliedAt;
+    private void validateBreakMinutes(Integer minutes) {
+        if (minutes != null && (minutes < 0 || minutes > 480)) {
+            throw new IllegalArgumentException("휴게 시간은 0분에서 480분 사이여야 합니다.");
+        }
     }
 }

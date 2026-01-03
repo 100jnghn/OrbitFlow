@@ -10,11 +10,6 @@
                 <i class="fas fa-chevron-down arrow"></i>
             </div>
             <ul class="sub-menu">
-                <li th:classappend="${currentMenu == 'commute'} ? 'selected' : ''">
-                    <a th:href="@{/view/attendance/commute}" class="sidebar-link" id="commuteLink">
-                        출퇴근기록
-                    </a>
-                </li>
                 <li th:classappend="${currentMenu == 'monthly'} ? 'selected' : ''">
                     <a th:href="@{/view/attendance/monthly}" class="sidebar-link" id="monthlyLink">
                         월별 근태 현황

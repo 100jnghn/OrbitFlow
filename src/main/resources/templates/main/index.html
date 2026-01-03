@@ -13,10 +13,12 @@
 
     <th:block th:fragment="pageCss">
         <link rel="stylesheet" th:href="@{/css/main/index.css}">
+        <link rel="stylesheet" th:href="@{/css/attendance/commute.css}">
     </th:block>
 
     <th:block th:fragment="pageScript">
         <script th:src="@{/js/main/index.js}" defer></script>
+        <script th:src="@{/js/attendance/commute.js}"></script>
     </th:block>
 </head>
 <body>
@@ -38,7 +40,35 @@
                     <div class="profile-dept" id="profileDept">-</div>
                     <div class="profile-name-wrapper">
                         <span class="profile-name" id="profileName">-</span>
+                        <span class="work-status-badge" id="workStatusBadge" style="display: none;"></span>
                         <span class="profile-rank" id="profileRank">-</span>
+                    </div>
+                </div>
+                
+                <!-- 출퇴근 버튼 그룹 -->
+                <div class="profile-attendance-buttons">
+                    <button type="button" id="checkInBtn" class="btn-attendance btn-checkin">출근</button>
+                    <button type="button" id="awayBtn" class="btn-attendance btn-away">자리비움</button>
+                    <button type="button" id="checkOutBtn" class="btn-attendance btn-checkout">퇴근</button>
+                </div>
+                
+                <!-- 출퇴근 정보 -->
+                <div class="profile-attendance-info">
+                    <div class="attendance-info-item">
+                        <span class="info-label">현재 시각</span>
+                        <span class="info-value" id="currentTime">00:00:00</span>
+                    </div>
+                    <div class="attendance-info-item">
+                        <span class="info-label">기준 근무 시간</span>
+                        <span class="info-value" id="workHours">조회 중...</span>
+                    </div>
+                    <div class="attendance-info-item">
+                        <span class="info-label">출근 시각</span>
+                        <span class="info-value" id="commuteTime">미기록</span>
+                    </div>
+                    <div class="attendance-info-item">
+                        <span class="info-label">퇴근 시각</span>
+                        <span class="info-value" id="leaveTime">미기록</span>
                     </div>
                 </div>
             </div>
@@ -64,7 +94,7 @@
         <div class="dashboard-widget widget-attendance">
             <div class="widget-header">
                 <h3>근태관리</h3>
-                <a href="/view/attendance/commute" class="widget-more">더보기 <i class="fas fa-chevron-right"></i></a>
+                <a href="/view/attendance/monthly" class="widget-more">더보기 <i class="fas fa-chevron-right"></i></a>
             </div>
             <div class="widget-content">
                 <div class="attendance-time" id="attendanceTime">-</div>
@@ -80,6 +110,15 @@
                         <span>최대 52h</span>
                     </div>
                 </div>
+            </div>
+        </div>
+        
+        <!-- 규칙 오류 알림 배너 -->
+        <div id="ruleErrorBanner" class="rule-error-banner" style="display: none;">
+            <div class="banner-content">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span class="banner-message">기본 근무 시간 설정에 오류가 있습니다. 출근 시간이 퇴근 시간보다 늦게 설정되어 있습니다. 관리자에게 문의해주세요.</span>
+                <button class="banner-close" onclick="document.getElementById('ruleErrorBanner').style.display='none';">&times;</button>
             </div>
         </div>
 

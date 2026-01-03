@@ -49,6 +49,23 @@
                 const start = data.startTime.substring(0, 5);
                 const end = data.endTime.substring(0, 5);
                 document.getElementById('workHours').textContent = `${start} ~ ${end}`;
+                
+                // 출근시간이 퇴근시간보다 늦은지 확인
+                const startTime = new Date(`2000-01-01T${data.startTime}`);
+                const endTime = new Date(`2000-01-01T${data.endTime}`);
+                if (startTime >= endTime) {
+                    // 오류 배너 표시
+                    const banner = document.getElementById('ruleErrorBanner');
+                    if (banner) {
+                        banner.style.display = 'block';
+                    }
+                } else {
+                    // 정상이면 배너 숨기기
+                    const banner = document.getElementById('ruleErrorBanner');
+                    if (banner) {
+                        banner.style.display = 'none';
+                    }
+                }
             }
         } catch (error) {
             console.error('기준 시간 로드 실패:', error);
@@ -78,36 +95,77 @@
     function updateUI() {
         if (!currentAttendance) return;
 
-        document.getElementById('commuteTime').textContent = formatTime(currentAttendance.commuteAt);
-        document.getElementById('leaveTime').textContent = formatTime(currentAttendance.leaveAt);
+        // 출퇴근 시간 표시 (홈화면과 출퇴근 기록 화면 모두 지원)
+        const commuteTimeEl = document.getElementById('commuteTime');
+        const leaveTimeEl = document.getElementById('leaveTime');
+        if (commuteTimeEl) commuteTimeEl.textContent = formatTime(currentAttendance.commuteAt);
+        if (leaveTimeEl) leaveTimeEl.textContent = formatTime(currentAttendance.leaveAt);
 
+        // 근무상태 벳지 업데이트 (홈화면)
+        updateWorkStatusBadge();
+
+        // 출퇴근 기록 화면용 UI 업데이트 (기존 코드 유지)
         const workStatusBadge = document.getElementById('workStatus');
         const awayStatusBadge = document.getElementById('awayStatus');
         const workStatusText = document.getElementById('workStatusText');
 
-        workStatusBadge.style.display = 'none';
-        awayStatusBadge.style.display = 'none';
-        workStatusText.textContent = '';
-        workStatusText.style.display = 'inline';
+        if (workStatusBadge) workStatusBadge.style.display = 'none';
+        if (awayStatusBadge) awayStatusBadge.style.display = 'none';
+        if (workStatusText) {
+            workStatusText.textContent = '';
+            workStatusText.style.display = 'inline';
+        }
 
         const attendanceDesc = currentAttendance.statusName || "근무예정";
 
-        if (!currentAttendance.commuteAt) {
-            workStatusText.textContent = `퇴근 (${attendanceDesc})`;
-        } else if (!currentAttendance.leaveAt) {
-            if (isAway) {
-                awayStatusBadge.style.display = 'inline-block';
-                workStatusText.textContent = ` (${attendanceDesc})`;
+        if (workStatusText) {
+            if (!currentAttendance.commuteAt) {
+                workStatusText.textContent = `퇴근 (${attendanceDesc})`;
+            } else if (!currentAttendance.leaveAt) {
+                if (isAway) {
+                    if (awayStatusBadge) awayStatusBadge.style.display = 'inline-block';
+                    workStatusText.textContent = ` (${attendanceDesc})`;
+                } else {
+                    if (workStatusBadge) {
+                        workStatusBadge.style.display = 'inline-block';
+                        workStatusBadge.textContent = "근무 중";
+                    }
+                    workStatusText.textContent = ` (${attendanceDesc})`;
+                }
             } else {
-                workStatusBadge.style.display = 'inline-block';
-                workStatusBadge.textContent = "근무 중";
-                workStatusText.textContent = ` (${attendanceDesc})`;
+                workStatusText.textContent = `퇴근 완료 (${attendanceDesc})`;
             }
-        } else {
-            workStatusText.textContent = `퇴근 완료 (${attendanceDesc})`;
         }
 
         updateButtonStates();
+    }
+
+    // 근무상태 벳지 업데이트 (홈화면)
+    function updateWorkStatusBadge() {
+        const badgeEl = document.getElementById('workStatusBadge');
+        if (!badgeEl || !currentAttendance) return;
+
+        badgeEl.style.display = 'inline-block';
+        badgeEl.className = 'work-status-badge';
+
+        if (!currentAttendance.commuteAt) {
+            // 출근 전
+            badgeEl.textContent = '근무예정';
+            badgeEl.classList.add('badge-before-work');
+        } else if (!currentAttendance.leaveAt) {
+            // 출근 후, 퇴근 전
+            if (isAway) {
+                badgeEl.textContent = '자리비움';
+                badgeEl.classList.add('badge-away');
+            } else {
+                badgeEl.textContent = '근무 중';
+                badgeEl.classList.add('badge-working');
+            }
+        } else {
+            // 퇴근 완료
+            badgeEl.textContent = '퇴근 완료';
+            badgeEl.classList.add('badge-off-work');
+        }
     }
 
     // 4. 출퇴근/자리비움 버튼 클릭 액션
@@ -138,6 +196,13 @@
 
             await loadTodayAttendance();
             alert("처리가 완료되었습니다.");
+            
+            // 홈화면인 경우 대시보드 데이터 새로고침
+            if (window.location.pathname === '/' || window.location.pathname === '/view/main') {
+                if (typeof loadDashboardData === 'function') {
+                    loadDashboardData();
+                }
+            }
 
         } catch (error) {
             console.error("액션 처리 중 오류:", error);
@@ -162,6 +227,8 @@
         const btnOut = document.getElementById('checkOutBtn');
         const btnAway = document.getElementById('awayBtn');
 
+        if (!btnIn || !btnOut || !btnAway) return;
+
         const hasIn = !!(currentAttendance && currentAttendance.commuteAt);
         const hasOut = !!(currentAttendance && currentAttendance.leaveAt);
 
@@ -179,11 +246,21 @@
     }
 
     function setupEventListeners() {
-        document.getElementById('checkInBtn').onclick = () => handleAction('checkin', '출근하시겠습니까?');
-        document.getElementById('checkOutBtn').onclick = () => handleAction('checkout', '퇴근하시겠습니까?');
-        document.getElementById('awayBtn').onclick = () => {
-            const action = isAway ? 'away/end' : 'away/start';
-            handleAction(action, isAway ? '자리비움을 해제하시겠습니까?' : '자리비움을 시작하시겠습니까?');
-        };
+        const checkInBtn = document.getElementById('checkInBtn');
+        const checkOutBtn = document.getElementById('checkOutBtn');
+        const awayBtn = document.getElementById('awayBtn');
+        
+        if (checkInBtn) {
+            checkInBtn.onclick = () => handleAction('checkin', '출근하시겠습니까?');
+        }
+        if (checkOutBtn) {
+            checkOutBtn.onclick = () => handleAction('checkout', '퇴근하시겠습니까?');
+        }
+        if (awayBtn) {
+            awayBtn.onclick = () => {
+                const action = isAway ? 'away/end' : 'away/start';
+                handleAction(action, isAway ? '자리비움을 해제하시겠습니까?' : '자리비움을 시작하시겠습니까?');
+            };
+        }
     }
 })(); // 즉시 실행 함수 닫기

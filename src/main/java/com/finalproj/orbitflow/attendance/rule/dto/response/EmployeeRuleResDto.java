@@ -14,7 +14,6 @@ import java.time.LocalTime;
  * @since : 2025. 12. 18. 목요일
  */
 
-// 규칙 응답 DTO (Response)
 public record EmployeeRuleResDto(
         Long overrideId,
         Long employeeId,

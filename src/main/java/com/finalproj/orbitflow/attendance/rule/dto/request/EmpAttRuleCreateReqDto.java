@@ -10,7 +10,7 @@ import java.time.LocalTime;
  * @filename : EmpAttRuleCreateReqDto
  * @since : 2025. 12. 18. 목요일
  */
-// 규칙 생성 요청 DTO (POST /exception)
+
 public record EmpAttRuleCreateReqDto(
         Long employeeId,
         LocalTime startTime,

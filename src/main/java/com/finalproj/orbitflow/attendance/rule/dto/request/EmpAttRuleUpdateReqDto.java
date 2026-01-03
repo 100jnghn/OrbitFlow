@@ -11,7 +11,6 @@ import java.time.LocalTime;
  * @since : 2025. 12. 18. 목요일
  */
 
-// 규칙 수정 요청 DTO (PUT /exception/{ruleId})
 public record EmpAttRuleUpdateReqDto(
         LocalTime startTime,
         LocalTime endTime,

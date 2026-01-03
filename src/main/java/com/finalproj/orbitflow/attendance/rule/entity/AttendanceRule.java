@@ -11,7 +11,7 @@ import java.time.LocalTime;
 @Getter
 @Builder
 @AllArgsConstructor
-@NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA용 기본 생성자 접근 제한
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AttendanceRule {
 
     @Id
@@ -24,10 +24,10 @@ public class AttendanceRule {
     @Column(length = 100)
     private String name;
 
-    @Column(name = "default_start_time")
+    @Column(name = "default_start_time", nullable = false)
     private LocalTime defaultStartTime;
 
-    @Column(name = "default_end_time")
+    @Column(name = "default_end_time", nullable = false)
     private LocalTime defaultEndTime;
 
     @Column(name = "default_break_minutes")
@@ -43,32 +43,39 @@ public class AttendanceRule {
     @Column(name = "is_default", nullable = false)
     private Boolean isDefault = true;
 
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // 규칙 업데이트 비즈니스 로직
+
     public void updateRule(LocalTime startTime, LocalTime endTime, Integer breakMinutes) {
         validateWorkTimes(startTime, endTime);
 
-        this.defaultStartTime = startTime;
-        this.defaultEndTime = endTime;
-        this.defaultBreakMinutes = breakMinutes;
+        this.defaultStartTime = startTime != null ? startTime : this.defaultStartTime;
+        this.defaultEndTime = endTime != null ? endTime : this.defaultEndTime;
+        this.defaultBreakMinutes = breakMinutes != null ? breakMinutes : this.defaultBreakMinutes;
+
         this.updatedAt = LocalDateTime.now();
     }
 
-    // 출퇴근 시간 유효성 검사
     private void validateWorkTimes(LocalTime start, LocalTime end) {
-        if (start != null && end != null && end.isBefore(start)) {
+        if (start != null && end != null && !end.isAfter(start)) {
             throw new IllegalArgumentException("퇴근 시간은 출근 시간보다 이후여야 합니다.");
         }
     }
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
+
+
+    @PreUpdate
+    protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
 }

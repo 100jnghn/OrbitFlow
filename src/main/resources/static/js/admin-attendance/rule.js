@@ -198,6 +198,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // 출근시간이 퇴근시간보다 늦은지 확인
+        const start = new Date(`2000-01-01T${startTime}:00`);
+        const end = new Date(`2000-01-01T${endTime}:00`);
+        if (start >= end) {
+            alert('출근 시간은 퇴근 시간보다 빨라야 합니다.');
+            return;
+        }
+
         const data = {
             defaultStartTime: startTime + ':00',
             defaultEndTime: endTime + ':00',

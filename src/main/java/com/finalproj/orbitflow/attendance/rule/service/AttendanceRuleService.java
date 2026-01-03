@@ -90,17 +90,18 @@ public class AttendanceRuleService {
 
     @Transactional
     public EmployeeRuleResDto updateExceptionRule(Long companyId, Long ruleId, EmpAttRuleUpdateReqDto request) {
-        validateRuleDates(request.validFrom(), request.validTo());
-
         EmployeeRule rule = findExceptionRuleOrThrow(ruleId);
         validateCompanyAccess(companyId, rule.getCompanyId());
 
         rule.updateRule(
-                request.startTime(), request.endTime(), request.breakMinutes(),
-                request.reason(), request.validFrom(), request.validTo(),
-                request.isActive() != null ? request.isActive() : rule.getIsActive()
+                request.startTime(),
+                request.endTime(),
+                request.breakMinutes(),
+                request.reason(),
+                request.validFrom(),
+                request.validTo(),
+                request.isActive()
         );
-        rule.setAppliedAt(LocalDateTime.now());
 
         Employee employee = findEmployeeOrThrow(rule.getEmployeeId());
         return toEmployeeRuleResDto(rule, employee);
@@ -115,7 +116,6 @@ public class AttendanceRuleService {
         rule.delete();
     }
 
-    // --- Helper Methods ---
 
     private void validateRuleDates(LocalDate from, LocalDate to) {
         if (from != null && to != null && to.isBefore(from)) {
@@ -158,7 +158,7 @@ public class AttendanceRuleService {
     private Map<Long, Employee> getEmployeeMap(List<EmployeeRule> rules) {
         List<Long> employeeIds = rules.stream()
                 .map(EmployeeRule::getEmployeeId)
-                .distinct() // 중복 제거로 조회 효율 증가
+                .distinct()
                 .toList();
 
         return employeeRepository.findAllByIdIn(employeeIds).stream()
