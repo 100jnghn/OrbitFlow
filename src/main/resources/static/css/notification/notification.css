@@ -128,6 +128,10 @@
     border-radius: 10px;
     transition: background-color 0.15s ease;
     margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
 }
 
 .notification-item:last-child {
@@ -158,6 +162,41 @@
     color: #4f4f4f;
     line-height: 1.6;
     word-break: break-word;
+}
+
+.notification-item-content,
+.notification-item-read-content {
+    flex: 1;
+}
+
+.notification-check-btn {
+    background: #ECFDF5;
+    border: 1.2px solid #10B981;
+    color: #10B981;
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+    flex-shrink: 0;
+    padding: 0;
+}
+
+.notification-check-btn:hover {
+    background: #8EE091;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.notification-check-btn:active {
+    transform: translateY(0);
+}
+
+.notification-check-btn i {
+    font-size: 12px;
 }
 
 .notification-empty {

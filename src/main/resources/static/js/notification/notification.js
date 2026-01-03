@@ -53,6 +53,9 @@ async function loadNotifications(showAll = false) {
         notificationList.innerHTML = notifications.map(notification => `
             <div class="notification-item ${notification.isRead ? 'notification-item-read' : ''}">
                 <div class="${notification.isRead ? 'notification-item-read-content' : 'notification-item-content'}">${escapeHtml(notification.content)}</div>
+                ${!notification.isRead ? `<button class="notification-check-btn" onclick="markAsRead(${notification.notificationId})" title="확인">
+                    <i class="fas fa-check"></i>
+                </button>` : ''}
             </div>
         `).join('');
     } catch (error) {
@@ -66,6 +69,32 @@ function toggleNotificationView() {
     const checkbox = document.getElementById('showAllNotifications');
     if (checkbox) {
         loadNotifications(checkbox.checked);
+    }
+}
+
+// 알림 읽음 처리
+async function markAsRead(notificationId) {
+    try {
+        const response = await apiFetch(`/api/notifications/${notificationId}`, {
+            method: 'PATCH'
+        });
+        
+        if (!response.ok) {
+            console.error('알림 읽음 처리 실패');
+            return;
+        }
+        
+        // 성공 시 알림 목록 새로고침
+        const checkbox = document.getElementById('showAllNotifications');
+        const showAll = checkbox ? checkbox.checked : false;
+        await loadNotifications(showAll);
+        
+        // 알림 카운트도 새로고침
+        if (typeof refreshUnreadCount === 'function') {
+            refreshUnreadCount();
+        }
+    } catch (error) {
+        console.error('알림 읽음 처리 실패:', error);
     }
 }
 
