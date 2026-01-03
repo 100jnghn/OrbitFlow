@@ -98,8 +98,8 @@
 /* 메시지 배지 */
 .message-badge {
     position: absolute;
-    top: 2px;
-    right: -14px;
+    top: -10px;
+    right: -18px;
     background-color: #ef4444;
     color: #ffffff;
     border-radius: 10px;

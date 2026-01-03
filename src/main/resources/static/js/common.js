@@ -489,15 +489,29 @@ function showToast(dto) {
 
     container.appendChild(toast);
 
-    // 5초 후 자동 제거
-    setTimeout(() => {
+    // 자동 제거 함수
+    const removeToast = () => {
         if (toast.parentNode) {
             toast.style.animation = 'slideOutToast 0.3s ease-out';
             setTimeout(() => {
-                toast.remove();
+                if (toast.parentNode) {
+                    toast.remove();
+                }
             }, 300);
         }
-    }, 5000);
+    };
+
+    let removeTimer = setTimeout(removeToast, 5000);
+
+    // hover 시 타이머 중지
+    toast.addEventListener('mouseenter', () => {
+        clearTimeout(removeTimer);
+    });
+
+    // hover 해제 시 다시 타이머 시작
+    toast.addEventListener('mouseleave', () => {
+        removeTimer = setTimeout(removeToast, 5000);
+    });
 }
 
 // 토스트 슬라이드 아웃 애니메이션 추가
@@ -532,7 +546,7 @@ async function refreshUnreadCount() {
 
             console.log("안 읽은 메시지 수 : " + list.length);
 
-            badge.innerText = list.length;
+            badge.innerText = list.length >= 10 ? '9+' : list.length.toString();
             badge.classList.remove("hidden");
             badge.style.display = "flex";
         } else {
