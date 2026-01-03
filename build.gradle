@@ -81,6 +81,9 @@ dependencies {
     // redis 의존성
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
+    // Gmail SMTP
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
 }
 
 tasks.named('test') {

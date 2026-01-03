@@ -468,4 +468,10 @@ public class EmployeeService {
         return EmployeeUpdateResDto.from(e);
     }
 
+    @Transactional(readOnly = true)
+    public Employee findById(Long employeeId) {
+        return employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new IllegalArgumentException("사원을 찾을 수 없습니다."));
+    }
+
 }

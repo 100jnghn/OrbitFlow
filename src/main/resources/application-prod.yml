@@ -32,3 +32,6 @@ external:
 business:
   validation:
     strict: false   # 시연용 (true = 운영)
+
+app:
+  base-url: https://orbitflow.com
