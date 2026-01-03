@@ -49,8 +49,7 @@ public class SecurityConfig {
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",
-                                "/favicon.ico",
-                                "/api/notifications/stream" // sse 연결을 위해 permitAll
+                                "/favicon.ico"
                                 ).permitAll()
 
                         .requestMatchers("/api/admin/**")

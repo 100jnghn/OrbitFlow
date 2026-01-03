@@ -407,9 +407,25 @@ document.addEventListener("DOMContentLoaded", () => {
 function connectSse() {
     if (eventSource) return;
 
-    eventSource = new EventSource(
+    // access token 사용
+    const accessToken = sessionStorage.getItem("accessToken");
+
+    if (!accessToken) {
+        console.warn("SSE 연결 중단: access token 없음");
+        return;
+    }
+
+    console.log("EventSourcePolyFill : " + window.EventSourcePolyfill);
+
+    // access token 사용해서 sse 연결 요청
+    eventSource = new EventSourcePolyfill(
         "/api/notifications/stream",
-        { withCredentials: true } // same-origin이면 생략 가능
+        {
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            },
+            withCredentials: true, // refresh token 쿠키 필요 시
+        }
     );
 
     eventSource.addEventListener("notification", (event) => {
