@@ -3,17 +3,16 @@
       th:fragment="layout(content, headerFragment, sidebarFragment, pageCss, pageScript)">
 <head>
     <meta charset="UTF-8">
-    <title th:text="${pageTitle} ?: 'OrbitFlow'">OrbitFlow</title>
+    <title th:text="${companyName != null and companyName != '' ? (companyName + ' - ' + (pageTitle ?: 'OrbitFlow')) : (pageTitle ?: 'OrbitFlow')}"></title>
+    <link rel="icon" href="data:,">
     
     <!-- Font 및 아이콘 -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/header.css}">
 
-
     <!-- 공통 CSS -->
     <link rel="stylesheet" th:href="@{/css/layout.css}">
-    <link rel="stylesheet" th:href="@{/css/layout-user.css}">
     <link rel="stylesheet" th:href="@{/css/user-sidebar/user-sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/chatbot/chatbot.css}">
 
@@ -40,6 +39,8 @@
 <!-- 챗봇 (공통) -->
 <div th:replace="~{fragments/chatbot :: body}"></div>
 
+<!-- Authentication 사용해서 eventSource(sse 연결)을 만드는 라이브러리 -->
+<script src="https://unpkg.com/event-source-polyfill/src/eventsource.min.js"></script>
 <script th:src="@{/js/common.js}"></script>
 <script th:src="@{/js/chatbot/chatbot.js}"></script>
 

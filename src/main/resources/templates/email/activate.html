@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>계정 활성화 | OrbitFlow</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: #f6f8fb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .card {
+            width: 420px;
+            background: #fff;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,.12);
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 12px;
+            font-size: 22px;
+            font-weight: 900;
+        }
+        p {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+        }
+        .success { color: #15803d; }
+        .error { color: #b91c1c; }
+        .spinner {
+            margin: 24px auto;
+            width: 36px;
+            height: 36px;
+            border: 4px solid #e5e7eb;
+            border-top-color: #2563eb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .btn {
+            margin-top: 28px;
+            padding: 12px 18px;
+            border-radius: 12px;
+            border: none;
+            background: #2563eb;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1 id="title">계정 활성화 중</h1>
+    <div class="spinner" id="spinner"></div>
+    <p id="message">잠시만 기다려 주세요.</p>
+
+    <button id="loginBtn" class="btn" style="display:none"
+            onclick="location.href='/login'">
+        로그인 페이지로 이동
+    </button>
+</div>
+
+<script>
+    const token = '[[${token}]]';
+
+    fetch(`/api/email/activate?token=${token}`, { method: 'POST' })
+        .then(res => {
+            if (!res.ok) throw new Error();
+            document.getElementById('title').innerText = '계정 활성화 완료';
+            document.getElementById('title').className = 'success';
+            document.getElementById('message').innerText =
+                '이제 OrbitFlow를 이용하실 수 있습니다.';
+        })
+        .catch(() => {
+            document.getElementById('title').innerText = '활성화 실패';
+            document.getElementById('title').className = 'error';
+            document.getElementById('message').innerText =
+                '이미 사용되었거나 만료된 링크입니다.';
+        })
+        .finally(() => {
+            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('loginBtn').style.display = 'inline-block';
+        });
+</script>
+
+</body>
+</html>

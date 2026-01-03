@@ -96,6 +96,22 @@ public class EmployeeController {
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.CREATED, "사원 생성 성공", null));
     }
 
+
+    @GetMapping("/{employeeId}/edit")
+    public ResponseEntity<ResponseDto<EmployeeUpdateResDto>> editView(
+            @PathVariable Long employeeId
+    ) {
+        return ResponseEntity.ok(
+                new ResponseDto<>(
+                        HttpStatus.OK,
+                        "사원 수정 초기값 조회 성공",
+                        employeeService.getEditView(SecurityUtils.getCompanyId(), employeeId)
+                )
+        );
+    }
+
+
+
     @PutMapping("/{employeeId}")
     public ResponseEntity<ResponseDto<Void>> update(
             @PathVariable Long employeeId,
@@ -104,6 +120,24 @@ public class EmployeeController {
         employeeService.update(SecurityUtils.getCompanyId(), employeeId, dto);
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "사원 수정 성공", null));
     }
+
+
+
+    @PutMapping("/{employeeId}/status")
+    public ResponseEntity<ResponseDto<Void>> updateStatus(
+            @PathVariable Long employeeId,
+            @RequestBody EmployeeStatusUpdateReqDto dto
+    ) {
+        employeeService.updateStatus(
+                SecurityUtils.getCompanyId(),
+                employeeId,
+                dto.getStatus()
+        );
+        return ResponseEntity.ok(
+                new ResponseDto<>(HttpStatus.OK, "상태 변경 성공", null)
+        );
+    }
+
 
     @GetMapping("/{employeeId}/logs")
     public ResponseEntity<ResponseDto<List<AuditLogResDto>>> logs(

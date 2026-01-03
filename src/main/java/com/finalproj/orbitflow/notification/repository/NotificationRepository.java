@@ -13,6 +13,8 @@ import java.util.List;
  * @since : 2025-12-16 화요일
  */
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
+    
+    List<Notification> findByCompanyIdAndReceiverIdOrderByCreatedAtDesc(Long companyId, Long employeeId);
 
-    List<Notification> findByReceiverIdAndIsReadFalse(Long employeeId);
+    List<Notification> findByCompanyIdAndReceiverIdAndIsReadFalseOrderByCreatedAtDesc(Long companyId, Long employeeId);
 }

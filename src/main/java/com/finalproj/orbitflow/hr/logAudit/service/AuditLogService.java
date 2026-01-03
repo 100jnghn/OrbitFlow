@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Please explain the class!!!
@@ -31,8 +32,8 @@ public class AuditLogService {
             AuditEntityType entityType,
             Long entityId,
             AuditEventType eventType,
-            String beforeData,
-            String afterData
+            Map<String, Object> beforeData,
+            Map<String, Object> afterData
     ) {
         AuditLog log = AuditLog.create(
                 company,

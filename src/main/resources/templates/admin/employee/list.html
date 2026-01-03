@@ -10,7 +10,7 @@
 
 <!-- ================= 페이지별 CSS ================= -->
 <th:block th:fragment="pageCss">
-  <link rel="stylesheet" th:href="@{/css/admin-employee.css}">
+  <link rel="stylesheet" th:href="@{/css/admin-employee-list.css}">
 </th:block>
 
 <!-- ================= 메인 컨텐츠 ================= -->
@@ -67,7 +67,8 @@
 
   </section>
 
-  <!-- 사원 생성/수정 모달 -->
+  <!-- 사원 생성 모달 -->
+  <!-- 사원 생성 모달 -->
   <div id="employeeModal" class="modal hidden">
     <div class="modal-panel">
       <div class="modal-head">
@@ -76,31 +77,80 @@
       </div>
 
       <div class="modal-body">
-        <input type="hidden" id="employeeId">
-
         <div class="form-group">
-          <label>이름</label>
+          <label>이름 *</label>
           <input id="empName">
         </div>
 
         <div class="form-group">
-          <label>이메일</label>
+          <label>이메일(로그인 ID) *</label>
           <input id="empEmail">
         </div>
 
         <div class="form-group">
-          <label>사번</label>
+          <label>사번 *</label>
           <input id="empNo">
         </div>
 
         <div class="form-group">
-          <label>상태</label>
-          <select id="empStatus">
-            <option value="ACTIVE">재직</option>
-            <option value="SUSPENDED">정지</option>
-            <option value="RESIGNED">퇴사</option>
+          <label>입사일 *</label>
+          <input type="date" id="empHireDate">
+        </div>
+
+        <div class="form-group">
+          <label>성별 *</label>
+          <select id="empGender">
+            <option value="">선택</option>
+            <option value="MALE">남성</option>
+            <option value="FEMALE">여성</option>
           </select>
         </div>
+
+        <div class="form-group">
+          <label>조직 *</label>
+          <select id="empOrgId">
+            <option value="">선택</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>직급 *</label>
+          <select id="empRankId">
+            <option value="">선택</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>직책</label>
+          <select id="empPositionCategoryId"></select>
+          <p id="createPositionResetNotice"
+             style="display:none; margin-top:6px; font-size:12px; font-weight:700; color:#ef4444;">
+            조직 변경으로 인해 기존 직책이 해제되었습니다.
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label>고용 형태 *</label>
+          <select id="empEmploymentType">
+            <option value="">선택</option>
+            <option value="REGULAR">정규직</option>
+            <option value="NON_REGULAR">비정규직</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>권한(역할) *</label>
+          <select id="empRole">
+            <option value="">선택</option>
+            <option value="EMPLOYEE">일반 사원</option>
+            <option value="ADMIN">관리자</option>
+            <option value="COMPANY_ADMIN">회사 대표 관리자</option>
+          </select>
+        </div>
+
+        <p style="margin-top:10px; font-size:12.5px; font-weight:800; color:#9ca3af;">
+          ※ 생성된 사원은 임시 계정(TEMP)으로 생성되며, 최초 로그인 후 활성화됩니다.
+        </p>
       </div>
 
       <div class="modal-actions">

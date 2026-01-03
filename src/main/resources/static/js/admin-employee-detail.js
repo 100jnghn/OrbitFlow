@@ -1,10 +1,53 @@
 /**
- * admin-employee-detail.js (FINAL)
- * - CSR 방식 상세 조회
- * - 상태 변경 + 이력 갱신
+ * admin-employee-detail.js
+ * - CSR 방식 사원 상세
+ * - 상태 변경
+ * - Audit Log 타임라인 + diff
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+/* =========================
+   Lookup Maps
+========================= */
+let orgMap = {};
+let rankMap = {};
+let positionMap = {};
+
+/* =========================
+   Edit Modal Elements
+========================= */
+const editName = document.getElementById('editName');
+const editPhone = document.getElementById('editPhone');
+const editInternalPhone = document.getElementById('editInternalPhone');
+const editBirthDate = document.getElementById('editBirthDate');
+
+const editOrgId = document.getElementById('editOrgId');
+const editRankId = document.getElementById('editRankId');
+const editPositionCategoryId = document.getElementById('editPositionCategoryId');
+const editEmploymentType = document.getElementById('editEmploymentType');
+const editRole = document.getElementById('editRole');
+
+const positionResetNotice = document.getElementById('positionResetNotice');
+
+
+async function loadLookups() {
+    const [orgRes, rankRes, posRes] = await Promise.all([
+        apiFetch('/api/admin/organizations'),
+        apiFetch('/api/admin/ranks'),
+        apiFetch('/api/admin/position-categories')
+    ]);
+
+    const orgs = await safeJson(orgRes);
+    const ranks = await safeJson(rankRes);
+    const positions = await safeJson(posRes);
+
+    orgs?.data?.forEach(o => orgMap[o.id] = o.name);
+    ranks?.data?.forEach(r => rankMap[r.id] = r.name);
+    positions?.data?.forEach(p => positionMap[p.id] = p.name);
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadLookups();
+
     const employeeId = document.getElementById('employeeId')?.value;
     if (!employeeId) return;
 
@@ -14,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* =========================
-   Detail
+   Employee Detail
 ========================= */
 async function loadEmployeeDetail(employeeId) {
     const res = await apiFetch(`/api/admin/employees/${employeeId}`);
@@ -27,17 +70,101 @@ async function loadEmployeeDetail(employeeId) {
 
     const e = result.data;
 
+    /* avatar */
+    const avatar = document.getElementById('empAvatar');
+    if (avatar) {
+        avatar.src = e.gender === 'FEMALE'
+            ? '/images/female.png'
+            : '/images/male.png';
+
+        avatar.classList.toggle('grayscale', e.status === 'RESIGNED');
+    }
+
+    /* basic info */
     setText('empName', e.name);
     setText('empEmail', e.email);
     setText('empEmpNo', e.employeeNo);
+
     setText('empOrg', e.orgPath);
     setText('empRank', e.rankName);
     setText('empPosition', e.positionName);
+
     setText('empHireDate', e.hireDate);
-    setText('empEmploymentType', e.employmentType);
+    setText('empEmploymentType', employmentLabel(e.employmentType));
+
+    setText('empPhone', e.phone);
+    setText('empInternalPhone', e.internalPhone);
+    setText('empBirthDate', e.birthDate);
 
     renderStatusBadge(e.status);
     highlightStatusButton(e.status);
+
+    /* summary */
+    const summary = [];
+    if (e.orgPath) summary.push(e.orgPath.split(' > ').pop());
+    if (e.positionName) summary.push(e.positionName);
+    if (e.rankName) summary.push(e.rankName);
+
+    let summaryHtml = summary.join(' · ');
+    if (e.employmentType) {
+        summaryHtml += ` <span class="emp-badge">${employmentLabel(e.employmentType)}</span>`;
+    }
+
+    const summaryEl = document.getElementById('empSummary');
+    if (summaryEl) summaryEl.innerHTML = summaryHtml;
+
+    updateStatusButtons(e.status);
+}
+
+function updateStatusButtons(status) {
+    btnActive.disabled = false;
+    btnSuspend.disabled = false;
+    btnResign.disabled = false;
+
+    btnResendActivate.style.display = 'none';
+    tempNotice.style.display = 'none';
+
+    if (status === 'TEMP') {
+        btnActive.disabled = true;
+        btnSuspend.disabled = true;
+
+        btnResendActivate.style.display = 'inline-flex';
+        tempNotice.style.display = 'block';
+    }
+
+    if (status === 'RESIGNED') {
+        btnActive.disabled = true;
+        btnSuspend.disabled = true;
+        btnResign.disabled = true;
+    }
+}
+
+btnResendActivate.onclick = async () => {
+    if (!confirm('활성화 메일을 다시 보내시겠습니까?')) return;
+
+    const employeeId = document.getElementById('employeeId').value;
+
+    const res = await apiFetch(`/api/email/activate/resend?employeeId=${employeeId}`, {
+        method: 'POST'
+    });
+
+    if (!res.ok) {
+        alert('메일 재전송에 실패했습니다.');
+        return;
+    }
+
+    toast('활성화 메일을 재전송했습니다.');
+};
+
+
+function employmentLabel(v) {
+    const map = {
+        REGULAR: '정규직',
+        NON_REGULAR: '비정규직',
+        CONTRACT: '계약직',
+        TEMP: '임시'
+    };
+    return map[v] ?? v;
 }
 
 /* =========================
@@ -56,27 +183,80 @@ async function loadAuditLogs(employeeId) {
     }
 
     list.innerHTML = '';
-    result.data.forEach(log => {
-        list.insertAdjacentHTML('beforeend', `
-          <li class="audit-item">
-            <div class="audit-top">
-              <div class="audit-left">
-                <span class="badge">${log.eventType}</span>
-                <span class="audit-time">${formatDateTime(log.createdAt)}</span>
-              </div>
-            </div>
 
-            ${log.afterData ? `
-              <details class="audit-detail" open>
-                <summary>변경 내용</summary>
-                <pre class="audit-json">${escapeHtml(log.afterData)}</pre>
-              </details>` : ''}
-          </li>
-        `);
+    result.data.forEach(log => {
+
+        let body;
+
+        if (log.eventType === 'CREATE') {
+            body = renderCreateLog(log.afterData);
+
+        } else if (log.eventType === 'STATUS_CHANGE') {
+            body = renderStatusChange(log.beforeData, log.afterData);
+
+        } else if (log.eventType === 'UPDATE') {
+            if (!hasDiff(log.beforeData, log.afterData)) return;
+            body = renderSideBySideDiff(log.beforeData, log.afterData);
+
+        } else {
+            return;
+        }
+
+        list.insertAdjacentHTML('beforeend', `
+<li class="audit-item audit-${log.eventType.toLowerCase()}">
+    <span class="timeline-dot"></span>
+    <div class="audit-top">
+        <div class="audit-left">
+            <span class="badge ${auditBadgeClass(log.eventType)}">
+                ${auditTypeLabel(log.eventType)}
+            </span>
+            <span class="audit-time">${formatRelativeTime(log.createdAt)}</span>
+            <span class="audit-actor">· ${log.actorName ?? '알 수 없음'}</span>
+        </div>
+    </div>
+    <details class="audit-detail" open>
+        <summary>${auditTypeLabel(log.eventType)} · 상세 보기</summary>
+        ${body}
+    </details>
+</li>
+    `);
     });
 
-    formatAuditJson();
 }
+
+function renderSideBySideDiff(beforeData, afterData) {
+    const before = toObj(beforeData);
+    const after = toObj(afterData);
+
+    const keys = Object.keys({ ...before, ...after });
+
+    if (!keys.length) {
+        return `<div class="audit-empty">변경 내용이 없습니다.</div>`;
+    }
+
+    return `
+<div class="diff-table">
+    <div class="diff-head">
+        <div>항목</div>
+        <div>이전</div>
+        <div>이후</div>
+    </div>
+    ${keys.map(k => {
+        const b = before[k];
+        const a = after[k];
+
+        const changed = JSON.stringify(b) !== JSON.stringify(a);
+
+        return `
+        <div class="diff-row ${changed ? 'changed' : ''}">
+            <div class="diff-key">${k}</div>
+            <div class="diff-before">${formatValueByKey(k, b)}</div>
+            <div class="diff-after">${formatValueByKey(k, a)}</div>
+        </div>`;
+    }).join('')}
+</div>`;
+}
+
 
 /* =========================
    Status Change
@@ -90,15 +270,14 @@ function bindStatusButtons(id) {
 async function changeStatus(id, status) {
     if (status === 'RESIGNED' && !confirm('퇴사 처리 시 되돌릴 수 없습니다. 진행할까요?')) return;
 
-    const res = await apiFetch(`/api/admin/employees/${id}`, {
+    const res = await apiFetch(`/api/admin/employees/${id}/status`, {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ status })
+        body: JSON.stringify({status})
     });
 
-    const result = await safeJson(res);
     if (!res.ok) {
-        alert(result?.message || '상태 변경 실패');
+        alert('상태 변경 실패');
         return;
     }
 
@@ -108,7 +287,7 @@ async function changeStatus(id, status) {
 }
 
 /* =========================
-   UI Helpers
+   Helpers
 ========================= */
 function renderStatusBadge(status) {
     const map = {
@@ -118,17 +297,57 @@ function renderStatusBadge(status) {
         TEMP: ['임시', 'status-temp']
     };
     const [text, cls] = map[status] || [status, 'status-temp'];
-
     empStatus.innerHTML = `<span class="status-pill ${cls}">${text}</span>`;
 }
 
 function highlightStatusButton(status) {
-    ['btnActive','btnSuspend','btnResign'].forEach(id =>
-        document.getElementById(id)?.classList.remove('is-selected')
-    );
+    ['btnActive', 'btnSuspend', 'btnResign']
+        .forEach(id => document.getElementById(id)?.classList.remove('is-selected'));
+
     if (status === 'ACTIVE') btnActive.classList.add('is-selected');
     if (status === 'SUSPENDED') btnSuspend.classList.add('is-selected');
     if (status === 'RESIGNED') btnResign.classList.add('is-selected');
+}
+
+function formatValueByKey(key, value) {
+    if (value == null) return '-';
+    if (key === 'orgId') return escapeHtml(orgMap[value] ?? value);
+    if (key === 'rankId') return escapeHtml(rankMap[value] ?? value);
+    if (key === 'positionCategoryId') return escapeHtml(positionMap[value] ?? value);
+    if (key === 'employmentType') return escapeHtml(employmentLabel(value));
+    return escapeHtml(String(value));
+}
+
+function auditBadgeClass(type) {
+    if (type === 'CREATE') return 'badge-create';
+    if (type === 'STATUS_CHANGE') return 'badge-status';
+    if (type === 'UPDATE') return 'badge-update';
+    return 'badge-default';
+}
+
+function auditTypeLabel(type) {
+    if (type === 'CREATE') return '생성';
+    if (type === 'STATUS_CHANGE') return '상태 변경';
+    if (type === 'UPDATE') return '정보 변경';
+    return type;
+}
+
+function statusLabel(s) {
+    return {TEMP: '임시', ACTIVE: '재직', SUSPENDED: '정지', RESIGNED: '퇴사'}[s] ?? s;
+}
+
+function normalizeStatus(v) {
+    return String(v).replaceAll('"', '');
+}
+
+function formatRelativeTime(iso) {
+    const diff = Date.now() - new Date(iso);
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return '방금 전';
+    if (m < 60) return `${m}분 전`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}시간 전`;
+    return `${Math.floor(h / 24)}일 전`;
 }
 
 function setText(id, v) {
@@ -136,25 +355,222 @@ function setText(id, v) {
     if (el) el.textContent = v ?? '-';
 }
 
-function formatAuditJson() {
-    document.querySelectorAll('.audit-json').forEach(el => {
-        try {
-            el.textContent = JSON.stringify(JSON.parse(el.textContent), null, 2);
-        } catch {}
-    });
+function safeJson(res) {
+    return res.json().catch(() => null);
 }
 
-function safeJson(res) { return res.json().catch(() => null); }
-function formatDateTime(v) { return v?.replace('T',' ').slice(0,19) ?? '-'; }
 function escapeHtml(s) {
-    return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+    return String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
 
 function toast(msg) {
     const el = document.createElement('div');
-    el.className = 'toast';
+    el.className = 'toast show';
     el.textContent = msg;
     document.body.appendChild(el);
-    setTimeout(() => el.classList.add('show'), 10);
-    setTimeout(() => el.remove(), 1600);
+    setTimeout(() => el.remove(), 1500);
+}
+
+/* =========================
+   Edit Modal
+========================= */
+async function openEditModal() {
+    const modal = document.getElementById('editEmployeeModal');
+    const employeeId = document.getElementById('employeeId').value;
+
+    const res = await apiFetch(`/api/admin/employees/${employeeId}`);
+    const result = await safeJson(res);
+
+    if (!res.ok) {
+        alert(result?.message || '사원 정보 조회 실패');
+        return;
+    }
+
+    const e = result.data;
+
+
+    // input들 세팅
+    editName.value = e.name ?? '';
+    editPhone.value = e.phone ?? '';
+    editInternalPhone.value = e.internalPhone ?? '';
+    editBirthDate.value = e.birthDate ?? '';
+
+    // select들 세팅 (org/rank/pos는 ID 기반)
+    await loadEditLookupsFromDetail();
+    editOrgId.value = e.orgId ?? '';
+    editRankId.value = e.rankId ?? '';
+    editEmploymentType.value = e.employmentType ?? '';
+    editRole.value = e.role ?? '';
+
+    // 직책은 “조직 정책” 적용해서 로드
+    await loadEditPositionsByOrg(e.orgId, e.positionCategoryId);
+
+    modal.classList.remove('hidden');
+}
+
+
+async function loadEditLookupsFromDetail() {
+    const [orgRes, rankRes] = await Promise.all([
+        apiFetch('/api/admin/organizations'),
+        apiFetch('/api/admin/ranks')
+    ]);
+
+    const orgs = (await orgRes.json())?.data ?? [];
+    const ranks = (await rankRes.json())?.data ?? [];
+
+    editOrgId.innerHTML = `<option value="">선택</option>`;
+    orgs.forEach(o =>
+        editOrgId.insertAdjacentHTML(
+            'beforeend',
+            `<option value="${o.id}">${o.name}</option>`
+        )
+    );
+
+    editRankId.innerHTML = `<option value="">선택</option>`;
+    ranks.forEach(r =>
+        editRankId.insertAdjacentHTML(
+            'beforeend',
+            `<option value="${r.id}">${r.name}</option>`
+        )
+    );
+}
+
+
+
+editOrgId.addEventListener('change', async e => {
+    const newOrgId = e.target.value;
+
+    // 직책 초기화
+    editPositionCategoryId.value = '';
+    positionResetNotice.style.display = 'block';
+
+    await loadEditPositionsByOrg(newOrgId, null);
+});
+
+
+
+
+
+async function loadEditPositionsByOrg(orgId, selectedId = null) {
+    const select = editPositionCategoryId;
+    select.innerHTML = `<option value="">선택</option>`;
+
+    if (!orgId) return;
+
+    const res = await apiFetch(`/api/admin/org-position-policies/${orgId}`);
+    const result = await res.json().catch(() => null);
+
+    const positions = result?.data ?? [];
+
+    positions.forEach(p => {
+        select.insertAdjacentHTML(
+            'beforeend',
+            `<option value="${p.positionCategoryId}">
+                ${p.positionCategoryName}
+            </option>`
+        );
+    });
+
+    // 기존 값이 정책에 포함되어 있을 때만 유지
+    if (selectedId && positions.some(p => p.positionCategoryId === selectedId)) {
+        select.value = selectedId;
+    }
+}
+
+
+
+function closeEditModal() {
+    const modal = document.getElementById('editEmployeeModal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+}
+
+async function saveEdit() {
+    const employeeId = document.getElementById('employeeId').value;
+
+    const payload = {
+        name: editName.value || null,
+        phone: editPhone.value || null,
+        internalPhone: editInternalPhone.value || null,
+        birthDate: editBirthDate.value || null,
+
+        orgId: editOrgId.value ? Number(editOrgId.value) : null,
+        rankId: editRankId.value ? Number(editRankId.value) : null,
+        positionCategoryId: editPositionCategoryId.value
+            ? Number(editPositionCategoryId.value)
+            : null,
+
+        employmentType: editEmploymentType.value || null,
+        role: editRole.value || null
+    };
+
+    const res = await apiFetch(`/api/admin/employees/${employeeId}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+        alert('사원 정보 수정 실패');
+        return;
+    }
+
+    toast('사원 정보가 수정되었습니다.');
+    closeEditModal();
+    loadEmployeeDetail(employeeId);
+    loadAuditLogs(employeeId);
+}
+
+
+function toObj(v) {
+    if (v == null) return {};
+    if (typeof v === 'object') return v;
+    if (typeof v === 'string') {
+        try {
+            return JSON.parse(v);
+        } catch {
+            return {};
+        }
+    }
+    return {};
+}
+
+function hasDiff(beforeData, afterData) {
+    const b = toObj(beforeData);
+    const a = toObj(afterData);
+    return Object.keys({...b, ...a})
+        .some(k => JSON.stringify(b[k]) !== JSON.stringify(a[k]));
+}
+
+function renderStatusChange(before, after) {
+    const b = toObj(before).status ?? before;
+    const a = toObj(after).status ?? after;
+
+    const bs = String(b).replaceAll('"', '');
+    const as = String(a).replaceAll('"', '');
+
+    return `
+<div class="status-diff">
+  <span class="status-pill status-${bs.toLowerCase()}">${statusLabel(bs)}</span>
+  <span class="status-arrow">→</span>
+  <span class="status-pill status-${as.toLowerCase()}">${statusLabel(as)}</span>
+</div>`;
+}
+
+function renderCreateLog(afterData) {
+    const a = toObj(afterData);
+
+    return `
+<div class="diff-table">
+    <div class="diff-head">
+        <div>항목</div>
+        <div>값</div>
+    </div>
+    ${Object.entries(a).map(([k, v]) => `
+        <div class="diff-row">
+            <div class="diff-key">${k}</div>
+            <div class="diff-after">${formatValueByKey(k, v)}</div>
+        </div>
+    `).join('')}
+</div>`;
 }

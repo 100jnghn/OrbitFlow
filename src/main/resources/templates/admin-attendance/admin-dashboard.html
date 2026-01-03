@@ -47,29 +47,20 @@
         <div class="board-search-section">
             <div class="search-filters">
                 <div class="date-field-wrapper">
-                    <label for="startDate">
-                        <i class="fas fa-calendar-alt" style="margin-right: 6px; color: var(--neutral-500);"></i>
-                        시작일
-                    </label>
+                    <label for="startDate" class="filter-label">시작일</label>
                     <input type="date" id="startDate" class="date-input">
                     <span class="error-message" id="startDateError"></span>
                 </div>
                 <div class="date-field-wrapper">
-                    <label for="endDate">
-                        <i class="fas fa-calendar-alt" style="margin-right: 6px; color: var(--neutral-500);"></i>
-                        종료일
-                    </label>
+                    <label for="endDate" class="filter-label">종료일</label>
                     <input type="date" id="endDate" class="date-input">
                     <span class="error-message" id="endDateError"></span>
                 </div>
                 
                 <div class="filter-select-wrapper">
-                    <label for="statusFilter">
-                        <i class="fas fa-filter" style="margin-right: 6px; color: var(--neutral-500);"></i>
-                        상태 필터
-                    </label>
+                    <label for="statusFilter" class="filter-label">상태</label>
                     <select id="statusFilter" class="filter-select">
-                        <option value="ALL">전체 상태</option>
+                        <option value="ALL">전체</option>
                         <option value="ON_TIME">정상</option>
                         <option value="LATE">지각</option>
                         <option value="ABSENT">결근</option>
@@ -77,20 +68,24 @@
                 </div>
                 
                 <div class="search-input-wrapper">
-                    <label for="searchKeyword">
-                        <i class="fas fa-user" style="margin-right: 6px; color: var(--neutral-500);"></i>
-                        검색
-                    </label>
+                    <label for="searchKeyword" class="filter-label">검색</label>
                     <input type="text" id="searchKeyword" class="search-input" 
                            placeholder="이름 또는 사번 입력" maxlength="100"
                            onkeyup="if(window.event.keyCode==13){handleSearch()}">
                     <span class="error-message" id="searchKeywordError"></span>
                 </div>
                 
-                <div style="display: flex; align-items: end;">
-                    <button type="button" class="btn-search" onclick="handleSearch()">
-                        <i class="fas fa-search"></i> 검색
-                    </button>
+                <div class="button-wrapper">
+                    <label class="filter-label" style="opacity: 0;">버튼</label>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="btn-search" onclick="handleSearch()">
+                            <i class="fas fa-search" style="margin-right: 6px;"></i>
+                            검색
+                        </button>
+                        <button type="button" class="btn-reset" onclick="resetFilters()">
+                            초기화
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
