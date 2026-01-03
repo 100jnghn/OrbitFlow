@@ -12,11 +12,9 @@
             <button class="notification-modal-close-btn" onclick="closeNotificationModal()">✕</button>
         </div>
         
-        <div class="notification-modal-toggle">
-            <label class="notification-toggle-label">
-                <input type="checkbox" id="showAllNotifications" onchange="toggleNotificationView()">
-                <span class="notification-toggle-text">모든 알림</span>
-            </label>
+        <div class="notification-modal-tabs">
+            <button class="notification-tab" id="unreadTab" onclick="switchTab('unread')">읽지 않음</button>
+            <button class="notification-tab" id="readTab" onclick="switchTab('read')">읽음</button>
         </div>
         
         <div class="notification-modal-body" id="notificationList">

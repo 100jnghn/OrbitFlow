@@ -69,30 +69,33 @@
     color: #111827;
 }
 
-.notification-modal-toggle {
-    padding: 16px 24px;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.notification-toggle-label {
+.notification-modal-tabs {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    user-select: none;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0 24px;
 }
 
-.notification-toggle-label input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: #2563eb;
-}
-
-.notification-toggle-text {
+.notification-tab {
+    background: none;
+    border: none;
+    padding: 16px 20px;
     font-size: 14px;
-    color: #374151;
     font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s ease, border-color 0.15s ease;
+    position: relative;
+    margin-bottom: -1px;
+}
+
+.notification-tab:hover {
+    color: #111827;
+}
+
+.notification-tab.active {
+    color: #ef4444;
+    border-bottom-color: #ef4444;
 }
 
 .notification-modal-body {
@@ -125,13 +128,13 @@
     padding: 16px;
     background-color: #e5f1ff;
     border-bottom: 1px solid #919191;
-    border-radius: 10px;
+    border-radius: 15px;
     transition: background-color 0.15s ease;
     margin-bottom: 3px;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    align-items: flex-start;
     gap: 12px;
+    position: relative;
 }
 
 .notification-item:last-child {
@@ -164,16 +167,51 @@
     word-break: break-word;
 }
 
+.notification-item-content-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.notification-item-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.notification-item-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+    flex: 1;
+}
+
+.notification-item-time {
+    font-size: 10px;
+    color: #9ca3af;
+    white-space: nowrap;
+    position: absolute;
+    top: 5px;
+    right: 12px;
+}
+
+.notification-item-read .notification-item-time {
+    right: 16px;
+}
+
 .notification-item-content,
 .notification-item-read-content {
-    flex: 1;
+    font-size: 12px;
+    line-height: 1.6;
+    word-break: break-word;
 }
 
 .notification-check-btn {
     background: #ECFDF5;
     border: 1.2px solid #10B981;
     color: #10B981;
-    border-radius: 6px;
+    border-radius: 20px;
     width: 28px;
     height: 28px;
     display: flex;
@@ -183,6 +221,7 @@
     transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
     flex-shrink: 0;
     padding: 0;
+    align-self: center;
 }
 
 .notification-check-btn:hover {
