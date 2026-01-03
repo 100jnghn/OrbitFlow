@@ -1,25 +1,50 @@
-/* 챗봇 매뉴얼 관리 페이지 스타일 */
-.content-area {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    padding: 32px;
+/* 챗봇 매뉴얼 관리 페이지 스타일 - 게시판과 동일한 크기 */
+
+/* 컬러 팔레트 */
+:root {
+    --primary-color: #3B82F6;
+    --primary-hover: #2563EB;
+    --neutral-50: #F9FAFB;
+    --neutral-100: #F3F4F6;
+    --neutral-200: #E5E7EB;
+    --neutral-300: #D1D5DB;
+    --neutral-400: #9CA3AF;
+    --neutral-500: #6B7280;
+    --neutral-600: #4B5563;
+    --neutral-700: #374151;
+    --neutral-800: #1F2937;
 }
 
-.page-header {
-    margin-bottom: 32px;
+.board-admin-container {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(103vh - 180px);
+    box-sizing: border-box;
 }
 
-.page-header h1 {
-    font-size: 24px;
+.board-header {
+    margin-bottom: 16px;
+    text-align: left;
+}
+
+.board-header h1 {
+    font-size: 26px;
     font-weight: 600;
-    color: #1e3a5f;
-    margin-bottom: 8px;
+    color: var(--neutral-800);
+    margin: 0 0 8px 0;
+    letter-spacing: -0.02em;
 }
 
 .page-description {
-    color: #666;
+    color: var(--neutral-600);
     font-size: 14px;
+    margin: 0;
 }
 
 .rule-section {
@@ -35,23 +60,106 @@
     border-bottom: 2px solid #e0e0e0;
 }
 
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.section-header h2 {
+    margin: 0;
+    border: none;
+    padding: 0;
+}
+
+.btn-add-category {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-add-category:hover {
+    background: var(--primary-hover);
+}
+
+.category-btn-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.category-btn-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.btn-edit-category,
+.btn-delete-category {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-edit-category {
+    background: var(--neutral-200);
+    color: var(--neutral-700);
+}
+
+.btn-edit-category:hover {
+    background: var(--neutral-300);
+}
+
+.btn-delete-category {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.btn-delete-category:hover {
+    background: #fecaca;
+}
+
 /* 카테고리 버튼 */
 .category-buttons {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
+    min-height: 50px;
+}
+
+.category-buttons p {
+    width: 100%;
+    text-align: center;
+    margin: 0;
 }
 
 .category-btn {
     padding: 12px 24px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
+    border: 1px solid var(--neutral-300);
+    border-radius: 8px;
     background: #fff;
-    color: #333;
+    color: var(--neutral-700);
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
+    display: inline-block;
+    visibility: visible;
+    opacity: 1;
 }
 
 .category-btn:hover {
@@ -190,5 +298,125 @@
 
 .btn-delete:hover {
     color: #c82333;
+}
+
+/* 모달 스타일 */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #fff;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid var(--neutral-200);
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--neutral-800);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--neutral-500);
+    cursor: pointer;
+    padding: 4px;
+    transition: color 0.2s;
+}
+
+.modal-close:hover {
+    color: var(--neutral-700);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 20px;
+    border-top: 1px solid var(--neutral-200);
+}
+
+.btn-secondary {
+    background: var(--neutral-200);
+    color: var(--neutral-700);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+    background: var(--neutral-300);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--neutral-700);
+}
+
+.form-group .required {
+    color: #dc2626;
+}
+
+.form-input,
+.form-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--neutral-300);
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 80px;
 }
 

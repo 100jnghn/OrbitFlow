@@ -33,5 +33,14 @@ public class ManualCategory extends BaseEntity{
     private Boolean isActive = true;
 
     private Integer sortOrder;
+
+
+    public void update(String categoryName, String description, Integer sortOrder) {
+        if (categoryName != null && !categoryName.isBlank()) {
+            this.categoryName = categoryName;
+        }
+        this.description = description;
+        this.sortOrder = sortOrder;
+    }
     
 }

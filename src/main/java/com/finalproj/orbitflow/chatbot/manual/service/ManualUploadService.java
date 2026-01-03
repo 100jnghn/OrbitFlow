@@ -6,6 +6,7 @@ import com.finalproj.orbitflow.chatbot.manualCategory.entity.ManualCategory;
 import com.finalproj.orbitflow.chatbot.manualCategory.repository.ManualCategoryRepository;
 
 import com.finalproj.orbitflow.global.file.entity.File;
+import com.finalproj.orbitflow.global.file.enums.FileDomain;
 import com.finalproj.orbitflow.global.file.repository.FileRepository;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
@@ -122,6 +123,7 @@ public class ManualUploadService {
                 .objectKey(objectKey)
                 .fileSize(file.getSize())
                 .contentType(file.getContentType())
+                .domain(FileDomain.CHAT)
                 .build());
     }
 
