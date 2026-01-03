@@ -46,6 +46,8 @@
 <div th:replace="~{fragments/session-modal :: body}"></div>
 
 <!-- 공통 JS -->
+<!-- Authentication 사용해서 eventSource(sse 연결)을 만드는 라이브러리 -->
+<script src="https://unpkg.com/event-source-polyfill/src/eventsource.min.js"></script>
 <script th:src="@{/js/common.js}"></script>
 
 <!-- ✅ 페이지별 JS 삽입 위치 (이 줄이 핵심) -->

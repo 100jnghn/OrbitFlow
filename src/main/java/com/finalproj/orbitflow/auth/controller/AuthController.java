@@ -97,7 +97,8 @@ public class AuthController {
      */
     @PostMapping("/refresh")
     public ResponseEntity<ResponseDto> refresh(
-            @CookieValue(value = "refreshToken", required = false) String token
+            @CookieValue(value = "refreshToken", required = false) String token,
+            HttpServletResponse response
     ) {
 
         if (token == null) {
@@ -113,8 +114,13 @@ public class AuthController {
             throw new ForbiddenException("로그인할 수 없는 계정 상태입니다.");
         }
 
+        // 새 토큰 발급
+        // Cookie에 sse_token 새로 저장
+
+        String newAccessToken = jwtProvider.createToken(user);
+
         LoginResDto res = new LoginResDto(
-                jwtProvider.createToken(user),
+                newAccessToken,
                 null,
                 refreshToken.getExpiresAt()
         );
@@ -166,12 +172,13 @@ public class AuthController {
         response.addHeader("Set-Cookie", cookie.toString());
 
         // 새 Access Token 발급
+        String newAccessToken = jwtProvider.createToken(user);
+
         LoginResDto res = new LoginResDto(
-                jwtProvider.createToken(user),
+                newAccessToken,
                 null,
                 newRefreshToken.getExpiresAt()
         );
-
         return ResponseEntity.ok(
                 new ResponseDto(HttpStatus.OK, "세션 연장 완료", res)
         );

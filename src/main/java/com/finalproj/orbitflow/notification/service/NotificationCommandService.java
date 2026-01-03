@@ -63,6 +63,8 @@ public class NotificationCommandService {
                 employeeId
         );
 
+        log.info("SSE : " + "안 읽은 알림 수 : " + list.size());
+
         return list.stream()
                 .map(NotificationResDto::fromEntity)
                 .toList();

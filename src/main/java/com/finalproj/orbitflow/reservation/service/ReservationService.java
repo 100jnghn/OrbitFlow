@@ -4,6 +4,7 @@ import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
+import com.finalproj.orbitflow.notification.service.NotificationCommandService;
 import com.finalproj.orbitflow.reservation.dto.ReservationReqDto;
 import com.finalproj.orbitflow.reservation.dto.ReservationResDto;
 import com.finalproj.orbitflow.reservation.dto.ReservationStatusChangeReqDto;
@@ -49,6 +50,8 @@ public class ReservationService {
     private final MeetingroomRepository meetingroomRepository;
     private final CarRepository carRepository;
     private final ItemRepository itemRepository;
+
+    private final NotificationCommandService notificationCommandService;
 
 
     @Transactional(readOnly = true)
@@ -219,6 +222,19 @@ public class ReservationService {
 
         ReservationStatus confirmStatus = reservationStatusRepository.findByStatusCode(ReservationStatusCode.CONFIRM);
         reservationRepository.approveReservation(reservationId, confirmStatus);
+
+
+        // 예약 승인 알림 발송
+        Reservation reservation = reservationRepository.getReferenceById(reservationId);
+        Employee employee = reservation.getEmployee();
+
+        notificationCommandService.createNotification(
+                employee.getCompany().getId(),
+                employee.getId(),
+                "RESERVATION",
+                "예약이 승인되었습니다"
+        );
+        log.info(reservation.getId() + "번 예약 " + reservation.getReservationReason() + " 승인됨.");
     }
 
     @Transactional

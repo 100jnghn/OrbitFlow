@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Please explain the class!!!
@@ -19,18 +20,27 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class NotificationPublisher {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final ObjectMapper objectMapper;
 
     /**
      * 알림 메시지 발행
      * 이 함수를 호출하여 알림 전송
      */
-    public void publish(NotificationMessageDto message) {
-        redisTemplate.convertAndSend(
-                RedisChannels.NOTIFICATION,
-                message
-        );
+    public void publish(NotificationMessageDto dto) {
 
-        log.debug("Published notification message: {}", message);
+        try {
+            String json = objectMapper.writeValueAsString(dto);
+
+            redisTemplate.convertAndSend(
+                    RedisChannels.NOTIFICATION,
+                    json
+            );
+
+            log.debug("발행된 알림 메시지 : {}", json);
+
+        } catch (Exception e) {
+            log.error("Redis publish 실패", e);
+        }
     }
 }
