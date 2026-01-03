@@ -16,6 +16,7 @@ public record DocumentFileAttachedListResDto(
         String fileName,
         Long fileSize,
         Long referenceTargetId,
-        DocumentFileStatus status
+        DocumentFileStatus status,
+        String fieldId
 ) {
 }

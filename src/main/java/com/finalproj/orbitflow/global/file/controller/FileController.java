@@ -1,11 +1,11 @@
 package com.finalproj.orbitflow.global.file.controller;
 
 import com.finalproj.orbitflow.global.common.ResponseDto;
-import com.finalproj.orbitflow.global.file.dto.PresignedUrlResDto;
-import com.finalproj.orbitflow.global.file.service.FileService;
 import com.finalproj.orbitflow.global.file.dto.FileUploadResDto;
+import com.finalproj.orbitflow.global.file.dto.PresignedUrlResDto;
 import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.global.file.enums.FileDomain;
+import com.finalproj.orbitflow.global.file.service.FileService;
 import com.finalproj.orbitflow.global.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -54,6 +54,5 @@ public class FileController {
         PresignedUrlResDto result = fileService.createPresignedDownloadUrl(SecurityUtils.getCompanyId(), fileId);
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "임시 다운로드 url 반환", result));
     }
-
 
 }

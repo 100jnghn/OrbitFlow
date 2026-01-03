@@ -812,13 +812,20 @@ CREATE TABLE document_file
 (
     id                  BIGINT AUTO_INCREMENT PRIMARY KEY,
 
-    document_id         BIGINT                               NOT NULL,
-    file_id             BIGINT                               NULL,
+    document_id         BIGINT                                       NOT NULL,
+    file_id             BIGINT                                       NULL,
 
-    reference_type      ENUM ('ATTACHMENT','DOCUMENT','URL') NOT NULL,
-    reference_target_id BIGINT                               NULL,
+    reference_type      ENUM ('ATTACHMENT','IMAGE','DOCUMENT','URL') NOT NULL,
+    reference_target_id BIGINT                                       NULL,
     reference_url       VARCHAR(255),
+    field_id            VARCHAR(100),
 
+    status              ENUM ('TEMP','FINAL','DELETED')              NOT NULL DEFAULT 'TEMP',
+
+    created_at          DATETIME                                     NOT NULL,
+    created_by          BIGINT,
+    updated_at          DATETIME,
+    modified_by         BIGINT,
 
     CONSTRAINT fk_df_document
         FOREIGN KEY (document_id)
@@ -835,7 +842,6 @@ CREATE TABLE document_file
 
     CONSTRAINT uk_df_document_reference
         UNIQUE (document_id, reference_type, reference_target_id)
-
 ) ENGINE = InnoDB;
 
 

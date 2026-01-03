@@ -34,6 +34,7 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -199,6 +200,15 @@ public class FileService {
         }
     }
 
+    public ResponseEntity<byte[]> streamImage(File file) {
+
+        byte[] bytes = downloadFromS3(file.getObjectKey());
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(file.getContentType()))
+                .body(bytes);
+    }
+
     /*
     * helper
     * */
@@ -213,4 +223,21 @@ public class FileService {
         return objectKey.substring(objectKey.lastIndexOf('/') + 1);
     }
 
+
+
+    private byte[] downloadFromS3(String objectKey) {
+        ResponseInputStream<GetObjectResponse> s3Object =
+                s3Client.getObject(
+                        GetObjectRequest.builder()
+                                .bucket(bucket)
+                                .key(objectKey)
+                                .build()
+                );
+
+        try {
+            return s3Object.readAllBytes();
+        } catch (IOException e) {
+            throw new RuntimeException("이미지 다운로드 실패", e);
+        }
+    }
 }

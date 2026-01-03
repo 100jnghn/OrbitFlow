@@ -18,4 +18,5 @@ public interface DocumentFileAttachedProjection {
     Long getFileSize();
     Long getReferenceTargetId();
     DocumentFileStatus getStatus();
+    String getFieldId();
 }

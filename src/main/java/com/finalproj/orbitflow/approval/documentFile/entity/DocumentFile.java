@@ -62,12 +62,33 @@ public class DocumentFile extends BaseEntity {
     @Column(name = "reference_url", length = 255)
     private String referenceUrl;
 
-    //TODO
-    // TEMP + 7일 경과 → S3 삭제 + DB 정리
-    @Column
+    /**
+     * image 컴포넌트 소속일 경우 fieldId
+     * null이면 일반 첨부 / 참조 문서
+     */
+    @Column(name = "field_id", length = 100)
+    private String fieldId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private DocumentFileStatus status = DocumentFileStatus.TEMP;
+
+    /* =========================
+       도메인 메서드
+    ========================= */
 
     public void updateStatus(DocumentFileStatus status) {
         this.status = status;
     }
-}
+
+    public void bindToField(String fieldId) {
+        this.fieldId = fieldId;
+    }
+
+    public boolean isImage() {
+        return this.referenceType == ReferenceType.IMAGE;
+    }
+
+    public boolean isAttachment() {
+        return this.referenceType == ReferenceType.ATTACHMENT;
+    }}

@@ -45,6 +45,26 @@ public class DocumentFileController {
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.CREATED, "파일 업로드 성공",  result));
     }
 
+    @PostMapping("/{documentId}/image")
+    public ResponseEntity<ResponseDto> uploadImage(
+            @PathVariable Long documentId,
+            @RequestParam String fieldId,
+            @RequestParam MultipartFile file
+    ) {
+        DocumentFileUploadResDto result =
+                documentFileService.uploadImageFile(
+                        SecurityUtils.getCompanyId(),
+                        SecurityUtils.getEmployeeId(),
+                        documentId,
+                        fieldId,
+                        file
+                );
+
+        return ResponseEntity.ok(
+                new ResponseDto<>(HttpStatus.CREATED, "이미지 업로드 성공", result)
+        );
+    }
+
     @GetMapping("/{documentId}/files")
     public ResponseEntity<ResponseDto> getAttachedFiles(
             @PathVariable Long documentId
@@ -63,5 +83,18 @@ public class DocumentFileController {
         documentFileService.updateStatus(SecurityUtils.getEmployeeId(), documentFileId, status);
 
         return ResponseEntity.ok(new ResponseDto(HttpStatus.OK, "첨부 파일 상태 수정 성공", null));
+    }
+
+
+    @GetMapping("/{documentId}/images/{fileId}")
+    public ResponseEntity<byte[]> getDocumentImage(
+            @PathVariable Long documentId,
+            @PathVariable Long fileId
+    ) {
+        return documentFileService.getDocumentImage(
+                SecurityUtils.getEmployeeId(),
+                documentId,
+                fileId
+        );
     }
 }

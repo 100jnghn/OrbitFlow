@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Please explain the class!!!
@@ -26,7 +27,8 @@ public interface DocumentFileRepository extends JpaRepository<DocumentFile, Long
         f.originFile as fileName,
         f.fileSize as fileSize,
         df.referenceTargetId as referenceTargetId,
-        df.status as status
+        df.status as status,
+        df.fieldId as fieldId
     from DocumentFile df
     join df.file f
     where df.document.id = :documentId
@@ -37,4 +39,6 @@ public interface DocumentFileRepository extends JpaRepository<DocumentFile, Long
     );
 
     List<DocumentFile> findByDocument_Id(Long documentId);
+
+    Optional<DocumentFile> findByDocument_IdAndFile_Id(Long documentId, Long fileId);
 }
