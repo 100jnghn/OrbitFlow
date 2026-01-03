@@ -155,7 +155,7 @@ public class DocumentService {
     }
 
 
-    private void validateViewPermission(
+    public void validateViewPermission(
             Long employeeId,
             Document document
     ) {
