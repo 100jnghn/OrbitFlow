@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.exception_rule.entity;
+package com.finalproj.orbitflow.attendance.rule.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -10,14 +10,14 @@ import com.querydsl.core.types.Path;
 
 
 /**
- * QEmployeeAttRule is a Querydsl query type for EmployeeAttRule
+ * QEmployeeRule is a Querydsl query type for EmployeeRule
  */
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
-public class QEmployeeAttRule extends EntityPathBase<EmployeeAttRule> {
+public class QEmployeeRule extends EntityPathBase<EmployeeRule> {
 
-    private static final long serialVersionUID = -1328090497L;
+    private static final long serialVersionUID = -1225636918L;
 
-    public static final QEmployeeAttRule employeeAttRule = new QEmployeeAttRule("employeeAttRule");
+    public static final QEmployeeRule employeeRule = new QEmployeeRule("employeeRule");
 
     public final DateTimePath<java.time.LocalDateTime> appliedAt = createDateTime("appliedAt", java.time.LocalDateTime.class);
 
@@ -41,16 +41,16 @@ public class QEmployeeAttRule extends EntityPathBase<EmployeeAttRule> {
 
     public final DatePath<java.time.LocalDate> validTo = createDate("validTo", java.time.LocalDate.class);
 
-    public QEmployeeAttRule(String variable) {
-        super(EmployeeAttRule.class, forVariable(variable));
+    public QEmployeeRule(String variable) {
+        super(EmployeeRule.class, forVariable(variable));
     }
 
-    public QEmployeeAttRule(Path<? extends EmployeeAttRule> path) {
+    public QEmployeeRule(Path<? extends EmployeeRule> path) {
         super(path.getType(), path.getMetadata());
     }
 
-    public QEmployeeAttRule(PathMetadata metadata) {
-        super(EmployeeAttRule.class, metadata);
+    public QEmployeeRule(PathMetadata metadata) {
+        super(EmployeeRule.class, metadata);
     }
 
 }

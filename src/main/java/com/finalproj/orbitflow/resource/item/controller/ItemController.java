@@ -45,8 +45,7 @@ public class ItemController {
     ) {
         Long companyId = user.getCompanyId();
 
-        Page<ItemResDto> items =
-                itemService.getItems(companyId, pageable);
+        Page<ItemResDto> items = itemService.getItems(companyId, pageable);
 
         return ResponseEntity.ok(
                 new ResponseDto(HttpStatus.OK, "자원 리스트 조회 성공", items)
@@ -118,7 +117,8 @@ public class ItemController {
             @ModelAttribute ItemReqDto dto
     ) {
         Long companyId = user.getCompanyId();
-        itemService.insertItem(companyId, dto);
+        Long employeeId = user.getEmployeeId();
+        itemService.insertItem(companyId, employeeId, dto);
 
         return ResponseEntity.ok().body(
                 new ResponseDto(HttpStatus.OK, "자원 등록 성공", null)
@@ -128,10 +128,15 @@ public class ItemController {
     // 관리자 - 자원 수정
     @PutMapping("/admin/items/{itemId}")
     public ResponseEntity<ResponseDto> updateItem(
+            @AuthenticationPrincipal SecurityUser user,
             @PathVariable Long itemId,
             @ModelAttribute ItemReqDto dto
     ) {
-        itemService.updateItem(itemId, dto);
+        Long companyId = user.getCompanyId();
+        Long employeeId = user.getEmployeeId();
+
+        itemService.updateItem(companyId, employeeId, itemId, dto);
+
         return ResponseEntity.ok().body(
                 new ResponseDto(HttpStatus.OK, "자원 수정 성공", null)
         );

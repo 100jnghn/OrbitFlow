@@ -66,6 +66,10 @@ public class FileService {
     @Transactional
     public File upload(Long companyId, Long uploaderId, FileDomain domain, MultipartFile multipartFile) {
 
+        if (multipartFile == null || multipartFile.isEmpty()) {
+            return null;
+        }
+
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new NotFoundException("Company Not Found"));
 
@@ -170,8 +174,8 @@ public class FileService {
 
 
     /*
-    * helper
-    * */
+     * helper
+     * */
     private void rollbackS3(String objectKey) {
         try {
             s3Client.deleteObject(

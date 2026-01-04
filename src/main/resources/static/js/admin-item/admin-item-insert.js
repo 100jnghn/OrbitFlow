@@ -267,7 +267,7 @@ async function handleSave() {
 
     // 이미지 파일이 있으면 추가 (선택사항)
     if (selectedImageFile) {
-        formData.append('file', selectedImageFile);
+        formData.append('imgFile', selectedImageFile);
     }
 
     try {

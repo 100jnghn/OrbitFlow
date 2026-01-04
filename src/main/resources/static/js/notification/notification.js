@@ -13,6 +13,10 @@ function openNotificationModal() {
         // 탭 초기화
         currentTab = 'unread';
         switchTab('unread');
+        // 읽지 않은 알림 수 업데이트
+        if (typeof refreshUnreadCount === 'function') {
+            refreshUnreadCount();
+        }
     }
 }
 
@@ -43,6 +47,10 @@ function closeNotificationModal() {
     const modal = document.getElementById('notificationModal');
     if (modal) {
         modal.classList.add('hidden');
+        // 읽지 않은 알림 수 업데이트
+        if (typeof refreshUnreadCount === 'function') {
+            refreshUnreadCount();
+        }
     }
 }
 

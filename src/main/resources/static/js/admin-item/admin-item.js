@@ -183,7 +183,7 @@ function initEventListeners() {
  */
 function handleImageSelect(event) {
     const file = event.target.files[0];
-    
+
     if (!file) return;
 
     // 파일 타입 검증
@@ -220,7 +220,7 @@ function displayImagePreview(imageUrl) {
         itemImage.src = imageUrl;
         itemImage.style.display = 'block';
         placeholder.style.display = 'none';
-        
+
         if (removeBtn) {
             removeBtn.style.display = 'inline-flex';
         }
@@ -232,7 +232,7 @@ function displayImagePreview(imageUrl) {
  */
 function handleImageRemove() {
     selectedImageFile = null;
-    
+
     const itemImage = document.getElementById('item-image');
     const placeholder = document.getElementById('upload-placeholder');
     const removeBtn = document.getElementById('btn-remove');
@@ -242,15 +242,15 @@ function handleImageRemove() {
         itemImage.src = '';
         itemImage.style.display = 'none';
     }
-    
+
     if (placeholder) {
         placeholder.style.display = 'flex';
     }
-    
+
     if (removeBtn) {
         removeBtn.style.display = 'none';
     }
-    
+
     if (imageInput) {
         imageInput.value = '';
     }
@@ -274,7 +274,7 @@ async function handleEdit() {
 
     // 이미지 파일이 새로 선택된 경우 추가
     if (selectedImageFile) {
-        formData.append('file', selectedImageFile);
+        formData.append('imgFile', selectedImageFile);
     }
 
     try {
@@ -311,7 +311,7 @@ async function handleDelete() {
     try {
         const response = await apiFetch(
             `/api/admin/items/${currentItemId}/delete`,
-            { method: 'PATCH' }
+            {method: 'PATCH'}
         );
 
         if (!response.ok) {
@@ -330,7 +330,7 @@ async function loadStatusOptions(selectedStatusId) {
     try {
         const response = await apiFetch(
             '/api/admin/resource-status',
-        { method: 'GET' }
+            {method: 'GET'}
         );
 
         if (!response.ok) throw new Error();
@@ -363,7 +363,7 @@ async function loadCategoryOptions(selectedCategoryId) {
     try {
         const response = await apiFetch(
             '/api/item-categories',
-            { method: 'GET' }
+            {method: 'GET'}
         );
 
         if (!response.ok) throw new Error();
@@ -398,7 +398,7 @@ async function loadItemDetail() {
     try {
         const response = await apiFetch(
             `/api/items/${currentItemId}`,
-            { method: 'GET' }
+            {method: 'GET'}
         );
 
 
@@ -415,7 +415,7 @@ async function loadItemDetail() {
         document.getElementById('created-at').textContent = formatDate(data.createdAt);
 
         // 비품 이미지 표시
-        displayItemImage(data.fileUrl);
+        displayItemImage(data.fileId);
 
         await loadStatusOptions(data.statusId);
         await loadCategoryOptions(data.itemCategoryId);
@@ -446,30 +446,45 @@ function formatDate(localDateString) {
 /**
  * 비품 이미지 표시 (기존 이미지 로드 시)
  */
-function displayItemImage(imageUrl) {
+async function displayItemImage(fileId) {
     const itemImage = document.getElementById('item-image');
     const placeholder = document.getElementById('upload-placeholder');
     const removeBtn = document.getElementById('btn-remove');
-    
-    if (imageUrl) {
-        // 이미지가 있는 경우
+
+    if (!fileId) {
+        // 이미지 없는 경우
+        itemImage.src = '';
+        itemImage.style.display = 'none';
+
+        if (placeholder) placeholder.style.display = 'flex';
+        if (removeBtn) removeBtn.style.display = 'none';
+
+        return;
+    }
+
+    try {
+        // presigned URL 요청
+        const res = await apiFetch(`/api/files/${fileId}/presigned`);
+        if (!res.ok) throw new Error('presigned url 요청 실패');
+
+        const result = await res.json();
+        const imageUrl = result.data.url;
+
         itemImage.src = imageUrl;
         itemImage.style.display = 'block';
-        if (placeholder) {
-            placeholder.style.display = 'none';
-        }
-        if (removeBtn) {
-            removeBtn.style.display = 'inline-flex';
-        }
-    } else {
-        // 이미지가 없는 경우
+
+        if (placeholder) placeholder.style.display = 'none';
+        if (removeBtn) removeBtn.style.display = 'inline-flex';
+
+    } catch (e) {
+        console.error('이미지 로드 실패', e);
+
+        // 실패 시 placeholder 표시
+        itemImage.src = '';
         itemImage.style.display = 'none';
-        if (placeholder) {
-            placeholder.style.display = 'flex';
-        }
-        if (removeBtn) {
-            removeBtn.style.display = 'none';
-        }
+
+        if (placeholder) placeholder.style.display = 'flex';
+        if (removeBtn) removeBtn.style.display = 'none';
     }
 }
 
@@ -481,7 +496,7 @@ function showError() {
     document.getElementById('item-description').value = '비품 정보를 불러올 수 없습니다.';
     document.getElementById('uploader-name').textContent = '-';
     document.getElementById('created-at').textContent = '-';
-    
+
     // 이미지도 초기화
     displayItemImage(null);
 }
