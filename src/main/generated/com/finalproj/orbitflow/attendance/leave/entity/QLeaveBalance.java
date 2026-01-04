@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.leave.leaveBalance.entity;
+package com.finalproj.orbitflow.attendance.leave.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -15,7 +15,7 @@ import com.querydsl.core.types.Path;
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
 public class QLeaveBalance extends EntityPathBase<LeaveBalance> {
 
-    private static final long serialVersionUID = -1731234052L;
+    private static final long serialVersionUID = -1225053966L;
 
     public static final QLeaveBalance leaveBalance = new QLeaveBalance("leaveBalance");
 

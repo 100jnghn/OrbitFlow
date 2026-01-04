@@ -42,7 +42,7 @@ public class QAttendanceRecord extends EntityPathBase<AttendanceRecord> {
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
-    public final com.finalproj.orbitflow.attendance.leave.leaveType.entity.QLeaveType leaveType;
+    public final com.finalproj.orbitflow.attendance.leave.entity.QLeaveType leaveType;
 
     //inherited
     public final NumberPath<Long> modifiedBy = _super.modifiedBy;
@@ -78,7 +78,7 @@ public class QAttendanceRecord extends EntityPathBase<AttendanceRecord> {
         super(type, metadata, inits);
         this.company = inits.isInitialized("company") ? new com.finalproj.orbitflow.hr.company.entity.QCompany(forProperty("company")) : null;
         this.employee = inits.isInitialized("employee") ? new com.finalproj.orbitflow.hr.employee.entity.QEmployee(forProperty("employee"), inits.get("employee")) : null;
-        this.leaveType = inits.isInitialized("leaveType") ? new com.finalproj.orbitflow.attendance.leave.leaveType.entity.QLeaveType(forProperty("leaveType")) : null;
+        this.leaveType = inits.isInitialized("leaveType") ? new com.finalproj.orbitflow.attendance.leave.entity.QLeaveType(forProperty("leaveType")) : null;
         this.sourceDocument = inits.isInitialized("sourceDocument") ? new com.finalproj.orbitflow.approval.document.entity.QDocument(forProperty("sourceDocument"), inits.get("sourceDocument")) : null;
     }
 

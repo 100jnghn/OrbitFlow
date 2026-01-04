@@ -15,7 +15,8 @@ public enum FileDomain {
     CHAT("chat"),
     SIGNATURE("signature"),
     RESOURCE("resource"),
-    PDF_FINAL("pdf-final");
+    PDF_FINAL("pdf-final"),
+    MESSAGE("message");
 
     private final String path;
 

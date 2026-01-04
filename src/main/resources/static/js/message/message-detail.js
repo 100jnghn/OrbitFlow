@@ -192,6 +192,26 @@ function renderMessageDetail(message) {
         </span>`;
     }
 
+    // 첨부파일 정보
+    const fileId = message.fileId;
+    let fileSection = '';
+    if (fileId) {
+        fileSection = `
+            <div class="board-detail-files">
+                <h3 class="files-title">
+                    <i class="fas fa-paperclip"></i> 첨부파일
+                </h3>
+                <ul class="files-list">
+                    <li class="file-item">
+                        <a href="#" class="file-link" onclick="downloadMessageFile(${fileId}); return false;">
+                            <i class="fas fa-file"></i> 첨부파일
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        `;
+    }
+
     content.innerHTML = `
         <div class="board-detail-card">
             <!-- 메시지 헤더 -->
@@ -210,6 +230,9 @@ function renderMessageDetail(message) {
             <div class="board-detail-body">
                 <div class="board-detail-text">${escapeHTML(messageContent).replace(/\n/g, '<br>')}</div>
             </div>
+
+            <!-- 첨부파일 -->
+            ${fileSection}
 
             <!-- 버튼 영역 -->
             <div class="board-detail-actions">
@@ -425,6 +448,69 @@ function replyMessage() {
     });
     
     window.location.href = `/view/message/send?${params.toString()}`;
+}
+
+// 메시지 파일 다운로드
+async function downloadMessageFile(fileId) {
+    if (!fileId) {
+        alert('파일을 찾을 수 없습니다.');
+        return;
+    }
+    
+    try {
+        // fetch API를 사용하여 Authorization 헤더 포함
+        const response = await apiFetch(`/api/files/${fileId}/download`, {
+            method: 'GET'
+        });
+        
+        if (!response.ok) {
+            if (response.status === 401) {
+                location.href = '/login';
+                return;
+            }
+            if (response.status === 403) {
+                alert('파일 다운로드 권한이 없습니다.');
+                return;
+            }
+            if (response.status === 404) {
+                alert('파일을 찾을 수 없습니다.');
+                return;
+            }
+            throw new Error('파일 다운로드에 실패했습니다.');
+        }
+        
+        // Content-Disposition 헤더에서 파일명 추출
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let fileName = '파일';
+        if (contentDisposition) {
+            const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+            if (fileNameMatch && fileNameMatch[1]) {
+                fileName = fileNameMatch[1].replace(/['"]/g, '');
+                // URL 디코딩
+                try {
+                    fileName = decodeURIComponent(fileName);
+                } catch (e) {
+                    // 디코딩 실패 시 원본 사용
+                }
+            }
+        }
+        
+        // Blob으로 변환
+        const blob = await response.blob();
+        
+        // 다운로드 링크 생성
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Error downloading file:', error);
+        alert('파일 다운로드에 실패했습니다.');
+    }
 }
 
 // HTML 이스케이프

@@ -15,7 +15,7 @@ import com.querydsl.core.types.Path;
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
 public class QAttendanceRule extends EntityPathBase<AttendanceRule> {
 
-    private static final long serialVersionUID = 112530499L;
+    private static final long serialVersionUID = 148269701L;
 
     public static final QAttendanceRule attendanceRule = new QAttendanceRule("attendanceRule");
 

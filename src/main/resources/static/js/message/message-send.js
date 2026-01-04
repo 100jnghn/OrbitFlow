@@ -4,7 +4,7 @@ const MESSAGE_API = '/api/messages';
 const EMPLOYEE_SEARCH_API = '/api/employees/search';
 
 let selectedRecipients = []; // {id, name, employeeNo, organizationName, positionName}
-let selectedFileId = null;
+let selectedFile = null; // 선택된 파일 (MultipartFile)
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', function() {
@@ -206,21 +206,25 @@ function handleFileSelect(event) {
         return;
     }
     
-    // 파일 업로드 API 호출 (추후 구현)
-    // 일단 파일명만 표시
+    // 파일 크기 체크 (50MB 제한)
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+        alert('파일 크기는 50MB 이하여야 합니다.');
+        event.target.value = ''; // 파일 선택 초기화
+        return;
+    }
+    
+    // 파일 저장 (게시판과 동일하게 전송 시점에 업로드)
+    selectedFile = file;
     document.getElementById('fileName').textContent = file.name;
     document.getElementById('selectedFile').style.display = 'flex';
-    
-    // TODO: 파일 업로드 API 호출하여 fileId 받기
-    // selectedFileId = fileId;
-    alert('파일 업로드 기능은 추후 구현 예정입니다.');
 }
 
 // 파일 제거
 function removeFile() {
     document.getElementById('fileInput').value = '';
     document.getElementById('selectedFile').style.display = 'none';
-    selectedFileId = null;
+    selectedFile = null;
 }
 
 // 글자수 카운터 설정
@@ -356,21 +360,23 @@ async function handleSubmit(event) {
         return;
     }
     
-    // 전송 데이터 구성
-    const requestData = {
-        messageTitle: title,
-        messageContent: content,
-        recipientEmployeeIds: selectedRecipients.map(r => r.id),
-        fileId: selectedFileId || null
-    };
-    
     try {
+        // FormData로 전송 (게시판과 동일하게)
+        const formData = new FormData();
+        formData.append('messageTitle', title);
+        formData.append('messageContent', content);
+        selectedRecipients.forEach(r => {
+            formData.append('recipientEmployeeIds', r.id);
+        });
+        
+        // 파일 추가 (게시판과 동일하게 전송 시점에 함께 전송)
+        if (selectedFile) {
+            formData.append('file', selectedFile);
+        }
+        
         const response = await apiFetch(MESSAGE_API, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestData)
+            body: formData
         });
         
         if (!response.ok) {

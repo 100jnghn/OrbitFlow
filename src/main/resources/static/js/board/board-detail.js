@@ -465,10 +465,52 @@ async function deleteBoard() {
 }
 
 // 파일 다운로드
-function downloadFile(fileId, fileName) {
-    // TODO: 파일 다운로드 API 구현 시 연결
-    console.log('Download file:', fileId, fileName);
-    // window.location.href = `/api/files/${fileId}/download`;
+async function downloadFile(fileId, fileName) {
+    if (!fileId) {
+        alert('파일을 찾을 수 없습니다.');
+        return;
+    }
+    
+    console.log('Downloading file:', fileId, fileName);
+    
+    try {
+        // fetch API를 사용하여 Authorization 헤더 포함
+        const response = await apiFetch(`/api/files/${fileId}/download`, {
+            method: 'GET'
+        });
+        
+        if (!response.ok) {
+            if (response.status === 401) {
+                location.href = '/login';
+                return;
+            }
+            if (response.status === 403) {
+                alert('파일 다운로드 권한이 없습니다.');
+                return;
+            }
+            if (response.status === 404) {
+                alert('파일을 찾을 수 없습니다.');
+                return;
+            }
+            throw new Error('파일 다운로드에 실패했습니다.');
+        }
+        
+        // Blob으로 변환
+        const blob = await response.blob();
+        
+        // 다운로드 링크 생성
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName || '파일';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Error downloading file:', error);
+        alert('파일 다운로드에 실패했습니다.');
+    }
 }
 
 // 에러 메시지 표시

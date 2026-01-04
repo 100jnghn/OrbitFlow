@@ -3,8 +3,16 @@ package com.finalproj.orbitflow.message.service;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
+import com.finalproj.orbitflow.global.file.entity.File;
+import com.finalproj.orbitflow.global.file.enums.FileDomain;
+import com.finalproj.orbitflow.global.file.repository.FileRepository;
+import com.finalproj.orbitflow.global.file.service.FileService;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import com.finalproj.orbitflow.message.dto.MessageReqDto;
 import com.finalproj.orbitflow.message.dto.MessageResDto;
 import com.finalproj.orbitflow.message.entity.Message;
@@ -21,6 +29,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -30,11 +39,18 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class MessageService {
 
     private final MessageRepository messageRepository;
     private final MessageRecipientRepository messageRecipientRepository;
     private final EmployeeRepository employeeRepository;
+    private final FileService fileService;
+    private final FileRepository fileRepository;
+    private final S3Client s3Client;
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucket;
 
     /** 메시지함 목록 */
     public Page<MessageResDto.ListItem> getMessageList(
@@ -323,7 +339,7 @@ public class MessageService {
 
     /** 메시지 전송 */
     @Transactional
-    public Long sendMessage(Long companyId, Long senderEmployeeId, MessageReqDto.Send request) {
+    public Long sendMessage(Long companyId, Long senderEmployeeId, MessageReqDto.Send request, MultipartFile file) {
 
         // 제목 및 내용 글자수 검증
         if (request.getMessageTitle() != null && request.getMessageTitle().length() > 100) {
@@ -361,13 +377,23 @@ public class MessageService {
             }
         }
 
+        // 파일 업로드 처리
+        Long fileId = null;
+        if (file != null && !file.isEmpty()) {
+            File uploadedFile = fileService.upload(companyId, senderEmployeeId, FileDomain.MESSAGE, file);
+            fileId = uploadedFile.getId();
+        } else if (request.getFileId() != null) {
+            // 기존 파일 ID가 제공된 경우 (이미 업로드된 파일 재사용)
+            fileId = request.getFileId();
+        }
+
         // Message(본문) 생성
         Message message = Message.builder()
                 .companyId(companyId)
                 .sender(sender)
                 .messageTitle(request.getMessageTitle())
                 .messageContent(request.getMessageContent())
-                .fileId(request.getFileId()) // 자리만
+                .fileId(fileId)
                 .build();
 
         Message saved = messageRepository.save(message);
@@ -408,6 +434,24 @@ public class MessageService {
                 .findByCompanyIdAndMessage_IdAndEmployee_IdAndDeletedAtIsNull(companyId, messageId, employeeId)
                 .orElseThrow(() -> new NotFoundException("삭제할 메시지가 존재하지 않습니다."));
 
+        // 메시지에 첨부된 파일이 있고, 해당 메시지의 모든 recipient가 삭제된 경우에만 파일 삭제
+        Message message = mr.getMessage();
+        if (message.getFileId() != null) {
+            // 해당 메시지의 모든 recipient가 삭제되었는지 확인
+            // 현재 삭제하려는 recipient를 제외하고 카운트
+            long activeRecipientCount = messageRecipientRepository
+                    .countByMessage_IdAndDeletedAtIsNull(messageId);
+            
+            if (activeRecipientCount <= 1) {
+                // 마지막 recipient이므로 파일도 삭제
+                File file = fileRepository.findById(message.getFileId())
+                        .orElse(null);
+                if (file != null && file.getObjectKey() != null) {
+                    deleteObject(file.getObjectKey());
+                }
+            }
+        }
+
         mr.softDelete();
     }
 
@@ -436,5 +480,19 @@ public class MessageService {
         return messageRecipientRepository.countByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedFalseAndMessageFolderTypeAndIsReadFalse(
                 companyId, employeeId, MessageFolderType.INBOX
         );
+    }
+
+    /** S3에서 파일 삭제 */
+    private void deleteObject(String objectKey) {
+        try {
+            s3Client.deleteObject(
+                    DeleteObjectRequest.builder()
+                            .bucket(bucket)
+                            .key(objectKey)
+                            .build()
+            );
+        } catch (Exception ex) {
+            log.error("S3 delete failed. objectKey={}", objectKey, ex);
+        }
     }
 }

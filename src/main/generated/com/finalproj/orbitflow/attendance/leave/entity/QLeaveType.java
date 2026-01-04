@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.leave.leaveType.entity;
+package com.finalproj.orbitflow.attendance.leave.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -15,7 +15,7 @@ import com.querydsl.core.types.Path;
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
 public class QLeaveType extends EntityPathBase<LeaveType> {
 
-    private static final long serialVersionUID = 341388664L;
+    private static final long serialVersionUID = -1921123100L;
 
     public static final QLeaveType leaveType = new QLeaveType("leaveType");
 
