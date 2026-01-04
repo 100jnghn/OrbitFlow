@@ -38,7 +38,11 @@ import java.util.Optional;
 public class DocumentContent extends BaseEntity {
 
     @Transient
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static ObjectMapper objectMapper;
+
+    public static void setObjectMapper(ObjectMapper mapper) {
+        DocumentContent.objectMapper = mapper;
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
