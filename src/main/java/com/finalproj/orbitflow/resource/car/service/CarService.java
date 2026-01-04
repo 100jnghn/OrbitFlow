@@ -99,7 +99,7 @@ public class CarService {
     }
 
     @Transactional
-    public void updateCar(Long carId, CarReqDto dto) {
+    public void updateCar(Long companyId, Long employeeId, Long carId, CarReqDto dto) {
 
         log.info("수정 차 번호 " + carId);
         log.info("차 상태값 : " + dto.getStatusId());
@@ -107,8 +107,31 @@ public class CarService {
         Car car = findCarById(carId);
         ResourceStatus status = findResourceStatus(dto.getStatusId());
 
-        // todo - 이미지 수정 로직 추가
-        File imgFile = car.getFile();
+        File imgFile = null;
+
+        // TODO - 이미지 수정 로직 추가
+
+        // 이미지 변경 있는지 확인
+        // dto에 이미지 파일이 존재한다면
+        if (dto.getImgFile() != null && !dto.getImgFile().isEmpty()) {
+
+            // 1. 기존 img 삭제
+            // 1-1. 기존 파일 존재하는지 확인
+            File carImageFile = car.getFile();
+            if (carImageFile != null) {
+                // TODO - 이미지 삭제
+            }
+
+            // 2. 새 img 등록
+            imgFile = fileService.upload(companyId, employeeId, FileDomain.RESOURCE, dto.getImgFile());
+
+        }
+        // 이미지 변경 없으면
+        else {
+            // 기존 이미지
+            imgFile = car.getFile();
+        }
+
 
         // 차량 번호 unique하게 (공백 제거)
         String number = dto.getNumber().replace(" ", "");
@@ -119,7 +142,7 @@ public class CarService {
                 dto.getDriverAge(),
                 dto.getDescription(),
                 status,
-                imgFile // todo - 이미지 수정 로직 추가
+                imgFile
         );
     }
 

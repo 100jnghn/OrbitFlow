@@ -93,10 +93,14 @@ public class CarController {
     // 관리자 - 차량 수정
     @PutMapping("/admin/cars/{carId}")
     public ResponseEntity<ResponseDto> updateCar(
+            @AuthenticationPrincipal SecurityUser user,
             @PathVariable Long carId,
             @ModelAttribute CarReqDto dto
     ) {
-        carService.updateCar(carId, dto);
+        Long companyId = user.getCompanyId();
+        Long employeeId = user.getEmployeeId();
+
+        carService.updateCar(companyId, employeeId, carId, dto);
 
         return ResponseEntity.ok().body(
                 new ResponseDto(HttpStatus.OK, "차량 수정 성공", null)

@@ -281,7 +281,7 @@ async function handleEdit() {
 
     // 이미지 파일이 새로 선택된 경우 추가
     if (selectedImageFile) {
-        formData.append('file', selectedImageFile);
+        formData.append('imgFile', selectedImageFile);
     }
 
     try {
