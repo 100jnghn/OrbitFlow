@@ -31,8 +31,10 @@
     position: fixed;
     bottom: 100px;
     right: 30px;
-    width: 420px;
-    height: 600px;
+    width: 500px;
+    height: 700px;
+    max-width: calc(100vw - 60px);
+    max-height: calc(100vh - 200px);
     background: white;
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
