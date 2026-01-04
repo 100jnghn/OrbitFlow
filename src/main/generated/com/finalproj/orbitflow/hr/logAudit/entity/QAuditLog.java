@@ -26,9 +26,9 @@ public class QAuditLog extends EntityPathBase<AuditLog> {
 
     public final com.finalproj.orbitflow.hr.employee.entity.QEmployee actor;
 
-    public final StringPath afterData = createString("afterData");
+    public final MapPath<String, Object, SimplePath<Object>> afterData = this.<String, Object, SimplePath<Object>>createMap("afterData", String.class, Object.class, SimplePath.class);
 
-    public final StringPath beforeData = createString("beforeData");
+    public final MapPath<String, Object, SimplePath<Object>> beforeData = this.<String, Object, SimplePath<Object>>createMap("beforeData", String.class, Object.class, SimplePath.class);
 
     public final com.finalproj.orbitflow.hr.company.entity.QCompany company;
 

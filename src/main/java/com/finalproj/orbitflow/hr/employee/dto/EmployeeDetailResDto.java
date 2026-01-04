@@ -34,7 +34,13 @@ public class EmployeeDetailResDto {
     private EmploymentType employmentType;
     private EmployeeStatus status;
 
+    // 표시용
     private String orgPath;
     private String rankName;
     private String positionName;
+
+    // 편집용
+    private Long orgId;
+    private Long rankId;
+    private Long positionCategoryId;
 }

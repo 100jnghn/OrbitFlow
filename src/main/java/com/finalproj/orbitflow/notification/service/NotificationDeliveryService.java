@@ -42,15 +42,6 @@ public class NotificationDeliveryService {
         emitter.onTimeout(() -> removeEmitter(employeeId, emitter));
         emitter.onError(e -> removeEmitter(employeeId, emitter));
 
-        // 더미 이벤트 전송
-        try {
-            emitter.send(SseEmitter.event()
-                    .name("connect")
-                    .data("connected!!!!!"));
-        } catch (Exception e) {
-            removeEmitter(employeeId, emitter);
-        }
-
         return emitter;
     }
 
@@ -60,8 +51,12 @@ public class NotificationDeliveryService {
      * NotificationDeliveryService가 SSE로 밀어준다
      */
     public void send(Long employeeId, Object data) {
+
         Set<SseEmitter> userEmitters = emitters.get(employeeId);
+        log.info("SSE send 호출됨 employeeId={}", employeeId);
+
         if (userEmitters == null) {
+            log.warn("SSE emitter 없음 employeeId={}", employeeId);
             return;
         }
 

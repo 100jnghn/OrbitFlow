@@ -10,7 +10,7 @@
 
 <!-- ================= 페이지별 CSS ================= -->
 <th:block th:fragment="pageCss">
-    <link rel="stylesheet" th:href="@{/css/admin-employee.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-employee-detail.css}">
 </th:block>
 
 <th:block th:fragment="content">
@@ -25,19 +25,27 @@
             <p class="page-sub">사원 정보 확인 및 상태 변경, 변경 이력 조회</p>
         </div>
 
-        <a class="btn btn-outline" href="/view/admin/employees">목록으로</a>
+        <div style="display:flex; gap:8px;">
+            <button class="btn btn-outline" onclick="openEditModal()">수정</button>
+            <a class="btn btn-outline" href="/view/admin/employees">목록으로</a>
+        </div>
     </div>
 
     <!-- ===== Hero Card ===== -->
-    <section class="emp-hero">
-        <div class="emp-avatar">
-            <i class="fa-solid fa-user"></i>
-        </div>
+    <section class="emp-hero emp-hero-profile">
+        <img id="empAvatar" class="emp-avatar emp-avatar-profile"
+             src="/images/male.png" alt="profile"/>
 
         <div class="emp-hero-main">
             <div class="emp-hero-top">
                 <div>
                     <div class="emp-name" id="empName">-</div>
+
+                    <!-- 요약 추가 -->
+                    <div class="emp-summary" id="empSummary">
+                        -
+                    </div>
+
                     <div class="emp-meta">
                         <span id="empEmail">-</span>
                         <span class="dot">•</span>
@@ -52,7 +60,21 @@
                 <button id="btnActive" class="btn btn-outline">재직</button>
                 <button id="btnSuspend" class="btn btn-outline">정지</button>
                 <button id="btnResign" class="btn btn-danger">퇴사</button>
+
+                <!-- TEMP 전용 -->
+                <button id="btnResendActivate"
+                        class="btn btn-outline"
+                        style="display:none;">
+                    활성화 메일 재전송
+                </button>
+
             </div>
+
+            <p id="tempNotice"
+               style="display:none; margin-top:8px; font-size:12.5px; font-weight:800; color:#9ca3af;">
+                이 사원은 아직 이메일 인증을 완료하지 않았습니다.
+            </p>
+
         </div>
     </section>
 
@@ -69,6 +91,20 @@
 
                 <div class="k">직책</div>
                 <div class="v" id="empPosition">-</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">연락처 정보</div>
+            <div class="kv">
+                <div class="k">연락처</div>
+                <div class="v" id="empPhone">-</div>
+
+                <div class="k">사내 번호</div>
+                <div class="v" id="empInternalPhone">-</div>
+
+                <div class="k">생년월일</div>
+                <div class="v" id="empBirthDate">-</div>
             </div>
         </div>
 
@@ -95,6 +131,97 @@
             <li class="audit-empty">이력을 불러오는 중입니다…</li>
         </ul>
     </section>
+
+    <!-- ===== 사원 정보 수정 모달 ===== -->
+    <div id="editEmployeeModal" class="modal hidden">
+        <div class="modal-panel">
+            <div class="modal-head">
+                <h2>사원 정보 수정</h2>
+                <button class="icon-btn" onclick="closeEditModal()">✕</button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="form-section">
+                    <h3 class="form-section-title">기본 정보</h3>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>이름</label>
+                            <input id="editName">
+                        </div>
+
+                        <div class="form-group">
+                            <label>생년월일</label>
+                            <input type="date" id="editBirthDate">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="form-section-title">조직 / 권한</h3>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>조직</label>
+                            <select id="editOrgId"></select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>직급</label>
+                            <select id="editRankId"></select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>직책</label>
+                            <select id="editPositionCategoryId"></select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>권한</label>
+                            <select id="editRole">
+                                <option value="">선택</option>
+                                <option value="EMPLOYEE">일반 사원</option>
+                                <option value="ADMIN">관리자</option>
+                                <option value="COMPANY_ADMIN">회사 관리자</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="form-section-title">근무 / 연락처</h3>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>고용 형태</label>
+                            <select id="editEmploymentType">
+                                <option value="">선택</option>
+                                <option value="REGULAR">정규직</option>
+                                <option value="NON_REGULAR">비정규직</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>연락처</label>
+                            <input id="editPhone">
+                        </div>
+
+                        <div class="form-group">
+                            <label>사내 번호</label>
+                            <input id="editInternalPhone">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-ghost" onclick="closeEditModal()">취소</button>
+                <button class="btn btn-primary" onclick="saveEdit()">저장</button>
+            </div>
+        </div>
+    </div>
 
 </th:block>
 

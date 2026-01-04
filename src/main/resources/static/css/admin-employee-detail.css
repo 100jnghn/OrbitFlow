@@ -1,0 +1,477 @@
+/* ==================================================
+   admin-employee-detail.css
+   - 사원 상세(detail.html) 전용
+   - list.html / 공통 스타일 영향 없음
+================================================== */
+
+/* =========================
+   Page Head
+========================= */
+.page-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.page-sub {
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #9ca3af;
+}
+
+/* =========================
+   Hero Card
+========================= */
+.emp-hero {
+    display: flex;
+    gap: 20px;
+    padding: 18px;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+    margin-bottom: 16px;
+}
+
+.emp-avatar-profile {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #f3f4f6;
+    box-shadow: 0 6px 16px rgba(0,0,0,.08);
+}
+
+.emp-avatar-profile.grayscale {
+    filter: grayscale(1);
+    opacity: .75;
+}
+
+.emp-hero-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.emp-hero-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.emp-name {
+    font-size: 20px;
+    font-weight: 900;
+    color: #111827;
+}
+
+.emp-summary {
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #6b7280;
+}
+
+.emp-badge {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 900;
+    background: #eef4ff;
+    color: #2563eb;
+}
+
+.emp-meta {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #6b7280;
+}
+
+.emp-meta .dot {
+    color: #d1d5db;
+}
+
+.emp-actions {
+    margin-top: 14px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* =========================
+   Buttons (Detail Only)
+========================= */
+.page-head .btn,
+.emp-actions .btn,
+.modal .btn {
+    height: 42px;
+    padding: 0 16px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    font-size: 13.5px;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-outline {
+    background: #fff;
+    color: #2563eb;
+    border: 1px solid rgba(37,99,235,.35);
+}
+
+.btn-outline:hover {
+    background: rgba(37,99,235,.08);
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: #fff;
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: #fff;
+}
+
+.btn-ghost {
+    background: transparent;
+    color: #6b7280;
+}
+
+.btn.is-selected {
+    border-color: rgba(37,99,235,.85);
+    box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+}
+
+.btn.is-selected::after {
+    content: '현재';
+    margin-left: 6px;
+    font-size: 11px;
+    font-weight: 900;
+    color: #2563eb;
+}
+
+/* =========================
+   Status Pill
+========================= */
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 900;
+}
+
+.status-active { background: #dcfce7; color: #15803d; }
+.status-suspended { background: #fef3c7; color: #b45309; }
+.status-resigned { background: #fee2e2; color: #b91c1c; }
+.status-temp { background: #e5e7eb; color: #374151; }
+
+/* =========================
+   Info Cards
+========================= */
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    padding: 18px;
+}
+
+.card-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 12px;
+}
+
+.card-title {
+    font-size: 14px;
+    font-weight: 900;
+    color: #374151;
+}
+
+.card-sub {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #9ca3af;
+}
+
+.kv {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 10px 14px;
+    font-size: 13.5px;
+}
+
+.kv .k { font-weight: 800; color: #6b7280; }
+.kv .v { font-weight: 800; color: #111827; }
+
+/* =========================
+   Audit Log Timeline
+========================= */
+.audit-list {
+    position: relative;
+    padding-left: 34px;
+    list-style: none;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+
+.audit-item {
+    position: relative;
+    padding: 14px 14px 14px 48px;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    background: #fff;
+}
+
+.audit-empty {
+    padding: 20px;
+    text-align: center;
+    border: 1px dashed #e5e7eb;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #9ca3af;
+    background: #fafafa;
+}
+
+.audit-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.audit-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 배지 */
+.badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.badge-create {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.badge-update {
+    background: #eef4ff;
+    color: #2563eb;
+}
+
+.badge-status {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+
+.audit-time,
+.audit-actor {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.audit-detail summary {
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    list-style: none;
+}
+
+.audit-detail summary::-webkit-details-marker {
+    display: none;
+}
+
+/* =========================
+   Diff Table
+========================= */
+.diff-table {
+    display: grid;
+    grid-template-columns: 120px 1fr 1fr;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.diff-head { display: contents; font-weight: 900; color: #6b7280; }
+.diff-row { display: contents; }
+
+.diff-key { font-weight: 800; color: #6b7280; }
+.diff-before,
+.diff-after {
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.diff-row.changed .diff-before { background: #fff7ed; }
+.diff-row.changed .diff-after { background: #ecfeff; }
+
+/* =========================
+   Modal (Edit)
+========================= */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,.45);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal.hidden { display: none; }
+
+.modal-panel {
+    width: 520px;
+    max-width: 92vw;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 24px 70px rgba(0,0,0,.35);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+}
+
+.modal-head,
+.modal-actions {
+    padding: 18px 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #e5e7eb;
+    background: #fff;
+}
+
+.modal-head {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-actions {
+    border-top: 1px solid #e5e7eb;
+    gap: 10px;
+}
+
+.modal-actions .btn-primary {
+    min-width: 100px;
+}
+
+
+.modal-body {
+    padding: 16px 22px;
+    overflow-y: auto;
+    max-height: calc(90vh - 140px);
+}
+
+.icon-btn {
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.form-section {
+    margin-bottom: 26px;
+}
+
+.form-section-title {
+    margin-bottom: 14px;
+    font-size: 14px;
+    font-weight: 900;
+    color: #111827;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 16px;
+}
+
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #6b7280;
+}
+
+.form-group input,
+.form-group select {
+    height: 44px;
+    padding: 0 12px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #111827;
+    background: #fff;
+    transition: all .15s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+}
+
+
+/* =========================
+   Toast
+========================= */
+.toast {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: #111827;
+    color: #fff;
+    font-weight: 900;
+    z-index: 3000;
+}
+
+/* =========================
+   Responsive
+========================= */
+@media (max-width: 900px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .page-head { flex-direction: column; align-items: stretch; }
+}
