@@ -2,6 +2,8 @@ package com.finalproj.orbitflow.resource.car.service;
 
 import com.finalproj.orbitflow.global.exception.DuplicateCarNumberException;
 import com.finalproj.orbitflow.global.file.entity.File;
+import com.finalproj.orbitflow.global.file.enums.FileDomain;
+import com.finalproj.orbitflow.global.file.service.FileService;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
@@ -42,6 +44,8 @@ public class CarService {
     private final ResourceStatusRepository resourceStatusRepository;
     private final EmployeeRepository employeeRepository;
 
+    private final FileService fileService;
+
     @Transactional(readOnly = true)
     public Page<CarResDto> getCars(Long companyId, Pageable pageable) {
 
@@ -66,7 +70,7 @@ public class CarService {
     }
 
     @Transactional
-    public void insertCar(Long companyId, CarReqDto dto) {
+    public void insertCar(Long companyId, Long employeeId, CarReqDto dto) {
 
         Company company = companyRepository.getReferenceById(companyId);
         ResourceStatus resourceStatus = findResourceStatus(dto.getStatusId());
@@ -78,7 +82,8 @@ public class CarService {
             throw new DuplicateCarNumberException("이미 존재하는 차량 번호입니다");
         }
 
-        // todo - 이미지 파일 저장 기능 추가
+        // 이미지 저장 기능 추가
+        File imgFile = fileService.upload(companyId, employeeId, FileDomain.RESOURCE, dto.getImgFile());
 
         Car car = Car.builder()
                 .company(company)
@@ -87,7 +92,7 @@ public class CarService {
                 .driverAge(dto.getDriverAge())
                 .description(dto.getDescription())
                 .resourceStatus(resourceStatus)
-                // todo - 이미지 파일 추가
+                .file(imgFile)
                 .build();
 
         carRepository.save(car);
@@ -154,6 +159,13 @@ public class CarService {
 
         LocalDate createdAt = car.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDate();
 
+        Long fileId = null;
+
+        // 이미지 유효성 검사
+        if (car.getFile() != null) {
+            fileId = car.getFile().getId();
+        }
+
         return CarResDto.builder()
                 .carId(car.getId())
                 .number(number)
@@ -163,7 +175,7 @@ public class CarService {
                 .statusId(statusId)
                 .statusCode(code)
                 .statusName(name)
-                .objectKey(objectKey)
+                .fileId(fileId)
                 .uploaderName(uploaderName)
                 .createdAt(createdAt)
                 .build();

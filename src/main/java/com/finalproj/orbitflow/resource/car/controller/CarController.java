@@ -81,7 +81,9 @@ public class CarController {
             @AuthenticationPrincipal SecurityUser user
     ) {
         Long companyId = user.getCompanyId();
-        carService.insertCar(companyId, dto);
+        Long employeeId = user.getEmployeeId();
+
+        carService.insertCar(companyId, employeeId, dto);
 
         return ResponseEntity.ok().body(
                 new ResponseDto(HttpStatus.OK, "차량 등록 성공", null)
