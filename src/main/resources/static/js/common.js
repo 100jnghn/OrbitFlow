@@ -415,7 +415,7 @@ function connectSse() {
         return;
     }
 
-    console.log("EventSourcePolyFill : " + window.EventSourcePolyfill);
+    // console.log("EventSourcePolyFill : " + window.EventSourcePolyfill);
 
     // access token 사용해서 sse 연결 요청
     eventSource = new EventSourcePolyfill(
@@ -430,7 +430,7 @@ function connectSse() {
 
     eventSource.addEventListener("notification", (event) => {
         const dto = JSON.parse(event.data);
-        showToast(dto.content);
+        showToast(dto);
         refreshUnreadCount();
     });
 
@@ -448,21 +448,87 @@ function connectSse() {
 }
 
 // 알림 토스트 메시지 표시 함수
-function showToast(message) {
+function showToast(dto) {
     const container = document.getElementById("notification-toast-container");
     if (!container) return;
 
     const toast = document.createElement("div");
-    toast.className = "toast";
-    toast.innerText = message;
+    toast.className = "notification-toast";
+
+    // 왼쪽 아이콘 영역
+    const iconArea = document.createElement("div");
+    iconArea.className = "notification-toast-icon";
+    iconArea.innerHTML = '<i class="fas fa-bell"></i>';
+
+    // 오른쪽 컨텐츠 영역
+    const contentArea = document.createElement("div");
+    contentArea.className = "notification-toast-content";
+
+    // 텍스트
+    const text = document.createElement("div");
+    text.className = "notification-toast-text";
+    text.textContent = dto.type || '알림';
+
+    // 확인 버튼
+    const checkBtn = document.createElement("button");
+    checkBtn.className = "notification-toast-check-btn";
+    checkBtn.title = "확인";
+    checkBtn.innerHTML = '<i class="fas fa-check"></i>';
+    checkBtn.onclick = () => {
+        if (dto.notificationId) {
+            markAsRead(dto.notificationId);
+        }
+        toast.remove();
+    };
+
+    contentArea.appendChild(text);
+    contentArea.appendChild(checkBtn);
+
+    toast.appendChild(iconArea);
+    toast.appendChild(contentArea);
 
     container.appendChild(toast);
 
-    // 3초 후 제거
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
+    // 자동 제거 함수
+    const removeToast = () => {
+        if (toast.parentNode) {
+            toast.style.animation = 'slideOutToast 0.3s ease-out';
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 300);
+        }
+    };
+
+    let removeTimer = setTimeout(removeToast, 5000);
+
+    // hover 시 타이머 중지
+    toast.addEventListener('mouseenter', () => {
+        clearTimeout(removeTimer);
+    });
+
+    // hover 해제 시 다시 타이머 시작
+    toast.addEventListener('mouseleave', () => {
+        removeTimer = setTimeout(removeToast, 5000);
+    });
 }
+
+// 토스트 슬라이드 아웃 애니메이션 추가
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideOutToast {
+        from {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+    }
+`;
+document.head.appendChild(style);
 
 // 읽지 않은 메시지 수 불러오는 함수
 async function refreshUnreadCount() {
@@ -480,7 +546,7 @@ async function refreshUnreadCount() {
 
             console.log("안 읽은 메시지 수 : " + list.length);
 
-            badge.innerText = list.length;
+            badge.innerText = list.length >= 10 ? '9+' : list.length.toString();
             badge.classList.remove("hidden");
             badge.style.display = "flex";
         } else {
