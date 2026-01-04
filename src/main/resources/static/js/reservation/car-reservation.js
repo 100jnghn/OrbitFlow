@@ -342,7 +342,7 @@ function updateSelection() {
     }
 }
 
-function updateReservationForm() {
+async function updateReservationForm() {
     // 신청자 (현재 사용자 정보 - 추후 API에서 가져오기)
     document.getElementById('applicant-name').textContent = '사용자'; // TODO: 실제 사용자 정보
 
@@ -354,14 +354,27 @@ function updateReservationForm() {
         document.getElementById('selected-car-driver-age').textContent = selectedCar.driverAge ? `${selectedCar.driverAge}세 이상` : '-';
         document.getElementById('selected-car-description').textContent = selectedCar.description || '-';
 
-        // 차량 이미지 업데이트
-        if (selectedCar.objectKey) {
-            carImage.src = `/api/files/${selectedCar.objectKey}`;
-            carImage.style.display = 'block';
-            // carImage.alt = '';
+        // 차량 이미지 업데이트 (presigned URL 방식)
+        if (selectedCar.fileId) {
+            try {
+                // presigned URL 요청
+                const res = await apiFetch(`/api/files/${selectedCar.fileId}/presigned`);
+                if (!res.ok) throw new Error('presigned url 요청 실패');
+
+                const result = await res.json();
+                const imageUrl = result.data.url;
+
+                carImage.src = imageUrl;
+                carImage.style.display = 'block';
+            } catch (e) {
+                console.error('이미지 로드 실패', e);
+                // 실패 시 이미지 숨기기
+                carImage.src = '';
+                carImage.style.display = 'none';
+            }
         } else {
             carImage.src = '';
-            carImage.style.display = 'block';
+            carImage.style.display = 'none';
         }
     } else {
         document.getElementById('selected-car-name').textContent = '-';
