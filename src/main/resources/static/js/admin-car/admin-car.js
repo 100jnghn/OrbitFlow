@@ -398,7 +398,7 @@ async function loadCarDetail() {
         document.getElementById('created-at').textContent = formatDate(data.createdAt);
 
         // 차량 이미지 표시
-        displayCarImage(data.fileId);
+        await displayCarImage(data.fileId);
 
         await loadStatusOptions(data.statusId);
 

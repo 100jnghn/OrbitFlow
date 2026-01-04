@@ -101,15 +101,10 @@ public class CarService {
     @Transactional
     public void updateCar(Long companyId, Long employeeId, Long carId, CarReqDto dto) {
 
-        log.info("수정 차 번호 " + carId);
-        log.info("차 상태값 : " + dto.getStatusId());
-
         Car car = findCarById(carId);
         ResourceStatus status = findResourceStatus(dto.getStatusId());
 
         File imgFile = null;
-
-        // TODO - 이미지 수정 로직 추가
 
         // 이미지 변경 있는지 확인
         // dto에 이미지 파일이 존재한다면
@@ -150,6 +145,8 @@ public class CarService {
     public void deleteCar(Long carId) {
 
         Car car = findCarById(carId);
+
+        // TODO - 이미지 삭제
 
         ResourceStatus deleteStatus = resourceStatusRepository.findByResourceStatusCode(ResourceStatusCode.DELETED);
         car.delete(deleteStatus);
