@@ -11,16 +11,22 @@ import com.finalproj.orbitflow.board.enums.BoardSearchType;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.global.file.entity.File;
+import com.finalproj.orbitflow.global.file.enums.FileDomain;
+import com.finalproj.orbitflow.global.file.service.FileService;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeRole;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -30,11 +36,17 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class BoardService {
 
     private final BoardRepository boardRepository;
     private final BoardCategoryRepository boardCategoryRepository;
     private final EmployeeRepository employeeRepository;
+    private final FileService fileService;
+    private final S3Client s3Client;
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucket;
 
     /** [사용자용] 게시글 목록 조회 (공용/조직 게시판 공용, 검색 포함) */
     public Page<BoardResDto.ListInfo> getBoardList(
@@ -117,14 +129,11 @@ public class BoardService {
             throw new ForbiddenException("게시글 작성 권한이 없습니다.");
         }
 
-        // 파일처리: 지금은 예시로만 (네 프로젝트 파일 저장 로직에 맞춰 교체 권장)
+        // 파일 처리: FileService를 사용하여 S3에 업로드
         List<File> attachedFiles = null;
         if (files != null && !files.isEmpty()) {
             attachedFiles = files.stream()
-                    .map(f -> File.builder()
-                            .originFile(f.getOriginalFilename())
-                            .sysFile(saveFileToSystem(f))
-                            .build())
+                    .map(file -> fileService.upload(companyId, employeeId, FileDomain.BOARD, file))
                     .toList();
         }
 
@@ -173,10 +182,6 @@ public class BoardService {
         }
     }
 
-    /** 실제 파일 시스템 저장 (예시) */
-    private String saveFileToSystem(MultipartFile file) {
-        return "/files/" + file.getOriginalFilename();
-    }
 
     @Transactional
     public BoardResDto.DetailInfo updateBoard(
@@ -199,18 +204,28 @@ public class BoardService {
             throw new ForbiddenException("게시글 수정 권한이 없습니다.");
         }
 
-        // 파일 처리(선택) - createBoard와 동일하게 저장 로직을 태우면 됨
+        // 기존 파일 정보 저장 (S3 삭제용)
+        List<File> existingFiles = board.getFiles() != null ? new java.util.ArrayList<>(board.getFiles()) : null;
+
+        // 새 파일 업로드
         List<File> attachedFiles = null;
         if (files != null && !files.isEmpty()) {
             attachedFiles = files.stream()
-                    .map(file -> File.builder()
-                            .originFile(file.getOriginalFilename())
-                            .sysFile(saveFileToSystem(file))
-                            .build())
+                    .map(file -> fileService.upload(companyId, employeeId, FileDomain.BOARD, file))
                     .toList();
         }
 
+        // 게시글 업데이트 (파일 교체)
         board.update(request.getBoardTitle(), request.getBoardContent(), attachedFiles);
+
+        // 기존 파일 삭제 (S3에서도 삭제) - 업데이트 후에 삭제
+        if (existingFiles != null && !existingFiles.isEmpty()) {
+            existingFiles.forEach(file -> {
+                if (file.getObjectKey() != null) {
+                    deleteObject(file.getObjectKey());
+                }
+            });
+        }
 
         // Dirty checking으로 반영되므로 save() 없어도 됨.
         return BoardResDto.DetailInfo.from(board);
@@ -234,6 +249,29 @@ public class BoardService {
             throw new ForbiddenException("게시글 삭제 권한이 없습니다.");
         }
 
+        // 첨부된 파일 삭제 (S3에서도 삭제)
+        if (board.getFiles() != null && !board.getFiles().isEmpty()) {
+            board.getFiles().forEach(file -> {
+                if (file.getObjectKey() != null) {
+                    deleteObject(file.getObjectKey());
+                }
+            });
+        }
+
         board.softDelete(); // soft delete
+    }
+
+    /** S3에서 파일 삭제 */
+    private void deleteObject(String objectKey) {
+        try {
+            s3Client.deleteObject(
+                    DeleteObjectRequest.builder()
+                            .bucket(bucket)
+                            .key(objectKey)
+                            .build()
+            );
+        } catch (Exception ex) {
+            log.error("S3 delete failed. objectKey={}", objectKey, ex);
+        }
     }
 }
