@@ -1,43 +1,37 @@
+/* 대시보드 메인 컨테이너 */
 .dashboard-container {
     width: 100%;
     padding: 0 18px 18px 18px;
-    height: 100%; /* 헤더 높이 제외 */
+    height: 100%;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
 }
 
+/* 행 레이아웃 설정 */
 .dashboard-row {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
     gap: 18px;
     margin-bottom: 18px;
     flex-shrink: 0;
 }
 
+/* 상단 행: 프로필(1) : 공지사항(2) */
 .dashboard-row:first-child {
+    grid-template-columns: 1fr 2fr;
     margin-top: 0;
 }
 
-/* 상단 행: 프로필 + 공지사항 (비율 조정 - 프로필 확대) */
-.dashboard-row:first-child {
-    grid-template-columns: 1fr 2fr;
-}
-
-/* 중간 행: 근태관리 + 금주 일정 (비율 조정 - 근태관리 확대) */
+/* 하단 행: 근태관리(1) : 일정&통계(2) */
 .dashboard-row:nth-child(2) {
     grid-template-columns: 1fr 2fr;
-}
-
-/* 확장된 위젯 스타일 */
-.widget-expanded {
-    min-height: 240px;
 }
 
 .dashboard-row:last-child {
     margin-bottom: 0;
 }
 
+/* 공통 위젯 스타일 */
 .dashboard-widget {
     background: white;
     border-radius: 12px;
@@ -46,6 +40,12 @@
     min-height: 200px;
     display: flex;
     flex-direction: column;
+}
+
+/* 근태관리와 일정 영역 높이 맞추기 */
+.widget-attendance,
+.schedule-approval-wrapper {
+    min-height: 500px;
 }
 
 .widget-header {
@@ -86,20 +86,12 @@
     flex-direction: column;
 }
 
-/* 프로필 위젯 */
+/* 1. 프로필 위젯 스타일 */
 .widget-profile {
     display: flex;
     flex-direction: column;
     min-height: 140px !important;
     padding: 14px !important;
-}
-
-.widget-profile .widget-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-height: 0;
 }
 
 .profile-avatar {
@@ -115,11 +107,6 @@
     border: 3px solid #e5e7eb;
 }
 
-.profile-avatar i {
-    font-size: 60px;
-    color: #9ca3af;
-}
-
 .profile-info {
     text-align: center;
 }
@@ -129,14 +116,6 @@
     color: #6b7280;
     margin-bottom: 5px;
     font-weight: 500;
-}
-
-.profile-name-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    flex-wrap: wrap;
 }
 
 .profile-name {
@@ -151,64 +130,90 @@
     font-weight: 500;
 }
 
-/* 공지사항 위젯 */
-.widget-notice {
-    min-height: 140px !important;
-    padding: 14px !important;
+/* 근무상태 벳지 */
+.work-status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 8px;
 }
 
-.widget-notice .widget-content {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    word-wrap: break-word;
-    min-height: 0;
+.work-status-badge.badge-before-work { background-color: #DBEAFE; color: #1E40AF; }
+.work-status-badge.badge-working { background-color: #D1FAE5; color: #065F46; }
+.work-status-badge.badge-away { background-color: #FEF3C7; color: #92400E; }
+.work-status-badge.badge-off-work { background-color: #E5E7EB; color: #374151; }
+
+/* 출퇴근 버튼 그룹 */
+.profile-attendance-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
 }
 
-.widget-notice .widget-header {
-    margin-bottom: 10px;
-    padding-bottom: 8px;
+.btn-attendance {
+    width: 100%;
+    padding: 14px 16px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.notice-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+.btn-attendance.btn-checkin { background: linear-gradient(135deg, #EDF2FF 0%, #DBE4FF 100%); color: dimgray; border: 1.5px solid #3b82f6; }
+.btn-attendance.btn-away { background: linear-gradient(135deg, #FFF9DB 0%, #FFF3BF 100%); color: dimgray; border: 1.5px solid #f59e0b; }
+.btn-attendance.btn-checkout { background: linear-gradient(135deg, #FFF5F5 0%, #FFE3E3 100%); color: dimgray; border: 1.5px solid #ef4444; }
+
+/* 출퇴근 정보 */
+.profile-attendance-info {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
+.attendance-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    font-size: 13px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.attendance-info-item:last-child {
+    border-bottom: none;
+}
+
+.attendance-info-item .info-label {
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.attendance-info-item .info-value {
+    color: #111827;
+    font-weight: 600;
+}
+
+/* 2. 공지사항 위젯 */
 .notice-item {
     padding: 9px 0;
     border-bottom: 1px solid #f3f4f6;
     cursor: pointer;
     transition: background-color 0.2s;
-}
-
-.notice-item:last-child {
-    border-bottom: none;
-}
-
-.notice-item:hover {
-    background-color: #f9fafb;
-    padding-left: 8px;
-    padding-right: 8px;
-    margin-left: -8px;
-    margin-right: -8px;
-    border-radius: 6px;
-}
-
-.notice-item.empty {
-    color: #9ca3af;
-    cursor: default;
-    text-align: center;
-    padding: 18px 0;
-}
-
-.notice-item.empty:hover {
-    background-color: transparent;
-    padding-left: 0;
-    padding-right: 0;
-    margin-left: 0;
-    margin-right: 0;
 }
 
 .notice-title {
@@ -219,96 +224,83 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     font-weight: 500;
-    word-wrap: break-word;
-    max-width: 100%;
 }
 
-.notice-meta {
+/* 3. 근태관리 위젯 & 휴가 현황 */
+.attendance-summary {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.summary-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    color: #9ca3af;
+    gap: 12px;
+    padding: 12px;
+    background: #f9fafb;
+    border-radius: 8px;
 }
 
-.notice-author {
-    color: #6b7280;
+.summary-icon {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border-radius: 10px; color: #fff; font-size: 18px;
 }
 
-.notice-date {
-    color: #9ca3af;
+.summary-icon.leave-icon { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+
+/* 휴가 정보 섹션 (디자인 개선 반영) */
+.leave-info-section {
+    margin-top: 24px;
+    padding: 15px;
+    background-color: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
 }
 
-/* 근태관리 위젯 */
-.attendance-time {
-    font-size: 26px;
-    font-weight: 700;
-    color: #111827;
-    margin-bottom: 8px;
+.leave-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.leave-info-item {
+    background: white;
+    padding: 12px 5px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
     text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-.attendance-date {
-    font-size: 13px;
-    color: #6b7280;
-    text-align: center;
-    margin-bottom: 14px;
-}
+.leave-info-label { display: block; font-size: 11px; color: #6b7280; margin-bottom: 4px; }
+.leave-info-value { font-size: 15px; font-weight: 700; color: #111827; }
 
-.attendance-status {
-    font-size: 13px;
-    color: #059669;
-    text-align: center;
-    margin-bottom: 14px;
-    font-weight: 500;
-}
-
-.attendance-progress {
-    margin-top: 16px;
-}
-
-.progress-bar {
-    width: 100%;
-    height: 8px;
-    background-color: #e5e7eb;
-    border-radius: 4px;
-    overflow: hidden;
-    margin-bottom: 8px;
-}
-
-.progress-fill {
-    height: 100%;
-    background-color: #10b981;
-    border-radius: 4px;
-    transition: width 0.3s;
-}
-
-.progress-labels {
+/* 4. [핵심] 일정 바로 밑에 통계를 배치하는 래퍼 */
+.schedule-approval-wrapper {
     display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    color: #6b7280;
+    flex-direction: column;
+    gap: 18px; /* 위젯과 통계 사이 밀착 간격 */
+    height: 100%;
 }
 
-.progress-labels span:nth-child(2) {
-    font-weight: 600;
-    color: #111827;
-}
-
-/* 근태관리 위젯 높이 증가 */
-.widget-attendance {
-    min-height: 270px;
-}
-
-/* 일정 위젯 */
 .widget-schedule {
-    min-height: 270px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 .widget-schedule .widget-content {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
+    min-height: 0;
 }
 
 .schedule-list {
@@ -333,136 +325,46 @@
     padding: 18px 0;
 }
 
-.schedule-title {
-    font-size: 14px;
-    color: #111827;
-    margin-bottom: 4px;
-}
-
-.schedule-date {
-    font-size: 12px;
-    color: #9ca3af;
-}
-
-/* 금주일정 및 결재 통계 영역 */
-.schedule-approval-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-}
-
-/* 통계 카드 - 금주일정 가로 폭 안쪽으로 배치 */
 .dashboard-stats {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 18px;
+    gap: 16px;
 }
 
 .dashboard-stat-card {
-    background: white;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     padding: 16px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    transition: transform 0.2s, box-shadow 0.2s;
-    min-height: 70px;
+    justify-content: space-between;
+    min-height: 100px;
+    transition: transform 0.2s;
 }
 
-.dashboard-stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
+.dashboard-stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+.stat-label { font-size: 13px; color: #6b7280; font-weight: 500; margin: 0; }
+.stat-value { font-size: 24px; font-weight: 700; color: #111827; margin: 4px 0; }
+.stat-change { font-size: 11px; color: #10b981; font-weight: 600; margin: 0; }
 
 .stat-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    flex-shrink: 0;
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
 }
 
-.stat-pending .stat-icon {
-    background-color: #fef3c7;
-    color: #f59e0b;
-}
+/* 카드별 아이콘 색상 테마 유지 */
+.stat-pending .stat-icon { background-color: #fef3c7; color: #f59e0b; }
+.stat-created .stat-icon { background-color: #dbeafe; color: #3b82f6; }
+.stat-approved .stat-icon { background-color: #d1fae5; color: #10b981; }
+.stat-rejected .stat-icon { background-color: #fee2e2; color: #ef4444; }
 
-.stat-created .stat-icon {
-    background-color: #dbeafe;
-    color: #3b82f6;
-}
-
-.stat-approved .stat-icon {
-    background-color: #d1fae5;
-    color: #10b981;
-}
-
-.stat-rejected .stat-icon {
-    background-color: #fee2e2;
-    color: #ef4444;
-}
-
-.stat-content {
-    flex: 1;
-}
-
-.stat-value {
-    font-size: 22px;
-    font-weight: 700;
-    color: #111827;
-    margin-bottom: 4px;
-}
-
-.stat-label {
-    font-size: 13px;
-    color: #6b7280;
-    margin-bottom: 3px;
-}
-
-.stat-change {
-    font-size: 12px;
-    color: #9ca3af;
-}
-
-.stat-change.positive {
-    color: #10b981;
-}
-
-.stat-change.negative {
-    color: #ef4444;
-}
-
-/* 반응형 */
+/* 반응형 설정 */
 @media (max-width: 1200px) {
-    .dashboard-row:first-child,
-    .dashboard-row:nth-child(2) {
-        grid-template-columns: 1fr;
-    }
-    
-    .dashboard-stats {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .schedule-approval-wrapper {
-        gap: 18px;
-    }
+    .dashboard-row:first-child, .dashboard-row:nth-child(2) { grid-template-columns: 1fr; }
+    .dashboard-stats { grid-template-columns: repeat(2, 1fr); }
 }
-
-@media (max-width: 768px) {
-    .dashboard-container {
-        padding: 16px;
-    }
-    
-    .dashboard-row {
-        grid-template-columns: 1fr;
-    }
-    
-    .dashboard-stats {
-        grid-template-columns: 1fr;
-    }
-}
-

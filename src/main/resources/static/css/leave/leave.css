@@ -1,10 +1,16 @@
 /* 내 연차 조회 페이지 - 게시판 디자인과 통일 */
 
-/* 컨테이너 좌우 여백 - 화면 크기에 맞춤 (월별 근태조회와 동일) */
+/* 컨테이너 - 게시판과 동일한 크기 */
 .board-container {
-    padding: 24px;
-    max-width: 100%;
-    width: 100%;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(103vh - 180px);
 }
 
 /* 연차 요약 카드 전용 섹션 (게시판 디자인과 통일) */

@@ -132,10 +132,10 @@
                         </div>
                     </div>
 
-                    <!-- 3. 오버라이드 설정 -->
+                    <!-- 3. 규칙 적용 시간 -->
                     <div class="form-section">
                         <div class="section-content">
-                            <label class="section-label">오버라이드 설정 (변경할 항목 입력)</label>
+                            <label class="section-label">규칙 적용 시간</label>
                             <div class="override-fields">
                                 <div class="override-row">
                                     <div class="override-field">
@@ -152,7 +152,9 @@
                                 <div class="override-row">
                                     <div class="override-field">
                                         <label>휴게 시간 (분)</label>
-                                        <input type="number" id="exceptionBreakMinutes" name="breakMinutes" min="0" max="480" class="number-input">
+                                        <input type="text" id="exceptionBreakMinutes" name="breakMinutes" 
+                                               class="number-input" pattern="[0-9]*" inputmode="numeric"
+                                               placeholder="숫자만 입력" maxlength="3">
                                         <span class="error-message" id="breakMinutesError"></span>
                                     </div>
                                 </div>
@@ -229,10 +231,10 @@
                         </div>
                     </div>
 
-                    <!-- 오버라이드 설정 수정 -->
+                    <!-- 규칙 적용 시간 수정 -->
                     <div class="form-section">
                         <div class="section-content">
-                            <label class="section-label">오버라이드 설정 수정</label>
+                            <label class="section-label">규칙 적용 시간 수정</label>
                             <div class="override-fields">
                                 <div class="override-row">
                                     <div class="override-field">
@@ -249,7 +251,9 @@
                                 <div class="override-row">
                                     <div class="override-field">
                                         <label>휴게 시간:</label>
-                                        <input type="number" id="editExceptionBreakMinutes" name="breakMinutes" min="0" max="480" class="number-input">
+                                        <input type="text" id="editExceptionBreakMinutes" name="breakMinutes" 
+                                               class="number-input" pattern="[0-9]*" inputmode="numeric"
+                                               placeholder="숫자만 입력" maxlength="3">
                                         <span class="error-message" id="editBreakMinutesError"></span>
                                     </div>
                                 </div>

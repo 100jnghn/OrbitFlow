@@ -1,11 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
-      th:replace="
-      ~{layout/layout-user :: layout(
-      ~{::content},
-      ~{fragments/header :: header},
-      ~{sidebar/attendance/user-attendance-sidebar :: sidebar},
-      ~{::pageCss}, ~{::pageScript})}">
+      th:replace="~{layout/layout-user :: layout(~{::content}, ~{fragments/header :: header}, ~{sidebar/attendance/user-attendance-sidebar :: sidebar}, ~{::pageCss}, ~{::pageScript})}">
 <head>
     <th:block th:fragment="pageCss">
         <link rel="stylesheet" th:href="@{/css/board/board.css}">
@@ -17,42 +12,47 @@
 
 <div th:fragment="content">
     <div class="board-container">
-        <!-- 게시판 제목 -->
-        <div class="board-header">
-            <h1>내 연차 현황</h1>
-            <p class="base-date" style="margin-top: 8px; font-size: 14px; color: var(--neutral-600);">
-                <span th:text="${displayYear}">2025</span>년 기준
-                <span class="date-detail">(회계연도 1월 1일)</span>
-            </p>
+        <div class="board-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <div>
+                <h1>내 연차 현황</h1>
+                <p class="base-date" style="margin-top: 8px; font-size: 14px; color: var(--neutral-600);">
+                    <span id="displayYearText">2025</span>년 기준
+                    <span class="date-detail">(회계연도 1월 1일)</span>
+                </p>
+            </div>
+            <div class="year-filter-wrapper">
+                <label for="filterYear" class="filter-label">조회 연도</label>
+                <select id="filterYear" class="filter-select" onchange="refreshLeaveData()">
+                </select>
+            </div>
         </div>
 
-    <div class="leave-summary">
-        <div class="summary-card">
-            <p class="summary-label">총 발생 연차</p>
-            <p class="summary-count"><span id="totalGranted">0.0</span> <span class="unit">일</span></p>
+        <div class="leave-summary">
+            <div class="summary-card">
+                <p class="summary-label">총 발생 연차</p>
+                <p class="summary-count"><span id="totalGranted">0.0</span> <span class="unit">일</span></p>
+            </div>
+            <div class="summary-card">
+                <p class="summary-label">사용 연차</p>
+                <p class="summary-count count-used"><span id="usedDays">0.0</span> <span class="unit">일</span></p>
+            </div>
+            <div class="summary-card">
+                <p class="summary-label">잔여 연차</p>
+                <p class="summary-count count-remaining"><span id="remainingDays">0.0</span> <span class="unit">일</span></p>
+            </div>
         </div>
-        <div class="summary-card">
-            <p class="summary-label">사용 연차</p>
-            <p class="summary-count count-used"><span id="usedDays">0.0</span> <span class="unit">일</span></p>
-        </div>
-        <div class="summary-card">
-            <p class="summary-label">잔여 연차</p>
-            <p class="summary-count count-remaining"><span id="remainingDays">0.0</span> <span class="unit">일</span></p>
-        </div>
-    </div>
 
-        <!-- 필터 섹션 -->
         <div class="board-search-section">
             <div class="search-filters">
                 <div class="filter-select-wrapper">
                     <label for="filterType" class="filter-label">항목</label>
-                    <select id="filterType" class="filter-select">
-                        <option value="">전체</option>
+                    <select id="filterType" class="filter-select" onchange="applyFilters(0)">
+                        <option value="">전체 유형</option>
                     </select>
                 </div>
                 <div class="filter-select-wrapper">
                     <label for="filterStatus" class="filter-label">상태</label>
-                    <select id="filterStatus" class="filter-select">
+                    <select id="filterStatus" class="filter-select" onchange="applyFilters(0)">
                         <option value="">전체</option>
                         <option value="APPROVED">승인</option>
                         <option value="SUBMITTED">대기</option>
@@ -70,19 +70,15 @@
                 <div class="button-wrapper">
                     <label class="filter-label" style="opacity: 0;">버튼</label>
                     <div style="display: flex; gap: 8px;">
-                        <button type="button" class="btn-search" onclick="applyFilters()">
-                            <i class="fas fa-search" style="margin-right: 6px;"></i>
-                            검색
+                        <button type="button" class="btn-search" onclick="applyFilters(0)">
+                            <i class="fas fa-search" style="margin-right: 6px;"></i>검색
                         </button>
-                        <button type="button" class="btn-reset" onclick="resetFilters()">
-                            초기화
-                        </button>
+                        <button type="button" class="btn-reset" onclick="resetFilters()">초기화</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 연차 상세 내역 -->
         <div class="board-table-container">
             <table class="board-table" id="leaveHistoryTable">
                 <thead>
@@ -94,12 +90,10 @@
                     <th>상태</th>
                 </tr>
                 </thead>
-                <tbody id="leaveHistoryList">
-                </tbody>
+                <tbody id="leaveHistoryList"></tbody>
             </table>
         </div>
 
-        <!-- 페이지네이션 -->
         <div class="board-bottom-actions">
             <div class="pagination" id="leavePagination"></div>
         </div>
@@ -109,6 +103,5 @@
 <th:block th:fragment="pageScript">
     <script th:src="@{/js/leave/annual-leave.js}"></script>
 </th:block>
-
 </body>
 </html>

@@ -37,26 +37,34 @@ async function loadUserProfile() {
         
         document.getElementById('profileName').textContent = user.name || '-';
         
-        // 2. 부서명과 직책명 조회를 위해 사원 검색 API 사용 (본인 이름으로 검색)
+        // 2. 부서명과 직책명 조회 (관리자 권한이 필요한 API이므로 제거)
+        // 일반 사용자는 부서명과 직책명을 조회할 수 있는 별도 API가 필요합니다.
+        // 현재는 기본값으로 표시합니다.
         let organizationName = '-';
         let positionName = '';
         
-        try {
-            // 사원 검색 API를 사용하여 본인 정보 조회 (이름으로 검색, 최소 2자 필요)
-            if (user.name && user.name.length >= 2) {
-                const searchResponse = await apiFetch(`/api/admin/rules/employees/search?keyword=${encodeURIComponent(user.name)}`);
-                if (searchResponse.ok) {
-                    const employees = await searchResponse.json();
-                    // 본인 employeeId와 일치하는 사원 찾기
-                    const currentEmployee = employees.find(emp => emp.id === user.employeeId);
-                    if (currentEmployee) {
-                        organizationName = currentEmployee.organizationName || '-';
-                        positionName = currentEmployee.positionName || '';
+        // 관리자 권한이 있는 경우에만 사원 검색 API 사용
+        if (user.role === 'ADMIN' || user.role === 'COMPANY_ADMIN') {
+            try {
+                if (user.name && user.name.length >= 2) {
+                    const searchResponse = await apiFetch(`/api/admin/rules/employees/search?keyword=${encodeURIComponent(user.name)}`);
+                    if (searchResponse.ok) {
+                        const result = await searchResponse.json();
+                        const employees = result.data || result;
+                        if (Array.isArray(employees)) {
+                            // 본인 employeeId와 일치하는 사원 찾기
+                            const currentEmployee = employees.find(emp => emp.id === user.employeeId);
+                            if (currentEmployee) {
+                                organizationName = currentEmployee.organizationName || '-';
+                                positionName = currentEmployee.positionName || '';
+                            }
+                        }
                     }
                 }
+            } catch (searchError) {
+                // 403 에러 등은 조용히 처리 (콘솔에 표시하지 않음)
+                // console.warn('사원 정보 검색 실패, 기본값 사용:', searchError);
             }
-        } catch (searchError) {
-            console.warn('사원 정보 검색 실패, 기본값 사용:', searchError);
         }
         
         document.getElementById('profileDept').textContent = organizationName;
@@ -156,6 +164,23 @@ async function loadNotices() {
 // 근태 정보 로드
 async function loadAttendance() {
     try {
+        // 오늘의 근태 정보와 월별 근무시간, 연차 현황을 병렬로 로드
+        await Promise.all([
+            loadTodayAttendance(),
+            loadMonthlyWorkHours(),
+            loadLeaveBalance(),
+            loadLeaveInfo()
+        ]);
+    } catch (error) {
+        console.error('근태 정보 로드 실패:', error);
+        document.getElementById('attendanceDate').textContent = '-';
+        document.getElementById('attendanceStatus').textContent = '조회 실패';
+    }
+}
+
+// 오늘의 근태 정보 로드
+async function loadTodayAttendance() {
+    try {
         const response = await apiFetch('/api/attendance/today');
         if (!response.ok) {
             if (response.status === 401) {
@@ -182,7 +207,6 @@ async function loadAttendance() {
             weekday: 'short'
         });
         
-        document.getElementById('attendanceTime').textContent = timeStr;
         document.getElementById('attendanceDate').textContent = dateStr;
         
         if (attendance.attendance) {
@@ -194,23 +218,174 @@ async function loadAttendance() {
             const statusText = attendance.attendance.status === 'ON_TIME' ? '정상 출근' : '지각';
             document.getElementById('attendanceStatus').textContent = statusText;
             
-            // 근무 시간 표시 (예: 2h 50m)
-            const workTimeText = `${workHours}h ${workMinutes}m`;
-            document.getElementById('workTimeText').textContent = workTimeText;
-            
-            // 진행률 계산 (최소 40h 기준)
-            const progress = Math.min((workHours / 40) * 100, 100);
-            document.getElementById('progressFill').style.width = `${progress}%`;
         } else {
             document.getElementById('attendanceStatus').textContent = '근무 예정';
-            document.getElementById('workTimeText').textContent = '0h';
-            document.getElementById('progressFill').style.width = '0%';
         }
     } catch (error) {
-        console.error('근태 정보 로드 실패:', error);
-        document.getElementById('attendanceTime').textContent = '-';
-        document.getElementById('attendanceDate').textContent = '-';
-        document.getElementById('attendanceStatus').textContent = '조회 실패';
+        console.error('오늘 근태 정보 로드 실패:', error);
+    }
+}
+
+// 월별 총 근무시간 로드
+async function loadMonthlyWorkHours() {
+    try {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1;
+        
+        const response = await apiFetch(`/api/attendance/history/monthly?year=${year}&month=${month}`);
+        if (!response.ok) {
+            if (response.status === 401) {
+                location.href = '/login';
+                return;
+            }
+            throw new Error('월별 근무시간 조회 실패');
+        }
+        
+        const result = await response.json();
+        const data = result.data;
+        
+        if (data && data.summary && data.summary.totalWorkTimeDisplay) {
+            document.getElementById('totalWorkHours').textContent = data.summary.totalWorkTimeDisplay;
+        } else {
+            document.getElementById('totalWorkHours').textContent = '0h 0m';
+        }
+    } catch (error) {
+        console.error('월별 근무시간 로드 실패:', error);
+        document.getElementById('totalWorkHours').textContent = '-';
+    }
+}
+
+// 연차 현황 로드
+async function loadLeaveBalance() {
+    try {
+        const now = new Date();
+        const year = now.getFullYear();
+        
+        const response = await apiFetch(`/api/leave/summary?year=${year}`);
+        if (!response.ok) {
+            if (response.status === 401) {
+                location.href = '/login';
+                return;
+            }
+            throw new Error('연차 현황 조회 실패');
+        }
+        
+        const result = await response.json();
+        const data = result.data;
+        
+        if (data && data.remainingDays !== null && data.remainingDays !== undefined) {
+            const remainingDays = parseFloat(data.remainingDays);
+            document.getElementById('remainingLeave').textContent = remainingDays.toFixed(1) + '일';
+        } else {
+            document.getElementById('remainingLeave').textContent = '0일';
+        }
+    } catch (error) {
+        console.error('연차 현황 로드 실패:', error);
+        document.getElementById('remainingLeave').textContent = '-';
+    }
+}
+
+// 휴가 관련 정보 로드
+async function loadLeaveInfo() {
+    try {
+        const now = new Date();
+        const year = now.getFullYear();
+        
+        // 연차 현황 조회
+        const summaryResponse = await apiFetch(`/api/leave/summary?year=${year}`);
+        if (!summaryResponse.ok) {
+            if (summaryResponse.status === 401) {
+                location.href = '/login';
+                return;
+            }
+            throw new Error('연차 현황 조회 실패');
+        }
+        
+        const summaryResult = await summaryResponse.json();
+        const summaryData = summaryResult.data;
+        
+        // 사용/부여 연차 표시
+        if (summaryData) {
+            const totalGranted = parseFloat(summaryData.totalGranted || 0);
+            const usedDays = parseFloat(summaryData.usedDays || 0);
+            document.getElementById('leaveUsage').textContent = `${usedDays.toFixed(1)}일 / ${totalGranted.toFixed(1)}일`;
+        } else {
+            document.getElementById('leaveUsage').textContent = '-';
+        }
+        
+        // 휴가 신청 내역 조회 (대기 중인 신청 확인 - SUBMITTED, IN_PROGRESS 상태)
+        const historyResponse = await apiFetch(`/api/leave/history?page=0&size=50`);
+        if (historyResponse.ok) {
+            const historyResult = await historyResponse.json();
+            const historyData = historyResult.data;
+            
+            // 대기 중인 신청 건수 (SUBMITTED, IN_PROGRESS 상태)
+            if (historyData && historyData.content) {
+                const pendingCount = historyData.content.filter(leave => 
+                    leave.statusCode === 'SUBMITTED' || leave.statusCode === 'IN_PROGRESS'
+                ).length;
+                document.getElementById('pendingLeaveCount').textContent = pendingCount > 0 ? `${pendingCount}건` : '없음';
+            } else {
+                document.getElementById('pendingLeaveCount').textContent = '없음';
+            }
+        } else {
+            document.getElementById('pendingLeaveCount').textContent = '-';
+        }
+        
+        // 승인된 휴가 중 다음 예정일 조회
+        const approvedResponse = await apiFetch(`/api/leave/history?status=APPROVED&page=0&size=50`);
+        if (approvedResponse.ok) {
+            const approvedResult = await approvedResponse.json();
+            const approvedData = approvedResult.data;
+            
+            if (approvedData && approvedData.content && approvedData.content.length > 0) {
+                // 오늘 이후의 가장 가까운 휴가 날짜 찾기
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                let nextLeaveDate = null;
+                for (const leave of approvedData.content) {
+                    if (leave.period) {
+                        // period 형식: "2025-07-01 ~ 2025-07-02"
+                        const startDateStr = leave.period.split(' ~ ')[0];
+                        const startDate = new Date(startDateStr);
+                        startDate.setHours(0, 0, 0, 0);
+                        
+                        if (startDate >= today && (!nextLeaveDate || startDate < nextLeaveDate)) {
+                            nextLeaveDate = startDate;
+                        }
+                    } else if (leave.actionDate) {
+                        // actionDate 형식: "2025-07-01"
+                        const startDate = new Date(leave.actionDate);
+                        startDate.setHours(0, 0, 0, 0);
+                        
+                        if (startDate >= today && (!nextLeaveDate || startDate < nextLeaveDate)) {
+                            nextLeaveDate = startDate;
+                        }
+                    }
+                }
+                
+                if (nextLeaveDate) {
+                    const formattedDate = nextLeaveDate.toLocaleDateString('ko-KR', {
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    document.getElementById('nextLeaveDate').textContent = formattedDate;
+                } else {
+                    document.getElementById('nextLeaveDate').textContent = '없음';
+                }
+            } else {
+                document.getElementById('nextLeaveDate').textContent = '없음';
+            }
+        } else {
+            document.getElementById('nextLeaveDate').textContent = '-';
+        }
+    } catch (error) {
+        console.error('휴가 정보 로드 실패:', error);
+        document.getElementById('leaveUsage').textContent = '-';
+        document.getElementById('pendingLeaveCount').textContent = '-';
+        document.getElementById('nextLeaveDate').textContent = '-';
     }
 }
 

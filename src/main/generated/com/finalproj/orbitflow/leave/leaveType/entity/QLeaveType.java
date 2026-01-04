@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.leave.leaveType.entity;
+package com.finalproj.orbitflow.attendance.leave.leaveType.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 

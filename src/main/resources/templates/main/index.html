@@ -13,10 +13,12 @@
 
     <th:block th:fragment="pageCss">
         <link rel="stylesheet" th:href="@{/css/main/index.css}">
+        <link rel="stylesheet" th:href="@{/css/attendance/commute.css}">
     </th:block>
 
     <th:block th:fragment="pageScript">
         <script th:src="@{/js/main/index.js}" defer></script>
+        <script th:src="@{/js/attendance/commute.js}"></script>
     </th:block>
 </head>
 <body>
@@ -38,7 +40,44 @@
                     <div class="profile-dept" id="profileDept">-</div>
                     <div class="profile-name-wrapper">
                         <span class="profile-name" id="profileName">-</span>
+                        <span class="work-status-badge" id="workStatusBadge" style="display: none;"></span>
                         <span class="profile-rank" id="profileRank">-</span>
+                    </div>
+                </div>
+
+                <!-- 출퇴근 버튼 그룹 -->
+                <div class="profile-attendance-buttons">
+                    <button type="button" id="checkInBtn" class="btn-attendance btn-checkin">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>출근</span>
+                    </button>
+                    <button type="button" id="awayBtn" class="btn-attendance btn-away">
+                        <i class="fas fa-user-clock"></i>
+                        <span>자리비움</span>
+                    </button>
+                    <button type="button" id="checkOutBtn" class="btn-attendance btn-checkout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>퇴근</span>
+                    </button>
+                </div>
+
+                <!-- 출퇴근 정보 -->
+                <div class="profile-attendance-info">
+                    <div class="attendance-info-item">
+                        <span class="info-label">현재 시각</span>
+                        <span class="info-value" id="currentTime">00:00:00</span>
+                    </div>
+                    <div class="attendance-info-item">
+                        <span class="info-label">기준 근무 시간</span>
+                        <span class="info-value" id="workHours">조회 중...</span>
+                    </div>
+                    <div class="attendance-info-item">
+                        <span class="info-label">출근 시각</span>
+                        <span class="info-value" id="commuteTime">미기록</span>
+                    </div>
+                    <div class="attendance-info-item">
+                        <span class="info-label">퇴근 시각</span>
+                        <span class="info-value" id="leaveTime">미기록</span>
                     </div>
                 </div>
             </div>
@@ -64,22 +103,70 @@
         <div class="dashboard-widget widget-attendance">
             <div class="widget-header">
                 <h3>근태관리</h3>
-                <a href="/view/attendance/commute" class="widget-more">더보기 <i class="fas fa-chevron-right"></i></a>
+                <a href="/view/attendance/monthly" class="widget-more">더보기 <i class="fas fa-chevron-right"></i></a>
             </div>
             <div class="widget-content">
-                <div class="attendance-time" id="attendanceTime">-</div>
-                <div class="attendance-date" id="attendanceDate">-</div>
-                <div class="attendance-status" id="attendanceStatus">-</div>
-                <div class="attendance-progress">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill"></div>
+                <!-- 총 근무시간 및 연차 현황 -->
+                <div class="attendance-summary">
+                    <div class="summary-item">
+                        <div class="summary-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="summary-content">
+                            <div class="summary-label">이번 달 총 근무시간</div>
+                            <div class="summary-value" id="totalWorkHours">-</div>
+                        </div>
                     </div>
-                    <div class="progress-labels">
-                        <span>최소 40h</span>
-                        <span id="workTimeText">0h</span>
-                        <span>최대 52h</span>
+                    <div class="summary-item">
+                        <div class="summary-icon leave-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="summary-content">
+                            <div class="summary-label">남은 연차</div>
+                            <div class="summary-value" id="remainingLeave">-</div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- 휴가 관련 정보 -->
+                <div class="leave-info-section">
+                    <div class="leave-info-header">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>휴가 현황</span>
+                    </div>
+                    <div class="leave-info-grid">
+                        <div class="leave-info-item">
+                            <div class="leave-icon">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="leave-info-label">사용 / 부여</div>
+                            <div class="leave-info-value" id="leaveUsage">-</div>
+                        </div>
+                        <div class="leave-info-item">
+                            <div class="leave-icon">
+                                <i class="fas fa-hourglass-half"></i>
+                            </div>
+                            <div class="leave-info-label">대기 중인 신청</div>
+                            <div class="leave-info-value" id="pendingLeaveCount">-</div>
+                        </div>
+                        <div class="leave-info-item">
+                            <div class="leave-icon">
+                                <i class="fas fa-calendar-day"></i>
+                            </div>
+                            <div class="leave-info-label">다음 휴가 예정일</div>
+                            <div class="leave-info-value" id="nextLeaveDate">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 규칙 오류 알림 배너 -->
+        <div id="ruleErrorBanner" class="rule-error-banner" style="display: none;">
+            <div class="banner-content">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span class="banner-message">기본 근무 시간 설정에 오류가 있습니다. 출근 시간이 퇴근 시간보다 늦게 설정되어 있습니다. 관리자에게 문의해주세요.</span>
+                <button class="banner-close" onclick="document.getElementById('ruleErrorBanner').style.display='none';">&times;</button>
             </div>
         </div>
 
@@ -102,49 +189,49 @@
             <div class="dashboard-stats">
                 <!-- 대기 중인 결재 -->
                 <div class="dashboard-stat-card stat-pending">
+                    <div class="stat-content">
+                        <div class="stat-label">대기 중인 결재</div>
+                        <div class="stat-value" id="pendingApprovals">-</div>
+                        <div class="stat-change" id="pendingChange">-</div>
+                    </div>
                     <div class="stat-icon">
                         <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="stat-content">
-                        <div class="stat-value" id="pendingApprovals">-</div>
-                        <div class="stat-label">대기 중인 결재</div>
-                        <div class="stat-change" id="pendingChange">-</div>
                     </div>
                 </div>
 
                 <!-- 작성한 문서 -->
                 <div class="dashboard-stat-card stat-created">
+                    <div class="stat-content">
+                        <div class="stat-label">작성한 문서</div>
+                        <div class="stat-value" id="documentsCreated">-</div>
+                        <div class="stat-change" id="createdChange">-</div>
+                    </div>
                     <div class="stat-icon">
                         <i class="fas fa-file-alt"></i>
-                    </div>
-                    <div class="stat-content">
-                        <div class="stat-value" id="documentsCreated">-</div>
-                        <div class="stat-label">작성한 문서</div>
-                        <div class="stat-change" id="createdChange">-</div>
                     </div>
                 </div>
 
                 <!-- 이번 주 승인 -->
                 <div class="dashboard-stat-card stat-approved">
+                    <div class="stat-content">
+                        <div class="stat-label">이번 주 승인</div>
+                        <div class="stat-value" id="approvedThisWeek">-</div>
+                        <div class="stat-change" id="approvedChange">-</div>
+                    </div>
                     <div class="stat-icon">
                         <i class="fas fa-check-circle"></i>
-                    </div>
-                    <div class="stat-content">
-                        <div class="stat-value" id="approvedThisWeek">-</div>
-                        <div class="stat-label">이번 주 승인</div>
-                        <div class="stat-change" id="approvedChange">-</div>
                     </div>
                 </div>
 
                 <!-- 반려 -->
                 <div class="dashboard-stat-card stat-rejected">
+                    <div class="stat-content">
+                        <div class="stat-label">반려</div>
+                        <div class="stat-value" id="rejected">-</div>
+                        <div class="stat-change" id="rejectedChange">-</div>
+                    </div>
                     <div class="stat-icon">
                         <i class="fas fa-times-circle"></i>
-                    </div>
-                    <div class="stat-content">
-                        <div class="stat-value" id="rejected">-</div>
-                        <div class="stat-label">반려</div>
-                        <div class="stat-change" id="rejectedChange">-</div>
                     </div>
                 </div>
             </div>
