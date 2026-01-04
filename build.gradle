@@ -77,6 +77,9 @@ dependencies {
     // 4. 문서 파싱 (PDF)
     implementation 'dev.langchain4j:langchain4j-document-parser-apache-pdfbox'
 
+
+    implementation 'com.openhtmltopdf:openhtmltopdf-pdfbox:1.0.10'
+    implementation 'com.openhtmltopdf:openhtmltopdf-slf4j:1.0.10'
 }
 
 tasks.named('test') {

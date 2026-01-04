@@ -4,11 +4,10 @@ import com.finalproj.orbitflow.chatbot.manual.entity.ManualMetadata;
 import com.finalproj.orbitflow.chatbot.manual.repository.ManualRepository;
 import com.finalproj.orbitflow.chatbot.manualCategory.entity.ManualCategory;
 import com.finalproj.orbitflow.chatbot.manualCategory.repository.ManualCategoryRepository;
-
-import com.finalproj.orbitflow.global.file.entity.File;
-import com.finalproj.orbitflow.global.file.repository.FileRepository;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
+import com.finalproj.orbitflow.global.file.entity.File;
+import com.finalproj.orbitflow.global.file.repository.FileRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import dev.langchain4j.data.document.Document;
@@ -21,6 +20,7 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,6 +35,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Profile("chatbot")
 public class ManualUploadService {
 
     private final ManualRepository manualMetadataRepository;

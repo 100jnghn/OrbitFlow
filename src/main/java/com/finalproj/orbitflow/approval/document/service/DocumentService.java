@@ -3,10 +3,12 @@ package com.finalproj.orbitflow.approval.document.service;
 import com.finalproj.orbitflow.approval.approvalLine.dto.ApprovalLineViewResDto;
 import com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus;
 import com.finalproj.orbitflow.approval.approvalLine.repository.ApprovalLineRepository;
+import com.finalproj.orbitflow.approval.document.documentContentRender.PdfContentSchema;
 import com.finalproj.orbitflow.approval.document.dto.*;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
 import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
+import com.finalproj.orbitflow.approval.document.schema.PdfContentSchemaAssembler;
 import com.finalproj.orbitflow.approval.documentContent.entity.DocumentContent;
 import com.finalproj.orbitflow.approval.documentContent.repository.DocumentContentRepository;
 import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
@@ -21,6 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 /**
@@ -40,6 +44,8 @@ public class DocumentService {
     private final ObjectMapper objectMapper;
     private final DocumentContentRepository documentContentRepository;
     private final ApprovalLineRepository approvalLineRepository;
+    private final PdfContentSchemaAssembler  pdfContentSchemaAssembler;
+    private final DocumentContentRenderService documentContentRenderService;
 
 
     @Transactional(readOnly = true)
@@ -226,4 +232,65 @@ public class DocumentService {
                                 .build()
                 );
     }
+
+    public DocumentPdfViewDto getPdfViewData(Long documentId) {
+
+        // 1️⃣ 문서 조회
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new NotFoundException("문서를 찾을 수 없습니다."));
+
+        if (document.getStatus() != DocumentStatus.APPROVED) {
+            throw new IllegalStateException("승인 완료된 문서만 PDF로 생성할 수 있습니다.");
+        }
+
+        // 2️⃣ 문서 본문(JSON) 조회
+        DocumentContent content = documentContentRepository
+                .findByDocument_Id(documentId)
+                .orElseThrow(() -> new NotFoundException(
+                        "DocumentContent not found. documentId=" + documentId
+                ));
+
+        // 3️⃣ JSON → FormTemplateSchema
+        FormTemplateSchema schema = parseSchema(content.getContentJson());
+        if (schema.getFields() == null || schema.getFields().isEmpty()) {
+            throw new IllegalStateException("양식에 필드가 없습니다.");
+        }
+
+        // 4️⃣ FormTemplateSchema → PdfContentSchema
+        PdfContentSchema pdfSchema =
+                pdfContentSchemaAssembler.from(schema);
+
+        // 🔥 5️⃣ PdfContentSchema → HTML (이미 만들어둔 렌더러 사용)
+        String documentContentHtml =
+                documentContentRenderService.render(documentId ,pdfSchema);
+
+        // 6️⃣ PDF View DTO 생성
+        return DocumentPdfViewDto.builder()
+                .documentId(document.getId())
+                .title(document.getTitle())
+                .status(document.getStatus())
+
+                .submittedAt(
+                        document.getSubmittedAt() == null ? null :
+                                LocalDateTime.ofInstant(
+                                        document.getSubmittedAt(),
+                                        ZoneId.systemDefault()
+                                )
+                )
+                .submittedBy(document.getWriter().getName())
+
+                .approvedAt(
+                        document.getUpdatedAt() == null ? null :
+                                LocalDateTime.ofInstant(
+                                        document.getUpdatedAt(),
+                                        ZoneId.systemDefault()
+                                )
+                )
+
+                // 🔥 서버에서 완성한 PDF 본문 HTML
+                .documentContentHtml(documentContentHtml)
+                .build();
+    }
+
+
 }

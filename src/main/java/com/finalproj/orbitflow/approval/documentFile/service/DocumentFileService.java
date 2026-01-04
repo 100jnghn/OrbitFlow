@@ -19,6 +19,7 @@ import com.finalproj.orbitflow.global.file.enums.FileDomain;
 import com.finalproj.orbitflow.global.file.service.FileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,7 +61,6 @@ public class DocumentFileService {
 
         File file = fileService.upload(
                 companyId,
-                uploaderId,
                 FileDomain.DOCUMENT,
                 multipartFile
         );
@@ -104,7 +104,6 @@ public class DocumentFileService {
 
         File file = fileService.upload(
                 companyId,
-                uploaderId,
                 FileDomain.DOCUMENT,
                 multipartFile
         );
@@ -203,4 +202,18 @@ public class DocumentFileService {
         // 이미지 스트리밍 반환
         return fileService.streamImage(documentFile.getFile());
     }
+
+    public Resource loadImage(Long documentFileId) {
+
+        DocumentFile documentFile = documentFileRepository
+                .findById(documentFileId)
+                .orElseThrow(() -> new NotFoundException("문서 파일 없음"));
+
+        if (!documentFile.isImage()) {
+            throw new IllegalStateException("이미지가 아님");
+        }
+
+        return fileService.loadAsResource(documentFile.getFile());
+    }
+
 }

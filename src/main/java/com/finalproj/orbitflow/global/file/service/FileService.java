@@ -5,10 +5,9 @@ import com.finalproj.orbitflow.global.file.dto.PresignedUrlResDto;
 import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.global.file.enums.FileDomain;
 import com.finalproj.orbitflow.global.file.repository.FileRepository;
+import com.finalproj.orbitflow.global.file.storage.FileStorage;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
-import com.finalproj.orbitflow.hr.employee.entity.Employee;
-import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,12 +33,15 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -60,27 +62,73 @@ public class FileService {
     private final S3Presigner s3Presigner;
     private final FileRepository fileRepository;
     private final CompanyRepository companyRepository;
-    private final EmployeeRepository employeeRepository;
+    private final FileStorage fileStorage;
 
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
     @Transactional
-    public File upload(Long companyId, Long uploaderId, FileDomain domain, MultipartFile multipartFile) {
-
+    public File upload(
+            Long companyId,
+            FileDomain domain,
+            MultipartFile multipartFile
+    ) {
         Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new NotFoundException("Company Not Found"));
+                .orElseThrow();
 
-        Employee uploader = employeeRepository.findById(uploaderId)
-                .orElseThrow(() -> new NotFoundException("Employee Not Found"));
 
-        String origin = multipartFile.getOriginalFilename();
-        if (origin == null || origin.isBlank()) {
-            origin = "unknown";
+        String origin = Optional.ofNullable(multipartFile.getOriginalFilename())
+                .filter(s -> !s.isBlank())
+                .orElse("unknown");
+
+        try {
+            return saveFileInternal(
+                    company,
+                    domain,
+                    origin,
+                    multipartFile.getContentType(),
+                    multipartFile.getSize(),
+                    multipartFile.getInputStream()
+            );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+    }
 
-        String objectKey = createObjectKey(company.getId(), domain, origin);
+
+    @Transactional
+    public File saveGeneratedPdf(
+            Long companyId,
+            Long documentId,
+            byte[] pdfBytes
+    ) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow();
+
+
+        String fileName = "document-" + documentId + ".pdf";
+
+        return saveFileInternal(
+                company,
+                FileDomain.DOCUMENT_PDF,
+                fileName,
+                "application/pdf",
+                pdfBytes.length,
+                new ByteArrayInputStream(pdfBytes)
+        );
+    }
+
+
+    private File saveFileInternal(
+            Company company,
+            FileDomain domain,
+            String originFileName,
+            String contentType,
+            long size,
+            InputStream inputStream
+    ) {
+        String objectKey = createObjectKey(company.getId(), domain, originFileName);
 
         try {
             // 1️⃣ S3 업로드
@@ -88,12 +136,9 @@ public class FileService {
                     PutObjectRequest.builder()
                             .bucket(bucket)
                             .key(objectKey)
-                            .contentType(multipartFile.getContentType())
+                            .contentType(contentType)
                             .build(),
-                    RequestBody.fromInputStream(
-                            multipartFile.getInputStream(),
-                            multipartFile.getSize()
-                    )
+                    RequestBody.fromInputStream(inputStream, size)
             );
 
             // 2️⃣ DB 저장
@@ -101,15 +146,15 @@ public class FileService {
                     .company(company)
                     .domain(domain)
                     .objectKey(objectKey)
-                    .originFile(origin)
+                    .originFile(originFileName)
                     .sysFile(extractSysFile(objectKey))
-                    .contentType(multipartFile.getContentType())
-                    .fileSize(multipartFile.getSize())
+                    .contentType(contentType)
+                    .fileSize(size)
                     .build();
 
             File savedFile = fileRepository.save(file);
 
-            // 3️⃣ 트랜잭션 롤백 시 S3 보상 삭제
+            // 3️⃣ 트랜잭션 보상
             if (TransactionSynchronizationManager.isActualTransactionActive()) {
                 TransactionSynchronizationManager.registerSynchronization(
                         new TransactionSynchronization() {
@@ -122,13 +167,10 @@ public class FileService {
                         }
                 );
             }
-
             return savedFile;
-
         } catch (Exception e) {
-            // S3 업로드 자체 실패
             deleteObject(objectKey);
-            throw new RuntimeException("파일 업로드 처리 중 오류 발생", e);
+            throw new RuntimeException("파일 저장 중 오류 발생", e);
         }
     }
 
@@ -239,5 +281,9 @@ public class FileService {
         } catch (IOException e) {
             throw new RuntimeException("이미지 다운로드 실패", e);
         }
+    }
+
+    public Resource loadAsResource(File file) {
+        return fileStorage.loadAsResource(file.getObjectKey());
     }
 }

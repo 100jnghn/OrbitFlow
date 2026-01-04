@@ -36,7 +36,6 @@ public class FileController {
     ) {
         File saved = fileService.upload(
                 SecurityUtils.getCompanyId(),
-                SecurityUtils.getEmployeeId(),
                 domain,
                 file
         );

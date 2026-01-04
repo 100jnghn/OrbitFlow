@@ -18,6 +18,8 @@ const fieldRenderers = {
 
     address: renderAddress,
 
+    image: renderImage,
+
     "event-date-range": renderEventDateRange,
     notice: renderNotice,
     default: renderDefaultField
@@ -269,6 +271,7 @@ function initDocumentDetailPage(data) {
     controlActionButtons(data);
     setupRevisionButtons(data);
     bindBackButton();
+    addPdfPreviewButton(data.documentId);
 }
 
 
@@ -334,6 +337,7 @@ function renderDocumentContent(schema) {
 }
 
 
+// ✅ 그대로 둔다 (수정 X)
 function createFieldWrapper(field, valueEl) {
     const row = document.createElement("div");
     row.className = `doc-field field-${field.fieldType}`;
@@ -355,6 +359,7 @@ function createFieldWrapper(field, valueEl) {
     row.append(label, value);
     return row;
 }
+
 
 function renderSimpleRange(field) {
     const v = field.value ?? {};
@@ -413,8 +418,9 @@ function renderDepartment(field) {
         span.textContent = "-";
     } else {
         span.textContent =
-            v.displayText ||
-            v.departmentName ||
+            v.displayText ||      // 다른 타입 대비
+            v.departmentName ||   // 혹시 있을 경우
+            v.name ||
             "-";
     }
 
@@ -571,6 +577,75 @@ function renderTable(field) {
     table.appendChild(tbody);
 
     return createFieldWrapper(field, table);
+}
+
+
+function renderImage(field) {
+    const images = Array.isArray(field.value) ? field.value : [];
+
+    if (!images.length) {
+        const span = document.createElement("span");
+        span.textContent = "-";
+        span.classList.add("empty");
+        return createFieldWrapper(field, span);
+    }
+
+    const container = document.createElement("div");
+    container.className = "image-field readonly";
+
+    images.forEach(img => {
+        const row = document.createElement("div");
+        row.className = "image-row readonly";
+
+        // ✅ 스피너
+        const spinner = document.createElement("div");
+        spinner.className = "image-spinner";
+        row.appendChild(spinner);
+
+        const imageEl = document.createElement("img");
+        imageEl.alt = "첨부 이미지";
+        imageEl.style.display = "none"; // ⭐ 처음엔 숨김
+
+        loadProtectedImageForDetail(img.fileId)
+            .then(url => {
+                imageEl.src = url;
+
+                imageEl.onload = () => {
+                    spinner.remove();              // ⭐ 스피너 제거
+                    imageEl.style.display = "block";
+                    URL.revokeObjectURL(url);
+                };
+            })
+            .catch(() => {
+                spinner.textContent = "이미지 로드 실패";
+            });
+
+        // 클릭 시 원본
+        imageEl.addEventListener("click", async () => {
+            const url = await loadProtectedImageForDetail(img.fileId);
+            window.open(url, "_blank");
+        });
+
+        row.appendChild(imageEl);
+        container.appendChild(row);
+    });
+
+    return createFieldWrapper(field, container);
+}
+
+
+async function loadProtectedImageForDetail(fileId) {
+    const res = await apiFetch(
+        `/api/document-file/${currentDocumentId}/images/${fileId}`,
+        {method: "GET"}
+    );
+
+    if (!res.ok) {
+        throw new Error("IMAGE_LOAD_FAILED");
+    }
+
+    const blob = await res.blob();
+    return URL.createObjectURL(blob);
 }
 
 
@@ -798,12 +873,9 @@ function renderApprovalLines(lines) {
 =============================== */
 async function loadAndRenderAttachments(documentId) {
     try {
-        console.log("[ATTACHMENT] load start, documentId:", documentId);
-
         const files = await fetchDocumentFiles(documentId);
 
-        console.log("[ATTACHMENT] files:", files);
-
+        // ✅ 첨부파일 패널만 렌더
         renderAttachments(files);
 
     } catch (e) {
@@ -818,7 +890,10 @@ function renderAttachments(files = []) {
 
     listEl.innerHTML = "";
 
-    if (!files.length) {
+    // ⭐ 핵심: fieldId가 null인 파일만
+    const attachments = files.filter(f => f.fieldId == null);
+
+    if (!attachments.length) {
         const li = document.createElement("li");
         li.className = "attachment-empty";
         li.textContent = "첨부된 파일이 없습니다.";
@@ -826,7 +901,7 @@ function renderAttachments(files = []) {
         return;
     }
 
-    files.forEach(file => {
+    attachments.forEach(file => {
         const li = document.createElement("li");
         li.className = "attachment-item";
 
@@ -890,6 +965,21 @@ function controlActionButtons(data) {
         rejectBtn.style.display = canApproveOrReject ? "inline-block" : "none";
         rejectBtn.onclick = () => openApprovalModal("reject");
     }
+}
+
+
+function addPdfPreviewButton(documentId) {
+    const actionLeft = document.querySelector(".action-left");
+    if (!actionLeft) return;
+
+    const pdfBtn = document.createElement("button");
+    pdfBtn.className = "action-btn secondary";
+    pdfBtn.textContent = "PDF 미리보기 (임시)";
+    pdfBtn.onclick = () => {
+        window.open(`/internal/documents/${documentId}/pdf`, "_blank");
+    };
+
+    actionLeft.appendChild(pdfBtn);
 }
 
 

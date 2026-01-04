@@ -4,10 +4,14 @@ import com.finalproj.orbitflow.approval.approvalLine.entity.ApprovalLine;
 import com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus;
 import com.finalproj.orbitflow.approval.approvalLine.repository.ApprovalLineRepository;
 import com.finalproj.orbitflow.approval.approvalLine.service.ApprovalLineDomainService;
+import com.finalproj.orbitflow.approval.document.documentContentRender.PdfContentSchema;
 import com.finalproj.orbitflow.approval.document.dto.DocumentCreateResDto;
+import com.finalproj.orbitflow.approval.document.dto.PdfApprovalLineDto;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
 import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
+import com.finalproj.orbitflow.approval.document.schema.PdfApprovalLineAssembler;
+import com.finalproj.orbitflow.approval.document.schema.PdfContentSchemaAssembler;
 import com.finalproj.orbitflow.approval.documentContent.entity.DocumentContent;
 import com.finalproj.orbitflow.approval.documentContent.repository.DocumentContentRepository;
 import com.finalproj.orbitflow.approval.documentFile.entity.DocumentFile;
@@ -25,19 +29,27 @@ import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
+import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import tools.jackson.databind.ObjectMapper;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+
+import static com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder.FontStyle;
+
 
 /**
  * Please explain the class!!!
@@ -65,6 +77,9 @@ public class DocumentApplicationService {
     private final DocumentFileRepository documentFileRepository;
     private final FileRepository fileRepository;
     private final FileService fileService;
+    private final PdfHtmlBuilder pdfHtmlBuilder;
+    private final PdfContentSchemaAssembler pdfContentSchemaAssembler;
+    private final PdfApprovalLineAssembler pdfApprovalLineAssembler;
 
 
     @PersistenceContext
@@ -193,8 +208,100 @@ public class DocumentApplicationService {
         } else {
             // 6-2. 다음 결재자가 없다 → 최종 승인
             document.approve();
-
             applicationEventPublisher.publishEvent(document.getId());
+        }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void generateAndStorePdf(Long documentId) {
+
+        // 1️⃣ 문서 조회
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new NotFoundException("문서를 찾을 수 없습니다."));
+
+        if (document.getStatus() != DocumentStatus.APPROVED) {
+            throw new IllegalStateException("승인 완료된 문서만 PDF로 생성할 수 있습니다.");
+        }
+
+        // 2️⃣ 문서 본문(JSON)
+        DocumentContent content = documentContentRepository
+                .findByDocument_Id(documentId)
+                .orElseThrow(() -> new NotFoundException(
+                        "DocumentContent not found. documentId=" + documentId
+                ));
+
+        // 3️⃣ JSON → FormTemplateSchema
+        FormTemplateSchema schema = parseSchema(content.getContentJson());
+        if (schema.getFields() == null || schema.getFields().isEmpty()) {
+            throw new IllegalStateException("양식에 필드가 없습니다.");
+        }
+
+
+        PdfApprovalLineDto approvalLine =
+                pdfApprovalLineAssembler.from(documentId);
+
+
+        // 4️⃣ FormTemplateSchema → PdfContentSchema
+        PdfContentSchema pdfSchema =
+                pdfContentSchemaAssembler.from(schema);
+
+        // 5️⃣ HTML 생성
+        String html = pdfHtmlBuilder.build(documentId, approvalLine, pdfSchema, document.getWriter().getName(), document.getSubmittedAt());
+
+
+        log.info("===== PDF HTML START =====");
+        log.info(html);
+        log.info("===== PDF HTML END =====");
+        // 6️⃣ HTML → PDF
+        try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+
+            PdfRendererBuilder builder = new PdfRendererBuilder();
+            builder.useFastMode();
+
+            // baseUri (CSS / 이미지 로딩 필수)
+            builder.withHtmlContent(html, "http://localhost:8090");
+            builder.toStream(os);
+
+            // ✅ Regular
+            builder.useFont(
+                    () -> {
+                        try {
+                            return new ClassPathResource("fonts/NanumGothic-Regular.ttf").getInputStream();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    },
+                    "Nanum Gothic",
+                    400,
+                    FontStyle.NORMAL,
+                    true
+            );
+
+            builder.useFont(
+                    () -> {
+                        try {
+                            return new ClassPathResource("fonts/NanumGothic-Bold.ttf").getInputStream();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    },
+                    "Nanum Gothic",
+                    700,
+                    FontStyle.NORMAL,
+                    true
+            );
+
+            builder.run();
+
+            byte[] pdfBytes = os.toByteArray();
+
+            fileService.saveGeneratedPdf(
+                    document.getCompany().getId(),
+                    documentId,
+                    pdfBytes
+            );
+        } catch (IOException e) {
+            throw new RuntimeException("PDF 생성 실패", e);
         }
     }
 

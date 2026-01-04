@@ -81,9 +81,6 @@ public class DocumentFile extends BaseEntity {
         this.status = status;
     }
 
-    public void bindToField(String fieldId) {
-        this.fieldId = fieldId;
-    }
 
     public boolean isImage() {
         return this.referenceType == ReferenceType.IMAGE;

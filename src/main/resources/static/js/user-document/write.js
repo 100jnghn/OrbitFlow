@@ -2534,6 +2534,18 @@ function validateFieldsByTypeWithSchema(fieldDefs, valuesById) {
     for (const field of fieldDefs) {
         const value = valuesById.get(field.fieldId);
 
+        if (field.fieldType === 'event-date-range') {
+            if (!validateEventDateRange(field, value)) {
+                return false;
+            }
+            continue;
+        }
+
+        // required=false → 타입 검증 스킵
+        if (!field.required) {
+            continue;
+        }
+
         switch (field.fieldType) {
 
             case 'date-range':
@@ -3427,8 +3439,8 @@ function collectDocumentValues() {
     });
 
     /* =====================================================
-   IMAGE FIELDS
-===================================================== */
+       IMAGE FIELDS
+    ===================================================== */
     documentFieldDefinitions
         .filter(f => f.fieldType === 'image')
         .forEach(field => {

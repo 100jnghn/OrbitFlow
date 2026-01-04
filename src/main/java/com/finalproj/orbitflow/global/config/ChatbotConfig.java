@@ -10,6 +10,7 @@ import dev.langchain4j.store.embedding.chroma.ChromaEmbeddingStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import java.time.Duration;
 
@@ -19,6 +20,7 @@ import java.time.Duration;
  * @since : 2025. 12. 30. 화요일
  */
 @Configuration
+@Profile("chatbot")
 public class ChatbotConfig {
 
     @Value("${OPENAI_API_KEY}")
