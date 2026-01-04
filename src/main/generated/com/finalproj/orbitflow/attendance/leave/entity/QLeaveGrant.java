@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.leave.leaveGrant.entity;
+package com.finalproj.orbitflow.attendance.leave.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -15,7 +15,7 @@ import com.querydsl.core.types.Path;
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
 public class QLeaveGrant extends EntityPathBase<LeaveGrant> {
 
-    private static final long serialVersionUID = 364577532L;
+    private static final long serialVersionUID = 562497714L;
 
     public static final QLeaveGrant leaveGrant = new QLeaveGrant("leaveGrant");
 
