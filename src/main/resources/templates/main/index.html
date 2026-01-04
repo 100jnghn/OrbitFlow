@@ -106,17 +106,50 @@
                 <a href="/view/attendance/monthly" class="widget-more">더보기 <i class="fas fa-chevron-right"></i></a>
             </div>
             <div class="widget-content">
-                <div class="attendance-time" id="attendanceTime">-</div>
                 <div class="attendance-date" id="attendanceDate">-</div>
                 <div class="attendance-status" id="attendanceStatus">-</div>
-                <div class="attendance-progress">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill"></div>
+                
+                <!-- 총 근무시간 및 연차 현황 -->
+                <div class="attendance-summary">
+                    <div class="summary-item">
+                        <div class="summary-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="summary-content">
+                            <div class="summary-label">이번 달 총 근무시간</div>
+                            <div class="summary-value" id="totalWorkHours">-</div>
+                        </div>
                     </div>
-                    <div class="progress-labels">
-                        <span>최소 40h</span>
-                        <span id="workTimeText">0h</span>
-                        <span>최대 52h</span>
+                    <div class="summary-item">
+                        <div class="summary-icon leave-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="summary-content">
+                            <div class="summary-label">남은 연차</div>
+                            <div class="summary-value" id="remainingLeave">-</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 휴가 관련 정보 -->
+                <div class="leave-info-section">
+                    <div class="leave-info-header">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>휴가 현황</span>
+                    </div>
+                    <div class="leave-info-grid">
+                        <div class="leave-info-item">
+                            <div class="leave-info-label">사용 / 부여</div>
+                            <div class="leave-info-value" id="leaveUsage">-</div>
+                        </div>
+                        <div class="leave-info-item">
+                            <div class="leave-info-label">대기 중인 신청</div>
+                            <div class="leave-info-value" id="pendingLeaveCount">-</div>
+                        </div>
+                        <div class="leave-info-item">
+                            <div class="leave-info-label">다음 휴가 예정일</div>
+                            <div class="leave-info-value" id="nextLeaveDate">-</div>
+                        </div>
                     </div>
                 </div>
             </div>

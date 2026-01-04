@@ -76,61 +76,76 @@
 }
 
 .btn-add-category {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
-    background: var(--primary-color);
+    justify-content: center;
+    gap: 8px;
+    background: #2563eb;
     color: #fff;
     border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
+    padding: 10px 20px;
+    border-radius: 8px;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
 }
 
 .btn-add-category:hover {
-    background: var(--primary-hover);
+    background: #1d4ed8;
+    box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+    transform: translateY(-1px);
 }
 
-.category-btn-wrapper {
+.btn-add-category:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+}
+
+.btn-add-category i {
+    font-size: 13px;
+}
+
+/* 카테고리 카드 */
+.category-card {
+    position: relative;
+    display: inline-block;
+}
+
+.category-delete-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
-    gap: 8px;
-}
-
-.category-btn-actions {
-    display: flex;
-    gap: 4px;
-}
-
-.btn-edit-category,
-.btn-delete-category {
-    padding: 4px 8px;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
     border: none;
-    border-radius: 4px;
+    border-radius: 50%;
     font-size: 12px;
     cursor: pointer;
-    transition: all 0.2s;
+    opacity: 0;
+    transition: all 0.2s ease;
+    z-index: 10;
+    pointer-events: none;
 }
 
-.btn-edit-category {
-    background: var(--neutral-200);
-    color: var(--neutral-700);
+.category-card:hover .category-delete-btn {
+    opacity: 1;
+    pointer-events: auto;
 }
 
-.btn-edit-category:hover {
-    background: var(--neutral-300);
+.category-delete-btn:hover {
+    background: rgba(220, 38, 38, 0.8);
+    transform: scale(1.1);
 }
 
-.btn-delete-category {
-    background: #fee2e2;
-    color: #dc2626;
-}
-
-.btn-delete-category:hover {
-    background: #fecaca;
+.category-delete-btn:active {
+    transform: scale(0.95);
 }
 
 /* 카테고리 버튼 */
@@ -149,28 +164,37 @@
 
 .category-btn {
     padding: 12px 24px;
-    border: 1px solid var(--neutral-300);
-    border-radius: 8px;
+    min-width: 140px;
+    min-height: 48px;
+    border: 1.5px solid var(--neutral-300);
+    border-radius: 12px;
     background: #fff;
     color: var(--neutral-700);
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
-    display: inline-block;
-    visibility: visible;
-    opacity: 1;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    position: relative;
 }
 
 .category-btn:hover {
-    background: #f5f5f5;
-    border-color: #5687ef;
+    background: #f8f9fa;
+    border-color: #3b82f6;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
 }
 
 .category-btn.active {
-    background: #5687ef;
+    background: #3b82f6;
     color: #fff;
-    border-color: #5687ef;
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    font-weight: 600;
 }
 
 /* 파일 업로드 영역 */
@@ -222,25 +246,40 @@
 }
 
 .btn-primary {
-    background: #5687ef;
+    background: #4a69bd;
     color: #fff;
     border: none;
-    padding: 10px 24px;
-    border-radius: 4px;
+    padding: 10px 22px;
+    border-radius: 8px;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(74, 105, 189, 0.2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
 }
 
 .btn-primary:hover:not(:disabled) {
-    background: #386adc;
+    background: #3a5aa0;
+    box-shadow: 0 4px 8px rgba(74, 105, 189, 0.3);
+    transform: translateY(-1px);
+}
+
+.btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(74, 105, 189, 0.2);
 }
 
 .btn-primary:disabled {
-    background: #ccc;
+    background: #d1d5db;
+    color: #9ca3af;
     cursor: not-allowed;
     opacity: 0.6;
+    box-shadow: none;
+    transform: none;
 }
 
 /* 테이블 스타일 */
@@ -366,19 +405,28 @@
 }
 
 .btn-secondary {
-    background: var(--neutral-200);
+    background: #fff;
     color: var(--neutral-700);
-    border: none;
+    border: 1.5px solid var(--neutral-300);
     padding: 10px 20px;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-secondary:hover {
-    background: var(--neutral-300);
+    background: var(--neutral-50);
+    border-color: var(--neutral-400);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .form-group {

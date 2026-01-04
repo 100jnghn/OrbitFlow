@@ -72,48 +72,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         categoryList.forEach(category => {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'category-btn-wrapper';
+            const card = document.createElement('div');
+            card.className = 'category-card';
+            card.dataset.categoryId = category.id;
             
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'category-btn';
-            button.dataset.categoryId = category.id;
             button.textContent = category.categoryName || '이름 없음';
             
             button.addEventListener('click', () => {
                 selectCategory(category.id, category.categoryName);
             });
-
-            const actions = document.createElement('div');
-            actions.className = 'category-btn-actions';
-            
-            const editBtn = document.createElement('button');
-            editBtn.type = 'button';
-            editBtn.className = 'btn-edit-category';
-            editBtn.innerHTML = '<i class="fas fa-edit"></i>';
-            editBtn.title = '수정';
-            editBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                openCategoryModal(category);
-            });
             
             const deleteBtn = document.createElement('button');
             deleteBtn.type = 'button';
-            deleteBtn.className = 'btn-delete-category';
-            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteBtn.className = 'category-delete-btn';
+            deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
             deleteBtn.title = '삭제';
             deleteBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 deleteCategory(category.id);
             });
             
-            actions.appendChild(editBtn);
-            actions.appendChild(deleteBtn);
-            
-            wrapper.appendChild(button);
-            wrapper.appendChild(actions);
-            categoryButtonsContainer.appendChild(wrapper);
+            card.appendChild(button);
+            card.appendChild(deleteBtn);
+            categoryButtonsContainer.appendChild(card);
         });
     }
 
@@ -121,19 +105,22 @@ document.addEventListener('DOMContentLoaded', () => {
     function selectCategory(categoryId, categoryName) {
         selectedCategoryId = categoryId;
         
-            // 모든 버튼에서 active 클래스 제거
+        // 모든 버튼에서 active 클래스 제거
         document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
         
-        // 선택한 버튼에 active 클래스 추가
-        const selectedBtn = document.querySelector(`.category-btn[data-category-id="${categoryId}"]`);
-        if (selectedBtn) {
-            selectedBtn.classList.add('active');
+        // 선택한 카드의 버튼에 active 클래스 추가
+        const selectedCard = document.querySelector(`.category-card[data-category-id="${categoryId}"]`);
+        if (selectedCard) {
+            const selectedBtn = selectedCard.querySelector('.category-btn');
+            if (selectedBtn) {
+                selectedBtn.classList.add('active');
+            }
         }
         
         // 카테고리 이름 업데이트
         document.getElementById('selectedCategoryName').textContent = categoryName || '선택 중...';
             
-            // 해당 카테고리의 매뉴얼 목록 로드
+        // 해당 카테고리의 매뉴얼 목록 로드
         loadManualList(categoryId);
     }
 
@@ -174,12 +161,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 파일 선택 처리
     function handleFileSelect(file) {
-        // 파일 확장자 확인 (백엔드가 PDF를 받지만, 프론트엔드에서 TXT도 허용하도록 함)
-        const validExtensions = ['.txt', '.pdf'];
+        // 파일 확장자 확인
+        const validExtensions = ['.txt', '.pdf', '.doc'];
         const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
         
         if (!validExtensions.includes(fileExtension)) {
-            alert('TXT 또는 PDF 파일만 업로드 가능합니다.');
+            alert('TXT, PDF, DOC 파일만 업로드 가능합니다.');
             return;
         }
 
@@ -235,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 uploadContent.innerHTML = `
                     <i class="fas fa-cloud-upload-alt upload-icon"></i>
                     <p>파일을 드래그하여 여기에 놓거나, 클릭하여 파일을 선택하세요.</p>
-                    <p class="upload-hint">최대 10MB (TXT, PDF)</p>
+                    <p class="upload-hint">최대 10MB (TXT, PDF, DOC)</p>
                 `;
                 loadManualList(selectedCategoryId);
             } else {

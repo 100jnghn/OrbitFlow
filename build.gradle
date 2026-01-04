@@ -22,6 +22,7 @@ configurations {
 
 repositories {
     mavenCentral()
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
@@ -64,7 +65,7 @@ dependencies {
 
 
 
-// 1. LangChain4j BOM (버전 관리 통합)
+    // 1. LangChain4j BOM (버전 관리 통합)
     implementation platform('dev.langchain4j:langchain4j-bom:0.35.0')
 
     // 2. 핵심 라이브러리 및 스프링 부트 통합
@@ -77,6 +78,12 @@ dependencies {
 
     // 4. 문서 파싱 (PDF)
     implementation 'dev.langchain4j:langchain4j-document-parser-apache-pdfbox'
+    
+    // 5. 문서 파싱 (DOC, DOCX) - Apache POI
+    implementation 'org.apache.poi:poi:5.2.5'
+    implementation 'org.apache.poi:poi-ooxml:5.2.5'
+    implementation 'org.apache.poi:poi-scratchpad:5.2.5'
+
 
     // redis 의존성
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
