@@ -15,7 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 /**
@@ -65,10 +67,15 @@ public class NotificationCommandService {
         // 현재 - 30일 전
         LocalDateTime daysAgo = LocalDateTime.now().minusDays(MAX_SELECT_DATE);
 
+        // LocalDateTime -> Instant
+        Instant daysAgoInstant = daysAgo
+                .atZone(ZoneId.systemDefault())
+                .toInstant();
+
         List<Notification> list = notificationRepository.findByCompanyIdAndReceiverIdAndIsReadFalseAndCreatedAtAfterOrderByCreatedAtDesc(
                 companyId,
                 employeeId,
-                daysAgo
+                daysAgoInstant
         );
 
         return list.stream()
