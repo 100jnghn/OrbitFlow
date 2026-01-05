@@ -405,7 +405,12 @@
                     if (approvalResponse.ok) {
                         const approvalResult = await approvalResponse.json();
                         if (approvalResult.data) {
-                            allSchedules.push(...approvalResult.data);
+                            // approval 스케줄에 플래그 추가
+                            const approvalSchedules = approvalResult.data.map(schedule => ({
+                                ...schedule,
+                                isApproval: true
+                            }));
+                            allSchedules.push(...approvalSchedules);
                         }
                     }
                 } catch (error) {
@@ -426,12 +431,16 @@
     function filterAndRenderSchedules() {
         let filtered = [...schedules];
 
-        // 개인/전사 일정 필터 적용
         filtered = filtered.filter(s => {
+            
+            if (s.isApproval) {
+                return showApproval;
+            }
+
+            // 기존 일정 필터
             if (s.company) {
                 return showCompany;
             } else if (s.orgId) {
-                // 조직 일정은 선택된 조직만 표시
                 return selectedOrgIds.includes(String(s.orgId));
             } else {
                 return showPersonal;
@@ -440,14 +449,13 @@
 
         renderCalendar(filtered);
 
-        // 날짜가 선택되지 않은 경우 일정 목록 초기화
         if (!selectedDate) {
             renderScheduleList([]);
         } else {
-            // 날짜가 선택되어 있으면 해당 날짜의 일정 다시 로드
             loadDateSchedules(selectedDate);
         }
     }
+
 
     // 캘린더 렌더링
     function renderCalendar(filteredSchedules = schedules) {
@@ -547,7 +555,9 @@
         item.className = 'schedule-item';
 
         // 일정 유형에 따라 클래스 추가
-        if (schedule.company) {
+        if (schedule.isApproval) {
+            item.classList.add('approval');
+        } else if (schedule.company) {
             item.classList.add('company');
         } else if (schedule.orgId) {
             item.classList.add('organization');
@@ -604,7 +614,9 @@
         item.className = 'schedule-item-list';
 
         // 일정 유형에 따라 클래스 추가
-        if (schedule.company) {
+        if (schedule.isApproval) {
+            item.classList.add('approval');
+        } else if (schedule.company) {
             item.classList.add('company');
         } else if (schedule.orgId) {
             item.classList.add('organization');
@@ -627,7 +639,9 @@
 
         const org = document.createElement('div');
         org.className = 'schedule-item-org';
-        if (schedule.company) {
+        if (schedule.isApproval) {
+            org.textContent = '결재 일정';
+        } else if (schedule.company) {
             org.textContent = '전사 일정';
         } else if (schedule.orgId) {
             const orgData = orgList.find(o => o.id === schedule.orgId);

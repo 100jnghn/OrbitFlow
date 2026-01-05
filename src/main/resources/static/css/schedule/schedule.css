@@ -542,6 +542,11 @@
     color: var(--neutral-800);
 }
 
+.schedule-item.approval {
+    background: #e5c0fc;
+    color: var(--neutral-800);
+}
+
 .schedule-item:hover {
     opacity: 0.9;
     transform: translateX(2px);
@@ -597,6 +602,10 @@
 
 .schedule-item-list.organization {
     border-left-color: var(--schedule-organization);
+}
+
+.schedule-item-list.approval {
+    border-left-color: #e0bcf7;
 }
 
 .schedule-item-list:hover {
