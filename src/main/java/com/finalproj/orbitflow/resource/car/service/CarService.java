@@ -3,6 +3,7 @@ package com.finalproj.orbitflow.resource.car.service;
 import com.finalproj.orbitflow.global.exception.DuplicateCarNumberException;
 import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.global.file.enums.FileDomain;
+import com.finalproj.orbitflow.global.file.repository.FileRepository;
 import com.finalproj.orbitflow.global.file.service.FileService;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
@@ -45,6 +46,7 @@ public class CarService {
     private final EmployeeRepository employeeRepository;
 
     private final FileService fileService;
+    private final FileRepository fileRepository;
 
     @Transactional(readOnly = true)
     public Page<CarResDto> getCars(Long companyId, Pageable pageable) {
@@ -106,25 +108,30 @@ public class CarService {
 
         File imgFile = null;
 
-        // 이미지 변경 있는지 확인
-        // dto에 이미지 파일이 존재한다면
-        if (dto.getImgFile() != null && !dto.getImgFile().isEmpty()) {
+        // 기존 이미지
+        File carImageFile = car.getFile();
 
-            // 1. 기존 img 삭제
-            // 1-1. 기존 파일 존재하는지 확인
-            File carImageFile = car.getFile();
-            if (carImageFile != null) {
-                // TODO - 이미지 삭제
-            }
 
-            // 2. 새 img 등록
+        // ----- 이미지 수정 ----- //
+
+        // 기존 이미지 X
+        // 이미지 추가 O
+        if (carImageFile == null && dto.getImgFile() != null) {
             imgFile = fileService.upload(companyId, FileDomain.RESOURCE, dto.getImgFile());
 
         }
-        // 이미지 변경 없으면
-        else {
-            // 기존 이미지
-            imgFile = car.getFile();
+
+        // 기존 이미지 O
+        // 이미지 변경
+        else if (carImageFile != null && dto.getImgFile() != null) {
+            boolean result = deleteCarFileInternal(car);
+            imgFile = fileService.upload(companyId, FileDomain.RESOURCE, dto.getImgFile());
+        }
+
+        // 기존 이미지 O
+        // 이미지 유지
+        else if (carImageFile != null && dto.getImgFile() == null) {
+            imgFile = carImageFile;
         }
 
 
@@ -141,15 +148,50 @@ public class CarService {
         );
     }
 
+    // 차량 삭제
     @Transactional
     public void deleteCar(Long carId) {
 
         Car car = findCarById(carId);
 
-        // TODO - 이미지 삭제
+        // 이미지 삭제
+        if (car.getFile() != null) {
+
+            boolean result = deleteCarFileInternal(car);
+        }
 
         ResourceStatus deleteStatus = resourceStatusRepository.findByResourceStatusCode(ResourceStatusCode.DELETED);
         car.delete(deleteStatus);
+    }
+
+
+    // 차량 이미지 삭제
+    @Transactional
+    public boolean deleteCarFile(Long carId) {
+
+        Car car = findCarById(carId);
+        boolean result = deleteCarFileInternal(car);
+
+        return result;
+    }
+
+    // 차량 이미지 삭제 함수 호출
+    private boolean deleteCarFileInternal(Car car) {
+
+        if (car.getFile() == null) {
+            return false;
+        }
+
+        File file = car.getFile();
+
+        // db file 삭제, 반영
+        fileRepository.delete(file);
+        fileRepository.flush();
+
+        // s3 file 삭제
+        fileService.deleteObjectAfterCommit(file.getObjectKey());
+
+        return true;
     }
 
 
@@ -163,12 +205,6 @@ public class CarService {
             statusId = car.getResourceStatus().getId();
             code = car.getResourceStatus().getResourceStatusCode().name();
             name = car.getResourceStatus().getResourceStatusCode().getDescription();
-        }
-
-        String objectKey = null;
-
-        if (car.getFile() != null) {
-            objectKey = car.getFile().getObjectKey();
         }
 
         String number = car.getNumber();

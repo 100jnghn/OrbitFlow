@@ -160,6 +160,13 @@ public class ItemService {
 
         Item item = itemRepository.findItemById(itemId);
         ResourceStatus deleteStatus = resourceStatusRepository.findByResourceStatusCode(ResourceStatusCode.DELETED);
+
+        // 이미지 삭제
+        if (item.getFile() != null) {
+            File file = item.getFile();
+            fileService.deleteObject(file.getObjectKey());
+        }
+
         item.delete(deleteStatus);
     }
 

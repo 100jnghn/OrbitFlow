@@ -118,4 +118,18 @@ public class CarController {
                 new ResponseDto(HttpStatus.OK, "차량 삭제 성공", null)
         );
     }
+
+    // 관리자 - 차량 이미지 삭제
+    @GetMapping("/admin/cars/{carId}/file/delete")
+    public ResponseEntity<ResponseDto> deleteCarFile(
+            @PathVariable Long carId
+    ) {
+        boolean result = carService.deleteCarFile(carId);
+
+        String message = result ? "파일을 삭제했습니다" : "파일이 존재하지 않습니다";
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, message, null)
+        );
+    }
 }

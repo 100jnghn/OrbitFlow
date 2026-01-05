@@ -37,7 +37,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class ScheduleSummaryService {
 
-    private static final Duration COOL_TIME = Duration.ofMinutes(60 * 24);    // 60분
+    private static final Duration COOL_TIME = Duration.ofMinutes(60);    // 60분
 
     private final ScheduleSummaryRepository scheduleSummaryRepository;
     private final OpenAiSummaryModelService aiService;
