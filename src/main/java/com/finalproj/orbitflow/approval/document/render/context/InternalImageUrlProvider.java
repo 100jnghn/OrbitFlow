@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.document.documentContentRender;
+package com.finalproj.orbitflow.approval.document.render.context;
 
 import org.springframework.stereotype.Component;
 

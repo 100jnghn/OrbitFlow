@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.document.schema;
+package com.finalproj.orbitflow.approval.document.service;
 
 import com.finalproj.orbitflow.approval.approvalLine.entity.ApprovalLine;
 import com.finalproj.orbitflow.approval.approvalLine.repository.ApprovalLineRepository;

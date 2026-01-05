@@ -4,14 +4,13 @@ import com.finalproj.orbitflow.approval.approvalLine.entity.ApprovalLine;
 import com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus;
 import com.finalproj.orbitflow.approval.approvalLine.repository.ApprovalLineRepository;
 import com.finalproj.orbitflow.approval.approvalLine.service.ApprovalLineDomainService;
-import com.finalproj.orbitflow.approval.document.documentContentRender.PdfContentSchema;
+import com.finalproj.orbitflow.approval.document.schema.PdfContentSchema;
 import com.finalproj.orbitflow.approval.document.dto.DocumentCreateResDto;
 import com.finalproj.orbitflow.approval.document.dto.PdfApprovalLineDto;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
+import com.finalproj.orbitflow.approval.document.render.pdf.PdfHtmlBuilder;
 import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
-import com.finalproj.orbitflow.approval.document.schema.PdfApprovalLineAssembler;
-import com.finalproj.orbitflow.approval.document.schema.PdfContentSchemaAssembler;
 import com.finalproj.orbitflow.approval.documentContent.entity.DocumentContent;
 import com.finalproj.orbitflow.approval.documentContent.repository.DocumentContentRepository;
 import com.finalproj.orbitflow.approval.documentFile.entity.DocumentFile;
@@ -297,9 +296,8 @@ public class DocumentApplicationService {
                     true
             );
 
-            // 🔥 baseUri: classpath 기준 (운영/로컬/Docker 모두 안전)
             String baseUri = requireNonNull(
-                    getClass().getClassLoader().getResource("")
+                    getClass().getClassLoader().getResource("static/")
             ).toExternalForm();
 
             builder.withHtmlContent(html, baseUri);
