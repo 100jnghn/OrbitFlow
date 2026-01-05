@@ -43,7 +43,7 @@ public class QNotification extends EntityPathBase<Notification> {
 
     public final com.finalproj.orbitflow.hr.employee.entity.QEmployee receiver;
 
-    public final StringPath type = createString("type");
+    public final EnumPath<com.finalproj.orbitflow.notification.enums.NotificationType> type = createEnum("type", com.finalproj.orbitflow.notification.enums.NotificationType.class);
 
     //inherited
     public final DateTimePath<java.time.Instant> updatedAt = _super.updatedAt;

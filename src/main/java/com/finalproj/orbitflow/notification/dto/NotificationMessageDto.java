@@ -37,7 +37,7 @@ public class NotificationMessageDto {
                 .notificationId(notification.getId())
                 .companyId(notification.getCompany().getId())
                 .employeeId(notification.getReceiver().getId())
-                .type(notification.getType())
+                .type(notification.getType().getDescription())
                 .content(notification.getContent())
                 .isRead(notification.getIsRead())
                 .createdAt(notification.getCreatedAt())

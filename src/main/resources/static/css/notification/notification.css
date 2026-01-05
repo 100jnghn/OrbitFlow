@@ -124,6 +124,11 @@
     background: #9ca3af;
 }
 
+.notification-item-content,
+.notification-item-read-content {
+    white-space: pre-line;
+}
+
 .notification-item {
     padding: 16px;
     background-color: #e5f1ff;
@@ -135,6 +140,7 @@
     align-items: flex-start;
     gap: 12px;
     position: relative;
+    min-height: 70px;
 }
 
 .notification-item:last-child {

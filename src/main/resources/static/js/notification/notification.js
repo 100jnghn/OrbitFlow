@@ -92,7 +92,7 @@ async function loadNotifications(showRead = false) {
                 <div class="notification-item-time">${formatTimeAgo(notification.createdAt)}</div>
                 <div class="notification-item-content-wrapper">
                     <div class="notification-item-header">
-                        <div class="notification-item-title">새로운 ${escapeHtml(notification.type)} 알림</div>
+                        <div class="notification-item-title">${escapeHtml(notification.type)} 알림</div>
                     </div>
                     <div class="${notification.isRead ? 'notification-item-read-content' : 'notification-item-content'}">${escapeHtml(notification.content)}</div>
                 </div>

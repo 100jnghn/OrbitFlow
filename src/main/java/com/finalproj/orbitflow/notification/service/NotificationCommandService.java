@@ -7,8 +7,9 @@ import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import com.finalproj.orbitflow.notification.dto.NotificationMessageDto;
 import com.finalproj.orbitflow.notification.dto.NotificationResDto;
 import com.finalproj.orbitflow.notification.entity.Notification;
+import com.finalproj.orbitflow.notification.enums.NotificationType;
 import com.finalproj.orbitflow.notification.repository.NotificationRepository;
-import com.finalproj.orbitflow.redis.publisher.NotificationPublisher;
+import com.finalproj.orbitflow.redis.publisher.RedisPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,7 @@ import java.util.List;
 public class NotificationCommandService {
 
     private final NotificationRepository notificationRepository;
-    private final NotificationPublisher notificationPublisher;
+    private final RedisPublisher notificationPublisher;
     private final CompanyRepository companyRepository;
     private final EmployeeRepository employeeRepository;
 
@@ -100,7 +101,7 @@ public class NotificationCommandService {
     public void createNotification(
             Long companyId,
             Long employeeId,
-            String type,
+            NotificationType type,
             String content
     ) {
         Company company = companyRepository.getReferenceById(companyId);

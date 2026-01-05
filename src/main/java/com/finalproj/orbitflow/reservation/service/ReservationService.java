@@ -4,6 +4,7 @@ import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
+import com.finalproj.orbitflow.notification.enums.NotificationType;
 import com.finalproj.orbitflow.notification.service.NotificationCommandService;
 import com.finalproj.orbitflow.reservation.dto.ReservationReqDto;
 import com.finalproj.orbitflow.reservation.dto.ReservationResDto;
@@ -14,10 +15,13 @@ import com.finalproj.orbitflow.reservation.enums.ReservationStatusCode;
 import com.finalproj.orbitflow.reservation.enums.ReservationTypeCode;
 import com.finalproj.orbitflow.reservation.repository.ReservationRepository;
 import com.finalproj.orbitflow.reservation.repository.ReservationStatusRepository;
+import com.finalproj.orbitflow.resource.car.entity.Car;
 import com.finalproj.orbitflow.resource.car.repository.CarRepository;
+import com.finalproj.orbitflow.resource.item.entity.Item;
 import com.finalproj.orbitflow.resource.item.repository.ItemRepository;
 import com.finalproj.orbitflow.resource.itemcategory.entity.ItemCategory;
 import com.finalproj.orbitflow.resource.itemcategory.repository.ItemCategoryRepository;
+import com.finalproj.orbitflow.resource.meetingroom.entity.Meetingroom;
 import com.finalproj.orbitflow.resource.meetingroom.repository.MeetingroomRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -228,13 +232,43 @@ public class ReservationService {
         Reservation reservation = reservationRepository.getReferenceById(reservationId);
         Employee employee = reservation.getEmployee();
 
+        String notificationMessage = createNotificationMessage(reservation);
+
         notificationCommandService.createNotification(
                 employee.getCompany().getId(),
                 employee.getId(),
-                "RESERVATION",
-                "예약이 승인되었습니다"
+                NotificationType.RESERVATION,
+                notificationMessage
         );
-        log.info(reservation.getId() + "번 예약 " + reservation.getReservationReason() + " 승인됨.");
+    }
+
+    // 알림 전송할 메시지 생성
+    private String createNotificationMessage(Reservation reservation) {
+
+        ReservationTypeCode type = reservation.getTypeCode();
+        Long resourceId = reservation.getResourceId();
+        String resourceName = "";
+        String reservationDate = "";
+
+        if (type.equals(ReservationTypeCode.MEETING)) {
+            Meetingroom meetingroom = meetingroomRepository.getReferenceById(resourceId);
+            resourceName = meetingroom.getName();
+            reservationDate = reservation.getReservationDate() + " " + reservation.getStartTime() + " ~ " + reservation.getEndTime();
+
+        } else if (type.equals(ReservationTypeCode.CAR)) {
+            Car car = carRepository.getReferenceById(resourceId);
+            resourceName = car.getName();
+            reservationDate = reservation.getReservationDate() + " ~ " + reservation.getEndDate();
+
+        } else if (type.equals(ReservationTypeCode.ITEM)) {
+            Item item = itemRepository.getReferenceById(resourceId);
+            resourceName = item.getName();
+            reservationDate = reservation.getReservationDate() + " " + reservation.getStartTime() + " ~ " + reservation.getEndTime();
+
+        }
+
+        String msg = reservationDate + "\n" + resourceName + " 예약이 승인되었습니다";
+        return msg;
     }
 
     @Transactional

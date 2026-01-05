@@ -27,7 +27,7 @@ public class NotificationResDto {
     public static NotificationResDto fromEntity(Notification notification) {
         return new NotificationResDto(
                 notification.getId(),
-                notification.getType(),
+                notification.getType().getDescription(),
                 notification.getContent(),
                 notification.getIsRead(),
                 notification.getCreatedAt()

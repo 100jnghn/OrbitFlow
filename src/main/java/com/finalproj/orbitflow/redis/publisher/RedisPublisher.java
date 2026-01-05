@@ -18,7 +18,7 @@ import tools.jackson.databind.ObjectMapper;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class NotificationPublisher {
+public class RedisPublisher {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
