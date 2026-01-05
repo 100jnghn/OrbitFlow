@@ -171,26 +171,62 @@ function updateSidebarSelection(selectedCategoryId) {
     // 선택된 항목 찾아서 표시
     document.querySelectorAll('.board-link').forEach(link => {
         const href = link.getAttribute('href');
-        if (href && href.includes(`categoryId=${selectedCategoryId}`)) {
-            const menuItem = link.closest('.menu-item');
-            const subMenuItem = link.closest('.sub-menu li');
-            
-            if (subMenuItem) {
-                // 부서게시판인 경우
-                subMenuItem.classList.add('selected');
-                const parentMenuItem = subMenuItem.closest('.menu-item');
-                if (parentMenuItem) {
-                    parentMenuItem.classList.add('active'); // 아코디언 열기
-                    const menuTitle = parentMenuItem.querySelector('.menu-title');
-                    if (menuTitle) {
-                        menuTitle.setAttribute('aria-expanded', 'true');
+        if (href) {
+            // URL 파라미터에서 categoryId 정확히 추출
+            try {
+                const url = new URL(href, window.location.origin);
+                const linkCategoryId = url.searchParams.get('categoryId');
+                
+                // 정확한 숫자 비교
+                if (linkCategoryId && parseInt(linkCategoryId) === selectedCategoryId) {
+                    const menuItem = link.closest('.menu-item');
+                    const subMenuItem = link.closest('.sub-menu li');
+                    
+                    if (subMenuItem) {
+                        // 부서게시판인 경우
+                        subMenuItem.classList.add('selected');
+                        const parentMenuItem = subMenuItem.closest('.menu-item');
+                        if (parentMenuItem) {
+                            parentMenuItem.classList.add('active'); // 아코디언 열기
+                            const menuTitle = parentMenuItem.querySelector('.menu-title');
+                            if (menuTitle) {
+                                menuTitle.setAttribute('aria-expanded', 'true');
+                            }
+                        }
+                        console.log('[사이드바 선택 효과] 부서게시판 선택:', selectedCategoryId);
+                    } else if (menuItem) {
+                        // 일반 게시판인 경우
+                        menuItem.classList.add('selected');
+                        console.log('[사이드바 선택 효과] 일반 게시판 선택:', selectedCategoryId);
                     }
                 }
-                console.log('[사이드바 선택 효과] 부서게시판 선택:', selectedCategoryId);
-            } else if (menuItem) {
-                // 일반 게시판인 경우
-                menuItem.classList.add('selected');
-                console.log('[사이드바 선택 효과] 일반 게시판 선택:', selectedCategoryId);
+            } catch (e) {
+                // 상대 경로인 경우 수동 파싱
+                const urlParams = new URLSearchParams(href.split('?')[1] || '');
+                const linkCategoryId = urlParams.get('categoryId');
+                
+                if (linkCategoryId && parseInt(linkCategoryId) === selectedCategoryId) {
+                    const menuItem = link.closest('.menu-item');
+                    const subMenuItem = link.closest('.sub-menu li');
+                    
+                    if (subMenuItem) {
+                        // 부서게시판인 경우
+                        subMenuItem.classList.add('selected');
+                        const parentMenuItem = subMenuItem.closest('.menu-item');
+                        if (parentMenuItem) {
+                            parentMenuItem.classList.add('active'); // 아코디언 열기
+                            const menuTitle = parentMenuItem.querySelector('.menu-title');
+                            if (menuTitle) {
+                                menuTitle.setAttribute('aria-expanded', 'true');
+                            }
+                        }
+                        console.log('[사이드바 선택 효과] 부서게시판 선택:', selectedCategoryId);
+                    } else if (menuItem) {
+                        // 일반 게시판인 경우
+                        menuItem.classList.add('selected');
+                        console.log('[사이드바 선택 효과] 일반 게시판 선택:', selectedCategoryId);
+                    }
+                }
             }
         }
     });

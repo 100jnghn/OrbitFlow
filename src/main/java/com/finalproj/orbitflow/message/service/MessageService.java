@@ -5,14 +5,10 @@ import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.global.file.enums.FileDomain;
-import com.finalproj.orbitflow.global.file.repository.FileRepository;
 import com.finalproj.orbitflow.global.file.service.FileService;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import com.finalproj.orbitflow.message.dto.MessageReqDto;
 import com.finalproj.orbitflow.message.dto.MessageResDto;
 import com.finalproj.orbitflow.message.entity.Message;
@@ -46,11 +42,6 @@ public class MessageService {
     private final MessageRecipientRepository messageRecipientRepository;
     private final EmployeeRepository employeeRepository;
     private final FileService fileService;
-    private final FileRepository fileRepository;
-    private final S3Client s3Client;
-
-    @Value("${cloud.aws.s3.bucket}")
-    private String bucket;
 
     /** 메시지함 목록 */
     public Page<MessageResDto.ListItem> getMessageList(
@@ -62,54 +53,49 @@ public class MessageService {
             LocalDate endDate,
             String searchTypeStr,
             String keyword,
-            Pageable pageable
-    ) {
+            Pageable pageable) {
         // searchType 파싱
         MessageSearchType searchType = MessageSearchType.from(searchTypeStr);
-        
+
         // 기간 조건 변환 (LocalDate -> Instant)
         ZoneId zoneId = ZoneId.systemDefault();
         Instant startInstant = (startDate != null) ? startDate.atStartOfDay(zoneId).toInstant() : null;
         Instant endExclusiveInstant = (endDate != null) ? endDate.plusDays(1).atStartOfDay(zoneId).toInstant() : null;
-        
+
         // 검색어나 기간 조건이 있으면 Specification 사용
         boolean hasSearch = (keyword != null && !keyword.isBlank());
         boolean hasDateFilter = (startDate != null || endDate != null);
-        
+
         Page<MessageRecipient> page;
         if (archived) {
             if (hasSearch || hasDateFilter) {
                 Specification<MessageRecipient> spec = MessageRecipientSpecifications.archiveSpec(
-                        companyId, employeeId, startInstant, endExclusiveInstant, searchType, keyword
-                );
+                        companyId, employeeId, startInstant, endExclusiveInstant, searchType, keyword);
                 // 정렬을 pageable에 포함
                 pageable = org.springframework.data.domain.PageRequest.of(
                         pageable.getPageNumber(),
                         pageable.getPageSize(),
-                        Sort.by(Sort.Direction.DESC, "createdAt")
-                );
+                        Sort.by(Sort.Direction.DESC, "createdAt"));
                 page = messageRecipientRepository.findAll(spec, pageable);
             } else {
-                page = messageRecipientRepository.findByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedTrueOrderByCreatedAtDesc(
-                        companyId, employeeId, pageable
-                );
+                page = messageRecipientRepository
+                        .findByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedTrueOrderByCreatedAtDesc(
+                                companyId, employeeId, pageable);
             }
         } else {
             if (hasSearch || hasDateFilter) {
                 Specification<MessageRecipient> spec = MessageRecipientSpecifications.listSpec(
-                        companyId, employeeId, folder, startInstant, endExclusiveInstant, searchType, keyword
-                );
+                        companyId, employeeId, folder, startInstant, endExclusiveInstant, searchType, keyword);
                 // 정렬을 pageable에 포함
                 pageable = org.springframework.data.domain.PageRequest.of(
                         pageable.getPageNumber(),
                         pageable.getPageSize(),
-                        Sort.by(Sort.Direction.DESC, "createdAt")
-                );
+                        Sort.by(Sort.Direction.DESC, "createdAt"));
                 page = messageRecipientRepository.findAll(spec, pageable);
             } else {
-                page = messageRecipientRepository.findByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedFalseAndMessageFolderTypeOrderByCreatedAtDesc(
-                        companyId, employeeId, folder, pageable
-                );
+                page = messageRecipientRepository
+                        .findByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedFalseAndMessageFolderTypeOrderByCreatedAtDesc(
+                                companyId, employeeId, folder, pageable);
             }
         }
 
@@ -118,55 +104,54 @@ public class MessageService {
             // SENT 폴더 조회 시: 해당 메시지의 모든 INBOX 수신자 레코드를 조회
             // 각 수신자마다 별도 행으로 표시하기 위함
             List<MessageResDto.ListItem> resultList = new java.util.ArrayList<>();
-            
+
             // 먼저 SENT 레코드로 메시지 ID 목록 조회
             List<Long> messageIds = page.getContent().stream()
                     .map(mr -> mr.getMessage().getId())
                     .distinct()
                     .toList();
-            
+
             // 각 메시지의 INBOX 수신자 레코드 조회
             for (Long messageId : messageIds) {
                 List<MessageRecipient> recipients = messageRecipientRepository
                         .findByMessage_IdAndMessageFolderTypeAndDeletedAtIsNull(
                                 messageId, MessageFolderType.INBOX);
-                
+
                 for (MessageRecipient recipient : recipients) {
                     // 각 수신자마다 별도 ListItem 생성
                     String peerName = recipient.getEmployee().getName();
                     MessageResDto.ListItem item = MessageResDto.ListItem.builder()
                             .messageId(recipient.getMessage().getId())
-                            .recipientId(recipient.getId())  // INBOX 레코드의 ID 사용
-                            .folderType(MessageFolderType.SENT)  // 표시는 SENT로
+                            .recipientId(recipient.getId()) // INBOX 레코드의 ID 사용
+                            .folderType(MessageFolderType.SENT) // 표시는 SENT로
                             .archived(recipient.isArchived())
-                            .read(recipient.isRead())  // 수신자의 읽음 상태
-                            .readAt(recipient.getReadAt())  // 수신자가 읽은 일시
+                            .read(recipient.isRead()) // 수신자의 읽음 상태
+                            .readAt(recipient.getReadAt()) // 수신자가 읽은 일시
                             .title(recipient.getMessage().getMessageTitle())
-                            .peerName(peerName)  // 수신자 이름
+                            .peerName(peerName) // 수신자 이름
                             .senderName(recipient.getMessage().getSender().getName())
                             .recipientName(null)
-                            .createdAt(recipient.getMessage().getCreatedAt())  // 메시지 생성일 (발신일)
+                            .createdAt(recipient.getMessage().getCreatedAt()) // 메시지 생성일 (발신일)
                             .build();
                     resultList.add(item);
                 }
             }
-            
+
             // 정렬: 생성일 기준 내림차순
             resultList.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
-            
+
             // 페이징 처리
             int start = (int) pageable.getOffset();
             int end = Math.min(start + pageable.getPageSize(), resultList.size());
             List<MessageResDto.ListItem> pagedList = resultList.subList(start, end);
-            
+
             // Page 객체로 변환
             return new org.springframework.data.domain.PageImpl<>(
                     pagedList,
                     pageable,
-                    resultList.size()
-            );
+                    resultList.size());
         }
-        
+
         // INBOX, ARCHIVE: 기존 로직 유지
         // peerName 정책:
         // - INBOX: senderName
@@ -174,7 +159,7 @@ public class MessageService {
         return page.map(mr -> {
             String peerName;
             String recipientName = null;
-            
+
             if (mr.getMessageFolderType() == MessageFolderType.INBOX) {
                 peerName = mr.getMessage().getSender().getName();
                 // 보관함에서 받은 메시지인 경우, 현재 사용자가 수신자
@@ -204,7 +189,7 @@ public class MessageService {
                     }
                 }
             }
-            
+
             MessageResDto.ListItem item = MessageResDto.ListItem.from(mr, peerName);
             // 보관함인 경우 recipientName 설정
             if (archived && recipientName != null) {
@@ -233,10 +218,10 @@ public class MessageService {
             Long companyId,
             Long employeeId,
             Long messageId,
-            Long recipientId  // 보낸 메시지함에서 특정 수신자 선택 시 사용 (optional)
+            Long recipientId // 보낸 메시지함에서 특정 수신자 선택 시 사용 (optional)
     ) {
         MessageRecipient mr;
-        
+
         // recipientId가 제공되면 해당 레코드 조회 (보낸 메시지함에서 INBOX recipientId 사용)
         if (recipientId != null) {
             mr = messageRecipientRepository.findById(recipientId)
@@ -257,21 +242,22 @@ public class MessageService {
         }
 
         MessageResDto.Detail detail = MessageResDto.Detail.from(mr);
-        
+
         // 보낸 메시지함인 경우 수신자 정보 추가
         // recipientId가 제공된 경우 (보낸 메시지함에서 특정 수신자 선택)
         // 또는 보관함에서 보낸 메시지(SENT 타입)인 경우
-        boolean isSentMessageDetail = recipientId != null || 
-            (mr.getMessageFolderType() == MessageFolderType.INBOX && 
-             mr.getMessage().getSender().getId().equals(employeeId)) ||
-            (mr.getMessageFolderType() == MessageFolderType.SENT && 
-             mr.getMessage().getSender().getId().equals(employeeId));
-        
+        boolean isSentMessageDetail = recipientId != null ||
+                (mr.getMessageFolderType() == MessageFolderType.INBOX &&
+                        mr.getMessage().getSender().getId().equals(employeeId))
+                ||
+                (mr.getMessageFolderType() == MessageFolderType.SENT &&
+                        mr.getMessage().getSender().getId().equals(employeeId));
+
         if (isSentMessageDetail) {
             // 보낸 메시지함 또는 보관함에서 보낸 메시지
             Long recipientIdDetail = null;
             String recipientName = null;
-            
+
             if (recipientId != null && mr.getMessageFolderType() == MessageFolderType.INBOX) {
                 // 보낸 메시지함에서 특정 수신자 선택한 경우: 해당 수신자 정보만 표시
                 recipientIdDetail = mr.getEmployee().getId();
@@ -281,7 +267,7 @@ public class MessageService {
                 List<MessageRecipient> inboxRecipients = messageRecipientRepository
                         .findByMessage_IdAndMessageFolderTypeAndDeletedAtIsNull(
                                 mr.getMessage().getId(), MessageFolderType.INBOX);
-                
+
                 if (!inboxRecipients.isEmpty()) {
                     if (inboxRecipients.size() == 1) {
                         recipientIdDetail = inboxRecipients.get(0).getEmployee().getId();
@@ -295,7 +281,7 @@ public class MessageService {
                     }
                 }
             }
-            
+
             // 읽은 일시: 수신자 중 읽은 수신자가 있으면 그 중 하나의 readAt 사용
             Instant readAt = detail.getReadAt();
             if (mr.getMessageFolderType() == MessageFolderType.SENT || recipientId == null) {
@@ -309,7 +295,7 @@ public class MessageService {
                         .map(MessageRecipient::getReadAt)
                         .orElse(null);
             }
-            
+
             // 발신자가 조회하는 경우이므로 읽음 처리하지 않음 (수신자의 readAt은 그대로 유지)
             return MessageResDto.Detail.builder()
                     .messageId(detail.getMessageId())
@@ -320,36 +306,38 @@ public class MessageService {
                     .senderName(detail.getSenderName())
                     .recipientIdDetail(recipientIdDetail)
                     .recipientName(recipientName)
-                    .folderType(MessageFolderType.SENT)  // 보낸 메시지함으로 표시
+                    .folderType(MessageFolderType.SENT) // 보낸 메시지함으로 표시
                     .archived(detail.isArchived())
                     .read(detail.isRead())
-                    .readAt(readAt)  // 수신자가 읽은 일시 (발신자가 조회해도 변경되지 않음)
-                    .fileId(detail.getFileId())
+                    .readAt(readAt) // 수신자가 읽은 일시 (발신자가 조회해도 변경되지 않음)
+                    .readAt(readAt) // 수신자가 읽은 일시 (발신자가 조회해도 변경되지 않음)
+                    .files(MessageResDto.FileInfo.fromFiles(mr.getMessage().getFiles()))
                     .createdAt(detail.getCreatedAt())
                     .build();
         }
-        
+
         // 받은 편지함이면 읽음 처리 (수신자가 자신의 메시지를 조회하는 경우)
         if (mr.getMessageFolderType() == MessageFolderType.INBOX) {
             mr.markRead();
         }
-        
+
         return detail;
     }
 
     /** 메시지 전송 */
     @Transactional
-    public Long sendMessage(Long companyId, Long senderEmployeeId, MessageReqDto.Send request, MultipartFile file) {
+    public Long sendMessage(Long companyId, Long senderEmployeeId, MessageReqDto.Send request,
+            List<MultipartFile> files) {
 
         // 제목 및 내용 글자수 검증
         if (request.getMessageTitle() != null && request.getMessageTitle().length() > 100) {
             throw new InvalidRequestException("제목은 100자 이하여야 합니다.");
         }
-        
+
         if (request.getMessageContent() != null && request.getMessageContent().length() > 3000) {
             throw new InvalidRequestException("내용은 3,000자 이하여야 합니다.");
         }
-        
+
         // 공백만 입력된 내용 검증
         if (request.getMessageContent() != null && request.getMessageContent().trim().isEmpty()) {
             throw new InvalidRequestException("공백만 입력된 내용은 전송할 수 없습니다.");
@@ -378,13 +366,11 @@ public class MessageService {
         }
 
         // 파일 업로드 처리
-        Long fileId = null;
-        if (file != null && !file.isEmpty()) {
-            File uploadedFile = fileService.upload(companyId, senderEmployeeId, FileDomain.MESSAGE, file);
-            fileId = uploadedFile.getId();
-        } else if (request.getFileId() != null) {
-            // 기존 파일 ID가 제공된 경우 (이미 업로드된 파일 재사용)
-            fileId = request.getFileId();
+        List<File> attachedFiles = null;
+        if (files != null && !files.isEmpty()) {
+            attachedFiles = files.stream()
+                    .map(file -> fileService.upload(companyId, senderEmployeeId, FileDomain.MESSAGE, file))
+                    .toList();
         }
 
         // Message(본문) 생성
@@ -393,7 +379,7 @@ public class MessageService {
                 .sender(sender)
                 .messageTitle(request.getMessageTitle())
                 .messageContent(request.getMessageContent())
-                .fileId(fileId)
+                .files(attachedFiles)
                 .build();
 
         Message saved = messageRepository.save(message);
@@ -418,7 +404,7 @@ public class MessageService {
                 .message(saved)
                 .employee(sender)
                 .messageFolderType(MessageFolderType.SENT)
-                .isRead(true)      // 본인이 보낸 거라 읽음 처리해도 무방
+                .isRead(true) // 본인이 보낸 거라 읽음 처리해도 무방
                 .isArchived(false)
                 .build();
 
@@ -436,19 +422,44 @@ public class MessageService {
 
         // 메시지에 첨부된 파일이 있고, 해당 메시지의 모든 recipient가 삭제된 경우에만 파일 삭제
         Message message = mr.getMessage();
-        if (message.getFileId() != null) {
+        if (message.getFiles() != null && !message.getFiles().isEmpty()) {
             // 해당 메시지의 모든 recipient가 삭제되었는지 확인
             // 현재 삭제하려는 recipient를 제외하고 카운트
             long activeRecipientCount = messageRecipientRepository
                     .countByMessage_IdAndDeletedAtIsNull(messageId);
-            
+
             if (activeRecipientCount <= 1) {
                 // 마지막 recipient이므로 파일도 삭제
-                File file = fileRepository.findById(message.getFileId())
-                        .orElse(null);
-                if (file != null && file.getObjectKey() != null) {
-                    deleteObject(file.getObjectKey());
-                }
+                List<File> files = message.getFiles();
+                files.forEach(file -> {
+                    if (file.getObjectKey() != null) {
+                        fileService.deleteObject(file.getObjectKey());
+                    }
+                });
+
+                // 파일 엔티티는 CascadeType.ALL에 의해 메시지가 삭제될 때 같이 삭제되거나
+                // 직접 삭제할 수도 있음. 여기서는 S3 삭제만 수행하고 DB 삭제는 메시지 삭제 시점 혹은 고아 객체 제거로 위임 가능
+                // 하지만 MessageRecipient soft delete 방식이라 Message 자체는 살아있음.
+                // 따라서 파일만 명시적으로 삭제하거나, 리스트를 비워서 orphanRemoval 유도
+                // message.getFiles().clear(); // 이것은 더티 체킹으로 반영됨
+
+                // 로직상 Message가 여러 사람에게 공유되므로, 모든 사람이 삭제했을 때만 파일 삭제
+                // 하지만 soft delete라서 Message 자체는 남아있음.
+                // 완전히 삭제하려면 Message도 soft delete 처리해야 하는데, 현재 로직에는 없음.
+                // (Message 엔티티에는 deletedAt 없음, MessageRecipient에만 있음) -> 아님, Message에도
+                // deletedAt 있음?
+                // Message 엔티티 BaseEntity 상속받았으나 softDelete 메소드 없음... 아까 BaseEntity 확인함.
+                // 확인해보니 Message 엔티티 자체는 softDelete 호출 안함.
+                // MessageRecipient만 soft delete 함. Message는 영원히 남는 구조인가?
+                // 네, MessageService.deleteMessage 로직을 보면 recipient만 soft delete함.
+
+                // 그렇다면 파일도 실제로 삭제하면 안될 수도 있음 (나중에 복구하거나 감사를 위해)
+                // 하지만 기존 코드에서는 S3에서 삭제하고 있었음.
+                // 기존 로직 유지: 마지막 사람이 삭제하면 S3 파일 삭제.
+                // 그리고 DB상의 File 레코드는 orphanRemoval=true에 의해
+                // message.getFiles().clear() 하면 삭제됨.
+
+                // message.getFiles().clear(); // TODO: 이거 호출하면 DB에서도 삭제됨 (orphanRemoval)
             }
         }
 
@@ -477,22 +488,8 @@ public class MessageService {
 
     /** 안 읽은 메시지 카운트 (받은 메시지함 기준) */
     public long getUnreadMessageCount(Long companyId, Long employeeId) {
-        return messageRecipientRepository.countByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedFalseAndMessageFolderTypeAndIsReadFalse(
-                companyId, employeeId, MessageFolderType.INBOX
-        );
-    }
-
-    /** S3에서 파일 삭제 */
-    private void deleteObject(String objectKey) {
-        try {
-            s3Client.deleteObject(
-                    DeleteObjectRequest.builder()
-                            .bucket(bucket)
-                            .key(objectKey)
-                            .build()
-            );
-        } catch (Exception ex) {
-            log.error("S3 delete failed. objectKey={}", objectKey, ex);
-        }
+        return messageRecipientRepository
+                .countByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedFalseAndMessageFolderTypeAndIsReadFalse(
+                        companyId, employeeId, MessageFolderType.INBOX);
     }
 }

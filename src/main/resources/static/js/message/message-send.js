@@ -4,7 +4,7 @@ const MESSAGE_API = '/api/messages';
 const EMPLOYEE_SEARCH_API = '/api/employees/search';
 
 let selectedRecipients = []; // {id, name, employeeNo, organizationName, positionName}
-let selectedFile = null; // 선택된 파일 (MultipartFile)
+let selectedFiles = []; // 선택된 파일 배열
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', function() {
@@ -201,30 +201,48 @@ function removeRecipient(index) {
 
 // 파일 선택 처리
 function handleFileSelect(event) {
-    const file = event.target.files[0];
-    if (!file) {
-        return;
-    }
+    const files = Array.from(event.target.files);
     
     // 파일 크기 체크 (50MB 제한)
     const maxSize = 50 * 1024 * 1024; // 50MB
-    if (file.size > maxSize) {
-        alert('파일 크기는 50MB 이하여야 합니다.');
-        event.target.value = ''; // 파일 선택 초기화
-        return;
-    }
     
-    // 파일 저장 (게시판과 동일하게 전송 시점에 업로드)
-    selectedFile = file;
-    document.getElementById('fileName').textContent = file.name;
-    document.getElementById('selectedFile').style.display = 'flex';
+    files.forEach(file => {
+        if (file.size > maxSize) {
+            alert(`'${file.name}' 파일 크기는 50MB 이하여야 합니다.`);
+            return;
+        }
+        
+        // 중복 체크
+        if (!selectedFiles.find(f => f.name === file.name && f.size === file.size)) {
+            selectedFiles.push(file);
+            addFileToList(file.name);
+        }
+    });
+    
+    event.target.value = ''; // 같은 파일 다시 선택 가능하도록
+}
+
+// 파일 목록에 추가
+function addFileToList(fileName) {
+    const fileList = document.getElementById('fileList');
+    const fileItem = document.createElement('div');
+    fileItem.className = 'file-item';
+    fileItem.innerHTML = `
+        <span class="file-name">${escapeHTML(fileName)}</span>
+        <button type="button" class="btn-file-remove" onclick="removeFile(this)">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    fileList.appendChild(fileItem);
 }
 
 // 파일 제거
-function removeFile() {
-    document.getElementById('fileInput').value = '';
-    document.getElementById('selectedFile').style.display = 'none';
-    selectedFile = null;
+function removeFile(button) {
+    const fileItem = button.closest('.file-item');
+    const fileName = fileItem.querySelector('.file-name').textContent;
+    
+    selectedFiles = selectedFiles.filter(f => f.name !== fileName);
+    fileItem.remove();
 }
 
 // 글자수 카운터 설정
@@ -369,10 +387,10 @@ async function handleSubmit(event) {
             formData.append('recipientEmployeeIds', r.id);
         });
         
-        // 파일 추가 (게시판과 동일하게 전송 시점에 함께 전송)
-        if (selectedFile) {
-            formData.append('file', selectedFile);
-        }
+        // 파일 추가 (다중 파일)
+        selectedFiles.forEach(file => {
+            formData.append('files', file);
+        });
         
         const response = await apiFetch(MESSAGE_API, {
             method: 'POST',
