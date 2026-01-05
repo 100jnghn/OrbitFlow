@@ -73,14 +73,25 @@ public class DocumentFile extends BaseEntity {
     @Column(nullable = false, length = 20)
     private DocumentFileStatus status = DocumentFileStatus.TEMP;
 
+
     /* =========================
        도메인 메서드
     ========================= */
+    public static DocumentFile copyFor(Document revised, DocumentFile documentFile) {
+        return DocumentFile.builder()
+                .document(revised)
+                .file(documentFile.getFile())
+                .referenceType(documentFile.getReferenceType())
+                .referenceTargetId(documentFile.getReferenceTargetId())
+                .referenceUrl(documentFile.getReferenceUrl())
+                .fieldId(documentFile.getFieldId())
+                .status(DocumentFileStatus.TEMP)
+                .build();
+    }
 
     public void updateStatus(DocumentFileStatus status) {
         this.status = status;
     }
-
 
     public boolean isImage() {
         return this.referenceType == ReferenceType.IMAGE;

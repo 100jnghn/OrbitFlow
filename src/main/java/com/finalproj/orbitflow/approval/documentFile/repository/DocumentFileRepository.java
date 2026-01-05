@@ -41,4 +41,6 @@ public interface DocumentFileRepository extends JpaRepository<DocumentFile, Long
     List<DocumentFile> findByDocument_Id(Long documentId);
 
     Optional<DocumentFile> findByDocument_IdAndFile_Id(Long documentId, Long fileId);
+
+    long countByFile_Id(Long id);
 }
