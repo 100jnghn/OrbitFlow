@@ -7,13 +7,17 @@ import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import com.finalproj.orbitflow.notification.dto.NotificationMessageDto;
 import com.finalproj.orbitflow.notification.dto.NotificationResDto;
 import com.finalproj.orbitflow.notification.entity.Notification;
+import com.finalproj.orbitflow.notification.enums.NotificationType;
 import com.finalproj.orbitflow.notification.repository.NotificationRepository;
-import com.finalproj.orbitflow.redis.publisher.NotificationPublisher;
+import com.finalproj.orbitflow.redis.publisher.RedisPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 /**
@@ -28,8 +32,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NotificationCommandService {
 
+    private final int MAX_SELECT_DATE = 30;
+
     private final NotificationRepository notificationRepository;
-    private final NotificationPublisher notificationPublisher;
+    private final RedisPublisher notificationPublisher;
     private final CompanyRepository companyRepository;
     private final EmployeeRepository employeeRepository;
 
@@ -58,12 +64,19 @@ public class NotificationCommandService {
     @Transactional(readOnly = true)
     public List<NotificationResDto> getUnreadNotifications(Long companyId, Long employeeId) {
 
-        List<Notification> list = notificationRepository.findByCompanyIdAndReceiverIdAndIsReadFalseOrderByCreatedAtDesc(
-                companyId,
-                employeeId
-        );
+        // 현재 - 30일 전
+        LocalDateTime daysAgo = LocalDateTime.now().minusDays(MAX_SELECT_DATE);
 
-        log.info("SSE : " + "안 읽은 알림 수 : " + list.size());
+        // LocalDateTime -> Instant
+        Instant daysAgoInstant = daysAgo
+                .atZone(ZoneId.systemDefault())
+                .toInstant();
+
+        List<Notification> list = notificationRepository.findByCompanyIdAndReceiverIdAndIsReadFalseAndCreatedAtAfterOrderByCreatedAtDesc(
+                companyId,
+                employeeId,
+                daysAgoInstant
+        );
 
         return list.stream()
                 .map(NotificationResDto::fromEntity)
@@ -100,8 +113,9 @@ public class NotificationCommandService {
     public void createNotification(
             Long companyId,
             Long employeeId,
-            String type,
-            String content
+            NotificationType type,
+            String content,
+            String url
     ) {
         Company company = companyRepository.getReferenceById(companyId);
         Employee employee = employeeRepository.getReferenceById(employeeId);
@@ -113,6 +127,7 @@ public class NotificationCommandService {
                 .type(type)
                 .content(content)
                 .isRead(false)
+                .url(url)
                 .build();
 
         // RDB에 저장

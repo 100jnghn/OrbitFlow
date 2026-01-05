@@ -3,6 +3,7 @@ package com.finalproj.orbitflow.notification.repository;
 import com.finalproj.orbitflow.notification.entity.Notification;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -16,5 +17,5 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     
     List<Notification> findByCompanyIdAndReceiverIdOrderByCreatedAtDesc(Long companyId, Long employeeId);
 
-    List<Notification> findByCompanyIdAndReceiverIdAndIsReadFalseOrderByCreatedAtDesc(Long companyId, Long employeeId);
+    List<Notification> findByCompanyIdAndReceiverIdAndIsReadFalseAndCreatedAtAfterOrderByCreatedAtDesc(Long companyId, Long employeeId, Instant thirtyDaysAgo);
 }

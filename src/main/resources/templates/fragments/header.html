@@ -39,12 +39,14 @@
                 <span id="messageBadge" class="message-badge" style="display: none;">0</span>
             </a>
             <div style="position: relative;">
-                <a href="#" onclick="openNotificationModal(); return false;" style="color: inherit; text-decoration: none; position: relative; display: inline-flex; align-items: center;">
+                <a href="#" onclick="toggleNotificationDropdown(); return false;" style="color: inherit; text-decoration: none; position: relative; display: inline-flex; align-items: center;">
                     <i class="fas fa-bell"></i>
                     <span id="notificationBadge" class="message-badge" style="display: none;">0</span>
                 </a>
                 <!-- 알림 토스트 영역 -->
                 <div id="notification-toast-container"></div>
+                <!-- 알림 드롭다운 -->
+                <div th:replace="~{fragments/notification :: body}"></div>
             </div>
         </div>
 

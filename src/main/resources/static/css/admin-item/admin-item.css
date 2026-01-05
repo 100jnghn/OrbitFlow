@@ -126,12 +126,12 @@
 }
 
 /* =========================
-   Info Grid (2 x 2)
+   Info Grid (2 x 3)
 ========================= */
 .info-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: auto auto;
+    grid-template-rows: auto auto auto;
     gap: 20px;
     margin-bottom: 24px;
 }
@@ -175,14 +175,15 @@
 
 /*제거 버튼 컨테이너*/
 .info-grid .upload-actions {
-    grid-column: 2 / 3;
-    grid-row: 3 / 4;
+    grid-column: 2 / 4;   /* 이미지 영역 전체 폭 */
+    grid-row: 4 / 5;      /* 이미지 아래 한 줄 */
     display: flex;
     gap: 8px;
-    justify-content: flex-end;  /* 오른쪽 정렬 */
-    align-items: center;         /* 세로 가운데 정렬 */
+    justify-content: flex-end;
+    /* 오른쪽 정렬 */
+    align-items: center;
+    /* 세로 가운데 정렬 */
 }
-
 
 .info-description-wrapper {
     display: flex;
@@ -271,7 +272,8 @@
     color: #999;
 }
 
-.btn-remove {
+.btn-remove,
+.btn-remove-img {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -284,12 +286,14 @@
     transition: all 0.2s;
 }
 
-.btn-remove {
+.btn-remove,
+.btn-remove-img {
     background: #e74c3c;
     color: #fff;
 }
 
-.btn-remove:hover {
+.btn-remove:hover,
+.btn-remove-img:hover {
     background: #c0392b;
 }
 

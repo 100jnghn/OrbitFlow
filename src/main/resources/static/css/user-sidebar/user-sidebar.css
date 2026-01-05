@@ -163,3 +163,53 @@
     display: none; /* 더 이상 사용하지 않음 */
 }
 
+/* ===== 내선번호 영역 ===== */
+
+.extension-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 12px 14px;
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.extension-tree {
+    max-height: 260px;
+    overflow-y: auto;
+    font-size: 12px;
+}
+
+.extension-tree.hidden {
+    display: none;
+}
+
+.extension-org {
+    padding: 6px 14px;
+    font-weight: 600;
+    color: #ddd;
+}
+
+.extension-emp {
+    padding: 4px 28px;
+    cursor: pointer;
+    color: #ccc;
+}
+
+.extension-emp:hover {
+    background: rgba(255,255,255,0.08);
+}
+
+.extension-emp .phone {
+    color: #9ecbff;
+    margin-left: 6px;
+}
+
+.extension-emp.active {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+}

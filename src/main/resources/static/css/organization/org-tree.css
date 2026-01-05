@@ -1,0 +1,145 @@
+/* =========================
+   Layout
+========================= */
+.org-page {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 20px;
+    height: 100%;
+}
+
+/* =========================
+   Org Tree (보조)
+========================= */
+.org-tree {
+    background: #fff;
+    border-radius: 14px;
+    padding: 12px 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.05);
+    overflow-y: auto;
+}
+
+.org-node {
+    font-size: 14px;
+    font-weight: 800;
+    margin: 6px 0;
+    color: #1f2937;
+}
+
+.org-emp {
+    font-size: 13px;
+    padding: 4px 8px;
+    margin: 2px 0;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #374151;
+}
+
+.org-emp:hover,
+.org-emp.active {
+    background: #eef4ff;
+    color: #2563eb;
+}
+
+/* =========================
+   Employee Panel (메인)
+========================= */
+.employee-panel {
+    background: #fff;
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 10px 32px rgba(0,0,0,.08);
+}
+
+.employee-panel.hidden {
+    display: none;
+}
+
+/* Hero */
+.emp-hero {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.emp-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #f3f4f6;
+}
+
+.emp-name {
+    font-size: 20px;
+    font-weight: 900;
+}
+
+.emp-summary {
+    margin-top: 4px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #6b7280;
+}
+
+.emp-meta {
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #6b7280;
+}
+
+.emp-meta .dot {
+    margin: 0 6px;
+    color: #d1d5db;
+}
+
+.emp-status {
+    margin-top: 6px;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.emp-status.active { color: #15803d; }
+.emp-status.suspended { color: #b45309; }
+.emp-status.resigned { color: #b91c1c; }
+
+/* Info Card */
+.emp-info-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 16px;
+}
+
+.kv {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 10px 14px;
+    font-size: 14px;
+}
+
+.kv .k {
+    font-weight: 800;
+    color: #6b7280;
+}
+
+.kv .v {
+    font-weight: 800;
+}
+
+/* =========================
+   Responsive
+========================= */
+@media (max-width: 900px) {
+    .org-page {
+        grid-template-columns: 1fr;
+    }
+
+    .org-tree {
+        order: 2;
+    }
+
+    .employee-panel {
+        order: 1;
+    }
+}

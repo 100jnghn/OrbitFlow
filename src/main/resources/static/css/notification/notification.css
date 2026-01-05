@@ -1,27 +1,19 @@
 /* ===============================
-   알림 모달 스타일
+   알림 드롭다운 스타일
 ================================ */
 
-.notification-modal {
+.notification-dropdown {
     position: fixed;
-    inset: 0;
+    top: 64px;
+    right: 28px;
     z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
-.notification-modal.hidden {
+.notification-dropdown.hidden {
     display: none;
 }
 
-.notification-modal-backdrop {
-    position: absolute;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0.4);
-}
-
-.notification-modal-panel {
+.notification-dropdown-panel {
     position: relative;
     background-color: #ffffff;
     border-radius: 12px;
@@ -31,9 +23,10 @@
     display: flex;
     flex-direction: column;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e5e7eb;
 }
 
-.notification-modal-head {
+.notification-dropdown-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -41,14 +34,14 @@
     border-bottom: 1px solid #e5e7eb;
 }
 
-.notification-modal-head h2 {
+.notification-dropdown-head h2 {
     margin: 0;
     font-size: 20px;
     font-weight: 700;
     color: #111827;
 }
 
-.notification-modal-close-btn {
+.notification-dropdown-close-btn {
     background: none;
     border: none;
     font-size: 24px;
@@ -64,12 +57,12 @@
     transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.notification-modal-close-btn:hover {
+.notification-dropdown-close-btn:hover {
     background-color: #f3f4f6;
     color: #111827;
 }
 
-.notification-modal-tabs {
+.notification-dropdown-tabs {
     display: flex;
     border-bottom: 1px solid #e5e7eb;
     padding: 0 24px;
@@ -98,7 +91,7 @@
     border-bottom-color: #ef4444;
 }
 
-.notification-modal-body {
+.notification-dropdown-body {
     flex: 1;
     overflow-y: auto;
     padding: 16px 24px;
@@ -106,22 +99,27 @@
     max-height: calc(80vh - 180px);
 }
 
-.notification-modal-body::-webkit-scrollbar {
+.notification-dropdown-body::-webkit-scrollbar {
     width: 8px;
 }
 
-.notification-modal-body::-webkit-scrollbar-track {
+.notification-dropdown-body::-webkit-scrollbar-track {
     background: #f3f4f6;
     border-radius: 4px;
 }
 
-.notification-modal-body::-webkit-scrollbar-thumb {
+.notification-dropdown-body::-webkit-scrollbar-thumb {
     background: #d1d5db;
     border-radius: 4px;
 }
 
-.notification-modal-body::-webkit-scrollbar-thumb:hover {
+.notification-dropdown-body::-webkit-scrollbar-thumb:hover {
     background: #9ca3af;
+}
+
+.notification-item-content,
+.notification-item-read-content {
+    white-space: pre-line;
 }
 
 .notification-item {
@@ -135,6 +133,7 @@
     align-items: flex-start;
     gap: 12px;
     position: relative;
+    min-height: 70px;
 }
 
 .notification-item:last-child {
