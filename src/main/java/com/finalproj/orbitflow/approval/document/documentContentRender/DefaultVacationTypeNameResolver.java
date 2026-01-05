@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow.approval.document.documentContentRender;
 
-import com.finalproj.orbitflow.leave.leaveType.service.LeaveTypeService;
+import com.finalproj.orbitflow.attendance.leave.service.LeaveTypeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

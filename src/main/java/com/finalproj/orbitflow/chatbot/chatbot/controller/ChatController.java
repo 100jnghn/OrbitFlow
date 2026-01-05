@@ -26,7 +26,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/chatbot")
 @RequiredArgsConstructor
-@Profile("chatbot")
 public class ChatController {
 
     private final ChatService chatService;

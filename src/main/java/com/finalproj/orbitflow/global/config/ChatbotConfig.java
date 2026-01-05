@@ -20,7 +20,6 @@ import java.time.Duration;
  * @since : 2025. 12. 30. 화요일
  */
 @Configuration
-@Profile("chatbot")
 public class ChatbotConfig {
 
     @Value("${OPENAI_API_KEY}")

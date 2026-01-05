@@ -50,7 +50,7 @@ public class SecurityConfig {
                                 "/js/**",
                                 "/images/**",
                                 "/favicon.ico",
-                                "/internal/**"
+                                "/internal/**",
                                 "/favicon.ico",
                                 "/activate",
                                 "/reset-password",

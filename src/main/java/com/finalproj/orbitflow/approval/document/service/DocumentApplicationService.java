@@ -49,6 +49,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder.FontStyle;
+import static java.util.Objects.requireNonNull;
 
 
 /**
@@ -236,37 +237,41 @@ public class DocumentApplicationService {
             throw new IllegalStateException("양식에 필드가 없습니다.");
         }
 
-
+        // 4️⃣ 승인선
         PdfApprovalLineDto approvalLine =
                 pdfApprovalLineAssembler.from(documentId);
 
-
-        // 4️⃣ FormTemplateSchema → PdfContentSchema
+        // 5️⃣ FormTemplateSchema → PdfContentSchema
         PdfContentSchema pdfSchema =
                 pdfContentSchemaAssembler.from(schema);
 
-        // 5️⃣ HTML 생성
-        String html = pdfHtmlBuilder.build(documentId, approvalLine, pdfSchema, document.getWriter().getName(), document.getSubmittedAt());
-
+        // 6️⃣ HTML 생성
+        String html = pdfHtmlBuilder.build(
+                documentId,
+                approvalLine,
+                pdfSchema,
+                document.getWriter().getName(),
+                document.getSubmittedAt()
+        );
 
         log.info("===== PDF HTML START =====");
         log.info(html);
         log.info("===== PDF HTML END =====");
-        // 6️⃣ HTML → PDF
+
+        // 7️⃣ HTML → PDF
         try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
 
             PdfRendererBuilder builder = new PdfRendererBuilder();
+
+            // 🔥 성능 + 안정 모드
             builder.useFastMode();
 
-            // baseUri (CSS / 이미지 로딩 필수)
-            builder.withHtmlContent(html, "http://localhost:8090");
-            builder.toStream(os);
-
-            // ✅ Regular
+            // 🔥 폰트 먼저 등록 (시스템 폰트 스캔 차단)
             builder.useFont(
                     () -> {
                         try {
-                            return new ClassPathResource("fonts/NanumGothic-Regular.ttf").getInputStream();
+                            return new ClassPathResource("fonts/NanumGothic-Regular.ttf")
+                                    .getInputStream();
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
@@ -280,7 +285,8 @@ public class DocumentApplicationService {
             builder.useFont(
                     () -> {
                         try {
-                            return new ClassPathResource("fonts/NanumGothic-Bold.ttf").getInputStream();
+                            return new ClassPathResource("fonts/NanumGothic-Bold.ttf")
+                                    .getInputStream();
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
@@ -291,15 +297,25 @@ public class DocumentApplicationService {
                     true
             );
 
+            // 🔥 baseUri: classpath 기준 (운영/로컬/Docker 모두 안전)
+            String baseUri = requireNonNull(
+                    getClass().getClassLoader().getResource("")
+            ).toExternalForm();
+
+            builder.withHtmlContent(html, baseUri);
+
+            builder.toStream(os);
             builder.run();
 
             byte[] pdfBytes = os.toByteArray();
 
+            // 8️⃣ PDF 저장
             fileService.saveGeneratedPdf(
                     document.getCompany().getId(),
                     documentId,
                     pdfBytes
             );
+
         } catch (IOException e) {
             throw new RuntimeException("PDF 생성 실패", e);
         }

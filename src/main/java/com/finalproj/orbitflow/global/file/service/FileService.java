@@ -75,9 +75,6 @@ public class FileService {
             MultipartFile multipartFile
     ) {
 
-        if (multipartFile == null || multipartFile.isEmpty()) {
-            return null;
-        }
 
         Company company = companyRepository.findById(companyId)
                 .orElseThrow();
@@ -235,11 +232,6 @@ public class FileService {
     }
 
     public void deleteObject(String objectKey) {
-
-    /*
-     * helper
-     * */
-    private void rollbackS3(String objectKey) {
         try {
             s3Client.deleteObject(
                     DeleteObjectRequest.builder()
@@ -262,8 +254,8 @@ public class FileService {
     }
 
     /*
-    * helper
-    * */
+     * helper
+     * */
 
     private String createObjectKey(Long companyId, FileDomain domain, String originFileName) {
         String uuid = UUID.randomUUID().toString();
@@ -274,7 +266,6 @@ public class FileService {
     private String extractSysFile(String objectKey) {
         return objectKey.substring(objectKey.lastIndexOf('/') + 1);
     }
-
 
 
     private byte[] downloadFromS3(String objectKey) {

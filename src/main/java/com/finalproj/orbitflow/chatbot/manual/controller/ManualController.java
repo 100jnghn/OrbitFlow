@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/admin/manual")
 @RequiredArgsConstructor
-@Profile("chatbot")
 public class ManualController {
 
     private final ManualUploadService manualUploadService;
