@@ -26,6 +26,7 @@ public class MessageReqDto {
         @NotEmpty(message = "수신자를 최소 1명 이상 선택해주세요.")
         private List<Long> recipientEmployeeIds;
 
-        // 파일은 별도 파라미터로 받음
+        /** 파일은 우선 자리만 */
+        private Long fileId;
     }
 }

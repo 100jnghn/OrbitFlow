@@ -65,9 +65,8 @@ public class FileService {
     private final FileStorage fileStorage;
 
 
-        public ResponseEntity<Resource> download(Long fileId, Long companyId) {
-                File file = fileRepository.findByIdAndCompany_Id(fileId, companyId)
-                                .orElseThrow(() -> new NotFoundException("파일을 찾을 수 없습니다. id=" + fileId));
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucket;
 
     @Transactional
     public File upload(
@@ -175,25 +174,25 @@ public class FileService {
             deleteObject(objectKey);
             throw new RuntimeException("파일 저장 중 오류 발생", e);
         }
+    }
 
-        /*
-         * helper
-         */
-        /**
-         * S3 파일 삭제
-         *
-         * @param objectKey S3 객체 키
-         */
-        public void deleteObject(String objectKey) {
-                try {
-                        s3Client.deleteObject(
-                                        DeleteObjectRequest.builder()
-                                                        .bucket(bucket)
-                                                        .key(objectKey)
-                                                        .build());
-                } catch (Exception ex) {
-                        log.error("S3 delete failed. objectKey={}", objectKey, ex);
-                }
+
+    public ResponseEntity<Resource> download(Long fileId, Long companyId) {
+        File file = fileRepository.findByIdAndCompany_Id(fileId, companyId)
+                .orElseThrow(() -> new NotFoundException("파일을 찾을 수 없습니다. id=" + fileId));
+
+        ResponseInputStream<GetObjectResponse> s3Object = s3Client.getObject(
+                GetObjectRequest.builder()
+                        .bucket(bucket)
+                        .key(file.getObjectKey())
+                        .build()
+        );
+
+        InputStreamResource resource = new InputStreamResource(s3Object);
+
+        MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        if (file.getContentType() != null && !file.getContentType().isBlank()) {
+            mediaType = MediaType.parseMediaType(file.getContentType());
         }
 
         String encodedName = UriUtils.encode(file.getOriginFile(), StandardCharsets.UTF_8);
@@ -243,6 +242,7 @@ public class FileService {
         } catch (Exception ex) {
             log.error("S3 delete failed. objectKey={}", objectKey, ex);
         }
+    }
 
     public ResponseEntity<byte[]> streamImage(File file) {
 
