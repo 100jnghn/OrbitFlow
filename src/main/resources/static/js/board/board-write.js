@@ -233,7 +233,16 @@ async function loadBoardDetail() {
 // 파일 선택 처리
 function handleFileSelect(event) {
     const files = Array.from(event.target.files);
+
+    // 파일 크기 체크 (50MB 제한) - 메시지 작성과 동일하게 통일
+    const maxSize = 50 * 1024 * 1024; // 50MB
+
     files.forEach(file => {
+        if (file.size > maxSize) {
+            alert(`'${file.name}' 파일 크기는 50MB 이하여야 합니다.`);
+            return;
+        }
+
         if (!selectedFiles.find(f => f.name === file.name && f.size === file.size)) {
             selectedFiles.push(file);
             addFileToList(file.name, null, false);
