@@ -44,8 +44,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.startsWith("/js/")
                 || path.startsWith("/images/")
                 || path.equals("/")
-                || path.equals("/favicon.ico");
+                || path.equals("/favicon.ico")
+
+                // ✅ PDF 미리보기 (임시)
+                || path.startsWith("/internal")
+                || path.endsWith("/pdf");
     }
+
 
     @Override
     protected void doFilterInternal(
