@@ -242,35 +242,6 @@ public class ReservationService {
         );
     }
 
-    // 알림 전송할 메시지 생성
-    private String createNotificationMessage(Reservation reservation) {
-
-        ReservationTypeCode type = reservation.getTypeCode();
-        Long resourceId = reservation.getResourceId();
-        String resourceName = "";
-        String reservationDate = "";
-
-        if (type.equals(ReservationTypeCode.MEETING)) {
-            Meetingroom meetingroom = meetingroomRepository.getReferenceById(resourceId);
-            resourceName = meetingroom.getName();
-            reservationDate = reservation.getReservationDate() + " " + reservation.getStartTime() + " ~ " + reservation.getEndTime();
-
-        } else if (type.equals(ReservationTypeCode.CAR)) {
-            Car car = carRepository.getReferenceById(resourceId);
-            resourceName = car.getName();
-            reservationDate = reservation.getReservationDate() + " ~ " + reservation.getEndDate();
-
-        } else if (type.equals(ReservationTypeCode.ITEM)) {
-            Item item = itemRepository.getReferenceById(resourceId);
-            resourceName = item.getName();
-            reservationDate = reservation.getReservationDate() + " " + reservation.getStartTime() + " ~ " + reservation.getEndTime();
-
-        }
-
-        String msg = reservationDate + "\n" + resourceName + " 예약이 승인되었습니다";
-        return msg;
-    }
-
     @Transactional
     public void rejectReservation(Long reservationId, ReservationStatusChangeReqDto rejectReqDto) {
 
@@ -558,6 +529,36 @@ public class ReservationService {
                 .reservationStatusId(reservationStatusId)
                 .reservationStatusName(reservationStatusName)
                 .build();
+    }
+
+
+    // 알림 전송할 메시지 생성
+    private String createNotificationMessage(Reservation reservation) {
+
+        ReservationTypeCode type = reservation.getTypeCode();
+        Long resourceId = reservation.getResourceId();
+        String resourceName = "";
+        String reservationDate = "";
+
+        if (type.equals(ReservationTypeCode.MEETING)) {
+            Meetingroom meetingroom = meetingroomRepository.getReferenceById(resourceId);
+            resourceName = meetingroom.getName();
+            reservationDate = reservation.getReservationDate() + " " + reservation.getStartTime() + " ~ " + reservation.getEndTime();
+
+        } else if (type.equals(ReservationTypeCode.CAR)) {
+            Car car = carRepository.getReferenceById(resourceId);
+            resourceName = car.getName();
+            reservationDate = reservation.getReservationDate() + "시" + " ~ " + reservation.getEndDate() + "시";
+
+        } else if (type.equals(ReservationTypeCode.ITEM)) {
+            Item item = itemRepository.getReferenceById(resourceId);
+            resourceName = item.getName();
+            reservationDate = reservation.getReservationDate() + " " + reservation.getStartTime() + " ~ " + reservation.getEndTime();
+
+        }
+
+        String msg = reservationDate + "\n" + resourceName + " 예약이 승인되었습니다";
+        return msg;
     }
 
 }

@@ -432,7 +432,7 @@
         let filtered = [...schedules];
 
         filtered = filtered.filter(s => {
-            
+
             if (s.isApproval) {
                 return showApproval;
             }
