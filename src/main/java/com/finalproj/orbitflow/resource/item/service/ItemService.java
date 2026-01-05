@@ -102,7 +102,7 @@ public class ItemService {
         ItemCategory itemCategory = itemCategoryRepository.getReferenceById(dto.getItemCategoryId());
 
         // 이미지 저장
-        File imgFile = fileService.upload(companyId, FileDomain.RESOURCE, dto.getImgFile());
+        File imgFile = fileService.upload(companyId, employeeId, FileDomain.RESOURCE, dto.getImgFile());
 
         Item item = Item.builder()
                 .company(company)
@@ -137,7 +137,7 @@ public class ItemService {
             }
 
             // 2. 새 img 등록
-            imgFile = fileService.upload(companyId, FileDomain.RESOURCE, dto.getImgFile());
+            imgFile = fileService.upload(companyId, employeeId, FileDomain.RESOURCE, dto.getImgFile());
 
         }
         // 이미지 변경 없으면

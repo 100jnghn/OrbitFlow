@@ -16,7 +16,6 @@ public enum FileDomain {
     SIGNATURE("signature"),
     RESOURCE("resource"),
     PDF_FINAL("pdf-final"),
-    DOCUMENT_PDF("document-pdf"),
     MESSAGE("message");
 
     private final String path;

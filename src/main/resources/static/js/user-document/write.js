@@ -12,9 +12,6 @@
 let hasUnsavedChanges = false;
 let isInitializing = true;
 let documentFieldDefinitions = [];
-let attachmentFiles = [];
-const imageFieldState = new Map();
-
 
 const MAX_LENGTH = {
     /* 단일 필드 */
@@ -60,7 +57,7 @@ async function searchEmployees(keyword) {
     if (!keyword || keyword.length < 2) return [];
 
     const res = await apiFetch(
-        `/api/employees/search?keyword=${encodeURIComponent(keyword)}`
+        `/api/admin/rules/employees/search?keyword=${encodeURIComponent(keyword)}`
     );
 
     if (!res.ok) {
@@ -72,22 +69,6 @@ async function searchEmployees(keyword) {
     return Array.isArray(result)
         ? result
         : result.data ?? [];
-}
-
-async function searchOrganizations(keyword) {
-    if (!keyword || keyword.length < 2) return [];
-
-    const res = await apiFetch(
-        `/api/admin/organizations?keyword=${encodeURIComponent(keyword)}`
-    );
-
-    if (!res.ok) {
-        showToast('조직 검색에 실패했습니다.', 'error');
-        return [];
-    }
-
-    const result = await res.json();
-    return result.data ?? [];
 }
 
 
@@ -114,12 +95,9 @@ function updateApprovalSidebarSelection() {
 /* 클릭 이벤트 */
 document.addEventListener('click', (e) => {
     document
-        .querySelectorAll('.employee-search, .organization-search')
+        .querySelectorAll('.employee-search')
         .forEach(wrapper => {
-            const dropdown =
-                wrapper.querySelector('.employee-search-dropdown') ||
-                wrapper.querySelector('.organization-search-dropdown');
-
+            const dropdown = wrapper.querySelector('.employee-search-dropdown');
             if (!dropdown) return;
 
             if (!wrapper.contains(e.target)) {
@@ -140,9 +118,7 @@ document.addEventListener('keydown', (e) => {
 
     /* 1️⃣ employee search dropdown 닫기 */
     document
-        .querySelectorAll(
-            '.employee-search-dropdown, .organization-search-dropdown'
-        )
+        .querySelectorAll('.employee-search-dropdown')
         .forEach(dd => dd.classList.add('hidden'));
 
     /* 2️⃣ 주소 검색 닫기 */
@@ -161,12 +137,6 @@ document.addEventListener('input', (e) => {
             'input[data-field-id], textarea[data-field-id], select[data-field-id]'
         )
     ) {
-        const isTracked =
-            target.dataset.trackUnsaved === 'true' ||
-            target.closest('[data-track-unsaved="true"]');
-
-        if (!isTracked) return;
-
         hasUnsavedChanges = true;
 
         /* =========================
@@ -222,11 +192,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         await loadDocumentDraft(DOCUMENT_ID);
         await loadApprovalLines(DOCUMENT_ID);
-
-        await loadAttachments(DOCUMENT_ID);
-        renderAttachmentList();
-        await hydrateImageFields(); // ⭐ 여기서만
-
         bindEvents(DOCUMENT_ID);
 
         hasUnsavedChanges = false;
@@ -397,43 +362,13 @@ function showFieldError(inputEl, message) {
 }
 
 
-function showImageFieldError(fieldId, message) {
-    const state = imageFieldState.get(fieldId);
-    if (!state) return;
-
-    const {wrapper} = state;
-
-    // 기존 에러 제거
-    wrapper.classList.remove('field-error');
-    wrapper.querySelector('.field-hint')?.remove();
-
-    // 에러 클래스
-    wrapper.classList.add('field-error');
-
-    // hint
-    const hint = document.createElement('div');
-    hint.className = 'field-hint error';
-    hint.textContent = message;
-    wrapper.appendChild(hint);
-
-    // 스크롤
-    wrapper.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'
-    });
-}
-
-
 function clearFieldError(inputEl) {
     if (!inputEl) return;
 
     const fieldId = inputEl.dataset?.fieldId;
     if (!fieldId) return;
 
-    const fieldWrapper =
-        getFieldWrapperByFieldId(fieldId) ||
-        inputEl.closest('.doc-field');
-
+    const fieldWrapper = getFieldWrapperByFieldId(fieldId);
     if (!fieldWrapper) return;
 
     fieldWrapper.classList.remove('field-error');
@@ -825,11 +760,13 @@ function renderDocumentTitleFromField(titleField) {
 
     if (!titleInput || !titleField) return;
 
+    // label
     if (titleLabel) {
         titleLabel.textContent = titleField.label ?? '문서 제목';
         titleLabel.classList.toggle('required', titleField.required === true);
     }
 
+    // input
     titleInput.placeholder =
         titleField.meta?.placeholder ?? '문서 제목을 입력하세요';
 
@@ -837,16 +774,7 @@ function renderDocumentTitleFromField(titleField) {
         titleField.value ?? titleField.meta?.value ?? '';
 
     titleInput.dataset.fieldId = titleField.fieldId;
-
-    // ⭐ 추가 (중요)
-    titleInput.dataset.trackUnsaved = 'true';
-
     bindLengthCounter(titleInput, MAX_LENGTH.documentTitle);
-
-    // ⭐ 추가: 입력 시 error 즉시 제거
-    titleInput.addEventListener('input', () => {
-        clearFieldError(titleInput);
-    });
 }
 
 
@@ -1002,9 +930,6 @@ async function createFieldComponent(field) {
         case 'employee-search':
             input = createEmployeeSearchField(field);
             break;
-        case 'department-search':
-            input = createOrganizationSearchField(field);
-            break;
 
         default:
             input = createPlaceholder(field);
@@ -1016,8 +941,7 @@ async function createFieldComponent(field) {
     if (input && input.dataset !== undefined) {
         input.dataset.fieldId = field.fieldId;
 
-        input.dataset.trackUnsaved = 'true';
-
+        // ❗ address는 wrapper에 disabled 금지
         if (field.editable === false && field.fieldType !== 'address') {
             input.disabled = true;
         }
@@ -1289,88 +1213,6 @@ function createEmployeeSearchField(field) {
     return container;
 }
 
-function createOrganizationSearchField(field) {
-    const container = document.createElement('div');
-    container.className = 'organization-search';
-
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.placeholder = '조직명 검색';
-    input.autocomplete = 'off';
-    input.dataset.fieldId = field.fieldId;
-
-    const dropdown = document.createElement('div');
-    dropdown.className = 'organization-search-dropdown hidden';
-
-    const list = document.createElement('ul');
-    list.className = 'organization-list';
-    dropdown.appendChild(list);
-
-    let selectedOrg = null;
-
-    /* =========================
-       🔹 초기 값 복원
-    ========================= */
-    if (field.value?.id) {
-        selectedOrg = field.value;
-        input.value = field.value.name;
-    }
-
-    /* =========================
-       검색
-    ========================= */
-    input.addEventListener('input', async () => {
-        const keyword = input.value.trim();
-
-        dropdown.classList.add('hidden');
-        list.innerHTML = '';
-        selectedOrg = null;
-
-        if (keyword.length < 2) return;
-
-        const orgs = await searchOrganizations(keyword);
-
-        if (orgs.length === 0) {
-            list.innerHTML =
-                `<li class="no-results">검색 결과가 없습니다.</li>`;
-            dropdown.classList.remove('hidden');
-            return;
-        }
-
-        orgs.forEach(org => {
-            const li = document.createElement('li');
-            li.className = 'organization-item';
-            li.textContent = org.name;
-
-            li.addEventListener('click', () => {
-                selectedOrg = {
-                    id: org.id,
-                    name: org.name,
-                    categoryId: org.categoryId,
-                    parentOrgId: org.parentOrgId
-                };
-
-                input.value = org.name;
-                dropdown.classList.add('hidden');
-                clearFieldError(input);
-            });
-
-            list.appendChild(li);
-        });
-
-        dropdown.classList.remove('hidden');
-    });
-
-    /* =========================
-       값 접근 (⭐ 핵심)
-    ========================= */
-    container.getValue = () => selectedOrg;
-
-    container.append(input, dropdown);
-    return container;
-}
-
-
 function openPostcodeSearch(fieldId) {
     const overlay = document.getElementById('postcode-overlay');
     const content = document.getElementById('postcode-content');
@@ -1468,16 +1310,11 @@ function createTableField(field) {
     wrapper.className = 'doc-table';
     wrapper.dataset.fieldId = field.fieldId;
 
-    // ⭐ table 전체를 unsavedChanges 추적 대상으로
-    wrapper.dataset.trackUnsaved = 'true';
-
     const table = document.createElement('table');
     const thead = document.createElement('thead');
     const tbody = document.createElement('tbody');
 
-    /* =========================
-       header
-    ========================= */
+    /* header */
     const headerRow = document.createElement('tr');
     field.meta.columns.forEach(col => {
         const th = document.createElement('th');
@@ -1496,9 +1333,7 @@ function createTableField(field) {
 
     thead.appendChild(headerRow);
 
-    /* =========================
-       rows (🔥 minRows 반영)
-    ========================= */
+    /* rows (🔥 minRows 반영) */
     const initialRows = Array.isArray(field.value) ? field.value : [];
     const minRows = field.meta?.rowPolicy?.min ?? 0;
 
@@ -1520,9 +1355,7 @@ function createTableField(field) {
     table.append(thead, tbody);
     wrapper.appendChild(table);
 
-    /* =========================
-       add row 버튼
-    ========================= */
+    /* add row 버튼 */
     let addBtn = null;
     if (field.meta.rowPolicy?.addable) {
         addBtn = document.createElement('button');
@@ -1533,9 +1366,6 @@ function createTableField(field) {
         addBtn.addEventListener('click', () => {
             addTableRow(tbody, field);
             updateTableRowControls(tbody, field, addBtn);
-
-            // ⭐ 행 추가도 문서 변경으로 인식
-            hasUnsavedChanges = true;
         });
 
         wrapper.appendChild(addBtn);
@@ -1550,183 +1380,61 @@ function createTableField(field) {
 function createImageField(field) {
     const wrapper = document.createElement('div');
     wrapper.className = 'doc-image-wrapper';
-    wrapper.dataset.fieldId = field.fieldId;
 
-    /* =========================
-       Label + maxCount 안내
-    ========================= */
     const label = document.createElement('label');
     label.className = 'info-label';
     label.textContent = field.label;
-
-    const maxCount = field.meta?.maxCount ?? 1;
-    const countHint = document.createElement('span');
-    countHint.className = 'image-max-hint';
-
-    label.appendChild(countHint);
     wrapper.appendChild(label);
 
-    /* =========================
-       업로드 input
-    ========================= */
+    const uploadContainer = document.createElement('div');
+    uploadContainer.className = 'image-upload-container';
+
     const inputFile = document.createElement('input');
     inputFile.type = 'file';
     inputFile.accept = 'image/*';
-    inputFile.multiple = false;
     inputFile.style.display = 'none';
+    inputFile.dataset.fieldId = field.fieldId;
 
-    /* =========================
-       이미지 리스트 컨테이너
-    ========================= */
-    const list = document.createElement('div');
-    list.className = 'image-preview-list';
+    const preview = document.createElement('div');
+    preview.className = 'image-preview';
 
-    /* =========================
-       업로드 버튼
-    ========================= */
-    const uploadBtn = document.createElement('div');
-    uploadBtn.className = 'image-upload-placeholder';
-    uploadBtn.innerHTML = `
+    const img = document.createElement('img');
+    img.alt = '미리보기';
+    img.style.display = 'none';
+
+    const placeholder = document.createElement('div');
+    placeholder.className = 'upload-placeholder';
+    placeholder.innerHTML = `
         <i class="fas fa-cloud-upload-alt"></i>
-        <p>이미지 업로드</p>
+        <p>클릭하여 이미지 업로드</p>
         <span class="upload-hint">JPG, PNG, GIF</span>
     `;
 
-    wrapper.append(inputFile, list, uploadBtn);
+    preview.append(img, placeholder);
+    uploadContainer.append(inputFile, preview);
+    wrapper.appendChild(uploadContainer);
 
-    /* =========================
-       count / 버튼 동기화
-    ========================= */
-    function updateCountHint() {
-        const activeCount = attachmentFiles.filter(
-            f => f.fieldId === field.fieldId && f.status !== 'DELETED'
-        ).length;
-
-        countHint.textContent = ` (${activeCount} / ${maxCount})`;
-        uploadBtn.style.display =
-            activeCount >= maxCount ? 'none' : 'flex';
-    }
-
-    /* =========================
-       업로드 클릭
-    ========================= */
-    uploadBtn.addEventListener('click', () => {
+    // 클릭 시 파일 선택
+    preview.addEventListener('click', () => {
         inputFile.click();
     });
 
-    /* =========================
-       파일 선택 → 업로드
-    ========================= */
-    inputFile.addEventListener('change', async () => {
+    // 파일 선택 시 미리보기
+    inputFile.addEventListener('change', () => {
         const file = inputFile.files[0];
         if (!file) return;
 
-        const activeCount = attachmentFiles.filter(
-            f => f.fieldId === field.fieldId && f.status !== 'DELETED'
-        ).length;
-
-        if (activeCount >= maxCount) {
-            showToast(`최대 ${maxCount}장까지 업로드할 수 있습니다.`, 'warning');
-            inputFile.value = '';
-            return;
-        }
-
-        try {
-            const uploaded = await uploadImage(field.fieldId, file);
-            // { documentFileId, fileId, fileName, fileSize }
-
-            attachmentFiles.push({
-                ...uploaded,
-                fieldId: field.fieldId,
-                status: 'TEMP'
-            });
-
-            // 즉시 field 단위 렌더
-            await renderImageField(field.fieldId);
-
-        } catch (e) {
-            console.error(e);
-            showToast('이미지 업로드에 실패했습니다.', 'error');
-        } finally {
-            inputFile.value = '';
-        }
-    });
-
-    // 초기 상태 반영
-    updateCountHint();
-
-    imageFieldState.set(field.fieldId, {
-        wrapper,
-        maxCount
+        const reader = new FileReader();
+        reader.onload = e => {
+            img.src = e.target.result;
+            img.style.display = 'block';
+            placeholder.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
     });
 
     return wrapper;
 }
-
-async function renderImageField(fieldId) {
-    const state = imageFieldState.get(fieldId);
-    if (!state) return;
-
-    const {wrapper, maxCount} = state;
-    const list = wrapper.querySelector('.image-preview-list');
-
-    const images = attachmentFiles.filter(
-        f => f.fieldId === fieldId && f.status !== 'DELETED'
-    );
-
-    /* =========================
-       기존 이미지 정리
-    ========================= */
-    list.querySelectorAll('img').forEach(img => {
-        if (img.src.startsWith('blob:')) {
-            URL.revokeObjectURL(img.src);
-        }
-    });
-
-    list.innerHTML = '';
-
-    /* =========================
-       이미지 렌더링
-    ========================= */
-    for (const file of images) {
-        const blobUrl = await loadProtectedImage(
-            `/api/document-file/${DOCUMENT_ID}/images/${file.fileId}`
-        );
-
-        const item = createImagePreviewItem(
-            {
-                documentFileId: file.documentFileId,
-                fileId: file.fileId,
-                url: blobUrl
-            },
-            fieldId
-        );
-
-        // ⭐ 이미지 로드 후 blob URL 회수
-        const img = item.querySelector('img');
-        if (img) {
-            img.onload = () => {
-                URL.revokeObjectURL(img.src);
-            };
-        }
-
-        list.appendChild(item);
-    }
-
-    /* =========================
-       count / upload 버튼 동기화
-    ========================= */
-    updateImageFieldHint(fieldId);
-
-    /* =========================
-       ⭐ required image 에러 자동 해제
-    ========================= */
-    if (images.length > 0) {
-        wrapper.classList.remove('field-error');
-        wrapper.querySelector('.field-hint.error')?.remove();
-    }
-}
-
 
 function getTableCellPlaceholderByType(type) {
     switch (type) {
@@ -1769,16 +1477,8 @@ function addTableRow(tbody, field, rowData = {}) {
         /* =========================
            입력 제어
         ========================= */
-        input.addEventListener('input', (e) => {
+        input.addEventListener('input', () => {
             if (!isInitializing) {
-                const target = e.target;
-
-                const isTracked =
-                    target.dataset.trackUnsaved === 'true' ||
-                    target.closest('[data-track-unsaved="true"]');
-
-                if (!isTracked) return;
-
                 hasUnsavedChanges = true;
             }
 
@@ -1835,7 +1535,7 @@ function addTableRow(tbody, field, rowData = {}) {
 
         btn.addEventListener('click', () => {
             tr.remove();
-            hasUnsavedChanges = true;
+
             const tbody = tr.closest('tbody');
             const fieldId = tbody.closest('.doc-table')?.dataset.fieldId;
             const field = documentFieldDefinitions.find(f => f.fieldId === fieldId);
@@ -2443,20 +2143,11 @@ function validateRequiredField(field, value) {
 
         case 'employee-search':
             return value !== null && value !== undefined;
+
         case 'department-search':
-            return value !== null && value !== undefined;
-
-        case 'image': {
-            if (!field.required) return true;
-
-            const images = attachmentFiles.filter(
-                f =>
-                    f.fieldId === field.fieldId &&
-                    f.status !== 'DELETED'
-            );
-
-            return images.length > 0;
-        }
+        case 'image':
+            // 아직 기능 미구현
+            return true;
 
         case 'event-date-range': {
             return true;
@@ -2533,18 +2224,6 @@ function updateTableRowControls(tbody, field, addBtn) {
 function validateFieldsByTypeWithSchema(fieldDefs, valuesById) {
     for (const field of fieldDefs) {
         const value = valuesById.get(field.fieldId);
-
-        if (field.fieldType === 'event-date-range') {
-            if (!validateEventDateRange(field, value)) {
-                return false;
-            }
-            continue;
-        }
-
-        // required=false → 타입 검증 스킵
-        if (!field.required) {
-            continue;
-        }
 
         switch (field.fieldType) {
 
@@ -2717,14 +2396,6 @@ function validateRequiredFieldsWithSchema(fieldDefs, valuesById) {
         const valid = validateRequiredField(field, value);
 
         if (!valid) {
-
-            if (field.fieldType === 'image') {
-                showImageFieldError(
-                    field.fieldId,
-                    `필수 항목입니다. ${field.label} 이미지를 최소 1장 이상 업로드해주세요.`
-                );
-                return false;
-            }
 
             /* range */
             if (
@@ -2966,34 +2637,7 @@ function goToPreviousPage() {
     }
 }
 
-function bindAttachmentEvents(documentId) {
-
-    const box = document.getElementById('attachmentBox');
-    const input = document.getElementById('attachmentFileInput');
-
-    if (!box || !input) return;
-
-    // dropzone 클릭 → 파일 선택
-    box.addEventListener('click', () => {
-        input.click();
-    });
-
-    // 파일 선택 → 업로드
-    input.addEventListener('change', async () => {
-        const files = Array.from(input.files);
-        if (files.length === 0) return;
-
-        for (const file of files) {
-            await uploadAttachment(documentId, file);
-        }
-
-        input.value = ''; // 동일 파일 재선택 가능
-        await loadAttachments(documentId);
-        renderAttachmentList();
-    });
-}
-
-async function bindEvents(documentId) {
+function bindEvents(documentId) {
 
     // 임시 저장
     document.getElementById('tempSaveBtn')
@@ -3004,8 +2648,11 @@ async function bindEvents(documentId) {
     // 이전
     document.getElementById('prevBtn')
         ?.addEventListener('click', () => {
-            goToPreviousPage();
+            if (!confirmLeaveIfDirty()) return;
+
+            history.back();
         });
+
 
     // 다음
     document.getElementById('nextBtn')
@@ -3039,6 +2686,7 @@ async function bindEvents(documentId) {
                 valuesById
             )) return;
 
+
             try {
                 // 5️⃣ 최종 저장
                 await apiFetch(`/api/document-contents/${DOCUMENT_ID}`, {
@@ -3064,305 +2712,8 @@ async function bindEvents(documentId) {
             }
         });
 
-    /* =========================
-       첨부파일
-    ========================= */
-    bindAttachmentEvents(documentId);
-    await loadAttachments(documentId);
+
 }
-
-function renderAttachmentList() {
-
-    const listEl = document.getElementById('attachmentList');
-    if (!listEl) return;
-
-    listEl.innerHTML = '';
-
-    /* =========================
-       ⭐ 첨부파일 필터링
-       - fieldId === null
-       - referenceTargetId === null
-    ========================= */
-    const displayFiles = attachmentFiles.filter(
-        file => file.fieldId == null && file.referenceTargetId == null
-    );
-
-    if (displayFiles.length === 0) {
-        listEl.innerHTML =
-            `<li class="empty">첨부된 파일이 없습니다.</li>`;
-        return;
-    }
-
-    displayFiles.forEach(file => {
-
-        const li = document.createElement('li');
-
-        /* =========================
-           파일명
-        ========================= */
-        const name = document.createElement('span');
-        name.className = 'item-name';
-        name.textContent =
-            `${file.fileName} (${formatFileSize(file.fileSize)})`;
-
-        /* 상태별 스타일 */
-        if (file.status === 'DELETED') {
-            li.style.opacity = '0.5';
-            name.style.textDecoration = 'line-through';
-        }
-
-        /* =========================
-           상태 버튼
-        ========================= */
-        const btn = document.createElement('button');
-
-        if (file.status === 'DELETED') {
-            btn.textContent = '복구';
-            btn.className = 'restore-btn';
-
-            btn.addEventListener('click', async () => {
-                btn.disabled = true;
-
-                const ok = await updateAttachmentStatus(
-                    file.documentFileId,
-                    'TEMP'
-                );
-
-                if (ok) {
-                    showToast('첨부파일이 복구되었습니다.', 'success');
-                    await loadAttachments(DOCUMENT_ID);
-                    renderAttachmentList();
-                }
-
-                btn.disabled = false;
-            });
-
-        } else {
-            btn.textContent = '삭제';
-            btn.className = 'delete-btn';
-
-            btn.addEventListener('click', async () => {
-                if (!confirm('첨부파일을 삭제하시겠습니까?')) return;
-
-                btn.disabled = true;
-
-                const ok = await updateAttachmentStatus(
-                    file.documentFileId,
-                    'DELETED'
-                );
-
-                if (ok) {
-                    showToast('첨부파일이 삭제되었습니다.', 'info');
-                    await loadAttachments(DOCUMENT_ID);
-                    renderAttachmentList();
-                }
-
-                btn.disabled = false;
-            });
-        }
-
-        li.append(name, btn);
-        listEl.appendChild(li);
-    });
-}
-
-async function hydrateImageFields() {
-    const fieldIds = new Set(
-        attachmentFiles
-            .filter(f => f.fieldId)
-            .map(f => f.fieldId)
-    );
-
-    for (const fieldId of fieldIds) {
-        await renderImageField(fieldId);
-    }
-}
-
-async function loadProtectedImage(url) {
-    const res = await apiFetch(url, {method: 'GET'});
-
-    if (!res.ok) {
-        throw new Error('IMAGE_LOAD_FAILED');
-    }
-
-    const blob = await res.blob();
-    return URL.createObjectURL(blob);
-}
-
-
-function createImagePreviewItem(imageItem, fieldId) {
-    const item = document.createElement('div');
-    item.className = 'image-preview-item';
-
-    const img = document.createElement('img');
-    img.src = imageItem.url;
-
-    const delBtn = document.createElement('button');
-    delBtn.className = 'image-delete-btn';
-    delBtn.innerHTML = '✕';
-
-    delBtn.addEventListener('click', async () => {
-        delBtn.disabled = true;
-
-        const ok = await updateAttachmentStatus(
-            imageItem.documentFileId,
-            'DELETED'
-        );
-
-        if (!ok) {
-            delBtn.disabled = false;
-            return;
-        }
-
-        /* =========================
-           1️⃣ 상태 즉시 반영 (🔥 중요)
-        ========================= */
-        const target = attachmentFiles.find(
-            f => f.documentFileId === imageItem.documentFileId
-        );
-        if (target) {
-            target.status = 'DELETED';
-        }
-
-        /* =========================
-           2️⃣ DOM 즉시 제거 (UX)
-        ========================= */
-        item.remove();
-
-        /* =========================
-           3️⃣ hint 즉시 갱신
-        ========================= */
-        updateImageFieldHint(fieldId);
-
-        /* =========================
-           4️⃣ field 단위 재렌더 (동기화)
-        ========================= */
-        await renderImageField(fieldId);
-    });
-
-    item.append(img, delBtn);
-    return item;
-}
-
-function updateImageFieldHint(fieldId) {
-    const state = imageFieldState.get(fieldId);
-    if (!state) return;
-
-    const {wrapper, maxCount} = state;
-
-    const countHint = wrapper.querySelector('.image-max-hint');
-    const uploadBtn = wrapper.querySelector('.image-upload-placeholder');
-
-    const activeCount = attachmentFiles.filter(
-        f => f.fieldId === fieldId && f.status !== 'DELETED'
-    ).length;
-
-    countHint.textContent = ` (${activeCount} / ${maxCount})`;
-    uploadBtn.style.display =
-        activeCount >= maxCount ? 'none' : 'flex';
-}
-
-function formatFileSize(bytes) {
-    if (!bytes && bytes !== 0) return '';
-
-    const units = ['B', 'KB', 'MB', 'GB'];
-    let size = bytes;
-    let unit = 0;
-
-    while (size >= 1024 && unit < units.length - 1) {
-        size /= 1024;
-        unit++;
-    }
-
-    return `${size.toFixed(1)}${units[unit]}`;
-}
-
-/* =====================================================
-   첨부 파일
-   ===================================================== */
-async function uploadAttachment(documentId, file) {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const res = await apiFetch(
-        `/api/document-file/${documentId}`,
-        {
-            method: 'POST',
-            body: formData
-        }
-    );
-
-    if (!res.ok) {
-        showToast(`파일 업로드 실패: ${file.name}`, 'error');
-        throw new Error('UPLOAD_FAILED');
-    }
-
-    const result = await res.json();
-    const uploaded = result.data;
-    // { documentFileId, fileId, fileName, fileSize, ... }
-
-    showToast(`업로드 완료: ${file.name}`, 'success');
-    return uploaded;
-}
-
-
-async function uploadImage(fieldId, file) {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('fieldId', fieldId);
-
-    const res = await apiFetch(
-        `/api/document-file/${DOCUMENT_ID}/image`,
-        {
-            method: 'POST',
-            body: formData
-        }
-    );
-
-    if (!res.ok) {
-        showToast('이미지 업로드에 실패했습니다.', 'error');
-        throw new Error('IMAGE_UPLOAD_FAILED');
-    }
-
-    const result = await res.json();
-    return result.data;
-    // { documentFileId, fileId, fileName, fileSize }
-}
-
-
-async function loadAttachments(documentId) {
-    const res = await apiFetch(
-        `/api/document-file/${documentId}/files`
-    );
-
-    if (!res.ok) {
-        showToast('첨부파일 목록을 불러오지 못했습니다.', 'error');
-        return;
-    }
-
-    const result = await res.json();
-    attachmentFiles = Array.isArray(result)
-        ? result
-        : result.data ?? [];
-}
-
-async function updateAttachmentStatus(documentFileId, status) {
-
-    const res = await apiFetch(
-        `/api/document-file/${documentFileId}/status?status=${status}`,
-        {
-            method: 'PATCH'
-        }
-    );
-
-    if (!res.ok) {
-        showToast('첨부파일 상태 변경에 실패했습니다.', 'error');
-        return false;
-    }
-
-    return true;
-}
-
 
 /* =====================================================
    임시 저장
@@ -3439,31 +2790,6 @@ function collectDocumentValues() {
     });
 
     /* =====================================================
-       IMAGE FIELDS
-    ===================================================== */
-    documentFieldDefinitions
-        .filter(f => f.fieldType === 'image')
-        .forEach(field => {
-
-            const images = attachmentFiles.filter(
-                f =>
-                    f.fieldId === field.fieldId &&
-                    f.status !== 'DELETED'
-            );
-
-            fieldMap.set(field.fieldId, {
-                fieldId: field.fieldId,
-                value: images.map(img => ({
-                    documentFileId: img.documentFileId,
-                    fileId: img.fileId
-                }))
-            });
-
-            processedFieldIds.add(field.fieldId);
-        });
-
-
-    /* =====================================================
        OTHER FIELDS
        ===================================================== */
     document.querySelectorAll(
@@ -3526,18 +2852,13 @@ function collectDocumentValues() {
             return;
         }
 
-        /* ===== employee-search / organization-search ===== */
-        if (
-            el.closest('.employee-search') ||
-            el.closest('.organization-search')
-        ) {
+        /* ===== employee-search ===== */
+        if (el.closest('.employee-search')) {
             if (fieldMap.has(fieldId)) return;
 
-            const wrapper =
-                el.closest('.employee-search') ||
-                el.closest('.organization-search');
-
+            const wrapper = el.closest('.employee-search');
             const value = wrapper.getValue?.() ?? null;
+
             fieldMap.set(fieldId, {fieldId, value});
             return;
         }

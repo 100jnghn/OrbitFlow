@@ -10,5 +10,5 @@ package com.finalproj.orbitflow.approval.documentFile.enums;
 
 
 public enum ReferenceType {
-    ATTACHMENT, DOCUMENT, URL, IMAGE
+    ATTACHMENT, DOCUMENT, URL
 }

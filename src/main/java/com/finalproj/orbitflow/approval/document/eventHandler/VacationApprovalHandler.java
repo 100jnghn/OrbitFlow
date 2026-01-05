@@ -70,7 +70,6 @@ public class VacationApprovalHandler {
 
         ScheduleReqDto scheduleReqDto = ScheduleReqDto.builder()
                 .isCompany(true)
-                .isPersonal(true)
                 .orgCategoryId(org.getCategoryId())
                 .orgId(org.getId())
                 .title(leave.getTypeName())
@@ -81,5 +80,6 @@ public class VacationApprovalHandler {
                 .build();
 
         scheduleService.newTransactionInsertSchedule(writer.getCompany().getId(), writer.getId(), scheduleReqDto);
+
     }
 }
