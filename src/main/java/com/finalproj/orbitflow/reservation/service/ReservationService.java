@@ -238,7 +238,8 @@ public class ReservationService {
                 employee.getCompany().getId(),
                 employee.getId(),
                 NotificationType.RESERVATION,
-                notificationMessage
+                notificationMessage,
+                "/view/reservation/me"
         );
     }
 

@@ -48,6 +48,8 @@ public class QNotification extends EntityPathBase<Notification> {
     //inherited
     public final DateTimePath<java.time.Instant> updatedAt = _super.updatedAt;
 
+    public final StringPath url = createString("url");
+
     public QNotification(String variable) {
         this(Notification.class, forVariable(variable), INITS);
     }

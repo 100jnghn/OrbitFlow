@@ -3,7 +3,6 @@ package com.finalproj.orbitflow.notification.controller;
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import com.finalproj.orbitflow.notification.dto.NotificationResDto;
-import com.finalproj.orbitflow.notification.enums.NotificationType;
 import com.finalproj.orbitflow.notification.service.NotificationCommandService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -82,25 +81,6 @@ public class NotificationCommandController {
 
         return ResponseEntity.ok().body(
                 new ResponseDto(HttpStatus.OK, "알림 읽음 처리", null)
-        );
-    }
-
-    /**
-     * 알림 전송
-     */
-    @PostMapping("/send")
-    public ResponseEntity<ResponseDto> sendTestNotification(
-            @AuthenticationPrincipal SecurityUser user
-    ) {
-        notificationCommandService.createNotification(
-                user.getCompanyId(),
-                user.getEmployeeId(),
-                NotificationType.TEST,
-                "테스트 알림입니다."
-        );
-
-        return ResponseEntity.ok().body(
-                new ResponseDto(HttpStatus.OK, "알림 생성 성공", null)
         );
     }
 }

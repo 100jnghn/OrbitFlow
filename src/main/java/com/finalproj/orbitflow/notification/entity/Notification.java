@@ -44,6 +44,9 @@ public class Notification extends BaseEntity {
     @Column(name = "is_read", nullable = false)
     private Boolean isRead;
 
+    @Column(name = "url")
+    private String url;
+
     // 읽음 처리
     public void read() {
         this.isRead = true;

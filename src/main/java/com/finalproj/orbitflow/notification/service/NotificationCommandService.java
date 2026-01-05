@@ -107,7 +107,8 @@ public class NotificationCommandService {
             Long companyId,
             Long employeeId,
             NotificationType type,
-            String content
+            String content,
+            String url
     ) {
         Company company = companyRepository.getReferenceById(companyId);
         Employee employee = employeeRepository.getReferenceById(employeeId);
@@ -119,6 +120,7 @@ public class NotificationCommandService {
                 .type(type)
                 .content(content)
                 .isRead(false)
+                .url(url)
                 .build();
 
         // RDB에 저장
