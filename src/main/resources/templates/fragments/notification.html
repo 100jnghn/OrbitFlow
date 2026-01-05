@@ -2,22 +2,21 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<!-- 알림 모달 -->
+<!-- 알림 드롭다운 -->
 <div th:fragment="body">
-<div id="notificationModal" class="notification-modal hidden">
-    <div class="notification-modal-backdrop" onclick="closeNotificationModal()"></div>
-    <div class="notification-modal-panel">
-        <div class="notification-modal-head">
+<div id="notificationDropdown" class="notification-dropdown hidden">
+    <div class="notification-dropdown-panel">
+        <div class="notification-dropdown-head">
             <h2>알림</h2>
-            <button class="notification-modal-close-btn" onclick="closeNotificationModal()">✕</button>
+            <button class="notification-dropdown-close-btn" onclick="toggleNotificationDropdown()">✕</button>
         </div>
         
-        <div class="notification-modal-tabs">
+        <div class="notification-dropdown-tabs">
             <button class="notification-tab" id="unreadTab" onclick="switchTab('unread')">읽지 않음</button>
             <button class="notification-tab" id="readTab" onclick="switchTab('read')">읽음</button>
         </div>
         
-        <div class="notification-modal-body" id="notificationList">
+        <div class="notification-dropdown-body" id="notificationList">
             <!-- 알림 목록이 여기에 동적으로 추가됩니다 -->
         </div>
     </div>

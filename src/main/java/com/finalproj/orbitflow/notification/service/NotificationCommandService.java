@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -28,6 +29,8 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 public class NotificationCommandService {
+
+    private final int MAX_SELECT_DATE = 30;
 
     private final NotificationRepository notificationRepository;
     private final RedisPublisher notificationPublisher;
@@ -59,12 +62,14 @@ public class NotificationCommandService {
     @Transactional(readOnly = true)
     public List<NotificationResDto> getUnreadNotifications(Long companyId, Long employeeId) {
 
-        List<Notification> list = notificationRepository.findByCompanyIdAndReceiverIdAndIsReadFalseOrderByCreatedAtDesc(
-                companyId,
-                employeeId
-        );
+        // 현재 - 30일 전
+        LocalDateTime daysAgo = LocalDateTime.now().minusDays(MAX_SELECT_DATE);
 
-        log.info("SSE : " + "안 읽은 알림 수 : " + list.size());
+        List<Notification> list = notificationRepository.findByCompanyIdAndReceiverIdAndIsReadFalseAndCreatedAtAfterOrderByCreatedAtDesc(
+                companyId,
+                employeeId,
+                daysAgo
+        );
 
         return list.stream()
                 .map(NotificationResDto::fromEntity)

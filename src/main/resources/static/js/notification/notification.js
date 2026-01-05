@@ -5,19 +5,33 @@
 // 현재 선택된 탭 (기본값: unread)
 let currentTab = 'unread';
 
-// 모달 열기
-function openNotificationModal() {
-    const modal = document.getElementById('notificationModal');
-    if (modal) {
-        modal.classList.remove('hidden');
-        // 탭 초기화
-        currentTab = 'unread';
-        switchTab('unread');
-        // 읽지 않은 알림 수 업데이트
-        if (typeof refreshUnreadCount === 'function') {
-            refreshUnreadCount();
+// 드롭다운 토글
+function toggleNotificationDropdown() {
+    const dropdown = document.getElementById('notificationDropdown');
+    if (dropdown) {
+        const isHidden = dropdown.classList.contains('hidden');
+        if (isHidden) {
+            dropdown.classList.remove('hidden');
+            // 탭 초기화
+            currentTab = 'unread';
+            switchTab('unread');
+            // 읽지 않은 알림 수 업데이트
+            if (typeof refreshUnreadCount === 'function') {
+                refreshUnreadCount();
+            }
+        } else {
+            dropdown.classList.add('hidden');
+            // 읽지 않은 알림 수 업데이트
+            if (typeof refreshUnreadCount === 'function') {
+                refreshUnreadCount();
+            }
         }
     }
+}
+
+// 모달 열기 (하위 호환성)
+function openNotificationModal() {
+    toggleNotificationDropdown();
 }
 
 // 탭 전환
@@ -42,16 +56,9 @@ function switchTab(tab) {
     loadNotifications(tab === 'read');
 }
 
-// 모달 닫기
+// 드롭다운 닫기
 function closeNotificationModal() {
-    const modal = document.getElementById('notificationModal');
-    if (modal) {
-        modal.classList.add('hidden');
-        // 읽지 않은 알림 수 업데이트
-        if (typeof refreshUnreadCount === 'function') {
-            refreshUnreadCount();
-        }
-    }
+    toggleNotificationDropdown();
 }
 
 // 알림 목록 로드
@@ -165,5 +172,20 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// 모달 외부 클릭 시 닫기 (이미 HTML에서 처리됨)
+// 외부 클릭 시 드롭다운 닫기
+document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('notificationDropdown');
+    const bellIcon = document.querySelector('.fa-bell');
+    
+    if (dropdown && !dropdown.classList.contains('hidden')) {
+        // 드롭다운 내부나 알림 아이콘을 클릭한 경우가 아니면 닫기
+        if (!dropdown.contains(e.target) && !e.target.closest('a[onclick*="toggleNotificationDropdown"]')) {
+            dropdown.classList.add('hidden');
+            // 읽지 않은 알림 수 업데이트
+            if (typeof refreshUnreadCount === 'function') {
+                refreshUnreadCount();
+            }
+        }
+    }
+});
 

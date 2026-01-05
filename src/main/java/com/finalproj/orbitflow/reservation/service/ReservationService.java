@@ -543,18 +543,17 @@ public class ReservationService {
         if (type.equals(ReservationTypeCode.MEETING)) {
             Meetingroom meetingroom = meetingroomRepository.getReferenceById(resourceId);
             resourceName = meetingroom.getName();
-            reservationDate = reservation.getReservationDate() + " " + reservation.getStartTime() + " ~ " + reservation.getEndTime();
+            reservationDate = reservation.getReservationDate() + " " + reservation.getStartTime() + "시" + " ~ " + reservation.getEndTime() + "시";
 
         } else if (type.equals(ReservationTypeCode.CAR)) {
             Car car = carRepository.getReferenceById(resourceId);
             resourceName = car.getName();
-            reservationDate = reservation.getReservationDate() + "시" + " ~ " + reservation.getEndDate() + "시";
+            reservationDate = reservation.getReservationDate() + " ~ " + reservation.getEndDate();
 
         } else if (type.equals(ReservationTypeCode.ITEM)) {
             Item item = itemRepository.getReferenceById(resourceId);
             resourceName = item.getName();
-            reservationDate = reservation.getReservationDate() + " " + reservation.getStartTime() + " ~ " + reservation.getEndTime();
-
+            reservationDate = reservation.getReservationDate() + " " + reservation.getStartTime() + "시" + " ~ " + reservation.getEndTime() + "시";
         }
 
         String msg = reservationDate + "\n" + resourceName + " 예약이 승인되었습니다";
