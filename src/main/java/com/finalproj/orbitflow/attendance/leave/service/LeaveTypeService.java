@@ -1,14 +1,12 @@
 package com.finalproj.orbitflow.attendance.leave.service;
 
 import com.finalproj.orbitflow.attendance.leave.dto.LeaveTypeResDto;
-import com.finalproj.orbitflow.attendance.leave.entity.LeaveType;
 import com.finalproj.orbitflow.attendance.leave.repository.LeaveTypeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,24 +32,5 @@ public class LeaveTypeService {
         return leaveTypeRepository.findByIsCountableTrueOrderByIdAsc().stream()
                 .map(LeaveTypeResDto::from)
                 .collect(Collectors.toList());
-    }
-
-    private LeaveTypeResDto mapToDto(LeaveType leaveType) {
-        return LeaveTypeResDto.builder()
-                .typeId(leaveType.getId())
-                .typeName(leaveType.getTypeName())
-                .isCountable(leaveType.getIsCountable())
-                .description(leaveType.getDescription())
-                .build();
-    }
-
-    public Optional<String> findNameById(String leaveTypeId) {
-        if (leaveTypeId == null) {
-            return Optional.empty();
-        }
-
-        return leaveTypeRepository
-                .findById(Long.valueOf(leaveTypeId))
-                .map(LeaveType::getTypeName);
     }
 }

@@ -43,7 +43,8 @@ public class BoardResDto {
         private String filePath;
 
         public static FileInfo from(File file) {
-            if (file == null) return null;
+            if (file == null)
+                return null;
             return FileInfo.builder()
                     .id(file.getId())
                     .originalFileName(file.getOriginFile())
@@ -52,12 +53,14 @@ public class BoardResDto {
         }
 
         public static List<FileInfo> fromFiles(List<File> files) {
-            if (files == null || files.isEmpty()) return List.of();
+            if (files == null || files.isEmpty())
+                return List.of();
             return files.stream()
                     .map(FileInfo::from)
                     .toList();
         }
     }
+
     /** 게시글 목록 조회 DTO */
     @Data
     @NoArgsConstructor

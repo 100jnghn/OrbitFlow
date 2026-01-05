@@ -1,6 +1,5 @@
 package com.finalproj.orbitflow.email.controller;
 
-import com.finalproj.orbitflow.auth.service.AuthService;
 import com.finalproj.orbitflow.email.dto.PasswordResetReqDto;
 import com.finalproj.orbitflow.email.entity.EmailVerificationToken;
 import com.finalproj.orbitflow.email.enums.EmailTokenType;
@@ -33,7 +32,6 @@ public class PasswordResetController {
     private final EmployeeService employeeService;
     private final EmailVerificationService emailService;
     private final AuditLogService auditLogService;
-    private final AuthService authService;
 
     @PostMapping("/password/reset-request")
     public ResponseEntity<?> request(@RequestParam String email) {
@@ -51,14 +49,11 @@ public class PasswordResetController {
             @RequestBody @Valid PasswordResetReqDto dto
     ) {
         EmailVerificationToken verificationToken =
-                emailService.verify(token, EmailTokenType.RESET_PASSWORD);
+                emailService.verify(token, EmailTokenType.ACTIVATE_ACCOUNT);
 
         Employee employee = verificationToken.getEmployee();
 
         employeeService.resetPassword(employee, dto.getPassword());
-
-        // 모든 세션 무효화 --> 비밀번호 변경 즉시 모든 기기 로그아웃
-        authService.invalidateAll(employee.getId());
 
         // 여기서 토큰 사용 처리
         emailService.markTokenUsed(verificationToken);

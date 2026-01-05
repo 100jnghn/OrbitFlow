@@ -977,7 +977,8 @@
     margin-bottom: 14px;
     white-space: pre-wrap;
     word-wrap: break-word;
-    max-height: calc(1.7em * 5); /* 5줄 높이 */
+    max-height: calc(1.7em * 5);
+    /* 5줄 높이 */
     overflow-y: auto;
     overflow-x: hidden;
     padding-right: 8px;

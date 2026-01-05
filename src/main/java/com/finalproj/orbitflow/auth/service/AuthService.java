@@ -64,8 +64,8 @@ public class AuthService {
         refreshTokenRepository.deleteByToken(token);
     }
 
-    // 비밀번호 변경 시 Refresh Token 전체 무효화
-    public void invalidateAll(Long employeeId) { // 특정 사원의 모든 Refresh Token을 DB에서 삭제
-        refreshTokenRepository.deleteAllByEmployeeId(employeeId);
-    }
+    // 동시 로그인 차단 // TODO: 사용할지는 나중에 결정하기
+//    public void invalidateAll(Long employeeId) { // 특정 사원의 모든 Refresh Token을 DB에서 삭제
+//        refreshTokenRepository.deleteAllByEmployeeId(employeeId);
+//    }
 }

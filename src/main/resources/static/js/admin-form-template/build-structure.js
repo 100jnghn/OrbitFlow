@@ -37,9 +37,6 @@ const REQUIRED_TOGGLE_HIDDEN_TYPES = [
     'event-date-range'
 ];
 
-// 이미지 컴포넌트 정책
-const IMAGE_COMPONENT_SYSTEM_MAX = 5;
-const IMAGE_COMPONENT_DEFAULT_MAX = 1;
 
 // -- 타입별 기본 스키마: 공통필드+meta
 const FORM_COMPONENT_SCHEMAS = {
@@ -187,7 +184,8 @@ const FORM_COMPONENT_SCHEMAS = {
         label: "이미지",
         required: false,
         meta: {
-            maxCount: IMAGE_COMPONENT_DEFAULT_MAX
+            src: "",
+            alt: ""
         }
     },
     currency: {
@@ -253,8 +251,6 @@ const FIXED_COMPONENTS = [
 // =====================================
 // 2. 전역 변수 (폼 상태 & 상수 값 등)
 // =====================================
-
-
 
 // -- 폼 컴포넌트(양식요소) 목록
 let formComponents = [
@@ -882,9 +878,6 @@ function addComponentByType(type) {
     const schema = FORM_COMPONENT_SCHEMAS[type];
     const metaCopy = deepCopy(schema.meta);
 
-    /* ===============================
-       선택형 옵션 ID 재생성
-    =============================== */
     if (type === "radio" || type === "checkbox") {
         metaCopy.options = metaCopy.options?.length
             ? metaCopy.options.map(opt => ({
@@ -892,24 +885,6 @@ function addComponentByType(type) {
                 id: generateOptionId()
             }))
             : [{id: generateOptionId(), label: "옵션 1"}];
-    }
-
-    /* ===============================
-       🖼 image 컴포넌트 전용 초기화
-    =============================== */
-    if (type === "image") {
-        // 기본 maxCount
-        let maxCount = metaCopy.maxCount ?? IMAGE_COMPONENT_DEFAULT_MAX;
-
-        // 시스템 상한 보정
-        if (maxCount > IMAGE_COMPONENT_SYSTEM_MAX) {
-            maxCount = IMAGE_COMPONENT_SYSTEM_MAX;
-        }
-
-        metaCopy.maxCount = maxCount;
-
-        // value는 작성 시점에 채워짐 (fileId 배열)
-        metaCopy.value = [];
     }
 
     const component = {
@@ -931,7 +906,7 @@ function addComponentByType(type) {
         );
     }
 
-    // document-meta 바로 앞에 삽입
+
     formComponents.splice(formComponents.length - 1, 0, component);
 
     selectedComponentId = component.id;
@@ -1392,11 +1367,20 @@ function renderTablePreview(comp) {
 
 
 function renderImagePreview(comp) {
-    const max = comp.meta?.maxCount ?? 1;
+    const src = comp.meta?.src;
+    const alt = comp.meta?.alt ?? "이미지";
+
+    if (!src) {
+        return `
+            <div class="image-preview placeholder">
+                이미지 미리보기
+            </div>
+        `;
+    }
 
     return `
-        <div class="image-preview placeholder">
-            이미지 (${max}장까지)
+        <div class="image-preview">
+            <img src="${src}" alt="${alt}" />
         </div>
     `;
 }
@@ -1490,31 +1474,6 @@ function showComponentSettingPanel(componentId) {
             <div class="hint" id="notice-message-hint"></div>
         </div>`;
     }
-
-    /* ======================
-       image
-    ====================== */
-    if (comp.type === "image") {
-        const currentMax = comp.meta.maxCount ?? IMAGE_COMPONENT_DEFAULT_MAX;
-
-        html += `
-    <div class="setting-row" style="margin-top:14px;">
-        <label style="font-weight:600;">최대 이미지 개수</label>
-        <input
-            type="number"
-            id="image-max-count"
-            min="1"
-            max="${IMAGE_COMPONENT_SYSTEM_MAX}"
-            value="${currentMax}"
-        />
-        <div class="hint" id="image-max-hint"></div>
-        <div style="font-size:0.85em;color:#888;margin-top:4px;">
-            ※ 문서 본문에 출력되는 이미지 수입니다 (최대 ${IMAGE_COMPONENT_SYSTEM_MAX}장)
-        </div>
-    </div>
-    `;
-    }
-
 
     /* ======================
        radio / checkbox
@@ -1645,31 +1604,6 @@ function showComponentSettingPanel(componentId) {
             renderFormComponents();
         });
     }
-
-    /* ======================
-       image 이벤트
-    ====================== */
-    if (comp.type === "image") {
-        const input = document.getElementById("image-max-count");
-        const hint = document.getElementById("image-max-hint");
-
-        input.addEventListener("input", () => {
-            let v = Number(input.value);
-
-            if (!v || v < 1) v = 1;
-            if (v > IMAGE_COMPONENT_SYSTEM_MAX) v = IMAGE_COMPONENT_SYSTEM_MAX;
-
-            input.value = v;
-            comp.meta.maxCount = v;
-
-            showMsg(
-                hint,
-                `최대 ${v}장까지 업로드 가능`,
-                'success'
-            );
-        });
-    }
-
 
     /* ======================
        5. radio / checkbox 이벤트

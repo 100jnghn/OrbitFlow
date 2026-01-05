@@ -92,7 +92,7 @@ public class DocumentController {
     public ResponseEntity<ResponseDto> submitDocument(
             @PathVariable Long documentId
     ) {
-        documentApplicationService.submitDocument(SecurityUtils.getEmployeeId(), documentId);
+        documentService.submitDocument(SecurityUtils.getEmployeeId(), documentId);
 
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "문서 상신 성공", null));
     }
