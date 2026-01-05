@@ -501,6 +501,8 @@
     text-decoration: none;
     transition: all 0.2s ease;
     font-weight: 500;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .file-link:hover {
@@ -779,36 +781,49 @@
     border-color: var(--neutral-400);
 }
 
-.selected-file {
+.file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.file-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-top: 12px;
-    padding: 10px 16px;
-    background-color: var(--neutral-50);
-    border: 1px solid var(--neutral-300);
+    justify-content: space-between;
+    padding: 7px 16px;
+    background: var(--neutral-50);
+    border: 1px solid var(--neutral-200);
     border-radius: 8px;
 }
 
-.selected-file #fileName {
-    flex: 1;
+.file-name {
     font-size: 14px;
     color: var(--neutral-700);
+    flex: 1;
+    font-weight: 500;
 }
 
-.btn-remove-file {
-    background: none;
-    border: none;
-    color: var(--neutral-500);
-    cursor: pointer;
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    transition: color 0.2s ease;
-}
-
-.btn-remove-file:hover {
+.btn-file-remove {
+    padding: 6px 12px;
+    background: transparent;
     color: var(--danger-color);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.btn-file-remove:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger-hover);
 }
 
 /* 폼 액션 버튼 */
@@ -877,5 +892,3 @@
     transform: none;
     box-shadow: none;
 }
-
-
