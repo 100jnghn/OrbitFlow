@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-user :: layout(
+         ~{::content},
+         ~{fragments/header :: header},
+         ~{::user-sidebar-menu},
+         ~{::pageCss},
+         ~{::pageScript}
+     )}">
+
+<!-- =========================
+     페이지 전용 CSS
+========================= -->
+<th:block th:fragment="pageCss">
+    <link rel="stylesheet" th:href="@{/css/organization/org-tree.css}">
+</th:block>
+
+<!-- =========================
+     메인 콘텐츠
+========================= -->
+<th:block th:fragment="content">
+    <div class="org-page">
+
+        <!-- 좌측: 조직 트리 -->
+        <aside id="org-tree-container" class="org-tree"></aside>
+
+        <!-- 우측: 사원 상세 (메인) -->
+        <section id="employee-panel" class="employee-panel hidden">
+
+            <!-- Hero -->
+            <div class="emp-hero">
+                <img id="empAvatar"
+                     class="emp-avatar"
+                     src="/images/male.png"
+                     alt="profile"/>
+
+                <div class="emp-main">
+                    <div class="emp-name" id="empName">-</div>
+                    <div class="emp-summary" id="empSummary">-</div>
+
+                    <div id="empStatus" class="emp-status"></div>
+
+                    <div class="emp-meta">
+                        <span id="empEmail">-</span>
+                        <span class="dot">•</span>
+                        <span>내선 <b id="empInternalPhone">-</b></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info -->
+            <div class="emp-info-card">
+                <div class="kv">
+                    <div class="k">조직</div>
+                    <div class="v" id="empOrg">-</div>
+
+                    <div class="k">직급</div>
+                    <div class="v" id="empRank">-</div>
+
+                    <div class="k">직책</div>
+                    <div class="v" id="empPosition">-</div>
+                </div>
+            </div>
+
+        </section>
+    </div>
+</th:block>
+
+<!-- =========================
+     페이지 전용 JS
+========================= -->
+<th:block th:fragment="pageScript">
+    <script th:inline="javascript">
+        const targetEmployeeId = [[${employeeId}]];
+    </script>
+    <script th:src="@{/js/org-tree.js}"></script>
+</th:block>
+
+<!-- =========================
+     사용자 사이드바 메뉴
+========================= -->
+<ul th:fragment="user-sidebar-menu" class="sidebar-menu">
+    <li class="selected">
+        <a th:href="@{/view/organizations}" class="sidebar-link">
+            조직도
+        </a>
+    </li>
+</ul>
+
+</html>
