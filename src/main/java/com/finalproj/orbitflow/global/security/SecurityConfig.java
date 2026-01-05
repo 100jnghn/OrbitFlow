@@ -52,6 +52,7 @@ public class SecurityConfig {
                                 "/favicon.ico",
                                 "/activate",
                                 "/reset-password",
+                                "/find-password",
                                 "/api/email/**"
                         ).permitAll()
 
