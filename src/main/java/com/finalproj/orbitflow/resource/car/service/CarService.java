@@ -83,7 +83,7 @@ public class CarService {
         }
 
         // 이미지 저장 기능 추가
-        File imgFile = fileService.upload(companyId, employeeId, FileDomain.RESOURCE, dto.getImgFile());
+        File imgFile = fileService.upload(companyId, FileDomain.RESOURCE, dto.getImgFile());
 
         Car car = Car.builder()
                 .company(company)
@@ -118,7 +118,7 @@ public class CarService {
             }
 
             // 2. 새 img 등록
-            imgFile = fileService.upload(companyId, employeeId, FileDomain.RESOURCE, dto.getImgFile());
+            imgFile = fileService.upload(companyId, FileDomain.RESOURCE, dto.getImgFile());
 
         }
         // 이미지 변경 없으면
