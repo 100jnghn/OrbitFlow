@@ -380,7 +380,7 @@ public class MessageService {
         // 파일 업로드 처리
         Long fileId = null;
         if (file != null && !file.isEmpty()) {
-            File uploadedFile = fileService.upload(companyId, senderEmployeeId, FileDomain.MESSAGE, file);
+            File uploadedFile = fileService.upload(companyId, FileDomain.MESSAGE, file);
             fileId = uploadedFile.getId();
         } else if (request.getFileId() != null) {
             // 기존 파일 ID가 제공된 경우 (이미 업로드된 파일 재사용)

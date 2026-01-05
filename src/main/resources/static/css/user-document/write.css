@@ -39,10 +39,20 @@ button:not(.primary):hover {
    Layout
    ===================================================== */
 
+.document-write-wrapper {
+    display: flex;
+    justify-content: center; /* ⭐ 가로 중앙 */
+    width: 100%;
+}
+
 .document-write {
     display: flex;
     gap: 24px;
     padding: 24px;
+
+    max-width: 1240px; /* 900 + 320 + gap */
+    width: 100%;
+
     height: calc(100vh - 120px);
 }
 
@@ -269,51 +279,112 @@ button:not(.primary):hover {
     margin-top: 8px;
 }
 
-/* =====================================================
-   Image Upload
-   ===================================================== */
-
+/* =========================
+   이미지 필드 전체 박스
+========================= */
 .doc-image-wrapper {
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 16px;
+    background: #ffffff;
     margin-bottom: 24px;
 }
 
-.image-upload-container {
-    cursor: pointer;
-}
-
-.image-preview {
-    border: 2px dashed #cbd5e1;
-    padding: 16px;
-    text-align: center;
-    border-radius: 8px;
-    transition: border-color 0.2s;
-}
-
-.image-preview:hover {
-    border-color: #2563eb;
-}
-
-.image-preview img {
-    max-width: 100%;
-    max-height: 240px;
-    display: block;
-    margin: 0 auto;
-}
-
-.upload-placeholder {
-    color: #888;
-}
-
-.upload-placeholder i {
-    font-size: 32px;
+.doc-image-wrapper > label {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
     margin-bottom: 8px;
 }
 
-.upload-hint {
-    font-size: 12px;
-    color: #aaa;
+/* =========================
+   업로드 placeholder
+========================= */
+.image-upload-placeholder {
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 20px 12px;
+    text-align: center;
+    cursor: pointer;
+
+    color: #64748b;
+    background: #ffffff;
+
+    transition: all 0.2s ease;
 }
 
+
+.image-upload-placeholder:hover {
+    border-color: #2563eb;
+    background: #f8fafc;
+    color: #2563eb;
+}
+
+.image-upload-placeholder i {
+    font-size: 24px;
+    margin-bottom: 6px;
+}
+
+/* =========================
+   미리보기 리스트
+========================= */
+.image-preview-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+/* =========================
+   미리보기 아이템
+========================= */
+.image-preview-item {
+    width: 100%;
+    max-width: 720px;
+    max-height: 1200px;
+    margin: 0 auto 12px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+
+    overflow: hidden;
+    position: relative;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+
+/* ⭐ 핵심: 원본 비율 유지 */
+.image-preview-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 4px;
+}
+
+.image-preview-item:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
+}
+
+.image-delete-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    font-size: 14px;
+
+    cursor: pointer;
+}
+
+.image-delete-btn:hover {
+    background: #dc2626;
+}
 
 
 /* =====================================================
@@ -379,6 +450,103 @@ button:not(.primary):hover {
     font-size: 15px;
     margin-bottom: 10px;
 }
+
+/* =====================================================
+   Right Panel – Attachment / Reference Dropzone
+   ===================================================== */
+
+/* 점선 클릭 박스 (공통) */
+.side-dropzone {
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 18px 12px;
+    text-align: center;
+    cursor: pointer;
+
+    color: #64748b;
+    background: #ffffff;
+
+    transition: all 0.2s ease;
+    margin-bottom: 10px;
+}
+
+.side-dropzone i {
+    font-size: 20px;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.side-dropzone p {
+    margin: 4px 0;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.side-dropzone .hint {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+/* hover */
+.side-dropzone:hover {
+    border-color: #2563eb;
+    background: #f8fafc;
+    color: #2563eb;
+}
+
+/* =====================================================
+   Attachment / Reference List
+   ===================================================== */
+
+.side-item-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.side-item-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    font-size: 13px;
+    padding: 6px 4px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* 파일 / 문서명 */
+.side-item-list .item-name {
+    flex: 1;
+    margin-right: 6px;
+    color: #374151;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 삭제 버튼 */
+.side-item-list button {
+    background: none;
+    border: none;
+    color: #ef4444;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.side-item-list button:hover {
+    text-decoration: underline;
+}
+
+/* 첨부파일 상태 버튼 */
+.side-item-list .delete-btn {
+    color: #ef4444;
+}
+
+.side-item-list .restore-btn {
+    color: #2563eb;
+}
+
 
 /* =====================================================
    Footer Buttons
@@ -780,30 +948,41 @@ button:not(.primary):hover {
 
 
 /* =====================================================
-   Employee Search Component (FINAL)
+   Search Component (Employee / Organization) - FINAL
    ===================================================== */
 
 /* ===============================
    비활성 상태
    =============================== */
-.employee-search.disabled {
+.employee-search.disabled,
+.organization-search.disabled {
     opacity: 0.6;
     pointer-events: none;
 }
 
 /* ===============================
-   employee-search 기본 컨테이너
+   검색 컴포넌트 기본 컨테이너
    - dropdown 기준점
    =============================== */
-.employee-search {
+.employee-search,
+.organization-search {
     position: relative; /* 🔥 dropdown 기준 */
+    width: 100%;
+}
+
+/* ===============================
+   공통 input 스타일 (선택)
+   =============================== */
+.employee-search input,
+.organization-search input {
     width: 100%;
 }
 
 /* ===============================
    드롭다운
    =============================== */
-.employee-search-dropdown {
+.employee-search-dropdown,
+.organization-search-dropdown {
     position: absolute;
     top: calc(100% + 4px);
     left: 0;
@@ -819,29 +998,39 @@ button:not(.primary):hover {
     z-index: 5000; /* 🔥 scroll / panel 위로 */
 }
 
-.employee-search-dropdown.hidden {
+.employee-search-dropdown.hidden,
+.organization-search-dropdown.hidden {
     display: none;
 }
 
 /* ===============================
    결과 리스트
    =============================== */
-.employee-list {
+.employee-list,
+.organization-list {
     list-style: none;
     margin: 0;
     padding: 4px 0;
 }
 
-.employee-item {
+/* ===============================
+   결과 아이템
+   =============================== */
+.employee-item,
+.organization-item {
     padding: 8px 12px;
     font-size: 14px;
     cursor: pointer;
 }
 
-.employee-item:hover {
+.employee-item:hover,
+.organization-item:hover {
     background: #f3f6fa;
 }
 
+/* ===============================
+   결과 없음
+   =============================== */
 .no-results {
     padding: 8px 12px;
     font-size: 13px;
@@ -851,8 +1040,9 @@ button:not(.primary):hover {
 /* ===============================
    doc-field 안에서
    라벨 : 입력박스 가로 배치
+   (사원 검색 + 조직 검색)
    =============================== */
-.doc-field:has(.employee-search) {
+.doc-field:has(:is(.employee-search, .organization-search)) {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -862,26 +1052,26 @@ button:not(.primary):hover {
 }
 
 /* 라벨 */
-.doc-field:has(.employee-search) > label {
+.doc-field:has(:is(.employee-search, .organization-search)) > label {
     width: 140px;
     flex-shrink: 0;
     margin: 0;
 }
 
 /* 입력 영역 */
-.doc-field:has(.employee-search) > .employee-search {
+.doc-field:has(:is(.employee-search, .organization-search))
+> :is(.employee-search, .organization-search) {
     flex: 1;
 }
 
 /* ===============================
    field-hint 위치 보정
-   =============================== */
-/*
+   ===============================
    구조:
    [label][input]
            [hint]
 */
-.doc-field:has(.employee-search) > .field-hint {
+.doc-field:has(:is(.employee-search, .organization-search)) > .field-hint {
     flex-basis: 100%;
     margin-left: 152px; /* label(140) + gap(12) */
     margin-top: 4px;
