@@ -16,6 +16,8 @@ import com.finalproj.orbitflow.global.file.service.FileService;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeRole;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
+import com.finalproj.orbitflow.hr.organization.repository.OrgRepository;
+import com.finalproj.orbitflow.hr.organization.repository.OrgResView;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,6 +45,7 @@ public class BoardService {
     private final BoardCategoryRepository boardCategoryRepository;
     private final EmployeeRepository employeeRepository;
     private final FileService fileService;
+    private final OrgRepository orgRepository;
     private final S3Client s3Client;
 
     @Value("${cloud.aws.s3.bucket}")
@@ -58,8 +61,7 @@ public class BoardService {
             LocalDate endDate,
             String searchTypeStr,
             String keyword,
-            Pageable pageable
-    ) {
+            Pageable pageable) {
         // 1) 카테고리 접근 검증 + 조회
         BoardCategory category = getVerifiedAccessibleCategory(companyId, organizationId, categoryId, role);
 
@@ -84,8 +86,7 @@ public class BoardService {
                 startInstant,
                 endExclusiveInstant,
                 searchType,
-                keyword
-        );
+                keyword);
 
         // 5) 조회
         return boardRepository.findAll(spec, pageable)
@@ -113,13 +114,12 @@ public class BoardService {
             Long organizationId,
             Long employeeId,
             BoardReqDto.Create request,
-            List<MultipartFile> files
-    ) {
+            List<MultipartFile> files) {
         BoardCategory category = getVerifiedAccessibleCategory(
                 companyId,
                 organizationId,
                 request.getCategoryId(),
-                null  // 생성 시에는 role 체크 불필요 (작성 권한은 별도 체크)
+                null // 생성 시에는 role 체크 불필요 (작성 권한은 별도 체크)
         );
 
         Employee employee = employeeRepository.findById(employeeId)
@@ -150,7 +150,8 @@ public class BoardService {
     }
 
     /** 게시판 카테고리 접근 검증 + 조회 */
-    private BoardCategory getVerifiedAccessibleCategory(Long companyId, Long organizationId, Long categoryId, EmployeeRole role) {
+    private BoardCategory getVerifiedAccessibleCategory(Long companyId, Long organizationId, Long categoryId,
+            EmployeeRole role) {
         BoardCategory category = boardCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new NotFoundException("게시판 카테고리를 찾을 수 없습니다."));
 
@@ -159,7 +160,8 @@ public class BoardService {
     }
 
     /** 게시판 접근 가능 여부 검증 */
-    private void validateCategoryAccess(Long companyId, Long organizationId, BoardCategory category, EmployeeRole role) {
+    private void validateCategoryAccess(Long companyId, Long organizationId, BoardCategory category,
+            EmployeeRole role) {
         if (!category.getCompany().getId().equals(companyId)) {
             throw new ForbiddenException("접근 권한이 없는 게시판입니다.");
         }
@@ -174,14 +176,22 @@ public class BoardService {
             return;
         }
 
-        // 조직 게시판이면 organizationId 일치해야 함
+        // 조직 게시판이면 소속 조직 또는 상위 조직 계층에 포함되어야 함
         if (category.getOrganization() != null) {
-            if (organizationId == null || !category.getOrganization().getId().equals(organizationId)) {
-                throw new ForbiddenException("소속 조직 게시판이 아닙니다.");
+            if (organizationId == null) {
+                throw new ForbiddenException("조직 정보가 없습니다.");
+            }
+
+            // 사용자의 조직 계층 구조 조회
+            List<OrgResView> hierarchy = orgRepository.findHierarchy(organizationId);
+            boolean isAccessible = hierarchy.stream()
+                    .anyMatch(view -> view.getId().equals(category.getOrganization().getId()));
+
+            if (!isAccessible) {
+                throw new ForbiddenException("소속 또는 상위 조직 게시판이 아닙니다.");
             }
         }
     }
-
 
     @Transactional
     public BoardResDto.DetailInfo updateBoard(
@@ -190,13 +200,12 @@ public class BoardService {
             Long employeeId,
             Long boardId,
             BoardReqDto.Update request,
-            List<MultipartFile> files
-    ) {
+            List<MultipartFile> files) {
         Board board = boardRepository.findByIdAndDeletedAtIsNull(boardId)
                 .orElseThrow(() -> new NotFoundException("게시글이 존재하지 않습니다."));
 
         BoardCategory category = board.getCategory();
-        validateCategoryAccess(companyId, organizationId, category, null);  // 수정 시에는 role 체크 불필요
+        validateCategoryAccess(companyId, organizationId, category, null); // 수정 시에는 role 체크 불필요
 
         // 작성자 본인 또는 관리자만 허용(관리자 정책은 네 role에 맞게 조정)
         boolean isWriter = board.getWriter().getId().equals(employeeId);
@@ -236,13 +245,12 @@ public class BoardService {
             Long companyId,
             Long organizationId,
             Long employeeId,
-            Long boardId
-    ) {
+            Long boardId) {
         Board board = boardRepository.findByIdAndDeletedAtIsNull(boardId)
                 .orElseThrow(() -> new NotFoundException("게시글이 존재하지 않습니다."));
 
         BoardCategory category = board.getCategory();
-        validateCategoryAccess(companyId, organizationId, category, null);  // 삭제 시에는 role 체크 불필요
+        validateCategoryAccess(companyId, organizationId, category, null); // 삭제 시에는 role 체크 불필요
 
         boolean isWriter = board.getWriter().getId().equals(employeeId);
         if (!isWriter) {
@@ -268,8 +276,7 @@ public class BoardService {
                     DeleteObjectRequest.builder()
                             .bucket(bucket)
                             .key(objectKey)
-                            .build()
-            );
+                            .build());
         } catch (Exception ex) {
             log.error("S3 delete failed. objectKey={}", objectKey, ex);
         }
