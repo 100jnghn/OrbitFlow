@@ -4,9 +4,7 @@ import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 /**
  * Please explain the class!!!
@@ -17,8 +15,10 @@ import lombok.NoArgsConstructor;
  */
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "notification")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class Notification extends BaseEntity {
 
     @Id
@@ -41,4 +41,9 @@ public class Notification extends BaseEntity {
 
     @Column(name = "is_read", nullable = false)
     private Boolean isRead;
+
+    // 읽음 처리
+    public void read() {
+        this.isRead = true;
+    }
 }

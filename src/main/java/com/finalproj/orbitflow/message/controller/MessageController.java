@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 
@@ -70,15 +71,17 @@ public class MessageController {
     }
 
     /** 메시지 전송 */
-    @PostMapping
+    @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<ResponseDto<Long>> sendMessage(
             @AuthenticationPrincipal SecurityUser user,
-            @RequestBody @Valid MessageReqDto.Send request
+            @Valid @ModelAttribute MessageReqDto.Send request,
+            @RequestPart(required = false) MultipartFile file
     ) {
         Long messageId = messageService.sendMessage(
                 user.getCompanyId(),
                 user.getEmployeeId(),
-                request
+                request,
+                file
         );
 
         return ResponseEntity.status(HttpStatus.CREATED)

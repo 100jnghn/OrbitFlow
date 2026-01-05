@@ -3,7 +3,7 @@
       th:replace="~{layout/layout-user :: layout(
           ~{::content},
           ~{fragments/header :: header},
-          ~{sidebar/attendance/user-attendance-sidebar :: menu},
+          ~{sidebar/attendance/user-attendance-sidebar :: sidebar},
           ~{::pageCss},
           ~{::pageScript}
       )}">
@@ -12,6 +12,7 @@
         <link rel="stylesheet" th:href="@{/css/board/board.css}">
         <link rel="stylesheet" th:href="@{/css/leave/leave.css}">
         <link rel="stylesheet" th:href="@{/css/attendance/monthly-attendance.css}">
+        <link rel="stylesheet" th:href="@{/css/user-sidebar/user-sidebar.css}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     </th:block>
 </head>
@@ -21,7 +22,7 @@
         <!-- 게시판 제목 -->
         <div class="board-header">
             <h1>월별 근태 현황 조회</h1>
-        </div>
+    </div>
 
         <!-- 검색 및 필터 -->
         <div class="board-search-section">
@@ -34,7 +35,7 @@
                         <option value="LATE">지각</option>
                         <option value="ABSENT">결근</option>
                         <option value="VACATION">휴가</option>
-                    </select>
+                </select>
                 </div>
                 <div class="date-field-wrapper">
                     <label for="startDate" class="filter-label">시작일</label>
@@ -43,7 +44,7 @@
                 <div class="date-field-wrapper">
                     <label for="endDate" class="filter-label">종료일</label>
                     <input type="date" id="endDate" class="date-input">
-                </div>
+                        </div>
                 <div class="button-wrapper">
                     <label class="filter-label" style="opacity: 0;">버튼</label>
                     <div style="display: flex; gap: 8px;">
@@ -57,40 +58,40 @@
                     </div>
                 </div>
             </div>
-        </div>
+    </div>
 
         <!-- 요약 카드 -->
         <div class="card summary-card" style="margin-bottom: 24px;">
-            <div class="summary-grid">
-                <div class="summary-item">
-                    <span class="summary-label">총 근무 시간 (누적)</span>
-                    <div class="summary-value"><span id="totalWorkHours" class="val-blue">0h 00m</span></div>
-                </div>
-                <div class="summary-item">
-                    <span class="summary-label">지각 횟수</span>
-                    <div class="summary-value"><span id="lateCount" class="val-orange">0</span> <small>회</small></div>
-                </div>
-                <div class="summary-item">
-                    <span class="summary-label">휴가/결근 일수</span>
-                    <div class="summary-value"><span id="absentCount" class="val-red">0</span> <small>일</small></div>
-                </div>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <span class="summary-label">총 근무 시간 (누적)</span>
+                <div class="summary-value"><span id="totalWorkHours" class="val-blue">0h 00m</span></div>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">지각 횟수</span>
+                <div class="summary-value"><span id="lateCount" class="val-orange">0</span> <small>회</small></div>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">휴가/결근 일수</span>
+                <div class="summary-value"><span id="absentCount" class="val-red">0</span> <small>일</small></div>
             </div>
         </div>
+    </div>
 
         <!-- 게시글 목록 테이블 -->
         <div class="board-table-container">
-            <table class="board-table" id="attendanceTable">
-                <thead>
-                <tr>
+        <table class="board-table" id="attendanceTable">
+            <thead>
+            <tr>
                     <th>날짜</th>
                     <th>출근 시각</th>
                     <th>퇴근 시각</th>
                     <th>근무 시간</th>
                     <th>상태</th>
-                </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
         </div>
 
         <!-- 페이지네이션 -->

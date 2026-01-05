@@ -1,10 +1,16 @@
 /* 내 연차 조회 페이지 - 게시판 디자인과 통일 */
 
-/* 컨테이너 좌우 여백 - 화면 크기에 맞춤 (월별 근태조회와 동일) */
+/* 컨테이너 - 게시판과 동일한 크기 */
 .board-container {
-    padding: 24px;
-    max-width: 100%;
-    width: 100%;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(103vh - 180px);
 }
 
 /* 연차 요약 카드 전용 섹션 (게시판 디자인과 통일) */
@@ -149,29 +155,31 @@
     font-weight: 600; 
 }
 
-/* 상태 점 스타일 */
-.status-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-}
-
-.status-dot {
+/* 상태 배지 스타일 (월별 근태 현황과 통일) */
+.status-badge {
     display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    vertical-align: middle;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    min-width: 60px;
+    text-align: center;
+    box-sizing: border-box;
 }
 
-.status-dot.approved { background-color: #10B981; } /* 승인: 초록 */
-.status-dot.submitted { background-color: #F59E0B; } /* 대기: 노랑 */
-.status-dot.rejected { background-color: #DC2626; }  /* 반려: 빨강 */
+.badge-approved {
+    background-color: #D1FAE5;
+    color: dimgray;
+}
 
-.status-text {
-    font-size: 13px;
-    color: var(--neutral-700);
+.badge-submitted {
+    background-color: #FEF3C7;
+    color: dimgray;
+}
+
+.badge-rejected {
+    background-color: #FEE2E2;
+    color: dimgray;
 }
 
 /* ================================

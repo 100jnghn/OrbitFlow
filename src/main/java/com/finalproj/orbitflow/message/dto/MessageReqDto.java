@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -11,6 +12,7 @@ public class MessageReqDto {
 
     /** 메시지 전송 */
     @Getter
+    @Setter
     public static class Send {
         @NotBlank(message = "제목은 필수입니다.")
         @Size(max = 100, message = "제목은 100자 이하여야 합니다.")

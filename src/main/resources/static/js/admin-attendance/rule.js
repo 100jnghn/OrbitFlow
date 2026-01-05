@@ -1,33 +1,185 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // 모달 및 폼 엘리먼트
     const modal = document.getElementById('exceptionRuleModal');
     const editModal = document.getElementById('editExceptionRuleModal');
     const form = document.getElementById('exceptionRuleForm');
     const editForm = document.getElementById('editExceptionRuleForm');
 
-    // 예외 규칙 목록 저장 (중복 체크용)
+    // 예외규칙 목록 전역 변수 (중복 체크용)
     let exceptionRulesList = [];
 
-    // 초기화
+    // 초기 로드
     loadDefaultRule();
     loadExceptionRules();
 
     // ============================================
-    // 기본 규칙 관련
+    // 예외규칙 추가 버튼 이벤트
+    // ============================================
+    document.getElementById('addExceptionRuleBtn').addEventListener('click', () => {
+        // 폼 초기화
+        form.reset();
+        document.getElementById('selectedEmployeeId').value = '';
+        document.getElementById('selectedEmployeeInfo').style.display = 'none';
+        document.getElementById('employeeSearchResults').innerHTML = '';
+        document.getElementById('employeeSearchInput').value = '';
+        document.getElementById('reasonCharCount').textContent = '0 / 40';
+        clearAllErrors();
+        openModal(modal);
+    });
+
+    // ============================================
+    // 사유 글자 수 카운터
+    // ============================================
+    const reasonTextarea = document.getElementById('reason');
+    const reasonCharCount = document.getElementById('reasonCharCount');
+    if (reasonTextarea && reasonCharCount) {
+        reasonTextarea.addEventListener('input', () => {
+            const count = reasonTextarea.value.length;
+            reasonCharCount.textContent = `${count} / 40`;
+            if (count >= 40) {
+                reasonCharCount.classList.add('error');
+            } else {
+                reasonCharCount.classList.remove('error');
+            }
+        });
+    }
+
+    const editReasonTextarea = document.getElementById('editReason');
+    const editReasonCharCount = document.getElementById('editReasonCharCount');
+    if (editReasonTextarea && editReasonCharCount) {
+        editReasonTextarea.addEventListener('input', () => {
+            const count = editReasonTextarea.value.length;
+            editReasonCharCount.textContent = `${count} / 40`;
+            if (count >= 40) {
+                editReasonCharCount.classList.add('error');
+            } else {
+                editReasonCharCount.classList.remove('error');
+            }
+        });
+    }
+
+    // ============================================
+    // 휴게시간 숫자만 입력 제한
+    // ============================================
+    document.getElementById('exceptionBreakMinutes')?.addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9]/g, '');
+        if (this.value && parseInt(this.value) > 480) {
+            this.value = '480';
+        }
+    });
+
+    document.getElementById('editExceptionBreakMinutes')?.addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9]/g, '');
+        if (this.value && parseInt(this.value) > 480) {
+            this.value = '480';
+        }
+    });
+
+    // ============================================
+    // 예외규칙 추가 폼 제출
+    // ============================================
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearAllErrors();
+        
+        const employeeId = document.getElementById('selectedEmployeeId').value;
+        const validFrom = document.getElementById('validFrom').value;
+        const validTo = document.getElementById('validTo').value;
+        const startTime = document.getElementById('exceptionStartTime').value;
+        const endTime = document.getElementById('exceptionEndTime').value;
+        const breakMinutes = document.getElementById('exceptionBreakMinutes').value;
+        const reason = document.getElementById('reason').value.trim();
+
+        // 유효성 검사
+        const errors = [];
+        
+        if (!employeeId) {
+            errors.push('대상 사원을 선택해주세요.');
+        } else {
+            // 이미 등록된 사원인지 재확인
+            const existingRule = exceptionRulesList.find(rule => rule.employeeId === parseInt(employeeId));
+            if (existingRule) {
+                errors.push(`해당 사원은 이미 예외규칙이 등록되어 있습니다.`);
+            }
+        }
+        if (!validFrom) {
+            errors.push('적용 시작일을 입력해주세요.');
+        }
+        if (!reason) {
+            errors.push('규칙 적용 사유를 입력해주세요.');
+        } else if (reason.length > 40) {
+            errors.push('사유는 40자 이하여야 합니다.');
+        }
+
+        // 출근시간과 퇴근시간 유효성 검사
+        if (startTime && endTime) {
+            const start = new Date(`2000-01-01T${startTime}:00`);
+            const end = new Date(`2000-01-01T${endTime}:00`);
+            if (start >= end) {
+                errors.push('출근 시간은 퇴근 시간보다 빨라야 합니다.');
+            }
+        }
+
+        // 휴게시간 유효성 검사
+        if (breakMinutes && (isNaN(breakMinutes) || parseInt(breakMinutes) < 0 || parseInt(breakMinutes) > 480)) {
+            errors.push('휴게 시간은 0~480분 사이의 숫자만 입력 가능합니다.');
+        }
+
+        // 에러가 있으면 팝업으로 표시
+        if (errors.length > 0) {
+            alert(errors.join('\n'));
+            return;
+        }
+
+        try {
+            const data = {
+                employeeId: parseInt(employeeId),
+                startTime: startTime ? startTime + ':00' : null,
+                endTime: endTime ? endTime + ':00' : null,
+                breakMinutes: breakMinutes ? parseInt(breakMinutes) : null,
+                reason: reason,
+                validFrom: validFrom,
+                validTo: validTo || null
+            };
+
+            const res = await apiFetch('/api/admin/rules/exception', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await res.json();
+            if (res.ok) {
+                alert(result.message || '예외 규칙이 추가되었습니다.');
+                closeModal(modal);
+                await loadExceptionRules(); // 목록 새로고침하여 전역 변수 업데이트
+            } else {
+                alert(result.message || '추가 중 오류가 발생했습니다.');
+            }
+        } catch (error) {
+            console.error('추가 실패:', error);
+            alert('추가 중 오류가 발생했습니다.');
+        }
+    });
+
+    // ============================================
+    // 1. 기본 규칙 관련 (Default Rule)
     // ============================================
     async function loadDefaultRule() {
         try {
             const res = await apiFetch('/api/admin/rules/default');
-
             if (res.ok) {
-                const rule = await res.json();
-                if (rule.defaultStartTime) {
+                const response = await res.json();
+                const rule = response.data; // ResponseDto 구조
+
+                if (rule && rule.defaultStartTime) {
                     document.getElementById('defaultStartTime').value = rule.defaultStartTime.substring(0, 5);
                 }
-                if (rule.defaultEndTime) {
+                if (rule && rule.defaultEndTime) {
                     document.getElementById('defaultEndTime').value = rule.defaultEndTime.substring(0, 5);
                 }
-                if (rule.lateThresholdMin !== null && rule.lateThresholdMin !== undefined) {
-                    document.getElementById('tardinessMinutes').value = rule.lateThresholdMin;
+                if (rule && rule.defaultBreakMinutes !== null && rule.defaultBreakMinutes !== undefined) {
+                    document.getElementById('tardinessMinutes').value = rule.defaultBreakMinutes;
                 }
             }
         } catch (error) {
@@ -35,78 +187,89 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 기본 규칙 저장 버튼
     document.getElementById('saveDefaultRuleBtn').addEventListener('click', async () => {
-        try {
-            const data = {
-                defaultStartTime: document.getElementById('defaultStartTime').value + ":00",
-                defaultEndTime: document.getElementById('defaultEndTime').value + ":00",
-                lateThresholdMin: parseInt(document.getElementById('tardinessMinutes').value)
-            };
+        const startTime = document.getElementById('defaultStartTime').value;
+        const endTime = document.getElementById('defaultEndTime').value;
+        const breakMin = document.getElementById('tardinessMinutes').value;
 
-            const res = await apiFetch('/api/admin/rules/default', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
+        if (!startTime || !endTime) {
+            alert('시간을 입력해주세요.');
+            return;
+        }
 
-            if (res.ok) {
-                alert('기본 규칙이 저장되었습니다.');
-                loadDefaultRule();
-            } else {
-                const error = await res.json();
-                alert('저장 실패: ' + (error.message || '알 수 없는 오류'));
-            }
-        } catch (error) {
-            console.error('기본 규칙 저장 실패:', error);
-            alert('저장 중 오류가 발생했습니다.');
+        // 출근시간이 퇴근시간보다 늦은지 확인
+        const start = new Date(`2000-01-01T${startTime}:00`);
+        const end = new Date(`2000-01-01T${endTime}:00`);
+        if (start >= end) {
+            alert('출근 시간은 퇴근 시간보다 빨라야 합니다.');
+            return;
+        }
+
+        const data = {
+            defaultStartTime: startTime + ':00',
+            defaultEndTime: endTime + ':00',
+            defaultBreakMinutes: breakMin ? parseInt(breakMin) : null
+        };
+
+        const res = await apiFetch('/api/admin/rules/default', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+        if (res.ok) {
+            alert(result.message || '기본 규칙이 저장되었습니다.');
+            loadDefaultRule();
+        } else {
+            alert(result.message || '저장 실패');
         }
     });
 
     // ============================================
-    // 예외 규칙 목록 조회
+    // 2. 예외 규칙 목록 (Exception Rule)
     // ============================================
     async function loadExceptionRules() {
         try {
             const res = await apiFetch('/api/admin/rules/exception');
-
             if (res.ok) {
-                const rules = await res.json();
+                const response = await res.json();
+                const rules = response.data || [];
                 exceptionRulesList = rules; // 전역 변수에 저장 (중복 체크용)
                 renderExceptionRulesTable(rules);
             }
         } catch (error) {
-            console.error('예외 규칙 목록 로드 실패:', error);
+            console.error('예외 규칙 로드 실패:', error);
         }
     }
 
     function renderExceptionRulesTable(rules) {
         const tbody = document.getElementById('exceptionRulesTableBody');
+        if (!tbody) return;
         tbody.innerHTML = '';
 
-        if (rules.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">등록된 예외 규칙이 없습니다.</td></tr>';
+        if (!rules || rules.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 20px;">등록된 예외 규칙이 없습니다.</td></tr>';
             return;
         }
 
         rules.forEach(rule => {
             const row = document.createElement('tr');
-            const startTime = rule.startTime ? rule.startTime.substring(0, 5) : 'NULL';
-            const endTime = rule.endTime ? rule.endTime.substring(0, 5) : 'NULL';
-            const breakMinutes = rule.breakMinutes !== null ? rule.breakMinutes + '분' : 'NULL';
-            const validFrom = rule.validFrom || '';
-            const validTo = rule.validTo || '무기한';
-            const appliedAt = rule.appliedAt ? new Date(rule.appliedAt).toLocaleDateString('ko-KR') : '';
+            const startTime = rule.startTime ? rule.startTime.substring(0, 5) : '-';
+            const endTime = rule.endTime ? rule.endTime.substring(0, 5) : '-';
+            const breakMin = rule.breakMinutes != null ? `${rule.breakMinutes}분` : '-';
+            const dateRange = `${rule.validFrom} ~ ${rule.validTo || '무기한'}`;
+            const regDate = rule.appliedAt ? rule.appliedAt.substring(0, 10) : '-';
 
             row.innerHTML = `
-                <td>${rule.employeeName || '알 수 없음'}</td>
-                <td>${validFrom} ~ ${validTo}</td>
+                <td><strong>${rule.employeeName || '사원'}</strong><br><small>${rule.employeeNo || ''}</small></td>
+                <td>${dateRange}</td>
                 <td>${startTime}</td>
                 <td>${endTime}</td>
-                <td>${breakMinutes}</td>
+                <td>${breakMin}</td>
                 <td>${rule.reason || ''}</td>
-                <td>${appliedAt}</td>
+                <td>${regDate}</td>
                 <td>
                     <button class="btn-edit" data-id="${rule.overrideId}">수정</button>
                     <button class="btn-delete" data-id="${rule.overrideId}">삭제</button>
@@ -115,238 +278,157 @@ document.addEventListener('DOMContentLoaded', () => {
             tbody.appendChild(row);
         });
 
-        // 수정/삭제 버튼 이벤트 리스너 추가
-        document.querySelectorAll('.btn-edit').forEach(btn => {
-            btn.addEventListener('click', () => openEditModal(btn.dataset.id));
+        // 버튼 이벤트 바인딩
+        tbody.querySelectorAll('.btn-edit').forEach(btn => {
+            btn.onclick = () => openEditModal(btn.dataset.id);
         });
-
-        document.querySelectorAll('.btn-delete').forEach(btn => {
-            btn.addEventListener('click', () => deleteExceptionRule(btn.dataset.id));
+        tbody.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.onclick = () => deleteExceptionRule(btn.dataset.id);
         });
-    }
-
-    // 글자수 카운터 업데이트 함수
-    function updateCharCount(inputId, countId, maxLength) {
-        const inputElement = document.getElementById(inputId);
-        const countElement = document.getElementById(countId);
-        
-        if (!inputElement || !countElement) return;
-        
-        const currentLength = inputElement.value.length;
-        countElement.textContent = `${currentLength} / ${maxLength}`;
-        
-        // 색상 변경
-        countElement.classList.remove('warning', 'error');
-        if (currentLength >= maxLength) {
-            countElement.classList.add('error');
-            countElement.style.color = 'var(--danger-color)';
-        } else if (currentLength >= maxLength * 0.8) {
-            countElement.classList.add('warning');
-            countElement.style.color = 'var(--warning-color)';
-        } else {
-            countElement.style.color = 'var(--neutral-500)';
-        }
-    }
-
-    // 모달 열기/닫기 헬퍼 함수
-    function openModal(modalElement) {
-        modalElement.style.display = 'block';
-        document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
-    }
-
-    function closeModal(modalElement) {
-        modalElement.style.display = 'none';
-        document.body.style.overflow = ''; // 배경 스크롤 복원
-        // 글자수 카운터 초기화
-        if (modalElement.id === 'exceptionRuleModal') {
-            updateCharCount('reason', 'reasonCharCount', 40);
-        } else if (modalElement.id === 'editExceptionRuleModal') {
-            updateCharCount('editReason', 'editReasonCharCount', 40);
-        }
     }
 
     // ============================================
-    // 예외 규칙 추가 모달
+    // 3. 예외 규칙 추가 및 수정 모달 제어
     // ============================================
-    const addBtn = document.getElementById('addExceptionRuleBtn');
-    if (addBtn) {
-        addBtn.addEventListener('click', () => {
-            form.reset();
-            document.getElementById('ruleId').value = '';
-            document.getElementById('selectedEmployeeId').value = '';
-            document.getElementById('selectedEmployeeInfo').style.display = 'none';
-            document.getElementById('employeeSearchResults').innerHTML = '';
-            document.getElementById('employeeSearchInput').value = '';
-            document.getElementById('modalTitle').innerText = '사원별 근태 예외 규칙 추가';
-            clearAllErrors();
-            // 글자수 카운터 초기화
-            setTimeout(() => {
-                updateCharCount('reason', 'reasonCharCount', 40);
-            }, 0);
-            openModal(modal);
-        });
-    }
+    async function openEditModal(ruleId) {
+        try {
+            const res = await apiFetch(`/api/admin/rules/exception/${ruleId}`);
+            if (res.ok) {
+                const response = await res.json();
+                const rule = response.data;
 
-    document.querySelector('#exceptionRuleModal .close').addEventListener('click', () => {
-        closeModal(modal);
-    });
+                if (!rule) {
+                    alert('규칙을 찾을 수 없습니다.');
+                    return;
+                }
 
-    document.getElementById('cancelBtn').addEventListener('click', () => {
-        clearAllErrors();
-        closeModal(modal);
-    });
+                document.getElementById('editRuleId').value = rule.overrideId;
+                document.getElementById('editEmployeeInfo').textContent = `${rule.employeeName || ''}${rule.employeeNo ? ' (' + rule.employeeNo + ')' : ''}`;
+                document.getElementById('editOriginalValidTo').textContent = rule.validTo || '무기한';
+                document.getElementById('editValidFrom').value = rule.validFrom;
+                document.getElementById('editValidTo').value = rule.validTo || '';
+                document.getElementById('editExceptionStartTime').value = rule.startTime ? rule.startTime.substring(0, 5) : '';
+                document.getElementById('editExceptionEndTime').value = rule.endTime ? rule.endTime.substring(0, 5) : '';
+                document.getElementById('editExceptionBreakMinutes').value = rule.breakMinutes || '';
+                document.getElementById('editReason').value = rule.reason || '';
+                
+                // 글자 수 카운터 업데이트
+                const editReasonCharCount = document.getElementById('editReasonCharCount');
+                if (editReasonCharCount) {
+                    const count = (rule.reason || '').length;
+                    editReasonCharCount.textContent = `${count} / 40`;
+                }
 
-    // 실시간 유효성 검사 이벤트 리스너
-    document.getElementById('validFrom').addEventListener('change', function() {
-        clearFieldError('validFromError', 'validFrom');
-        // 시작일이 변경되면 종료일 에러도 함께 검증
-        clearFieldError('validToError', 'validTo');
-        const validTo = document.getElementById('validTo').value;
-        if (validTo) {
-            validateDateRange();
-        }
-    });
-
-    document.getElementById('validTo').addEventListener('change', function() {
-        clearFieldError('validToError', 'validTo');
-        validateDateRange();
-    });
-
-    document.getElementById('exceptionStartTime').addEventListener('change', function() {
-        clearFieldError('startTimeError', 'exceptionStartTime');
-        clearFieldError('endTimeError', 'exceptionEndTime');
-        const endTime = document.getElementById('exceptionEndTime').value;
-        if (endTime) {
-            validateTimeRange();
-        }
-    });
-
-    document.getElementById('exceptionEndTime').addEventListener('change', function() {
-        clearFieldError('endTimeError', 'exceptionEndTime');
-        validateTimeRange();
-    });
-
-    // 휴게시간 숫자만 입력 허용
-    const breakMinutesInput = document.getElementById('exceptionBreakMinutes');
-    if (breakMinutesInput) {
-        // 키 입력 시 숫자만 허용
-        breakMinutesInput.addEventListener('keypress', function(e) {
-            const char = String.fromCharCode(e.which);
-            if (!/[0-9]/.test(char) && !e.ctrlKey && !e.metaKey) {
-                e.preventDefault();
-            }
-        });
-        
-        // 붙여넣기 시 숫자만 허용
-        breakMinutesInput.addEventListener('paste', function(e) {
-            e.preventDefault();
-            const paste = (e.clipboardData || window.clipboardData).getData('text');
-            const numbersOnly = paste.replace(/[^0-9]/g, '');
-            if (numbersOnly) {
-                this.value = numbersOnly;
-                this.dispatchEvent(new Event('input'));
-            }
-        });
-        
-        // input 이벤트에서도 필터링 (안전장치)
-        breakMinutesInput.addEventListener('input', function() {
-            const value = this.value.replace(/[^0-9]/g, '');
-            if (this.value !== value) {
-                this.value = value;
-            }
-            clearFieldError('breakMinutesError', 'exceptionBreakMinutes');
-            if (value) {
-                validateBreakMinutes();
-            }
-        });
-    }
-
-    document.getElementById('reason').addEventListener('input', function() {
-        clearFieldError('reasonError', 'reason');
-        validateReason();
-        updateCharCount('reason', 'reasonCharCount', 40);
-    });
-
-    // 개별 필드 에러 초기화 함수
-    function clearFieldError(errorElementId, inputElementId) {
-        const errorElement = document.getElementById(errorElementId);
-        const inputElement = document.getElementById(inputElementId);
-        if (errorElement) {
-            errorElement.textContent = '';
-            errorElement.style.display = 'none';
-        }
-        if (inputElement) {
-            inputElement.classList.remove('error');
-        }
-    }
-
-    // 날짜 범위 검증
-    function validateDateRange() {
-        const validFrom = document.getElementById('validFrom').value;
-        const validTo = document.getElementById('validTo').value;
-        
-        if (validFrom && validTo) {
-            const validFromDate = new Date(validFrom);
-            const validToDate = new Date(validTo);
-            
-            if (validToDate < validFromDate) {
-                showError('validToError', '적용 종료일은 적용 시작일 이후여야 합니다.');
-                return false;
+                clearAllErrors();
+                openModal(editModal);
             } else {
-                // 날짜 범위가 올바르면 에러 메시지 클리어
-                clearFieldError('validToError', 'validTo');
+                const result = await res.json();
+                alert(result.message || '데이터를 가져오는데 실패했습니다.');
             }
+        } catch (error) {
+            console.error('데이터 로드 실패:', error);
+            alert('데이터를 가져오는데 실패했습니다.');
         }
-        return true;
     }
 
-    // 시간 범위 검증
-    function validateTimeRange() {
-        const startTime = document.getElementById('exceptionStartTime').value;
-        const endTime = document.getElementById('exceptionEndTime').value;
+    // 예외 규칙 수정 제출
+    editForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearAllErrors();
         
+        const ruleId = document.getElementById('editRuleId').value;
+        const startTime = document.getElementById('editExceptionStartTime').value;
+        const endTime = document.getElementById('editExceptionEndTime').value;
+        const breakMinutes = document.getElementById('editExceptionBreakMinutes').value;
+        const reason = document.getElementById('editReason').value.trim();
+
+        // 유효성 검사
+        const errors = [];
+        
+        if (!reason) {
+            errors.push('규칙 수정 사유를 입력해주세요.');
+        } else if (reason.length > 40) {
+            errors.push('사유는 40자 이하여야 합니다.');
+        }
+
+        // 출근시간과 퇴근시간 유효성 검사
         if (startTime && endTime) {
             const start = new Date(`2000-01-01T${startTime}:00`);
             const end = new Date(`2000-01-01T${endTime}:00`);
-            
             if (start >= end) {
-                showError('endTimeError', '퇴근 시간은 출근 시간보다 늦어야 합니다.');
-                return false;
+                errors.push('출근 시간은 퇴근 시간보다 빨라야 합니다.');
+            }
+        }
+
+        // 휴게시간 유효성 검사
+        if (breakMinutes && (isNaN(breakMinutes) || parseInt(breakMinutes) < 0 || parseInt(breakMinutes) > 480)) {
+            errors.push('휴게 시간은 0~480분 사이의 숫자만 입력 가능합니다.');
+        }
+
+        // 에러가 있으면 팝업으로 표시
+        if (errors.length > 0) {
+            alert(errors.join('\n'));
+            return;
+        }
+
+        try {
+            const data = {
+                startTime: startTime ? startTime + ':00' : null,
+                endTime: endTime ? endTime + ':00' : null,
+                breakMinutes: breakMinutes ? parseInt(breakMinutes) : null,
+                reason: reason,
+                validFrom: document.getElementById('editValidFrom').value,
+                validTo: document.getElementById('editValidTo').value || null,
+                isActive: true
+            };
+
+            const res = await apiFetch(`/api/admin/rules/exception/${ruleId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await res.json();
+            if (res.ok) {
+                alert(result.message || '수정되었습니다.');
+                closeModal(editModal);
+                await loadExceptionRules(); // 목록 새로고침하여 전역 변수 업데이트
             } else {
-                // 시간 범위가 올바르면 에러 메시지 클리어
-                clearFieldError('endTimeError', 'exceptionEndTime');
+                alert(result.message || '수정 중 오류가 발생했습니다.');
             }
+        } catch (error) {
+            console.error('수정 실패:', error);
+            alert('수정 중 오류가 발생했습니다.');
         }
-        return true;
-    }
+    });
 
-    // 휴게 시간 검증
-    function validateBreakMinutes() {
-        const breakMinutes = document.getElementById('exceptionBreakMinutes').value;
-        if (breakMinutes) {
-            const breakMin = parseInt(breakMinutes);
-            if (isNaN(breakMin) || breakMin < 0) {
-                showError('breakMinutesError', '휴게 시간은 0 이상의 숫자여야 합니다.');
-                return false;
-            } else if (breakMin > 480) {
-                showError('breakMinutesError', '휴게 시간은 480분(8시간) 이하여야 합니다.');
-                return false;
+    // 예외 규칙 삭제
+    async function deleteExceptionRule(ruleId) {
+        if (!confirm('정말 삭제하시겠습니까?')) {
+            return;
+        }
+
+        try {
+            const res = await apiFetch(`/api/admin/rules/exception/${ruleId}`, {
+                method: 'DELETE'
+            });
+
+            const result = await res.json();
+            if (res.ok) {
+                alert(result.message || '삭제되었습니다.');
+                await loadExceptionRules(); // 목록 새로고침하여 전역 변수 업데이트
+            } else {
+                alert(result.message || '삭제 중 오류가 발생했습니다.');
             }
+        } catch (error) {
+            console.error('삭제 실패:', error);
+            alert('삭제 중 오류가 발생했습니다.');
         }
-        return true;
     }
 
-    // 사유 검증
-    function validateReason() {
-        const reason = document.getElementById('reason').value.trim();
-        if (reason && reason.length > 40) {
-            showError('reasonError', '규칙 적용 사유는 40자 이하여야 합니다.');
-            return false;
-        }
-        return true;
-    }
-
-    // 사원 검색
+    // ============================================
+    // 4. 사원 검색 기능
+    // ============================================
     document.getElementById('employeeSearchBtn').addEventListener('click', searchEmployee);
     document.getElementById('employeeSearchInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
@@ -363,15 +445,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const res = await apiFetch(
-                `/api/employees/search?keyword=${encodeURIComponent(keyword)}`
-            );
-
+            const res = await apiFetch(`/api/admin/employees?keyword=${encodeURIComponent(keyword)}&page=0&size=20`);
             if (res.ok) {
-                const employees = await res.json();
-                displayEmployeeSearchResults(employees);
+                const response = await res.json();
+                const employees = response.data?.content || [];
+                displayEmployeeResults(employees);
             } else {
-                alert('사원 검색에 실패했습니다.');
+                const result = await res.json();
+                alert(result.message || '사원 검색에 실패했습니다.');
             }
         } catch (error) {
             console.error('사원 검색 실패:', error);
@@ -379,571 +460,108 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function displayEmployeeSearchResults(employees) {
+    function displayEmployeeResults(employees) {
         const resultsDiv = document.getElementById('employeeSearchResults');
+        if (!resultsDiv) return;
+        
         resultsDiv.innerHTML = '';
-
-        if (employees.length === 0) {
+        
+        if (!employees || employees.length === 0) {
             resultsDiv.innerHTML = '<div class="no-results">검색 결과가 없습니다.</div>';
             return;
         }
 
-        const list = document.createElement('ul');
-        list.className = 'employee-list';
-
+        const ul = document.createElement('ul');
+        ul.className = 'employee-list';
         employees.forEach(emp => {
-            const item = document.createElement('li');
-            item.className = 'employee-item';
-            item.innerHTML = `
-                <div class="employee-name">${emp.name}</div>
-                <div class="employee-details">${emp.employeeNo} | ${emp.organizationName} | ${emp.positionName}</div>
+            const li = document.createElement('li');
+            li.className = 'employee-item';
+            li.innerHTML = `
+                <div class="employee-name">${emp.name || ''}</div>
+                <div class="employee-details">${emp.orgPath || ''} | ${emp.rankName || ''} | ${emp.positionName || ''}</div>
             `;
-            item.addEventListener('click', () => selectEmployee(emp));
-            list.appendChild(item);
+            li.onclick = () => selectEmployee(emp);
+            ul.appendChild(li);
         });
-
-        resultsDiv.appendChild(list);
+        resultsDiv.appendChild(ul);
     }
 
     function selectEmployee(employee) {
-        // 동일 직원의 예외 규칙이 이미 존재하는지 확인
+        // 이미 등록된 사원인지 확인
         const existingRule = exceptionRulesList.find(rule => rule.employeeId === employee.id);
         if (existingRule) {
-            clearFieldError('employeeError', 'selectedEmployeeId');
-            showError('employeeError', '해당 직원의 예외 규칙이 이미 존재합니다. 기존 규칙을 수정하거나 삭제한 후 다시 추가해주세요.');
+            alert(`해당 사원(${employee.name})은 이미 예외규칙이 등록되어 있습니다.\n기존 규칙을 수정하거나 삭제한 후 다시 등록해주세요.`);
+            document.getElementById('employeeSearchResults').innerHTML = '';
+            document.getElementById('employeeSearchInput').value = '';
+            clearError('employeeError');
             return;
         }
 
-        // 에러 메시지 클리어
-        clearFieldError('employeeError', 'selectedEmployeeId');
-        
         document.getElementById('selectedEmployeeId').value = employee.id;
         document.getElementById('selectedEmployeeInfo').innerHTML = `
             <div class="selected-employee">
-                <strong>${employee.name}</strong> (${employee.organizationName}, ${employee.positionName})
+                <strong>${employee.name}</strong> (${employee.orgPath || ''})
             </div>
         `;
         document.getElementById('selectedEmployeeInfo').style.display = 'block';
         document.getElementById('employeeSearchResults').innerHTML = '';
         document.getElementById('employeeSearchInput').value = '';
+        clearError('employeeError');
     }
 
-    // 에러 메시지 초기화 함수
+    // ============================================
+    // 5. 유틸리티 함수
+    // ============================================
+    function openModal(m) {
+        if (m) {
+            m.style.display = 'flex';
+            m.style.alignItems = 'center';
+            m.style.justifyContent = 'center';
+            document.body.style.overflow = 'hidden';
+        }
+    }
+    
+    function closeModal(m) {
+        if (m) {
+            m.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    }
+
     function clearAllErrors() {
-        const errorElements = document.querySelectorAll('.error-message');
-        errorElements.forEach(el => {
+        document.querySelectorAll('.error-message').forEach(el => {
             el.textContent = '';
             el.style.display = 'none';
         });
-        
-        const errorInputs = document.querySelectorAll('.error');
-        errorInputs.forEach(el => {
+        document.querySelectorAll('.error').forEach(el => {
             el.classList.remove('error');
         });
     }
 
-    // 에러 메시지 표시 함수
-    function showError(elementId, message) {
-        const errorElement = document.getElementById(elementId);
-        const inputElement = document.getElementById(elementId.replace('Error', ''));
-        
-        if (errorElement) {
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-        }
-        
-        if (inputElement) {
-            inputElement.classList.add('error');
-            inputElement.focus();
+    function clearError(errorId) {
+        const errorEl = document.getElementById(errorId);
+        if (errorEl) {
+            errorEl.textContent = '';
+            errorEl.style.display = 'none';
         }
     }
 
-    // 유효성 검사 함수
-    function validateExceptionRuleForm() {
-        clearAllErrors();
-        let isValid = true;
-
-        // 1. 대상 사원 선택 검증
-        const employeeId = document.getElementById('selectedEmployeeId').value;
-        if (!employeeId) {
-            showError('employeeError', '대상 사원을 선택해주세요.');
-            isValid = false;
-        } else {
-            // 동일 직원의 예외 규칙이 이미 존재하는지 확인
-            const existingRule = exceptionRulesList.find(rule => rule.employeeId === parseInt(employeeId));
-            if (existingRule) {
-                showError('employeeError', '해당 직원의 예외 규칙이 이미 존재합니다. 기존 규칙을 수정하거나 삭제한 후 다시 추가해주세요.');
-                isValid = false;
-            }
-        }
-
-        // 2. 적용 시작일 검증
-        const validFrom = document.getElementById('validFrom').value;
-        if (!validFrom) {
-            showError('validFromError', '적용 시작일을 선택해주세요.');
-            isValid = false;
-        } else {
-            const validFromDate = new Date(validFrom);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            if (validFromDate < today) {
-                showError('validFromError', '적용 시작일은 오늘 날짜 이후여야 합니다.');
-                isValid = false;
-            }
-        }
-
-        // 3. 적용 종료일 검증
-        const validTo = document.getElementById('validTo').value;
-        if (validTo) {
-            if (!validFrom) {
-                showError('validToError', '적용 시작일을 먼저 선택해주세요.');
-                isValid = false;
-            } else {
-                const validFromDate = new Date(validFrom);
-                const validToDate = new Date(validTo);
-                
-                if (validToDate < validFromDate) {
-                    showError('validToError', '적용 종료일은 적용 시작일 이후여야 합니다.');
-                    isValid = false;
-                }
-            }
-        }
-
-        // 4. 오버라이드 필드 검증 (최소 하나는 입력되어야 함)
-        const startTime = document.getElementById('exceptionStartTime').value;
-        const endTime = document.getElementById('exceptionEndTime').value;
-        const breakMinutes = document.getElementById('exceptionBreakMinutes').value;
-        
-        if (!startTime && !endTime && !breakMinutes) {
-            showError('overrideFieldsError', '출근 시간, 퇴근 시간, 휴게 시간 중 최소 하나는 입력해주세요.');
-            isValid = false;
-        }
-
-        // 5. 출근/퇴근 시간 검증
-        if (startTime && endTime) {
-            const start = new Date(`2000-01-01T${startTime}:00`);
-            const end = new Date(`2000-01-01T${endTime}:00`);
-            
-            if (start >= end) {
-                showError('endTimeError', '퇴근 시간은 출근 시간보다 늦어야 합니다.');
-                isValid = false;
-            }
-        }
-
-        // 6. 휴게 시간 검증
-        if (breakMinutes) {
-            const breakMin = parseInt(breakMinutes);
-            if (isNaN(breakMin) || breakMin < 0) {
-                showError('breakMinutesError', '휴게 시간은 0 이상의 숫자여야 합니다.');
-                isValid = false;
-            } else if (breakMin > 480) {
-                showError('breakMinutesError', '휴게 시간은 480분(8시간) 이하여야 합니다.');
-                isValid = false;
-            }
-        }
-
-        // 7. 규칙 적용 사유 검증
-        const reason = document.getElementById('reason').value.trim();
-        if (!reason) {
-            showError('reasonError', '규칙 적용 사유를 입력해주세요.');
-            isValid = false;
-        } else if (reason.length > 40) {
-            showError('reasonError', '규칙 적용 사유는 40자 이하여야 합니다.');
-            isValid = false;
-        }
-
-        return isValid;
-    }
-
-    // 예외 규칙 추가
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        // 유효성 검사
-        if (!validateExceptionRuleForm()) {
-            return;
-        }
-
-        const employeeId = document.getElementById('selectedEmployeeId').value;
-        const startTime = document.getElementById('exceptionStartTime').value;
-        const endTime = document.getElementById('exceptionEndTime').value;
-        const breakMinutes = document.getElementById('exceptionBreakMinutes').value;
-        const reason = document.getElementById('reason').value.trim();
-        const validFrom = document.getElementById('validFrom').value;
-        const validTo = document.getElementById('validTo').value || null;
-
-        try {
-            const data = {
-                employeeId: parseInt(employeeId),
-                startTime: startTime ? startTime + ":00" : null,
-                endTime: endTime ? endTime + ":00" : null,
-                breakMinutes: breakMinutes ? parseInt(breakMinutes) : null,
-                reason: reason,
-                validFrom: validFrom,
-                validTo: validTo
-            };
-
-            const res = await apiFetch('/api/admin/rules/exception', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-
-            if (res.ok) {
-                alert('예외 규칙이 추가되었습니다.');
-                closeModal(modal);
-                form.reset();
-                clearAllErrors();
-                document.getElementById('selectedEmployeeId').value = '';
-                document.getElementById('selectedEmployeeInfo').style.display = 'none';
-                await loadExceptionRules(); // 규칙 목록 새로고침하여 중복 체크 업데이트
-            } else {
-                const error = await res.json();
-                const errorMessage = error.message || '알 수 없는 오류';
-                
-                // 서버 에러 메시지에 따라 적절한 필드에 표시
-                if (errorMessage.includes('사원')) {
-                    showError('employeeError', errorMessage);
-                } else if (errorMessage.includes('시작일') || errorMessage.includes('기간')) {
-                    showError('validFromError', errorMessage);
-                } else if (errorMessage.includes('종료일')) {
-                    showError('validToError', errorMessage);
-                } else if (errorMessage.includes('시간') || errorMessage.includes('출근') || errorMessage.includes('퇴근')) {
-                    showError('startTimeError', errorMessage);
-                } else if (errorMessage.includes('사유') || errorMessage.includes('reason')) {
-                    showError('reasonError', errorMessage);
-                } else {
-                    alert('추가 실패: ' + errorMessage);
-                }
-            }
-        } catch (error) {
-            console.error('예외 규칙 추가 실패:', error);
-            alert('추가 중 오류가 발생했습니다.');
-        }
+    // 닫기 버튼 공통 처리
+    document.querySelectorAll('.close').forEach(btn => {
+        btn.onclick = () => {
+            closeModal(modal);
+            closeModal(editModal);
+        };
     });
 
-    // ============================================
-    // 예외 규칙 수정 모달
-    // ============================================
-    async function openEditModal(ruleId) {
-        try {
-            const res = await apiFetch(`/api/admin/rules/exception/${ruleId}`);
-
-            if (res.ok) {
-                const rule = await res.json();
-                populateEditForm(rule);
-                openModal(editModal);
-            } else {
-                alert('규칙 정보를 불러오는데 실패했습니다.');
-            }
-        } catch (error) {
-            console.error('규칙 정보 로드 실패:', error);
-            alert('규칙 정보를 불러오는 중 오류가 발생했습니다.');
-        }
-    }
-
-    function populateEditForm(rule) {
-        clearAllErrors();
-        document.getElementById('editRuleId').value = rule.overrideId;
-        document.getElementById('editEmployeeInfo').textContent = 
-            `${rule.employeeName || '알 수 없음'} (${rule.employeeNo || '사번 없음'})`;
-        
-        if (rule.validTo) {
-            document.getElementById('editOriginalValidTo').textContent = rule.validTo;
-        } else {
-            document.getElementById('editOriginalValidTo').textContent = '무기한';
-        }
-
-        document.getElementById('editValidFrom').value = rule.validFrom || '';
-        document.getElementById('editValidTo').value = rule.validTo || '';
-        
-        if (rule.startTime) {
-            document.getElementById('editExceptionStartTime').value = rule.startTime.substring(0, 5);
-        } else {
-            document.getElementById('editExceptionStartTime').value = '';
-        }
-        
-        if (rule.endTime) {
-            document.getElementById('editExceptionEndTime').value = rule.endTime.substring(0, 5);
-        } else {
-            document.getElementById('editExceptionEndTime').value = '';
-        }
-        
-        document.getElementById('editExceptionBreakMinutes').value = rule.breakMinutes || '';
-        document.getElementById('editReason').value = rule.reason || '';
-        // 글자수 카운터 업데이트
-        updateCharCount('editReason', 'editReasonCharCount', 40);
-    }
-
-    document.querySelector('#editExceptionRuleModal .close').addEventListener('click', () => {
-        closeModal(editModal);
-    });
-
-    document.getElementById('editCancelBtn').addEventListener('click', () => {
-        clearAllErrors();
-        closeModal(editModal);
-    });
-
-    // 수정 폼 유효성 검사 함수
-    function validateEditExceptionRuleForm() {
-        clearAllErrors();
-        let isValid = true;
-
-        // 1. 적용 종료일 검증
-        const validFrom = document.getElementById('editValidFrom').value;
-        const validTo = document.getElementById('editValidTo').value;
-        if (validTo) {
-            if (!validFrom) {
-                showError('editValidToError', '적용 시작일이 없습니다.');
-                isValid = false;
-            } else {
-                const validFromDate = new Date(validFrom);
-                const validToDate = new Date(validTo);
-                
-                if (validToDate < validFromDate) {
-                    showError('editValidToError', '적용 종료일은 적용 시작일 이후여야 합니다.');
-                    isValid = false;
-                }
-            }
-        }
-
-        // 2. 출근/퇴근 시간 검증
-        const startTime = document.getElementById('editExceptionStartTime').value;
-        const endTime = document.getElementById('editExceptionEndTime').value;
-        if (startTime && endTime) {
-            const start = new Date(`2000-01-01T${startTime}:00`);
-            const end = new Date(`2000-01-01T${endTime}:00`);
-            
-            if (start >= end) {
-                showError('editEndTimeError', '퇴근 시간은 출근 시간보다 늦어야 합니다.');
-                isValid = false;
-            }
-        }
-
-        // 3. 휴게 시간 검증
-        const breakMinutes = document.getElementById('editExceptionBreakMinutes').value;
-        if (breakMinutes) {
-            const breakMin = parseInt(breakMinutes);
-            if (isNaN(breakMin) || breakMin < 0) {
-                showError('editBreakMinutesError', '휴게 시간은 0 이상의 숫자여야 합니다.');
-                isValid = false;
-            } else if (breakMin > 480) {
-                showError('editBreakMinutesError', '휴게 시간은 480분(8시간) 이하여야 합니다.');
-                isValid = false;
-            }
-        }
-
-        // 4. 규칙 수정 사유 검증
-        const reason = document.getElementById('editReason').value.trim();
-        if (!reason) {
-            showError('editReasonError', '규칙 수정 사유를 입력해주세요.');
-            isValid = false;
-        } else if (reason.length > 40) {
-            showError('editReasonError', '규칙 수정 사유는 40자 이하여야 합니다.');
-            isValid = false;
-        }
-
-        return isValid;
-    }
-
-    // 수정 모달 실시간 검증
-    document.getElementById('editValidTo')?.addEventListener('change', function() {
-        clearFieldError('editValidToError', 'editValidTo');
-        const validFrom = document.getElementById('editValidFrom').value;
-        const validTo = this.value;
-        if (validFrom && validTo) {
-            const validFromDate = new Date(validFrom);
-            const validToDate = new Date(validTo);
-            if (validToDate < validFromDate) {
-                showError('editValidToError', '적용 종료일은 적용 시작일 이후여야 합니다.');
-            } else {
-                // 날짜 범위가 올바르면 에러 메시지 클리어
-                clearFieldError('editValidToError', 'editValidTo');
-            }
-        }
-    });
-
-    document.getElementById('editExceptionStartTime')?.addEventListener('change', function() {
-        clearFieldError('editStartTimeError', 'editExceptionStartTime');
-        clearFieldError('editEndTimeError', 'editExceptionEndTime');
-        const endTime = document.getElementById('editExceptionEndTime').value;
-        if (endTime) {
-            validateEditTimeRange();
-        }
-    });
-
-    document.getElementById('editExceptionEndTime')?.addEventListener('change', function() {
-        clearFieldError('editEndTimeError', 'editExceptionEndTime');
-        validateEditTimeRange();
-    });
-
-    // 수정 모달 휴게시간 숫자만 입력 허용
-    const editBreakMinutesInput = document.getElementById('editExceptionBreakMinutes');
-    if (editBreakMinutesInput) {
-        // 키 입력 시 숫자만 허용
-        editBreakMinutesInput.addEventListener('keypress', function(e) {
-            const char = String.fromCharCode(e.which);
-            if (!/[0-9]/.test(char) && !e.ctrlKey && !e.metaKey) {
-                e.preventDefault();
-            }
-        });
-        
-        // 붙여넣기 시 숫자만 허용
-        editBreakMinutesInput.addEventListener('paste', function(e) {
-            e.preventDefault();
-            const paste = (e.clipboardData || window.clipboardData).getData('text');
-            const numbersOnly = paste.replace(/[^0-9]/g, '');
-            if (numbersOnly) {
-                this.value = numbersOnly;
-                this.dispatchEvent(new Event('input'));
-            }
-        });
-        
-        // input 이벤트에서도 필터링 (안전장치)
-        editBreakMinutesInput.addEventListener('input', function() {
-            const value = this.value.replace(/[^0-9]/g, '');
-            if (this.value !== value) {
-                this.value = value;
-            }
-            clearFieldError('editBreakMinutesError', 'editExceptionBreakMinutes');
-            if (value) {
-                const breakMin = parseInt(value);
-                if (isNaN(breakMin) || breakMin < 0) {
-                    showError('editBreakMinutesError', '휴게 시간은 0 이상의 숫자여야 합니다.');
-                } else if (breakMin > 480) {
-                    showError('editBreakMinutesError', '휴게 시간은 480분(8시간) 이하여야 합니다.');
-                }
-            }
-        });
-    }
-
-    document.getElementById('editReason')?.addEventListener('input', function() {
-        clearFieldError('editReasonError', 'editReason');
-        const reason = this.value.trim();
-        if (reason && reason.length > 40) {
-            showError('editReasonError', '규칙 수정 사유는 40자 이하여야 합니다.');
-        }
-        updateCharCount('editReason', 'editReasonCharCount', 40);
-    });
-
-    function validateEditTimeRange() {
-        const startTime = document.getElementById('editExceptionStartTime').value;
-        const endTime = document.getElementById('editExceptionEndTime').value;
-        
-        if (startTime && endTime) {
-            const start = new Date(`2000-01-01T${startTime}:00`);
-            const end = new Date(`2000-01-01T${endTime}:00`);
-            
-            if (start >= end) {
-                showError('editEndTimeError', '퇴근 시간은 출근 시간보다 늦어야 합니다.');
-                return false;
-            } else {
-                // 시간 범위가 올바르면 에러 메시지 클리어
-                clearFieldError('editEndTimeError', 'editExceptionEndTime');
-            }
-        }
-        return true;
-    }
-
-    // 예외 규칙 수정
-    editForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        // 유효성 검사
-        if (!validateEditExceptionRuleForm()) {
-            return;
-        }
-
-        try {
-            const ruleId = document.getElementById('editRuleId').value;
-            const startTime = document.getElementById('editExceptionStartTime').value;
-            const endTime = document.getElementById('editExceptionEndTime').value;
-            const breakMinutes = document.getElementById('editExceptionBreakMinutes').value;
-            const reason = document.getElementById('editReason').value.trim();
-            const validFrom = document.getElementById('editValidFrom').value;
-            const validTo = document.getElementById('editValidTo').value || null;
-
-            const data = {
-                startTime: startTime ? startTime + ":00" : null,
-                endTime: endTime ? endTime + ":00" : null,
-                breakMinutes: breakMinutes ? parseInt(breakMinutes) : null,
-                reason: reason,
-                validFrom: validFrom,
-                validTo: validTo,
-                isActive: true
-            };
-
-            const res = await apiFetch(`/api/admin/rules/exception/${ruleId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-
-            if (res.ok) {
-                alert('예외 규칙이 수정되었습니다.');
-                closeModal(editModal);
-                clearAllErrors();
-                await loadExceptionRules(); // 규칙 목록 새로고침
-            } else {
-                const error = await res.json();
-                const errorMessage = error.message || '알 수 없는 오류';
-                
-                // 서버 에러 메시지에 따라 적절한 필드에 표시
-                if (errorMessage.includes('종료일') || errorMessage.includes('기간')) {
-                    showError('editValidToError', errorMessage);
-                } else if (errorMessage.includes('시간') || errorMessage.includes('출근') || errorMessage.includes('퇴근')) {
-                    showError('editEndTimeError', errorMessage);
-                } else if (errorMessage.includes('사유') || errorMessage.includes('reason')) {
-                    showError('editReasonError', errorMessage);
-                } else {
-                    alert('수정 실패: ' + errorMessage);
-                }
-            }
-        } catch (error) {
-            console.error('예외 규칙 수정 실패:', error);
-            alert('수정 중 오류가 발생했습니다.');
-        }
-    });
-
-    // ============================================
-    // 예외 규칙 삭제
-    // ============================================
-    async function deleteExceptionRule(ruleId) {
-        if (!confirm('정말 삭제하시겠습니까?')) {
-            return;
-        }
-
-        try {
-            const res = await apiFetch(`/api/admin/rules/exception/${ruleId}`, {
-                method: 'DELETE'
-            });
-
-            if (res.ok) {
-                alert('예외 규칙이 삭제되었습니다.');
-                await loadExceptionRules(); // 규칙 목록 새로고침하여 중복 체크 업데이트
-            } else {
-                const error = await res.json();
-                alert('삭제 실패: ' + (error.message || '알 수 없는 오류'));
-            }
-        } catch (error) {
-            console.error('예외 규칙 삭제 실패:', error);
-            alert('삭제 중 오류가 발생했습니다.');
-        }
-    }
+    document.getElementById('cancelBtn')?.addEventListener('click', () => closeModal(modal));
+    document.getElementById('editCancelBtn')?.addEventListener('click', () => closeModal(editModal));
 
     // 모달 외부 클릭 시 닫기
-    window.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            closeModal(modal);
-        }
-        if (e.target === editModal) {
-            closeModal(editModal);
-        }
+    modal?.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal(modal);
+    });
+    editModal?.addEventListener('click', (e) => {
+        if (e.target === editModal) closeModal(editModal);
     });
 });
-

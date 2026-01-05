@@ -1,5 +1,8 @@
 package com.finalproj.orbitflow.resource.item.service;
 
+import com.finalproj.orbitflow.global.file.entity.File;
+import com.finalproj.orbitflow.global.file.enums.FileDomain;
+import com.finalproj.orbitflow.global.file.service.FileService;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
@@ -43,6 +46,8 @@ public class ItemService {
     private final EmployeeRepository employeeRepository;
     private final ResourceStatusRepository resourceStatusRepository;
     private final ItemCategoryRepository itemCategoryRepository;
+
+    private final FileService fileService;
 
     // companyId
     @Transactional(readOnly = true)
@@ -90,14 +95,14 @@ public class ItemService {
     }
 
     @Transactional
-    public void insertItem(Long companyId, ItemReqDto dto) {
-        log.info("insert item");
-        log.info("dto status id" + dto.getStatusId());
-        log.info("dto category id" + dto.getItemCategoryId());
+    public void insertItem(Long companyId, Long employeeId, ItemReqDto dto) {
 
         Company company = companyRepository.getReferenceById(companyId);
         ResourceStatus resourceStatus = findResourceStatus(dto.getStatusId());
         ItemCategory itemCategory = itemCategoryRepository.getReferenceById(dto.getItemCategoryId());
+
+        // 이미지 저장
+        File imgFile = fileService.upload(companyId, employeeId, FileDomain.RESOURCE, dto.getImgFile());
 
         Item item = Item.builder()
                 .company(company)
@@ -105,27 +110,48 @@ public class ItemService {
                 .name(dto.getName())
                 .description(dto.getDescription())
                 .resourceStatus(resourceStatus)
-                // todo - 이미지 파일 처리
+                .file(imgFile)
                 .build();
 
         itemRepository.save(item);
     }
 
     @Transactional
-    public void updateItem(Long itemId, ItemReqDto dto) {
+    public void updateItem(Long companyId, Long employeeId, Long itemId, ItemReqDto dto) {
 
         ItemCategory itemCategory = itemCategoryRepository.getReferenceById(dto.getItemCategoryId());
         Item item = findItemById(itemId);
         ResourceStatus resourceStatus = findResourceStatus(dto.getStatusId());
 
-        // todo - 이미지 파일 처리
+        File imgFile = null;
+
+        // 이미지 변경 있는지 확인
+        // dto에 이미지 파일이 존재한다면
+        if (dto.getImgFile() != null && !dto.getImgFile().isEmpty()) {
+
+            // 1. 기존 img 삭제
+            // 1-1. 기존 파일 존재하는지 확인
+            File carImageFile = item.getFile();
+            if (carImageFile != null) {
+                // TODO - 이미지 삭제
+            }
+
+            // 2. 새 img 등록
+            imgFile = fileService.upload(companyId, employeeId, FileDomain.RESOURCE, dto.getImgFile());
+
+        }
+        // 이미지 변경 없으면
+        else {
+            // 기존 이미지
+            imgFile = item.getFile();
+        }
 
         item.update(
                 itemCategory,
                 dto.getName(),
                 dto.getDescription(),
                 resourceStatus,
-                null    // todo - 이미지 파일 처리
+                imgFile
         );
     }
 
@@ -155,6 +181,13 @@ public class ItemService {
 
         LocalDate createdAt = item.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDate();
 
+        // 이미지 파일 있으면 추가
+        Long fileId = null;
+
+        if (item.getFile() != null) {
+            fileId = item.getFile().getId();
+        }
+
         return ItemResDto.builder()
                 .itemId(item.getId())
                 .itemCategoryId(item.getItemCategory().getId())
@@ -164,7 +197,7 @@ public class ItemService {
                 .statusId(statusId)
                 .statusCode(code)
                 .statusName(name)
-                // todo - 이미지 파일 추가
+                .fileId(fileId)
                 .uploaderName(uploaderName)
                 .createdAt(createdAt)
                 .build();

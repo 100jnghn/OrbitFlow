@@ -56,10 +56,14 @@ public class Board extends BaseEntity {
         this.boardTitle = boardTitle;
         this.boardContent = boardContent;
 
-        // 파일 교체 (기존 제거 후 새로 설정)
-        if (this.files != null) this.files.clear();
+        // 파일 교체 (기존 컬렉션을 유지하면서 clear 후 addAll 사용)
+        // orphanRemoval = true인 경우 새 리스트로 교체하면 Hibernate 오류 발생
+        if (this.files == null) {
+            this.files = new java.util.ArrayList<>();
+        }
+        this.files.clear();
         if (newFiles != null && !newFiles.isEmpty()) {
-            this.files = newFiles;
+            this.files.addAll(newFiles);
         }
     }
 

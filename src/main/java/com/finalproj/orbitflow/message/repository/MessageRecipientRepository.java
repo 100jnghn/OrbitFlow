@@ -49,4 +49,7 @@ public interface MessageRecipientRepository extends JpaRepository<MessageRecipie
             Long employeeId,
             MessageFolderType folderType
     );
+
+    /** 메시지의 활성 recipient 수 조회 (파일 삭제 여부 판단용) */
+    long countByMessage_IdAndDeletedAtIsNull(Long messageId);
 }

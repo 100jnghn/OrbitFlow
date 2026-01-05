@@ -1,187 +1,333 @@
-const API_BASE_URL = '/api/attendance';
-let currentAttendance = null;
-let isAway = false;
+(function() {
+    // 1. 변수 선언을 즉시 실행 함수 내부로 옮겨 스코프 충돌 방지
+    const ATTENDANCE_API_BASE_URL = '/api/attendance';
+    let currentAttendance = null;
+    let isAway = false;
 
-document.addEventListener('DOMContentLoaded', function() {
-    updateClock();
-    setInterval(updateClock, 1000);
+    // DOM 로드 시 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+        updateClock();
+        setInterval(updateClock, 1000);
 
-    loadActiveWorkHours(); // 사원별 맞춤 시간 로드
-    loadTodayAttendance(); // 오늘 현황 로드
-    setupEventListeners();
-});
+        // 초기 상태 벳지 표시
+        updateWorkStatusBadge();
 
-// 공통 토큰 가져오기 함수
-function getAuthToken() {
-    return sessionStorage.getItem('accessToken');
-}
-
-// 실시간 시계
-function updateClock() {
-    const clockEl = document.getElementById('currentTime');
-    if (clockEl) {
-        const now = new Date();
-        clockEl.textContent = now.toLocaleTimeString('ko-KR', {
-            hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
-        });
-    }
-}
-
-// 1. 기준 근무 시간 로드
-async function loadActiveWorkHours() {
-    const token = getAuthToken();
-    if (!token) return;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/active-rule`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            const start = data.startTime.substring(0, 5);
-            const end = data.endTime.substring(0, 5);
-            document.getElementById('workHours').textContent = `${start} ~ ${end}`;
-        }
-    } catch (error) {
-        console.error('기준 시간 로드 실패:', error);
-    }
-}
-
-// 2. 오늘 현황 조회 및 화면 업데이트
-async function loadTodayAttendance() {
-    const token = getAuthToken();
-    if (!token) return;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/today`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.ok) {
-            currentAttendance = await response.json();
-            isAway = currentAttendance.isAway;
-            updateUI();
-        }
-    } catch (error) {
-        console.error('현황 조회 실패:', error);
-    }
-}
-
-// 3. UI 갱신 로직
-function updateUI() {
-    if (!currentAttendance) return;
-
-    document.getElementById('commuteTime').textContent = formatTime(currentAttendance.commuteAt);
-    document.getElementById('leaveTime').textContent = formatTime(currentAttendance.leaveAt);
-
-    const workStatusBadge = document.getElementById('workStatus');
-    const awayStatusBadge = document.getElementById('awayStatus');
-    const workStatusText = document.getElementById('workStatusText');
-
-    workStatusBadge.style.display = 'none';
-    awayStatusBadge.style.display = 'none';
-    workStatusText.textContent = '';
-    workStatusText.style.display = 'inline';
-
-    const attendanceDesc = currentAttendance.statusName || "근무예정";
-
-    if (!currentAttendance.commuteAt) {
-        workStatusText.textContent = `퇴근 (${attendanceDesc})`;
-    } else if (!currentAttendance.leaveAt) {
-        if (isAway) {
-            awayStatusBadge.style.display = 'inline-block';
-            workStatusText.textContent = ` (${attendanceDesc})`;
-        } else {
-            workStatusBadge.style.display = 'inline-block';
-            workStatusBadge.textContent = "근무 중";
-            workStatusText.textContent = ` (${attendanceDesc})`;
-        }
-    } else {
-        workStatusText.textContent = `퇴근 완료 (${attendanceDesc})`;
-    }
-
-    updateButtonStates();
-}
-
-// 4. 출퇴근/자리비움 버튼 클릭 액션 (알림 로직 추가)
-async function handleAction(endpoint, confirmMsg) {
-    if (!confirm(confirmMsg)) return;
-
-    const token = getAuthToken();
-    if (!token) {
-        alert("로그인 정보가 없습니다.");
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            // [중요] 퇴근 시간 이전인 경우 백엔드에서 에러 메시지를 수신하여 경고창 표시
-            alert(data.message || "요청을 처리할 수 없습니다.");
-            return; // 이후 로직 중단
-        }
-
-        // 성공 시 최신 현황 로드
-        await loadTodayAttendance();
-        alert("처리가 완료되었습니다.");
-
-    } catch (error) {
-        console.error("액션 처리 중 오류:", error);
-        alert("시스템 오류가 발생했습니다.");
-    }
-}
-
-// 시간 포맷팅 함수
-function formatTime(isoString) {
-    if (!isoString) return '미기록';
-    const date = new Date(isoString);
-    return date.toLocaleTimeString('ko-KR', {
-        hour12: false,
-        hour: '2-digit',
-        minute: '2-digit'
+        loadActiveWorkHours(); // 사원별 맞춤 시간 로드
+        loadTodayAttendance(); // 오늘 현황 로드
+        setupEventListeners();
     });
-}
 
-// 버튼 활성/비활성 제어
-function updateButtonStates() {
-    const btnIn = document.getElementById('checkInBtn');
-    const btnOut = document.getElementById('checkOutBtn');
-    const btnAway = document.getElementById('awayBtn');
-
-    const hasIn = !!(currentAttendance && currentAttendance.commuteAt);
-    const hasOut = !!(currentAttendance && currentAttendance.leaveAt);
-
-    btnIn.disabled = hasIn;
-    btnOut.disabled = !hasIn || hasOut;
-    btnAway.disabled = !hasIn || hasOut;
-
-    if (isAway) {
-        btnAway.classList.add('active');
-        btnAway.textContent = '자리비움 해제';
-    } else {
-        btnAway.classList.remove('active');
-        btnAway.textContent = '자리비움';
+    // 공통 토큰 가져오기 함수
+    function getAuthToken() {
+        return sessionStorage.getItem('accessToken');
     }
-}
 
-function setupEventListeners() {
-    document.getElementById('checkInBtn').onclick = () => handleAction('checkin', '출근하시겠습니까?');
-    document.getElementById('checkOutBtn').onclick = () => handleAction('checkout', '퇴근하시겠습니까?');
-    document.getElementById('awayBtn').onclick = () => {
-        const action = isAway ? 'away/end' : 'away/start';
-        handleAction(action, isAway ? '자리비움을 해제하시겠습니까?' : '자리비움을 시작하시겠습니까?');
-    };
-}
+    // 실시간 시계
+    function updateClock() {
+        const clockEl = document.getElementById('currentTime');
+        if (clockEl) {
+            const now = new Date();
+            clockEl.textContent = now.toLocaleTimeString('ko-KR', {
+                hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
+            });
+        }
+    }
+
+    // 1. 기준 근무 시간 로드
+    async function loadActiveWorkHours() {
+        const token = getAuthToken();
+        if (!token) {
+            console.warn('토큰이 없어 기준 근무 시간을 로드할 수 없습니다.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${ATTENDANCE_API_BASE_URL}/active-rule`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                
+                // ResponseDto 구조 확인 (data 필드가 있으면 사용, 없으면 직접 사용)
+                const ruleData = data.data || data;
+                
+                if (!ruleData || !ruleData.startTime || !ruleData.endTime) {
+                    console.error('기준 근무 시간 데이터가 올바르지 않습니다:', ruleData);
+                    const workHoursEl = document.getElementById('workHours');
+                    if (workHoursEl) {
+                        workHoursEl.textContent = '조회 실패';
+                    }
+                    return;
+                }
+                
+                // LocalTime 형식 처리 (HH:mm:ss 또는 HH:mm)
+                let startTimeStr = ruleData.startTime;
+                let endTimeStr = ruleData.endTime;
+                
+                // 문자열이면 그대로 사용, 아니면 변환
+                if (typeof startTimeStr !== 'string') {
+                    console.error('startTime이 문자열이 아닙니다:', startTimeStr);
+                    const workHoursEl = document.getElementById('workHours');
+                    if (workHoursEl) {
+                        workHoursEl.textContent = '조회 실패';
+                    }
+                    return;
+                }
+                
+                const start = startTimeStr.substring(0, 5);
+                const end = endTimeStr.substring(0, 5);
+                
+                const workHoursEl = document.getElementById('workHours');
+                if (workHoursEl) {
+                    workHoursEl.textContent = `${start} ~ ${end}`;
+                }
+                
+                // 출근시간이 퇴근시간보다 늦은지 확인
+                const startTime = new Date(`2000-01-01T${startTimeStr}`);
+                const endTime = new Date(`2000-01-01T${endTimeStr}`);
+                if (startTime >= endTime) {
+                    // 오류 배너 표시
+                    const banner = document.getElementById('ruleErrorBanner');
+                    if (banner) {
+                        banner.style.display = 'block';
+                    }
+                } else {
+                    // 정상이면 배너 숨기기
+                    const banner = document.getElementById('ruleErrorBanner');
+                    if (banner) {
+                        banner.style.display = 'none';
+                    }
+                }
+            } else {
+                console.error('기준 근무 시간 API 응답 오류:', response.status, response.statusText);
+                const workHoursEl = document.getElementById('workHours');
+                if (workHoursEl) {
+                    workHoursEl.textContent = '조회 실패';
+                }
+            }
+        } catch (error) {
+            console.error('기준 시간 로드 실패:', error);
+            const workHoursEl = document.getElementById('workHours');
+            if (workHoursEl) {
+                workHoursEl.textContent = '조회 실패';
+            }
+        }
+    }
+
+    // 2. 오늘 현황 조회 및 화면 업데이트
+    async function loadTodayAttendance() {
+        const token = getAuthToken();
+        if (!token) return;
+
+        try {
+            const response = await fetch(`${ATTENDANCE_API_BASE_URL}/today`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const result = await response.json();
+                // ResponseDto 구조 확인
+                currentAttendance = result.data || result;
+                isAway = currentAttendance ? (currentAttendance.isAway || false) : false;
+                updateUI();
+            }
+        } catch (error) {
+            console.error('현황 조회 실패:', error);
+        }
+    }
+
+    // 3. UI 갱신 로직
+    function updateUI() {
+        if (!currentAttendance) return;
+
+        // 출퇴근 시간 표시 (홈화면과 출퇴근 기록 화면 모두 지원)
+        const commuteTimeEl = document.getElementById('commuteTime');
+        const leaveTimeEl = document.getElementById('leaveTime');
+        if (commuteTimeEl) commuteTimeEl.textContent = formatTime(currentAttendance.commuteAt);
+        if (leaveTimeEl) leaveTimeEl.textContent = formatTime(currentAttendance.leaveAt);
+
+        // 근무상태 벳지 업데이트 (홈화면)
+        updateWorkStatusBadge();
+
+        // 출퇴근 기록 화면용 UI 업데이트 (기존 코드 유지)
+        const workStatusBadge = document.getElementById('workStatus');
+        const awayStatusBadge = document.getElementById('awayStatus');
+        const workStatusText = document.getElementById('workStatusText');
+
+        if (workStatusBadge) workStatusBadge.style.display = 'none';
+        if (awayStatusBadge) awayStatusBadge.style.display = 'none';
+        if (workStatusText) {
+            workStatusText.textContent = '';
+            workStatusText.style.display = 'inline';
+        }
+
+        const attendanceDesc = currentAttendance.statusName || "근무예정";
+
+        if (workStatusText) {
+            if (!currentAttendance.commuteAt) {
+                workStatusText.textContent = `퇴근 (${attendanceDesc})`;
+            } else if (!currentAttendance.leaveAt) {
+                if (isAway) {
+                    if (awayStatusBadge) awayStatusBadge.style.display = 'inline-block';
+                    workStatusText.textContent = ` (${attendanceDesc})`;
+                } else {
+                    if (workStatusBadge) {
+                        workStatusBadge.style.display = 'inline-block';
+                        workStatusBadge.textContent = "근무 중";
+                    }
+                    workStatusText.textContent = ` (${attendanceDesc})`;
+                }
+            } else {
+                workStatusText.textContent = `퇴근 완료 (${attendanceDesc})`;
+            }
+        }
+
+        updateButtonStates();
+    }
+
+    // 근무상태 벳지 업데이트 (홈화면)
+    function updateWorkStatusBadge() {
+        const badgeEl = document.getElementById('workStatusBadge');
+        if (!badgeEl) return;
+
+        // currentAttendance가 없으면 기본 상태 표시
+        if (!currentAttendance) {
+            badgeEl.style.display = 'inline-block';
+            badgeEl.className = 'work-status-badge badge-before-work';
+            badgeEl.textContent = '근무예정';
+            return;
+        }
+
+        badgeEl.style.display = 'inline-block';
+        badgeEl.className = 'work-status-badge';
+
+        const commuteAt = currentAttendance.commuteAt;
+        const leaveAt = currentAttendance.leaveAt;
+
+        if (!commuteAt) {
+            // 출근 전
+            badgeEl.textContent = '근무예정';
+            badgeEl.classList.add('badge-before-work');
+        } else if (!leaveAt) {
+            // 출근 후, 퇴근 전
+            if (isAway) {
+                badgeEl.textContent = '자리비움';
+                badgeEl.classList.add('badge-away');
+            } else {
+                badgeEl.textContent = '근무 중';
+                badgeEl.classList.add('badge-working');
+            }
+        } else {
+            // 퇴근 완료
+            badgeEl.textContent = '퇴근 완료';
+            badgeEl.classList.add('badge-off-work');
+        }
+    }
+
+    // 4. 출퇴근/자리비움 버튼 클릭 액션
+    async function handleAction(endpoint, confirmMsg) {
+        if (!confirm(confirmMsg)) return;
+
+        const token = getAuthToken();
+        if (!token) {
+            alert("로그인 정보가 없습니다.");
+            return;
+        }
+
+        try {
+            const response = await fetch(`${ATTENDANCE_API_BASE_URL}/${endpoint}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+            const data = result.data || result;
+
+            if (!response.ok) {
+                const message = result.message || data.message || "요청을 처리할 수 없습니다.";
+                alert(message);
+                return;
+            }
+
+            // 즉시 UI 업데이트
+            currentAttendance = data;
+            isAway = data ? (data.isAway || false) : false;
+            updateUI();
+            
+            // 최신 데이터 다시 로드
+            await loadTodayAttendance();
+            
+            // 홈화면인 경우 대시보드 데이터 새로고침
+            if (window.location.pathname === '/' || window.location.pathname === '/view/main') {
+                if (typeof loadDashboardData === 'function') {
+                    loadDashboardData();
+                }
+            }
+
+        } catch (error) {
+            console.error("액션 처리 중 오류:", error);
+            alert("시스템 오류가 발생했습니다.");
+        }
+    }
+
+    // 시간 포맷팅 함수
+    function formatTime(isoString) {
+        if (!isoString) return '미기록';
+        const date = new Date(isoString);
+        return date.toLocaleTimeString('ko-KR', {
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    // 버튼 활성/비활성 제어
+    function updateButtonStates() {
+        const btnIn = document.getElementById('checkInBtn');
+        const btnOut = document.getElementById('checkOutBtn');
+        const btnAway = document.getElementById('awayBtn');
+
+        if (!btnIn || !btnOut || !btnAway) return;
+
+        const hasIn = !!(currentAttendance && currentAttendance.commuteAt);
+        const hasOut = !!(currentAttendance && currentAttendance.leaveAt);
+
+        btnIn.disabled = hasIn;
+        btnOut.disabled = !hasIn || hasOut;
+        btnAway.disabled = !hasIn || hasOut;
+
+        if (isAway) {
+            btnAway.classList.add('active');
+            btnAway.textContent = '자리비움 해제';
+        } else {
+            btnAway.classList.remove('active');
+            btnAway.textContent = '자리비움';
+        }
+    }
+
+    function setupEventListeners() {
+        const checkInBtn = document.getElementById('checkInBtn');
+        const checkOutBtn = document.getElementById('checkOutBtn');
+        const awayBtn = document.getElementById('awayBtn');
+        
+        if (checkInBtn) {
+            checkInBtn.onclick = () => handleAction('checkin', '출근하시겠습니까?');
+        }
+        if (checkOutBtn) {
+            checkOutBtn.onclick = () => handleAction('checkout', '퇴근하시겠습니까?');
+        }
+        if (awayBtn) {
+            awayBtn.onclick = () => {
+                const action = isAway ? 'away/end' : 'away/start';
+                handleAction(action, isAway ? '자리비움을 해제하시겠습니까?' : '자리비움을 시작하시겠습니까?');
+            };
+        }
+    }
+})(); // 즉시 실행 함수 닫기

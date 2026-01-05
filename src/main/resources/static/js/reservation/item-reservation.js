@@ -341,7 +341,7 @@ function updateSelection() {
     }
 }
 
-function updateReservationForm() {
+async function updateReservationForm() {
     // 신청자 (현재 사용자 정보 - 추후 API에서 가져오기)
     document.getElementById('applicant-name').textContent = '사용자'; // TODO: 실제 사용자 정보
 
@@ -352,10 +352,24 @@ function updateReservationForm() {
         document.getElementById('selected-item-category').textContent = selectedItem.itemCategoryName || '-';
         document.getElementById('selected-item-description').textContent = selectedItem.description || '-';
 
-        // 자원 이미지 업데이트
-        if (selectedItem.objectKey) {
-            itemImage.src = `/api/files/${selectedItem.objectKey}`;
-            itemImage.style.display = 'block';
+        // 자원 이미지 업데이트 (presigned URL 방식)
+        if (selectedItem.fileId) {
+            try {
+                // presigned URL 요청
+                const res = await apiFetch(`/api/files/${selectedItem.fileId}/presigned`);
+                if (!res.ok) throw new Error('presigned url 요청 실패');
+
+                const result = await res.json();
+                const imageUrl = result.data.url;
+
+                itemImage.src = imageUrl;
+                itemImage.style.display = 'block';
+            } catch (e) {
+                console.error('이미지 로드 실패', e);
+                // 실패 시 이미지 숨기기
+                itemImage.src = '';
+                itemImage.style.display = 'none';
+            }
         } else {
             itemImage.src = '';
             itemImage.style.display = 'none';

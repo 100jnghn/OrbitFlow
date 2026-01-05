@@ -51,7 +51,11 @@ public class SecurityConfig {
                                 "/images/**",
                                 "/favicon.ico",
                                 "/internal/**"
-                                ).permitAll()
+                                "/favicon.ico",
+                                "/activate",
+                                "/reset-password",
+                                "/api/email/**"
+                        ).permitAll()
 
                         .requestMatchers("/api/admin/**")
                         .hasAnyRole("ADMIN", "COMPANY_ADMIN")

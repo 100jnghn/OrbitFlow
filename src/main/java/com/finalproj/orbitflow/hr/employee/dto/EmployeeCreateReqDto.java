@@ -1,7 +1,6 @@
 package com.finalproj.orbitflow.hr.employee.dto;
 
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeRole;
-import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.enums.EmploymentType;
 import com.finalproj.orbitflow.hr.employee.enums.Gender;
 import jakarta.validation.constraints.Email;
@@ -68,12 +67,12 @@ public class EmployeeCreateReqDto {
     @NotNull(message = "고용 형태는 필수입니다.")
     private EmploymentType employmentType;
 
-    /**
-     * 생성 시 기본값: TEMP
-     * - 프론트에서 보내지 않아도 되며
-     * - 서버에서 강제 설정하는 것을 권장
-     */
-    private EmployeeStatus status;
+//    /**
+//     * 생성 시 기본값: TEMP
+//     * - 프론트에서 보내지 않아도 되며
+//     * - 서버에서 강제 설정하는 것을 권장
+//     */
+//    private EmployeeStatus status;
 
     @NotNull(message = "사원 유형(권한)은 필수입니다.")
     private EmployeeRole role;

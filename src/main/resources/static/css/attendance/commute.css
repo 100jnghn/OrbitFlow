@@ -177,3 +177,66 @@ button:disabled {
 
 .status-late { color: var(--danger-color); }
 .status-ontime { color: #40C057; }
+
+/* 규칙 오류 알림 배너 */
+.rule-error-banner {
+    background: #FEF2F2;
+    border: 1px solid #FEE2E2;
+    border-left: 4px solid #EF4444;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.rule-error-banner .banner-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rule-error-banner i {
+    color: #EF4444;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.rule-error-banner .banner-message {
+    flex: 1;
+    color: #991B1B;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.rule-error-banner .banner-close {
+    background: none;
+    border: none;
+    color: #991B1B;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+.rule-error-banner .banner-close:hover {
+    background: rgba(239, 68, 68, 0.1);
+}

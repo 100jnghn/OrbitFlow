@@ -30,7 +30,7 @@ public class ChatService {
     private final EmbeddingModel embeddingModel;
     private final EmbeddingStore<TextSegment> embeddingStore;
 
-    public String askQuestion(String question, Long companyId) {
+    public String askQuestion(String question, Long companyId, Long categoryId) {
         var questionEmbedding = embeddingModel.embed(question).content();
 
         // 상위 10개로 검색 범위를 넓혀 필터링 후에도 충분한 데이터가 남도록 함
@@ -38,14 +38,24 @@ public class ChatService {
 
         String context = matches.stream()
                 .filter(match -> {
-                    Object storedId = match.embedded().metadata().toMap().get("company_id");
-                    return storedId != null && storedId.toString().equals(companyId.toString());
+                    var metadata = match.embedded().metadata().toMap();
+                    Object storedCompanyId = metadata.get("company_id");
+                    Object storedCategoryId = metadata.get("category_id");
+                    
+                    // 회사 ID 검증
+                    boolean companyMatch = storedCompanyId != null && storedCompanyId.toString().equals(companyId.toString());
+                    
+                    // 카테고리 ID 검증 (categoryId가 null이면 모든 카테고리 허용)
+                    boolean categoryMatch = categoryId == null || 
+                            (storedCategoryId != null && storedCategoryId.toString().equals(categoryId.toString()));
+                    
+                    return companyMatch && categoryMatch;
                 })
                 .map(match -> match.embedded().text())
                 .collect(Collectors.joining("\n\n"));
 
         if (context.trim().isEmpty()) {
-            log.warn("검색 결과 없음 - 회사ID: {}, 질문: {}", companyId, question);
+            log.warn("검색 결과 없음 - 회사ID: {}, 카테고리ID: {}, 질문: {}", companyId, categoryId, question);
             return "해당 질문에 대한 정보를 매뉴얼에서 찾을 수 없습니다.";
         }
 

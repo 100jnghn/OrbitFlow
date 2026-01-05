@@ -2,7 +2,7 @@ package com.finalproj.orbitflow.attendance.monthly_history.scheduler;
 
 import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
 import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
-import com.finalproj.orbitflow.attendance.commute.repository.AttendanceRepository;
+import com.finalproj.orbitflow.attendance.commute.repository.CommuteRepository;
 
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
@@ -22,7 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AttendanceScheduler {
 
-    private final AttendanceRepository attendanceRepository;
+    private final CommuteRepository commuteRepository;
     private final EmployeeRepository employeeRepository;
 
     /**
@@ -48,7 +48,7 @@ public class AttendanceScheduler {
 
         for (Employee emp : allEmployees) {
             // 3. 해당 사원이 어제 출근 기록이 있는지 확인
-            boolean exists = attendanceRepository.existsByEmployeeIdAndWorkDate(emp.getId(), yesterday);
+            boolean exists = commuteRepository.existsByEmployeeIdAndWorkDate(emp.getId(), yesterday);
 
             if (!exists) {
                 // 4. 기록이 없으면 ABSENT(결근) 레코드 생성
@@ -58,7 +58,7 @@ public class AttendanceScheduler {
                         .status(AttendanceStatus.ABSENT)
                         .build();
 
-                attendanceRepository.save(absenceRecord);
+                commuteRepository.save(absenceRecord);
             }
         }
         log.info("{} 결근 처리 완료", yesterday);

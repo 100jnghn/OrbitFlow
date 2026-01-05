@@ -2,6 +2,8 @@ package com.finalproj.orbitflow.resource.car.service;
 
 import com.finalproj.orbitflow.global.exception.DuplicateCarNumberException;
 import com.finalproj.orbitflow.global.file.entity.File;
+import com.finalproj.orbitflow.global.file.enums.FileDomain;
+import com.finalproj.orbitflow.global.file.service.FileService;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
@@ -42,6 +44,8 @@ public class CarService {
     private final ResourceStatusRepository resourceStatusRepository;
     private final EmployeeRepository employeeRepository;
 
+    private final FileService fileService;
+
     @Transactional(readOnly = true)
     public Page<CarResDto> getCars(Long companyId, Pageable pageable) {
 
@@ -66,7 +70,7 @@ public class CarService {
     }
 
     @Transactional
-    public void insertCar(Long companyId, CarReqDto dto) {
+    public void insertCar(Long companyId, Long employeeId, CarReqDto dto) {
 
         Company company = companyRepository.getReferenceById(companyId);
         ResourceStatus resourceStatus = findResourceStatus(dto.getStatusId());
@@ -78,7 +82,8 @@ public class CarService {
             throw new DuplicateCarNumberException("이미 존재하는 차량 번호입니다");
         }
 
-        // todo - 이미지 파일 저장 기능 추가
+        // 이미지 저장 기능 추가
+        File imgFile = fileService.upload(companyId, employeeId, FileDomain.RESOURCE, dto.getImgFile());
 
         Car car = Car.builder()
                 .company(company)
@@ -87,23 +92,41 @@ public class CarService {
                 .driverAge(dto.getDriverAge())
                 .description(dto.getDescription())
                 .resourceStatus(resourceStatus)
-                // todo - 이미지 파일 추가
+                .file(imgFile)
                 .build();
 
         carRepository.save(car);
     }
 
     @Transactional
-    public void updateCar(Long carId, CarReqDto dto) {
-
-        log.info("수정 차 번호 " + carId);
-        log.info("차 상태값 : " + dto.getStatusId());
+    public void updateCar(Long companyId, Long employeeId, Long carId, CarReqDto dto) {
 
         Car car = findCarById(carId);
         ResourceStatus status = findResourceStatus(dto.getStatusId());
 
-        // todo - 이미지 수정 로직 추가
-        File imgFile = car.getFile();
+        File imgFile = null;
+
+        // 이미지 변경 있는지 확인
+        // dto에 이미지 파일이 존재한다면
+        if (dto.getImgFile() != null && !dto.getImgFile().isEmpty()) {
+
+            // 1. 기존 img 삭제
+            // 1-1. 기존 파일 존재하는지 확인
+            File carImageFile = car.getFile();
+            if (carImageFile != null) {
+                // TODO - 이미지 삭제
+            }
+
+            // 2. 새 img 등록
+            imgFile = fileService.upload(companyId, employeeId, FileDomain.RESOURCE, dto.getImgFile());
+
+        }
+        // 이미지 변경 없으면
+        else {
+            // 기존 이미지
+            imgFile = car.getFile();
+        }
+
 
         // 차량 번호 unique하게 (공백 제거)
         String number = dto.getNumber().replace(" ", "");
@@ -114,7 +137,7 @@ public class CarService {
                 dto.getDriverAge(),
                 dto.getDescription(),
                 status,
-                imgFile // todo - 이미지 수정 로직 추가
+                imgFile
         );
     }
 
@@ -122,6 +145,8 @@ public class CarService {
     public void deleteCar(Long carId) {
 
         Car car = findCarById(carId);
+
+        // TODO - 이미지 삭제
 
         ResourceStatus deleteStatus = resourceStatusRepository.findByResourceStatusCode(ResourceStatusCode.DELETED);
         car.delete(deleteStatus);
@@ -154,6 +179,13 @@ public class CarService {
 
         LocalDate createdAt = car.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDate();
 
+        Long fileId = null;
+
+        // 이미지 유효성 검사
+        if (car.getFile() != null) {
+            fileId = car.getFile().getId();
+        }
+
         return CarResDto.builder()
                 .carId(car.getId())
                 .number(number)
@@ -163,7 +195,7 @@ public class CarService {
                 .statusId(statusId)
                 .statusCode(code)
                 .statusName(name)
-                .objectKey(objectKey)
+                .fileId(fileId)
                 .uploaderName(uploaderName)
                 .createdAt(createdAt)
                 .build();

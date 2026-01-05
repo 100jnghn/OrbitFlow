@@ -3,7 +3,7 @@
       th:replace="~{layout/layout-user :: layout(
           ~{::content},
           ~{fragments/header :: header},
-          ~{sidebar/attendance/user-attendance-sidebar :: menu},
+          ~{sidebar/attendance/user-attendance-sidebar :: sidebar},
           ~{::pageCss},
           ~{::pageScript}
       )}">
@@ -14,6 +14,7 @@
     <th:block th:fragment="pageCss">
         <link rel="stylesheet" th:href="@{/css/board/board.css}">
         <link rel="stylesheet" th:href="@{/css/attendance/commute.css}">
+        <link rel="stylesheet" th:href="@{/css/user-sidebar/user-sidebar.css}">
     </th:block>
 </head>
 <body>
@@ -22,6 +23,15 @@
         <!-- 게시판 제목 -->
         <div class="board-header">
             <h1>출퇴근 기록</h1>
+        </div>
+
+        <!-- 규칙 오류 알림 배너 -->
+        <div id="ruleErrorBanner" class="rule-error-banner" style="display: none;">
+            <div class="banner-content">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span class="banner-message">기본 근무 시간 설정에 오류가 있습니다. 출근 시간이 퇴근 시간보다 늦게 설정되어 있습니다. 관리자에게 문의해주세요.</span>
+                <button class="banner-close" onclick="document.getElementById('ruleErrorBanner').style.display='none';">&times;</button>
+            </div>
         </div>
 
         <!-- 출퇴근 액션 카드 -->

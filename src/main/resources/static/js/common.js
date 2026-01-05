@@ -385,3 +385,181 @@ function showSessionExtendModalOnce() {
     sessionStorage.setItem('sessionWarningShown', 'true');
     showSessionExtendModal();
 }
+
+/**
+ * 알림 관련 코드
+ */
+
+// sse 연결 확인 변수
+let eventSource = null;
+
+// sse 연결 시도 & 안 읽은 알림 수 불러오기
+document.addEventListener("DOMContentLoaded", () => {
+
+    // 로그인 화면에서는 알림 관련 메소드 호출 X
+    if (window.location.pathname === "/login") return;
+
+    connectSse();
+    refreshUnreadCount(); // 초기 상태 동기화
+});
+
+// sse 연결 함수
+function connectSse() {
+    if (eventSource) return;
+
+    // access token 사용
+    const accessToken = sessionStorage.getItem("accessToken");
+
+    if (!accessToken) {
+        console.warn("SSE 연결 중단: access token 없음");
+        return;
+    }
+
+    // console.log("EventSourcePolyFill : " + window.EventSourcePolyfill);
+
+    // access token 사용해서 sse 연결 요청
+    eventSource = new EventSourcePolyfill(
+        "/api/notifications/stream",
+        {
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            },
+            withCredentials: true, // refresh token 쿠키 필요 시
+        }
+    );
+
+    eventSource.addEventListener("notification", (event) => {
+        const dto = JSON.parse(event.data);
+        showToast(dto);
+        refreshUnreadCount();
+    });
+
+    eventSource.onopen = () => {
+        console.log("SSE 연결 성공");
+    };
+
+    eventSource.onerror = () => {
+        eventSource.close();
+        eventSource = null;
+
+        // 세션 기준으로 판단 (SSE 전용)
+        setTimeout(connectSse, 5000);
+    };
+}
+
+// 알림 토스트 메시지 표시 함수
+function showToast(dto) {
+    const container = document.getElementById("notification-toast-container");
+    if (!container) return;
+
+    const toast = document.createElement("div");
+    toast.className = "notification-toast";
+
+    // 왼쪽 아이콘 영역
+    const iconArea = document.createElement("div");
+    iconArea.className = "notification-toast-icon";
+    iconArea.innerHTML = '<i class="fas fa-bell"></i>';
+
+    // 오른쪽 컨텐츠 영역
+    const contentArea = document.createElement("div");
+    contentArea.className = "notification-toast-content";
+
+    // 텍스트
+    const text = document.createElement("div");
+    text.className = "notification-toast-text";
+    text.textContent = dto.type || '알림';
+
+    // 확인 버튼
+    const checkBtn = document.createElement("button");
+    checkBtn.className = "notification-toast-check-btn";
+    checkBtn.title = "확인";
+    checkBtn.innerHTML = '<i class="fas fa-check"></i>';
+    checkBtn.onclick = () => {
+        if (dto.notificationId) {
+            markAsRead(dto.notificationId);
+        }
+        toast.remove();
+    };
+
+    contentArea.appendChild(text);
+    contentArea.appendChild(checkBtn);
+
+    toast.appendChild(iconArea);
+    toast.appendChild(contentArea);
+
+    container.appendChild(toast);
+
+    // 자동 제거 함수
+    const removeToast = () => {
+        if (toast.parentNode) {
+            toast.style.animation = 'slideOutToast 0.3s ease-out';
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 300);
+        }
+    };
+
+    let removeTimer = setTimeout(removeToast, 5000);
+
+    // hover 시 타이머 중지
+    toast.addEventListener('mouseenter', () => {
+        clearTimeout(removeTimer);
+    });
+
+    // hover 해제 시 다시 타이머 시작
+    toast.addEventListener('mouseleave', () => {
+        removeTimer = setTimeout(removeToast, 5000);
+    });
+}
+
+// 토스트 슬라이드 아웃 애니메이션 추가
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideOutToast {
+        from {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// 읽지 않은 메시지 수 불러오는 함수
+async function refreshUnreadCount() {
+    try {
+        const res = await apiFetch("/api/notifications/unread");
+        if (!res.ok) return;
+
+        const result = await res.json();
+        const list = result.data;
+        const badge = document.getElementById("notificationBadge");
+
+        if (!badge) return;
+
+        if (list.length > 0) {
+
+            console.log("안 읽은 메시지 수 : " + list.length);
+
+            badge.innerText = list.length >= 10 ? '9+' : list.length.toString();
+            badge.classList.remove("hidden");
+            badge.style.display = "flex";
+        } else {
+            badge.classList.add("hidden");
+        }
+    } catch (e) {
+        console.error("읽지 않은 알림 불러오기 실패", e);
+    }
+}
+
+window.addEventListener("beforeunload", () => {
+    if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+    }
+});

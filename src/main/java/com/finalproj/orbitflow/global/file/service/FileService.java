@@ -74,6 +74,11 @@ public class FileService {
             FileDomain domain,
             MultipartFile multipartFile
     ) {
+
+        if (multipartFile == null || multipartFile.isEmpty()) {
+            return null;
+        }
+
         Company company = companyRepository.findById(companyId)
                 .orElseThrow();
 
@@ -230,6 +235,11 @@ public class FileService {
     }
 
     public void deleteObject(String objectKey) {
+
+    /*
+     * helper
+     * */
+    private void rollbackS3(String objectKey) {
         try {
             s3Client.deleteObject(
                     DeleteObjectRequest.builder()

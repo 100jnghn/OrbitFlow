@@ -2,12 +2,12 @@ package com.finalproj.orbitflow.attendance.dashboard.service;
 
 import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
 import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
-import com.finalproj.orbitflow.attendance.commute.repository.AttendanceRepository;
+import com.finalproj.orbitflow.attendance.commute.repository.CommuteRepository;
 import com.finalproj.orbitflow.attendance.dashboard.dto.AdminAttendanceResDto;
 import com.finalproj.orbitflow.attendance.dashboard.dto.AdminSummaryResDto;
 import com.finalproj.orbitflow.attendance.dashboard.dto.AttendanceUpdateDto;
-import com.finalproj.orbitflow.attendance.default_rule.entity.AttendanceRule;
-import com.finalproj.orbitflow.attendance.default_rule.repository.AttendanceRuleRepository;
+import com.finalproj.orbitflow.attendance.rule.entity.AttendanceRule;
+import com.finalproj.orbitflow.attendance.rule.repository.AttendanceRuleRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
@@ -28,7 +28,7 @@ import java.time.format.DateTimeFormatter;
 @Transactional(readOnly = true)
 public class AttendanceDashboardService {
 
-    private final AttendanceRepository attendanceRepository;
+    private final CommuteRepository commuteRepository;
     private final EmployeeRepository employeeRepository;
     private final AttendanceRuleRepository attendanceRuleRepository;
 
@@ -47,7 +47,7 @@ public class AttendanceDashboardService {
                 .orElse(null);
 
         // 3. 수정된 리포지토리 메서드 호출 (인자 5개 + pageable)
-        return attendanceRepository.findAllEmployeesWithAttendance(
+        return commuteRepository.findAllEmployeesWithAttendance(
                         companyId, startDate, endDate, statusEnum, keyword, pageable)
                 .map(result -> {
                     Employee emp = (Employee) result[0];
@@ -67,11 +67,11 @@ public class AttendanceDashboardService {
         int totalActive = employeeRepository.countByCompanyIdAndStatus(companyId, EmployeeStatus.ACTIVE);
 
         // 2. 출근 완료 및 지각 카운트
-        int onTime = attendanceRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today, AttendanceStatus.ON_TIME);
-        int late = attendanceRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today, AttendanceStatus.LATE);
+        int onTime = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today, AttendanceStatus.ON_TIME);
+        int late = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today, AttendanceStatus.LATE);
 
         // 3. 퇴근 미처리 (근무 중)
-        int notLeaving = attendanceRepository.countByCompanyIdAndWorkDateAndLeaveAtIsNull(companyId, today);
+        int notLeaving = commuteRepository.countByCompanyIdAndWorkDateAndLeaveAtIsNull(companyId, today);
 
         return AdminSummaryResDto.builder()
                 .totalEmployees(totalActive)
@@ -145,6 +145,7 @@ public class AttendanceDashboardService {
                 .statusName(statusName)
                 .statusCode(statusCode)
                 .isCorrected(att != null && att.getIsCorrected())
+                .correctionReason(att != null ? att.getCorrectionReason() : null)
                 .build();
     }
 
@@ -156,11 +157,11 @@ public class AttendanceDashboardService {
         Attendance attendance;
 
         if (attendanceId != null && attendanceId > 0) {
-            attendance = attendanceRepository.findById(attendanceId)
+            attendance = commuteRepository.findById(attendanceId)
                     .orElseThrow(() -> new RuntimeException("근태 기록을 찾을 수 없습니다."));
         } else {
             // "기록 누락" 사원의 경우 중복 생성 방지를 위해 재조회 후 생성
-            attendance = attendanceRepository.findByCompanyIdAndEmployeeIdAndWorkDate(
+            attendance = commuteRepository.findByCompanyIdAndEmployeeIdAndWorkDate(
                     companyId, dto.getEmployeeId(), LocalDate.now()).orElseGet(() ->
                     Attendance.builder()
                             .employeeId(dto.getEmployeeId())
@@ -182,7 +183,7 @@ public class AttendanceDashboardService {
             attendance.setLeaveAt(parseDateTime(attendance.getWorkDate(), dto.getLeaveAt()));
         }
 
-        attendanceRepository.save(attendance);
+        commuteRepository.save(attendance);
     }
 
     private LocalDateTime parseDateTime(LocalDate date, String timeStr) {

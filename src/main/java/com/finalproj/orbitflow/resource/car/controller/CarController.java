@@ -81,7 +81,9 @@ public class CarController {
             @AuthenticationPrincipal SecurityUser user
     ) {
         Long companyId = user.getCompanyId();
-        carService.insertCar(companyId, dto);
+        Long employeeId = user.getEmployeeId();
+
+        carService.insertCar(companyId, employeeId, dto);
 
         return ResponseEntity.ok().body(
                 new ResponseDto(HttpStatus.OK, "차량 등록 성공", null)
@@ -91,10 +93,14 @@ public class CarController {
     // 관리자 - 차량 수정
     @PutMapping("/admin/cars/{carId}")
     public ResponseEntity<ResponseDto> updateCar(
+            @AuthenticationPrincipal SecurityUser user,
             @PathVariable Long carId,
             @ModelAttribute CarReqDto dto
     ) {
-        carService.updateCar(carId, dto);
+        Long companyId = user.getCompanyId();
+        Long employeeId = user.getEmployeeId();
+
+        carService.updateCar(companyId, employeeId, carId, dto);
 
         return ResponseEntity.ok().body(
                 new ResponseDto(HttpStatus.OK, "차량 수정 성공", null)

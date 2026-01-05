@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.time.Instant;
+import java.util.Map;
 
 /**
  * Please explain the class!!!
@@ -20,8 +21,8 @@ public class AuditLogResDto {
     private String eventType;
     private String actorName;
     private String actorEmail;
-    private String beforeData;
-    private String afterData;
+    private Map<String, Object> beforeData;
+    private Map<String, Object> afterData;
     private Instant createdAt;
 
     public static AuditLogResDto from(AuditLog log) {
