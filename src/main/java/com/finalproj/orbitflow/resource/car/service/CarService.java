@@ -118,7 +118,6 @@ public class CarService {
         // 이미지 추가 O
         if (carImageFile == null && dto.getImgFile() != null) {
             imgFile = fileService.upload(companyId, FileDomain.RESOURCE, dto.getImgFile());
-
         }
 
         // 기존 이미지 O
@@ -156,7 +155,6 @@ public class CarService {
 
         // 이미지 삭제
         if (car.getFile() != null) {
-
             boolean result = deleteCarFileInternal(car);
         }
 

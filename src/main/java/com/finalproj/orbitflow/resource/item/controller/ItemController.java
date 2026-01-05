@@ -154,4 +154,18 @@ public class ItemController {
         );
     }
 
+    // 관리자 - 자원 이미지 삭제
+    @GetMapping("/admin/items/{itemId}/file/delete")
+    public ResponseEntity<ResponseDto> deleteItemFile(
+            @PathVariable Long itemId
+    ) {
+        boolean result = itemService.deleteItemFile(itemId);
+
+        String message = result ? "파일을 삭제했습니다" : "파일이 존재하지 않습니다";
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, message, null)
+        );
+    }
+
 }

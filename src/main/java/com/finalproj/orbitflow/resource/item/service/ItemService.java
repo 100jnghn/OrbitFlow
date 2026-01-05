@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.resource.item.service;
 
 import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.global.file.enums.FileDomain;
+import com.finalproj.orbitflow.global.file.repository.FileRepository;
 import com.finalproj.orbitflow.global.file.service.FileService;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
@@ -47,6 +48,7 @@ public class ItemService {
     private final ResourceStatusRepository resourceStatusRepository;
     private final ItemCategoryRepository itemCategoryRepository;
 
+    private final FileRepository fileRepository;
     private final FileService fileService;
 
     // companyId
@@ -125,25 +127,28 @@ public class ItemService {
 
         File imgFile = null;
 
-        // 이미지 변경 있는지 확인
-        // dto에 이미지 파일이 존재한다면
-        if (dto.getImgFile() != null && !dto.getImgFile().isEmpty()) {
+        // 기존 이미지
+        File itemImageFile = item.getFile();
 
-            // 1. 기존 img 삭제
-            // 1-1. 기존 파일 존재하는지 확인
-            File carImageFile = item.getFile();
-            if (carImageFile != null) {
-                // TODO - 이미지 삭제
-            }
+        // ----- 이미지 수정 ----- //
 
-            // 2. 새 img 등록
+        // 기존 이미지 X
+        // 이미지 추가 O
+        if (itemImageFile == null && dto.getImgFile() != null) {
             imgFile = fileService.upload(companyId, FileDomain.RESOURCE, dto.getImgFile());
-
         }
-        // 이미지 변경 없으면
-        else {
-            // 기존 이미지
-            imgFile = item.getFile();
+
+        // 기존 이미지 O
+        // 이미지 변경
+        else if (itemImageFile != null && dto.getImgFile() != null) {
+            boolean result = deleteItemFileInternal(item);
+            imgFile = fileService.upload(companyId, FileDomain.RESOURCE, dto.getImgFile());
+        }
+
+        // 기존 이미지 O
+        // 이미지 유지
+        else if (itemImageFile != null && dto.getImgFile() == null) {
+            imgFile = itemImageFile;
         }
 
         item.update(
@@ -155,19 +160,47 @@ public class ItemService {
         );
     }
 
+    // 자원 삭제
     @Transactional
     public void deleteItem(Long itemId) {
 
         Item item = itemRepository.findItemById(itemId);
-        ResourceStatus deleteStatus = resourceStatusRepository.findByResourceStatusCode(ResourceStatusCode.DELETED);
 
         // 이미지 삭제
         if (item.getFile() != null) {
-            File file = item.getFile();
-            fileService.deleteObject(file.getObjectKey());
+            boolean result = deleteItemFileInternal(item);
         }
 
+        ResourceStatus deleteStatus = resourceStatusRepository.findByResourceStatusCode(ResourceStatusCode.DELETED);
         item.delete(deleteStatus);
+    }
+
+    // 자원 이미지 삭제
+    @Transactional
+    public boolean deleteItemFile(Long itemId) {
+
+        Item item = itemRepository.findItemById(itemId);
+
+        boolean result = deleteItemFileInternal(item);
+        return result;
+    }
+
+    private boolean deleteItemFileInternal(Item item) {
+
+        if (item.getFile() == null) {
+            return false;
+        }
+
+        File file = item.getFile();
+
+        // db file 삭제, 반영
+        fileRepository.delete(file);
+        fileRepository.flush();
+
+        // s3 file 삭제
+        fileService.deleteObjectAfterCommit(file.getObjectKey());
+
+        return true;
     }
 
 
@@ -221,6 +254,5 @@ public class ItemService {
         return resourceStatusRepository.findById(statusId)
                 .orElseThrow(() -> new IllegalArgumentException("지원하지 않는 자원 상태입니다."));
     }
-
 
 }
