@@ -160,6 +160,7 @@ function initEventListeners() {
     // 이미지 업로드 관련
     const imageInput = document.getElementById('car-image-input');
     const removeBtn = document.getElementById('btn-remove');
+    const removeImgBtn = document.getElementById('btn-remove-img');
     const previewArea = document.getElementById('car-image-preview');
 
     // 미리보기 영역 클릭
@@ -174,11 +175,19 @@ function initEventListeners() {
         imageInput.addEventListener('change', handleImageSelect);
     }
 
-    // 이미지 제거 버튼
+    // 이미지 제거 버튼 (선택된 이미지)
     if (removeBtn) {
         removeBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             handleImageRemove();
+        });
+    }
+
+    // 기존 이미지 제거 버튼 (서버 이미지)
+    if (removeImgBtn) {
+        removeImgBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            handleDeleteImage();
         });
     }
 }
@@ -220,20 +229,25 @@ function displayImagePreview(imageUrl) {
     const carImage = document.getElementById('car-image');
     const placeholder = document.getElementById('upload-placeholder');
     const removeBtn = document.getElementById('btn-remove');
+    const removeImgBtn = document.getElementById('btn-remove-img');
 
     if (carImage && placeholder) {
         carImage.src = imageUrl;
         carImage.style.display = 'block';
         placeholder.style.display = 'none';
 
+        // 새로 선택한 이미지는 btn-remove만 표시
         if (removeBtn) {
             removeBtn.style.display = 'inline-flex';
+        }
+        if (removeImgBtn) {
+            removeImgBtn.style.display = 'none';
         }
     }
 }
 
 /**
- * 이미지 제거 핸들러
+ * 이미지 제거 핸들러 (선택된 이미지만 제거)
  */
 function handleImageRemove() {
     selectedImageFile = null;
@@ -241,6 +255,7 @@ function handleImageRemove() {
     const carImage = document.getElementById('car-image');
     const placeholder = document.getElementById('upload-placeholder');
     const removeBtn = document.getElementById('btn-remove');
+    const removeImgBtn = document.getElementById('btn-remove-img');
     const imageInput = document.getElementById('car-image-input');
 
     if (carImage) {
@@ -256,8 +271,42 @@ function handleImageRemove() {
         removeBtn.style.display = 'none';
     }
 
+    if (removeImgBtn) {
+        removeImgBtn.style.display = 'none';
+    }
+
     if (imageInput) {
         imageInput.value = '';
+    }
+}
+
+/**
+ * 기존 이미지 삭제 핸들러 (서버에서 완전 삭제)
+ */
+async function handleDeleteImage() {
+    if (!confirm('기존 이미지를 삭제하시겠습니까?')) {
+        return;
+    }
+
+    try {
+        const response = await apiFetch(
+            `/api/admin/cars/${currentCarId}/file/delete`,
+            { method: 'GET' }
+        );
+
+        if (!response.ok) {
+            throw new Error('이미지 삭제 실패');
+        }
+
+        const result = await response.json();
+        alert(result.message);
+
+        // 이미지 뷰 초기화
+        displayCarImage(null);
+
+    } catch (error) {
+        console.error(error);
+        alert('이미지 삭제에 실패했습니다.');
     }
 }
 
@@ -324,7 +373,7 @@ async function handleDelete() {
     try {
         const response = await apiFetch(
             `/api/admin/cars/${currentCarId}/delete`,
-            {method: 'PATCH'}
+            { method: 'PATCH' }
         );
 
         if (!response.ok) {
@@ -343,7 +392,7 @@ async function loadStatusOptions(selectedStatusId) {
     try {
         const response = await apiFetch(
             '/api/admin/resource-status',
-            {method: 'GET'}
+            { method: 'GET' }
         );
 
         if (!response.ok) throw new Error();
@@ -378,7 +427,7 @@ async function loadCarDetail() {
     try {
         const response = await apiFetch(
             `/api/cars/${currentCarId}`,
-            {method: 'GET'}
+            { method: 'GET' }
         );
 
 
@@ -432,6 +481,7 @@ async function displayCarImage(fileId) {
     const carImage = document.getElementById('car-image');
     const placeholder = document.getElementById('upload-placeholder');
     const removeBtn = document.getElementById('btn-remove');
+    const removeImgBtn = document.getElementById('btn-remove-img');
 
     if (!fileId) {
         // 이미지 없는 경우
@@ -440,6 +490,7 @@ async function displayCarImage(fileId) {
 
         if (placeholder) placeholder.style.display = 'flex';
         if (removeBtn) removeBtn.style.display = 'none';
+        if (removeImgBtn) removeImgBtn.style.display = 'none';
 
         return;
     }
@@ -456,7 +507,9 @@ async function displayCarImage(fileId) {
         carImage.style.display = 'block';
 
         if (placeholder) placeholder.style.display = 'none';
-        if (removeBtn) removeBtn.style.display = 'inline-flex';
+        // 기존 서버 이미지는 btn-remove-img만 표시
+        if (removeBtn) removeBtn.style.display = 'none';
+        if (removeImgBtn) removeImgBtn.style.display = 'inline-flex';
 
     } catch (e) {
         console.error('이미지 로드 실패', e);
@@ -467,6 +520,7 @@ async function displayCarImage(fileId) {
 
         if (placeholder) placeholder.style.display = 'flex';
         if (removeBtn) removeBtn.style.display = 'none';
+        if (removeImgBtn) removeImgBtn.style.display = 'none';
     }
 }
 
