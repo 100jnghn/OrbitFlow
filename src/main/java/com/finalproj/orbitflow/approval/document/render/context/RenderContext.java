@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.document.documentContentRender;
+package com.finalproj.orbitflow.approval.document.render.context;
 
 /**
  * Please explain the class!!!
@@ -9,6 +9,7 @@ package com.finalproj.orbitflow.approval.document.documentContentRender;
  **/
 
 
+import com.finalproj.orbitflow.approval.document.render.support.VacationTypeNameResolver;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

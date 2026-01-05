@@ -1,5 +1,7 @@
-package com.finalproj.orbitflow.approval.document.documentContentRender;
+package com.finalproj.orbitflow.approval.document.render.field;
 
+import com.finalproj.orbitflow.approval.document.render.context.RenderContext;
+import com.finalproj.orbitflow.approval.document.schema.PdfField;
 import org.springframework.stereotype.Component;
 
 /**
@@ -12,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 
 @Component
-public class RadioFieldRenderer extends HtmlRenderUtil
+public class RadioFieldRenderer extends AbstractFieldRenderer
         implements FieldRenderer {
 
     @Override

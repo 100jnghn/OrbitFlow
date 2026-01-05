@@ -1,7 +1,8 @@
-package com.finalproj.orbitflow.approval.document.service;
+package com.finalproj.orbitflow.approval.document.render.pdf;
 
-import com.finalproj.orbitflow.approval.document.documentContentRender.PdfContentSchema;
+import com.finalproj.orbitflow.approval.document.schema.PdfContentSchema;
 import com.finalproj.orbitflow.approval.document.dto.PdfApprovalLineDto;
+import com.finalproj.orbitflow.approval.document.service.DocumentContentRenderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -22,7 +23,7 @@ public class PdfHtmlBuilder {
 
     private final DocumentContentRenderService renderService;
 
-    String build(
+    public String build(
             Long documentId,
             PdfApprovalLineDto approvalLine,
             PdfContentSchema schema,
@@ -38,7 +39,7 @@ public class PdfHtmlBuilder {
                 <html lang="ko">
                 <head>
                     <meta charset="UTF-8"/>
-                    <link rel="stylesheet" href="/css/user-document/pdf-view.css"/>
+                    <link rel="stylesheet" href="css/user-document/pdf-view.css"/>
                 </head>
                 <body class="pdf-document">
                 

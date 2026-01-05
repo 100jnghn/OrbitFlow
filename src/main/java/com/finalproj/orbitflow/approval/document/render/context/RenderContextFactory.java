@@ -1,5 +1,6 @@
-package com.finalproj.orbitflow.approval.document.documentContentRender;
+package com.finalproj.orbitflow.approval.document.render.context;
 
+import com.finalproj.orbitflow.approval.document.render.support.VacationTypeNameResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

@@ -9,14 +9,14 @@ import java.util.List;
  * Please explain the class!!!
  *
  * @author : Choi MinHyeok
- * @filename : AiSummaryRequest
+ * @filename : AiSummaryReqDto
  * @since : 26. 1. 5. 월요일
  **/
 
 
 @Getter
 @AllArgsConstructor
-public class AiSummaryRequest {
+public class AiSummaryReqDto {
 
     private String documentTitle;
 

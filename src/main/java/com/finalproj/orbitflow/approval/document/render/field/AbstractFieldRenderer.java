@@ -1,15 +1,17 @@
-package com.finalproj.orbitflow.approval.document.documentContentRender;
+package com.finalproj.orbitflow.approval.document.render.field;
+
+import com.finalproj.orbitflow.approval.document.schema.PdfField;
 
 /**
  * Please explain the class!!!
  *
  * @author : Choi MinHyeok
- * @filename : HtmlRenderUtil
+ * @filename : AbstractFieldRenderer
  * @since : 26. 1. 4. 일요일
  **/
 
 
-public abstract class HtmlRenderUtil {
+public abstract class AbstractFieldRenderer {
 
     protected String wrapField(PdfField field, String valueHtml) {
 

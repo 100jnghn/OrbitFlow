@@ -244,6 +244,32 @@ public class FileService {
         }
     }
 
+    public void deleteObjectAfterCommit(String objectKey) {
+        if (!TransactionSynchronizationManager.isActualTransactionActive()) {
+            // 트랜잭션 없으면 즉시 삭제
+            deleteObject(objectKey);
+            return;
+        }
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        try {
+                            deleteObject(objectKey);
+                        } catch (Exception e) {
+                            log.error(
+                                    "[S3_DELETE_FAIL] objectKey={}",
+                                    objectKey,
+                                    e
+                            );
+                        }
+                    }
+                }
+        );
+    }
+
+
     public ResponseEntity<byte[]> streamImage(File file) {
 
         byte[] bytes = downloadFromS3(file.getObjectKey());
