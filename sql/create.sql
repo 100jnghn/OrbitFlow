@@ -782,7 +782,7 @@ CREATE TABLE file
     object_key   VARCHAR(512) NOT NULL UNIQUE,
     origin_file  VARCHAR(255),
     sys_file     VARCHAR(255),
-    content_type VARCHAR(50),
+    content_type VARCHAR(255),
     file_size    BIGINT,
     created_by   BIGINT       NULL,
     created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,

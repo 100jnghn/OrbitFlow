@@ -47,7 +47,7 @@ public class File extends BaseEntity {
     @Column(name = "domain", length = 30, nullable = false)
     private FileDomain domain;
 
-    @Column(name = "content_type", length = 50)
+    @Column(name = "content_type", length = 255)
     private String contentType;
 
     @Column(name = "file_size")
