@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.document.eventHandler;
+package com.finalproj.orbitflow.approval.document.event;
 
 import com.finalproj.orbitflow.approval.document.dto.CommonPayload;
 import com.finalproj.orbitflow.approval.document.dto.VacationPayload;

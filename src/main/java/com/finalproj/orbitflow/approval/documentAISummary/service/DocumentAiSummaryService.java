@@ -101,7 +101,7 @@ public class DocumentAiSummaryService {
 
         AiSummaryReqDto request = buildAiSummaryRequest(schema, list);
 
-        String prompt = aiSummaryPromptBuilder.build(request);
+        String prompt = aiSummaryPromptBuilder.build(request, schema);
 
         DocumentAISummary summary = saveProcessingSummary(document, prompt);
 
@@ -155,7 +155,8 @@ public class DocumentAiSummaryService {
             AiSummaryField aiField = new AiSummaryField(
                     field.getLabel(),
                     field.getFieldType(),
-                    simplifyValue(field)
+                    simplifyValue(field),
+                    field.getMeta()
             );
 
             if (isCoreField(field)) {

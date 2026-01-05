@@ -1,62 +1,64 @@
-package com.finalproj.orbitflow.approval.document.eventHandler;
+package com.finalproj.orbitflow.approval.document.event;
 
-import com.finalproj.orbitflow.approval.document.dto.VacationPayload;
+import com.finalproj.orbitflow.approval.document.dto.CommonPayload;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
 import com.finalproj.orbitflow.approval.documentContent.entity.DocumentContent;
 import com.finalproj.orbitflow.approval.documentContent.repository.DocumentContentRepository;
 import com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole;
+import com.finalproj.orbitflow.attendance.rule.entity.AttendanceRule;
+import com.finalproj.orbitflow.attendance.rule.repository.AttendanceRuleRepository;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.organization.entity.Organization;
 import com.finalproj.orbitflow.hr.organization.repository.OrgRepository;
-import com.finalproj.orbitflow.attendance.leave.entity.LeaveType;
-import com.finalproj.orbitflow.attendance.leave.repository.LeaveTypeRepository;
 import com.finalproj.orbitflow.schedule.dto.ScheduleReqDto;
 import com.finalproj.orbitflow.schedule.service.ScheduleService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
+
+import java.time.LocalTime;
 
 /**
  * Please explain the class!!!
  *
  * @author : Choi MinHyeok
- * @filename : VacationApprovalHandler
+ * @filename : CompanyEventApprovalHandler
  * @since : 25. 12. 31. 수요일
  **/
 
-
 @Component
 @RequiredArgsConstructor
-@Slf4j
-public class VacationApprovalHandler {
+public class CompanyEventApprovalHandler {
 
     private final DocumentRepository documentRepository;
     private final DocumentContentRepository documentContentRepository;
     private final DocumentContentParser documentContentParser;
-    private final OrgRepository orgRepository;
-    private final LeaveTypeRepository leaveTypeRepository;
     private final ScheduleService scheduleService;
+    private final OrgRepository orgRepository;
+    private final AttendanceRuleRepository attendanceRuleRepository;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(Long documentId) {
 
         Document document = documentRepository.findById(documentId)
-                .orElseThrow();
+                .orElseThrow(() -> new NotFoundException("문서를 찾을 수 없습니다."));
 
-        if (document.getTemplateGroup().getBaseRole() != BaseRole.VACATION) {
+        // COMPANY_EVENT가 아니면 무시
+        if (document.getTemplateGroup().getBaseRole() != BaseRole.COMPANY_EVENT) {
             return;
         }
 
         DocumentContent content = documentContentRepository
-                .findByDocument_Id(documentId)
-                .orElseThrow();
+                .findByDocument_Id(document.getId())
+                .orElseThrow(() ->
+                        new NotFoundException("문서 내용을 찾을 수 없습니다.")
+                );
 
-        VacationPayload payload =
-                documentContentParser.extractVacation(content);
+        CommonPayload payload =
+                documentContentParser.extractCommon(content);
 
         Employee writer = document.getWriter();
 
@@ -64,19 +66,19 @@ public class VacationApprovalHandler {
         Organization org = orgRepository.findFirstByCompanyIdAndParentOrgId(writer.getCompany().getId(), null)
                 .orElseThrow(() -> new NotFoundException("작성자의 최상위 조직 조회 실패"));
 
+        AttendanceRule rule = attendanceRuleRepository.findByCompanyIdAndIsDefaultTrue(writer.getCompany().getId()).orElseThrow(() -> new NotFoundException("회사의 출퇴근 시간 조회 실패"));
 
-        LeaveType leave = leaveTypeRepository.findById(payload.vacationTypeId())
-                .orElseThrow(() -> new NotFoundException("휴가 유형 이름 조회 실패"));
+        LocalTime st = rule.getDefaultStartTime();
+        LocalTime et = rule.getDefaultEndTime();
 
         ScheduleReqDto scheduleReqDto = ScheduleReqDto.builder()
                 .isCompany(true)
-                .isPersonal(true)
+                .isPersonal(false)
                 .orgCategoryId(org.getCategoryId())
-                .orgId(org.getId())
-                .title(leave.getTypeName())
-                .description(payload.reason())
-                .startAt(payload.startDate().atStartOfDay())
-                .endAt(payload.endDate().atTime(23, 59, 59))
+                .title(payload.title())
+                .description(payload.description())
+                .startAt(payload.startDate().atTime(st.getHour(), st.getMinute(), st.getSecond()))
+                .endAt(payload.endDate().atTime(et.getHour(), et.getMinute(), et.getSecond()))
                 .status("RELEASE")
                 .build();
 
