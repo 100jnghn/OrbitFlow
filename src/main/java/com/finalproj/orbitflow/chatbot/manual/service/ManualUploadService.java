@@ -22,6 +22,7 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.hwpf.extractor.WordExtractor;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,6 +47,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ManualUploadService {
 
     private final ManualRepository manualMetadataRepository;
@@ -88,6 +90,9 @@ public class ManualUploadService {
      */
     @Transactional
     public void uploadAndIndexingManual(MultipartFile file, Long categoryId, Long employeeId) {
+
+        System.out.println("!!! 서비스 호출됨 - 파일명: " + file.getOriginalFilename());
+
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new NotFoundException("사원 정보를 찾을 수 없습니다."));
 
@@ -124,6 +129,8 @@ public class ManualUploadService {
         } catch (IOException e) {
             throw new InvalidRequestException("파일 처리 중 오류: " + e.getMessage());
         }
+
+
     }
 
     private File processFileStorage(MultipartFile file, Employee employee) throws IOException {
@@ -149,49 +156,73 @@ public class ManualUploadService {
                 .domain(FileDomain.CHAT)
                 .build());
     }
-
     private void processVectorIndexing(MultipartFile file, ManualCategory category, Employee employee) throws IOException {
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null) {
+            log.error("[Vector Indexing] 실패: 파일명이 없습니다.");
             throw new InvalidRequestException("파일명이 없습니다.");
         }
-        
+
         String fileExtension = originalFileName.substring(originalFileName.lastIndexOf('.')).toLowerCase();
+
+        // 1. 시작 로그
+        log.info("[Vector Indexing] 프로세스 시작 - 파일명: {}, 확장자: {}, 회사ID: {}",
+                originalFileName, fileExtension, employee.getCompany().getId());
+
         Document document;
-        
-        // 파일 타입에 따라 적절한 파서 선택
-        switch (fileExtension) {
-            case ".pdf":
-                DocumentParser pdfParser = new ApachePdfBoxDocumentParser();
-                document = pdfParser.parse(file.getInputStream());
-                break;
-                
-            case ".txt":
-                DocumentParser txtParser = new TextDocumentParser();
-                document = txtParser.parse(file.getInputStream());
-                break;
-                
-            case ".doc":
-                String docText = extractTextFromDoc(file.getInputStream());
-                document = new Document(docText);
-                break;
-                
-            default:
-                throw new InvalidRequestException("지원하지 않는 파일 형식입니다.");
+        try {
+            // 파일 타입에 따라 적절한 파서 선택
+            switch (fileExtension) {
+                case ".pdf":
+                    DocumentParser pdfParser = new ApachePdfBoxDocumentParser();
+                    document = pdfParser.parse(file.getInputStream());
+                    break;
+
+                case ".txt":
+                    DocumentParser txtParser = new TextDocumentParser();
+                    document = txtParser.parse(file.getInputStream());
+                    break;
+
+                case ".doc":
+                    String docText = extractTextFromDoc(file.getInputStream());
+                    document = new Document(docText);
+                    break;
+
+                default:
+                    log.error("[Vector Indexing] 실패: 지원하지 않는 확장자 ({})", fileExtension);
+                    throw new InvalidRequestException("지원하지 않는 파일 형식입니다.");
+            }
+
+            // 2. 텍스트 추출 완료 로그
+            log.info("[Vector Indexing] 텍스트 추출 완료 - 추출된 길이: {}자", document.text().length());
+
+            // 텍스트를 500자 단위로 쪼개고 100자씩 겹치게 설정
+            DocumentSplitter splitter = DocumentSplitters.recursive(500, 100);
+            List<TextSegment> segments = splitter.split(document);
+
+            // 3. 분할 완료 로그
+            log.info("[Vector Indexing] 문장 분할 완료 - 생성된 세그먼트 수: {}개", segments.size());
+
+            // 메타데이터 추가
+            segments.forEach(segment -> {
+                segment.metadata().add("company_id", employee.getCompany().getId().toString());
+                segment.metadata().add("category_id", category.getId().toString());
+            });
+
+            // 4. ChromaDB 저장 시도 로그
+            log.info("[Vector Indexing] ChromaDB(벡터 DB) 저장 시도 중...");
+
+            // 벡터로 변환하여 ChromaDB에 저장
+            embeddingStore.addAll(embeddingModel.embedAll(segments).content(), segments);
+
+            // 5. 최종 성공 로그
+            log.info("[Vector Indexing] 최종 성공! ChromaDB에 데이터가 저장되었습니다. (파일명: {})", originalFileName);
+
+        } catch (Exception e) {
+            // 6. 실패 로그 (예외 발생 시)
+            log.error("[Vector Indexing] 처리 중 오류 발생 - 파일명: {}, 사유: {}", originalFileName, e.getMessage(), e);
+            throw e; // 예외를 다시 던져서 상위 트랜잭션 처리
         }
-
-        // 텍스트를 500자 단위로 쪼개고 100자씩 겹치게 설정하여 문맥 유지
-        DocumentSplitter splitter = DocumentSplitters.recursive(500, 100);
-        List<TextSegment> segments = splitter.split(document);
-
-        // 메타데이터에 회사ID와 카테고리ID를 넣어 나중에 필터링 가능하게 함
-        segments.forEach(segment -> {
-            segment.metadata().add("company_id", employee.getCompany().getId().toString());
-            segment.metadata().add("category_id", category.getId().toString());
-        });
-
-        // 벡터로 변환하여 ChromaDB에 저장
-        embeddingStore.addAll(embeddingModel.embedAll(segments).content(), segments);
     }
     
     /**

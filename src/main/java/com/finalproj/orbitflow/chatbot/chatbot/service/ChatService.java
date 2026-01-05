@@ -31,8 +31,14 @@ public class ChatService {
     public String askQuestion(String question, Long companyId, Long categoryId) {
         var questionEmbedding = embeddingModel.embed(question).content();
 
+        // 로그 추가: 검색 시작 알림
+        log.info("질문 기반 검색 시작: {}", question);
+
         // 상위 10개로 검색 범위를 넓혀 필터링 후에도 충분한 데이터가 남도록 함
         List<EmbeddingMatch<TextSegment>> matches = embeddingStore.findRelevant(questionEmbedding, 20);
+
+        // 로그 추가: 검색된 원본 개수
+        log.info("ChromaDB에서 찾은 원본 데이터 수: {}", matches.size());
 
         String context = matches.stream()
                 .filter(match -> {
@@ -40,6 +46,9 @@ public class ChatService {
                     Object storedCompanyId = metadata.get("company_id");
 
                     boolean companyMatch = storedCompanyId != null && storedCompanyId.toString().equals(companyId.toString());
+
+                    log.info("필터링 체크 - 저장된ID: {}, 현재ID: {}, 일치여부: {}", storedCompanyId, companyId, companyMatch);
+
                     return companyMatch;
                 })
                 .map(match -> match.embedded().text())
