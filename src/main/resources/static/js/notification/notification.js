@@ -94,8 +94,13 @@ async function loadNotifications(showRead = false) {
         }
 
         // 알림 목록 렌더링
-        notificationList.innerHTML = notifications.map(notification => `
-            <div class="notification-item ${notification.isRead ? 'notification-item-read' : ''}">
+        notificationList.innerHTML = notifications.map(notification => {
+            const url = notification.url || '';
+            const escapedUrl = url.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            return `
+            <div class="notification-item ${notification.isRead ? 'notification-item-read' : ''}" 
+                 ${url ? `onclick="handleNotificationClick('${escapedUrl}', ${notification.notificationId}, event)"` : ''}
+                 style="${url ? 'cursor: pointer;' : ''}">
                 <div class="notification-item-time">${formatTimeAgo(notification.createdAt)}</div>
                 <div class="notification-item-content-wrapper">
                     <div class="notification-item-header">
@@ -103,11 +108,12 @@ async function loadNotifications(showRead = false) {
                     </div>
                     <div class="${notification.isRead ? 'notification-item-read-content' : 'notification-item-content'}">${escapeHtml(notification.content)}</div>
                 </div>
-                ${!notification.isRead ? `<button class="notification-check-btn" onclick="markAsRead(${notification.notificationId})" title="확인">
+                ${!notification.isRead ? `<button class="notification-check-btn" onclick="markAsRead(${notification.notificationId}, event)" title="확인">
                     <i class="fas fa-check"></i>
                 </button>` : ''}
             </div>
-        `).join('');
+        `;
+        }).join('');
     } catch (error) {
         console.error('알림 로드 실패:', error);
         notificationList.innerHTML = '<div class="notification-empty">알림을 불러오는데 실패했습니다.</div>';
@@ -141,8 +147,33 @@ function formatTimeAgo(createdAt) {
 }
 
 
+// 알림 클릭 처리
+function handleNotificationClick(url, notificationId, event) {
+    // 확인 버튼 클릭 시에는 이동하지 않음
+    if (event && event.target.closest('.notification-check-btn')) {
+        return;
+    }
+    
+    // url이 있으면 이동
+    if (url) {
+        // 읽지 않은 알림이면 읽음 처리
+        if (notificationId) {
+            markAsRead(notificationId, event).then(() => {
+                window.location.href = url;
+            });
+        } else {
+            window.location.href = url;
+        }
+    }
+}
+
 // 알림 읽음 처리
-async function markAsRead(notificationId) {
+async function markAsRead(notificationId, event) {
+    // 이벤트 전파 중지
+    if (event) {
+        event.stopPropagation();
+    }
+    
     try {
         const response = await apiFetch(`/api/notifications/${notificationId}`, {
             method: 'PATCH'
