@@ -41,23 +41,28 @@ public class BoardResDto {
         private Long id;
         private String originalFileName;
         private String filePath;
+        private Long fileSize;
 
         public static FileInfo from(File file) {
-            if (file == null) return null;
+            if (file == null)
+                return null;
             return FileInfo.builder()
                     .id(file.getId())
                     .originalFileName(file.getOriginFile())
                     .filePath(file.getSysFile()) // 엔티티 필드 기준
+                    .fileSize(file.getFileSize())
                     .build();
         }
 
         public static List<FileInfo> fromFiles(List<File> files) {
-            if (files == null || files.isEmpty()) return List.of();
+            if (files == null || files.isEmpty())
+                return List.of();
             return files.stream()
                     .map(FileInfo::from)
                     .toList();
         }
     }
+
     /** 게시글 목록 조회 DTO */
     @Data
     @NoArgsConstructor

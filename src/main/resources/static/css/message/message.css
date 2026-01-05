@@ -878,4 +878,51 @@
     box-shadow: none;
 }
 
+/* 메시지 보내기 폼 파일 목록 스타일 */
+.message-send-form .file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
 
+.message-send-form .file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--neutral-50);
+    border: 1px solid var(--neutral-200);
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+.message-send-form .file-name {
+    font-size: 14px;
+    color: var(--neutral-700);
+    flex: 1;
+    font-weight: 500;
+}
+
+.message-send-form .btn-file-remove {
+    padding: 6px 12px;
+    background: transparent;
+    color: var(--danger-color);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.message-send-form .btn-file-remove:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger-hover);
+}
