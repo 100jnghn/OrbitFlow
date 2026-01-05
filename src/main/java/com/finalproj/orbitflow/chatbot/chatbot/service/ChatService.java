@@ -32,22 +32,15 @@ public class ChatService {
         var questionEmbedding = embeddingModel.embed(question).content();
 
         // 상위 10개로 검색 범위를 넓혀 필터링 후에도 충분한 데이터가 남도록 함
-        List<EmbeddingMatch<TextSegment>> matches = embeddingStore.findRelevant(questionEmbedding, 10);
+        List<EmbeddingMatch<TextSegment>> matches = embeddingStore.findRelevant(questionEmbedding, 20);
 
         String context = matches.stream()
                 .filter(match -> {
                     var metadata = match.embedded().metadata().toMap();
                     Object storedCompanyId = metadata.get("company_id");
-                    Object storedCategoryId = metadata.get("category_id");
-                    
-                    // 회사 ID 검증
+
                     boolean companyMatch = storedCompanyId != null && storedCompanyId.toString().equals(companyId.toString());
-                    
-                    // 카테고리 ID 검증 (categoryId가 null이면 모든 카테고리 허용)
-                    boolean categoryMatch = categoryId == null || 
-                            (storedCategoryId != null && storedCategoryId.toString().equals(categoryId.toString()));
-                    
-                    return companyMatch && categoryMatch;
+                    return companyMatch;
                 })
                 .map(match -> match.embedded().text())
                 .collect(Collectors.joining("\n\n"));

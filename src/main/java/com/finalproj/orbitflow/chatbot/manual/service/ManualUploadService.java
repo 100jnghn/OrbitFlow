@@ -64,7 +64,7 @@ public class ManualUploadService {
     @Transactional(readOnly = true)
     public List<ManualMetadata> findAllByCompany(Long companyId) {
         // 최신 등록순으로 해당 회사의 매뉴얼 메타데이터를 가져옵니다.
-        return manualMetadataRepository.findAllByCompanyIdOrderByIdDesc(companyId);
+        return manualMetadataRepository.findAllByCompanyIdAndIsActiveTrueOrderByIdDesc(companyId);
     }
 
     /**
@@ -72,7 +72,7 @@ public class ManualUploadService {
      */
     @Transactional(readOnly = true)
     public List<ManualMetadata> findByCompanyAndCategory(Long companyId, Long categoryId) {
-        return manualMetadataRepository.findByCompanyIdAndCategoryIdOrderByIdDesc(companyId, categoryId);
+        return manualMetadataRepository.findByCompanyIdAndCategoryIdAndIsActiveTrueOrderByIdDesc(companyId, categoryId);
     }
 
     /**
@@ -240,6 +240,8 @@ public class ManualUploadService {
             throw new InvalidRequestException("해당 매뉴얼을 삭제할 권한이 없습니다.");
         }
 
-        manualMetadataRepository.delete(manual);
+        manual.toggleActive();
+        manual.updateStatus("DELETE");
+
     }
 }
