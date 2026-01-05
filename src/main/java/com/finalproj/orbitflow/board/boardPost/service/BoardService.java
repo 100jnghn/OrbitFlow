@@ -18,12 +18,15 @@ import com.finalproj.orbitflow.hr.employee.enums.EmployeeRole;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -40,6 +43,10 @@ public class BoardService {
     private final BoardCategoryRepository boardCategoryRepository;
     private final EmployeeRepository employeeRepository;
     private final FileService fileService;
+    private final S3Client s3Client;
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucket;
 
     /** [사용자용] 게시글 목록 조회 (공용/조직 게시판 공용, 검색 포함) */
     public Page<BoardResDto.ListInfo> getBoardList(
@@ -51,7 +58,8 @@ public class BoardService {
             LocalDate endDate,
             String searchTypeStr,
             String keyword,
-            Pageable pageable) {
+            Pageable pageable
+    ) {
         // 1) 카테고리 접근 검증 + 조회
         BoardCategory category = getVerifiedAccessibleCategory(companyId, organizationId, categoryId, role);
 
@@ -76,7 +84,8 @@ public class BoardService {
                 startInstant,
                 endExclusiveInstant,
                 searchType,
-                keyword);
+                keyword
+        );
 
         // 5) 조회
         return boardRepository.findAll(spec, pageable)
@@ -104,12 +113,13 @@ public class BoardService {
             Long organizationId,
             Long employeeId,
             BoardReqDto.Create request,
-            List<MultipartFile> files) {
+            List<MultipartFile> files
+    ) {
         BoardCategory category = getVerifiedAccessibleCategory(
                 companyId,
                 organizationId,
                 request.getCategoryId(),
-                null // 생성 시에는 role 체크 불필요 (작성 권한은 별도 체크)
+                null  // 생성 시에는 role 체크 불필요 (작성 권한은 별도 체크)
         );
 
         Employee employee = employeeRepository.findById(employeeId)
@@ -123,7 +133,7 @@ public class BoardService {
         List<File> attachedFiles = null;
         if (files != null && !files.isEmpty()) {
             attachedFiles = files.stream()
-                    .map(file -> fileService.upload(companyId, employeeId, FileDomain.BOARD, file))
+                    .map(file -> fileService.upload(companyId, FileDomain.BOARD, file))
                     .toList();
         }
 
@@ -140,8 +150,7 @@ public class BoardService {
     }
 
     /** 게시판 카테고리 접근 검증 + 조회 */
-    private BoardCategory getVerifiedAccessibleCategory(Long companyId, Long organizationId, Long categoryId,
-            EmployeeRole role) {
+    private BoardCategory getVerifiedAccessibleCategory(Long companyId, Long organizationId, Long categoryId, EmployeeRole role) {
         BoardCategory category = boardCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new NotFoundException("게시판 카테고리를 찾을 수 없습니다."));
 
@@ -150,8 +159,7 @@ public class BoardService {
     }
 
     /** 게시판 접근 가능 여부 검증 */
-    private void validateCategoryAccess(Long companyId, Long organizationId, BoardCategory category,
-            EmployeeRole role) {
+    private void validateCategoryAccess(Long companyId, Long organizationId, BoardCategory category, EmployeeRole role) {
         if (!category.getCompany().getId().equals(companyId)) {
             throw new ForbiddenException("접근 권한이 없는 게시판입니다.");
         }
@@ -174,6 +182,7 @@ public class BoardService {
         }
     }
 
+
     @Transactional
     public BoardResDto.DetailInfo updateBoard(
             Long companyId,
@@ -181,12 +190,13 @@ public class BoardService {
             Long employeeId,
             Long boardId,
             BoardReqDto.Update request,
-            List<MultipartFile> files) {
+            List<MultipartFile> files
+    ) {
         Board board = boardRepository.findByIdAndDeletedAtIsNull(boardId)
                 .orElseThrow(() -> new NotFoundException("게시글이 존재하지 않습니다."));
 
         BoardCategory category = board.getCategory();
-        validateCategoryAccess(companyId, organizationId, category, null); // 수정 시에는 role 체크 불필요
+        validateCategoryAccess(companyId, organizationId, category, null);  // 수정 시에는 role 체크 불필요
 
         // 작성자 본인 또는 관리자만 허용(관리자 정책은 네 role에 맞게 조정)
         boolean isWriter = board.getWriter().getId().equals(employeeId);
@@ -194,34 +204,28 @@ public class BoardService {
             throw new ForbiddenException("게시글 수정 권한이 없습니다.");
         }
 
-        // 1. 파일 삭제 처리
-        List<Long> deleteFileIds = request.getDeleteFileIds();
-        if (deleteFileIds != null && !deleteFileIds.isEmpty()) {
-            List<File> filesToDelete = board.getFiles().stream()
-                    .filter(file -> deleteFileIds.contains(file.getId()))
-                    .toList();
+        // 기존 파일 정보 저장 (S3 삭제용)
+        List<File> existingFiles = board.getFiles() != null ? new java.util.ArrayList<>(board.getFiles()) : null;
 
-            // S3에서 삭제
-            filesToDelete.forEach(file -> {
-                if (file.getObjectKey() != null) {
-                    fileService.deleteObject(file.getObjectKey());
-                }
-            });
-
-            // DB 관계 끊기 (orphanRemoval = true에 의해 자동 삭제됨)
-            board.getFiles().removeAll(filesToDelete);
-        }
-
-        // 2. 새 파일 업로드
+        // 새 파일 업로드
         List<File> attachedFiles = null;
         if (files != null && !files.isEmpty()) {
             attachedFiles = files.stream()
-                    .map(file -> fileService.upload(companyId, employeeId, FileDomain.BOARD, file))
+                    .map(file -> fileService.upload(companyId, FileDomain.BOARD, file))
                     .toList();
         }
 
-        // 3. 게시글 업데이트 (새 파일 추가)
+        // 게시글 업데이트 (파일 교체)
         board.update(request.getBoardTitle(), request.getBoardContent(), attachedFiles);
+
+        // 기존 파일 삭제 (S3에서도 삭제) - 업데이트 후에 삭제
+        if (existingFiles != null && !existingFiles.isEmpty()) {
+            existingFiles.forEach(file -> {
+                if (file.getObjectKey() != null) {
+                    deleteObject(file.getObjectKey());
+                }
+            });
+        }
 
         // Dirty checking으로 반영되므로 save() 없어도 됨.
         return BoardResDto.DetailInfo.from(board);
@@ -232,12 +236,13 @@ public class BoardService {
             Long companyId,
             Long organizationId,
             Long employeeId,
-            Long boardId) {
+            Long boardId
+    ) {
         Board board = boardRepository.findByIdAndDeletedAtIsNull(boardId)
                 .orElseThrow(() -> new NotFoundException("게시글이 존재하지 않습니다."));
 
         BoardCategory category = board.getCategory();
-        validateCategoryAccess(companyId, organizationId, category, null); // 삭제 시에는 role 체크 불필요
+        validateCategoryAccess(companyId, organizationId, category, null);  // 삭제 시에는 role 체크 불필요
 
         boolean isWriter = board.getWriter().getId().equals(employeeId);
         if (!isWriter) {
@@ -248,11 +253,25 @@ public class BoardService {
         if (board.getFiles() != null && !board.getFiles().isEmpty()) {
             board.getFiles().forEach(file -> {
                 if (file.getObjectKey() != null) {
-                    fileService.deleteObject(file.getObjectKey());
+                    deleteObject(file.getObjectKey());
                 }
             });
         }
 
         board.softDelete(); // soft delete
+    }
+
+    /** S3에서 파일 삭제 */
+    private void deleteObject(String objectKey) {
+        try {
+            s3Client.deleteObject(
+                    DeleteObjectRequest.builder()
+                            .bucket(bucket)
+                            .key(objectKey)
+                            .build()
+            );
+        } catch (Exception ex) {
+            log.error("S3 delete failed. objectKey={}", objectKey, ex);
+        }
     }
 }

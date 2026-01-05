@@ -81,6 +81,7 @@ public class AttendanceApprovalHandler {
 
         ScheduleReqDto scheduleReqDto = ScheduleReqDto.builder()
                 .isCompany(true)
+                .isPersonal(true)
                 .orgCategoryId(org.getCategoryId())
                 .orgId(org.getId())
                 .title(title)

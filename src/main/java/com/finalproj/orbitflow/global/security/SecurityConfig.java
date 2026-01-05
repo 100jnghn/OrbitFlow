@@ -50,8 +50,11 @@ public class SecurityConfig {
                                 "/js/**",
                                 "/images/**",
                                 "/favicon.ico",
+                                "/internal/**",
+                                "/favicon.ico",
                                 "/activate",
                                 "/reset-password",
+                                "/find-password",
                                 "/api/email/**"
                         ).permitAll()
 
