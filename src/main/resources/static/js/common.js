@@ -467,7 +467,7 @@ function showToast(dto) {
     // 텍스트
     const text = document.createElement("div");
     text.className = "notification-toast-text";
-    text.textContent = dto.type || '알림';
+    text.textContent = '새로운 ' + dto.type + ' 알림';
 
     // 확인 버튼
     const checkBtn = document.createElement("button");

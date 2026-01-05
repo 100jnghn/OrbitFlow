@@ -5,19 +5,33 @@
 // 현재 선택된 탭 (기본값: unread)
 let currentTab = 'unread';
 
-// 모달 열기
-function openNotificationModal() {
-    const modal = document.getElementById('notificationModal');
-    if (modal) {
-        modal.classList.remove('hidden');
-        // 탭 초기화
-        currentTab = 'unread';
-        switchTab('unread');
-        // 읽지 않은 알림 수 업데이트
-        if (typeof refreshUnreadCount === 'function') {
-            refreshUnreadCount();
+// 드롭다운 토글
+function toggleNotificationDropdown() {
+    const dropdown = document.getElementById('notificationDropdown');
+    if (dropdown) {
+        const isHidden = dropdown.classList.contains('hidden');
+        if (isHidden) {
+            dropdown.classList.remove('hidden');
+            // 탭 초기화
+            currentTab = 'unread';
+            switchTab('unread');
+            // 읽지 않은 알림 수 업데이트
+            if (typeof refreshUnreadCount === 'function') {
+                refreshUnreadCount();
+            }
+        } else {
+            dropdown.classList.add('hidden');
+            // 읽지 않은 알림 수 업데이트
+            if (typeof refreshUnreadCount === 'function') {
+                refreshUnreadCount();
+            }
         }
     }
+}
+
+// 모달 열기 (하위 호환성)
+function openNotificationModal() {
+    toggleNotificationDropdown();
 }
 
 // 탭 전환
@@ -42,16 +56,9 @@ function switchTab(tab) {
     loadNotifications(tab === 'read');
 }
 
-// 모달 닫기
+// 드롭다운 닫기
 function closeNotificationModal() {
-    const modal = document.getElementById('notificationModal');
-    if (modal) {
-        modal.classList.add('hidden');
-        // 읽지 않은 알림 수 업데이트
-        if (typeof refreshUnreadCount === 'function') {
-            refreshUnreadCount();
-        }
-    }
+    toggleNotificationDropdown();
 }
 
 // 알림 목록 로드
@@ -87,20 +94,26 @@ async function loadNotifications(showRead = false) {
         }
 
         // 알림 목록 렌더링
-        notificationList.innerHTML = notifications.map(notification => `
-            <div class="notification-item ${notification.isRead ? 'notification-item-read' : ''}">
+        notificationList.innerHTML = notifications.map(notification => {
+            const url = notification.url || '';
+            const escapedUrl = url.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            return `
+            <div class="notification-item ${notification.isRead ? 'notification-item-read' : ''}" 
+                 ${url ? `onclick="handleNotificationClick('${escapedUrl}', ${notification.notificationId}, event)"` : ''}
+                 style="${url ? 'cursor: pointer;' : ''}">
                 <div class="notification-item-time">${formatTimeAgo(notification.createdAt)}</div>
                 <div class="notification-item-content-wrapper">
                     <div class="notification-item-header">
-                        <div class="notification-item-title">새로운 ${escapeHtml(notification.type)} 알림</div>
+                        <div class="notification-item-title">${escapeHtml(notification.type)} 알림</div>
                     </div>
                     <div class="${notification.isRead ? 'notification-item-read-content' : 'notification-item-content'}">${escapeHtml(notification.content)}</div>
                 </div>
-                ${!notification.isRead ? `<button class="notification-check-btn" onclick="markAsRead(${notification.notificationId})" title="확인">
+                ${!notification.isRead ? `<button class="notification-check-btn" onclick="markAsRead(${notification.notificationId}, event)" title="확인">
                     <i class="fas fa-check"></i>
                 </button>` : ''}
             </div>
-        `).join('');
+        `;
+        }).join('');
     } catch (error) {
         console.error('알림 로드 실패:', error);
         notificationList.innerHTML = '<div class="notification-empty">알림을 불러오는데 실패했습니다.</div>';
@@ -134,8 +147,33 @@ function formatTimeAgo(createdAt) {
 }
 
 
+// 알림 클릭 처리
+function handleNotificationClick(url, notificationId, event) {
+    // 확인 버튼 클릭 시에는 이동하지 않음
+    if (event && event.target.closest('.notification-check-btn')) {
+        return;
+    }
+    
+    // url이 있으면 이동
+    if (url) {
+        // 읽지 않은 알림이면 읽음 처리
+        if (notificationId) {
+            markAsRead(notificationId, event).then(() => {
+                window.location.href = url;
+            });
+        } else {
+            window.location.href = url;
+        }
+    }
+}
+
 // 알림 읽음 처리
-async function markAsRead(notificationId) {
+async function markAsRead(notificationId, event) {
+    // 이벤트 전파 중지
+    if (event) {
+        event.stopPropagation();
+    }
+    
     try {
         const response = await apiFetch(`/api/notifications/${notificationId}`, {
             method: 'PATCH'
@@ -165,5 +203,20 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// 모달 외부 클릭 시 닫기 (이미 HTML에서 처리됨)
+// 외부 클릭 시 드롭다운 닫기
+document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('notificationDropdown');
+    const bellIcon = document.querySelector('.fa-bell');
+    
+    if (dropdown && !dropdown.classList.contains('hidden')) {
+        // 드롭다운 내부나 알림 아이콘을 클릭한 경우가 아니면 닫기
+        if (!dropdown.contains(e.target) && !e.target.closest('a[onclick*="toggleNotificationDropdown"]')) {
+            dropdown.classList.add('hidden');
+            // 읽지 않은 알림 수 업데이트
+            if (typeof refreshUnreadCount === 'function') {
+                refreshUnreadCount();
+            }
+        }
+    }
+});
 

@@ -83,23 +83,4 @@ public class NotificationCommandController {
                 new ResponseDto(HttpStatus.OK, "알림 읽음 처리", null)
         );
     }
-
-    /**
-     * 알림 전송
-     */
-    @PostMapping("/send")
-    public ResponseEntity<ResponseDto> sendTestNotification(
-            @AuthenticationPrincipal SecurityUser user
-    ) {
-        notificationCommandService.createNotification(
-                user.getCompanyId(),
-                user.getEmployeeId(),
-                "TEST",
-                "테스트 알림입니다."
-        );
-
-        return ResponseEntity.ok().body(
-                new ResponseDto(HttpStatus.OK, "알림 생성 성공", null)
-        );
-    }
 }

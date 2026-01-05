@@ -45,6 +45,10 @@ public class QDocumentAISummary extends EntityPathBase<DocumentAISummary> {
     //inherited
     public final NumberPath<Long> modifiedBy = _super.modifiedBy;
 
+    public final StringPath prompt = createString("prompt");
+
+    public final EnumPath<com.finalproj.orbitflow.approval.documentAISummary.enums.SummaryStatus> status = createEnum("status", com.finalproj.orbitflow.approval.documentAISummary.enums.SummaryStatus.class);
+
     public final EnumPath<com.finalproj.orbitflow.approval.documentAISummary.enums.SummaryType> summaryType = createEnum("summaryType", com.finalproj.orbitflow.approval.documentAISummary.enums.SummaryType.class);
 
     //inherited

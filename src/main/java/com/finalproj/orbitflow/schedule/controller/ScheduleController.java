@@ -149,7 +149,7 @@ public class ScheduleController {
 
     /**
      * 사용자 - 휴가, 출장 등의 [개인 + 전사] 일정 조회
-     * isCompany TRUE / isPersonal TRUE / orgCategoryIs NULL / orgId NOT NULL
+     * isCompany TRUE / isPersonal TRUE / orgCategoryIs NOT NULL / orgId NOT NULL
      */
     @GetMapping("/schedules/company-employee")
     public ResponseEntity<ResponseDto> getCompanyEmployeeSchedules(
