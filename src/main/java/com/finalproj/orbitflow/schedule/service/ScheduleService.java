@@ -1,7 +1,11 @@
 package com.finalproj.orbitflow.schedule.service;
 
+import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
+import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import com.finalproj.orbitflow.hr.organization.repository.OrgRepository;
 import com.finalproj.orbitflow.hr.organization.repository.OrgResView;
+import com.finalproj.orbitflow.notification.enums.NotificationType;
+import com.finalproj.orbitflow.notification.service.NotificationCommandService;
 import com.finalproj.orbitflow.schedule.dto.ScheduleReqDto;
 import com.finalproj.orbitflow.schedule.dto.ScheduleResDto;
 import com.finalproj.orbitflow.schedule.entity.Schedule;
@@ -34,6 +38,9 @@ public class ScheduleService {
 
     private final ScheduleRepository scheduleRepository;
     private final OrgRepository orgRepository;
+    private final CompanyRepository companyRepository;
+    private final EmployeeRepository employeeRepository;
+    private final NotificationCommandService notificationCommandService;
 
     // 전사 일정 조회
     @Transactional(readOnly = true)
@@ -331,6 +338,69 @@ public class ScheduleService {
 
         Schedule schedule = ScheduleMapper.toEntity(companyId, employeeId, dto);
         scheduleRepository.save(schedule);
+
+        // 알림 전송 - 전사
+        if (schedule.isCompany() && !schedule.isPersonal()) {
+            createCompanyNotification(schedule);
+        }
+        // 알림 전송 - 조직
+        else if (!schedule.isCompany() && !schedule.isPersonal()) {
+            createOrganizationNotification(schedule);
+        }
+    }
+
+    // 전사 일정 알림 - 전사 직원들에게
+    private void createCompanyNotification(Schedule schedule) {
+
+        Long companyId = schedule.getCompanyId();
+        List<Long> companyEmployeeIds = employeeRepository.findEmployeeIdsByCompanyId(companyId);
+
+        String notificationMessage = createNotificationMessage(schedule, "전사");
+
+        // 전사 직원들에게 알림 전송
+        for (Long employeeId : companyEmployeeIds) {
+
+            // 알림 생성 서비스 호출
+            notificationCommandService.createNotification(
+                    companyId,
+                    employeeId,
+                    NotificationType.SCHEDULE,
+                    notificationMessage,
+                    "/view/schedule"
+            );
+        }
+    }
+
+    // 조직 일정 알림 - 소속 조직 직원들에게
+    private void createOrganizationNotification(Schedule schedule) {
+
+        Long companyId = schedule.getCompanyId();
+        Long orgId = schedule.getOrgId();
+        List<Long> orgEmployeeIs = employeeRepository.findEmployeeIdsByOrganizationId(orgId);
+
+        String notificationMessage = createNotificationMessage(schedule, "조직");
+
+        // 조직 직원들에게 알림 전송
+        for (Long employeeId : orgEmployeeIs) {
+
+            // 알림 생성 서비스 호출
+            notificationCommandService.createNotification(
+                    companyId,
+                    employeeId,
+                    NotificationType.SCHEDULE,
+                    notificationMessage,
+                    "/view/schedule"
+            );
+        }
+    }
+
+    // 알림 메시지 만들기
+    private String createNotificationMessage(Schedule schedule, String type) {
+
+        String date = schedule.getStartAt().toString() + " ~ " + schedule.getEndAt().toString();
+        String msg = date + "\n" + schedule.getTitle() + " - " + schedule.getDescription();
+
+        return msg;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
