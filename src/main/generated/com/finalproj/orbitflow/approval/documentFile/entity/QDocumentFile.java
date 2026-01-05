@@ -22,17 +22,35 @@ public class QDocumentFile extends EntityPathBase<DocumentFile> {
 
     public static final QDocumentFile documentFile = new QDocumentFile("documentFile");
 
+    public final com.finalproj.orbitflow.global.common.QBaseEntity _super = new com.finalproj.orbitflow.global.common.QBaseEntity(this);
+
+    //inherited
+    public final DateTimePath<java.time.Instant> createdAt = _super.createdAt;
+
+    //inherited
+    public final NumberPath<Long> createdBy = _super.createdBy;
+
     public final com.finalproj.orbitflow.approval.document.entity.QDocument document;
+
+    public final StringPath fieldId = createString("fieldId");
 
     public final com.finalproj.orbitflow.global.file.entity.QFile file;
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
+
+    //inherited
+    public final NumberPath<Long> modifiedBy = _super.modifiedBy;
 
     public final NumberPath<Long> referenceTargetId = createNumber("referenceTargetId", Long.class);
 
     public final EnumPath<com.finalproj.orbitflow.approval.documentFile.enums.ReferenceType> referenceType = createEnum("referenceType", com.finalproj.orbitflow.approval.documentFile.enums.ReferenceType.class);
 
     public final StringPath referenceUrl = createString("referenceUrl");
+
+    public final EnumPath<com.finalproj.orbitflow.approval.documentFile.enums.DocumentFileStatus> status = createEnum("status", com.finalproj.orbitflow.approval.documentFile.enums.DocumentFileStatus.class);
+
+    //inherited
+    public final DateTimePath<java.time.Instant> updatedAt = _super.updatedAt;
 
     public QDocumentFile(String variable) {
         this(DocumentFile.class, forVariable(variable), INITS);

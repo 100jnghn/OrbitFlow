@@ -41,6 +41,7 @@ public class BoardResDto {
         private Long id;
         private String originalFileName;
         private String filePath;
+        private Long fileSize;
 
         public static FileInfo from(File file) {
             if (file == null) return null;
@@ -48,6 +49,7 @@ public class BoardResDto {
                     .id(file.getId())
                     .originalFileName(file.getOriginFile())
                     .filePath(file.getSysFile()) // 엔티티 필드 기준
+                    .fileSize(file.getFileSize())
                     .build();
         }
 

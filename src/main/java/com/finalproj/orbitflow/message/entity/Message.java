@@ -13,7 +13,8 @@ import lombok.*;
 @Table(name = "message")
 public class Message extends BaseEntity {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "company_id", nullable = false)
@@ -31,11 +32,8 @@ public class Message extends BaseEntity {
     @Column(name = "message_content", nullable = false)
     private String messageContent;
 
-    /**
-     * 파일은 "자리만" (나중에 File 엔티티 연관으로 바꿔도 됨)
-     * - 지금은 file_id 컬럼만 관리
-     */
-    @Column(name = "file_id")
-    private Long fileId;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "message_id")
+    private java.util.List<com.finalproj.orbitflow.global.file.entity.File> files;
 
 }

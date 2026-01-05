@@ -115,7 +115,7 @@ async function loadNotices() {
         
         // 전사 공지사항 게시글 목록 조회 (최근 10개)
         const boardResponse = await apiFetch(
-            `/api/boards/categories/${noticeCategory.id}?page=0&size=10&sort=createdAt,desc`
+            `/api/boards/categories/${noticeCategory.id}?page=0&size=8&sort=createdAt,desc`
         );
         
         if (!boardResponse.ok) {
