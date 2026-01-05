@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.document.documentContentRender;
+package com.finalproj.orbitflow.approval.document.render.support;
 
 import com.finalproj.orbitflow.attendance.leave.service.LeaveTypeService;
 import lombok.RequiredArgsConstructor;

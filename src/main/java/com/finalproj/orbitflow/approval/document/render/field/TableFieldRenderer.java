@@ -1,5 +1,7 @@
-package com.finalproj.orbitflow.approval.document.documentContentRender;
+package com.finalproj.orbitflow.approval.document.render.field;
 
+import com.finalproj.orbitflow.approval.document.render.context.RenderContext;
+import com.finalproj.orbitflow.approval.document.schema.PdfField;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -15,7 +17,7 @@ import java.util.Map;
 
 
 @Component
-public class TableFieldRenderer extends HtmlRenderUtil
+public class TableFieldRenderer extends AbstractFieldRenderer
         implements FieldRenderer {
 
     @Override
