@@ -18,105 +18,113 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/messages")
 public class MessageController {
 
-        private final MessageService messageService;
+    private final MessageService messageService;
 
-        /** 메시지함 목록 */
-        @GetMapping
-        public ResponseEntity<ResponseDto<Page<MessageResDto.ListItem>>> getMessageList(
-                        @AuthenticationPrincipal SecurityUser user,
-                        @RequestParam(required = false, defaultValue = "INBOX") MessageFolderType folder,
-                        @RequestParam(required = false, defaultValue = "false") boolean archived,
-                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-                        @RequestParam(required = false) String searchType,
-                        @RequestParam(required = false) String keyword,
-                        Pageable pageable) {
-                Page<MessageResDto.ListItem> result = messageService.getMessageList(
-                                user.getCompanyId(),
-                                user.getEmployeeId(),
-                                folder,
-                                archived,
-                                startDate,
-                                endDate,
-                                searchType,
-                                keyword,
-                                pageable);
+    /** 메시지함 목록 */
+    @GetMapping
+    public ResponseEntity<ResponseDto<Page<MessageResDto.ListItem>>> getMessageList(
+            @AuthenticationPrincipal SecurityUser user,
+            @RequestParam(required = false, defaultValue = "INBOX") MessageFolderType folder,
+            @RequestParam(required = false, defaultValue = "false") boolean archived,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String searchType,
+            @RequestParam(required = false) String keyword,
+            Pageable pageable
+    ) {
+        Page<MessageResDto.ListItem> result = messageService.getMessageList(
+                user.getCompanyId(),
+                user.getEmployeeId(),
+                folder,
+                archived,
+                startDate,
+                endDate,
+                searchType,
+                keyword,
+                pageable
+        );
 
-                return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "메시지 목록 조회 성공", result));
-        }
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "메시지 목록 조회 성공", result));
+    }
 
-        /** 메시지 상세 조회 */
-        @GetMapping("/{messageId}")
-        public ResponseEntity<ResponseDto<MessageResDto.Detail>> getMessageDetail(
-                        @AuthenticationPrincipal SecurityUser user,
-                        @PathVariable Long messageId,
-                        @RequestParam(required = false) Long recipientId // 보낸 메시지함에서 특정 수신자 선택 시
-        ) {
-                MessageResDto.Detail result = messageService.getMessageDetail(
-                                user.getCompanyId(),
-                                user.getEmployeeId(),
-                                messageId,
-                                recipientId);
+    /** 메시지 상세 조회 */
+    @GetMapping("/{messageId}")
+    public ResponseEntity<ResponseDto<MessageResDto.Detail>> getMessageDetail(
+            @AuthenticationPrincipal SecurityUser user,
+            @PathVariable Long messageId,
+            @RequestParam(required = false) Long recipientId  // 보낸 메시지함에서 특정 수신자 선택 시
+    ) {
+        MessageResDto.Detail result = messageService.getMessageDetail(
+                user.getCompanyId(),
+                user.getEmployeeId(),
+                messageId,
+                recipientId
+        );
 
-                return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "메시지 상세 조회 성공", result));
-        }
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "메시지 상세 조회 성공", result));
+    }
 
-        /** 메시지 전송 */
-        @PostMapping(consumes = "multipart/form-data")
-        public ResponseEntity<ResponseDto<Long>> sendMessage(
-                        @AuthenticationPrincipal SecurityUser user,
-                        @Valid @ModelAttribute MessageReqDto.Send request,
-                        @RequestPart(required = false) List<MultipartFile> files) {
-                Long messageId = messageService.sendMessage(
-                                user.getCompanyId(),
-                                user.getEmployeeId(),
-                                request,
-                                files);
+    /** 메시지 전송 */
+    @PostMapping(consumes = "multipart/form-data")
+    public ResponseEntity<ResponseDto<Long>> sendMessage(
+            @AuthenticationPrincipal SecurityUser user,
+            @Valid @ModelAttribute MessageReqDto.Send request,
+            @RequestPart(required = false) MultipartFile file
+    ) {
+        Long messageId = messageService.sendMessage(
+                user.getCompanyId(),
+                user.getEmployeeId(),
+                request,
+                file
+        );
 
-                return ResponseEntity.status(HttpStatus.CREATED)
-                                .body(new ResponseDto<>(HttpStatus.CREATED, "메시지 전송 성공", messageId));
-        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ResponseDto<>(HttpStatus.CREATED, "메시지 전송 성공", messageId));
+    }
 
-        /** 메시지 삭제(소프트 삭제) */
-        @DeleteMapping("/{messageId}")
-        public ResponseEntity<ResponseDto<Void>> deleteMessage(
-                        @AuthenticationPrincipal SecurityUser user,
-                        @PathVariable Long messageId) {
-                messageService.deleteMessage(user.getCompanyId(), user.getEmployeeId(), messageId);
-                return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "메시지 삭제 성공", null));
-        }
+    /** 메시지 삭제(소프트 삭제) */
+    @DeleteMapping("/{messageId}")
+    public ResponseEntity<ResponseDto<Void>> deleteMessage(
+            @AuthenticationPrincipal SecurityUser user,
+            @PathVariable Long messageId
+    ) {
+        messageService.deleteMessage(user.getCompanyId(), user.getEmployeeId(), messageId);
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "메시지 삭제 성공", null));
+    }
 
-        /** 보관함 이동 */
-        @PatchMapping("/{messageId}/archive")
-        public ResponseEntity<ResponseDto<Void>> archiveMessage(
-                        @AuthenticationPrincipal SecurityUser user,
-                        @PathVariable Long messageId) {
-                messageService.archiveMessage(user.getCompanyId(), user.getEmployeeId(), messageId);
-                return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "보관함 이동 성공", null));
-        }
+    /** 보관함 이동 */
+    @PatchMapping("/{messageId}/archive")
+    public ResponseEntity<ResponseDto<Void>> archiveMessage(
+            @AuthenticationPrincipal SecurityUser user,
+            @PathVariable Long messageId
+    ) {
+        messageService.archiveMessage(user.getCompanyId(), user.getEmployeeId(), messageId);
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "보관함 이동 성공", null));
+    }
 
-        /** 보관함 해제 */
-        @PatchMapping("/{messageId}/unarchive")
-        public ResponseEntity<ResponseDto<Void>> unarchiveMessage(
-                        @AuthenticationPrincipal SecurityUser user,
-                        @PathVariable Long messageId) {
-                messageService.unarchiveMessage(user.getCompanyId(), user.getEmployeeId(), messageId);
-                return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "보관함 해제 성공", null));
-        }
+    /** 보관함 해제 */
+    @PatchMapping("/{messageId}/unarchive")
+    public ResponseEntity<ResponseDto<Void>> unarchiveMessage(
+            @AuthenticationPrincipal SecurityUser user,
+            @PathVariable Long messageId
+    ) {
+        messageService.unarchiveMessage(user.getCompanyId(), user.getEmployeeId(), messageId);
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "보관함 해제 성공", null));
+    }
 
-        /** 안 읽은 메시지 카운트 */
-        @GetMapping("/unread/count")
-        public ResponseEntity<ResponseDto<Long>> getUnreadMessageCount(
-                        @AuthenticationPrincipal SecurityUser user) {
-                long count = messageService.getUnreadMessageCount(user.getCompanyId(), user.getEmployeeId());
-                return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "안 읽은 메시지 카운트 조회 성공", count));
-        }
+    /** 안 읽은 메시지 카운트 */
+    @GetMapping("/unread/count")
+    public ResponseEntity<ResponseDto<Long>> getUnreadMessageCount(
+            @AuthenticationPrincipal SecurityUser user
+    ) {
+        long count = messageService.getUnreadMessageCount(user.getCompanyId(), user.getEmployeeId());
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "안 읽은 메시지 카운트 조회 성공", count));
+    }
 
 }

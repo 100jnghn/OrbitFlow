@@ -12,12 +12,12 @@ let currentCommentPage = 0;
 let totalCommentPages = 1;
 
 // 페이지 로드 시 초기화
-document.addEventListener('DOMContentLoaded', async function () {
+document.addEventListener('DOMContentLoaded', async function() {
     // URL 파라미터에서 boardId와 categoryId 가져오기
     const urlParams = new URLSearchParams(window.location.search);
     boardId = urlParams.get('boardId') || document.getElementById('boardId')?.value;
     const urlCategoryId = urlParams.get('categoryId');
-
+    
     // URL에서 categoryId가 있으면 먼저 설정
     if (urlCategoryId) {
         categoryId = parseInt(urlCategoryId);
@@ -92,7 +92,7 @@ async function loadBoardCategories() {
         cachedOrganizationBoards = orgData.data || [];
 
         renderSidebar(cachedAccessibleBoards, cachedOrganizationBoards);
-
+        
         // categoryId가 이미 설정되어 있으면 사이드바 선택 효과 적용
         if (categoryId) {
             // 사이드바 렌더링이 완료된 후 선택 효과 적용
@@ -114,17 +114,17 @@ function renderSidebar(accessibleBoards, organizationBoards) {
 
     // 일반 게시판 (권한이 있는 게시판) - 단일 항목으로 표시
     if (accessibleBoards && accessibleBoards.length > 0) {
-        accessibleBoards.forEach(board => {
+    accessibleBoards.forEach(board => {
             const isSelected = board.id === categoryId;
-            const li = document.createElement('li');
+        const li = document.createElement('li');
             li.className = 'menu-item no-sub' + (isSelected ? ' selected' : '');
-            li.innerHTML = `
+        li.innerHTML = `
                 <a href="/view/board?categoryId=${board.id}" class="board-link">
                     <span>${escapeHTML(board.boardName || board.name || '게시판')}</span>
             </a>
         `;
-            sidebar.appendChild(li);
-        });
+        sidebar.appendChild(li);
+    });
     }
 
     // 조직 게시판 - 아코디언 구조로 표시 (기본적으로 펼쳐진 상태)
@@ -140,14 +140,14 @@ function renderSidebar(accessibleBoards, organizationBoards) {
             <ul class="sub-menu">
                 ${organizationBoards.map(board => {
             const isSelected = board.id === categoryId;
-            return `
+                    return `
                         <li class="${isSelected ? 'selected' : ''}">
                             <a href="/view/board?categoryId=${board.id}" class="board-link">
                                 ${escapeHTML(board.boardName || board.name || '게시판')}
                             </a>
                         </li>
                     `;
-        }).join('')}
+                }).join('')}
             </ul>
         `;
         sidebar.appendChild(orgMenuItem);
@@ -157,9 +157,9 @@ function renderSidebar(accessibleBoards, organizationBoards) {
 // 사이드바 선택 효과 업데이트
 function updateSidebarSelection(selectedCategoryId) {
     if (!selectedCategoryId) return;
-
+    
     console.log('[사이드바 선택 효과] categoryId:', selectedCategoryId);
-
+    
     // 모든 선택 상태 초기화
     document.querySelectorAll('.menu-item').forEach(item => {
         item.classList.remove('selected');
@@ -167,66 +167,30 @@ function updateSidebarSelection(selectedCategoryId) {
     document.querySelectorAll('.sub-menu li').forEach(item => {
         item.classList.remove('selected');
     });
-
+    
     // 선택된 항목 찾아서 표시
     document.querySelectorAll('.board-link').forEach(link => {
         const href = link.getAttribute('href');
-        if (href) {
-            // URL 파라미터에서 categoryId 정확히 추출
-            try {
-                const url = new URL(href, window.location.origin);
-                const linkCategoryId = url.searchParams.get('categoryId');
-
-                // 정확한 숫자 비교
-                if (linkCategoryId && parseInt(linkCategoryId) === selectedCategoryId) {
-                    const menuItem = link.closest('.menu-item');
-                    const subMenuItem = link.closest('.sub-menu li');
-
-                    if (subMenuItem) {
-                        // 부서게시판인 경우
-                        subMenuItem.classList.add('selected');
-                        const parentMenuItem = subMenuItem.closest('.menu-item');
-                        if (parentMenuItem) {
-                            parentMenuItem.classList.add('active'); // 아코디언 열기
-                            const menuTitle = parentMenuItem.querySelector('.menu-title');
-                            if (menuTitle) {
-                                menuTitle.setAttribute('aria-expanded', 'true');
-                            }
-                        }
-                        console.log('[사이드바 선택 효과] 부서게시판 선택:', selectedCategoryId);
-                    } else if (menuItem) {
-                        // 일반 게시판인 경우
-                        menuItem.classList.add('selected');
-                        console.log('[사이드바 선택 효과] 일반 게시판 선택:', selectedCategoryId);
+        if (href && href.includes(`categoryId=${selectedCategoryId}`)) {
+            const menuItem = link.closest('.menu-item');
+            const subMenuItem = link.closest('.sub-menu li');
+            
+            if (subMenuItem) {
+                // 부서게시판인 경우
+                subMenuItem.classList.add('selected');
+                const parentMenuItem = subMenuItem.closest('.menu-item');
+                if (parentMenuItem) {
+                    parentMenuItem.classList.add('active'); // 아코디언 열기
+                    const menuTitle = parentMenuItem.querySelector('.menu-title');
+                    if (menuTitle) {
+                        menuTitle.setAttribute('aria-expanded', 'true');
                     }
                 }
-            } catch (e) {
-                // 상대 경로인 경우 수동 파싱
-                const urlParams = new URLSearchParams(href.split('?')[1] || '');
-                const linkCategoryId = urlParams.get('categoryId');
-
-                if (linkCategoryId && parseInt(linkCategoryId) === selectedCategoryId) {
-                    const menuItem = link.closest('.menu-item');
-                    const subMenuItem = link.closest('.sub-menu li');
-
-                    if (subMenuItem) {
-                        // 부서게시판인 경우
-                        subMenuItem.classList.add('selected');
-                        const parentMenuItem = subMenuItem.closest('.menu-item');
-                        if (parentMenuItem) {
-                            parentMenuItem.classList.add('active'); // 아코디언 열기
-                            const menuTitle = parentMenuItem.querySelector('.menu-title');
-                            if (menuTitle) {
-                                menuTitle.setAttribute('aria-expanded', 'true');
-                            }
-                        }
-                        console.log('[사이드바 선택 효과] 부서게시판 선택:', selectedCategoryId);
-                    } else if (menuItem) {
-                        // 일반 게시판인 경우
-                        menuItem.classList.add('selected');
-                        console.log('[사이드바 선택 효과] 일반 게시판 선택:', selectedCategoryId);
-                    }
-                }
+                console.log('[사이드바 선택 효과] 부서게시판 선택:', selectedCategoryId);
+            } else if (menuItem) {
+                // 일반 게시판인 경우
+                menuItem.classList.add('selected');
+                console.log('[사이드바 선택 효과] 일반 게시판 선택:', selectedCategoryId);
             }
         }
     });
@@ -381,13 +345,13 @@ function renderBoardDetail(board) {
             ${files.length > 0 ? `
                 <div class="board-detail-files">
                     <h3 class="files-title">
-                        <i class="fas fa-paperclip"></i> 첨부파일
+                        <i class="fas fa-paperclip"></i> 첨부파일 (${files.length})
                     </h3>
                     <ul class="files-list">
                         ${files.map(file => `
                             <li class="file-item">
                                 <a href="#" class="file-link" onclick="downloadFile(${file.id}, '${escapeHTML(file.originalFileName || file.originalFile || '')}'); return false;">
-                                    <i class="fas fa-file"></i> ${escapeHTML(file.originalFileName || file.originalFile || '파일')} (${formatFileSize(file.fileSize)})
+                                    <i class="fas fa-file"></i> ${escapeHTML(file.originalFileName || file.originalFile || '파일')}
                                 </a>
                             </li>
                         `).join('')}
@@ -506,15 +470,15 @@ async function downloadFile(fileId, fileName) {
         alert('파일을 찾을 수 없습니다.');
         return;
     }
-
+    
     console.log('Downloading file:', fileId, fileName);
-
+    
     try {
         // fetch API를 사용하여 Authorization 헤더 포함
         const response = await apiFetch(`/api/files/${fileId}/download`, {
             method: 'GET'
         });
-
+        
         if (!response.ok) {
             if (response.status === 401) {
                 location.href = '/login';
@@ -530,10 +494,10 @@ async function downloadFile(fileId, fileName) {
             }
             throw new Error('파일 다운로드에 실패했습니다.');
         }
-
+        
         // Blob으로 변환
         const blob = await response.blob();
-
+        
         // 다운로드 링크 생성
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -583,16 +547,6 @@ function escapeHTML(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
-}
-
-// 파일 크기 포맷
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    if (!bytes) return '';
-    const output = Math.log(bytes) / Math.log(1024);
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(output);
-    return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 // 댓글 목록 로드
@@ -653,7 +607,7 @@ function renderComments(comments) {
         const content = comment.content || comment.commentContent || '';
         const createdAt = comment.createdAt || comment.created_at;
         const updatedAt = comment.updatedAt || comment.updated_at;
-
+        
         // 수정 여부 확인 (updatedAt이 createdAt보다 나중이면 수정됨)
         let isModified = false;
         if (updatedAt && createdAt) {
@@ -663,7 +617,7 @@ function renderComments(comments) {
             isModified = (updated - created) > 1000;
         }
         const displayDate = isModified ? formatDateTime(updatedAt) + ' (수정됨)' : formatDateTime(createdAt);
-
+        
         // 작성자 본인인지 확인
         const isWriter = currentUserId && writerId && currentUserId === writerId;
         const showEditDelete = isWriter ? '' : 'style="display: none;"';
@@ -719,11 +673,11 @@ function updateCommentCharCount() {
     if (input && countElement) {
         const currentLength = input.value.length;
         const maxLength = 500;
-
+        
         // 항상 표시
         countElement.style.display = 'block';
         countElement.textContent = `${currentLength}/${maxLength}`;
-
+        
         // 500자 이상이면 경고 색상
         if (currentLength >= 500) {
             countElement.style.color = '#EF4444';
@@ -740,11 +694,11 @@ function updateEditCommentCharCount(commentId) {
     if (input && countElement) {
         const currentLength = input.value.length;
         const maxLength = 500;
-
+        
         // 항상 표시
         countElement.style.display = 'block';
         countElement.textContent = `${currentLength}/${maxLength}`;
-
+        
         // 500자 이상이면 경고 색상
         if (currentLength >= 500) {
             countElement.style.color = '#EF4444';
@@ -819,12 +773,12 @@ function editComment(commentId) {
 
     const displayDiv = document.getElementById(`comment-content-display-${commentId}`);
     const editDiv = document.getElementById(`comment-content-edit-${commentId}`);
-
+    
     if (displayDiv && editDiv) {
         displayDiv.style.display = 'none';
         editDiv.style.display = 'block';
         editingCommentId = commentId;
-
+        
         // 텍스트 영역에 포커스
         const textarea = document.getElementById(`comment-edit-input-${commentId}`);
         if (textarea) {
@@ -839,7 +793,7 @@ function editComment(commentId) {
 function cancelEditComment(commentId) {
     const displayDiv = document.getElementById(`comment-content-display-${commentId}`);
     const editDiv = document.getElementById(`comment-content-edit-${commentId}`);
-
+    
     if (displayDiv && editDiv) {
         displayDiv.style.display = 'block';
         editDiv.style.display = 'none';

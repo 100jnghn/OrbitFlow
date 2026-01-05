@@ -32,7 +32,7 @@ public class QMessage extends EntityPathBase<Message> {
     //inherited
     public final NumberPath<Long> createdBy = _super.createdBy;
 
-    public final ListPath<com.finalproj.orbitflow.global.file.entity.File, com.finalproj.orbitflow.global.file.entity.QFile> files = this.<com.finalproj.orbitflow.global.file.entity.File, com.finalproj.orbitflow.global.file.entity.QFile>createList("files", com.finalproj.orbitflow.global.file.entity.File.class, com.finalproj.orbitflow.global.file.entity.QFile.class, PathInits.DIRECT2);
+    public final NumberPath<Long> fileId = createNumber("fileId", Long.class);
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
