@@ -10,9 +10,13 @@ package com.finalproj.orbitflow.approval.documentFile.entity;
 
 
 import com.finalproj.orbitflow.approval.document.entity.Document;
+import com.finalproj.orbitflow.approval.documentFile.enums.DocumentFileStatus;
 import com.finalproj.orbitflow.approval.documentFile.enums.ReferenceType;
+import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.global.file.entity.File;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -32,7 +36,9 @@ import lombok.NoArgsConstructor;
 )
 @Getter
 @NoArgsConstructor
-public class DocumentFile {
+@AllArgsConstructor
+@Builder
+public class DocumentFile extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -55,4 +61,31 @@ public class DocumentFile {
 
     @Column(name = "reference_url", length = 255)
     private String referenceUrl;
-}
+
+    /**
+     * image 컴포넌트 소속일 경우 fieldId
+     * null이면 일반 첨부 / 참조 문서
+     */
+    @Column(name = "field_id", length = 100)
+    private String fieldId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private DocumentFileStatus status = DocumentFileStatus.TEMP;
+
+    /* =========================
+       도메인 메서드
+    ========================= */
+
+    public void updateStatus(DocumentFileStatus status) {
+        this.status = status;
+    }
+
+
+    public boolean isImage() {
+        return this.referenceType == ReferenceType.IMAGE;
+    }
+
+    public boolean isAttachment() {
+        return this.referenceType == ReferenceType.ATTACHMENT;
+    }}

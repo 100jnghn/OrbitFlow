@@ -73,6 +73,7 @@ public class CompanyEventApprovalHandler {
 
         ScheduleReqDto scheduleReqDto = ScheduleReqDto.builder()
                 .isCompany(true)
+                .isPersonal(false)
                 .orgCategoryId(org.getCategoryId())
                 .title(payload.title())
                 .description(payload.description())

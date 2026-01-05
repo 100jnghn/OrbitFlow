@@ -91,6 +91,9 @@ dependencies {
     // Gmail SMTP
     implementation 'org.springframework.boot:spring-boot-starter-mail'
 
+
+    implementation 'com.openhtmltopdf:openhtmltopdf-pdfbox:1.0.10'
+    implementation 'com.openhtmltopdf:openhtmltopdf-slf4j:1.0.10'
 }
 
 tasks.named('test') {

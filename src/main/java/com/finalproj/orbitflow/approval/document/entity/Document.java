@@ -124,4 +124,5 @@ public class Document extends BaseEntity {
     public void approve() {
         this.status = DocumentStatus.APPROVED;
     }
+
 }
