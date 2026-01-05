@@ -18,14 +18,14 @@ import org.springframework.web.bind.annotation.*;
  **/
 
 @RestController
-@RequestMapping("/api/document-ai-summary")
+@RequestMapping("/api/document-ai")
 @RequiredArgsConstructor
 public class DocumentAiSummaryController {
 
     private final DocumentAiSummaryService documentAiSummaryService;
 
 
-    @PostMapping("/{documentId}")
+    @PostMapping("/{documentId}/summary")
     public ResponseEntity<ResponseDto> sendReqSummary(
             @PathVariable Long documentId
     ) {
@@ -33,7 +33,7 @@ public class DocumentAiSummaryController {
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.ACCEPTED, "ai 요약 생성 시작", null));
     }
 
-    @GetMapping("/{documentId}")
+    @GetMapping("/{documentId}/summary")
     public ResponseEntity<ResponseDto<AiSummaryResDto>> readSummary(
             @PathVariable Long documentId
     ) {
@@ -76,6 +76,14 @@ public class DocumentAiSummaryController {
                     )
             );
         };
+    }
+
+    @PostMapping("/{documentId}/diff")
+    public ResponseEntity<ResponseDto> sendReqDiff(
+            @PathVariable Long documentId
+    ) {
+        documentAiSummaryService.sendReqDiff(SecurityUtils.getEmployeeId(), documentId);
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.ACCEPTED, "ai 문서 비교 생성 시작", null));
     }
 
 
