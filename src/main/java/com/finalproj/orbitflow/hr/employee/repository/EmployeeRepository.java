@@ -199,4 +199,19 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
             """)
     List<Employee> findActiveWithExtension(Long companyId);
 
+
+    // company.id = :companyId 인 Employee의 id만 조회
+    @Query("""
+                select e.id
+                from Employee e 
+                where e.company.id = :companyId
+            """)
+    List<Long> findEmployeeIdsByCompanyId(@Param("companyId") Long companyId);
+
+    @Query("""
+                select e.id
+                from Employee e 
+                where e.organization.id = :orgId
+            """)
+    List<Long> findEmployeeIdsByOrganizationId(@Param("orgId") Long orgId);
 }

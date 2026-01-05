@@ -3,6 +3,7 @@ package com.finalproj.orbitflow.hr.company.repository;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -35,4 +36,6 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
      * 사업자 번호 중복 여부 확인
      */
     boolean existsByBusinessNumber(String businessNumber);
+
+    List<Long> getAllById(Long id);
 }

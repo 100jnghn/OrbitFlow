@@ -227,13 +227,13 @@ public class ReservationService {
         ReservationStatus confirmStatus = reservationStatusRepository.findByStatusCode(ReservationStatusCode.CONFIRM);
         reservationRepository.approveReservation(reservationId, confirmStatus);
 
-
-        // 예약 승인 알림 발송
         Reservation reservation = reservationRepository.getReferenceById(reservationId);
         Employee employee = reservation.getEmployee();
 
-        String notificationMessage = createNotificationMessage(reservation);
+        // 예약 승인 알림 발송
+        String notificationMessage = createNotificationMessage(reservation, "승인");
 
+        // 알림 생성 서비스 호출
         notificationCommandService.createNotification(
                 employee.getCompany().getId(),
                 employee.getId(),
@@ -250,6 +250,21 @@ public class ReservationService {
 
         ReservationStatus rejectStatus = reservationStatusRepository.findByStatusCode(ReservationStatusCode.REJECT);
         reservationRepository.rejectReservation(reservationId, rejectReason, rejectStatus);
+
+        Reservation reservation = reservationRepository.getReferenceById(reservationId);
+        Employee employee = reservation.getEmployee();
+
+        // 예약 승인 알림 발송
+        String notificationMessage = createNotificationMessage(reservation, "반려");
+
+        // 알림 생성 서비스 호출
+        notificationCommandService.createNotification(
+                employee.getCompany().getId(),
+                employee.getId(),
+                NotificationType.RESERVATION,
+                notificationMessage,
+                "/view/reservation/me"
+        );
     }
 
     // 관리자 - 예약 상태 변경 -> 반려/취소는 사유를 필수 입력해야 함
@@ -265,14 +280,37 @@ public class ReservationService {
         ReservationStatusCode targetCode = newStatus.getStatusCode();
 
         String rejectReason = null;
-        if (targetCode.equals(ReservationStatusCode.REJECT) || targetCode.equals(ReservationStatusCode.CANCELED)) {
+        String status = null;
+
+        if (targetCode.equals(ReservationStatusCode.REJECT)) {
             if (dto.getRejectReason() == null || dto.getRejectReason().isBlank()) {
-                throw new IllegalArgumentException("반려/취소 사유는 필수입니다.");
+                throw new IllegalArgumentException("반려 사유는 필수입니다.");
             }
-            rejectReason = dto.getRejectReason();
+            status = "반려";
+
+        } else if (targetCode.equals(ReservationStatusCode.CANCELED)) {
+            if (dto.getRejectReason() == null || dto.getRejectReason().isBlank()) {
+                throw new IllegalArgumentException("취소 사유는 필수입니다.");
+            }
+            status = "취소";
         }
 
+        rejectReason = dto.getRejectReason();
         reservation.changeStatus(newStatus, rejectReason);
+
+        Employee employee = reservation.getEmployee();
+
+        // 예약 승인 알림 발송
+        String notificationMessage = createNotificationMessage(reservation, status);
+
+        // 알림 생성 서비스 호출
+        notificationCommandService.createNotification(
+                employee.getCompany().getId(),
+                employee.getId(),
+                NotificationType.RESERVATION,
+                notificationMessage,
+                "/view/reservation/me"
+        );
     }
 
 
@@ -372,6 +410,23 @@ public class ReservationService {
             );
         }
 
+        for (Long reservationId : approveIds) {
+            Reservation reservation = reservationRepository.getReferenceById(reservationId);
+            Employee employee = reservation.getEmployee();
+
+            // 예약 승인 알림 발송
+            String notificationMessage = createNotificationMessage(reservation, "승인");
+
+            // 알림 생성 서비스 호출
+            notificationCommandService.createNotification(
+                    employee.getCompany().getId(),
+                    employee.getId(),
+                    NotificationType.RESERVATION,
+                    notificationMessage,
+                    "/view/reservation/me"
+            );
+        }
+
         return approveIds.size();
     }
 
@@ -435,6 +490,23 @@ public class ReservationService {
             reservationRepository.bulkUpdateStatus(
                     approveIds,
                     getConfirmStatus()
+            );
+        }
+
+        for (Long reservationId : approveIds) {
+            Reservation reservation = reservationRepository.getReferenceById(reservationId);
+            Employee employee = reservation.getEmployee();
+
+            // 예약 승인 알림 발송
+            String notificationMessage = createNotificationMessage(reservation, "승인");
+
+            // 알림 생성 서비스 호출
+            notificationCommandService.createNotification(
+                    employee.getCompany().getId(),
+                    employee.getId(),
+                    NotificationType.RESERVATION,
+                    notificationMessage,
+                    "/view/reservation/me"
             );
         }
 
@@ -534,7 +606,7 @@ public class ReservationService {
 
 
     // 알림 전송할 메시지 생성
-    private String createNotificationMessage(Reservation reservation) {
+    private String createNotificationMessage(Reservation reservation, String status) {
 
         ReservationTypeCode type = reservation.getTypeCode();
         Long resourceId = reservation.getResourceId();
@@ -557,7 +629,7 @@ public class ReservationService {
             reservationDate = reservation.getReservationDate() + " " + reservation.getStartTime() + "시" + " ~ " + reservation.getEndTime() + "시";
         }
 
-        String msg = reservationDate + "\n" + resourceName + " 예약이 승인되었습니다";
+        String msg = reservationDate + "\n" + resourceName + " 예약이 " + status + "되었습니다";
         return msg;
     }
 
