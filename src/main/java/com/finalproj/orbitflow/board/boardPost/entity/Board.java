@@ -52,16 +52,17 @@ public class Board extends BaseEntity {
     private Instant deletedAt; // 삭제 일시 (소프트 삭제)
 
     // 게시글 수정 메서드
-    // 게시글 수정 메서드
     public void update(String boardTitle, String boardContent, List<File> newFiles) {
         this.boardTitle = boardTitle;
         this.boardContent = boardContent;
 
-        // 파일 추가 (기존 파일 유지 + 새 파일 추가)
+        // 파일 교체 (기존 컬렉션을 유지하면서 clear 후 addAll 사용)
+        // orphanRemoval = true인 경우 새 리스트로 교체하면 Hibernate 오류 발생
+        if (this.files == null) {
+            this.files = new java.util.ArrayList<>();
+        }
+        this.files.clear();
         if (newFiles != null && !newFiles.isEmpty()) {
-            if (this.files == null) {
-                this.files = new java.util.ArrayList<>();
-            }
             this.files.addAll(newFiles);
         }
     }
@@ -80,7 +81,8 @@ public class Board extends BaseEntity {
             BoardCategory category,
             Employee writer,
             String title,
-            String content) {
+            String content
+    ) {
         Board board = new Board();
         board.category = category;
         board.writer = writer;
