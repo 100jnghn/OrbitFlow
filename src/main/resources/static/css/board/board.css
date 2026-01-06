@@ -227,7 +227,8 @@
 
 .board-table th:nth-child(2) {
     width: auto;
-    min-width: 350px;
+    min-width: 120px;
+    /* 제목 보호 (약 4~5글자) */
     text-align: left !important;
 }
 
@@ -300,6 +301,9 @@
     text-align: left;
     width: 100%;
     padding-left: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .board-title-link:hover {
@@ -1145,3 +1149,76 @@
     background: rgba(239, 68, 68, 0.1);
     color: var(--danger-hover);
 }
+
+/* 반응형 단계 정밀 최적화: 패딩/번호 -> 날짜 조기 제거 -> 제목 보호 */
+
+/* 1단계 (1200px 이하): 패딩 압축 및 번호 축소 */
+@media (max-width: 1200px) {
+
+    .board-table th,
+    .board-table td {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+
+    .board-table th:nth-child(1),
+    .board-table td:nth-child(1) {
+        width: 45px !important;
+    }
+}
+
+/* 2단계 (1024px 이하): 날짜 및 조회수 조기 제거 (제목 보호 최우선) */
+@media (max-width: 1024px) {
+
+    .board-table th,
+    .board-table td {
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+    }
+
+    /* 등록일(4) 및 조회수(5) 컬럼 조기 숨김 */
+    .board-table th:nth-child(4),
+    .board-table td:nth-child(4),
+    .board-table th:nth-child(5),
+    .board-table td:nth-child(5) {
+        display: none !important;
+    }
+
+    .board-table th:nth-child(3),
+    .board-table td:nth-child(3) {
+        width: 100px !important;
+    }
+
+    /* 작성자 최적화 */
+}
+
+/* 3단계 (850px 이하): 작성자 추가 압축 */
+@media (max-width: 850px) {
+
+    .board-table th:nth-child(3),
+    .board-table td:nth-child(3) {
+        width: 85px !important;
+    }
+}
+
+/* 4단계 (650px 이하): 번호/제목/작성자 최종 최적화 */
+@media (max-width: 650px) {
+
+    .board-table th:nth-child(1),
+    .board-table td:nth-child(1) {
+        width: 40px !important;
+    }
+
+    .board-table th:nth-child(3),
+    .board-table td:nth-child(3) {
+        width: 80px !important;
+    }
+
+    .board-table th:nth-child(2),
+    .board-table td:nth-child(2) {
+        min-width: 120px !important;
+        /* 제목 4글자 사수 */
+    }
+}
+
+```

@@ -8,7 +8,7 @@ let boardId = null;
 let selectedFiles = [];
 
 // 페이지 로드 시 초기화
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', async function () {
     // URL 파라미터에서 categoryId와 boardId 가져오기
     const urlParams = new URLSearchParams(window.location.search);
     categoryId = urlParams.get('categoryId') || document.getElementById('categoryId')?.value;
@@ -31,10 +31,10 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // 게시판 목록 로드 (사이드바용)
     loadBoardCategories();
-    
+
     // 게시판 이름 표시
     updateBoardCategoryName();
-    
+
     // 글자수 카운터 초기화
     updateTitleCharCount();
     updateContentCharCount();
@@ -76,11 +76,10 @@ async function loadBoardCategories() {
         cachedOrganizationBoards = orgData.data || [];
 
         renderSidebar(cachedAccessibleBoards, cachedOrganizationBoards);
-        
+
         // 게시판 이름 업데이트
         updateBoardCategoryName();
     } catch (error) {
-        console.error('Error loading board categories:', error);
     }
 }
 
@@ -118,15 +117,15 @@ function renderSidebar(accessibleBoards, organizationBoards) {
             </div>
             <ul class="sub-menu">
                 ${organizationBoards.map(board => {
-                    const isSelected = board.id === categoryId;
-                    return `
+            const isSelected = board.id === categoryId;
+            return `
                         <li class="${isSelected ? 'selected' : ''}">
                             <a href="/view/board?categoryId=${board.id}" class="board-link">
                                 ${escapeHTML(board.boardName || board.name || '게시판')}
                             </a>
                         </li>
                     `;
-                }).join('')}
+        }).join('')}
             </ul>
         `;
         sidebar.appendChild(orgMenuItem);
@@ -185,7 +184,7 @@ async function loadBoardDetail() {
         if (board) {
             const titleInput = document.getElementById('boardTitleInput');
             const contentInput = document.getElementById('boardContent');
-            
+
             if (titleInput) {
                 titleInput.value = board.boardTitle || board.title || '';
                 updateTitleCharCount();
@@ -194,7 +193,7 @@ async function loadBoardDetail() {
                 contentInput.value = board.boardContent || board.content || '';
                 updateContentCharCount();
             }
-            
+
             // categoryId 설정 (URL 파라미터가 없으면 게시글에서 가져옴)
             if (!categoryId) {
                 categoryId = board.categoryId || board.category?.id;
@@ -224,7 +223,6 @@ async function loadBoardDetail() {
             }
         }
     } catch (error) {
-        console.error('Error loading board detail:', error);
         alert('게시글을 불러오는데 실패했습니다.');
     }
 }
@@ -261,12 +259,12 @@ function addFileToList(fileName, fileId, isExisting) {
 function updateBoardCategoryName() {
     const categoryNameElement = document.getElementById('boardCategoryName');
     if (!categoryNameElement) return;
-    
+
     if (categoryId) {
         // 캐시된 게시판 목록에서 찾기
         const allBoards = [...cachedAccessibleBoards, ...cachedOrganizationBoards];
         const board = allBoards.find(b => b.id === categoryId);
-        
+
         if (board) {
             categoryNameElement.textContent = board.boardName || board.name || '게시판';
         } else {
@@ -287,7 +285,7 @@ async function loadBoardCategoryName(catId) {
                 'Content-Type': 'application/json'
             }
         });
-        
+
         if (response.ok) {
             const result = await response.json();
             const board = result.data;
@@ -297,7 +295,6 @@ async function loadBoardCategoryName(catId) {
             }
         }
     } catch (error) {
-        console.error('Error loading board category name:', error);
     }
 }
 
@@ -309,7 +306,6 @@ function removeFile(button) {
 
     if (isExisting) {
         // 기존 파일은 서버에서 삭제해야 함 (나중에 구현)
-        console.log('Remove existing file:', fileId);
     } else {
         // 새로 추가한 파일은 배열에서 제거
         const fileName = fileItem.querySelector('.file-name').textContent;
@@ -415,16 +411,16 @@ async function handleSubmit(e) {
         const result = await response.json();
         const savedBoard = result.data;
         const savedBoardId = savedBoard?.id || savedBoard?.boardId || boardId;
-        
+
         if (!savedBoardId) {
             alert(boardId ? '게시글이 수정되었습니다.' : '게시글이 등록되었습니다.');
             // boardId가 없으면 목록으로 이동
             window.location.href = `/view/board?categoryId=${categoryId}`;
             return;
         }
-        
+
         alert(boardId ? '게시글이 수정되었습니다.' : '게시글이 등록되었습니다.');
-        
+
         // 게시글 상세 페이지로 이동 (categoryId 포함)
         if (categoryId) {
             window.location.href = `/view/board/detail?boardId=${savedBoardId}&categoryId=${categoryId}`;
@@ -432,7 +428,6 @@ async function handleSubmit(e) {
             window.location.href = `/view/board/detail?boardId=${savedBoardId}`;
         }
     } catch (error) {
-        console.error('Error submitting board:', error);
         alert(error.message || '게시글 저장에 실패했습니다.');
     }
 }
@@ -465,12 +460,12 @@ function updateTitleCharCount() {
     if (input && countElement) {
         const currentLength = input.value.length;
         const maxLength = 100;
-        
+
         // 50자 이상일 때만 표시
         if (currentLength >= 50) {
             countElement.style.display = 'block';
             countElement.textContent = `${currentLength} / ${maxLength}`;
-            
+
             // 80자 이상이면 경고 색상
             if (currentLength >= 80) {
                 countElement.style.color = '#EF4444';
@@ -490,12 +485,12 @@ function updateContentCharCount() {
     if (input && countElement) {
         const currentLength = input.value.length;
         const maxLength = 10000;
-        
+
         // 8000자 이상일 때만 표시
         if (currentLength >= 8000) {
             countElement.style.display = 'block';
             countElement.textContent = `${currentLength} / ${maxLength}`;
-            
+
             // 9500자 이상이면 경고 색상
             if (currentLength >= 9500) {
                 countElement.style.color = '#EF4444';
