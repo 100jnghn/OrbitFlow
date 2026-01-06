@@ -286,16 +286,15 @@ public class DocumentAiSummaryService {
 
 
     @Transactional(readOnly = true)
-    public AiSummaryResDto readSummary(Long employeeId, Long documentId) {
+    public AiSummaryResDto readSummary(Long employeeId, Long documentId, SummaryType summaryType) {
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Document not found"));
 
         documentService.validateViewPermission(employeeId, document);
 
-        DocumentAISummary summary = documentAiSummaryRepository.findByDocumentAndSummaryType(document, SummaryType.CONTENT)
-                .orElseThrow(() -> new NotFoundException("Not found Ai Summary"));
+        Optional<DocumentAISummary> summary = documentAiSummaryRepository.findByDocumentAndSummaryType(document, summaryType);
 
-        return AiSummaryResDto.from(summary);
+        return summary.map(AiSummaryResDto::from).orElse(null);
     }
 
     public void sendReqDiff(Long employeeId, Long documentId) {
