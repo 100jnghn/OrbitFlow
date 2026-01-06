@@ -198,22 +198,83 @@ function initEventListeners() {
 }
 
 /**
+ * 이미지 파일 검증
+ * - 파일 크기: 50MB 이하
+ * - 이미지 비율: 가로가 세로보다 길어야 함 (1:1 제외)
+ * - 최대 비율: 16:9
+ */
+async function validateImageFile(file) {
+    // 파일 타입 검증
+    if (!file.type.startsWith('image/')) {
+        return { valid: false, message: '이미지 파일만 업로드 가능합니다.' };
+    }
+
+    // 파일 크기 검증 (50MB)
+    const maxSize = 50 * 1024 * 1024; // 50MB in bytes
+    if (file.size > maxSize) {
+        return { valid: false, message: '이미지 크기는 50MB를 초과할 수 없습니다.' };
+    }
+
+    // 이미지 비율 검증을 위해 이미지 로드
+    return new Promise((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+
+        img.onload = () => {
+            URL.revokeObjectURL(url); // 메모리 해제
+
+            const width = img.width;
+            const height = img.height;
+            const ratio = width / height;
+
+            // 1:1 이하 (세로가 가로보다 길거나 같은 경우) 제외
+            if (ratio <= 1) {
+                resolve({
+                    valid: false,
+                    message: '가로가 세로보다 긴 이미지만 업로드 가능합니다.' + '\n' + '(현재 비율: ' +
+                        width + 'x' + height + ')'
+                });
+                return;
+            }
+
+            // 16:9 초과 체크
+            const maxRatio = 16 / 9; // 약 1.778
+            if (ratio > maxRatio) {
+                resolve({
+                    valid: false,
+                    message: '이미지 비율은 최대 16:9까지 가능합니다. (현재 비율: ' +
+                        width + 'x' + height + ')'
+                });
+                return;
+            }
+
+            resolve({ valid: true });
+        };
+
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            resolve({ valid: false, message: '이미지 파일을 읽을 수 없습니다.' });
+        };
+
+        img.src = url;
+    });
+}
+
+/**
  * 이미지 선택 핸들러
  */
-function handleImageSelect(event) {
+async function handleImageSelect(event) {
     const file = event.target.files[0];
 
     if (!file) return;
 
-    // 파일 타입 검증
-    if (!file.type.startsWith('image/')) {
-        alert('이미지 파일만 업로드 가능합니다.');
-        return;
-    }
+    // 이미지 파일 검증
+    const validation = await validateImageFile(file);
 
-    // 파일 크기 검증 (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-        alert('이미지 크기는 5MB를 초과할 수 없습니다.');
+    if (!validation.valid) {
+        alert(validation.message);
+        // 파일 입력 초기화
+        event.target.value = '';
         return;
     }
 
@@ -348,7 +409,7 @@ async function loadStatusOptions() {
     try {
         const response = await apiFetch(
             '/api/admin/resource-status',
-            {method: 'GET'}
+            { method: 'GET' }
         );
 
         if (!response.ok) throw new Error();

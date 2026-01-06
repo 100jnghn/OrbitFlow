@@ -1,6 +1,7 @@
 package com.finalproj.orbitflow.resource.car.service;
 
 import com.finalproj.orbitflow.global.exception.DuplicateCarNumberException;
+import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.global.file.enums.FileDomain;
 import com.finalproj.orbitflow.global.file.repository.FileRepository;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -75,6 +77,7 @@ public class CarService {
     public void insertCar(Long companyId, Long employeeId, CarReqDto dto) {
 
         Company company = companyRepository.getReferenceById(companyId);
+        Employee employee = employeeRepository.getReferenceById(employeeId);
         ResourceStatus resourceStatus = findResourceStatus(dto.getStatusId());
 
         // 차량 번호 unique하게 (공백 제거)
@@ -82,6 +85,17 @@ public class CarService {
 
         if (carRepository.existsByNumber(number)) {
             throw new DuplicateCarNumberException("이미 존재하는 차량 번호입니다");
+        }
+
+        // 이미지 저장
+        if (!Objects.requireNonNull(dto.getImgFile().getContentType()).startsWith("image/")) {
+            throw new InvalidRequestException("이미지 파일만 업로드할 수 있습니다.");
+        }
+
+        // 관리자만 업로드할 수 있도록 확인
+        String role = employee.getRole().toString();
+        if (role.endsWith("ADMIN")) {
+            throw new InvalidRequestException("관리자만 업로드할 수 있습니다.");
         }
 
         // 이미지 저장 기능 추가
