@@ -416,11 +416,10 @@ public class OrgService {
     public List<OrgResDto> searchForUser(
             Long companyId,
             String keyword,
-            boolean includeInactive,
             boolean includeDescendants
     ) {
         List<OrgResDto> result =
-                search(companyId, keyword, includeInactive, includeDescendants);
+                search(companyId, keyword, false, includeDescendants); // 항상 활성만
 
         // 최상위 조직(회사명) 제외
         return result.stream()

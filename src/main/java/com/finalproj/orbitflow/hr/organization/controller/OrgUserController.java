@@ -87,7 +87,6 @@ public class OrgUserController {
                         orgService.searchForUser(
                                 companyId,
                                 keyword,
-                                false,
                                 includeDescendants
                         )
                 )
