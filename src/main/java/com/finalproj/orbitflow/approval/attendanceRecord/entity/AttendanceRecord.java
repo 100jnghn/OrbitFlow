@@ -16,6 +16,8 @@ import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -27,6 +29,8 @@ import java.time.LocalDateTime;
 @Table(name = "attendance_record")
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class AttendanceRecord extends BaseEntity {
 
     @Id

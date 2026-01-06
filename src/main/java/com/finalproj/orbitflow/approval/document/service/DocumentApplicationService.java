@@ -22,6 +22,7 @@ import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
+import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.global.file.repository.FileRepository;
 import com.finalproj.orbitflow.global.file.service.FileService;
 import com.finalproj.orbitflow.hr.company.entity.Company;
@@ -33,6 +34,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
@@ -46,7 +48,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder.FontStyle;
-import static java.util.Objects.requireNonNull;
 
 
 /**
@@ -78,6 +79,9 @@ public class DocumentApplicationService {
     private final PdfHtmlBuilder pdfHtmlBuilder;
     private final PdfContentSchemaAssembler pdfContentSchemaAssembler;
     private final PdfApprovalLineAssembler pdfApprovalLineAssembler;
+
+    @Value("${app.base-url}")
+    private String baseUrl;
 
 
     @PersistenceContext
@@ -294,11 +298,11 @@ public class DocumentApplicationService {
                     true
             );
 
-            String baseUri = requireNonNull(
+      /*      String baseUri = requireNonNull(
                     getClass().getClassLoader().getResource("static/")
-            ).toExternalForm();
+            ).toExternalForm();*/
 
-            builder.withHtmlContent(html, baseUri);
+            builder.withHtmlContent(html, baseUrl);
 
             builder.toStream(os);
             builder.run();
@@ -316,7 +320,6 @@ public class DocumentApplicationService {
             throw new RuntimeException("PDF 생성 실패", e);
         }
     }
-
 
     @Transactional
     public void reject(Long employeeId, Long documentId, String comment) {
@@ -396,8 +399,23 @@ public class DocumentApplicationService {
                         .orElseThrow(() -> new NotFoundException("문서 양식 조회 실패"));
 
         // 6. 재기안 문서 생성 (DRAFT)
-        Document reviseDraft = Document.reviseDraft(rejected);
-        documentRepository.save(reviseDraft);
+        Document revised = Document.reviseDraft(rejected);
+        documentRepository.save(revised);
+
+        // 기존 문서 첨부파일 조회
+        List<DocumentFile> originalFiles =
+                documentFileRepository.findByDocument_Id(rejected.getId());
+
+        // DocumentFile만 복제 (File은 공유)
+        for (DocumentFile df : originalFiles) {
+            if (df.getStatus() == DocumentFileStatus.DELETED) continue;
+
+            DocumentFile copied =
+                    DocumentFile.copyFor(revised, df);
+
+            documentFileRepository.save(copied);
+        }
+
 
         // 7. 문서 내용 복사
         DocumentContent rejectedContent =
@@ -405,21 +423,20 @@ public class DocumentApplicationService {
                         .orElseThrow(() -> new NotFoundException("문서 내용을 찾을 수 없습니다."));
 
         DocumentContent reviseContent =
-                DocumentContent.revise(reviseDraft, rejectedContent);
+                DocumentContent.revise(revised, rejectedContent);
 
         documentContentRepository.save(reviseContent);
 
         // 8. 결재선 초안 초기화
         approvalLineDomainService.initializeDraftLines(
-                reviseDraft,
+                revised,
                 rejectedTemplate,
                 employee
         );
 
         // 9. 결과 반환
-        return DocumentCreateResDto.from(reviseDraft.getId());
+        return DocumentCreateResDto.from(revised.getId());
     }
-
 
     @Transactional
     public void submitDocument(Long employeeId, Long documentId) {
@@ -435,10 +452,10 @@ public class DocumentApplicationService {
             );
         }
 
-        // 문서 상태 변경
+        // 1. 문서 상태 변경
         document.submit();
 
-        // 결재선 처리
+        // 2. 결재선 처리
         List<ApprovalLine> lines =
                 approvalLineRepository.findByDocument_IdOrderByOrderNoAsc(documentId);
 
@@ -451,58 +468,38 @@ public class DocumentApplicationService {
         lines.forEach(ApprovalLine::markWaiting);
         lines.get(0).markInProgress();
 
-        // 첨부파일 조회
+        // 3. 첨부파일 조회
         List<DocumentFile> documentFiles =
                 documentFileRepository.findByDocument_Id(documentId);
 
-        // 상태별 분리
+        // 4. TEMP → FINAL
+        documentFiles.stream()
+                .filter(df -> df.getStatus() == DocumentFileStatus.TEMP)
+                .forEach(df -> df.updateStatus(DocumentFileStatus.FINAL));
+
+        // 5. DELETED 파일 분리
         List<DocumentFile> deletedFiles = documentFiles.stream()
                 .filter(df -> df.getStatus() == DocumentFileStatus.DELETED)
                 .toList();
 
-        List<DocumentFile> tempFiles = documentFiles.stream()
-                .filter(df -> df.getStatus() == DocumentFileStatus.TEMP)
-                .toList();
-
-        // TEMP → FINAL
-        tempFiles.forEach(df -> df.updateStatus(DocumentFileStatus.FINAL));
-
-        // DELETED → objectKey 확보
-        List<String> deletedObjectKeys = deletedFiles.stream()
-                .map(df -> df.getFile().getObjectKey())
-                .toList();
-
-        // DELETED → DB 삭제
+        // 6. 문서-파일 관계 먼저 제거
         documentFileRepository.deleteAll(deletedFiles);
-        fileRepository.deleteAll(
-                deletedFiles.stream().map(DocumentFile::getFile).toList()
-        );
 
-        // DB 먼저 반영
+        // DB 반영
         entityManager.flush();
 
-        // afterCommit에서 S3 삭제 등록
-        //TransactionSynchronizationManager.registerSynchronization(
-        //        new TransactionSynchronization() {
-        //            @Override
-        //            public void afterCommit() {
-        //                for (String objectKey : deletedObjectKeys) {
-        //                    try {
-        //                        fileService.deleteObject(objectKey);
-        //                    } catch (Exception e) {
-        //                        log.error(
-        //                                "[S3_DELETE_FAIL] documentId={}, objectKey={}",
-        //                                documentId,
-        //                                objectKey,
-        //                                e
-        //                        );
-        //                    }
-        //                }
-        //            }
-        //        }
-        //);
+        // 7. File 참조 수 체크 후 실제 삭제
+        for (DocumentFile df : deletedFiles) {
+            File file = df.getFile();
 
-        deletedObjectKeys.forEach(fileService::deleteObjectAfterCommit);
+            long refCount =
+                    documentFileRepository.countByFile_Id(file.getId());
+
+            if (refCount == 0) {
+                fileRepository.delete(file);
+                fileService.deleteObjectAfterCommit(file.getObjectKey());
+            }
+        }
     }
 
     private List<ApprovalLine> getApprovalLines(Long documentId) {
