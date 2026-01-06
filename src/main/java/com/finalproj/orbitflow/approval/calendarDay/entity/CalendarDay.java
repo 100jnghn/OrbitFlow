@@ -34,6 +34,9 @@ public class CalendarDay {
     @Column(name = "day_of_week", nullable = false)
     private int dayOfWeek;
 
+    @Column(name = "is_public_holiday", nullable = false)
+    private boolean isPublicHoliday;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "day_type", nullable = false, length = 20)
     private CalendarDayType dayType;
