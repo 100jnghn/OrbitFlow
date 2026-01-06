@@ -4,13 +4,13 @@ import com.finalproj.orbitflow.approval.attendanceRecord.entity.AttendanceRecord
 import com.finalproj.orbitflow.approval.attendanceRecord.repository.AttendanceRecordRepository;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
-import com.finalproj.orbitflow.attendance.leave.dto.LeaveBalanceResDto;
-import com.finalproj.orbitflow.attendance.leave.dto.LeaveHistoryResDto;
+import com.finalproj.orbitflow.attendance.leave.dto.*;
 import com.finalproj.orbitflow.attendance.leave.entity.LeaveBalance;
 import com.finalproj.orbitflow.attendance.leave.entity.LeaveGrant;
 import com.finalproj.orbitflow.attendance.leave.entity.LeaveType;
 import com.finalproj.orbitflow.attendance.leave.repository.LeaveBalanceRepository;
 import com.finalproj.orbitflow.attendance.leave.repository.LeaveGrantRepository;
+import com.finalproj.orbitflow.attendance.leave.repository.LeaveTypeRepository;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
@@ -40,6 +40,7 @@ public class LeaveService {
     private final LeaveGrantRepository leaveGrantRepository;
     private final LeaveBalanceRepository leaveBalanceRepository;
     private final AttendanceRecordRepository attendanceRecordRepository;
+    private final LeaveTypeRepository leaveTypeRepository;
 
     @Transactional
     public void batchGrantAnnualLeave(Long companyId, Integer year) {
@@ -84,7 +85,8 @@ public class LeaveService {
         for (Employee e : active) {
             if (e.getHireDate() == null) continue;
             if (!e.getHireDate().isAfter(today.minusYears(1))) continue;
-            if (leaveGrantRepository.existsByEmployeeIdAndGrantTypeAndGrantDate(e.getId(), "ANNUAL_MONTHLY", today)) continue;
+            if (leaveGrantRepository.existsByEmployeeIdAndGrantTypeAndGrantDate(e.getId(), "ANNUAL_MONTHLY", today))
+                continue;
 
             saveGrantAndBalance(e, today, new BigDecimal("1.00"), "ANNUAL_MONTHLY");
         }
@@ -131,15 +133,14 @@ public class LeaveService {
     }
 
 
-
     public Page<LeaveHistoryResDto> getLeaveUsageHistory(
-            Long companyId, Long employeeId, int year, 
+            Long companyId, Long employeeId, int year,
             String typeName, DocumentStatus status, LocalDate startDate, LocalDate endDate,
             Pageable pageable) {
         // AttendanceRecordRepository에 작성된 쿼리를 사용하여 차감되는 항목만 조회
         // 필터: 승인됨(APPROVED) + 차감대상(isCountable=true) + 해당 연도 + 추가 필터
         return attendanceRecordRepository.findUsageHistoryWithFilters(
-                companyId, employeeId, year, typeName, status, startDate, endDate, pageable)
+                        companyId, employeeId, year, typeName, status, startDate, endDate, pageable)
                 .map(this::mapRecordToDto);
     }
 
@@ -245,6 +246,77 @@ public class LeaveService {
 
         leaveBalance.deductBalance(days);
         leaveBalanceRepository.save(leaveBalance);
+    }
+
+    public LeaveRemainingResDto getLeaveRemaining(Long employeeId) {
+
+        LeaveBalance leaveBalance =
+                leaveBalanceRepository
+                        .findTopByEmployeeIdOrderByYearDesc(employeeId)
+                        .orElseThrow(() -> new NotFoundException("잔여 연차 조회 실패"));
+
+        return new LeaveRemainingResDto(leaveBalance.getRemainingDays());
+    }
+
+    public LeaveValidationResDto validateLeave(
+            Long employeeId,
+            LeaveValidationReqDto reqDto
+    ) {
+        // 1. 잔여 연차 조회
+        LeaveBalance leaveBalance =
+                leaveBalanceRepository
+                        .findTopByEmployeeIdOrderByYearDesc(employeeId)
+                        .orElseThrow(() -> new NotFoundException("잔여 연차 조회 실패"));
+
+        // 2. 휴가 유형 조회
+        LeaveType leaveType =
+                leaveTypeRepository.findById(reqDto.getLeaveTypeId())
+                        .orElseThrow(() -> new NotFoundException("휴가 유형 조회 실패"));
+
+        BigDecimal remainingDays = leaveBalance.getRemainingDays();
+
+        /* =========================
+           차감되지 않는 휴가
+        ========================= */
+        if (!leaveType.getIsCountable()) {
+            return LeaveValidationResDto.builder()
+                    .valid(true)
+                    .requiredDays(BigDecimal.ZERO)
+                    .remainingDays(remainingDays)
+                    .message("연차 차감 대상이 아닌 휴가입니다")
+                    .build();
+        }
+
+        /* =========================
+           차감되는 휴가
+        ========================= */
+
+        // 3. 전체 기간 (inclusive)
+        long totalDays =
+                ChronoUnit.DAYS.between(
+                        reqDto.getStartDate(),
+                        reqDto.getEndDate()
+                ) + 1;
+
+        // 4. 필요 연차 계산
+        BigDecimal requiredDays =
+                leaveType.getUnitDays()
+                        .multiply(BigDecimal.valueOf(totalDays));
+
+        // 5. 검증
+        boolean valid =
+                remainingDays.compareTo(requiredDays) >= 0;
+
+        String message = valid
+                ? "신청 가능한 휴가입니다"
+                : "잔여 연차가 부족합니다";
+
+        return LeaveValidationResDto.builder()
+                .valid(valid)
+                .requiredDays(requiredDays)
+                .remainingDays(remainingDays)
+                .message(message)
+                .build();
     }
 
 }

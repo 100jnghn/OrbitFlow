@@ -1,13 +1,12 @@
 package com.finalproj.orbitflow.attendance.leave.controller;
 
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
-import com.finalproj.orbitflow.attendance.leave.dto.LeaveBalanceResDto;
-import com.finalproj.orbitflow.attendance.leave.dto.LeaveHistoryResDto;
-import com.finalproj.orbitflow.attendance.leave.dto.LeaveTypeResDto;
+import com.finalproj.orbitflow.attendance.leave.dto.*;
 import com.finalproj.orbitflow.attendance.leave.service.LeaveService;
 import com.finalproj.orbitflow.attendance.leave.service.LeaveTypeService;
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUser;
+import com.finalproj.orbitflow.global.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -80,8 +79,8 @@ public class LeaveController {
         int targetYear = (year != null) ? year : LocalDate.now().getYear();
 
         // 디버깅 로그
-        System.out.println("필터 파라미터 - year: " + targetYear + ", typeName: " + typeName + 
-                          ", status: " + status + ", startDate: " + startDate + ", endDate: " + endDate);
+        System.out.println("필터 파라미터 - year: " + targetYear + ", typeName: " + typeName +
+                ", status: " + status + ", startDate: " + startDate + ", endDate: " + endDate);
 
         // isCountable = true 인 내역만 조회하도록 서비스 호출 (필터 파라미터 추가)
         Page<LeaveHistoryResDto> usageHistory = leaveService.getLeaveUsageHistory(
@@ -113,5 +112,20 @@ public class LeaveController {
                 leaveTypeService.getCountableLeaveTypes() : leaveTypeService.getAllLeaveTypes();
 
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "신청 가능한 휴가 유형 목록입니다.", types));
+    }
+
+    @GetMapping("/leave/remaining")
+    public ResponseEntity<?> getLeaveRemaining() {
+        LeaveRemainingResDto result = leaveService.getLeaveRemaining(SecurityUtils.getEmployeeId());
+
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "잔여 연차 조회 성공", result));
+    }
+
+    @PostMapping("/leave/validate")
+    public ResponseEntity<?> validateLeave(
+            @RequestBody LeaveValidationReqDto reqDto
+    ) {
+        LeaveValidationResDto result = leaveService.validateLeave(SecurityUtils.getEmployeeId(), reqDto);
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "연차 사용 검증 결과 반환", result));
     }
 }
