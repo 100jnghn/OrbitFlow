@@ -176,7 +176,7 @@
         const startDateInput = document.getElementById('scheduleStartDate');
         const endDateInput = document.getElementById('scheduleEndDate');
         if (startDateInput && endDateInput) {
-            startDateInput.addEventListener('change', function() {
+            startDateInput.addEventListener('change', function () {
                 if (this.value) {
                     endDateInput.min = this.value;
                     // 종료 날짜가 시작 날짜보다 이전이면 시작 날짜로 설정
@@ -188,24 +188,98 @@
         }
     }
 
-    // 시간 선택 옵션 초기화
+
+    // 시간 선택 옵션 초기화 (커스텀 드롭다운)
     function initializeTimeSelects() {
-        const hours = Array.from({length: 24}, (_, i) => String(i).padStart(2, '0'));
+        const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
         const minutes = ['00', '10', '20', '30', '40', '50'];
 
-        const hourSelects = ['scheduleStartHour', 'scheduleEndHour'];
-        const minuteSelects = ['scheduleStartMinute', 'scheduleEndMinute'];
+        const selects = [
+            { id: 'scheduleStartHour', options: hours },
+            { id: 'scheduleEndHour', options: hours },
+            { id: 'scheduleStartMinute', options: minutes },
+            { id: 'scheduleEndMinute', options: minutes }
+        ];
 
-        hourSelects.forEach(id => {
+        selects.forEach(({ id, options }) => {
             const select = document.getElementById(id);
-            select.innerHTML = hours.map(h => `<option value="${h}">${h}</option>`).join('');
+            const wrapper = select.parentElement;
+
+            // 원래 select 숨기기
+            select.style.display = 'none';
+
+            // 커스텀 드롭다운 생성
+            const customSelect = document.createElement('div');
+            customSelect.className = 'custom-select';
+            customSelect.dataset.selectId = id;
+
+            const selected = document.createElement('div');
+            selected.className = 'custom-select-selected';
+            selected.textContent = options[0];
+            select.value = options[0];
+
+            const optionsContainer = document.createElement('div');
+            optionsContainer.className = 'custom-select-options';
+            optionsContainer.style.display = 'none';
+
+            options.forEach(opt => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'custom-select-option';
+                optionDiv.textContent = opt;
+                optionDiv.dataset.value = opt;
+
+                optionDiv.addEventListener('click', () => {
+                    selected.textContent = opt;
+                    select.value = opt;
+                    optionsContainer.style.display = 'none';
+                    customSelect.classList.remove('active');
+
+                    // 모든 옵션의 selected 클래스 제거
+                    optionsContainer.querySelectorAll('.custom-select-option').forEach(o => {
+                        o.classList.remove('selected');
+                    });
+                    optionDiv.classList.add('selected');
+                });
+
+                optionsContainer.appendChild(optionDiv);
+            });
+
+            // 첫 번째 옵션을 selected로 표시
+            optionsContainer.querySelector('.custom-select-option').classList.add('selected');
+
+            selected.addEventListener('click', (e) => {
+                e.stopPropagation();
+
+                // 다른 모든 드롭다운 닫기
+                document.querySelectorAll('.custom-select').forEach(cs => {
+                    if (cs !== customSelect) {
+                        cs.querySelector('.custom-select-options').style.display = 'none';
+                        cs.classList.remove('active');
+                    }
+                });
+
+                // 현재 드롭다운 토글
+                const isVisible = optionsContainer.style.display === 'block';
+                optionsContainer.style.display = isVisible ? 'none' : 'block';
+                customSelect.classList.toggle('active', !isVisible);
+            });
+
+            customSelect.appendChild(selected);
+            customSelect.appendChild(optionsContainer);
+            wrapper.insertBefore(customSelect, select);
         });
 
-        minuteSelects.forEach(id => {
-            const select = document.getElementById(id);
-            select.innerHTML = minutes.map(m => `<option value="${m}">${m}</option>`).join('');
+        // 외부 클릭 시 모든 드롭다운 닫기
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.custom-select-options').forEach(opt => {
+                opt.style.display = 'none';
+            });
+            document.querySelectorAll('.custom-select').forEach(cs => {
+                cs.classList.remove('active');
+            });
         });
     }
+
 
     // 조직 목록 로드
     async function loadOrganizations() {
@@ -725,7 +799,7 @@
         document.getElementById('scheduleModal').style.display = 'block';
     }
 
-// 일정 세부 정보 모달 열기
+    // 일정 세부 정보 모달 열기
     function openScheduleDetailModal(schedule) {
         // 세부 정보 표시
         document.getElementById('detailTitle').textContent = schedule.title || '-';
@@ -783,7 +857,7 @@
         document.getElementById('scheduleDetailModal').style.display = 'none';
     }
 
-// 모달 닫기
+    // 모달 닫기
     function closeScheduleModal() {
         document.getElementById('scheduleModal').style.display = 'none';
     }
@@ -792,7 +866,7 @@
     window.closeScheduleDetailModal = closeScheduleDetailModal;
     window.closeScheduleModal = closeScheduleModal;
 
-// 제목 글자 수 업데이트
+    // 제목 글자 수 업데이트
     function updateTitleCharCount() {
         const input = document.getElementById('scheduleTitle');
         const count = input.value.length;
@@ -812,7 +886,7 @@
         }
     }
 
-// 설명 글자 수 업데이트
+    // 설명 글자 수 업데이트
     function updateDescriptionCharCount() {
         const input = document.getElementById('scheduleDescription');
         const count = input.value.length;
@@ -952,7 +1026,7 @@
         }
     }
 
-// 일정 삭제
+    // 일정 삭제
     async function deleteSchedule(scheduleId) {
         if (!confirm('정말 이 일정을 삭제하시겠습니까?')) {
             return;
@@ -982,7 +1056,7 @@
         }
     }
 
-// 모달 외부 클릭 시 닫기
+    // 모달 외부 클릭 시 닫기
     window.onclick = function (event) {
         const scheduleModal = document.getElementById('scheduleModal');
         const detailModal = document.getElementById('scheduleDetailModal');
