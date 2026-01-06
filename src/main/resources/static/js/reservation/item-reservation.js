@@ -69,11 +69,11 @@ function initDateSelector() {
 ========================== */
 async function loadCategories() {
     try {
-        const res = await apiFetch('/api/item-categories', {method: 'GET'});
+        const res = await apiFetch('/api/item-categories', { method: 'GET' });
 
         if (!res.ok) throw new Error();
 
-        const {data} = await res.json();
+        const { data } = await res.json();
         categories = data || [];
 
         renderCategorySelector();
@@ -106,11 +106,11 @@ async function loadItems(categoryId = null) {
             url = `/api/categories/${categoryId}/items`;
         }
 
-        const res = await apiFetch(url, {method: 'GET'});
+        const res = await apiFetch(url, { method: 'GET' });
 
         if (!res.ok) throw new Error();
 
-        const {data} = await res.json();
+        const { data } = await res.json();
         items = data || [];
 
         renderGrid();
@@ -138,7 +138,7 @@ async function loadReservations(date) {
 
         if (!res.ok) throw new Error();
 
-        const {data} = await res.json();
+        const { data } = await res.json();
         reservations = data || [];
 
         renderGrid();
@@ -191,6 +191,7 @@ function renderGrid() {
         itemNameCell.className = 'item-name-cell';
         itemNameCell.textContent = item.name;
         itemNameCell.title = item.name;
+        itemNameCell.addEventListener('click', () => openItemImageModal(item));
         row.appendChild(itemNameCell);
 
         // 시간대 셀들
@@ -343,45 +344,15 @@ function updateSelection() {
 
 async function updateReservationForm() {
     // 신청자 (현재 사용자 정보 - 추후 API에서 가져오기)
-    document.getElementById('applicant-name').textContent = '사용자'; // TODO: 실제 사용자 정보
-
-    // 자원 정보
-    const itemImage = document.getElementById('selected-item-image');
+    document.getElementById('applicant-name').textContent = '사용자'; // TODO:    // 자원 정보
     if (selectedItem) {
         document.getElementById('selected-item-name').textContent = selectedItem.name;
         document.getElementById('selected-item-category').textContent = selectedItem.itemCategoryName || '-';
         document.getElementById('selected-item-description').textContent = selectedItem.description || '-';
-
-        // 자원 이미지 업데이트 (presigned URL 방식)
-        if (selectedItem.fileId) {
-            try {
-                // presigned URL 요청
-                const res = await apiFetch(`/api/files/${selectedItem.fileId}/presigned`);
-                if (!res.ok) throw new Error('presigned url 요청 실패');
-
-                const result = await res.json();
-                const imageUrl = result.data.url;
-
-                itemImage.src = imageUrl;
-                itemImage.style.display = 'block';
-            } catch (e) {
-                console.error('이미지 로드 실패', e);
-                // 실패 시 이미지 숨기기
-                itemImage.src = '';
-                itemImage.style.display = 'none';
-            }
-        } else {
-            itemImage.src = '';
-            itemImage.style.display = 'none';
-        }
     } else {
         document.getElementById('selected-item-name').textContent = '-';
         document.getElementById('selected-item-category').textContent = '-';
         document.getElementById('selected-item-description').textContent = '-';
-
-        // 자원 이미지 숨기기
-        itemImage.src = '';
-        itemImage.style.display = 'none';
     }
 
     // 날짜
@@ -505,6 +476,50 @@ async function submitReservation() {
 }
 
 /* ==========================
+   Item Image Modal Functions
+========================== */
+async function openItemImageModal(item) {
+    const modal = document.getElementById('item-image-modal');
+    const modalItemName = document.getElementById('modal-item-name');
+    const modalItemImage = document.getElementById('modal-item-image');
+
+    // 자원 이름 설정
+    modalItemName.textContent = item.name;
+
+    // 자원 이미지 로드
+    if (item.fileId) {
+        try {
+            // presigned URL 요청
+            const res = await apiFetch(`/api/files/${item.fileId}/presigned`);
+            if (!res.ok) throw new Error('presigned url 요청 실패');
+
+            const result = await res.json();
+            const imageUrl = result.data.url;
+
+            modalItemImage.src = imageUrl;
+            modalItemImage.style.display = 'block';
+        } catch (e) {
+            console.error('이미지 로드 실패', e);
+            modalItemImage.src = '';
+            modalItemImage.alt = '이미지를 불러올 수 없습니다.';
+        }
+    } else {
+        modalItemImage.src = '';
+        modalItemImage.alt = '등록된 이미지가 없습니다.';
+    }
+
+    // 모달 표시
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
+}
+
+function closeItemImageModal() {
+    const modal = document.getElementById('item-image-modal');
+    modal.classList.remove('show');
+    document.body.style.overflow = ''; // 배경 스크롤 복원
+}
+
+/* ==========================
    Event Listeners
 ========================== */
 function initEventListeners() {
@@ -563,6 +578,13 @@ function initEventListeners() {
             }
         });
     }
+
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeItemImageModal();
+        }
+    });
 }
 
 function updateApprovalSidebarSelection() {
