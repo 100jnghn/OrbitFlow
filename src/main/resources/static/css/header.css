@@ -114,6 +114,8 @@
     line-height: 1;
     border: 2px solid #ffffff;
     box-sizing: border-box;
+    cursor: pointer;
+    pointer-events: auto;
 }
 
 /* 사용자 정보 */
@@ -261,9 +263,9 @@
         opacity: 0;
         transform: translateY(-10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
     }
 }
-
