@@ -113,7 +113,7 @@ public class ItemService {
 
         // 관리자만 업로드할 수 있도록 확인
         String role = employee.getRole().toString();
-        if (role.endsWith("ADMIN")) {
+        if (!role.endsWith("ADMIN")) {
             throw new InvalidRequestException("관리자만 업로드할 수 있습니다.");
         }
 
