@@ -83,4 +83,19 @@ public class NotificationCommandController {
                 new ResponseDto(HttpStatus.OK, "알림 읽음 처리", null)
         );
     }
+
+    /**
+     * 안 읽은 알림 전체 읽음 처리
+     */
+    @PatchMapping("/read-all")
+    public ResponseEntity<ResponseDto> readAllNotifications(
+            @AuthenticationPrincipal SecurityUser user
+    ) {
+        Long employeeId = user.getEmployeeId();
+        notificationCommandService.readAllNotification(employeeId);
+
+        return ResponseEntity.ok().body(
+                new ResponseDto(HttpStatus.OK, "알림 전체 읽음 처리", null)
+        );
+    }
 }
