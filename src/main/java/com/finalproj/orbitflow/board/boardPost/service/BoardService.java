@@ -16,8 +16,11 @@ import com.finalproj.orbitflow.global.file.service.FileService;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeRole;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
+import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.organization.repository.OrgRepository;
 import com.finalproj.orbitflow.hr.organization.repository.OrgResView;
+import com.finalproj.orbitflow.notification.enums.NotificationType;
+import com.finalproj.orbitflow.notification.service.NotificationCommandService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,6 +50,7 @@ public class BoardService {
     private final FileService fileService;
     private final OrgRepository orgRepository;
     private final S3Client s3Client;
+    private final NotificationCommandService notificationCommandService;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
@@ -145,7 +149,29 @@ public class BoardService {
                 .files(attachedFiles)
                 .build();
 
-        Board saved = boardRepository.save(board);
+        com.finalproj.orbitflow.board.boardPost.entity.Board saved = boardRepository.save(board);
+
+        // 공지사항(NOTICE) 타입 게시글 작성 시 전 사원에게 알림 생성
+        if (com.finalproj.orbitflow.board.boardCategory.enums.Board.NOTICE.name().equals(category.getBoardType())) {
+            List<Employee> allActiveEmployees = employeeRepository.findByCompanyIdAndStatus(
+                    companyId, EmployeeStatus.ACTIVE);
+
+            String notificationMessage = String.format("새로운 공지사항이 등록되었습니다.\n제목: %s", saved.getBoardTitle());
+
+            for (Employee emp : allActiveEmployees) {
+                // 작성자 본인 제외
+                if (emp.getId().equals(employeeId))
+                    continue;
+
+                notificationCommandService.createNotification(
+                        companyId,
+                        emp.getId(),
+                        NotificationType.BOARD,
+                        notificationMessage,
+                        "/view/board/detail?boardId=" + saved.getId());
+            }
+        }
+
         return BoardResDto.DetailInfo.from(saved);
     }
 
