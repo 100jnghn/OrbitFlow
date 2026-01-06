@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-admin :: layout(
+        ~{::content},
+        ~{fragments/header :: header},
+        ~{sidebar/admin-sidebar :: menu},
+        ~{::pageCss},
+        ~{::pageScript}
+      )}">
+
+<head>
+  <meta charset="UTF-8">
+  <title>인사 감사 로그</title>
+
+  <th:block th:fragment="pageCss">
+    <link rel="stylesheet" th:href="@{/css/admin-audit/admin-audit-logs.css}">
+  </th:block>
+
+  <th:block th:fragment="pageScript">
+    <script th:src="@{/js/admin-audit/admin-audit-logs.js}"></script>
+  </th:block>
+</head>
+
+<body>
+<div th:fragment="content">
+
+  <div class="board-container">
+
+    <!-- Header -->
+    <div class="page-header">
+      <h1 class="page-title">인사 감사 로그</h1>
+    </div>
+
+    <!-- Table -->
+    <div class="board-table-container">
+      <table class="resource-table">
+        <colgroup>
+          <col style="width:5%">
+          <col style="width:20%">
+          <col style="width:15%">
+          <col style="width:15%">
+          <col style="width:15%">
+          <col style="width:10%">
+        </colgroup>
+        <thead>
+        <tr>
+          <th>No</th>
+          <th>일시</th>
+          <th>수행자</th>
+          <th>대상</th>
+          <th>이벤트</th>
+          <th>상세</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-container" id="pagination-container">
+      <div class="pagination"></div>
+    </div>
+
+    <!-- 안내 문구 -->
+    <div class="hint warning">
+      ※ 인사 감사 로그는 법적 보관 데이터로 수정 및 삭제가 불가합니다.
+    </div>
+  </div>
+
+  <!-- Audit Log Detail Modal (반드시 content 안) -->
+  <div class="modal-overlay" id="audit-log-modal" style="display:none;">
+    <div class="modal">
+
+      <div class="modal-header">
+        <h2>인사 감사 로그 상세</h2>
+        <button class="btn-close" onclick="closeAuditLogModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="info-grid">
+          <div class="info-item">
+            <label class="info-label">발생 일시</label>
+            <div class="info-text" id="modal-created-at">-</div>
+          </div>
+
+          <div class="info-item">
+            <label class="info-label">수행자</label>
+            <div class="info-text" id="modal-actor">-</div>
+          </div>
+
+          <div class="info-item">
+            <label class="info-label">대상</label>
+            <div class="info-text" id="modal-entity">-</div>
+          </div>
+
+          <div class="info-item">
+            <label class="info-label">이벤트</label>
+            <div class="info-text" id="modal-event">-</div>
+          </div>
+        </div>
+
+        <div class="diff-container">
+          <div class="diff-box before">
+            <h3>BEFORE</h3>
+            <pre id="modal-before"></pre>
+          </div>
+
+          <div class="diff-box after">
+            <h3>AFTER</h3>
+            <pre id="modal-after"></pre>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
