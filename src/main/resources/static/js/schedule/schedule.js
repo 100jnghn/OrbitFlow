@@ -7,7 +7,7 @@
     let selectedOrgIds = [];
     let showPersonal = true; // 개인 일정 표시 여부
     let showCompany = true; // 전사 일정 표시 여부
-    let showApproval = false; // 결재 일정 표시 여부
+    let showApproval = true; // 결재 일정 표시 여부
     let orgList = [];
     let isSubmitting = false; // 제출 중 플래그 (중복 제출 방지)
     let selectedDate = null; // 선택된 날짜

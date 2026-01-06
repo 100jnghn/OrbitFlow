@@ -1,7 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko"
-      xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/layout-admin :: layout(
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/layout-admin :: layout(
         ~{::content},
         ~{fragments/header :: header},
         ~{sidebar/admin-sidebar :: menu},
@@ -14,10 +12,8 @@
     <meta charset="UTF-8">
     <title>비품 등록</title>
 
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <!-- 페이지별 CSS -->
     <th:block th:fragment="pageCss">
@@ -29,126 +25,122 @@
         <script th:src="@{/js/admin-item/admin-item-insert.js}"></script>
     </th:block>
 </head>
+
 <body>
 
-<!-- Main Content -->
-<div th:fragment="content">
+    <!-- Main Content -->
+    <div th:fragment="content">
 
-    <!-- Page Header -->
-    <div class="detail-header">
-        <div class="header-left">
-            <button type="button" class="btn-back" onclick="history.back()">
-                <i class="fas fa-arrow-left"></i>
-                뒤로가기
-            </button>
-            <h1 class="page-title">비품 등록</h1>
+        <!-- Page Header -->
+        <div class="detail-header">
+            <div class="header-left">
+                <button type="button" class="btn-back" onclick="history.back()">
+                    <i class="fas fa-arrow-left"></i>
+                    뒤로가기
+                </button>
+                <h1 class="page-title">비품 등록</h1>
+            </div>
+            <div class="header-actions">
+                <button type="button" class="btn-primary" id="btn-save">
+                    <i class="fas fa-save"></i>
+                    등록
+                </button>
+                <button type="button" class="btn-secondary" id="btn-cancel">
+                    <i class="fas fa-times"></i>
+                    취소
+                </button>
+            </div>
         </div>
-        <div class="header-actions">
-            <button type="button" class="btn-primary" id="btn-save">
-                <i class="fas fa-save"></i>
-                등록
-            </button>
-            <button type="button" class="btn-secondary" id="btn-cancel">
-                <i class="fas fa-times"></i>
-                취소
-            </button>
-        </div>
-    </div>
 
-    <!-- Content Wrapper -->
-    <div class="content-wrapper">
+        <!-- Content Wrapper -->
+        <div class="content-wrapper">
 
-        <!-- Left Column: 기본 정보 -->
-        <div class="left-column">
+            <!-- Left Column: 기본 정보 -->
+            <div class="left-column">
 
-            <!-- 기본 정보 섹션 -->
-            <section class="info-card">
-                <div class="card-header">
-                    <h2 class="card-title">
-                        <i class="fas fa-info-circle"></i>
-                        기본 정보
-                    </h2>
-                </div>
+                <!-- 기본 정보 섹션 -->
+                <section class="info-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-info-circle"></i>
+                            기본 정보
+                        </h2>
+                    </div>
 
-                <div class="card-body">
-                    <div class="info-grid">
+                    <div class="card-body">
+                        <div class="info-grid">
 
-                        <!-- 비품명 -->
-                        <div class="info-item">
-                            <label class="info-label">비품명 <span class="required">*</span></label>
-                            <input type="text"
-                                   class="info-input"
-                                   id="item-name"
-                                   placeholder="비품명을 입력하세요"
-                                   maxlength="50"/>
-                            <span class="hint" id="item-name-msg"></span>
-                        </div>
+                            <!-- 비품명 -->
+                            <div class="info-item">
+                                <label class="info-label">비품명 <span class="required">*</span></label>
+                                <input type="text" class="info-input" id="item-name" placeholder="비품명을 입력하세요"
+                                    maxlength="50" />
+                                <span class="hint" id="item-name-msg"></span>
+                            </div>
 
-                        <!-- 비품 이미지 업로드 -->
-                        <div class="item-image-wrapper">
-                            <label class="info-label">비품 이미지 (선택사항)</label>
-                            <div class="item-image-upload-container">
-                                <input type="file"
-                                       id="item-image-input"
-                                       accept="image/*"
-                                       style="display: none;">
-                                <div class="item-image-preview" id="item-image-preview">
-                                    <img id="preview-image"
-                                         src=""
-                                         alt="미리보기"
-                                         style="display: none;">
-                                    <div class="upload-placeholder" id="upload-placeholder">
-                                        <i class="fas fa-cloud-upload-alt"></i>
-                                        <p>클릭하여 이미지 업로드</p>
-                                        <span class="upload-hint">JPG, PNG, GIF (최대 5MB)</span>
+                            <!-- 비품 이미지 업로드 -->
+                            <div class="item-image-wrapper">
+                                <label class="info-label">비품 이미지 (선택사항)</label>
+                                <div class="item-image-upload-container">
+                                    <input type="file" id="item-image-input" accept="image/*" style="display: none;">
+                                    <div class="item-image-preview" id="item-image-preview">
+                                        <img id="preview-image" src="" alt="미리보기" style="display: none;">
+                                        <div class="upload-placeholder" id="upload-placeholder">
+                                            <i class="fas fa-cloud-upload-alt"></i>
+                                            <p>클릭하여 이미지 업로드</p>
+                                            <span class="upload-hint">JPG, PNG (최대 50MB)</span>
+                                        </div>
+                                    </div>
+                                    <div class="upload-actions">
+                                        <button type="button" class="btn-remove" id="btn-remove" style="display: none;">
+                                            <i class="fas fa-trash"></i>
+                                            제거
+                                        </button>
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- 카테고리 -->
+                            <div class="info-item">
+                                <label class="info-label">카테고리 <span class="required">*</span></label>
+                                <select class="info-select" id="item-category">
+                                    <option value="">카테고리 선택</option>
+                                </select>
+                                <span class="hint" id="item-category-msg"></span>
+                            </div>
+
+                            <div class="upload-actions">
+                                <button type="button" class="btn-remove" id="btn-remove" style="display: none;">
+                                    <i class="fas fa-trash"></i>
+                                    제거
+                                </button>
+                            </div>
+
+                            <!-- 상태 -->
+                            <div class="info-item">
+                                <label class="info-label">상태 <span class="required">*</span></label>
+                                <select class="info-select" id="item-status">
+                                    <option value="">상태 선택</option>
+                                </select>
+                                <span class="hint" id="item-status-msg"></span>
+                            </div>
                         </div>
 
-                        <!-- 카테고리 -->
-                        <div class="info-item">
-                            <label class="info-label">카테고리 <span class="required">*</span></label>
-                            <select class="info-select" id="item-category">
-                                <option value="">카테고리 선택</option>
-                            </select>
-                            <span class="hint" id="item-category-msg"></span>
-                        </div>
-
-                        <div class="upload-actions">
-                            <button type="button" class="btn-remove" id="btn-remove" style="display: none;">
-                                <i class="fas fa-trash"></i>
-                                제거
-                            </button>
-                        </div>
-
-                        <!-- 상태 -->
-                        <div class="info-item">
-                            <label class="info-label">상태 <span class="required">*</span></label>
-                            <select class="info-select" id="item-status">
-                                <option value="">상태 선택</option>
-                            </select>
-                            <span class="hint" id="item-status-msg"></span>
+                        <!-- 비고 -->
+                        <div class="info-description-wrapper">
+                            <label class="info-label">비고</label>
+                            <input type="text" class="info-textarea" id="item-description"
+                                placeholder="비고 내용을 입력하세요 (선택)" maxlength="50" />
+                            <span class="hint" id="item-description-msg"></span>
                         </div>
                     </div>
+                </section>
 
-                    <!-- 비고 -->
-                    <div class="info-description-wrapper">
-                        <label class="info-label">비고</label>
-                        <input type="text"
-                               class="info-textarea"
-                               id="item-description"
-                               placeholder="비고 내용을 입력하세요 (선택)"
-                               maxlength="50"/>
-                        <span class="hint" id="item-description-msg"></span>
-                    </div>
-                </div>
-            </section>
+            </div>
 
         </div>
-
     </div>
-</div>
 
 </body>
+
 </html>

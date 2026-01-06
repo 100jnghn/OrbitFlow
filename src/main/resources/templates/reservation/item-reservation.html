@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/layout-user :: layout(
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/layout-user :: layout(
         ~{::content},
         ~{fragments/header :: header},
         ~{sidebar/reservation/user-reservation-sidebar :: sidebar},
@@ -25,101 +24,112 @@
 </head>
 
 <body>
-<!-- Main Content -->
-<div th:fragment="content">
-    <div class="page-header">
-        <h1 class="page-title">기타 자원 예약</h1>
-    </div>
+    <!-- Main Content -->
+    <div th:fragment="content">
+        <div class="reservation-container">
+            <div class="page-header">
+                <h1 class="page-title">기타 자원 예약</h1>
+            </div>
 
-    <!-- Category and Date Selection -->
-    <div class="filter-section">
-        <div class="filter-item">
-            <label class="filter-label">카테고리</label>
-            <select class="filter-select" id="category-select">
-                <option value="">카테고리 선택</option>
-                <!-- JavaScript로 동적 생성 -->
-            </select>
-        </div>
-        <div class="filter-item">
-            <label class="filter-label">예약 날짜</label>
-            <select class="filter-select" id="reservation-date-select">
-                <!-- JavaScript로 동적 생성 -->
-            </select>
-        </div>
-    </div>
-
-    <!-- Reservation Grid and Image -->
-    <div class="grid-image-wrapper">
-        <div class="grid-container">
-            <div class="grid-inner">
-                <div class="grid-header">
-                    <div class="item-column-header"></div>
-                    <div class="times-header" id="times-header">
-                        <!-- JavaScript로 시간 헤더 생성 -->
-                    </div>
+            <!-- Category and Date Selection -->
+            <div class="filter-section">
+                <div class="filter-item">
+                    <label class="filter-label">카테고리</label>
+                    <select class="filter-select" id="category-select">
+                        <option value="">카테고리 선택</option>
+                        <!-- JavaScript로 동적 생성 -->
+                    </select>
                 </div>
-                <div class="grid-body-wrapper">
-                    <div class="grid-body" id="grid-body">
-                        <!-- JavaScript로 그리드 생성 -->
-                    </div>
+                <div class="filter-item">
+                    <label class="filter-label">예약 날짜</label>
+                    <select class="filter-select" id="reservation-date-select">
+                        <!-- JavaScript로 동적 생성 -->
+                    </select>
                 </div>
             </div>
-        </div>
-        <div class="item-image-section">
-            <img id="selected-item-image" src="" alt="" class="item-image">
+
+            <!-- Reservation Grid -->
+            <div class="grid-container">
+                <div class="grid-inner">
+                    <div class="grid-header">
+                        <div class="item-column-header"></div>
+                        <div class="times-header" id="times-header">
+                            <!-- JavaScript로 시간 헤더 생성 -->
+                        </div>
+                    </div>
+                    <div class="grid-body-wrapper">
+                        <div class="grid-body" id="grid-body">
+                            <!-- JavaScript로 그리드 생성 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item Image Modal -->
+            <div id="item-image-modal" class="modal">
+                <div class="modal-overlay" onclick="closeItemImageModal()"></div>
+                <div class="modal-content">
+                    <button class="modal-close" onclick="closeItemImageModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div class="modal-body">
+                        <h3 id="modal-item-name" class="modal-item-name"></h3>
+                        <div class="modal-image-container">
+                            <img id="modal-item-image" src="" alt="자원 이미지" class="modal-item-image">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reservation Form -->
+            <div class="reservation-form-container">
+                <div class="reservation-info-grid">
+                    <div class="info-item">
+                        <label class="info-label">신청자</label>
+                        <div class="info-value" id="applicant-name">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label class="info-label">자원</label>
+                        <div class="info-value" id="selected-item-name">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label class="info-label">카테고리</label>
+                        <div class="info-value" id="selected-item-category">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label class="info-label">비고</label>
+                        <div class="info-value" id="selected-item-description">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label class="info-label">날짜</label>
+                        <div class="info-value" id="selected-date">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label class="info-label">시작 시간</label>
+                        <div class="info-value" id="selected-start-time">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label class="info-label">종료 시간</label>
+                        <div class="info-value" id="selected-end-time">-</div>
+                    </div>
+                </div>
+
+                <div class="reservation-input-section">
+                    <div class="input-wrapper">
+                        <label class="form-label">신청 사유 <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="reservation-reason" placeholder="신청 사유를 입력하세요"
+                            maxlength="200">
+                        <div id="reservation-reason-msg" class="hint"></div>
+                    </div>
+                    <button type="button" class="btn-submit" id="btn-submit">
+                        <i class="fas fa-check"></i>
+                        신청
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
-
-    <!-- Reservation Form -->
-    <div class="reservation-form-container">
-        <div class="reservation-info-grid">
-            <div class="info-item">
-                <label class="info-label">신청자</label>
-                <div class="info-value" id="applicant-name">-</div>
-            </div>
-            <div class="info-item">
-                <label class="info-label">자원</label>
-                <div class="info-value" id="selected-item-name">-</div>
-            </div>
-            <div class="info-item">
-                <label class="info-label">카테고리</label>
-                <div class="info-value" id="selected-item-category">-</div>
-            </div>
-            <div class="info-item">
-                <label class="info-label">비고</label>
-                <div class="info-value" id="selected-item-description">-</div>
-            </div>
-            <div class="info-item">
-                <label class="info-label">날짜</label>
-                <div class="info-value" id="selected-date">-</div>
-            </div>
-            <div class="info-item">
-                <label class="info-label">시작 시간</label>
-                <div class="info-value" id="selected-start-time">-</div>
-            </div>
-            <div class="info-item">
-                <label class="info-label">종료 시간</label>
-                <div class="info-value" id="selected-end-time">-</div>
-            </div>
-        </div>
-
-        <div class="reservation-input-section">
-            <div class="input-wrapper">
-                <label class="form-label">신청 사유 <span class="required">*</span></label>
-                <input type="text"
-                       class="form-input"
-                       id="reservation-reason"
-                       placeholder="신청 사유를 입력하세요"
-                       maxlength="200">
-                <div id="reservation-reason-msg" class="hint"></div>
-            </div>
-            <button type="button" class="btn-submit" id="btn-submit">
-                <i class="fas fa-check"></i>
-                신청
-            </button>
-        </div>
-    </div>
-</div>
 
 </body>
+
 </html>
