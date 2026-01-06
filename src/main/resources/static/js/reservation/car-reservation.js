@@ -14,7 +14,7 @@ let dates = []; // 오늘부터 14일 후까지의 날짜 배열
 function generateDates() {
     dates = [];
     const today = new Date();
-    
+
     for (let i = 0; i < 14; i++) {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
@@ -80,7 +80,7 @@ async function loadReservations() {
         // 날짜 범위로 예약 조회 (오늘부터 14일 후까지)
         const startDate = dates[0].dateString;
         const endDate = dates[dates.length - 1].dateString;
-        
+
         const params = new URLSearchParams({
             startDate: startDate,
             endDate: endDate,
@@ -166,6 +166,7 @@ function renderGrid() {
         carNameCell.className = 'car-name-cell';
         carNameCell.textContent = car.name;
         carNameCell.title = car.name;
+        carNameCell.addEventListener('click', () => openCarImageModal(car));
         row.appendChild(carNameCell);
 
         // 날짜 셀들
@@ -213,12 +214,12 @@ function checkReservation(carId, dateString) {
     const reservation = reservations.find(r => {
         if (r.resourceId !== carId) return false;
         if (r.reservationStatusId !== 1 && r.reservationStatusId !== 2) return false; // 대기 or 확정만
-        
+
         // 예약 시작 날짜
         const startDate = r.reservationDate;
         // 예약 종료 날짜 (없으면 시작 날짜와 동일)
         const endDate = r.endDate || r.reservationDate;
-        
+
         // 날짜 범위 내에 있는지 확인
         return dateString >= startDate && dateString <= endDate;
     });
@@ -286,7 +287,7 @@ function handleCellClick(cell, car, dateString) {
 function isRangeAvailable(carId, startDate, endDate) {
     const startIndex = dates.findIndex(d => d.dateString === startDate);
     const endIndex = dates.findIndex(d => d.dateString === endDate);
-    
+
     if (startIndex === -1 || endIndex === -1) return false;
 
     for (let i = startIndex; i <= endIndex; i++) {
@@ -322,7 +323,7 @@ function updateSelection() {
     if (selectedCar && selectedStartDate !== null && selectedEndDate !== null) {
         const startIndex = dates.findIndex(d => d.dateString === selectedStartDate);
         const endIndex = dates.findIndex(d => d.dateString === selectedEndDate);
-        
+
         if (startIndex !== -1 && endIndex !== -1) {
             const minIndex = Math.min(startIndex, endIndex);
             const maxIndex = Math.max(startIndex, endIndex);
@@ -347,50 +348,22 @@ async function updateReservationForm() {
     document.getElementById('applicant-name').textContent = '사용자'; // TODO: 실제 사용자 정보
 
     // 차량 정보
-    const carImage = document.getElementById('selected-car-image');
     if (selectedCar) {
         document.getElementById('selected-car-name').textContent = selectedCar.name;
         document.getElementById('selected-car-number').textContent = selectedCar.number || '-';
         document.getElementById('selected-car-driver-age').textContent = selectedCar.driverAge ? `${selectedCar.driverAge}세 이상` : '-';
         document.getElementById('selected-car-description').textContent = selectedCar.description || '-';
-
-        // 차량 이미지 업데이트 (presigned URL 방식)
-        if (selectedCar.fileId) {
-            try {
-                // presigned URL 요청
-                const res = await apiFetch(`/api/files/${selectedCar.fileId}/presigned`);
-                if (!res.ok) throw new Error('presigned url 요청 실패');
-
-                const result = await res.json();
-                const imageUrl = result.data.url;
-
-                carImage.src = imageUrl;
-                carImage.style.display = 'block';
-            } catch (e) {
-                console.error('이미지 로드 실패', e);
-                // 실패 시 이미지 숨기기
-                carImage.src = '';
-                carImage.style.display = 'none';
-            }
-        } else {
-            carImage.src = '';
-            carImage.style.display = 'none';
-        }
     } else {
         document.getElementById('selected-car-name').textContent = '-';
         document.getElementById('selected-car-number').textContent = '-';
         document.getElementById('selected-car-driver-age').textContent = '-';
         document.getElementById('selected-car-description').textContent = '-';
-
-        // 차량 이미지 숨기기
-        carImage.src = '';
-        carImage.style.display = 'none';
     }
 
 
     // 시작 날짜
     document.getElementById('selected-start-date').textContent = selectedStartDate ? formatDateKorean(selectedStartDate) : '-';
-    
+
     // 종료 날짜
     document.getElementById('selected-end-date').textContent = selectedEndDate ? formatDateKorean(selectedEndDate) : '-';
 
@@ -433,9 +406,9 @@ function validateReservationReason(showEmptyMessage = true) {
 function updateSubmitButtonState() {
     const submitBtn = document.getElementById('btn-submit');
     const isValid = selectedCar &&
-                    selectedStartDate !== null &&
-                    selectedEndDate !== null &&
-                    validateReservationReason(false);
+        selectedStartDate !== null &&
+        selectedEndDate !== null &&
+        validateReservationReason(false);
     submitBtn.disabled = !isValid;
 }
 
@@ -499,6 +472,50 @@ async function submitReservation() {
 }
 
 /* ==========================
+   Car Image Modal Functions
+========================== */
+async function openCarImageModal(car) {
+    const modal = document.getElementById('car-image-modal');
+    const modalCarName = document.getElementById('modal-car-name');
+    const modalCarImage = document.getElementById('modal-car-image');
+
+    // 차량 이름 설정
+    modalCarName.textContent = car.name;
+
+    // 차량 이미지 로드
+    if (car.fileId) {
+        try {
+            // presigned URL 요청
+            const res = await apiFetch(`/api/files/${car.fileId}/presigned`);
+            if (!res.ok) throw new Error('presigned url 요청 실패');
+
+            const result = await res.json();
+            const imageUrl = result.data.url;
+
+            modalCarImage.src = imageUrl;
+            modalCarImage.style.display = 'block';
+        } catch (e) {
+            console.error('이미지 로드 실패', e);
+            modalCarImage.src = '';
+            modalCarImage.alt = '이미지를 불러올 수 없습니다.';
+        }
+    } else {
+        modalCarImage.src = '';
+        modalCarImage.alt = '등록된 이미지가 없습니다.';
+    }
+
+    // 모달 표시
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
+}
+
+function closeCarImageModal() {
+    const modal = document.getElementById('car-image-modal');
+    modal.classList.remove('show');
+    document.body.style.overflow = ''; // 배경 스크롤 복원
+}
+
+/* ==========================
    Event Listeners
 ========================== */
 function initEventListeners() {
@@ -523,6 +540,13 @@ function initEventListeners() {
             }
         });
     }
+
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeCarImageModal();
+        }
+    });
 }
 
 function updateApprovalSidebarSelection() {
