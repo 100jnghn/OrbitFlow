@@ -254,8 +254,7 @@
 
 /* 예약 불가 */
 .time-cell.unavailable {
-    background: #f8d7da;
-    color: #c62828;
+    background: #cbcbcb;
     cursor: not-allowed;
 }
 

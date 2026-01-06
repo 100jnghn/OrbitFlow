@@ -189,10 +189,10 @@ function renderGrid() {
             if (isReserved) {
                 if (isReserved.isMine) {
                     cell.className += ' my-reservation';
-                    cell.textContent = '예약됨';
+                    // cell.textContent = '예약됨';
                 } else {
                     cell.className += ' unavailable';
-                    cell.textContent = '예약 불가';
+                    // cell.textContent = '예약 불가';
                 }
             } else {
                 cell.className += ' available';
