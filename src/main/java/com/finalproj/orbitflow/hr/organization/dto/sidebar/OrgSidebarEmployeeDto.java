@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.hr.organization.dto.sidebar;
 
+import com.finalproj.orbitflow.hr.employee.enums.WorkStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -17,4 +18,6 @@ public class OrgSidebarEmployeeDto {
     private Long employeeId;
     private String name;
     private String internalPhone;
+    private WorkStatus workStatus;
+
 }

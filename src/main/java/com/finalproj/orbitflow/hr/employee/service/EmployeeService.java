@@ -6,6 +6,7 @@ import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.employee.dto.*;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
+import com.finalproj.orbitflow.hr.employee.enums.WorkStatus;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import com.finalproj.orbitflow.hr.logAudit.dto.AuditLogResDto;
 import com.finalproj.orbitflow.hr.logAudit.enums.AuditEntityType;
@@ -351,7 +352,10 @@ public class EmployeeService {
 
         switch (newStatus) {
             case ACTIVE -> throw new IllegalStateException("ACTIVE는 이메일 인증 전용");
-            case SUSPENDED -> employee.suspend();
+            case SUSPENDED -> {
+                employee.suspend();
+                employee.updateWorkStatus(WorkStatus.OFF_WORK);
+            }
             case RESIGNED -> processResignation(employee);
         }
 
@@ -368,6 +372,7 @@ public class EmployeeService {
 
     private void processResignation(Employee employee) {
         employee.resign();
+        employee.updateWorkStatus(WorkStatus.OFF_WORK);
         employee.changeEmail("resigned_" + employee.getId() + "@orbitflow.local");
         employee.changePassword(passwordEncoder.encode(UUID.randomUUID().toString()));
         employee.clearContactInfo();

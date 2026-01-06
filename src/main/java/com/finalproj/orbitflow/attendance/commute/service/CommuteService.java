@@ -135,4 +135,19 @@ public class CommuteService {
             throw new BusinessException("퇴근 시간(" + endTimeThreshold + ") 이전이라서 퇴근할 수 없습니다.");
         }
     }
+
+    // 조직도 페이지 - 사원 근무 상태 조회
+    @Transactional(readOnly = true)
+    public WorkStatus getEmployeeWorkStatus(Long companyId, Long employeeId) {
+
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new BusinessException("사원 정보를 찾을 수 없습니다."));
+
+        if (!employee.getCompany().getId().equals(companyId)) {
+            throw new BusinessException("다른 회사의 사원입니다.");
+        }
+
+        return employee.getWorkStatus();
+    }
+
 }

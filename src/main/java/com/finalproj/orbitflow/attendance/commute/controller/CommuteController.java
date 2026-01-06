@@ -1,6 +1,7 @@
 package com.finalproj.orbitflow.attendance.commute.controller;
 
 import com.finalproj.orbitflow.attendance.commute.dto.ActiveRuleResDto;
+import com.finalproj.orbitflow.attendance.commute.dto.EmployeeWorkStatusResDto;
 import com.finalproj.orbitflow.attendance.commute.dto.TodayAttResDto;
 import com.finalproj.orbitflow.attendance.commute.service.CommuteService;
 import com.finalproj.orbitflow.global.common.ResponseDto;
@@ -86,4 +87,24 @@ public class CommuteController {
                 result
         ));
     }
+
+    @GetMapping("/work-status/{employeeId}")
+    public ResponseEntity<?> getEmployeeWorkStatus(
+            @PathVariable Long employeeId,
+            @AuthenticationPrincipal SecurityUser user
+    ) {
+        return ResponseEntity.ok(
+                new ResponseDto<>(
+                        HttpStatus.OK,
+                        "사원 근무 상태 조회 성공",
+                        new EmployeeWorkStatusResDto(
+                                commuteService.getEmployeeWorkStatus(
+                                        user.getCompanyId(),
+                                        employeeId
+                                )
+                        )
+                )
+        );
+    }
+
 }

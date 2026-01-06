@@ -6,10 +6,32 @@
     width: 250px;
     background: #0b1220 !important;
     color: #fff;
+
     display: flex;
     flex-direction: column;
-    z-index: 100;
 }
+
+
+.sidebar-inner {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+
+/* 메뉴 영역만 스크롤 */
+.sidebar-menu-wrapper {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* 내선번호는 항상 하단 고정 */
+.sidebar-footer {
+    margin-top: auto;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    background: #0b1220;
+}
+
 
 /* 사이드바 메뉴 오버라이드 */
 .sidebar-menu {
@@ -195,15 +217,26 @@
 }
 
 .extension-emp {
-    padding: 4px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* 좌/우 분리 */
+    padding: 4px 14px;
     cursor: pointer;
     color: #ccc;
+}
+
+/* 왼쪽 묶음 */
+.extension-emp .name {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .extension-emp:hover {
     background: rgba(255,255,255,0.08);
 }
 
+/* 내선번호를 이름 옆으로 */
 .extension-emp .phone {
     color: #9ecbff;
     margin-left: 6px;
@@ -212,4 +245,43 @@
 .extension-emp.active {
     background: rgba(255,255,255,0.15);
     color: #fff;
+}
+
+.work-dot {
+    margin-left: 6px;
+    font-size: 10px;
+    vertical-align: middle;
+}
+
+.work-dot.working { color: #22c55e; }   /* 근무중 */
+.work-dot.away { color: #f59e0b; }      /* 자리비움 */
+.work-dot.off_work { color: #9ca3af; }  /* 퇴근 */
+
+/* 왼쪽 묶음 (이름 + 내선번호) */
+.extension-emp .emp-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* 오른쪽 점 */
+.extension-emp .work-dot {
+    font-size: 10px;
+}
+
+.extension-tree {
+    background: #0b1220;
+}
+
+.extension-emp:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.extension-emp.active {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* 조직/사원 영역도 배경 명시 (안정성) */
+.extension-org {
+    background: #0b1220;
 }
