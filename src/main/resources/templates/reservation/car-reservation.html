@@ -26,87 +26,89 @@
 <body>
     <!-- Main Content -->
     <div th:fragment="content">
-        <div class="page-header">
-            <h1 class="page-title">차량 예약</h1>
-        </div>
-
-        <!-- Reservation Grid -->
-        <div class="grid-container">
-            <div class="grid-inner">
-                <div class="grid-header">
-                    <div class="car-column-header"></div>
-                    <div class="dates-header" id="dates-header">
-                        <!-- JavaScript로 날짜 헤더 생성 -->
-                    </div>
-                </div>
-                <div class="grid-body-wrapper">
-                    <div class="grid-body" id="grid-body">
-                        <!-- JavaScript로 그리드 생성 -->
-                    </div>
-                </div>
+        <div class="reservation-container">
+            <div class="page-header">
+                <h1 class="page-title">차량 예약</h1>
             </div>
-        </div>
 
-        <!-- Car Image Modal -->
-        <div id="car-image-modal" class="modal">
-            <div class="modal-overlay" onclick="closeCarImageModal()"></div>
-            <div class="modal-content">
-                <button class="modal-close" onclick="closeCarImageModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-                <div class="modal-body">
-                    <h3 id="modal-car-name" class="modal-car-name"></h3>
-                    <div class="modal-image-container">
-                        <img id="modal-car-image" src="" alt="차량 이미지" class="modal-car-image">
+            <!-- Reservation Grid -->
+            <div class="grid-container">
+                <div class="grid-inner">
+                    <div class="grid-header">
+                        <div class="car-column-header"></div>
+                        <div class="dates-header" id="dates-header">
+                            <!-- JavaScript로 날짜 헤더 생성 -->
+                        </div>
+                    </div>
+                    <div class="grid-body-wrapper">
+                        <div class="grid-body" id="grid-body">
+                            <!-- JavaScript로 그리드 생성 -->
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Reservation Form -->
-        <div class="reservation-form-container">
-            <div class="reservation-info-grid">
-                <div class="info-item">
-                    <label class="info-label">신청자</label>
-                    <div class="info-value" id="applicant-name">-</div>
-                </div>
-                <div class="info-item">
-                    <label class="info-label">차량</label>
-                    <div class="info-value" id="selected-car-name">-</div>
-                </div>
-                <div class="info-item">
-                    <label class="info-label">차량 번호</label>
-                    <div class="info-value" id="selected-car-number">-</div>
-                </div>
-                <div class="info-item">
-                    <label class="info-label">운전 가능 나이</label>
-                    <div class="info-value" id="selected-car-driver-age">-</div>
-                </div>
-                <div class="info-item">
-                    <label class="info-label">비고</label>
-                    <div class="info-value" id="selected-car-description">-</div>
-                </div>
-                <div class="info-item">
-                    <label class="info-label">시작 날짜</label>
-                    <div class="info-value" id="selected-start-date">-</div>
-                </div>
-                <div class="info-item">
-                    <label class="info-label">종료 날짜</label>
-                    <div class="info-value" id="selected-end-date">-</div>
+            <!-- Car Image Modal -->
+            <div id="car-image-modal" class="modal">
+                <div class="modal-overlay" onclick="closeCarImageModal()"></div>
+                <div class="modal-content">
+                    <button class="modal-close" onclick="closeCarImageModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div class="modal-body">
+                        <h3 id="modal-car-name" class="modal-car-name"></h3>
+                        <div class="modal-image-container">
+                            <img id="modal-car-image" src="" alt="차량 이미지" class="modal-car-image">
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="reservation-input-section">
-                <div class="input-wrapper">
-                    <label class="form-label">신청 사유 <span class="required">*</span></label>
-                    <input type="text" class="form-input" id="reservation-reason" placeholder="신청 사유를 입력하세요"
-                        maxlength="200">
-                    <div id="reservation-reason-msg" class="hint"></div>
+            <!-- Reservation Form -->
+            <div class="reservation-form-container">
+                <div class="reservation-info-grid">
+                    <div class="info-item">
+                        <label class="info-label">신청자</label>
+                        <div class="info-value" id="applicant-name">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label class="info-label">차량</label>
+                        <div class="info-value" id="selected-car-name">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label class="info-label">차량 번호</label>
+                        <div class="info-value" id="selected-car-number">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label class="info-label">운전 가능 나이</label>
+                        <div class="info-value" id="selected-car-driver-age">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label class="info-label">비고</label>
+                        <div class="info-value" id="selected-car-description">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label class="info-label">시작 날짜</label>
+                        <div class="info-value" id="selected-start-date">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label class="info-label">종료 날짜</label>
+                        <div class="info-value" id="selected-end-date">-</div>
+                    </div>
                 </div>
-                <button type="button" class="btn-submit" id="btn-submit">
-                    <i class="fas fa-check"></i>
-                    신청
-                </button>
+
+                <div class="reservation-input-section">
+                    <div class="input-wrapper">
+                        <label class="form-label">신청 사유 <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="reservation-reason" placeholder="신청 사유를 입력하세요"
+                            maxlength="200">
+                        <div id="reservation-reason-msg" class="hint"></div>
+                    </div>
+                    <button type="button" class="btn-submit" id="btn-submit">
+                        <i class="fas fa-check"></i>
+                        신청
+                    </button>
+                </div>
             </div>
         </div>
     </div>
