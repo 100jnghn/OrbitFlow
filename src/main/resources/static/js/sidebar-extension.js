@@ -1,13 +1,3 @@
-/* =========================
-   Work Status Dot
-========================= */
-function createWorkStatusDot(workStatus) {
-    const dot = document.createElement('span');
-    dot.className = `work-dot ${workStatus?.toLowerCase() ?? 'unknown'}`;
-    dot.textContent = '●';
-    return dot;
-}
-
 document.addEventListener('DOMContentLoaded', () => {
 
     const toggle = document.getElementById('extension-toggle');
@@ -17,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!toggle || !treeEl) return;
 
     /* =========================
-       메인 / 조직도 페이지 기본 OPEN
+       기본 OPEN 페이지
     ========================= */
     const isOrganizationPage =
         location.pathname.startsWith('/view/organizations');
@@ -68,17 +58,14 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(err => console.error('내선번호 조회 실패', err));
     }
 
-    // 🔹 외부에서도 호출 가능 (출근/퇴근 직후 즉시 반영용)
+    // 외부에서도 호출 가능
     window.reloadExtensionTree = loadExtensionTree;
 
     /* =========================
-       Polling (10초)
+       Polling
     ========================= */
-    loadExtensionTree(); // 최초 1회
-
-    setInterval(() => {
-        loadExtensionTree();
-    }, 10000);
+    loadExtensionTree(); // 최초
+    setInterval(loadExtensionTree, 10000);
 
     /* =========================
        트리 렌더링
@@ -114,8 +101,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 leftWrap.appendChild(nameSpan);
                 leftWrap.appendChild(phoneSpan);
 
-                /* 오른쪽: 근무 상태 점 */
-                const workDot = createWorkStatusDot(emp.workStatus);
+                /* 오른쪽: 근무 상태 점 (※ 여기서 1번만 생성) */
+                const workDot = document.createElement('span');
+                workDot.className = 'work-dot';
+
+                applyWorkStatusClass(workDot, emp.workStatus);
 
                 empDiv.appendChild(leftWrap);
                 empDiv.appendChild(workDot);
@@ -125,12 +115,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         .forEach(el => el.classList.remove('active'));
                     empDiv.classList.add('active');
 
-                    // 조직도 페이지면 → 우측 패널만 갱신
                     if (typeof window.loadEmployeeDetail === 'function') {
                         window.loadEmployeeDetail(emp.employeeId);
-                    }
-                    // 그 외 페이지면 → 조직도 페이지로 이동
-                    else {
+                    } else {
                         location.href = `/view/organizations?employeeId=${emp.employeeId}`;
                     }
                 });
@@ -143,5 +130,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderTree(org.children, depth + 1);
             }
         });
+    }
+
+    /* =========================
+       근무 상태 class 적용 (중복 방지 핵심)
+    ========================= */
+    function applyWorkStatusClass(dotEl, workStatus) {
+        dotEl.className = 'work-dot'; // 항상 초기화
+
+        if (workStatus === 'WORKING') {
+            dotEl.classList.add('working');
+        } else if (workStatus === 'AWAY') {
+            dotEl.classList.add('away');
+        } else {
+            dotEl.classList.add('off');
+        }
     }
 });

@@ -15,6 +15,8 @@
     <link rel="stylesheet" th:href="@{/css/layout-admin.css}">
     <link rel="stylesheet" th:href="@{/css/header.css}">
     <link rel="stylesheet" th:href="@{/css/notification/notification.css}">
+    <link rel="stylesheet" th:href="@{/css/sidebar-extension.css}">
+
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
@@ -51,6 +53,7 @@
 <script src="https://unpkg.com/event-source-polyfill/src/eventsource.min.js"></script>
 <script th:src="@{/js/common.js}"></script>
 <script th:src="@{/js/notification/notification.js}"></script>
+<script th:src="@{/js/sidebar-extension.js}"></script>
 
 <!-- ✅ 페이지별 JS 삽입 위치 (이 줄이 핵심) -->
 <th:block th:replace="${pageScript}"></th:block>
