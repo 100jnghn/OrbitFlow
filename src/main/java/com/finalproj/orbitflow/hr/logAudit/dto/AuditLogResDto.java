@@ -18,16 +18,28 @@ import java.util.Map;
 @AllArgsConstructor
 public class AuditLogResDto {
     private Long id;
+
+    private String entityType;   // 대상
+    private Long entityId;       // 대상 ID
+
+    private String entityDisplay; // 화면 표시용
+
+
     private String eventType;
     private String actorName;
     private String actorEmail;
+
     private Map<String, Object> beforeData;
     private Map<String, Object> afterData;
+
     private Instant createdAt;
 
     public static AuditLogResDto from(AuditLog log) {
         return new AuditLogResDto(
                 log.getId(),
+                log.getEntityType().name(),
+                log.getEntityId(),
+                log.getEntityType().getDisplayName(),
                 log.getEventType().name(),
                 log.getActor().getName(),
                 log.getActor().getEmail(),
