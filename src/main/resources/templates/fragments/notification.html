@@ -1,28 +1,34 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <body>
 
-<!-- 알림 드롭다운 -->
-<div th:fragment="body">
-<div id="notificationDropdown" class="notification-dropdown hidden">
-    <div class="notification-dropdown-panel">
-        <div class="notification-dropdown-head">
-            <h2>알림</h2>
-            <button class="notification-dropdown-close-btn" onclick="toggleNotificationDropdown()">✕</button>
-        </div>
-        
-        <div class="notification-dropdown-tabs">
-            <button class="notification-tab" id="unreadTab" onclick="switchTab('unread')">읽지 않음</button>
-            <button class="notification-tab" id="readTab" onclick="switchTab('read')">읽음</button>
-        </div>
-        
-        <div class="notification-dropdown-body" id="notificationList">
-            <!-- 알림 목록이 여기에 동적으로 추가됩니다 -->
+    <!-- 알림 드롭다운 -->
+    <div th:fragment="body">
+        <div id="notificationDropdown" class="notification-dropdown hidden">
+            <div class="notification-dropdown-panel">
+                <div class="notification-dropdown-head">
+                    <h2>알림</h2>
+                    <button class="notification-dropdown-close-btn" onclick="toggleNotificationDropdown()">✕</button>
+                </div>
+
+                <div class="notification-dropdown-tabs">
+                    <div class="notification-tabs-left">
+                        <button class="notification-tab" id="unreadTab" onclick="switchTab('unread')">읽지 않음</button>
+                        <button class="notification-tab" id="readTab" onclick="switchTab('read')">읽음</button>
+                    </div>
+                    <button class="notification-mark-all-read-btn" onclick="markAllAsRead()" title="모두 읽음 처리">
+                        모두 읽음
+                    </button>
+                </div>
+
+                <div class="notification-dropdown-body" id="notificationList">
+                    <!-- 알림 목록이 여기에 동적으로 추가됩니다 -->
+                </div>
+            </div>
         </div>
     </div>
-</div>
-</div>
 
 </body>
-</html>
 
+</html>
