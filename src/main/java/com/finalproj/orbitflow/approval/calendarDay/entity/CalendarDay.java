@@ -47,6 +47,9 @@ public class CalendarDay {
     }
 
     public boolean isChargeableForLeave() {
-        return dayType.isChargeableForLeave();
+        return dayType.isChargeableForLeave()
+                && dayOfWeek >= 1
+                && dayOfWeek <= 5;
     }
+
 }

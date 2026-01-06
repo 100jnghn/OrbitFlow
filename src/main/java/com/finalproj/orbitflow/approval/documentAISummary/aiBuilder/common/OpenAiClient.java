@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.documentAISummary.aiBuilder;
+package com.finalproj.orbitflow.approval.documentAISummary.aiBuilder.common;
 
 import com.finalproj.orbitflow.openAi.dto.OpenAiChatReqDto;
 import com.finalproj.orbitflow.openAi.dto.OpenAiChatResDto;

@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.approval.approvalLine.service;
 
 import com.finalproj.orbitflow.approval.approvalLine.dto.ApprovalRuleResDto;
 import com.finalproj.orbitflow.approval.approvalLine.entity.ApprovalLine;
+import com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus;
 import com.finalproj.orbitflow.approval.approvalLine.repository.ApprovalLineRepository;
 import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
@@ -55,5 +56,13 @@ public class ApprovalLineService {
                 .orElseThrow(() -> new NotFoundException("ApprovalLine not found"));
 
         line.setApprover(approver);
+    }
+
+    public String findRejectComment(Long documentId) {
+        return approvalLineRepository
+                .findByDocument_IdAndStatus(documentId, ApprovalStatus.REJECTED)
+                .map(ApprovalLine::getComment)
+                .filter(c -> c != null && !c.isBlank())
+                .orElse(null);
     }
 }
