@@ -19,4 +19,6 @@ import java.util.Optional;
 public interface DocumentAiSummaryRepository extends JpaRepository<DocumentAISummary, Long> {
 
     Optional<DocumentAISummary> findByDocumentAndSummaryType(Document document, SummaryType summaryType);
+
+    Optional<DocumentAISummary> findByDocumentAndBeforeDocumentAndSummaryType(Document document, Document beforeDocument, SummaryType summaryType);
 }

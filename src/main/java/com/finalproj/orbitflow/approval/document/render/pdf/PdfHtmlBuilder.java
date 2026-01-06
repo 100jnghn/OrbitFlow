@@ -39,7 +39,7 @@ public class PdfHtmlBuilder {
                 <html lang="ko">
                 <head>
                     <meta charset="UTF-8"/>
-                    <link rel="stylesheet" href="css/user-document/pdf-view.css"/>
+                    <link rel="stylesheet" href="/css/user-document/pdf-view.css"/>
                 </head>
                 <body class="pdf-document">
                 

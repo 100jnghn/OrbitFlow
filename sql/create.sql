@@ -263,11 +263,14 @@ CREATE TABLE refresh_token
 CREATE TABLE leave_type
 (
     id           BIGINT AUTO_INCREMENT PRIMARY KEY,
-    type_name    VARCHAR(50) NOT NULL,
-    is_countable BOOLEAN     NOT NULL,
+    type_name    VARCHAR(50)   NOT NULL,
+    is_countable BOOLEAN       NOT NULL,
     description  VARCHAR(255),
-    created_at   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+    unit_days    DECIMAL(5, 3) NOT NULL,
+
+    created_at   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE = InnoDB;
 

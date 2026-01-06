@@ -22,4 +22,5 @@ public class AiSummaryReqDto {
 
     private List<AiSummaryField> coreFields;
     private List<AiSummaryField> optionalFields;
+    private List<String> attachmentNames; // 파일명만
 }

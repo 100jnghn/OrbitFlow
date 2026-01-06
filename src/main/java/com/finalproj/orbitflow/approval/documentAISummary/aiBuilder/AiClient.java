@@ -11,4 +11,5 @@ package com.finalproj.orbitflow.approval.documentAISummary.aiBuilder;
 
 public interface AiClient {
     String summarize(String prompt);
+    String diff(String prompt);
 }
