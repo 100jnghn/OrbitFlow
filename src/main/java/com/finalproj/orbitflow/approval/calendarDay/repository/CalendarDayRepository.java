@@ -16,5 +16,8 @@ import java.time.LocalDate;
 
 public interface CalendarDayRepository extends JpaRepository<CalendarDay, LocalDate> {
 
-    boolean existsByDateAndPublicHolidayTrue(LocalDate date);
+
+    void deleteByDateBetween(LocalDate start, LocalDate end);
+
+    long countByDateBetween(LocalDate start, LocalDate end);
 }

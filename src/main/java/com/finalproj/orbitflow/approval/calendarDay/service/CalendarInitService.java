@@ -1,6 +1,7 @@
 package com.finalproj.orbitflow.approval.calendarDay.service;
 
 import com.finalproj.orbitflow.approval.calendarDay.entity.CalendarDay;
+import com.finalproj.orbitflow.approval.calendarDay.enums.CalendarDayType;
 import com.finalproj.orbitflow.approval.calendarDay.repository.CalendarDayRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,13 +28,23 @@ public class CalendarInitService {
     private final HolidayProvider holidayProvider; // 공휴일 공급자
 
     @Transactional
+    public void regenerateYear(int year) {
+
+        LocalDate start = LocalDate.of(year, 1, 1);
+        LocalDate end = LocalDate.of(year, 12, 31);
+
+        calendarDayRepository.deleteByDateBetween(start, end);
+        generateYear(year);
+    }
+
+    @Transactional
     public void generateYear(int year) {
 
         LocalDate start = LocalDate.of(year, 1, 1);
         LocalDate end = LocalDate.of(year, 12, 31);
 
-        Map<LocalDate, String> holidays =
-                holidayProvider.getHolidays(year); // date -> name
+        Map<LocalDate, String> publicHolidays =
+                holidayProvider.getHolidays(year); // 공공 공휴일 only
 
         for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
 
@@ -41,12 +52,24 @@ public class CalendarInitService {
 
             DayOfWeek dow = date.getDayOfWeek();
 
-            String holidayName = holidays.get(date);
+            CalendarDayType dayType = CalendarDayType.WORKDAY;
+            String holidayName = null;
+
+            /* 1️⃣ 근로자의 날 (고정 유급휴무일) */
+            if (date.getMonthValue() == 5 && date.getDayOfMonth() == 1) {
+                dayType = CalendarDayType.PAID_HOLIDAY;
+                holidayName = "근로자의 날";
+            }
+            /* 2️⃣ 공공 공휴일 */
+            else if (publicHolidays.containsKey(date)) {
+                dayType = CalendarDayType.PUBLIC_HOLIDAY;
+                holidayName = publicHolidays.get(date);
+            }
 
             CalendarDay day = new CalendarDay(
                     date,
                     dow.getValue(),
-                    holidayName != null,
+                    dayType,
                     holidayName
             );
 
