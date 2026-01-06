@@ -96,11 +96,13 @@
     min-height: 280px;
     max-height: 280px;
     box-sizing: border-box;
+    overflow-x: auto;
 }
 
 .grid-inner {
     display: block;
     width: 100%;
+    min-width: max-content;
 }
 
 .grid-header {
