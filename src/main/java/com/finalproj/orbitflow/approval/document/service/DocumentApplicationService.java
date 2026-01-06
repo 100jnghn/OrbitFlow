@@ -4,14 +4,13 @@ import com.finalproj.orbitflow.approval.approvalLine.entity.ApprovalLine;
 import com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus;
 import com.finalproj.orbitflow.approval.approvalLine.repository.ApprovalLineRepository;
 import com.finalproj.orbitflow.approval.approvalLine.service.ApprovalLineDomainService;
-import com.finalproj.orbitflow.approval.document.documentContentRender.PdfContentSchema;
 import com.finalproj.orbitflow.approval.document.dto.DocumentCreateResDto;
 import com.finalproj.orbitflow.approval.document.dto.PdfApprovalLineDto;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
+import com.finalproj.orbitflow.approval.document.render.pdf.PdfHtmlBuilder;
 import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
-import com.finalproj.orbitflow.approval.document.schema.PdfApprovalLineAssembler;
-import com.finalproj.orbitflow.approval.document.schema.PdfContentSchemaAssembler;
+import com.finalproj.orbitflow.approval.document.schema.PdfContentSchema;
 import com.finalproj.orbitflow.approval.documentContent.entity.DocumentContent;
 import com.finalproj.orbitflow.approval.documentContent.repository.DocumentContentRepository;
 import com.finalproj.orbitflow.approval.documentFile.entity.DocumentFile;
@@ -39,8 +38,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.ByteArrayOutputStream;
@@ -297,9 +294,8 @@ public class DocumentApplicationService {
                     true
             );
 
-            // 🔥 baseUri: classpath 기준 (운영/로컬/Docker 모두 안전)
             String baseUri = requireNonNull(
-                    getClass().getClassLoader().getResource("")
+                    getClass().getClassLoader().getResource("static/")
             ).toExternalForm();
 
             builder.withHtmlContent(html, baseUri);
@@ -486,25 +482,27 @@ public class DocumentApplicationService {
         entityManager.flush();
 
         // afterCommit에서 S3 삭제 등록
-        TransactionSynchronizationManager.registerSynchronization(
-                new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        for (String objectKey : deletedObjectKeys) {
-                            try {
-                                fileService.deleteObject(objectKey);
-                            } catch (Exception e) {
-                                log.error(
-                                        "[S3_DELETE_FAIL] documentId={}, objectKey={}",
-                                        documentId,
-                                        objectKey,
-                                        e
-                                );
-                            }
-                        }
-                    }
-                }
-        );
+        //TransactionSynchronizationManager.registerSynchronization(
+        //        new TransactionSynchronization() {
+        //            @Override
+        //            public void afterCommit() {
+        //                for (String objectKey : deletedObjectKeys) {
+        //                    try {
+        //                        fileService.deleteObject(objectKey);
+        //                    } catch (Exception e) {
+        //                        log.error(
+        //                                "[S3_DELETE_FAIL] documentId={}, objectKey={}",
+        //                                documentId,
+        //                                objectKey,
+        //                                e
+        //                        );
+        //                    }
+        //                }
+        //            }
+        //        }
+        //);
+
+        deletedObjectKeys.forEach(fileService::deleteObjectAfterCommit);
     }
 
     private List<ApprovalLine> getApprovalLines(Long documentId) {

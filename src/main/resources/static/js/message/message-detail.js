@@ -7,19 +7,19 @@ let currentFolder = 'INBOX';
 let messageDetailData = null;  // 메시지 상세 데이터 저장용
 
 // 페이지 로드 시 초기화
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', async function () {
     // URL 파라미터에서 messageId와 folder 가져오기
     const urlParams = new URLSearchParams(window.location.search);
     messageId = urlParams.get('messageId');
     currentFolder = urlParams.get('folder') || 'INBOX';
-    
+
     if (messageId) {
         messageId = parseInt(messageId);
         loadMessageDetail();
     } else {
         showError('메시지 ID가 없습니다.');
     }
-    
+
     // 사이드바 선택 효과
     updateSidebarSelection();
 });
@@ -31,12 +31,12 @@ function updateSidebarSelection() {
         'SENT': document.getElementById('sentLink'),
         'ARCHIVE': document.getElementById('archiveLink')
     };
-    
+
     // 모든 선택 상태 초기화
     document.querySelectorAll('.menu-item.no-sub').forEach(item => {
         item.classList.remove('selected');
     });
-    
+
     // 현재 폴더 선택
     if (currentFolder && links[currentFolder]) {
         const menuItem = links[currentFolder].closest('.menu-item.no-sub');
@@ -54,12 +54,12 @@ async function loadMessageDetail() {
         // recipientId 파라미터 추가 (보낸 메시지함에서 특정 수신자 선택 시)
         const urlParams = new URLSearchParams(window.location.search);
         const recipientId = urlParams.get('recipientId');
-        
+
         let url = `${MESSAGE_API}/${messageId}`;
         if (recipientId) {
             url += `?recipientId=${recipientId}`;
         }
-        
+
         const response = await apiFetch(url, {
             method: 'GET',
             headers: {
@@ -86,7 +86,7 @@ async function loadMessageDetail() {
             messageDetailData = message;  // 메시지 상세 데이터 저장
             window.messageDetailData = message;  // goBack 함수에서 사용하기 위해 전역 변수로도 저장
             renderMessageDetail(message);
-            
+
             // 받은 메시지함(INBOX)이고 읽지 않았던 메시지인 경우 헤더 카운트 업데이트
             // 백엔드에서 자동으로 읽음 처리되므로, 카운트를 즉시 업데이트
             if (message.folderType === 'INBOX' && typeof updateMessageCount === 'function') {
@@ -112,10 +112,10 @@ function renderMessageDetail(message) {
     const folderType = message.folderType || currentFolder;  // 백엔드에서 받은 folderType 사용
     const archived = message.archived !== undefined ? message.archived : false;
     const createdAt = formatDateTime(message.createdAt);
-    
+
     // 실제 폴더 타입에 따라 표시할 폴더명 결정 (보관함인 경우 원래 폴더 타입으로)
     const displayFolderType = archived ? 'ARCHIVE' : folderType;
-    
+
     // 폴더명 표시
     const folderNames = {
         'INBOX': '받은 메시지함',
@@ -167,7 +167,7 @@ function renderMessageDetail(message) {
     // 발신자/수신자 표시 (folderType에 따라)
     let peerInfo = '';
     const recipientName = message.recipientName || '';
-    
+
     if (folderType === 'INBOX') {
         peerInfo = `<span class="meta-item">
             <i class="fas fa-user"></i> 발신자: ${escapeHTML(senderName)}
@@ -193,20 +193,23 @@ function renderMessageDetail(message) {
     }
 
     // 첨부파일 정보
-    const fileId = message.fileId;
+    const files = message.files || [];
     let fileSection = '';
-    if (fileId) {
+    if (files && files.length > 0) {
         fileSection = `
             <div class="board-detail-files">
                 <h3 class="files-title">
                     <i class="fas fa-paperclip"></i> 첨부파일
                 </h3>
                 <ul class="files-list">
-                    <li class="file-item">
-                        <a href="#" class="file-link" onclick="downloadMessageFile(${fileId}); return false;">
-                            <i class="fas fa-file"></i> 첨부파일
-                        </a>
-                    </li>
+                    ${files.map(file => `
+                        <li class="file-item">
+                            <a href="#" class="file-link" onclick="downloadMessageFile(${file.id}); return false;">
+                                <i class="fas fa-file"></i> ${escapeHTML(file.originalFileName)}
+                                ${file.fileSize ? `<span class="file-size">(${formatFileSize(file.fileSize)})</span>` : ''}
+                            </a>
+                        </li>
+                    `).join('')}
                 </ul>
             </div>
         `;
@@ -256,13 +259,13 @@ function goBack() {
         'SENT': '/view/message/sent',
         'ARCHIVE': '/view/message/archive'
     };
-    
+
     // currentFolder가 ARCHIVE로 설정되어 있으면 보관함으로, 아니면 원래 폴더로
     let targetFolder = currentFolder;
     if (currentFolder === 'ARCHIVE' || window.messageDetailData?.archived) {
         targetFolder = 'ARCHIVE';
     }
-    
+
     const path = folderPaths[targetFolder] || '/view/message/inbox';
     window.location.href = path;
 }
@@ -273,11 +276,11 @@ async function archiveMessage() {
         alert('메시지 ID가 없습니다.');
         return;
     }
-    
+
     if (!confirm('메시지를 보관함으로 이동하시겠습니까?')) {
         return;
     }
-    
+
     try {
         const response = await apiFetch(`${MESSAGE_API}/${messageId}/archive`, {
             method: 'PATCH',
@@ -285,7 +288,7 @@ async function archiveMessage() {
                 'Content-Type': 'application/json'
             }
         });
-        
+
         if (!response.ok) {
             if (response.status === 401) {
                 location.href = '/login';
@@ -293,9 +296,9 @@ async function archiveMessage() {
             }
             throw new Error('보관함 이동에 실패했습니다.');
         }
-        
+
         alert('보관함으로 이동되었습니다.');
-        
+
         // 보관함으로 이동
         window.location.href = '/view/message/archive';
     } catch (error) {
@@ -310,11 +313,11 @@ async function unarchiveMessage() {
         alert('메시지 ID가 없습니다.');
         return;
     }
-    
+
     if (!confirm('메시지를 보관함에서 해제하시겠습니까?')) {
         return;
     }
-    
+
     try {
         const response = await apiFetch(`${MESSAGE_API}/${messageId}/unarchive`, {
             method: 'PATCH',
@@ -322,7 +325,7 @@ async function unarchiveMessage() {
                 'Content-Type': 'application/json'
             }
         });
-        
+
         if (!response.ok) {
             if (response.status === 401) {
                 location.href = '/login';
@@ -330,9 +333,9 @@ async function unarchiveMessage() {
             }
             throw new Error('보관 해제에 실패했습니다.');
         }
-        
+
         alert('보관함에서 해제되었습니다.');
-        
+
         // 원래 폴더로 이동 (folderType에 따라)
         const folderType = messageDetailData?.folderType || 'INBOX';
         if (folderType === 'INBOX') {
@@ -352,11 +355,11 @@ async function deleteMessage() {
         alert('메시지 ID가 없습니다.');
         return;
     }
-    
+
     if (!confirm('메시지를 삭제하시겠습니까?\n삭제된 메시지는 복구할 수 없습니다.')) {
         return;
     }
-    
+
     try {
         const response = await apiFetch(`${MESSAGE_API}/${messageId}`, {
             method: 'DELETE',
@@ -364,7 +367,7 @@ async function deleteMessage() {
                 'Content-Type': 'application/json'
             }
         });
-        
+
         if (!response.ok) {
             if (response.status === 401) {
                 location.href = '/login';
@@ -372,9 +375,9 @@ async function deleteMessage() {
             }
             throw new Error('메시지 삭제에 실패했습니다.');
         }
-        
+
         alert('메시지가 삭제되었습니다.');
-        
+
         // 현재 폴더에 따라 목록으로 이동
         const folderType = messageDetailData?.folderType || currentFolder;
         if (messageDetailData?.archived) {
@@ -394,7 +397,7 @@ async function deleteMessage() {
 function showError(message) {
     const content = document.getElementById('messageDetailContent');
     if (!content) return;
-    
+
     content.innerHTML = `
         <div class="error-message">
             <i class="fas fa-exclamation-circle"></i>
@@ -418,25 +421,24 @@ function formatDateTime(dateString) {
     const seconds = String(date.getSeconds()).padStart(2, '0');
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
-
 // 답장하기
 function replyMessage() {
     if (!messageDetailData) {
         alert('메시지 정보를 불러올 수 없습니다.');
         return;
     }
-    
+
     const senderId = messageDetailData.senderId;
     const originalTitle = messageDetailData.title || '';
     const originalContent = messageDetailData.content || '';
     const originalSenderName = messageDetailData.senderName || '';
     const originalCreatedAt = messageDetailData.createdAt || '';
-    
+
     if (!senderId) {
         alert('발신자 정보가 없습니다.');
         return;
     }
-    
+
     // URL 파라미터로 원문 정보 전달
     const params = new URLSearchParams({
         replyTo: messageId,
@@ -446,8 +448,17 @@ function replyMessage() {
         originalSenderName: originalSenderName,
         originalCreatedAt: originalCreatedAt
     });
-    
+
     window.location.href = `/view/message/send?${params.toString()}`;
+}
+
+// 파일 크기 포맷팅
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 // 메시지 파일 다운로드
@@ -456,13 +467,13 @@ async function downloadMessageFile(fileId) {
         alert('파일을 찾을 수 없습니다.');
         return;
     }
-    
+
     try {
         // fetch API를 사용하여 Authorization 헤더 포함
         const response = await apiFetch(`/api/files/${fileId}/download`, {
             method: 'GET'
         });
-        
+
         if (!response.ok) {
             if (response.status === 401) {
                 location.href = '/login';
@@ -478,7 +489,7 @@ async function downloadMessageFile(fileId) {
             }
             throw new Error('파일 다운로드에 실패했습니다.');
         }
-        
+
         // Content-Disposition 헤더에서 파일명 추출
         const contentDisposition = response.headers.get('Content-Disposition');
         let fileName = '파일';
@@ -494,10 +505,10 @@ async function downloadMessageFile(fileId) {
                 }
             }
         }
-        
+
         // Blob으로 변환
         const blob = await response.blob();
-        
+
         // 다운로드 링크 생성
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -511,6 +522,15 @@ async function downloadMessageFile(fileId) {
         console.error('Error downloading file:', error);
         alert('파일 다운로드에 실패했습니다.');
     }
+}
+
+// 파일 크기 포맷팅
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 // HTML 이스케이프

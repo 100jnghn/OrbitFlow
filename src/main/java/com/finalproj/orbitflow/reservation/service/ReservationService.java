@@ -4,6 +4,7 @@ import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
+import com.finalproj.orbitflow.notification.enums.NotificationType;
 import com.finalproj.orbitflow.notification.service.NotificationCommandService;
 import com.finalproj.orbitflow.reservation.dto.ReservationReqDto;
 import com.finalproj.orbitflow.reservation.dto.ReservationResDto;
@@ -14,10 +15,13 @@ import com.finalproj.orbitflow.reservation.enums.ReservationStatusCode;
 import com.finalproj.orbitflow.reservation.enums.ReservationTypeCode;
 import com.finalproj.orbitflow.reservation.repository.ReservationRepository;
 import com.finalproj.orbitflow.reservation.repository.ReservationStatusRepository;
+import com.finalproj.orbitflow.resource.car.entity.Car;
 import com.finalproj.orbitflow.resource.car.repository.CarRepository;
+import com.finalproj.orbitflow.resource.item.entity.Item;
 import com.finalproj.orbitflow.resource.item.repository.ItemRepository;
 import com.finalproj.orbitflow.resource.itemcategory.entity.ItemCategory;
 import com.finalproj.orbitflow.resource.itemcategory.repository.ItemCategoryRepository;
+import com.finalproj.orbitflow.resource.meetingroom.entity.Meetingroom;
 import com.finalproj.orbitflow.resource.meetingroom.repository.MeetingroomRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -223,18 +227,20 @@ public class ReservationService {
         ReservationStatus confirmStatus = reservationStatusRepository.findByStatusCode(ReservationStatusCode.CONFIRM);
         reservationRepository.approveReservation(reservationId, confirmStatus);
 
-
-        // 예약 승인 알림 발송
         Reservation reservation = reservationRepository.getReferenceById(reservationId);
         Employee employee = reservation.getEmployee();
 
+        // 예약 승인 알림 발송
+        String notificationMessage = createNotificationMessage(reservation, "승인");
+
+        // 알림 생성 서비스 호출
         notificationCommandService.createNotification(
                 employee.getCompany().getId(),
                 employee.getId(),
-                "RESERVATION",
-                "예약이 승인되었습니다"
+                NotificationType.RESERVATION,
+                notificationMessage,
+                "/view/reservation/me"
         );
-        log.info(reservation.getId() + "번 예약 " + reservation.getReservationReason() + " 승인됨.");
     }
 
     @Transactional
@@ -244,6 +250,21 @@ public class ReservationService {
 
         ReservationStatus rejectStatus = reservationStatusRepository.findByStatusCode(ReservationStatusCode.REJECT);
         reservationRepository.rejectReservation(reservationId, rejectReason, rejectStatus);
+
+        Reservation reservation = reservationRepository.getReferenceById(reservationId);
+        Employee employee = reservation.getEmployee();
+
+        // 예약 승인 알림 발송
+        String notificationMessage = createNotificationMessage(reservation, "반려");
+
+        // 알림 생성 서비스 호출
+        notificationCommandService.createNotification(
+                employee.getCompany().getId(),
+                employee.getId(),
+                NotificationType.RESERVATION,
+                notificationMessage,
+                "/view/reservation/me"
+        );
     }
 
     // 관리자 - 예약 상태 변경 -> 반려/취소는 사유를 필수 입력해야 함
@@ -259,14 +280,37 @@ public class ReservationService {
         ReservationStatusCode targetCode = newStatus.getStatusCode();
 
         String rejectReason = null;
-        if (targetCode.equals(ReservationStatusCode.REJECT) || targetCode.equals(ReservationStatusCode.CANCELED)) {
+        String status = null;
+
+        if (targetCode.equals(ReservationStatusCode.REJECT)) {
             if (dto.getRejectReason() == null || dto.getRejectReason().isBlank()) {
-                throw new IllegalArgumentException("반려/취소 사유는 필수입니다.");
+                throw new IllegalArgumentException("반려 사유는 필수입니다.");
             }
-            rejectReason = dto.getRejectReason();
+            status = "반려";
+
+        } else if (targetCode.equals(ReservationStatusCode.CANCELED)) {
+            if (dto.getRejectReason() == null || dto.getRejectReason().isBlank()) {
+                throw new IllegalArgumentException("취소 사유는 필수입니다.");
+            }
+            status = "취소";
         }
 
+        rejectReason = dto.getRejectReason();
         reservation.changeStatus(newStatus, rejectReason);
+
+        Employee employee = reservation.getEmployee();
+
+        // 예약 승인 알림 발송
+        String notificationMessage = createNotificationMessage(reservation, status);
+
+        // 알림 생성 서비스 호출
+        notificationCommandService.createNotification(
+                employee.getCompany().getId(),
+                employee.getId(),
+                NotificationType.RESERVATION,
+                notificationMessage,
+                "/view/reservation/me"
+        );
     }
 
 
@@ -366,6 +410,23 @@ public class ReservationService {
             );
         }
 
+        for (Long reservationId : approveIds) {
+            Reservation reservation = reservationRepository.getReferenceById(reservationId);
+            Employee employee = reservation.getEmployee();
+
+            // 예약 승인 알림 발송
+            String notificationMessage = createNotificationMessage(reservation, "승인");
+
+            // 알림 생성 서비스 호출
+            notificationCommandService.createNotification(
+                    employee.getCompany().getId(),
+                    employee.getId(),
+                    NotificationType.RESERVATION,
+                    notificationMessage,
+                    "/view/reservation/me"
+            );
+        }
+
         return approveIds.size();
     }
 
@@ -429,6 +490,23 @@ public class ReservationService {
             reservationRepository.bulkUpdateStatus(
                     approveIds,
                     getConfirmStatus()
+            );
+        }
+
+        for (Long reservationId : approveIds) {
+            Reservation reservation = reservationRepository.getReferenceById(reservationId);
+            Employee employee = reservation.getEmployee();
+
+            // 예약 승인 알림 발송
+            String notificationMessage = createNotificationMessage(reservation, "승인");
+
+            // 알림 생성 서비스 호출
+            notificationCommandService.createNotification(
+                    employee.getCompany().getId(),
+                    employee.getId(),
+                    NotificationType.RESERVATION,
+                    notificationMessage,
+                    "/view/reservation/me"
             );
         }
 
@@ -524,6 +602,35 @@ public class ReservationService {
                 .reservationStatusId(reservationStatusId)
                 .reservationStatusName(reservationStatusName)
                 .build();
+    }
+
+
+    // 알림 전송할 메시지 생성
+    private String createNotificationMessage(Reservation reservation, String status) {
+
+        ReservationTypeCode type = reservation.getTypeCode();
+        Long resourceId = reservation.getResourceId();
+        String resourceName = "";
+        String reservationDate = "";
+
+        if (type.equals(ReservationTypeCode.MEETING)) {
+            Meetingroom meetingroom = meetingroomRepository.getReferenceById(resourceId);
+            resourceName = meetingroom.getName();
+            reservationDate = reservation.getReservationDate() + " " + reservation.getStartTime() + "시" + " ~ " + reservation.getEndTime() + "시";
+
+        } else if (type.equals(ReservationTypeCode.CAR)) {
+            Car car = carRepository.getReferenceById(resourceId);
+            resourceName = car.getName();
+            reservationDate = reservation.getReservationDate() + " ~ " + reservation.getEndDate();
+
+        } else if (type.equals(ReservationTypeCode.ITEM)) {
+            Item item = itemRepository.getReferenceById(resourceId);
+            resourceName = item.getName();
+            reservationDate = reservation.getReservationDate() + " " + reservation.getStartTime() + "시" + " ~ " + reservation.getEndTime() + "시";
+        }
+
+        String msg = reservationDate + "\n" + resourceName + " 예약이 " + status + "되었습니다";
+        return msg;
     }
 
 }

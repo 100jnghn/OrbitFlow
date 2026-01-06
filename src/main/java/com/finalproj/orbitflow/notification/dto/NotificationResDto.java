@@ -21,15 +21,17 @@ public class NotificationResDto {
     private String type;
     private String content;
     private Boolean isRead;
+    private String url;
     private Instant createdAt;
 
     // entity -> dto
     public static NotificationResDto fromEntity(Notification notification) {
         return new NotificationResDto(
                 notification.getId(),
-                notification.getType(),
+                notification.getType().getDescription(),
                 notification.getContent(),
                 notification.getIsRead(),
+                notification.getUrl(),
                 notification.getCreatedAt()
         );
     }

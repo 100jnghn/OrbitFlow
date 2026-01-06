@@ -1,15 +1,15 @@
 package com.finalproj.orbitflow.hr.employee.controller;
 
+import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUtils;
+import com.finalproj.orbitflow.hr.employee.dto.EmployeeDetailResDto;
 import com.finalproj.orbitflow.hr.employee.dto.EmployeeSearchDto;
 import com.finalproj.orbitflow.hr.employee.service.EmployeeService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -45,4 +45,21 @@ public class EmployeeUserController {
                 )
         );
     }
+
+    @GetMapping("/{employeeId}")
+    public ResponseEntity<ResponseDto<EmployeeDetailResDto>> detail(
+            @PathVariable Long employeeId
+    ) {
+        return ResponseEntity.ok(
+                new ResponseDto<>(
+                        HttpStatus.OK,
+                        "사원 상세 조회 성공",
+                        employeeService.getDetail(
+                                SecurityUtils.getCompanyId(),
+                                employeeId
+                        )
+                )
+        );
+    }
+
 }

@@ -47,13 +47,13 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
             Long organizationId,
             EmployeeStatus status
     );
-  
+
     /**
      * 회사 ID + 이름, 사번 또는 이메일로 사원 검색
      */
     @Query("SELECT e FROM Employee e WHERE e.company.id = :companyId " +
-           "AND (e.name LIKE CONCAT('%', :keyword, '%') OR e.employeeNo LIKE CONCAT('%', :keyword, '%') OR e.email LIKE CONCAT('%', :keyword, '%')) " +
-           "AND e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE")
+            "AND (e.name LIKE CONCAT('%', :keyword, '%') OR e.employeeNo LIKE CONCAT('%', :keyword, '%') OR e.email LIKE CONCAT('%', :keyword, '%')) " +
+            "AND e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE")
     List<Employee> searchByCompanyIdAndKeyword(
             @Param("companyId") Long companyId,
             @Param("keyword") String keyword
@@ -81,32 +81,32 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
 
     @Query("""
-        select e
-        from Employee e
-        join e.positionCategory pc
-        join e.organization o
-        where o.id = :organizationId
-          and pc.orgCategory.id = :orgCategoryId
-          and pc.isHead = true
-          and pc.isActive = true
-          and e.status = "ACTIVE"
-    """)
+                select e
+                from Employee e
+                join e.positionCategory pc
+                join e.organization o
+                where o.id = :organizationId
+                  and pc.orgCategory.id = :orgCategoryId
+                  and pc.isHead = true
+                  and pc.isActive = true
+                  and e.status = "ACTIVE"
+            """)
     Optional<Employee> findHeadByOrganizationAndOrgCategory(
             @Param("organizationId") Long organizationId,
             @Param("orgCategoryId") Long orgCategoryId
     );
 
     @Query("""
-        select case when count(e) > 0 then true else false end
-        from Employee e
-        join e.organization o
-        join e.positionCategory pc
-        where e.id = :employeeId
-          and o.id = :organizationId
-          and pc.id = :positionCategoryId
-          and e.status = "ACTIVE"
-          and pc.isActive = true
-    """)
+                select case when count(e) > 0 then true else false end
+                from Employee e
+                join e.organization o
+                join e.positionCategory pc
+                where e.id = :employeeId
+                  and o.id = :organizationId
+                  and pc.id = :positionCategoryId
+                  and e.status = "ACTIVE"
+                  and pc.isActive = true
+            """)
     boolean existsInOrgAndPositionCategory(
             @Param("employeeId") Long employeeId,
             @Param("organizationId") Long organizationId,
@@ -115,17 +115,17 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
 
     @Query("""
-        select e
-        from Employee e
-        join e.organization o
-        join e.positionCategory pc
-        where o.id = :orgId
-          and pc.isHead = true
-          and pc.isActive = true
-          and pc.orgCategory.id = o.categoryId
-          and e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE
-        order by e.id asc
-    """)
+                select e
+                from Employee e
+                join e.organization o
+                join e.positionCategory pc
+                where o.id = :orgId
+                  and pc.isHead = true
+                  and pc.isActive = true
+                  and pc.orgCategory.id = o.categoryId
+                  and e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE
+                order by e.id asc
+            """)
     List<Employee> findHeadsByOrgId(@Param("orgId") Long orgId);
 
     default Optional<Employee> findHeadByOrgId(Long orgId) {
@@ -134,14 +134,14 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     }
 
     @Query("""
-    select e
-    from Employee e
-    join e.organization o
-    join e.positionCategory pc
-    where o.id = :orgId
-      and pc.id = :positionCategoryId
-      and e.status = :status
-    """)
+            select e
+            from Employee e
+            join e.organization o
+            join e.positionCategory pc
+            where o.id = :orgId
+              and pc.id = :positionCategoryId
+              and e.status = :status
+            """)
     Optional<Employee> findHeadByOrgIdAndPositionCategoryIdAndStatus(
             @Param("orgId") Long orgId,
             @Param("positionCategoryId") Long positionCategoryId,
@@ -149,15 +149,15 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     );
 
     @Query("""
-    select e
-    from Employee e
-    join e.organization o
-    join e.positionCategory pc
-    where e.id = :employeeId
-      and o.id = :orgId
-      and pc.id = :positionCategoryId
-      and e.status = :status
-    """)
+            select e
+            from Employee e
+            join e.organization o
+            join e.positionCategory pc
+            where e.id = :employeeId
+              and o.id = :orgId
+              and pc.id = :positionCategoryId
+              and e.status = :status
+            """)
     Optional<Employee> findByIdAndOrgIdAndPositionCategoryIdAndStatus(
             @Param("employeeId") Long employeeId,
             @Param("orgId") Long orgId,
@@ -168,17 +168,17 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     List<Employee> findByStatus(EmployeeStatus employeeStatus);
 
     @Query("""
-    select e
-    from Employee e
-    join e.organization o
-    where e.company.id = :companyId
-      and (:status is null or e.status = :status)
-      and (
-        :keyword is null
-        or e.name like concat('%', :keyword, '%')
-        or e.email like concat('%', :keyword, '%')
-      )
-""")
+                select e
+                from Employee e
+                join e.organization o
+                where e.company.id = :companyId
+                  and (:status is null or e.status = :status)
+                  and (
+                    :keyword is null
+                    or e.name like concat('%', :keyword, '%')
+                    or e.email like concat('%', :keyword, '%')
+                  )
+            """)
     Page<Employee> searchAdmin(
             @Param("companyId") Long companyId,
             @Param("keyword") String keyword,
@@ -188,4 +188,30 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
 
     List<Employee> findByCompanyIdAndStatus(Long companyId, EmployeeStatus employeeStatus);
+
+    @Query("""
+                select e
+                from Employee e
+                join fetch e.organization o
+                where e.company.id = :companyId
+                  and e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE
+                  and e.internalPhone is not null
+            """)
+    List<Employee> findActiveWithExtension(Long companyId);
+
+
+    // company.id = :companyId 인 Employee의 id만 조회
+    @Query("""
+                select e.id
+                from Employee e 
+                where e.company.id = :companyId
+            """)
+    List<Long> findEmployeeIdsByCompanyId(@Param("companyId") Long companyId);
+
+    @Query("""
+                select e.id
+                from Employee e 
+                where e.organization.id = :orgId
+            """)
+    List<Long> findEmployeeIdsByOrganizationId(@Param("orgId") Long orgId);
 }

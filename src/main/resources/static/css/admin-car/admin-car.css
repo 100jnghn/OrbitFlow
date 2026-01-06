@@ -179,8 +179,10 @@
     grid-row: 4 / 5;
     display: flex;
     gap: 8px;
-    justify-content: flex-end;  /* 오른쪽 정렬 */
-    align-items: center;         /* 세로 가운데 정렬 */
+    justify-content: flex-end;
+    /* 오른쪽 정렬 */
+    align-items: center;
+    /* 세로 가운데 정렬 */
 }
 
 /* 상태 (1,4) */
@@ -277,7 +279,8 @@
     color: #999;
 }
 
-.btn-remove {
+.btn-remove,
+.btn-remove-img {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -290,12 +293,14 @@
     transition: all 0.2s;
 }
 
-.btn-remove {
+.btn-remove,
+.btn-remove-img {
     background: #e74c3c;
     color: #fff;
 }
 
-.btn-remove:hover {
+.btn-remove:hover,
+.btn-remove-img:hover {
     background: #c0392b;
 }
 

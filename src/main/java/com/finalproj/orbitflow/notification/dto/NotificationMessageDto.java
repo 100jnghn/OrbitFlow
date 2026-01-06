@@ -27,6 +27,7 @@ public class NotificationMessageDto {
     private String type;
     private String content;
     private Boolean isRead;
+    private String url;
     private Instant createdAt;
 
     /**
@@ -37,9 +38,10 @@ public class NotificationMessageDto {
                 .notificationId(notification.getId())
                 .companyId(notification.getCompany().getId())
                 .employeeId(notification.getReceiver().getId())
-                .type(notification.getType())
+                .type(notification.getType().getDescription())
                 .content(notification.getContent())
                 .isRead(notification.getIsRead())
+                .url(notification.getUrl())
                 .createdAt(notification.getCreatedAt())
                 .build();
     }

@@ -1,6 +1,10 @@
 package com.finalproj.orbitflow.approval.document.service;
 
-import com.finalproj.orbitflow.approval.document.documentContentRender.*;
+import com.finalproj.orbitflow.approval.document.render.context.RenderContext;
+import com.finalproj.orbitflow.approval.document.render.context.RenderContextFactory;
+import com.finalproj.orbitflow.approval.document.render.field.FieldRenderer;
+import com.finalproj.orbitflow.approval.document.schema.PdfContentSchema;
+import com.finalproj.orbitflow.approval.document.schema.PdfField;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
