@@ -38,6 +38,8 @@ public class QLeaveType extends EntityPathBase<LeaveType> {
 
     public final StringPath typeName = createString("typeName");
 
+    public final NumberPath<java.math.BigDecimal> unitDays = createNumber("unitDays", java.math.BigDecimal.class);
+
     //inherited
     public final DateTimePath<java.time.Instant> updatedAt = _super.updatedAt;
 
