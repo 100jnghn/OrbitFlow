@@ -563,7 +563,6 @@
         }
     }
 
-
     // 캘린더 렌더링
     function renderCalendar(filteredSchedules = schedules) {
         console.log("캘린더 로드");
@@ -576,7 +575,6 @@
 
         // 첫 번째 날짜 계산
         const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
         const startDate = new Date(firstDay);
         startDate.setDate(startDate.getDate() - startDate.getDay());
 
@@ -596,7 +594,7 @@
             const holiday = holidayMap.get(yyyyMMdd);
 
             if (holiday) {
-                console.log('휴일 매칭:', yyyyMMdd, holiday.dayType);
+                console.log('휴일 매칭:', yyyyMMdd, holiday.dayType, holiday.holidayName);
             }
 
             // JS 기준 요일
@@ -612,12 +610,12 @@
                 dayElement.classList.add('saturday');
             }
 
-            // 공휴일 (주말보다 우선)
+            // 공휴일 (주말보다 우선)  ✅ 기존 기능 유지!
             if (holiday && holiday.dayType !== 'WORKDAY') {
                 dayElement.classList.add('holiday');
             }
 
-
+            // 이번 달 아닌 날짜
             if (date.getMonth() !== month) {
                 dayElement.classList.add('other-month');
             }
@@ -632,12 +630,32 @@
                 dayElement.classList.add('selected');
             }
 
+            /* =========================
+               날짜 상단: 날짜 + 공휴일명(추가)
+               (기존 day-number 위치 유지하면서 공휴일명만 옆에 붙임)
+            ========================== */
+            const dayHeaderRow = document.createElement('div');
+            dayHeaderRow.className = 'day-header-row';
+
             const dayNumber = document.createElement('div');
             dayNumber.className = 'day-number';
             dayNumber.textContent = date.getDate();
-            dayElement.appendChild(dayNumber);
+            dayHeaderRow.appendChild(dayNumber);
 
-            // 해당 날짜의 일정 표시
+            // ✅ "글자 하나만 추가": 공휴일이면 holidayName 오른쪽에 표시
+            if (holiday && holiday.holidayName) {
+                const holidayNameEl = document.createElement('div');
+                holidayNameEl.className = 'holiday-name';
+                holidayNameEl.textContent = holiday.holidayName;
+                holidayNameEl.title = holiday.holidayName;
+                dayHeaderRow.appendChild(holidayNameEl);
+            }
+
+            dayElement.appendChild(dayHeaderRow);
+
+            /* =========================
+               해당 날짜의 일정 표시 (기존 유지)
+            ========================== */
             const daySchedules = filteredSchedules.filter(s => {
                 const start = new Date(s.startAt);
                 const end = new Date(s.endAt);
@@ -682,6 +700,8 @@
             calendarGrid.appendChild(dayElement);
         }
     }
+
+
 
     // 일정 아이템 생성 (캘린더용)
     function createScheduleItem(schedule) {
