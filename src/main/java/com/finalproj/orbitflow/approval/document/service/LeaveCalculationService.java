@@ -12,7 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.temporal.ChronoUnit;
+import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Please explain the class!!!
@@ -30,6 +31,7 @@ public class LeaveCalculationService {
     private final DocumentContentRepository documentContentRepository;
     private final DocumentContentParser documentContentParser;
     private final LeaveTypeRepository leaveTypeRepository;
+    private final WorkingDayService workingDayService;
 
     public LeaveCalculationResult calculate(Document document) {
 
@@ -44,20 +46,22 @@ public class LeaveCalculationService {
                 .findById(payload.vacationTypeId())
                 .orElseThrow();
 
-        BigDecimal days;
+        // 🔥 근무일 계산 (분리된 책임)
+        List<LocalDate> effectiveDates =
+                workingDayService.getWorkingDates(
+                        payload.startDate(),
+                        payload.endDate()
+                );
 
-        if (leaveType.getUnitDays().compareTo(BigDecimal.ONE) < 0) {
-            days = leaveType.getUnitDays();
-        } else {
-            long dayCount = ChronoUnit.DAYS.between(
-                    payload.startDate(),
-                    payload.endDate()
-            ) + 1;
+        BigDecimal days =
+                BigDecimal.valueOf(effectiveDates.size())
+                        .multiply(leaveType.getUnitDays());
 
-            days = leaveType.getUnitDays()
-                    .multiply(BigDecimal.valueOf(dayCount));
-        }
-
-        return new LeaveCalculationResult(payload, leaveType, days);
+        return new LeaveCalculationResult(
+                payload,
+                leaveType,
+                days,
+                effectiveDates
+        );
     }
 }

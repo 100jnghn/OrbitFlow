@@ -3,6 +3,8 @@ package com.finalproj.orbitflow.approval.document.dto;
 import com.finalproj.orbitflow.attendance.leave.entity.LeaveType;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Please explain the class!!!
@@ -14,8 +16,9 @@ import java.math.BigDecimal;
 
 
 public record LeaveCalculationResult(
-        VacationPayload payload,
+        VacationPayload payload,        // 요청 원본
         LeaveType leaveType,
-        BigDecimal days
+        BigDecimal days,                // 실제 차감 일수
+        List<LocalDate> effectiveDates  // 실제 휴가 날짜
 ) {
 }

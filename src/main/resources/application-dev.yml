@@ -79,3 +79,7 @@ cloud:
     region: ${REGION}
     s3:
       bucket: ${BUCKET}
+holiday:
+  api:
+    url: https://api.example.com/holidays?year={year}&serviceKey={apiKey}
+    api-key: YOUR_API_KEY
