@@ -11,16 +11,16 @@ package com.finalproj.orbitflow.approval.calendarDay.enums;
 
 public enum CalendarDayType {
 
-    WORKDAY,           // 정상 근무일
-    PUBLIC_HOLIDAY,    // 공공 공휴일 (특일 API)
-    PAID_HOLIDAY,      // 유급휴무일 (근로자의 날 등)
-    UNPAID_HOLIDAY;    // 무급휴무일 (확장용)
-
-    public boolean isHoliday() {
-        return this != WORKDAY;
-    }
+    WORKDAY,
+    PUBLIC_HOLIDAY,
+    PAID_HOLIDAY,
+    UNPAID_HOLIDAY;
 
     public boolean isChargeableForLeave() {
         return this == WORKDAY || this == UNPAID_HOLIDAY;
+    }
+
+    public boolean isHoliday() {
+        return this == PUBLIC_HOLIDAY || this == PAID_HOLIDAY;
     }
 }

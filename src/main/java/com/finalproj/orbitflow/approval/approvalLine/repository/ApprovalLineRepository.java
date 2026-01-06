@@ -28,4 +28,6 @@ public interface ApprovalLineRepository extends JpaRepository<ApprovalLine, Long
     Optional<ApprovalLine> findFirstByDocumentAndStatusOrderByOrderNoAsc(Document document, ApprovalStatus approvalStatus);
 
     boolean existsByDocumentIdAndApproverId(Long id, Long employeeId);
+
+    Optional<ApprovalLine> findByDocument_IdAndStatus(Long documentId, ApprovalStatus approvalStatus);
 }

@@ -1,15 +1,13 @@
 package com.finalproj.orbitflow.approval.documentAISummary.service;
 
+import com.finalproj.orbitflow.approval.approvalLine.service.ApprovalLineService;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.render.support.VacationTypeNameResolver;
 import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
 import com.finalproj.orbitflow.approval.document.service.DocumentService;
-import com.finalproj.orbitflow.approval.documentAISummary.aiBuilder.AiDiffPromptBuilder;
-import com.finalproj.orbitflow.approval.documentAISummary.aiBuilder.AiSummaryPromptBuilder;
-import com.finalproj.orbitflow.approval.documentAISummary.dto.AiDiffReqDto;
-import com.finalproj.orbitflow.approval.documentAISummary.dto.AiSummaryField;
-import com.finalproj.orbitflow.approval.documentAISummary.dto.AiSummaryReqDto;
-import com.finalproj.orbitflow.approval.documentAISummary.dto.AiSummaryResDto;
+import com.finalproj.orbitflow.approval.documentAISummary.aiBuilder.diff.AiDiffPromptBuilder;
+import com.finalproj.orbitflow.approval.documentAISummary.aiBuilder.summary.AiSummaryPromptBuilder;
+import com.finalproj.orbitflow.approval.documentAISummary.dto.*;
 import com.finalproj.orbitflow.approval.documentAISummary.entity.DocumentAISummary;
 import com.finalproj.orbitflow.approval.documentAISummary.enums.SummaryStatus;
 import com.finalproj.orbitflow.approval.documentAISummary.enums.SummaryType;
@@ -71,6 +69,7 @@ public class DocumentAiSummaryService {
             "사유", "목적",
             "금액", "비용", "예산"
     );
+    private final ApprovalLineService approvalLineService;
     @Value("${openai.model}")
     String openaiModel;
 
@@ -304,7 +303,8 @@ public class DocumentAiSummaryService {
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new NotFoundException("Document not found"));
 
-        if (document.getBeforeDocument() == null) {
+        Document beforeDocument = document.getBeforeDocument();
+        if (beforeDocument == null) {
             throw new InvalidRequestException("비교 대상 문서가 존재하지 않습니다.");
         }
 
@@ -315,7 +315,7 @@ public class DocumentAiSummaryService {
         documentAiSummaryRepository
                 .findByDocumentAndBeforeDocumentAndSummaryType(
                         document,
-                        document.getBeforeDocument(),
+                        beforeDocument,
                         SummaryType.DIFF
                 )
                 .filter(summary -> summary.getStatus() == SummaryStatus.COMPLETED)
@@ -323,27 +323,49 @@ public class DocumentAiSummaryService {
                     throw new InvalidRequestException("이미 완료된 AI 비교가 존재합니다.");
                 });
 
-        // 스키마 조회
-        FormTemplateSchema currentSchema =
+        // 스키마 조회 (동일 양식 전제 → current 기준)
+        FormTemplateSchema schema =
                 documentContentService.getDocumentContentByDocumentId(documentId);
 
-        FormTemplateSchema beforeSchema =
-                documentContentService.getDocumentContentByDocumentId(
-                        document.getBeforeDocument().getId()
-                );
+        // 첨부파일명 조회
+        List<String> beforeAttachedNames =
+                documentFileRepository.findByDocument_Id(beforeDocument.getId())
+                        .stream()
+                        .map(df -> df.getFile().getOriginFile())
+                        .toList();
 
-        List<String> beforeAttachedNames = documentFileRepository.findByDocument_Id(documentId).stream().map(documentFile -> documentFile.getFile().getOriginFile()).toList();
-        List<String> currentAttachedNames = documentFileRepository.findByDocument_Id(document.getBeforeDocument().getId()).stream().map(documentFile -> documentFile.getFile().getOriginFile()).toList();
+        List<String> currentAttachedNames =
+                documentFileRepository.findByDocument_Id(documentId)
+                        .stream()
+                        .map(df -> df.getFile().getOriginFile())
+                        .toList();
 
         // 동일 규칙으로 정규화
-        AiSummaryReqDto before = buildAiSummaryRequest(beforeSchema, beforeAttachedNames);
-        AiSummaryReqDto current = buildAiSummaryRequest(currentSchema, currentAttachedNames);
+        AiSummaryReqDto before =
+                buildAiSummaryRequest(
+                        documentContentService.getDocumentContentByDocumentId(beforeDocument.getId()),
+                        beforeAttachedNames
+                );
 
-        // Diff 요청 DTO 생성
+        AiSummaryReqDto current =
+                buildAiSummaryRequest(
+                        schema,
+                        currentAttachedNames
+                );
+
+        // Diff 요청 DTO
         AiDiffReqDto diffRequest = new AiDiffReqDto(before, current);
 
-        // 프롬프트 생성
-        String prompt = aiDiffPromptBuilder.build(diffRequest);
+        String rejectComment =
+                approvalLineService.findRejectComment(beforeDocument.getId());
+
+        String prompt = aiDiffPromptBuilder.build(
+                new DiffPromptContext(
+                        diffRequest,
+                        schema,
+                        rejectComment
+                )
+        );
 
         // PROCESSING 상태 저장
         DocumentAISummary summary = saveProcessingDiff(document, prompt);
@@ -359,6 +381,7 @@ public class DocumentAiSummaryService {
                 }
         );
     }
+
 
     protected DocumentAISummary saveProcessingDiff(
             Document document,

@@ -42,18 +42,11 @@ public class CalendarWorkingDayService implements WorkingDayService {
                                     "CalendarDay not initialized: " + currentDate
                             ));
 
-            if (isWorkingDay(day)) {
-                result.add(currentDate);
+            if (day.isChargeableForLeave()) {
+                result.add(date);
             }
         }
 
-
         return result;
-    }
-
-    private boolean isWorkingDay(CalendarDay day) {
-        int dow = day.getDayOfWeek(); // 1=월 ... 7=일
-        if (dow == 6 || dow == 7) return false;
-        return !day.isHoliday();
     }
 }
