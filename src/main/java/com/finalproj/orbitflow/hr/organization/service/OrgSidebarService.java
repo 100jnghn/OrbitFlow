@@ -49,7 +49,8 @@ public class OrgSidebarService {
                                         e -> new OrgSidebarEmployeeDto(
                                                 e.getId(),
                                                 e.getName(),
-                                                e.getInternalPhone()
+                                                e.getInternalPhone(),
+                                                e.getWorkStatus()
                                         ),
                                         Collectors.toList()
                                 )
