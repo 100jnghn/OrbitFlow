@@ -53,4 +53,12 @@ public class LeaveBalance extends BaseEntity {
         if (this.totalGranted == null) this.totalGranted = BigDecimal.ZERO;
         this.remainingDays = this.totalGranted.subtract(actualUsedDays);
     }
+
+    public void deductBalance(BigDecimal deductedDays) {
+        if (this.remainingDays == null) {
+            this.remainingDays = BigDecimal.ZERO;
+        }
+        this.remainingDays = this.remainingDays.subtract(deductedDays);
+    }
+
 }

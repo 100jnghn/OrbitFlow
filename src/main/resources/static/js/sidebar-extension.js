@@ -3,8 +3,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggle = document.getElementById('extension-toggle');
     const treeEl = document.getElementById('extension-tree');
 
-    // 사이드바가 없는 페이지에서는 실행 안 함
+    // 사이드바 없는 페이지 보호
     if (!toggle || !treeEl) return;
+
+    /* =========================
+       기본 OPEN 페이지
+    ========================= */
+    const isOrganizationPage =
+        location.pathname.startsWith('/view/organizations');
+
+    const isMainPage =
+        location.pathname === '/';
+
+    if (isOrganizationPage || isMainPage) {
+        openExtensionTree();
+    }
+
+    function openExtensionTree() {
+        treeEl.classList.remove('hidden');
+
+        const icon = toggle.querySelector('i');
+        if (icon) {
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+        }
+    }
 
     /* =========================
        내선번호 토글
@@ -19,21 +42,30 @@ document.addEventListener('DOMContentLoaded', () => {
         icon.classList.toggle('fa-chevron-down');
     });
 
-
     /* =========================
        내선번호 트리 로딩
     ========================= */
-    apiFetch('/api/sidebar/extensions')
-        .then(res => {
-            if (!res.ok) throw new Error('내선번호 API 실패');
-            return res.json();
-        })
-        .then(res => {
-            treeEl.innerHTML = ''; // 재렌더링 대비
-            renderTree(res.data);
-        })
-        .catch(err => console.error('내선번호 조회 실패', err));
+    function loadExtensionTree() {
+        apiFetch('/api/sidebar/extensions')
+            .then(res => {
+                if (!res.ok) throw new Error('내선번호 API 실패');
+                return res.json();
+            })
+            .then(res => {
+                treeEl.innerHTML = '';
+                renderTree(res.data);
+            })
+            .catch(err => console.error('내선번호 조회 실패', err));
+    }
 
+    // 외부에서도 호출 가능
+    window.reloadExtensionTree = loadExtensionTree;
+
+    /* =========================
+       Polling
+    ========================= */
+    loadExtensionTree(); // 최초
+    setInterval(loadExtensionTree, 10000);
 
     /* =========================
        트리 렌더링
@@ -53,23 +85,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 const empDiv = document.createElement('div');
                 empDiv.className = 'extension-emp';
                 empDiv.style.paddingLeft = `${28 + depth * 12}px`;
-                empDiv.innerHTML = `
-                    <span class="name">${emp.name}</span>
-                    <span class="phone">${emp.internalPhone ?? '-'}</span>
-                `;
+
+                /* 왼쪽: 이름 + 내선번호 */
+                const leftWrap = document.createElement('div');
+                leftWrap.className = 'emp-left';
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'name';
+                nameSpan.textContent = emp.name;
+
+                const phoneSpan = document.createElement('span');
+                phoneSpan.className = 'phone';
+                phoneSpan.textContent = emp.internalPhone ?? '-';
+
+                leftWrap.appendChild(nameSpan);
+                leftWrap.appendChild(phoneSpan);
+
+                /* 오른쪽: 근무 상태 점 (※ 여기서 1번만 생성) */
+                const workDot = document.createElement('span');
+                workDot.className = 'work-dot';
+
+                applyWorkStatusClass(workDot, emp.workStatus);
+
+                empDiv.appendChild(leftWrap);
+                empDiv.appendChild(workDot);
 
                 empDiv.addEventListener('click', () => {
-                    // 선택 강조
                     document.querySelectorAll('.extension-emp')
                         .forEach(el => el.classList.remove('active'));
                     empDiv.classList.add('active');
 
-                    // 조직도 페이지면 → 우측 패널만 갱신
                     if (typeof window.loadEmployeeDetail === 'function') {
                         window.loadEmployeeDetail(emp.employeeId);
-                    }
-                    // 그 외 페이지면 → 조직도 페이지로 이동
-                    else {
+                    } else {
                         location.href = `/view/organizations?employeeId=${emp.employeeId}`;
                     }
                 });
@@ -82,5 +130,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderTree(org.children, depth + 1);
             }
         });
+    }
+
+    /* =========================
+       근무 상태 class 적용 (중복 방지 핵심)
+    ========================= */
+    function applyWorkStatusClass(dotEl, workStatus) {
+        dotEl.className = 'work-dot'; // 항상 초기화
+
+        if (workStatus === 'WORKING') {
+            dotEl.classList.add('working');
+        } else if (workStatus === 'AWAY') {
+            dotEl.classList.add('away');
+        } else {
+            dotEl.classList.add('off');
+        }
     }
 });

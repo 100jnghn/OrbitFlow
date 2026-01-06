@@ -1,3 +1,27 @@
+const EMPLOYMENT_LABEL = {
+    REGULAR: '정규직',
+    NON_REGULAR: '비정규직',
+    CONTRACT: '계약직'
+};
+
+const STATUS_LABEL = {
+    TEMP: '미활성',
+    ACTIVE: '재직중',
+    SUSPENDED: '정지',
+    RESIGNED: '퇴사'
+};
+
+const WORK_STATUS_LABEL = {
+    WORKING: '근무중',
+    OFF_WORK: '퇴근',
+    AWAY: '자리비움'
+};
+
+
+let currentEmployeeId = null;
+
+
+
 document.addEventListener('DOMContentLoaded', () => {
 
     apiFetch('/api/user/organizations/tree')
@@ -47,6 +71,8 @@ function renderNode(node, parent, depth) {
    Employee Detail
 ========================= */
 window.loadEmployeeDetail = async function (id) {
+    currentEmployeeId = id;
+
     const panel = document.getElementById('employee-panel');
     panel.classList.remove('hidden');
 
@@ -63,11 +89,39 @@ window.loadEmployeeDetail = async function (id) {
     document.getElementById('empEmail').textContent = e.email ?? '-';
     document.getElementById('empInternalPhone').textContent = e.internalPhone ?? '-';
 
+    document.getElementById('empEmployeeNo').textContent = e.employeeNo ?? '-';
+    document.getElementById('empEmploymentType').textContent = EMPLOYMENT_LABEL[e.employmentType] ?? '-';
+    document.getElementById('empHireDate').textContent =
+        e.hireDate ? e.hireDate.replaceAll('-', '.') : '-';
+
     document.getElementById('empOrg').textContent = e.orgPath ?? '-';
     document.getElementById('empRank').textContent = e.rankName ?? '-';
     document.getElementById('empPosition').textContent = e.positionName ?? '-';
 
-    const status = document.getElementById('empStatus');
-    status.textContent = e.status === 'ACTIVE' ? '근무중' : e.status;
-    status.className = `emp-status ${e.status.toLowerCase()}`;
+    // const status = document.getElementById('empStatus');
+    // status.textContent = STATUS_LABEL[e.status] ?? e.status;
+    // status.className = `emp-status ${e.status.toLowerCase()}`;
+
+    // 근무 상태 조회 (Attendance 도메인)
+    await loadEmployeeWorkStatus(id);
+
 };
+
+async function loadEmployeeWorkStatus(employeeId) {
+    const res = await apiFetch(`/api/attendance/work-status/${employeeId}`);
+    const { data } = await res.json();
+
+    // 다른 사원으로 바뀌었으면 무시 --> race condition 방지
+    if (employeeId !== currentEmployeeId) return;
+
+    document.getElementById('empWorkStatus').textContent =
+        WORK_STATUS_LABEL[data.workStatus] ?? '-';
+
+    const dot = document.getElementById('empWorkDot');
+    dot.className = 'hero-work-dot';
+
+    if (data.workStatus === 'WORKING') dot.classList.add('working');
+    else if (data.workStatus === 'OFF_WORK') dot.classList.add('off');
+    else if (data.workStatus === 'AWAY') dot.classList.add('away');
+
+}

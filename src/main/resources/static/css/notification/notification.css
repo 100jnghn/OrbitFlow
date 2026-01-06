@@ -64,8 +64,14 @@
 
 .notification-dropdown-tabs {
     display: flex;
+    justify-content: space-between;
+    align-items: center;
     border-bottom: 1px solid #e5e7eb;
     padding: 0 24px;
+}
+
+.notification-tabs-left {
+    display: flex;
 }
 
 .notification-tab {
@@ -89,6 +95,33 @@
 .notification-tab.active {
     color: #ef4444;
     border-bottom-color: #ef4444;
+}
+
+.notification-mark-all-read-btn {
+    background: #F0F9FF; /* 하늘색 */
+    border: 1.2px solid #38BDF8;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.notification-mark-all-read-btn:hover {
+    background: #BBDEFB;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    color: #111827;
+    border-color: #d1d5db;
+}
+
+.notification-mark-all-read-btn i {
+    font-size: 12px;
 }
 
 .notification-dropdown-body {
@@ -255,4 +288,3 @@
     color: #6b7280;
     font-size: 14px;
 }
-

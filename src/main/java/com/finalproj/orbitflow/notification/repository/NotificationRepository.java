@@ -18,4 +18,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findByCompanyIdAndReceiverIdOrderByCreatedAtDesc(Long companyId, Long employeeId);
 
     List<Notification> findByCompanyIdAndReceiverIdAndIsReadFalseAndCreatedAtAfterOrderByCreatedAtDesc(Long companyId, Long employeeId, Instant thirtyDaysAgo);
+
+    List<Notification> findByReceiverIdAndIsReadFalse(Long employeeId);
 }

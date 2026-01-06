@@ -2,13 +2,16 @@ package com.finalproj.orbitflow.attendance.leave.service;
 
 import com.finalproj.orbitflow.approval.attendanceRecord.entity.AttendanceRecord;
 import com.finalproj.orbitflow.approval.attendanceRecord.repository.AttendanceRecordRepository;
+import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
-import com.finalproj.orbitflow.attendance.leave.entity.LeaveBalance;
-import com.finalproj.orbitflow.attendance.leave.entity.LeaveGrant;
 import com.finalproj.orbitflow.attendance.leave.dto.LeaveBalanceResDto;
 import com.finalproj.orbitflow.attendance.leave.dto.LeaveHistoryResDto;
+import com.finalproj.orbitflow.attendance.leave.entity.LeaveBalance;
+import com.finalproj.orbitflow.attendance.leave.entity.LeaveGrant;
+import com.finalproj.orbitflow.attendance.leave.entity.LeaveType;
 import com.finalproj.orbitflow.attendance.leave.repository.LeaveBalanceRepository;
 import com.finalproj.orbitflow.attendance.leave.repository.LeaveGrantRepository;
+import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
@@ -220,4 +223,28 @@ public class LeaveService {
             default -> "대기";
         };
     }
+
+
+    public void deduction(Employee employee,
+                          BigDecimal days,
+                          Document document,
+                          LeaveType leaveType) {
+
+        if (!leaveType.getIsCountable()) return;
+
+        if (document.getStatus() != DocumentStatus.APPROVED) return;
+
+        LeaveBalance leaveBalance =
+                leaveBalanceRepository
+                        .findTopByEmployeeIdOrderByYearDesc(employee.getId())
+                        .orElseThrow(() -> new NotFoundException("잔여 연차 조회 실패"));
+
+        if (leaveBalance.getRemainingDays().compareTo(days) < 0) {
+            throw new IllegalStateException("잔여 연차가 부족합니다.");
+        }
+
+        leaveBalance.deductBalance(days);
+        leaveBalanceRepository.save(leaveBalance);
+    }
+
 }

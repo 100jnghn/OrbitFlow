@@ -50,4 +50,24 @@ public class DocumentAiSummaryAsyncService {
             summaryEntity.markFailed();
         }
     }
+
+    @Async
+    @Transactional
+    public void generateDiffAsync(Long summaryId, String prompt) {
+
+        DocumentAISummary summaryEntity =
+                documentAiSummaryRepository.findById(summaryId)
+                        .orElseThrow(() -> new RuntimeException("Summary not found"));
+
+        try {
+            String content = aiClient.diff(prompt);
+
+            summaryEntity.markCompleted(content);
+
+        } catch (Exception e) {
+            log.error("AI diff failed. summaryId={}", summaryId, e);
+            summaryEntity.markFailed();
+        }
+    }
+
 }

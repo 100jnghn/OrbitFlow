@@ -142,4 +142,10 @@ public class NotificationCommandService {
         log.debug("Notification created & published. id={}", notification.getId());
     }
 
+    @Transactional
+    public void readAllNotification(Long employeeId) {
+
+        List<Notification> unreadNotifications = notificationRepository.findByReceiverIdAndIsReadFalse(employeeId);
+        unreadNotifications.forEach(Notification::read);
+    }
 }

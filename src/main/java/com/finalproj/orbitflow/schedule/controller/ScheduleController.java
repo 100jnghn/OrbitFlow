@@ -253,6 +253,8 @@ public class ScheduleController {
             @AuthenticationPrincipal SecurityUser user,
             @RequestBody ScheduleReqDto scheduleReqDto
     ) {
+        log.info("insertSchedule called");
+
         Long companyId = user.getCompanyId();
         Long employeeId = user.getEmployeeId();
 

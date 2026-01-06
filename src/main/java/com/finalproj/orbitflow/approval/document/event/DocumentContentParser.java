@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.document.eventHandler;
+package com.finalproj.orbitflow.approval.document.event;
 
 import com.finalproj.orbitflow.approval.document.dto.CommonPayload;
 import com.finalproj.orbitflow.approval.document.dto.VacationPayload;
@@ -60,7 +60,7 @@ public class DocumentContentParser {
                 value.get("vacationTypeId") == null
                         ? null
                         : Long.valueOf(value.get("vacationTypeId").toString()),
-                "휴가 사유는 공개되지 않습니다",
+                value.get("reason").toString(),
                 LocalDate.parse(value.get("start").toString()),
                 LocalDate.parse(value.get("end").toString())
         );

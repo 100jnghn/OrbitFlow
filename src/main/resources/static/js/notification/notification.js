@@ -37,11 +37,11 @@ function openNotificationModal() {
 // 탭 전환
 function switchTab(tab) {
     currentTab = tab;
-    
+
     // 탭 버튼 활성화 상태 업데이트
     const unreadTab = document.getElementById('unreadTab');
     const readTab = document.getElementById('readTab');
-    
+
     if (unreadTab && readTab) {
         if (tab === 'unread') {
             unreadTab.classList.add('active');
@@ -51,7 +51,7 @@ function switchTab(tab) {
             readTab.classList.add('active');
         }
     }
-    
+
     // 알림 목록 로드
     loadNotifications(tab === 'read');
 }
@@ -72,7 +72,7 @@ async function loadNotifications(showRead = false) {
     try {
         // 모든 알림을 가져온 후 필터링
         const response = await apiFetch('/api/notifications');
-        
+
         if (!response.ok) {
             notificationList.innerHTML = '<div class="notification-empty">알림을 불러오는데 실패했습니다.</div>';
             return;
@@ -123,14 +123,14 @@ async function loadNotifications(showRead = false) {
 // 시간 포맷팅 함수 (createdAt 기반)
 function formatTimeAgo(createdAt) {
     if (!createdAt) return '';
-    
+
     const now = new Date();
     const created = new Date(createdAt);
     const diffMs = now - created;
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
-    
+
     if (diffMins < 1) {
         return '방금 전';
     } else if (diffMins < 60) {
@@ -153,7 +153,7 @@ function handleNotificationClick(url, notificationId, event) {
     if (event && event.target.closest('.notification-check-btn')) {
         return;
     }
-    
+
     // url이 있으면 이동
     if (url) {
         // 읽지 않은 알림이면 읽음 처리
@@ -173,26 +173,55 @@ async function markAsRead(notificationId, event) {
     if (event) {
         event.stopPropagation();
     }
-    
+
     try {
         const response = await apiFetch(`/api/notifications/${notificationId}`, {
             method: 'PATCH'
         });
-        
+
         if (!response.ok) {
             console.error('알림 읽음 처리 실패');
             return;
         }
-        
+
         // 성공 시 알림 목록 새로고침
         await loadNotifications(currentTab === 'read');
-        
+
         // 알림 카운트도 새로고침
         if (typeof refreshUnreadCount === 'function') {
             refreshUnreadCount();
         }
     } catch (error) {
         console.error('알림 읽음 처리 실패:', error);
+    }
+}
+
+// 모든 알림 읽음 처리
+async function markAllAsRead() {
+    try {
+        const response = await apiFetch('/api/notifications/read-all', {
+            method: 'PATCH'
+        });
+
+        if (!response.ok) {
+            console.error('모든 알림 읽음 처리 실패');
+            alert('모든 알림을 읽음 처리하는데 실패했습니다.');
+            return;
+        }
+
+        // 성공 시 알림 목록 새로고침
+        await loadNotifications(currentTab === 'read');
+
+        // 알림 카운트도 새로고침
+        if (typeof refreshUnreadCount === 'function') {
+            refreshUnreadCount();
+        }
+
+        // 성공 메시지 (선택사항)
+        console.log('모든 알림이 읽음 처리되었습니다.');
+    } catch (error) {
+        console.error('모든 알림 읽음 처리 실패:', error);
+        alert('모든 알림을 읽음 처리하는데 실패했습니다.');
     }
 }
 
@@ -207,7 +236,7 @@ function escapeHtml(text) {
 document.addEventListener('click', (e) => {
     const dropdown = document.getElementById('notificationDropdown');
     const bellIcon = document.querySelector('.fa-bell');
-    
+
     if (dropdown && !dropdown.classList.contains('hidden')) {
         // 드롭다운 내부나 알림 아이콘을 클릭한 경우가 아니면 닫기
         if (!dropdown.contains(e.target) && !e.target.closest('a[onclick*="toggleNotificationDropdown"]')) {
