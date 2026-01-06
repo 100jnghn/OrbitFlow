@@ -140,10 +140,25 @@
     margin-left: 8px;
 }
 
-.work-status-badge.badge-before-work { background-color: #DBEAFE; color: #1E40AF; }
-.work-status-badge.badge-working { background-color: #D1FAE5; color: #065F46; }
-.work-status-badge.badge-away { background-color: #FEF3C7; color: #92400E; }
-.work-status-badge.badge-off-work { background-color: #E5E7EB; color: #374151; }
+.work-status-badge.badge-before-work {
+    background-color: #DBEAFE;
+    color: #1E40AF;
+}
+
+.work-status-badge.badge-working {
+    background-color: #D1FAE5;
+    color: #065F46;
+}
+
+.work-status-badge.badge-away {
+    background-color: #FEF3C7;
+    color: #92400E;
+}
+
+.work-status-badge.badge-off-work {
+    background-color: #E5E7EB;
+    color: #374151;
+}
 
 /* 출퇴근 버튼 그룹 */
 .profile-attendance-buttons {
@@ -171,9 +186,23 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.btn-attendance.btn-checkin { background: linear-gradient(135deg, #EDF2FF 0%, #DBE4FF 100%); color: dimgray; border: 1.5px solid #3b82f6; }
-.btn-attendance.btn-away { background: linear-gradient(135deg, #FFF9DB 0%, #FFF3BF 100%); color: dimgray; border: 1.5px solid #f59e0b; }
-.btn-attendance.btn-checkout { background: linear-gradient(135deg, #FFF5F5 0%, #FFE3E3 100%); color: dimgray; border: 1.5px solid #ef4444; }
+.btn-attendance.btn-checkin {
+    background: linear-gradient(135deg, #EDF2FF 0%, #DBE4FF 100%);
+    color: dimgray;
+    border: 1.5px solid #3b82f6;
+}
+
+.btn-attendance.btn-away {
+    background: linear-gradient(135deg, #FFF9DB 0%, #FFF3BF 100%);
+    color: dimgray;
+    border: 1.5px solid #f59e0b;
+}
+
+.btn-attendance.btn-checkout {
+    background: linear-gradient(135deg, #FFF5F5 0%, #FFE3E3 100%);
+    color: dimgray;
+    border: 1.5px solid #ef4444;
+}
 
 /* 출퇴근 정보 */
 .profile-attendance-info {
@@ -246,13 +275,20 @@
 }
 
 .summary-icon {
-    width: 40px; height: 40px;
-    display: flex; align-items: center; justify-content: center;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    border-radius: 10px; color: #fff; font-size: 18px;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 18px;
 }
 
-.summary-icon.leave-icon { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+.summary-icon.leave-icon {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
 
 /* 휴가 정보 섹션 (디자인 개선 반영) */
 .leave-info-section {
@@ -275,17 +311,28 @@
     border-radius: 10px;
     border: 1px solid #e5e7eb;
     text-align: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.leave-info-label { display: block; font-size: 11px; color: #6b7280; margin-bottom: 4px; }
-.leave-info-value { font-size: 15px; font-weight: 700; color: #111827; }
+.leave-info-label {
+    display: block;
+    font-size: 11px;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.leave-info-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827;
+}
 
 /* 4. [핵심] 일정 바로 밑에 통계를 배치하는 래퍼 */
 .schedule-approval-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 18px; /* 위젯과 통계 사이 밀착 간격 */
+    gap: 18px;
+    /* 위젯과 통계 사이 밀착 간격 */
     height: 100%;
 }
 
@@ -303,26 +350,70 @@
     min-height: 0;
 }
 
-.schedule-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+/* 일정 요약 그리드 (좌우 2개 컬럼) */
+.schedule-summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    height: 100%;
 }
 
 .schedule-item {
-    padding: 11px 0;
-    border-bottom: 1px solid #f3f4f6;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    min-height: 200px;
 }
 
-.schedule-item:last-child {
-    border-bottom: none;
+.schedule-item-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e5e7eb;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
 }
 
-.schedule-item.empty {
-    color: #9ca3af;
-    cursor: default;
-    text-align: center;
-    padding: 18px 0;
+.schedule-item-header i {
+    color: #3b82f6;
+    font-size: 16px;
+}
+
+.schedule-item-content {
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #4b5563;
+    overflow-y: auto;
+    white-space: pre-line;
+}
+
+.schedule-item-content strong {
+    font-weight: 600;
+    color: #111827;
+}
+
+.schedule-item-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.schedule-item-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.schedule-item-content::-webkit-scrollbar-thumb {
+    background-color: #d1d5db;
+    border-radius: 3px;
+}
+
+.schedule-item-content::-webkit-scrollbar-thumb:hover {
+    background-color: #9ca3af;
 }
 
 .dashboard-stats {
@@ -344,27 +435,72 @@
     transition: transform 0.2s;
 }
 
-.dashboard-stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.dashboard-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
 
-.stat-label { font-size: 13px; color: #6b7280; font-weight: 500; margin: 0; }
-.stat-value { font-size: 24px; font-weight: 700; color: #111827; margin: 4px 0; }
-.stat-change { font-size: 11px; color: #10b981; font-weight: 600; margin: 0; }
+.stat-label {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+    margin: 0;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #111827;
+    margin: 4px 0;
+}
+
+.stat-change {
+    font-size: 11px;
+    color: #10b981;
+    font-weight: 600;
+    margin: 0;
+}
 
 .stat-icon {
-    width: 40px; height: 40px;
+    width: 40px;
+    height: 40px;
     border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 18px;
 }
 
 /* 카드별 아이콘 색상 테마 유지 */
-.stat-pending .stat-icon { background-color: #fef3c7; color: #f59e0b; }
-.stat-created .stat-icon { background-color: #dbeafe; color: #3b82f6; }
-.stat-approved .stat-icon { background-color: #d1fae5; color: #10b981; }
-.stat-rejected .stat-icon { background-color: #fee2e2; color: #ef4444; }
+.stat-pending .stat-icon {
+    background-color: #fef3c7;
+    color: #f59e0b;
+}
+
+.stat-created .stat-icon {
+    background-color: #dbeafe;
+    color: #3b82f6;
+}
+
+.stat-approved .stat-icon {
+    background-color: #d1fae5;
+    color: #10b981;
+}
+
+.stat-rejected .stat-icon {
+    background-color: #fee2e2;
+    color: #ef4444;
+}
 
 /* 반응형 설정 */
 @media (max-width: 1200px) {
-    .dashboard-row:first-child, .dashboard-row:nth-child(2) { grid-template-columns: 1fr; }
-    .dashboard-stats { grid-template-columns: repeat(2, 1fr); }
+
+    .dashboard-row:first-child,
+    .dashboard-row:nth-child(2) {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
