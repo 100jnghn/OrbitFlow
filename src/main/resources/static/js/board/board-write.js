@@ -232,6 +232,12 @@ function handleFileSelect(event) {
     const files = Array.from(event.target.files);
     files.forEach(file => {
         if (!selectedFiles.find(f => f.name === file.name && f.size === file.size)) {
+            // 파일 크기 체크 (50MB 제한)
+            const maxSize = 50 * 1024 * 1024; // 50MB
+            if (file.size > maxSize) {
+                alert(`파일 "${file.name}"의 크기가 50MB를 초과하여 제외되었습니다.`);
+                return;
+            }
             selectedFiles.push(file);
             addFileToList(file.name, null, false);
         }

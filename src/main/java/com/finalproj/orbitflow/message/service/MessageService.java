@@ -376,6 +376,9 @@ public class MessageService {
             }
         }
 
+        // 파일 크기 검증
+        validateFileSize(files);
+
         // 파일 업로드 처리
         java.util.List<File> uploadedFiles = new java.util.ArrayList<>();
         if (files != null && !files.isEmpty()) {
@@ -497,6 +500,18 @@ public class MessageService {
         return messageRecipientRepository
                 .countByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedFalseAndMessageFolderTypeAndIsReadFalse(
                         companyId, employeeId, MessageFolderType.INBOX);
+    }
+
+    /** 파일 크기 검증 (50MB 제한) */
+    private void validateFileSize(java.util.List<MultipartFile> files) {
+        if (files != null) {
+            long maxSize = 50 * 1024 * 1024; // 50MB
+            for (MultipartFile file : files) {
+                if (file.getSize() > maxSize) {
+                    throw new InvalidRequestException("파일 크기는 50MB를 초과할 수 없습니다: " + file.getOriginalFilename());
+                }
+            }
+        }
     }
 
     /** S3에서 파일 삭제 */

@@ -133,6 +133,9 @@ public class BoardService {
             throw new ForbiddenException("게시글 작성 권한이 없습니다.");
         }
 
+        // 파일 크기 검증
+        validateFileSize(files);
+
         // 파일 처리: FileService를 사용하여 S3에 업로드
         List<File> attachedFiles = null;
         if (files != null && !files.isEmpty()) {
@@ -239,6 +242,9 @@ public class BoardService {
             throw new ForbiddenException("게시글 수정 권한이 없습니다.");
         }
 
+        // 파일 크기 검증
+        validateFileSize(files);
+
         // 기존 파일 정보 저장 (S3 삭제용)
         List<File> existingFiles = board.getFiles() != null ? new java.util.ArrayList<>(board.getFiles()) : null;
 
@@ -293,6 +299,19 @@ public class BoardService {
         }
 
         board.softDelete(); // soft delete
+    }
+
+    /** 파일 크기 검증 (50MB 제한) */
+    private void validateFileSize(List<MultipartFile> files) {
+        if (files != null) {
+            long maxSize = 50 * 1024 * 1024; // 50MB
+            for (MultipartFile file : files) {
+                if (file.getSize() > maxSize) {
+                    throw new com.finalproj.orbitflow.global.exception.InvalidRequestException(
+                            "파일 크기는 50MB를 초과할 수 없습니다: " + file.getOriginalFilename());
+                }
+            }
+        }
     }
 
     /** S3에서 파일 삭제 */
