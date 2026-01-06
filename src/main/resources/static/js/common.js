@@ -178,7 +178,7 @@ async function updateMessageCount() {
         const result = await response.json();
         const count = result.data || 0;
         const badge = document.getElementById('messageBadge');
-        
+
         if (badge) {
             if (count > 0) {
                 badge.textContent = count > 99 ? '99+' : count.toString();
@@ -195,7 +195,7 @@ async function updateMessageCount() {
 }
 
 // 페이지 로드 시 메시지 카운트 업데이트
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     updateMessageCount();
     // 30초마다 메시지 카운트 업데이트
     setInterval(updateMessageCount, 30000);
@@ -474,7 +474,8 @@ function showToast(dto) {
     checkBtn.className = "notification-toast-check-btn";
     checkBtn.title = "확인";
     checkBtn.innerHTML = '<i class="fas fa-check"></i>';
-    checkBtn.onclick = () => {
+    checkBtn.onclick = (e) => {
+        e.stopPropagation();
         if (dto.notificationId) {
             markAsRead(dto.notificationId);
         }
@@ -487,32 +488,43 @@ function showToast(dto) {
     toast.appendChild(iconArea);
     toast.appendChild(contentArea);
 
+    // 🔥 핵심 수정 부분
+    toast.addEventListener('click', (e) => {
+        if (e.target.closest('.notification-toast-check-btn')) return;
+
+        e.stopPropagation(); // ⭐ document 클릭 방지
+
+        // 1️⃣ 드롭다운 먼저 열기
+        const dropdown = document.getElementById('notificationDropdown');
+        if (dropdown) {
+            dropdown.classList.remove('hidden');
+            switchTab?.('unread');
+        }
+
+        // 2️⃣ 토스트 즉시 제거 (이벤트 루프 뒤)
+        setTimeout(() => {
+            toast.remove();
+        }, 0);
+    });
+
     container.appendChild(toast);
 
     // 자동 제거 함수
     const removeToast = () => {
         if (toast.parentNode) {
             toast.style.animation = 'slideOutToast 0.3s ease-out';
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.remove();
-                }
-            }, 300);
+            setTimeout(() => toast.remove(), 300);
         }
     };
 
     let removeTimer = setTimeout(removeToast, 5000);
 
-    // hover 시 타이머 중지
-    toast.addEventListener('mouseenter', () => {
-        clearTimeout(removeTimer);
-    });
-
-    // hover 해제 시 다시 타이머 시작
+    toast.addEventListener('mouseenter', () => clearTimeout(removeTimer));
     toast.addEventListener('mouseleave', () => {
         removeTimer = setTimeout(removeToast, 5000);
     });
 }
+
 
 // 토스트 슬라이드 아웃 애니메이션 추가
 const style = document.createElement('style');
