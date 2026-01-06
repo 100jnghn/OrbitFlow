@@ -34,6 +34,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
@@ -47,7 +48,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder.FontStyle;
-import static java.util.Objects.requireNonNull;
 
 
 /**
@@ -79,6 +79,9 @@ public class DocumentApplicationService {
     private final PdfHtmlBuilder pdfHtmlBuilder;
     private final PdfContentSchemaAssembler pdfContentSchemaAssembler;
     private final PdfApprovalLineAssembler pdfApprovalLineAssembler;
+
+    @Value("${app.base-url}")
+    private String baseUrl;
 
 
     @PersistenceContext
@@ -295,11 +298,11 @@ public class DocumentApplicationService {
                     true
             );
 
-            String baseUri = requireNonNull(
+      /*      String baseUri = requireNonNull(
                     getClass().getClassLoader().getResource("static/")
-            ).toExternalForm();
+            ).toExternalForm();*/
 
-            builder.withHtmlContent(html, baseUri);
+            builder.withHtmlContent(html, baseUrl);
 
             builder.toStream(os);
             builder.run();
@@ -317,7 +320,6 @@ public class DocumentApplicationService {
             throw new RuntimeException("PDF 생성 실패", e);
         }
     }
-
 
     @Transactional
     public void reject(Long employeeId, Long documentId, String comment) {
@@ -436,7 +438,6 @@ public class DocumentApplicationService {
         return DocumentCreateResDto.from(revised.getId());
     }
 
-
     @Transactional
     public void submitDocument(Long employeeId, Long documentId) {
 
@@ -500,7 +501,6 @@ public class DocumentApplicationService {
             }
         }
     }
-
 
     private List<ApprovalLine> getApprovalLines(Long documentId) {
         List<ApprovalLine> lines =

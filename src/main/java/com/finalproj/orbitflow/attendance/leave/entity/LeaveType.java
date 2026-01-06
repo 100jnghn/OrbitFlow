@@ -4,6 +4,8 @@ import com.finalproj.orbitflow.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Getter
 @Builder
@@ -25,4 +27,7 @@ public class LeaveType extends BaseEntity {
 
     @Column(name = "description", length = 255)
     private String description;     // 상세 설명
+
+    @Column(precision = 5, scale = 3)
+    private BigDecimal unitDays;
 }
