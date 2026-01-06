@@ -10,10 +10,10 @@ let selectedEmployees = []; // 선택된 사원 목록
 let deletingBoardId = null; // 삭제할 게시판 ID
 
 // 페이지 로드 시 초기화
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     try {
         loadBoardList();
-        
+
         // 모달 폼 이벤트 리스너
         const boardForm = document.getElementById('boardForm');
         if (boardForm) {
@@ -50,60 +50,60 @@ async function loadBoardList(page = 0) {
         const result = await response.json();
         console.log('Board list response:', result); // 디버깅용
         console.log('Response structure:', JSON.stringify(result, null, 2));
-        
+
         // ResponseDto 구조 확인
         if (!result) {
             console.error('No response received');
             alert('게시판 목록을 불러오는데 실패했습니다.');
             return;
         }
-        
+
         // status가 200인지 확인 (ResponseDto 구조)
         if (result.status && result.status !== 200) {
             console.error('Invalid status:', result.status, result.message);
             alert(result.message || '게시판 목록을 불러오는데 실패했습니다.');
             return;
         }
-        
+
         // data 추출 (ResponseDto.data 또는 직접 Page 객체)
         let data = result.data;
-        
+
         // data가 없으면 result 자체가 Page 객체일 수 있음
         if (!data && result.content) {
             data = result;
         }
-        
+
         if (!data) {
             console.error('No data in response:', result);
             alert('게시판 목록 데이터가 없습니다.');
             return;
         }
-        
+
         console.log('Extracted data:', data);
         console.log('Data type:', typeof data);
         console.log('Data keys:', Object.keys(data));
-        
+
         // Page 객체 구조 확인 (content, number, totalPages 등)
         const content = data.content || data.elements || (Array.isArray(data) ? data : []);
         const number = data.number !== undefined ? data.number : (data.pageNumber !== undefined ? data.pageNumber : 0);
         const totalPages = data.totalPages !== undefined ? data.totalPages : (data.totalPageCount !== undefined ? data.totalPageCount : 1);
         const totalElements = data.totalElements !== undefined ? data.totalElements : (data.total !== undefined ? data.total : content.length);
-        
-        console.log('Page info:', { 
-            content: content.length, 
-            number, 
+
+        console.log('Page info:', {
+            content: content.length,
+            number,
             totalPages,
             totalElements: totalElements,
             size: data.size || 8,
             first: data.first !== undefined ? data.first : (number === 0),
             last: data.last !== undefined ? data.last : (number === totalPages - 1)
         });
-        
+
         currentBoardPage = number;
         totalBoardPages = totalPages;
-        
+
         console.log(`현재 페이지: ${currentBoardPage + 1}/${totalBoardPages}, 게시판 수: ${content.length}개, 전체: ${totalElements}개`);
-        
+
         renderBoardTable(content);
         renderBoardPagination();
     } catch (error) {
@@ -127,7 +127,7 @@ function renderBoardTable(boards) {
     boards.forEach((board, index) => {
         const row = document.createElement('tr');
         const rowNumber = currentBoardPage * 8 + index + 1;
-        
+
         const createdAt = new Date(board.createdAt).toLocaleString('ko-KR', {
             year: 'numeric',
             month: '2-digit',
@@ -242,6 +242,8 @@ function openAddBoardModal() {
     hideError('boardNameError');
     hideError('employeeSearchError');
     document.getElementById('boardModal').style.display = 'block';
+    document.body.classList.add('modal-open');
+    document.documentElement.classList.add('modal-open');
 }
 
 // 게시판 수정 모달 열기
@@ -276,7 +278,7 @@ async function openEditBoardModal(boardId) {
         isEditMode = true;
         editingBoardId = boardId;
         selectedEmployees = [];
-        
+
         // 권한 정보 로드
         if (permissionResponse && permissionResponse.ok) {
             try {
@@ -306,17 +308,19 @@ async function openEditBoardModal(boardId) {
         document.getElementById('submitBtn').textContent = '수정';
         document.getElementById('boardId').value = boardId;
         document.getElementById('boardName').value = board.boardName || '';
-        
+
         // 댓글 허용 설정
         const commentRadio = document.querySelector(`input[name="commentActivated"][value="${board.commentActivated ? 'true' : 'false'}"]`);
         if (commentRadio) {
             commentRadio.checked = true;
         }
-        
+
         // 선택된 사원 표시
         renderSelectedEmployees();
         document.getElementById('employeeSearchResults').innerHTML = '';
         document.getElementById('boardModal').style.display = 'block';
+        document.body.classList.add('modal-open');
+        document.documentElement.classList.add('modal-open');
     } catch (error) {
         console.error('Error loading board detail:', error);
         if (error.message !== 'SESSION_EXPIRED') {
@@ -328,6 +332,8 @@ async function openEditBoardModal(boardId) {
 // 게시판 모달 닫기
 function closeBoardModal() {
     document.getElementById('boardModal').style.display = 'none';
+    document.body.classList.remove('modal-open');
+    document.documentElement.classList.remove('modal-open');
     document.getElementById('boardForm').reset();
     document.getElementById('employeeSearchResults').innerHTML = '';
     selectedEmployees = [];
@@ -383,7 +389,7 @@ async function handleBoardSubmit(e) {
             commentActivated: commentActivated
         };
 
-        const url = isEditMode 
+        const url = isEditMode
             ? `${API_BASE_URL}/${editingBoardId}`
             : API_BASE_URL;
         const method = isEditMode ? 'PUT' : 'POST';
@@ -431,21 +437,21 @@ async function searchEmployee(keyword) {
         const searchInput = document.getElementById('employeeSearchInput');
         keyword = searchInput?.value.trim();
     }
-    
+
     if (!keyword || keyword.length < 2) {
         return;
     }
-    
+
     // 최대 30자 제한
     if (keyword.length > 30) {
         return;
     }
-    
+
     const resultsDiv = document.getElementById('employeeSearchResults');
     if (!resultsDiv) {
         return;
     }
-    
+
     try {
         const response = await apiFetch(`${EMPLOYEE_SEARCH_API}?keyword=${encodeURIComponent(keyword)}`, {
             method: 'GET',
@@ -481,16 +487,16 @@ function displayEmployeeSearchResults(employees) {
     if (!resultsDiv) {
         return;
     }
-    
+
     resultsDiv.innerHTML = '';
-    
+
     // 검색 결과가 50건 이상이면 안내 메시지 표시
     if (Array.isArray(employees) && employees.length >= 50) {
         resultsDiv.innerHTML = '<div class="no-results">검색 결과가 너무 많습니다. 검색어를 더 입력해주세요.</div>';
         resultsDiv.style.display = 'block';
         return;
     }
-    
+
     if (employees.length === 0) {
         resultsDiv.innerHTML = '<div class="no-results">검색 결과가 없습니다.</div>';
         resultsDiv.style.display = 'block';
@@ -553,7 +559,7 @@ async function selectEmployee(employee) {
 
             const result = await response.json();
             const permissions = result.data || [];
-            
+
             // 권한이 성공적으로 부여된 경우
             if (permissions.length > 0) {
                 const permission = permissions[0];
@@ -603,9 +609,9 @@ async function selectEmployee(employee) {
 }
 
 // 선택된 사원 제거 (전역 함수로 선언)
-window.removeEmployee = async function(employeeId, permissionId) {
+window.removeEmployee = async function (employeeId, permissionId) {
     console.log('removeEmployee called:', { employeeId, permissionId, isEditMode });
-    
+
     // permissionId가 문자열 'null'이거나 null/undefined인 경우 처리
     if (permissionId === 'null' || permissionId === null || permissionId === undefined) {
         permissionId = null;
@@ -615,7 +621,7 @@ window.removeEmployee = async function(employeeId, permissionId) {
             permissionId = null;
         }
     }
-    
+
     // 수정 모드이고 권한이 이미 부여된 사원인 경우 (permissionId가 있음)
     if (isEditMode && permissionId) {
         if (!confirm('이 사원의 게시판 권한을 제거하시겠습니까?')) {
@@ -674,7 +680,7 @@ function renderSelectedEmployees() {
         div.className = 'selected-employee';
         const permissionIdValue = emp.permissionId ? emp.permissionId : 'null';
         console.log('Rendering employee:', emp.name, 'permissionId:', permissionIdValue, 'isEditMode:', isEditMode);
-        
+
         // 사원 정보를 한 줄로 표시: 이름 | 사번 | 이메일 | 부서 | 직급
         const employeeInfoText = [
             escapeHTML(emp.name || ''),
@@ -683,7 +689,7 @@ function renderSelectedEmployees() {
             escapeHTML(emp.departmentName || ''),
             escapeHTML(emp.rankName || '')
         ].filter(item => item).join(' | ');
-        
+
         // 모든 사원에 대해 항상 X 버튼 표시
         div.innerHTML = `
             <span class="employee-info">${employeeInfoText}</span>
@@ -702,14 +708,14 @@ async function saveBoardPermissions(boardCategoryId) {
     try {
         // permissionId가 없는 사원들만 권한 부여 (이미 권한이 있는 사원은 제외)
         const employeesToGrant = selectedEmployees.filter(se => !se.permissionId);
-        
+
         if (employeesToGrant.length === 0) {
             console.log('No new permissions to grant');
             return;
         }
-        
+
         const employeeIds = employeesToGrant.map(se => se.id);
-        
+
         const response = await apiFetch('/api/admin/board-permissions', {
             method: 'POST',
             headers: {
@@ -730,7 +736,7 @@ async function saveBoardPermissions(boardCategoryId) {
             console.warn('권한 저장에 실패했습니다:', response.status, errorText);
             throw new Error('권한 저장에 실패했습니다.');
         }
-        
+
         console.log('Permissions saved successfully');
     } catch (error) {
         console.error('Error saving permissions:', error);
@@ -742,11 +748,15 @@ async function saveBoardPermissions(boardCategoryId) {
 function deleteBoard(boardId) {
     deletingBoardId = boardId;
     document.getElementById('deleteModal').style.display = 'block';
+    document.body.classList.add('modal-open');
+    document.documentElement.classList.add('modal-open');
 }
 
 // 삭제 확인 모달 닫기
 function closeDeleteModal() {
     document.getElementById('deleteModal').style.display = 'none';
+    document.body.classList.remove('modal-open');
+    document.documentElement.classList.remove('modal-open');
     deletingBoardId = null;
 }
 
@@ -790,10 +800,10 @@ function escapeHTML(str) {
 }
 
 // 모달 외부 클릭 시 닫기
-window.onclick = function(event) {
+window.onclick = function (event) {
     const boardModal = document.getElementById('boardModal');
     const deleteModal = document.getElementById('deleteModal');
-    
+
     if (event.target === boardModal) {
         closeBoardModal();
     }
@@ -803,7 +813,7 @@ window.onclick = function(event) {
 }
 
 // 사원 검색 실시간 검색 설정 (메시지 수신자 검색과 동일한 방식)
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     setupEmployeeSearch();
 });
 
@@ -811,18 +821,18 @@ document.addEventListener('DOMContentLoaded', function() {
 function setupEmployeeSearch() {
     const searchInput = document.getElementById('employeeSearchInput');
     const resultsDiv = document.getElementById('employeeSearchResults');
-    
+
     if (!searchInput || !resultsDiv) {
         return;
     }
-    
+
     let searchTimeout;
-    
-    searchInput.addEventListener('input', function() {
+
+    searchInput.addEventListener('input', function () {
         const keyword = this.value.trim();
-        
+
         clearTimeout(searchTimeout);
-        
+
         // 최소 2자 이상 입력 시에만 검색
         if (keyword.length < 2) {
             resultsDiv.innerHTML = '';
@@ -830,20 +840,20 @@ function setupEmployeeSearch() {
             hideError('employeeSearchError');
             return;
         }
-        
+
         // 최대 30자 제한
         if (keyword.length > 30) {
             hideError('employeeSearchError');
             return;
         }
-        
+
         searchTimeout = setTimeout(() => {
             searchEmployee(keyword);
         }, 300);
     });
-    
+
     // Enter 키로도 검색 가능 (기존 기능 유지)
-    searchInput.addEventListener('keypress', function(e) {
+    searchInput.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             e.preventDefault();
             clearTimeout(searchTimeout);
@@ -853,9 +863,9 @@ function setupEmployeeSearch() {
             }
         }
     });
-    
+
     // 외부 클릭 시 검색 결과 닫기
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) {
             resultsDiv.style.display = 'none';
         }

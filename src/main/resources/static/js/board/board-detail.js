@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     // URL에서 categoryId가 있으면 먼저 설정
     if (urlCategoryId) {
         categoryId = parseInt(urlCategoryId);
-        console.log('[페이지 로드] URL에서 categoryId 읽음:', categoryId);
     }
 
     if (boardId) {
@@ -52,7 +51,6 @@ async function loadCurrentUser() {
             currentUserId = result.data?.id || result.data?.employeeId;
         }
     } catch (error) {
-        console.error('Error loading current user:', error);
     }
 }
 
@@ -101,7 +99,6 @@ async function loadBoardCategories() {
             }, 100);
         }
     } catch (error) {
-        console.error('Error loading board categories:', error);
     }
 }
 
@@ -158,7 +155,6 @@ function renderSidebar(accessibleBoards, organizationBoards) {
 function updateSidebarSelection(selectedCategoryId) {
     if (!selectedCategoryId) return;
 
-    console.log('[사이드바 선택 효과] categoryId:', selectedCategoryId);
 
     // 모든 선택 상태 초기화
     document.querySelectorAll('.menu-item').forEach(item => {
@@ -292,7 +288,6 @@ async function loadBoardDetail() {
                 // URL에 categoryId가 없거나, 게시글의 categoryId가 다르면 게시글의 categoryId 사용
                 if (!categoryId || categoryId !== parseInt(boardCategoryId)) {
                     categoryId = parseInt(boardCategoryId);
-                    console.log('[게시글 상세] categoryId 설정:', categoryId);
                 }
             }
             // categoryId 설정 후 사이드바 선택 효과 업데이트
@@ -307,7 +302,6 @@ async function loadBoardDetail() {
                     }, 100);
                 } else {
                     // 게시판 목록이 아직 로드되지 않았으면 로드 후 선택 효과 적용됨
-                    console.log('[게시글 상세] 게시판 목록 로드 중...');
                 }
             }
             renderBoardDetail(board);
@@ -319,7 +313,6 @@ async function loadBoardDetail() {
             showError('게시글 데이터가 없습니다.');
         }
     } catch (error) {
-        console.error('Error loading board detail:', error);
         showError('게시글을 불러오는데 실패했습니다.');
     }
 }
@@ -439,11 +432,9 @@ function renderBoardDetail(board) {
 
 // 목록으로 돌아가기
 function goBack() {
-    console.log('[목록으로 돌아가기] categoryId:', categoryId);
     if (categoryId) {
         window.location.href = `/view/board?categoryId=${categoryId}`;
     } else {
-        console.warn('[목록으로 돌아가기] categoryId가 없어 기본 페이지로 이동');
         window.location.href = '/view/board';
     }
 }
@@ -486,16 +477,12 @@ async function deleteBoard() {
 
         alert('게시글이 삭제되었습니다.');
         // categoryId를 사용하여 해당 게시판 목록으로 이동
-        console.log('[게시글 삭제] categoryId:', categoryId);
         if (categoryId) {
-            console.log('[게시글 삭제] 게시판 목록으로 이동:', categoryId);
             window.location.href = `/view/board?categoryId=${categoryId}`;
         } else {
-            console.warn('[게시글 삭제] categoryId가 없어 기본 페이지로 이동');
             window.location.href = '/view/board';
         }
     } catch (error) {
-        console.error('Error deleting board:', error);
         alert(error.message || '게시글 삭제에 실패했습니다.');
     }
 }
@@ -507,7 +494,6 @@ async function downloadFile(fileId, fileName) {
         return;
     }
 
-    console.log('Downloading file:', fileId, fileName);
 
     try {
         // fetch API를 사용하여 Authorization 헤더 포함
@@ -544,7 +530,6 @@ async function downloadFile(fileId, fileName) {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
     } catch (error) {
-        console.error('Error downloading file:', error);
         alert('파일 다운로드에 실패했습니다.');
     }
 }
@@ -612,7 +597,6 @@ async function loadComments(page = 0) {
                 location.href = '/login';
                 return;
             }
-            console.error('댓글 목록을 불러오는데 실패했습니다.');
             return;
         }
 
@@ -628,7 +612,6 @@ async function loadComments(page = 0) {
         renderComments(comments);
         renderCommentPagination();
     } catch (error) {
-        console.error('Error loading comments:', error);
         const commentList = document.getElementById('commentList');
         if (commentList) {
             commentList.innerHTML = '<div class="error-message">댓글을 불러오는데 실패했습니다.</div>';
@@ -896,7 +879,6 @@ async function saveComment(commentId) {
         editingCommentId = null;
         loadComments(currentCommentPage);
     } catch (error) {
-        console.error('Error saving comment:', error);
         alert(error.message || '댓글 수정에 실패했습니다.');
     }
 }
@@ -926,7 +908,6 @@ async function deleteComment(commentId) {
 
         loadComments(currentCommentPage);
     } catch (error) {
-        console.error('Error deleting comment:', error);
         alert(error.message || '댓글 삭제에 실패했습니다.');
     }
 }

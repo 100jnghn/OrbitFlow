@@ -104,7 +104,6 @@ async function searchEmployees(keyword) {
         const employees = result.data || result;
         displaySearchResults(Array.isArray(employees) ? employees : []);
     } catch (error) {
-        console.error('Error searching employees:', error);
         const resultsDiv = document.getElementById('recipientSearchResults');
         resultsDiv.innerHTML = '<div class="search-result-item error">검색 중 오류가 발생했습니다.</div>';
         resultsDiv.style.display = 'block';
@@ -414,7 +413,6 @@ async function handleSubmit(event) {
         // 보낸 메시지함으로 이동
         window.location.href = '/view/message/sent';
     } catch (error) {
-        console.error('Error sending message:', error);
         alert(error.message || '메시지 전송에 실패했습니다.');
     }
 }
@@ -435,7 +433,6 @@ async function initializeReplyMode() {
     const originalCreatedAt = urlParams.get('originalCreatedAt') || '';
 
     if (!senderId) {
-        console.warn('답장 모드이지만 발신자 ID가 없습니다.');
         return;
     }
 
@@ -465,7 +462,6 @@ async function initializeReplyMode() {
                 }
             }
         } catch (error) {
-            console.error('Error loading sender info for reply:', error);
             // 에러가 발생해도 계속 진행 (수동 입력 가능)
         }
     }

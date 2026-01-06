@@ -7,7 +7,7 @@ let currentPage = 0;
 let totalPages = 1;
 
 // 페이지 로드 시 초기화
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // URL에서 folderType 확인
     const urlPath = window.location.pathname;
     if (urlPath.includes('/inbox')) {
@@ -20,15 +20,15 @@ document.addEventListener('DOMContentLoaded', function() {
         // 메시지 보내기 페이지는 목록 로드하지 않음
         return;
     }
-    
+
     // 사이드바 선택 효과
     updateSidebarSelection();
-    
+
     // 메시지 목록 로드
     if (currentFolder) {
         loadMessageList(0);
     }
-    
+
     // 날짜 필터 이벤트 리스너
     setupDateFilter();
 });
@@ -40,12 +40,12 @@ function updateSidebarSelection() {
         'SENT': document.getElementById('sentLink'),
         'ARCHIVE': document.getElementById('archiveLink')
     };
-    
+
     // 모든 선택 상태 초기화
     document.querySelectorAll('.menu-item.no-sub').forEach(item => {
         item.classList.remove('selected');
     });
-    
+
     // 현재 폴더 선택
     if (currentFolder && links[currentFolder]) {
         const menuItem = links[currentFolder].closest('.menu-item.no-sub');
@@ -67,7 +67,7 @@ async function loadMessageList(page = 0) {
             size: 10,
             sort: 'createdAt,desc'
         });
-        
+
         // 보관함인 경우 archived=true, 그 외에는 archived=false
         if (currentFolder === 'ARCHIVE') {
             params.append('archived', 'true');
@@ -118,7 +118,7 @@ async function loadMessageList(page = 0) {
 
         const result = await response.json();
         const messageData = result.data || result;
-        
+
         const messageList = messageData?.content || messageData?.elements || (Array.isArray(messageData) ? messageData : []);
         totalPages = messageData?.totalPages || messageData?.totalPageCount || 1;
         currentPage = messageData?.number !== undefined ? messageData.number : page;
@@ -126,7 +126,6 @@ async function loadMessageList(page = 0) {
         renderMessageTable(messageList);
         renderPagination(currentPage);
     } catch (error) {
-        console.error('Error loading message list:', error);
         if (error.message !== 'SESSION_EXPIRED') {
             alert('메시지 목록을 불러오는데 실패했습니다.');
         }
@@ -137,12 +136,12 @@ async function loadMessageList(page = 0) {
 function renderMessageTable(messages) {
     const tbody = document.getElementById('messageTableBody');
     if (!tbody) return;
-    
+
     tbody.innerHTML = '';
 
     // 폴더별 컬럼 수 결정
     const colSpan = currentFolder === 'ARCHIVE' ? 6 : 5;
-    
+
     if (messages.length === 0) {
         tbody.innerHTML = `<tr><td colspan="${colSpan}" style="text-align: center; padding: 40px; color: #9ca3af;">등록된 메시지가 없습니다.</td></tr>`;
         return;
@@ -151,7 +150,7 @@ function renderMessageTable(messages) {
     messages.forEach((message, index) => {
         const row = document.createElement('tr');
         const rowNumber = currentPage * 10 + index + 1;
-        
+
         const title = message.title || '';
         const peerName = message.peerName || '';
         const senderName = message.senderName || '';
@@ -160,14 +159,14 @@ function renderMessageTable(messages) {
         const read = message.read !== undefined ? message.read : false;
         const readAt = message.readAt ? formatDateTime(message.readAt) : null;
         const folderType = message.folderType || currentFolder;
-        
+
         // 폴더별로 다른 컬럼 렌더링
         if (currentFolder === 'INBOX') {
             // 받은 메시지함: 번호 | 제목 | 발신자 | 수신일 | 읽음 여부
             // 미읽음은 제목 Bold, 읽음 여부는 읽었을 때만 ✔ 표시
             const titleClass = read ? '' : 'message-unread';
             const readStatus = read ? '<span style="color: #10B981;">✔</span>' : '';
-            
+
             row.innerHTML = `
                 <td>${rowNumber}</td>
                 <td>
@@ -182,7 +181,7 @@ function renderMessageTable(messages) {
         } else if (currentFolder === 'SENT') {
             // 보낸 메시지함: 번호 | 제목 | 수신자 | 발신일 | 읽은 일시
             const readDateTime = readAt ? readAt : '-';
-            
+
             row.innerHTML = `
                 <td>${rowNumber}</td>
                 <td>
@@ -199,7 +198,7 @@ function renderMessageTable(messages) {
             const folderIcon = folderType === 'INBOX' ? '📥 받은 메시지' : '📤 보낸 메시지';
             // 수신자 이름: 보관함에서 받은 메시지는 현재 사용자(recipientName), 보낸 메시지는 peerName
             const displayRecipientName = recipientName || (folderType === 'INBOX' ? '' : peerName);
-            
+
             row.innerHTML = `
                 <td>${rowNumber}</td>
                 <td>
@@ -226,7 +225,7 @@ function renderMessageTable(messages) {
                 <td>${read ? '읽음' : '미읽음'}</td>
             `;
         }
-        
+
         tbody.appendChild(row);
     });
 }
@@ -235,7 +234,7 @@ function renderMessageTable(messages) {
 function renderPagination(page) {
     const pagination = document.getElementById('messagePagination');
     if (!pagination) return;
-    
+
     pagination.innerHTML = '';
 
     // 이전 버튼
@@ -335,21 +334,21 @@ function setupDateFilter() {
     const dateFilter = document.getElementById('dateFilter');
     const startDateInput = document.getElementById('startDate');
     const endDateInput = document.getElementById('endDate');
-    
+
     if (!dateFilter || !startDateInput || !endDateInput) return;
-    
-    dateFilter.addEventListener('change', function() {
+
+    dateFilter.addEventListener('change', function () {
         if (this.value === 'custom') {
             startDateInput.style.display = 'inline-block';
             endDateInput.style.display = 'inline-block';
         } else {
             startDateInput.style.display = 'none';
             endDateInput.style.display = 'none';
-            
+
             // 날짜 자동 설정
             const today = new Date();
             let startDate = new Date();
-            
+
             if (this.value === 'today') {
                 startDate = today;
             } else if (this.value === 'week') {
@@ -357,7 +356,7 @@ function setupDateFilter() {
             } else if (this.value === 'month') {
                 startDate.setMonth(today.getMonth() - 1);
             }
-            
+
             if (this.value !== '') {
                 const startDateStr = startDate.toISOString().split('T')[0];
                 const endDateStr = today.toISOString().split('T')[0];
@@ -368,9 +367,9 @@ function setupDateFilter() {
             }
         }
     });
-    
+
     // 시작일 변경 시 종료일의 최소값 설정
-    startDateInput.addEventListener('change', function() {
+    startDateInput.addEventListener('change', function () {
         const startDate = this.value;
         if (startDate) {
             // 종료일의 최소값을 시작일로 설정
@@ -381,9 +380,9 @@ function setupDateFilter() {
             }
         }
     });
-    
+
     // 종료일 변경 시 시작일보다 이전인지 확인
-    endDateInput.addEventListener('change', function() {
+    endDateInput.addEventListener('change', function () {
         const endDate = this.value;
         const startDate = startDateInput.value;
         if (startDate && endDate && endDate < startDate) {
@@ -391,11 +390,11 @@ function setupDateFilter() {
             this.value = startDate;
         }
     });
-    
+
     // 검색 입력 필드에 엔터 키 이벤트 추가
     const searchKeyword = document.getElementById('searchKeyword');
     if (searchKeyword) {
-        searchKeyword.addEventListener('keydown', function(e) {
+        searchKeyword.addEventListener('keydown', function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 searchMessages();
@@ -427,7 +426,7 @@ function formatDateTime(dateString) {
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     const seconds = String(date.getSeconds()).padStart(2, '0');
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    return `${year}-${month}-${day} <span class="time-part">${hours}:${minutes}:${seconds}</span>`;
 }
 
 // HTML 이스케이프

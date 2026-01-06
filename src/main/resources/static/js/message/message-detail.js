@@ -96,7 +96,6 @@ async function loadMessageDetail() {
             showError('메시지 데이터가 없습니다.');
         }
     } catch (error) {
-        console.error('Error loading message detail:', error);
         showError('메시지를 불러오는데 실패했습니다.');
     }
 }
@@ -302,7 +301,6 @@ async function archiveMessage() {
         // 보관함으로 이동
         window.location.href = '/view/message/archive';
     } catch (error) {
-        console.error('Error archiving message:', error);
         alert('보관함 이동에 실패했습니다.');
     }
 }
@@ -344,7 +342,6 @@ async function unarchiveMessage() {
             window.location.href = '/view/message/sent';
         }
     } catch (error) {
-        console.error('Error unarchiving message:', error);
         alert('보관 해제에 실패했습니다.');
     }
 }
@@ -388,7 +385,6 @@ async function deleteMessage() {
             window.location.href = '/view/message/sent';
         }
     } catch (error) {
-        console.error('Error deleting message:', error);
         alert('메시지 삭제에 실패했습니다.');
     }
 }
@@ -519,7 +515,6 @@ async function downloadMessageFile(fileId) {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
     } catch (error) {
-        console.error('Error downloading file:', error);
         alert('파일 다운로드에 실패했습니다.');
     }
 }
