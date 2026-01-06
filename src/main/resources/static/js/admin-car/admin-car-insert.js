@@ -238,8 +238,8 @@ async function validateImageFile(file) {
             }
 
             // 16:9 초과 체크
-            const maxRatio = 16 / 9; // 약 1.778
-            if (ratio > maxRatio) {
+            const maxRatio = 1.7; // 약 1.778
+            if (width * 9 > height * 16) {
                 resolve({
                     valid: false,
                     message: '이미지 비율은 최대 16:9까지 가능합니다. (현재 비율: ' +
