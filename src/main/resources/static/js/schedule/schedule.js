@@ -922,21 +922,42 @@
     async function handleScheduleSubmit(e) {
         e.preventDefault();
 
-        // 중복 제출 방지
-        if (isSubmitting) {
-            return;
-        }
-        isSubmitting = true;
 
         const title = document.getElementById('scheduleTitle').value.trim();
         const description = document.getElementById('scheduleDescription').value.trim();
-        const startDate = document.getElementById('scheduleStartDate').value;
-        const startHour = document.getElementById('scheduleStartHour').value;
-        const startMinute = document.getElementById('scheduleStartMinute').value;
-        const endDate = document.getElementById('scheduleEndDate').value;
-        const endHour = document.getElementById('scheduleEndHour').value;
-        const endMinute = document.getElementById('scheduleEndMinute').value;
+        // const startDate = document.getElementById('scheduleStartDate').value;
+        // const startHour = document.getElementById('scheduleStartHour').value;
+        // const startMinute = document.getElementById('scheduleStartMinute').value;
+        // const endDate = document.getElementById('scheduleEndDate').value;
+        // const endHour = document.getElementById('scheduleEndHour').value;
+        // const endMinute = document.getElementById('scheduleEndMinute').value;
         const isPersonal = document.getElementById('isPersonalSchedule').checked;
+
+        const DEFAULT_START_HOUR = '09';
+        const DEFAULT_START_MINUTE = '00';
+        const DEFAULT_END_HOUR = '18';
+        const DEFAULT_END_MINUTE = '00';
+
+        const startDate =
+            document.getElementById('scheduleStartDate').value ||
+            document.getElementById('scheduleEndDate').value ||
+            new Date().toISOString().slice(0, 10);
+
+        const endDate =
+            document.getElementById('scheduleEndDate').value || startDate;
+
+        const startHour =
+            document.getElementById('scheduleStartHour').value || DEFAULT_START_HOUR;
+
+        const startMinute =
+            document.getElementById('scheduleStartMinute').value || DEFAULT_START_MINUTE;
+
+        const endHour =
+            document.getElementById('scheduleEndHour').value || DEFAULT_END_HOUR;
+
+        const endMinute =
+            document.getElementById('scheduleEndMinute').value || DEFAULT_END_MINUTE;
+
 
         const orgId = isPersonal ? '' : document.getElementById('scheduleOrg').value;
         let orgCategoryId = null;
@@ -1009,9 +1030,21 @@
                     location.href = '/login';
                     return;
                 }
-                const error = await response.json();
-                throw new Error(error.message || '일정 등록에 실패했습니다.');
+                let errorMessage = '일정 등록에 실패했습니다.';
+
+                try {
+                    const error = await response.json();
+                    errorMessage = error.message || errorMessage;
+                } catch (e) {
+                    // 응답 body가 없거나 JSON이 아닌 경우
+                }
+
+                throw new Error(errorMessage);
             }
+
+            console.log('status:', response.status);
+            console.log('content-type:', response.headers.get('content-type'));
+
 
             alert('일정이 등록되었습니다.');
             closeScheduleModal();

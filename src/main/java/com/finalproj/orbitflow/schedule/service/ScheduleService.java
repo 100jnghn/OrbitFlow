@@ -20,8 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Stream;
 
 /**
@@ -397,7 +399,11 @@ public class ScheduleService {
     // 알림 메시지 만들기
     private String createNotificationMessage(Schedule schedule, String type) {
 
-        String date = schedule.getStartAt().toString() + " ~ " + schedule.getEndAt().toString();
+        String date = schedule.getStartAt().format(
+                DateTimeFormatter.ofPattern("yyyy-MM-dd a hh:mm", Locale.KOREAN)
+        ) + " ~ " + schedule.getEndAt().format(
+                DateTimeFormatter.ofPattern("yyyy-MM-dd a hh:mm", Locale.KOREAN)
+        );
         String msg = date + "\n" + schedule.getTitle() + " - " + schedule.getDescription();
 
         return msg;
