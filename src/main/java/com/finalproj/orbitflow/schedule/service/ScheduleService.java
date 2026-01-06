@@ -400,9 +400,9 @@ public class ScheduleService {
     private String createNotificationMessage(Schedule schedule, String type) {
 
         String date = schedule.getStartAt().format(
-                DateTimeFormatter.ofPattern("yyyy-MM-dd a hh:mm", Locale.KOREAN)
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.KOREAN)
         ) + " ~ " + schedule.getEndAt().format(
-                DateTimeFormatter.ofPattern("yyyy-MM-dd a hh:mm", Locale.KOREAN)
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.KOREAN)
         );
         String msg = date + "\n" + schedule.getTitle() + " - " + schedule.getDescription();
 

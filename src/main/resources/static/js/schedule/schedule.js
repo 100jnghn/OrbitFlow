@@ -933,9 +933,9 @@
         // const endMinute = document.getElementById('scheduleEndMinute').value;
         const isPersonal = document.getElementById('isPersonalSchedule').checked;
 
-        const DEFAULT_START_HOUR = '09';
+        const DEFAULT_START_HOUR = '00';
         const DEFAULT_START_MINUTE = '00';
-        const DEFAULT_END_HOUR = '18';
+        const DEFAULT_END_HOUR = '00';
         const DEFAULT_END_MINUTE = '00';
 
         const startDate =
@@ -994,7 +994,7 @@
         const startDateTime = new Date(`${startDate}T${startTime}`);
         const endDateTime = new Date(`${endDate}T${endTime}`);
 
-        if (endDateTime <= startDateTime) {
+        if (endDateTime < startDateTime) {
             alert('종료 날짜/시간은 시작 날짜/시간보다 이후여야 합니다.');
             return;
         }
