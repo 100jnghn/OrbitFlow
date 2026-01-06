@@ -1,0 +1,147 @@
+/* =========================
+   Sidebar Extension (내선번호)
+========================= */
+
+/* 하단 영역 전체 */
+.sidebar-footer {
+    margin-top: auto;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    background: #0b1220;
+
+    /* 🔥 중요: 내부 스크롤 제어를 위한 flex */
+    display: flex;
+    flex-direction: column;
+
+    /* 사용자/관리자 공통 기준 높이 */
+    max-height: 45vh;
+}
+
+/* 내선번호 헤더 (토글) */
+.extension-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 12px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+
+    flex-shrink: 0; /* 스크롤 시 고정 */
+}
+
+/* =========================
+   내선번호 트리 (스크롤 영역)
+========================= */
+.extension-tree {
+    flex: 1;                     /* 🔥 핵심 */
+    min-height: 120px;
+    max-height: 40vh;            /* 사용자/관리자 동일 비율 */
+    overflow-y: auto;
+
+    font-size: 12px;
+    background: #0b1220;
+}
+
+.extension-tree.hidden {
+    display: none;
+}
+
+/* =========================
+   조직
+========================= */
+.extension-org {
+    padding: 6px 14px;
+    font-weight: 600;
+    color: #ddd;
+    background: #0b1220;
+}
+
+/* =========================
+   사원
+========================= */
+.extension-emp {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 4px 14px;
+    cursor: pointer;
+    color: #ccc;
+}
+
+.extension-emp:hover {
+    background: rgba(255,255,255,0.06);
+}
+
+.extension-emp.active {
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+}
+
+/* 왼쪽 묶음 (이름 + 내선번호) */
+.extension-emp .emp-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.extension-emp .phone {
+    color: #9ecbff;
+}
+
+/* =========================
+   근무 상태 점 (사이드바 전용)
+   ※ Hero 점과 완전 분리
+========================= */
+.extension-emp .work-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+
+    background: #9ca3af; /* 기본 */
+    flex-shrink: 0;      /* 줄어들지 않게 */
+}
+
+/* 상태별 색상 */
+.extension-emp .work-dot.working {
+    background: #22c55e; /* 근무중 */
+}
+
+.extension-emp .work-dot.away {
+    background: #f59e0b; /* 자리비움 */
+}
+
+.extension-emp .work-dot.off {
+    background: #9ca3af; /* 퇴근 */
+}
+
+
+/* =========================
+   Extension Scrollbar
+========================= */
+
+/* Chrome, Edge, Safari */
+.extension-tree::-webkit-scrollbar {
+    width: 6px;
+}
+
+.extension-tree::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.extension-tree::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+}
+
+.extension-tree::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.32);
+}
+
+/* Firefox */
+.extension-tree {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}

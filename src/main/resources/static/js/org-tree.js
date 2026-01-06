@@ -1,3 +1,9 @@
+const EMPLOYMENT_LABEL = {
+    REGULAR: '정규직',
+    NON_REGULAR: '비정규직',
+    CONTRACT: '계약직'
+};
+
 const STATUS_LABEL = {
     TEMP: '미활성',
     ACTIVE: '재직중',
@@ -84,7 +90,7 @@ window.loadEmployeeDetail = async function (id) {
     document.getElementById('empInternalPhone').textContent = e.internalPhone ?? '-';
 
     document.getElementById('empEmployeeNo').textContent = e.employeeNo ?? '-';
-    document.getElementById('empEmploymentType').textContent = e.employmentType ?? '-';
+    document.getElementById('empEmploymentType').textContent = EMPLOYMENT_LABEL[e.employmentType] ?? '-';
     document.getElementById('empHireDate').textContent =
         e.hireDate ? e.hireDate.replaceAll('-', '.') : '-';
 
@@ -92,9 +98,9 @@ window.loadEmployeeDetail = async function (id) {
     document.getElementById('empRank').textContent = e.rankName ?? '-';
     document.getElementById('empPosition').textContent = e.positionName ?? '-';
 
-    const status = document.getElementById('empStatus');
-    status.textContent = STATUS_LABEL[e.status] ?? e.status;
-    status.className = `emp-status ${e.status.toLowerCase()}`;
+    // const status = document.getElementById('empStatus');
+    // status.textContent = STATUS_LABEL[e.status] ?? e.status;
+    // status.className = `emp-status ${e.status.toLowerCase()}`;
 
     // 근무 상태 조회 (Attendance 도메인)
     await loadEmployeeWorkStatus(id);
@@ -110,4 +116,12 @@ async function loadEmployeeWorkStatus(employeeId) {
 
     document.getElementById('empWorkStatus').textContent =
         WORK_STATUS_LABEL[data.workStatus] ?? '-';
+
+    const dot = document.getElementById('empWorkDot');
+    dot.className = 'hero-work-dot';
+
+    if (data.workStatus === 'WORKING') dot.classList.add('working');
+    else if (data.workStatus === 'OFF_WORK') dot.classList.add('off');
+    else if (data.workStatus === 'AWAY') dot.classList.add('away');
+
 }
