@@ -173,19 +173,7 @@
     grid-row: 3 / 4;
 }
 
-/*제거 버튼 컨테이너*/
-.info-grid .upload-actions {
-    grid-column: 2 / 4;
-    /* 이미지 영역 전체 폭 */
-    grid-row: 4 / 5;
-    /* 이미지 아래 한 줄 */
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-    /* 오른쪽 정렬 */
-    align-items: center;
-    /* 세로 가운데 정렬 */
-}
+
 
 .info-description-wrapper {
     display: flex;
@@ -273,6 +261,13 @@
     color: #999;
 }
 
+/* 버튼 컨테이너 */
+.upload-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
 .btn-remove,
 .btn-remove-img {
     display: inline-flex;
@@ -285,10 +280,6 @@
     cursor: pointer;
     border: none;
     transition: all 0.2s;
-}
-
-.btn-remove,
-.btn-remove-img {
     background: #e74c3c;
     color: #fff;
 }
