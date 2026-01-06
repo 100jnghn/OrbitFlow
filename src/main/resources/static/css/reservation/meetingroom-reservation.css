@@ -92,19 +92,15 @@
     border-radius: 12px;
     padding: 24px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-
-    /* ⭐ 가운데 정렬 핵심 */
-    display: flex;
-    justify-content: center; /* 좌우 */
-    align-items: center;     /* 상하 */
-
-    /* 중요 */
-    min-height: 400px;       /* 최소 높이 지정 (없으면 상하 중앙 안 보임) */
-    overflow-x: auto;
+    width: 100%;
+    min-height: 280px;
+    max-height: 280px;
+    box-sizing: border-box;
 }
 
 .grid-inner {
-    display: inline-block; /* 내용 크기만큼 */
+    display: block;
+    width: 100%;
 }
 
 .grid-header {
@@ -115,8 +111,9 @@
 .room-column-header {
     display: flex;
 
-    /*width: 150px;*/
-    min-width: 150px;
+    width: 120px;
+    min-width: 100px;
+    height: 10px;
     padding: 12px 8px;
     background: #f8f9fa;
     border: 1px solid #e9ecef;
@@ -129,8 +126,10 @@
 
 .room-name-cell {
     display: flex;
-    /*width: 150px;*/
-    min-width: 150px;
+    width: 120px;
+    min-width: 100px;
+    height: 10px;
+
     padding: 12px 8px;
     background: #f8f9fa;
     border: 1px solid #e9ecef;
@@ -151,9 +150,9 @@
 }
 
 .time-header {
-    flex: 0 0 50px; /* 고정 폭 */
-    min-width: 50px;
-    padding: 8px;
+    flex: 1;
+    min-width: 42px;
+    padding: 8px 4px;
     background: #f8f9fa;
     border: 1px solid #e9ecef;
     border-left: none;
@@ -161,8 +160,7 @@
     font-size: 12px;
     text-align: center;
     white-space: nowrap;
-    box-sizing: border-box; /* 이거 없으면 셀 선택 시 크기 달라져서 정렬 깨짐 */
-
+    box-sizing: border-box;
 }
 
 .time-cells {
@@ -171,9 +169,9 @@
 }
 
 .time-cell {
-    flex: 0 0 50px;
-    min-width: 50px;
-    padding: 12px 8px;
+    flex: 1;
+    min-width: 42px;
+    padding: 12px 4px;
     border: 1px solid #e9ecef;
     border-left: none;
     border-top: none;
@@ -181,7 +179,7 @@
     font-size: 12px;
     cursor: pointer;
     transition: background-color 0.2s;
-    box-sizing: border-box; /* 이거 없으면 셀 선택 시 크기 달라져서 정렬 깨짐 */
+    box-sizing: border-box;
 }
 
 .time-header:last-child {
@@ -421,6 +419,7 @@
     from {
         transform: rotate(0deg);
     }
+
     to {
         transform: rotate(360deg);
     }
@@ -448,4 +447,3 @@
         width: 100%;
     }
 }
-
