@@ -13,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -54,4 +55,42 @@ public class OrgUserController {
                 )
         );
     }
+
+    @GetMapping
+    public ResponseEntity<ResponseDto<List<OrgResDto>>> listOrSearch(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "false") boolean includeDescendants
+    ) {
+        Long companyId = SecurityUtils.getCompanyId();
+
+        // 검색어 없으면 → 사용자 기준 전체 조직 (회사 제외)
+        if (keyword == null || keyword.isBlank()) {
+            List<OrgResDto> orgs = orgService.findAll(companyId, false)
+                    .stream()
+                    .filter(o -> o.getParentOrgId() != null)
+                    .toList();
+
+            return ResponseEntity.ok(
+                    new ResponseDto<>(
+                            HttpStatus.OK,
+                            "조직 목록 조회",
+                            orgs
+                    )
+            );
+        }
+
+        // 검색
+        return ResponseEntity.ok(
+                new ResponseDto<>(
+                        HttpStatus.OK,
+                        "조직 검색 결과 조회",
+                        orgService.searchForUser(
+                                companyId,
+                                keyword,
+                                includeDescendants
+                        )
+                )
+        );
+    }
+
 }
