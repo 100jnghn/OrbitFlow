@@ -23,7 +23,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Stream;
 
 /**
@@ -400,9 +399,9 @@ public class ScheduleService {
     private String createNotificationMessage(Schedule schedule, String type) {
 
         String date = schedule.getStartAt().format(
-                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.KOREAN)
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
         ) + " ~ " + schedule.getEndAt().format(
-                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.KOREAN)
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
         );
         String msg = date + "\n" + schedule.getTitle() + " - " + schedule.getDescription();
 
