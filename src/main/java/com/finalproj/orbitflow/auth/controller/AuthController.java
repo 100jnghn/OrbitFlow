@@ -48,8 +48,11 @@ public class AuthController {
      * 로그인
      */
     @PostMapping("/login")
-    public ResponseEntity<ResponseDto> login(@RequestBody LoginReqDto request,
-                                             HttpServletResponse response) {
+    public ResponseEntity<ResponseDto> login(
+            @RequestBody LoginReqDto request,
+            @CookieValue(value = "refreshToken", required = false) String oldRefreshToken,
+            HttpServletResponse response
+    ) {
 
         SecurityUser user;
         try {
@@ -66,9 +69,10 @@ public class AuthController {
             throw new ForbiddenException("계정이 활성 상태가 아닙니다.");
         }
 
-        // 동시 로그인 차단하려면 주석 풀기
-//        authService.invalidateAll(user.getEmployeeId());
-
+        // 추가) 기존 refresh token 정리
+        if (oldRefreshToken != null) {
+            authService.invalidateRefreshToken(oldRefreshToken);
+        }
 
         String accessToken = jwtProvider.createToken(user);
         RefreshToken refreshToken = authService.issueRefreshToken(user);
