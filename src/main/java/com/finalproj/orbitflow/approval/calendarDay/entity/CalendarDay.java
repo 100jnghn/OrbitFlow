@@ -1,9 +1,8 @@
 package com.finalproj.orbitflow.approval.calendarDay.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.finalproj.orbitflow.approval.calendarDay.enums.CalendarDayType;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -22,6 +21,7 @@ import java.time.LocalDate;
 @Table(name = "calendar_day")
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class CalendarDay {
 
     @Id
@@ -34,25 +34,19 @@ public class CalendarDay {
     @Column(name = "day_of_week", nullable = false)
     private int dayOfWeek;
 
-    @Column(name = "is_public_holiday", nullable = false)
-    private boolean publicHoliday;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "day_type", nullable = false, length = 20)
+    private CalendarDayType dayType;
 
     @Column(name = "holiday_name", length = 50)
     private String holidayName;
 
-    public CalendarDay(
-            LocalDate date,
-            int dayOfWeek,
-            boolean publicHoliday,
-            String holidayName
-    ) {
-        this.date = date;
-        this.dayOfWeek = dayOfWeek;
-        this.publicHoliday = publicHoliday;
-        this.holidayName = holidayName;
-    }
 
     public boolean isHoliday() {
-        return publicHoliday;
+        return dayType.isHoliday();
+    }
+
+    public boolean isChargeableForLeave() {
+        return dayType.isChargeableForLeave();
     }
 }

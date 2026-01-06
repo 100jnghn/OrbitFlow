@@ -9,6 +9,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.Year;
 
 /**
  * Please explain the class!!!
@@ -30,17 +31,22 @@ public class CalendarStartupInitializer implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
 
-        if (calendarDayRepository.count() > 0) {
-            log.info("[CalendarInit] Calendar data already exists. Skip initialization.");
+        int year = LocalDate.now().getYear();
+
+        LocalDate start = LocalDate.of(year, 1, 1);
+        LocalDate end = LocalDate.of(year, 12, 31);
+
+        long count = calendarDayRepository.countByDateBetween(start, end);
+        int expected = Year.isLeap(year) ? 366 : 365;
+
+        if (count == expected) {
             return;
         }
 
-        int currentYear = LocalDate.now().getYear();
-        int nextYear = currentYear + 1;
-
-        log.info("[CalendarInit] No calendar data found. Initializing {} and {}", currentYear, nextYear);
-
-        calendarInitService.generateYear(currentYear);
-        //calendarInitService.generateYear(nextYear);
+        if (count > 0) {
+            calendarInitService.regenerateYear(year);
+        } else {
+            calendarInitService.generateYear(year);
+        }
     }
 }

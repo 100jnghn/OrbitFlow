@@ -1454,12 +1454,13 @@ CREATE INDEX idx_manual_comp_category ON manual_metadata (company_id, category_i
 
 CREATE TABLE calendar_day
 (
-    date              DATE    NOT NULL,
-    day_of_week       TINYINT NOT NULL COMMENT '1=Mon ~ 7=Sun',
-    is_public_holiday BOOLEAN NOT NULL DEFAULT FALSE,
-    holiday_name      VARCHAR(50),
+    date         DATE        NOT NULL,
+    day_of_week  TINYINT     NOT NULL COMMENT '1=Mon ~ 7=Sun',
+    day_type     VARCHAR(20) NOT NULL COMMENT 'WORKDAY, PUBLIC_HOLIDAY, PAID_HOLIDAY, UNPAID_HOLIDAY',
+    holiday_name VARCHAR(50),
 
     PRIMARY KEY (date)
 );
-CREATE INDEX idx_calendar_day_holiday
-    ON calendar_day (is_public_holiday);
+
+CREATE INDEX idx_calendar_day_type
+    ON calendar_day (day_type);
