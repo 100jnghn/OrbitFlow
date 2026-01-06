@@ -1137,4 +1137,22 @@
         width: 95%;
         margin: 10% auto;
     }
+
+}
+
+/* ===== 주말 / 공휴일 배경 (강제 우선) ===== */
+
+/* 일요일 */
+.calendar-day.sunday {
+    background: #ffeded !important;
+}
+
+/* 토요일 */
+.calendar-day.saturday {
+    background: #e9f4ff !important;
+}
+
+/* 공휴일 (주말보다 우선) */
+.calendar-day.holiday {
+    background: #ffeded !important;
 }

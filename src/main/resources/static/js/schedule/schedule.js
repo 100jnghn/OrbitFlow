@@ -2,6 +2,8 @@
     console.log('schedule.js loaded');
 
     // 전역 변수
+    let holidayMap = new Map(); // key: yyyy-MM-dd, value: CalendarDayResDto
+
     let currentDate = new Date();
     let schedules = [];
     let selectedOrgIds = [];
@@ -29,7 +31,7 @@
     }
 
     // js 로드될 때 초기화
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', async function () {
         updateApprovalSidebarSelection();
         initializeTimeSelects();
         setupEventListeners();
@@ -38,25 +40,28 @@
         document.getElementById('personalToggle').classList.toggle('active', showPersonal);
         document.getElementById('companyToggle').classList.toggle('active', showCompany);
         document.getElementById('approvalToggle').classList.toggle('active', showApproval);
-        loadOrganizations();
+        await loadOrganizations();
 
         // 오늘 날짜를 선택된 날짜로 설정
         selectedDate = new Date();
         selectedDate.setHours(0, 0, 0, 0);
 
+        // 해당 년도 휴일 조회
+        await loadHolidays(selectedDate.getFullYear());
+
         // AI 일정 요약 기능 호출
         // 시간은 백엔드에서 계산
-        loadScheduleSummary();
+        await loadScheduleSummary();
 
 
         // 초기 로드 시 list-title 업데이트
         updateScheduleListTitle();
 
-        loadSchedules();
+        await loadSchedules();
         renderCalendar();
 
         // 오늘 날짜의 일정 로드
-        loadDateSchedules(selectedDate);
+        await loadDateSchedules(selectedDate);
     });
 
     function renderMarkdown(text) {
@@ -417,6 +422,34 @@
         }
     }
 
+    // 휴일 + 주말 정보 로드 (연 단위 1회)
+    async function loadHolidays(year) {
+        try {
+            const response = await apiFetch(`/api/calendar/holidays?year=${year}`);
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    location.href = '/login';
+                    return;
+                }
+                throw new Error('휴일 정보를 불러오지 못했습니다.');
+            }
+
+            const result = await response.json();
+            const list = result.data || [];
+
+            holidayMap.clear();
+            list.forEach(day => {
+                holidayMap.set(day.date, day);
+            });
+
+            console.log(`휴일 ${list.length}건 로드 완료`);
+        } catch (error) {
+            console.error('휴일 로드 실패:', error);
+        }
+    }
+
+
     // 일정 로드
     async function loadSchedules() {
         try {
@@ -557,6 +590,33 @@
 
             const dayElement = document.createElement('div');
             dayElement.className = 'calendar-day';
+
+            // 휴일
+            const yyyyMMdd = formatYYYYMMDD(date);
+            const holiday = holidayMap.get(yyyyMMdd);
+
+            if (holiday) {
+                console.log('휴일 매칭:', yyyyMMdd, holiday.dayType);
+            }
+
+            // JS 기준 요일
+            const jsDay = date.getDay(); // 0=일, 6=토
+
+            // 일요일
+            if (jsDay === 0) {
+                dayElement.classList.add('sunday');
+            }
+
+            // 토요일
+            if (jsDay === 6) {
+                dayElement.classList.add('saturday');
+            }
+
+            // 공휴일 (주말보다 우선)
+            if (holiday && holiday.dayType !== 'WORKDAY') {
+                dayElement.classList.add('holiday');
+            }
+
 
             if (date.getMonth() !== month) {
                 dayElement.classList.add('other-month');
@@ -747,6 +807,14 @@
         });
 
         return item;
+    }
+
+    // 날짜 포맷
+    function formatYYYYMMDD(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
     }
 
     // 날짜/시간 포맷
