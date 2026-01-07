@@ -9,6 +9,8 @@
       )}">
 
 <!-- ================= 페이지별 CSS ================= -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
+
 <th:block th:fragment="pageCss">
   <link rel="stylesheet" th:href="@{/css/admin-org-category.css}">
 </th:block>
@@ -16,13 +18,13 @@
 <!-- ================= 메인 컨텐츠 ================= -->
 <th:block th:fragment="content">
 
-  <!-- 상단 타이틀 -->
-  <div class="orgcat-title-row">
-    <h1 class="orgcat-title">조직 카테고리 관리</h1>
-  </div>
-
   <!-- 메인 카드 -->
   <section class="orgcat-card">
+
+    <!-- 카드 헤더 (타이틀 영역) -->
+    <div class="orgcat-card-head">
+      <h1 class="orgcat-title">조직 카테고리 관리</h1>
+    </div>
 
     <!-- ================= 상단 유틸 ================= -->
     <div class="orgcat-toolbar">

@@ -192,17 +192,26 @@ function renderRow(category) {
     const isActive = normalizeActive(category);
 
     tr.innerHTML = `
-      <td>
+      <td class="col-order">
         ${isActive && !isSearchMode() ? dragHandleHtml() : ''}
       </td>
-      <td><strong>${escapeHtml(category.name)}</strong></td>
-      <td>
-        <span class="status-badge ${isActive ? 'status-active' : 'status-inactive'}">
-          ${isActive ? '활성' : '비활성'}
-        </span>
+
+      <td class="col-name">
+        <strong>${escapeHtml(category.name)}</strong>
       </td>
-      <td>
-        <button class="table-btn" data-edit="${category.id}">수정</button>
+
+      <td class="col-status">
+        <div class="cell-center">
+          <span class="status-badge ${isActive ? 'status-active' : 'status-inactive'}">
+            ${isActive ? '활성' : '비활성'}
+          </span>
+        </div>
+      </td>
+
+      <td class="col-action">
+        <div class="cell-center">
+          <button class="table-btn" data-edit="${category.id}">수정</button>
+        </div>
       </td>
     `;
 
