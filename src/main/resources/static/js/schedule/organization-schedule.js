@@ -2,6 +2,7 @@
     console.log('organization-schedule.js loaded');
 
     // 전역 변수
+    let holidayMap = new Map(); // key: yyyy-MM-dd, value: CalendarDayResDto
     let currentDate = new Date();
     let schedules = [];
     let selectedOrgIds = [];
@@ -31,7 +32,7 @@
         updateApprovalSidebarSelection();
         setupEventListeners();
         await loadOrgCategories();
-        
+
         // 첫 번째 카테고리 자동 선택 및 조직 로드
         const categorySelect = document.getElementById('orgCategorySelect');
         if (categorySelect.options.length > 0) {
@@ -40,17 +41,20 @@
             selectedCategoryId = firstCategoryId;
             await loadOrganizationsByCategory(selectedCategoryId);
         }
-        
+
         // 오늘 날짜를 선택된 날짜로 설정
         selectedDate = new Date();
         selectedDate.setHours(0, 0, 0, 0);
-        
+
+        // 해당 년도 휴일 조회
+        await loadHolidays(selectedDate.getFullYear());
+
         // 초기 로드 시 list-title 업데이트
         updateScheduleListTitle();
-        
+
         loadSchedules();
         renderCalendar();
-        
+
         // 오늘 날짜의 일정 로드
         if (selectedOrgIds.length > 0) {
             loadDateSchedules(selectedDate);
@@ -115,7 +119,7 @@
                     const orderB = b.orderIndex !== null ? b.orderIndex : 999;
                     return orderA - orderB;
                 });
-            
+
             // 조직 카테고리 드롭다운 채우기 ('전체' 옵션 제거)
             const categorySelect = document.getElementById('orgCategorySelect');
             const categoryOptions = activeCategories.map(cat => `<option value="${cat.id}">${cat.name}</option>`).join('');
@@ -192,13 +196,13 @@
         const categorySelect = document.getElementById('orgCategorySelect');
         selectedCategoryId = categorySelect.value ? parseInt(categorySelect.value) : null;
         selectedDate = null; // 날짜 선택 초기화
-        
+
         if (selectedCategoryId) {
             await loadOrganizationsByCategory(selectedCategoryId);
         }
-        
+
         loadSchedules();
-        
+
         // 날짜가 선택되지 않았으면 일정 목록 초기화
         renderScheduleList([]);
     }
@@ -206,7 +210,7 @@
     // 전체 선택/해제 버튼 설정
     function setupCheckboxControlButtons() {
         const toggleAllBtn = document.getElementById('toggleAllBtn');
-        
+
         if (toggleAllBtn) {
             toggleAllBtn.addEventListener('click', handleToggleAll);
         }
@@ -216,12 +220,12 @@
     function handleToggleAll() {
         const checkboxes = document.querySelectorAll('#orgFilter .org-filter-checkbox');
         const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
-        
+
         // 모두 선택되어 있으면 모두 해제, 그렇지 않으면 모두 선택
         checkboxes.forEach(checkbox => {
             checkbox.checked = !allChecked;
         });
-        
+
         handleOrgFilterChange();
     }
 
@@ -229,9 +233,9 @@
     function handleOrgFilterChange() {
         const checkedBoxes = document.querySelectorAll('#orgFilter .org-filter-checkbox:checked');
         selectedOrgIds = Array.from(checkedBoxes).map(cb => cb.value);
-        
+
         loadSchedules();
-        
+
         // 날짜가 선택되어 있으면 해당 날짜의 일정 다시 로드
         if (selectedDate) {
             loadDateSchedules(selectedDate);
@@ -257,7 +261,7 @@
 
             // orgIds 파라미터 생성
             const orgIdsParam = selectedOrgIds.map(id => `orgIds=${id}`).join('&');
-            
+
             const response = await apiFetch(`/api/schedules/organizations/schedule?${orgIdsParam}&date=${dateStr}`);
             if (!response.ok) {
                 if (response.status === 401) {
@@ -275,6 +279,33 @@
         } catch (error) {
             console.error('Error loading date schedules:', error);
             alert('일정을 불러오는데 실패했습니다.');
+        }
+    }
+
+    // 휴일 + 주말 정보 로드 (연 단위 1회)
+    async function loadHolidays(year) {
+        try {
+            const response = await apiFetch(`/api/calendar/holidays?year=${year}`);
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    location.href = '/login';
+                    return;
+                }
+                throw new Error('휴일 정보를 불러오지 못했습니다.');
+            }
+
+            const result = await response.json();
+            const list = result.data || [];
+
+            holidayMap.clear();
+            list.forEach(day => {
+                holidayMap.set(day.date, day);
+            });
+
+            console.log(`휴일 ${list.length}건 로드 완료`);
+        } catch (error) {
+            console.error('휴일 로드 실패:', error);
         }
     }
 
@@ -317,7 +348,7 @@
         const filtered = schedules.filter(s => s.orgId !== null && !s.company);
 
         renderCalendar(filtered);
-        
+
         // 날짜가 선택되지 않은 경우 일정 목록 초기화
         if (!selectedDate) {
             renderScheduleList([]);
@@ -350,6 +381,33 @@
             const dayElement = document.createElement('div');
             dayElement.className = 'calendar-day';
 
+            // 휴일
+            const yyyyMMdd = formatYYYYMMDD(date);
+            const holiday = holidayMap.get(yyyyMMdd);
+
+            if (holiday) {
+                console.log('휴일 매칭:', yyyyMMdd, holiday.dayType, holiday.holidayName);
+            }
+
+            // JS 기준 요일
+            const jsDay = date.getDay(); // 0=일, 6=토
+
+            // 일요일
+            if (jsDay === 0) {
+                dayElement.classList.add('sunday');
+            }
+
+            // 토요일
+            if (jsDay === 6) {
+                dayElement.classList.add('saturday');
+            }
+
+            // 공휴일 (주말보다 우선)
+            if (holiday && holiday.dayType !== 'WORKDAY') {
+                dayElement.classList.add('holiday');
+            }
+
+            // 이번 달 아닌 날짜
             if (date.getMonth() !== month) {
                 dayElement.classList.add('other-month');
             }
@@ -364,10 +422,28 @@
                 dayElement.classList.add('selected');
             }
 
+            /* =========================
+               날짜 상단: 날짜 + 공휴일명(추가)
+               (기존 day-number 위치 유지하면서 공휴일명만 옆에 붙임)
+            ========================== */
+            const dayHeaderRow = document.createElement('div');
+            dayHeaderRow.className = 'day-header-row';
+
             const dayNumber = document.createElement('div');
             dayNumber.className = 'day-number';
             dayNumber.textContent = date.getDate();
-            dayElement.appendChild(dayNumber);
+            dayHeaderRow.appendChild(dayNumber);
+
+            // 공휴일이면 holidayName 오른쪽에 표시
+            if (holiday && holiday.holidayName) {
+                const holidayNameEl = document.createElement('div');
+                holidayNameEl.className = 'holiday-name';
+                holidayNameEl.textContent = holiday.holidayName;
+                holidayNameEl.title = holiday.holidayName;
+                dayHeaderRow.appendChild(holidayNameEl);
+            }
+
+            dayElement.appendChild(dayHeaderRow);
 
             // 해당 날짜의 일정 표시
             const daySchedules = filteredSchedules.filter(s => {
@@ -419,7 +495,7 @@
     function createScheduleItem(schedule) {
         const item = document.createElement('div');
         item.className = 'schedule-item organization';
-        
+
         item.textContent = schedule.title;
         item.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -497,6 +573,14 @@
         });
 
         return item;
+    }
+
+    // 날짜 포맷
+    function formatYYYYMMDD(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
     }
 
     // 날짜/시간 포맷

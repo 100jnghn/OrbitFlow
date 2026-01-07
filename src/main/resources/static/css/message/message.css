@@ -190,7 +190,8 @@
 
 .board-table th:nth-child(2) {
     width: auto;
-    min-width: 350px;
+    min-width: 130px;
+    /* 제목 보호 (약 4~5글자) */
     text-align: left !important;
 }
 
@@ -274,6 +275,9 @@
     text-align: left;
     width: 100%;
     padding-left: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .board-title-link:hover {
@@ -891,4 +895,85 @@
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
+}
+
+/* 반응형 단계 정밀 최적화: 패딩/번호 -> 일시/상태 숨김 -> 제목 보호 */
+
+/* 1단계 (1200px 이하): 패딩 압축 및 번호 축소 */
+@media (max-width: 1200px) {
+
+    .board-table th,
+    .board-table td {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+
+    .board-table th:nth-child(1),
+    .board-table td:nth-child(1) {
+        width: 45px !important;
+    }
+}
+
+/* 2단계 (1024px 이하): 부가 정보 압축 및 시간 숨김 */
+@media (max-width: 1024px) {
+
+    .board-table th,
+    .board-table td {
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+    }
+
+    /* 발신인/수신인 및 읽음 상태/날짜 축소 */
+    .board-table th:nth-child(3),
+    .board-table td:nth-child(3) {
+        width: 100px !important;
+    }
+
+    .board-table th:nth-child(5),
+    .board-table td:nth-child(5) {
+        width: 80px !important;
+    }
+
+    .board-table th:nth-child(6),
+    .board-table td:nth-child(6) {
+        width: 80px !important;
+    }
+
+    .time-part {
+        display: none;
+    }
+}
+
+/* 3단계 (850px 이하): 날짜 강제 제거 (제목 보호 우선) */
+@media (max-width: 850px) {
+
+    /* 날짜/일시(4/6번 컬럼) 및 상태(5번 컬럼) 숨김 */
+    .board-table th:nth-child(4),
+    .board-table td:nth-child(4),
+    .board-table th:nth-child(5),
+    .board-table td:nth-child(5),
+    .board-table th:nth-child(6),
+    .board-table td:nth-child(6) {
+        display: none !important;
+    }
+}
+
+/* 4단계 (650px 이하): 번호/제목/상상대방 최적화 */
+@media (max-width: 650px) {
+
+    .board-table th:nth-child(1),
+    .board-table td:nth-child(1) {
+        width: 40px !important;
+    }
+
+    .board-table th:nth-child(3),
+    .board-table td:nth-child(3) {
+        width: 85px !important;
+    }
+
+    .board-table th:nth-child(2),
+    .board-table td:nth-child(2) {
+        min-width: 130px !important;
+        /* 제목 보호 */
+    }
 }

@@ -4,6 +4,7 @@ import com.finalproj.orbitflow.attendance.leave.entity.LeaveBalance;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -22,4 +23,6 @@ public interface LeaveBalanceRepository extends JpaRepository<LeaveBalance, Long
     Optional<LeaveBalance> findByCompanyIdAndEmployeeIdAndYear(Long companyId, Long employeeId, int year);
 
     Optional<LeaveBalance> findTopByEmployeeIdOrderByYearDesc(Long employeeId);
+
+    List<LeaveBalance> findByEmployeeId(Long employeeId);
 }

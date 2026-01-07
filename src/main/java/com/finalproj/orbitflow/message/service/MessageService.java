@@ -22,6 +22,8 @@ import com.finalproj.orbitflow.message.enums.MessageSearchType;
 import com.finalproj.orbitflow.message.repository.MessageRecipientRepository;
 import com.finalproj.orbitflow.message.repository.MessageRecipientSpecifications;
 import com.finalproj.orbitflow.message.repository.MessageRepository;
+import com.finalproj.orbitflow.notification.enums.NotificationType;
+import com.finalproj.orbitflow.notification.service.NotificationCommandService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,6 +50,7 @@ public class MessageService {
     private final FileService fileService;
     private final FileRepository fileRepository;
     private final S3Client s3Client;
+    private final NotificationCommandService notificationCommandService;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
@@ -373,6 +376,9 @@ public class MessageService {
             }
         }
 
+        // 파일 크기 검증
+        validateFileSize(files);
+
         // 파일 업로드 처리
         java.util.List<File> uploadedFiles = new java.util.ArrayList<>();
         if (files != null && !files.isEmpty()) {
@@ -423,6 +429,20 @@ public class MessageService {
                 .build();
 
         messageRecipientRepository.save(senderRow);
+
+        // 수신자들에게 알림 전송 (INBOX 레코드 기준)
+        recipientRows.forEach(row -> {
+            String notificationMessage = String.format("%s님이 메시지를 보냈습니다.\n제목: %s",
+                    sender.getName(),
+                    saved.getMessageTitle());
+
+            notificationCommandService.createNotification(
+                    companyId,
+                    row.getEmployee().getId(),
+                    NotificationType.MESSAGE,
+                    notificationMessage,
+                    "/view/message/detail?messageId=" + saved.getId() + "&folder=INBOX");
+        });
 
         return saved.getId();
     }
@@ -480,6 +500,18 @@ public class MessageService {
         return messageRecipientRepository
                 .countByCompanyIdAndEmployee_IdAndDeletedAtIsNullAndIsArchivedFalseAndMessageFolderTypeAndIsReadFalse(
                         companyId, employeeId, MessageFolderType.INBOX);
+    }
+
+    /** 파일 크기 검증 (50MB 제한) */
+    private void validateFileSize(java.util.List<MultipartFile> files) {
+        if (files != null) {
+            long maxSize = 50 * 1024 * 1024; // 50MB
+            for (MultipartFile file : files) {
+                if (file.getSize() > maxSize) {
+                    throw new InvalidRequestException("파일 크기는 50MB를 초과할 수 없습니다: " + file.getOriginalFilename());
+                }
+            }
+        }
     }
 
     /** S3에서 파일 삭제 */

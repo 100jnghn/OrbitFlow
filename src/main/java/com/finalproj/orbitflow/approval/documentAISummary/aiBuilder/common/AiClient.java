@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.documentAISummary.aiBuilder;
+package com.finalproj.orbitflow.approval.documentAISummary.aiBuilder.common;
 
 /**
  * Please explain the class!!!

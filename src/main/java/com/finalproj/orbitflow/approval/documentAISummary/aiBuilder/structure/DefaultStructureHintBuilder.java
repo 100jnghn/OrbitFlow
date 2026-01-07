@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.documentAISummary.aiBuilder;
+package com.finalproj.orbitflow.approval.documentAISummary.aiBuilder.structure;
 
 import com.finalproj.orbitflow.approval.formTemplate.schema.FormFieldSchema;
 import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;

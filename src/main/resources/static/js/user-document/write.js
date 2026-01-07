@@ -1587,10 +1587,16 @@ function createImageField(field) {
     const uploadBtn = document.createElement('div');
     uploadBtn.className = 'image-upload-placeholder';
     uploadBtn.innerHTML = `
-        <i class="fas fa-cloud-upload-alt"></i>
-        <p>이미지 업로드</p>
-        <span class="upload-hint">JPG, PNG, GIF</span>
+        <div class="upload-content">
+            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+    
+            <div class="upload-text">
+                <span class="upload-title">이미지 업로드</span>
+                <span class="upload-hint">JPG, PNG, GIF</span>
+            </div>
+        </div>
     `;
+
 
     wrapper.append(inputFile, list, uploadBtn);
 
@@ -1631,6 +1637,9 @@ function createImageField(field) {
             return;
         }
 
+        setLoading(wrapper, true, '이미지 업로드 중...');
+        uploadBtn.style.pointerEvents = 'none';
+
         try {
             const uploaded = await uploadImage(field.fieldId, file);
             // { documentFileId, fileId, fileName, fileSize }
@@ -1648,6 +1657,8 @@ function createImageField(field) {
             console.error(e);
             showToast('이미지 업로드에 실패했습니다.', 'error');
         } finally {
+            setLoading(wrapper, false);
+            uploadBtn.style.pointerEvents = '';
             inputFile.value = '';
         }
     });
@@ -2530,12 +2541,12 @@ function updateTableRowControls(tbody, field, addBtn) {
 }
 
 
-function validateFieldsByTypeWithSchema(fieldDefs, valuesById) {
+async function validateFieldsByTypeWithSchema(fieldDefs, valuesById) {
     for (const field of fieldDefs) {
         const value = valuesById.get(field.fieldId);
 
         if (field.fieldType === 'event-date-range') {
-            if (!validateEventDateRange(field, value)) {
+            if (!await validateEventDateRange(field, value)) {
                 return false;
             }
             continue;
@@ -2694,7 +2705,7 @@ function validateRangeField(fieldDef, value) {
 }
 
 
-function validateRequiredFieldsWithSchema(fieldDefs, valuesById) {
+async function validateRequiredFieldsWithSchema(fieldDefs, valuesById) {
     for (const field of fieldDefs) {
         const value = valuesById.get(field.fieldId);
 
@@ -2703,7 +2714,7 @@ function validateRequiredFieldsWithSchema(fieldDefs, valuesById) {
            (무조건 required)
         ========================= */
         if (field.fieldType === 'event-date-range') {
-            if (!validateEventDateRange(field, value)) {
+            if (!(await validateEventDateRange(field, value))) {
                 return false;
             }
             continue;
@@ -2783,11 +2794,17 @@ function getScheduleGroupByFieldIdAndSubKey(fieldId, subKey) {
     )?.closest('.schedule-group') || null;
 }
 
+const leaveValidationCache = new Map();
+// key: `${start}|${end}|${leaveTypeId}`
+// value: { valid: boolean, message?: string }
 
-function validateEventDateRange(field, value) {
+async function validateEventDateRange(field, value) {
     console.log('[EVENT] validateEventDateRange start', field.fieldId, value);
 
-    /* 날짜 */
+    /* =========================
+       1️⃣ 로컬 필수 / 형식 검증
+    ========================= */
+
     if (!value?.start) {
         showScheduleDateRangeError(
             field.fieldId,
@@ -2797,7 +2814,6 @@ function validateEventDateRange(field, value) {
         return false;
     }
 
-// 종료일 없음
     if (!value?.end) {
         showScheduleDateRangeError(
             field.fieldId,
@@ -2807,7 +2823,6 @@ function validateEventDateRange(field, value) {
         return false;
     }
 
-// 시작일 > 종료일
     if (value.start > value.end) {
         showScheduleDateRangeError(
             field.fieldId,
@@ -2851,9 +2866,7 @@ function validateEventDateRange(field, value) {
             field.fieldId,
             'description'
         );
-        const textarea = group?.querySelector(
-            '[data-sub-key="description"]'
-        );
+        const textarea = group?.querySelector('[data-sub-key="description"]');
 
         showScheduleFieldError(
             textarea,
@@ -2871,9 +2884,7 @@ function validateEventDateRange(field, value) {
             field.fieldId,
             'reason'
         );
-        const textarea = group?.querySelector(
-            '[data-sub-key="reason"]'
-        );
+        const textarea = group?.querySelector('[data-sub-key="reason"]');
 
         showScheduleFieldError(
             textarea,
@@ -2882,6 +2893,96 @@ function validateEventDateRange(field, value) {
         return false;
     }
 
+    /* =========================
+       2️⃣ 서버 연차 검증 (캐싱)
+    ========================= */
+    if (field.meta?.baseRole === 'VACATION') {
+
+        const cacheKey =
+            `${value.start}|${value.end}|${value.vacationTypeId}`;
+
+        // ✅ 캐시 히트
+        // ✅ 캐시 히트
+        if (leaveValidationCache.has(cacheKey)) {
+            const cached = leaveValidationCache.get(cacheKey);
+
+            if (!cached.valid) {
+
+                const detailMessage =
+                    cached.remainingDays != null && cached.requiredDays != null
+                        ? `잔여 연차 ${cached.remainingDays}일 / 필요 연차 ${cached.requiredDays}일`
+                        : (cached.message || '잔여 연차가 부족합니다.');
+
+                showScheduleDateRangeError(
+                    field.fieldId,
+                    detailMessage,
+                    'start'
+                );
+            }
+
+            return cached.valid;
+        }
+
+
+        // ❌ 캐시 미스 → 서버 호출
+        try {
+            const res = await apiFetch('/api/leave/validate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    startDate: value.start,
+                    endDate: value.end,
+                    leaveTypeId: value.vacationTypeId
+                })
+            });
+
+            if (!res.ok) {
+                showScheduleDateRangeError(
+                    field.fieldId,
+                    '연차 검증 중 오류가 발생했습니다.',
+                    'start'
+                );
+                return false;
+            }
+
+            const result = await res.json();
+            const data = result.data;
+
+            // ✅ 결과 캐싱
+            leaveValidationCache.set(cacheKey, {
+                valid: data.valid,
+                message: data.message,
+                requiredDays: data.requiredDays,
+                remainingDays: data.remainingDays
+            });
+
+            if (!data.valid) {
+
+                const detailMessage =
+                    data.remainingDays != null && data.requiredDays != null
+                        ? `잔여 연차 ${data.remainingDays}일 / 필요 연차 ${data.requiredDays}일`
+                        : (data.message || '잔여 연차가 부족합니다.');
+
+                showScheduleDateRangeError(
+                    field.fieldId,
+                    detailMessage,
+                    'start'
+                );
+
+                return false;
+            }
+
+
+        } catch (e) {
+            console.error(e);
+            showScheduleDateRangeError(
+                field.fieldId,
+                '연차 검증 중 오류가 발생했습니다.',
+                'start'
+            );
+            return false;
+        }
+    }
 
     return true;
 }
@@ -2983,13 +3084,22 @@ function bindAttachmentEvents(documentId) {
         const files = Array.from(input.files);
         if (files.length === 0) return;
 
-        for (const file of files) {
-            await uploadAttachment(documentId, file);
-        }
+        setLoading(box, true, '파일 업로드 중...');
+        box.style.pointerEvents = 'none';
 
-        input.value = ''; // 동일 파일 재선택 가능
-        await loadAttachments(documentId);
-        renderAttachmentList();
+        try {
+            for (const file of files) {
+                await uploadAttachment(documentId, file);
+                hasUnsavedChanges = true; // ✅ 업로드는 변경사항
+            }
+
+            input.value = '';
+            await loadAttachments(documentId);
+            renderAttachmentList();
+        } finally {
+            setLoading(box, false);
+            box.style.pointerEvents = '';
+        }
     });
 }
 
@@ -3028,13 +3138,13 @@ async function bindEvents(documentId) {
             );
 
             // 3️⃣ required 검증
-            if (!validateRequiredFieldsWithSchema(
+            if (!await validateRequiredFieldsWithSchema(
                 documentFieldDefinitions,
                 valuesById
             )) return;
 
             // 4️⃣ 타입별 검증
-            if (!validateFieldsByTypeWithSchema(
+            if (!await validateFieldsByTypeWithSchema(
                 documentFieldDefinitions,
                 valuesById
             )) return;
@@ -3202,42 +3312,61 @@ function createImagePreviewItem(imageItem, fieldId) {
     delBtn.innerHTML = '✕';
 
     delBtn.addEventListener('click', async () => {
+        if (delBtn.disabled) return;
+
         delBtn.disabled = true;
 
-        const ok = await updateAttachmentStatus(
-            imageItem.documentFileId,
-            'DELETED'
-        );
+        const wrapper = imageFieldState.get(fieldId)?.wrapper;
 
-        if (!ok) {
+        // ✅ 삭제 스피너 ON (field 단위)
+        setLoading(wrapper, true, '이미지 삭제 중...');
+
+        try {
+            const ok = await updateAttachmentStatus(
+                imageItem.documentFileId,
+                'DELETED'
+            );
+
+            if (!ok) {
+                showToast('이미지 삭제에 실패했습니다.', 'error');
+                return;
+            }
+
+            /* =========================
+               1️⃣ 상태 즉시 반영
+            ========================= */
+            const target = attachmentFiles.find(
+                f => f.documentFileId === imageItem.documentFileId
+            );
+            if (target) {
+                target.status = 'DELETED';
+            }
+
+            hasUnsavedChanges = true; // ✅ 변경사항 반영
+
+            /* =========================
+               2️⃣ DOM 즉시 제거 (UX)
+            ========================= */
+            item.remove();
+
+            /* =========================
+               3️⃣ hint 즉시 갱신
+            ========================= */
+            updateImageFieldHint(fieldId);
+
+            /* =========================
+               4️⃣ field 단위 재렌더 (동기화)
+            ========================= */
+            await renderImageField(fieldId);
+
+        } catch (e) {
+            console.error(e);
+            showToast('이미지 삭제 중 오류가 발생했습니다.', 'error');
+        } finally {
+            // ✅ 스피너 OFF
+            setLoading(wrapper, false);
             delBtn.disabled = false;
-            return;
         }
-
-        /* =========================
-           1️⃣ 상태 즉시 반영 (🔥 중요)
-        ========================= */
-        const target = attachmentFiles.find(
-            f => f.documentFileId === imageItem.documentFileId
-        );
-        if (target) {
-            target.status = 'DELETED';
-        }
-
-        /* =========================
-           2️⃣ DOM 즉시 제거 (UX)
-        ========================= */
-        item.remove();
-
-        /* =========================
-           3️⃣ hint 즉시 갱신
-        ========================= */
-        updateImageFieldHint(fieldId);
-
-        /* =========================
-           4️⃣ field 단위 재렌더 (동기화)
-        ========================= */
-        await renderImageField(fieldId);
     });
 
     item.append(img, delBtn);
@@ -3571,3 +3700,26 @@ function collectDocumentValues() {
     };
 }
 
+function setLoading(targetEl, loading, message = '') {
+    if (!targetEl) return;
+
+    let overlay = targetEl.querySelector(':scope > .loading-overlay');
+
+    if (loading) {
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.className = 'loading-overlay';
+            overlay.innerHTML = `
+        <div class="spinner"></div>
+        ${message ? `<div class="loading-text">${message}</div>` : ''}
+      `;
+            targetEl.style.position = 'relative';
+            targetEl.appendChild(overlay);
+        } else {
+            const textEl = overlay.querySelector('.loading-text');
+            if (textEl) textEl.textContent = message;
+        }
+    } else {
+        overlay?.remove();
+    }
+}

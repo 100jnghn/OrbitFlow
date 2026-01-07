@@ -2,12 +2,14 @@
     console.log('schedule.js loaded');
 
     // 전역 변수
+    let holidayMap = new Map(); // key: yyyy-MM-dd, value: CalendarDayResDto
+
     let currentDate = new Date();
     let schedules = [];
     let selectedOrgIds = [];
     let showPersonal = true; // 개인 일정 표시 여부
     let showCompany = true; // 전사 일정 표시 여부
-    let showApproval = false; // 결재 일정 표시 여부
+    let showApproval = true; // 결재 일정 표시 여부
     let orgList = [];
     let isSubmitting = false; // 제출 중 플래그 (중복 제출 방지)
     let selectedDate = null; // 선택된 날짜
@@ -29,7 +31,7 @@
     }
 
     // js 로드될 때 초기화
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', async function () {
         updateApprovalSidebarSelection();
         initializeTimeSelects();
         setupEventListeners();
@@ -38,25 +40,28 @@
         document.getElementById('personalToggle').classList.toggle('active', showPersonal);
         document.getElementById('companyToggle').classList.toggle('active', showCompany);
         document.getElementById('approvalToggle').classList.toggle('active', showApproval);
-        loadOrganizations();
+        await loadOrganizations();
 
         // 오늘 날짜를 선택된 날짜로 설정
         selectedDate = new Date();
         selectedDate.setHours(0, 0, 0, 0);
 
+        // 해당 년도 휴일 조회
+        await loadHolidays(selectedDate.getFullYear());
+
         // AI 일정 요약 기능 호출
         // 시간은 백엔드에서 계산
-        loadScheduleSummary();
+        await loadScheduleSummary();
 
 
         // 초기 로드 시 list-title 업데이트
         updateScheduleListTitle();
 
-        loadSchedules();
+        await loadSchedules();
         renderCalendar();
 
         // 오늘 날짜의 일정 로드
-        loadDateSchedules(selectedDate);
+        await loadDateSchedules(selectedDate);
     });
 
     function renderMarkdown(text) {
@@ -417,6 +422,34 @@
         }
     }
 
+    // 휴일 + 주말 정보 로드 (연 단위 1회)
+    async function loadHolidays(year) {
+        try {
+            const response = await apiFetch(`/api/calendar/holidays?year=${year}`);
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    location.href = '/login';
+                    return;
+                }
+                throw new Error('휴일 정보를 불러오지 못했습니다.');
+            }
+
+            const result = await response.json();
+            const list = result.data || [];
+
+            holidayMap.clear();
+            list.forEach(day => {
+                holidayMap.set(day.date, day);
+            });
+
+            console.log(`휴일 ${list.length}건 로드 완료`);
+        } catch (error) {
+            console.error('휴일 로드 실패:', error);
+        }
+    }
+
+
     // 일정 로드
     async function loadSchedules() {
         try {
@@ -530,7 +563,6 @@
         }
     }
 
-
     // 캘린더 렌더링
     function renderCalendar(filteredSchedules = schedules) {
         console.log("캘린더 로드");
@@ -543,7 +575,6 @@
 
         // 첫 번째 날짜 계산
         const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
         const startDate = new Date(firstDay);
         startDate.setDate(startDate.getDate() - startDate.getDay());
 
@@ -558,6 +589,33 @@
             const dayElement = document.createElement('div');
             dayElement.className = 'calendar-day';
 
+            // 휴일
+            const yyyyMMdd = formatYYYYMMDD(date);
+            const holiday = holidayMap.get(yyyyMMdd);
+
+            if (holiday) {
+                console.log('휴일 매칭:', yyyyMMdd, holiday.dayType, holiday.holidayName);
+            }
+
+            // JS 기준 요일
+            const jsDay = date.getDay(); // 0=일, 6=토
+
+            // 일요일
+            if (jsDay === 0) {
+                dayElement.classList.add('sunday');
+            }
+
+            // 토요일
+            if (jsDay === 6) {
+                dayElement.classList.add('saturday');
+            }
+
+            // 공휴일 (주말보다 우선)  ✅ 기존 기능 유지!
+            if (holiday && holiday.dayType !== 'WORKDAY') {
+                dayElement.classList.add('holiday');
+            }
+
+            // 이번 달 아닌 날짜
             if (date.getMonth() !== month) {
                 dayElement.classList.add('other-month');
             }
@@ -572,12 +630,32 @@
                 dayElement.classList.add('selected');
             }
 
+            /* =========================
+               날짜 상단: 날짜 + 공휴일명(추가)
+               (기존 day-number 위치 유지하면서 공휴일명만 옆에 붙임)
+            ========================== */
+            const dayHeaderRow = document.createElement('div');
+            dayHeaderRow.className = 'day-header-row';
+
             const dayNumber = document.createElement('div');
             dayNumber.className = 'day-number';
             dayNumber.textContent = date.getDate();
-            dayElement.appendChild(dayNumber);
+            dayHeaderRow.appendChild(dayNumber);
 
-            // 해당 날짜의 일정 표시
+            // ✅ "글자 하나만 추가": 공휴일이면 holidayName 오른쪽에 표시
+            if (holiday && holiday.holidayName) {
+                const holidayNameEl = document.createElement('div');
+                holidayNameEl.className = 'holiday-name';
+                holidayNameEl.textContent = holiday.holidayName;
+                holidayNameEl.title = holiday.holidayName;
+                dayHeaderRow.appendChild(holidayNameEl);
+            }
+
+            dayElement.appendChild(dayHeaderRow);
+
+            /* =========================
+               해당 날짜의 일정 표시 (기존 유지)
+            ========================== */
             const daySchedules = filteredSchedules.filter(s => {
                 const start = new Date(s.startAt);
                 const end = new Date(s.endAt);
@@ -622,6 +700,8 @@
             calendarGrid.appendChild(dayElement);
         }
     }
+
+
 
     // 일정 아이템 생성 (캘린더용)
     function createScheduleItem(schedule) {
@@ -747,6 +827,14 @@
         });
 
         return item;
+    }
+
+    // 날짜 포맷
+    function formatYYYYMMDD(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
     }
 
     // 날짜/시간 포맷

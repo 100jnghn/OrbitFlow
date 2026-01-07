@@ -11,6 +11,8 @@ import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
+import com.finalproj.orbitflow.notification.enums.NotificationType;
+import com.finalproj.orbitflow.notification.service.NotificationCommandService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,14 +26,14 @@ public class CommentService {
     private final BoardRepository boardRepository;
     private final CommentRepository commentRepository;
     private final EmployeeRepository employeeRepository;
+    private final NotificationCommandService notificationCommandService;
 
     /** 댓글 목록 조회 */
     public Page<CommentResDto.ListInfo> getCommentList(
             Long companyId,
             Long organizationId,
             Long boardId,
-            Pageable pageable
-    ) {
+            Pageable pageable) {
         // 1) 게시글 존재 + soft delete 검증
         Board board = boardRepository.findByIdAndDeletedAtIsNull(boardId)
                 .orElseThrow(() -> new NotFoundException("게시글이 존재하지 않습니다."));
@@ -68,8 +70,7 @@ public class CommentService {
             Long organizationId,
             Long employeeId,
             Long boardId,
-            CommentReqDto.Create request
-    ) {
+            CommentReqDto.Create request) {
         Board board = boardRepository.findByIdAndDeletedAtIsNull(boardId)
                 .orElseThrow(() -> new NotFoundException("게시글이 존재하지 않습니다."));
 
@@ -85,7 +86,23 @@ public class CommentService {
                 .commentContent(request.getCommentContent())
                 .build();
 
-        return CommentResDto.DetailInfo.from(commentRepository.save(comment));
+        Comment savedComment = commentRepository.save(comment);
+
+        // 게시글 작성자에게 알림 전송 (본인이 작성한 댓글 제외)
+        Employee boardWriter = board.getWriter();
+        if (!boardWriter.getId().equals(employeeId)) {
+            String notificationMessage = String.format("작성하신 게시물에 새로운 댓글이 달렸습니다.\n내용: %s",
+                    savedComment.getCommentContent());
+
+            notificationCommandService.createNotification(
+                    companyId,
+                    boardWriter.getId(),
+                    NotificationType.BOARD,
+                    notificationMessage,
+                    "/view/board/detail?boardId=" + boardId);
+        }
+
+        return CommentResDto.DetailInfo.from(savedComment);
     }
 
     /** 댓글 수정 */
@@ -94,8 +111,7 @@ public class CommentService {
             Long companyId,
             Long employeeId,
             Long commentId,
-            CommentReqDto.Update request
-    ) {
+            CommentReqDto.Update request) {
         Comment comment = commentRepository.findByIdAndDeletedAtIsNull(commentId)
                 .orElseThrow(() -> new NotFoundException("댓글이 존재하지 않습니다."));
 
@@ -119,8 +135,7 @@ public class CommentService {
     public void deleteComment(
             Long companyId,
             Long employeeId,
-            Long commentId
-    ) {
+            Long commentId) {
         Comment comment = commentRepository.findByIdAndDeletedAtIsNull(commentId)
                 .orElseThrow(() -> new NotFoundException("댓글이 존재하지 않습니다."));
 
