@@ -93,4 +93,10 @@ public class GlobalExceptionHandler {
                 .body(new ResponseDto(HttpStatus.CONFLICT, e.getMessage(), null));
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ResponseDto> handleIllegalState(IllegalStateException e) {
+        return ResponseEntity.badRequest()
+                .body(new ResponseDto(HttpStatus.BAD_REQUEST, e.getMessage(), null));
+    }
+
 }

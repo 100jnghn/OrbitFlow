@@ -6,6 +6,7 @@ import com.finalproj.orbitflow.email.entity.EmailVerificationToken;
 import com.finalproj.orbitflow.email.enums.EmailTokenType;
 import com.finalproj.orbitflow.email.service.EmailVerificationService;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
+import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.service.EmployeeService;
 import com.finalproj.orbitflow.hr.logAudit.enums.AuditEntityType;
 import com.finalproj.orbitflow.hr.logAudit.enums.AuditEventType;
@@ -39,6 +40,11 @@ public class PasswordResetController {
     public ResponseEntity<?> request(@RequestParam String email) {
 
         Employee employee = employeeService.findByEmail(email);
+
+        if (employee.getStatus() != EmployeeStatus.ACTIVE) {
+            throw new IllegalStateException("요청을 처리할 수 없습니다."); // 활성화된 계정만 비밀번호 재설정이 가능합니다.
+        }
+
         emailService.requestPasswordReset(employee);
 
         return ResponseEntity.ok().build();
