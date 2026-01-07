@@ -141,15 +141,6 @@
             회사별로 조직 카테고리를 추가하고, 비활성화할 수 있습니다.
           </p>
         </div>
-
-        <button
-                class="icon-btn"
-                id="btnCloseModal"
-                type="button"
-                aria-label="닫기"
-        >
-          <i class="fa-solid fa-xmark"></i>
-        </button>
       </div>
 
       <input type="hidden" id="categoryId">
@@ -166,6 +157,11 @@
                   type="text"
                   placeholder="예: 본부 / 팀 / 센터"
           >
+
+          <div class="input-meta">
+            <span id="nameCount">0</span>/50
+          </div>
+
           <p class="form-help" id="nameHelp"></p>
         </div>
 

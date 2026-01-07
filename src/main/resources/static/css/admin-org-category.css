@@ -1,7 +1,7 @@
 /* ==================================================
-   admin-org-category.css
+   admin-org-category.css (FINAL)
    - 조직 카테고리 관리 (목록 + 모달)
-   - board.css 디자인 기준 통일 버전
+   - board.css 디자인 기준 완전 통일
 ================================================== */
 
 :root {
@@ -10,6 +10,7 @@
     --line: #eef1f6;
     --text: #111827;
     --muted: #6b7280;
+
     --primary: #3B82F6;
     --primary-hover: #2563EB;
     --primary-weak: rgba(59, 130, 246, .12);
@@ -35,15 +36,13 @@
     padding: 20px;
 }
 
-/* 카드 헤더 */
 .orgcat-card-head {
     margin-bottom: 16px;
     padding-bottom: 12px;
-    border-bottom: 1px solid var(--line);
 }
 
 .orgcat-card-head .orgcat-title {
-    font-size: 26px;          /* board h1 기준 */
+    font-size: 26px; /* board h1 */
     font-weight: 600;
     color: var(--neutral-800);
     letter-spacing: -0.02em;
@@ -73,7 +72,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    height: 40px;                 /* board 기준 */
+    height: 40px;
     padding: 0 14px;
     border: 1px solid var(--line);
     border-radius: 8px;
@@ -98,7 +97,7 @@
 }
 
 /* =========================
-   버튼 (board 스타일 통일)
+   버튼 (board 통일)
 ========================= */
 
 .btn {
@@ -169,10 +168,12 @@
 }
 
 .orgcat-table tbody td {
+    height: 52px;              /* board-table 기준 */
     padding: 14px 16px;
     border-bottom: 1px solid var(--line);
     color: var(--neutral-800);
     vertical-align: middle;
+    box-sizing: border-box;
 }
 
 .orgcat-table tbody tr:hover {
@@ -184,34 +185,58 @@
 }
 
 /* 컬럼 폭 */
-.col-order { width: 90px; }
-.col-status { width: 140px; text-align: center; }
+.col-order  { width: 90px; }
+.col-status { width: 140px; }
 .col-action { width: 140px; }
+
+/* =========================
+   상태 / 관리 컬럼 정렬
+========================= */
+
+.orgcat-table th.col-status,
+.orgcat-table td.col-status,
+.orgcat-table th.col-action,
+.orgcat-table td.col-action {
+    text-align: center;
+    vertical-align: middle;
+}
 
 /* =========================
    상태 배지
 ========================= */
 
+
 .status-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+
     min-width: 56px;
     height: 22px;
-    padding: 0 12px;
-    border-radius: 999px;
+    padding: 3px 14px;
+
+    border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
+    line-height: 1;
+
+    border: 1.2px solid transparent;
+    color: dimgray;
+    background: #f5f5f5;
 }
 
-.status-active {
-    background: var(--success-bg);
-    color: var(--success-text);
+/* 활성 */
+.status-badge.status-active {
+    background: #ecfdf5;          /* 연한 민트 */
+    border-color: #10b981;
+    color: dimgray;
 }
 
-.status-inactive {
-    background: var(--danger-bg);
-    color: var(--danger-text);
+/* 비활성 */
+.status-badge.status-inactive {
+    background: #fef2f2;          /* 연한 레드 */
+    border-color: #f87171;
+    color: dimgray;
 }
 
 /* =========================
@@ -219,18 +244,53 @@
 ========================= */
 
 .table-btn {
-    height: 36px;
-    padding: 0 14px;
-    border-radius: 8px;
-    border: 1px solid var(--line);
-    background: #fff;
-    font-size: 14px;
-    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 13px;
     cursor: pointer;
+    transition: background 0.2s;
+    background: #e3f2fd;
+    border: 1.2px solid #6d8cdc;
+    color: #1976d2;
 }
 
 .table-btn:hover {
     background: #f3f4f6;
+}
+
+/* =========================
+   드래그 핸들 (점 6개)
+========================= */
+
+.drag-handle {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    cursor: grab;
+    color: #9ca3af;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.drag-dots {
+    width: 14px;
+    height: 18px;
+    display: grid;
+    grid-template-columns: repeat(2, 4px);
+    grid-template-rows: repeat(3, 4px);
+    gap: 3px;
+}
+
+.drag-dots span {
+    width: 4px;
+    height: 4px;
+    background: #9ca3af;
+    border-radius: 50%;
 }
 
 /* =========================
@@ -294,7 +354,13 @@
 }
 
 .modal-body {
-    padding: 16px 24px;
+    padding: 24px 28px;
+}
+
+/* 입력 그룹 최대 폭 제한 */
+.modal-body .form-group {
+    /*width: 100%;*/
+    max-width: 480px;
 }
 
 .form-label {
@@ -324,11 +390,7 @@
 ========================= */
 
 @media (max-width: 720px) {
-    .orgcat-toolbar {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
+    .orgcat-toolbar,
     .orgcat-footer {
         flex-direction: column;
         align-items: stretch;
@@ -340,85 +402,218 @@
 }
 
 
+/* ==================================================
+   Modal UI Upgrade (FINAL)
+================================================== */
+
+/* 배경 */
+.modal {
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+}
+
+/* 패널 */
+.modal-panel {
+    width: 560px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow:
+            0 20px 40px rgba(0, 0, 0, 0.12),
+            0 8px 16px rgba(0, 0, 0, 0.08);
+    animation: modalFadeUp .18s ease-out;
+}
+
+/* 등장 애니메이션 */
+@keyframes modalFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 /* =========================
-   드래그 핸들 (점 6개)
+   헤더
 ========================= */
 
-.drag-handle {
-    width: 34px;
-    height: 34px;
+.modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 24px 28px 16px;
+    border-bottom: 1px solid var(--line);
+}
+
+.modal-head-text h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--neutral-800);
+    margin: 0;
+}
+
+.modal-sub {
+    margin-top: 6px;
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.5;
+}
+
+/* 닫기 버튼 */
+.icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #6b7280;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
-    cursor: grab;
+}
+
+.icon-btn:hover {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+/* =========================
+   바디
+========================= */
+
+.modal-body {
+    align-items: flex-start;
+    padding: 24px 28px;
+}
+
+/* 폼 그룹 */
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--neutral-700);
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* 인풋 */
+.form-input {
+    height: 44px;
+    font-size: 14px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    transition: all .2s ease;
+}
+
+.form-input::placeholder {
     color: #9ca3af;
 }
 
-.drag-handle:active {
-    cursor: grabbing;
+.form-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, .12);
 }
 
-.drag-dots {
-    width: 14px;
-    height: 18px;
-    display: grid;
-    grid-template-columns: repeat(2, 4px);
-    grid-template-rows: repeat(3, 4px);
-    gap: 3px;
-}
-
-.drag-dots span {
-    width: 4px;
-    height: 4px;
-    background: #9ca3af;
-    border-radius: 50%;
-}
-
-
-
-/* 상태 컬럼 중앙 정렬 */
-.orgcat-table th.col-status,
-.orgcat-table td.col-status {
-    text-align: center;
-    vertical-align: middle;
+/* 도움말 / 에러 */
+.form-help {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--danger-text);
 }
 
 /* =========================
-   상태 / 관리 컬럼 완전 중앙 정렬 (FIX)
+   토글 (사용여부)
 ========================= */
 
-/* 상태 컬럼 */
-.orgcat-table th.col-status,
-.orgcat-table td.col-status {
-    text-align: center;
-}
-
-
-/* 관리 컬럼 */
-.orgcat-table th.col-action,
-.orgcat-table td.col-action {
-    text-align: center;
-}
-
-/* =========================
-   테이블 셀 중앙 정렬
-========================= */
-
-.cell-center {
+.toggle-row {
     display: flex;
-    align-items: center;      /* 세로 중앙 */
-    justify-content: center;  /* 가로 중앙 */
-    height: 100%;
+    align-items: center;
+    gap: 12px;
+}
+
+/* 스위치 */
+.switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+}
+
+.switch input {
+    display: none;
+}
+
+.slider {
+    position: absolute;
+    inset: 0;
+    background: #e5e7eb;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.slider::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    transition: .2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+
+.switch input:checked + .slider {
+    background: var(--primary);
+}
+
+.switch input:checked + .slider::before {
+    transform: translateX(20px);
+}
+
+.toggle-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--neutral-700);
 }
 
 /* =========================
-   테이블 행 높이 통일 (board 기준)
+   하단 액션
 ========================= */
 
-.orgcat-table tbody td {
-    height: 52px;              /* board-table td와 동일 */
-    padding: 14px 16px;        /* 이미 동일하지만 명시 */
-    vertical-align: middle;
-    box-sizing: border-box;
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 28px 24px;
+    border-top: 1px solid var(--line);
+}
+
+/* 취소 버튼 */
+.btn-ghost {
+    background: #fff;
+    border: 1px solid var(--line);
+    color: var(--neutral-700);
+}
+
+.btn-ghost:hover {
+    background: #f9fafb;
+}
+
+/* 입력 하단 메타 정보 */
+.input-meta {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #2563eb;       /* 파란 강조 */
+    text-align: right;
+
 }
