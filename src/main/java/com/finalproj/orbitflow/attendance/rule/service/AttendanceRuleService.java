@@ -78,9 +78,6 @@ public class AttendanceRuleService {
 
         EmployeeRule savedRule = employeeRuleRepository.save(rule);
 
-        // [핵심] 알림 서비스 호출: 가이드에 따른 매개변수 적용
-        // createNotification(COMPANY_ID, EMPLOYEE_ID, NOTIFICATION-TYPE, 전달할 메시지, 이동할
-        // URL)
         notificationService.createNotification(
                 companyId,
                 employee.getId(),
