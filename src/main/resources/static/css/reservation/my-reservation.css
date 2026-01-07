@@ -153,7 +153,7 @@
     margin-bottom: 24px;
     background: white;
     border-radius: 12px;
-    overflow: hidden;
+    /*overflow: hidden;*/
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border: 1px solid #e5e7eb;
     min-height: 450px;
@@ -162,7 +162,15 @@
     display: flex;
     flex-direction: column;
 }
-
+.table-scroll-wrapper {
+    overflow-x: auto;
+    width: 100%;
+}
+.resource-table {
+    width: max-content;   /* 핵심 */
+    min-width: 1000px;    /* 전체 테이블 최소 폭 */
+    table-layout: auto;   /* fixed ❌ */
+}
 .table-container {
     background: #fff;
     border-radius: 12px;
@@ -183,9 +191,8 @@
 
 .resource-table {
     width: 100%;
-    margin-top: 16px;
     border-collapse: collapse;
-    table-layout: fixed;
+    table-layout: auto;
 }
 
 .resource-table thead {
@@ -202,10 +209,12 @@
 
     /* 한 줄 유지 */
     white-space: nowrap;
-    overflow: hidden;
+    /*overflow: hidden;*/
     text-overflow: ellipsis;
 
     position: relative;
+
+    min-width: 300px;
 }
 
 .resource-table th {
@@ -478,28 +487,6 @@
     pointer-events: none;
     display: none;
 }
-
-/* =========================
-   CSS Hover Tooltip (카테고리, 이름, 예약 사유)
-========================= */
-.resource-table td:nth-child(2),  /* 카테고리 */
-.resource-table td:nth-child(3),  /* 이름 */
-.resource-table td:nth-child(4) { /* 예약 사유 */
-    cursor: help;
-}
-
-.resource-table td:nth-child(2):hover::after,
-.resource-table td:nth-child(3):hover::after,
-.resource-table td:nth-child(4):hover::after {
-    content: attr(data-fulltext);
-
-    position: absolute;
-    left: 0;
-    top: 100%;
-    z-index: 1000;
-}
-
-/* 카테고리 셀 hover 지원 */
 
 /* 사이드바 메뉴 스타일 (message.css와 동일) */
 .sidebar {
