@@ -27,8 +27,6 @@ public class QCalendarDay extends EntityPathBase<CalendarDay> {
 
     public final StringPath holidayName = createString("holidayName");
 
-    public final BooleanPath isPublicHoliday = createBoolean("isPublicHoliday");
-
     public QCalendarDay(String variable) {
         super(CalendarDay.class, forVariable(variable));
     }
