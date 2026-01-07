@@ -86,11 +86,11 @@ async function loadMeetingRooms(page = 0) {
     try {
         const res = await apiFetch(
             `/api/admin/meetingrooms?page=${page}&size=${pageSize}&sort=id,asc`,
-            {method: 'GET'}
+            { method: 'GET' }
         );
         if (!res.ok) throw new Error();
 
-        const {data} = await res.json();
+        const { data } = await res.json();
         const tbody = document.querySelector('.resource-table tbody');
         tbody.innerHTML = '';
 
@@ -199,7 +199,7 @@ async function deleteMeetingRoom(id) {
     try {
         const response = await apiFetch(
             `/api/admin/meetingrooms/${id}/delete`,
-            {method: 'PATCH'}
+            { method: 'PATCH' }
         );
 
         if (!response.ok) {

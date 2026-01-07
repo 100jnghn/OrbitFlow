@@ -194,6 +194,7 @@
     position: fixed;
     z-index: 9999;
     pointer-events: none;
+    display: none;
 }
 
 /* =========================
@@ -204,15 +205,7 @@
     cursor: help;
 }
 
-.resource-table td:nth-child(3):hover::after,
-.resource-table td:nth-child(4):hover::after {
-    content: attr(data-fulltext);
-
-    position: absolute;
-    left: 0;
-    top: 100%;
-    z-index: 1000;
-}
+/* Note: 'content: attr(data-fulltext)' REMOVED to prevent CSS tooltip from showing up in addition to JS tooltip */
 
 /* =========================
    Action Buttons

@@ -229,4 +229,3 @@ document.addEventListener('DOMContentLoaded', () => {
     loadCars();
     initAddButton();
 });
-
