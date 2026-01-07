@@ -106,7 +106,7 @@
     margin: 0 auto 12px auto;
     background: #fff;
     border-radius: 12px;
-    padding: 24px;
+    padding: 0px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border: 1px solid #e9ecef;
     width: 100%;
@@ -119,7 +119,7 @@
 .grid-inner {
     display: block;
     width: 100%;
-    min-width: max-content;
+    min-width: 95%;
 }
 
 .grid-header {
@@ -148,7 +148,6 @@
     width: 120px;
     min-width: 100px;
     height: 10px;
-
     padding: 12px 8px;
     background: #f8f9fa;
     border: 1px solid #e9ecef;
@@ -175,9 +174,9 @@
     background: #f8f9fa;
     border: 1px solid #e9ecef;
     border-left: none;
-    font-weight: 600;
-    font-size: 12px;
-    text-align: center;
+    font-weight: 300;
+    font-size: 10px;
+    text-align: left;
     white-space: nowrap;
     box-sizing: border-box;
 }

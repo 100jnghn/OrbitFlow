@@ -134,11 +134,11 @@
     transition: 0.3s;
 }
 
-.toggle-switch input:checked + .toggle-slider {
+.toggle-switch input:checked+.toggle-slider {
     background-color: #4a69bd;
 }
 
-.toggle-switch input:checked + .toggle-slider:before {
+.toggle-switch input:checked+.toggle-slider:before {
     transform: translateX(22px);
 }
 
@@ -163,29 +163,20 @@
     flex-direction: column;
 }
 
-.table-container {
-    background: #fff;
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+.table-scroll-wrapper {
+    width: 100%;
+    overflow: hidden;
 }
 
 /* =========================
-   Resource Table (Base)
+   Resource Table (Board Style)
 ========================= */
-.board-table-container .resource-table {
+.resource-table {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
     height: 100%;
     background: #fff;
-}
-
-.resource-table {
-    width: 100%;
-    margin-top: 16px;
-    border-collapse: collapse;
-    table-layout: fixed;
 }
 
 .resource-table thead {
@@ -199,12 +190,8 @@
     font-size: 14px;
     text-align: left;
     border-bottom: 1px solid #f0f0f0;
-
-    /* 한 줄 유지 */
     white-space: nowrap;
-    overflow: hidden;
     text-overflow: ellipsis;
-
     position: relative;
 }
 
@@ -217,41 +204,68 @@
     color: #555;
 }
 
-/* 번호 열 - 중앙 정렬 */
-.resource-table th:first-child,
-.resource-table td:first-child {
+/* Column Width Definitions */
+.resource-table th:nth-child(1),
+.resource-table td:nth-child(1) {
+    width: 60px;
     text-align: center;
     font-weight: 600;
     color: #6c757d;
 }
 
-/* 카테고리 열 - 중앙 정렬 */
 .resource-table th:nth-child(2),
 .resource-table td:nth-child(2) {
+    width: 80px;
     text-align: center;
 }
 
-/* 예약일, 시작시간, 종료시간 - 중앙 정렬 */
+.resource-table th:nth-child(3),
+.resource-table td:nth-child(3) {
+    width: auto;
+    min-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.resource-table th:nth-child(4),
+.resource-table td:nth-child(4) {
+    width: auto;
+    min-width: 150px;
+}
+
 .resource-table th:nth-child(5),
-.resource-table td:nth-child(5),
+.resource-table td:nth-child(5) {
+    width: 100px;
+    text-align: center;
+}
+
 .resource-table th:nth-child(6),
-.resource-table td:nth-child(6),
+.resource-table td:nth-child(6) {
+    width: 100px;
+    text-align: center;
+}
+
 .resource-table th:nth-child(7),
-.resource-table td:nth-child(7),
+.resource-table td:nth-child(7) {
+    width: 90px;
+    text-align: center;
+}
+
 .resource-table th:nth-child(8),
 .resource-table td:nth-child(8) {
+    width: 90px;
     text-align: center;
 }
 
-/* 상태 열 - 중앙 정렬 */
 .resource-table th:nth-child(9),
 .resource-table td:nth-child(9) {
+    width: 100px;
     text-align: center;
 }
 
-/* 취소 열 (마지막 열) - 중앙 정렬 */
-.resource-table th:last-child,
-.resource-table td:last-child {
+.resource-table th:nth-child(10),
+.resource-table td:nth-child(10) {
+    width: 80px;
     text-align: center;
 }
 
@@ -267,11 +281,9 @@
     border-bottom: none;
 }
 
-
 /* =========================
    Status Badge
 ========================= */
-/* 상태 배지: 통일된 크기 스타일 */
 .status-badge {
     display: inline-flex;
     align-items: center;
@@ -287,28 +299,26 @@
     color: dimgray;
 }
 
-/* 상태별 배경색 */
 .status-badge.status-confirmed {
-    background: #f0f9ff; /* 하늘색 */
+    background: #f0f9ff;
     border: 1.2px solid #38bdf8;
 }
 
 .status-badge.status-pending {
-    background: #fffbeb; /* 연노랑색 */
+    background: #fffbeb;
     border: 1.2px solid #f5c417;
 }
 
 .status-badge.status-rejected {
-    background: #fef2f2; /* 연분홍 */
+    background: #fef2f2;
     border: 1.2px solid #f87171;
 }
 
 .status-badge.status-cancelled {
-    background: #e0e0e0; /* 회색 */
+    background: #e0e0e0;
     border: 1.2px solid #2b2b2b;
 }
 
-/* 상태 셀에 rejectReason tooltip이 있을 때 cursor 변경 */
 .resource-table td[data-fulltext] .status-badge {
     pointer-events: none;
 }
@@ -450,28 +460,22 @@
 }
 
 /* =========================
-   Tooltip Base (공통 디자인)
+   Tooltip Base
 ========================= */
 .tooltip,
 .resource-table td[data-fulltext]:hover::after {
     max-width: 400px;
     padding: 6px 10px;
-
     background: rgba(33, 37, 41, 0.95);
     color: #fff;
     font-size: 13px;
     line-height: 1.4;
-
     border-radius: 4px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-
     white-space: normal;
     font-family: 'Noto Sans KR', system-ui, sans-serif;
 }
 
-/* =========================
-   JS Tooltip (position: fixed)
-========================= */
 .tooltip {
     position: fixed;
     z-index: 9999;
@@ -480,28 +484,8 @@
 }
 
 /* =========================
-   CSS Hover Tooltip (카테고리, 이름, 예약 사유)
+   Sidebar Menu Styles
 ========================= */
-.resource-table td:nth-child(2),  /* 카테고리 */
-.resource-table td:nth-child(3),  /* 이름 */
-.resource-table td:nth-child(4) { /* 예약 사유 */
-    cursor: help;
-}
-
-.resource-table td:nth-child(2):hover::after,
-.resource-table td:nth-child(3):hover::after,
-.resource-table td:nth-child(4):hover::after {
-    content: attr(data-fulltext);
-
-    position: absolute;
-    left: 0;
-    top: 100%;
-    z-index: 1000;
-}
-
-/* 카테고리 셀 hover 지원 */
-
-/* 사이드바 메뉴 스타일 (message.css와 동일) */
 .sidebar {
     width: 250px;
     background: #0b1220 !important;
@@ -552,4 +536,33 @@
     height: 4px;
     background-color: #5dade2;
     border-radius: 50%;
+}
+
+/* =========================
+   Responsive Column Hiding
+========================= */
+/* 1200px 이하: 예약사유, 시작일, 종료일, 시작시간, 종료시간 숨김 */
+@media (max-width: 1200px) {
+
+    .resource-table th:nth-child(4),
+    .resource-table td:nth-child(4),
+    .resource-table th:nth-child(5),
+    .resource-table td:nth-child(5),
+    .resource-table th:nth-child(6),
+    .resource-table td:nth-child(6),
+    .resource-table th:nth-child(7),
+    .resource-table td:nth-child(7),
+    .resource-table th:nth-child(8),
+    .resource-table td:nth-child(8) {
+        display: none;
+    }
+}
+
+/* 900px 이하: 번호도 숨김 (최종: 카테고리, 이름, 상태, 취소만 남음) */
+@media (max-width: 900px) {
+
+    .resource-table th:nth-child(1),
+    .resource-table td:nth-child(1) {
+        display: none;
+    }
 }

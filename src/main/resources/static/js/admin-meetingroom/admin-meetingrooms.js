@@ -52,6 +52,24 @@ function createCell(value = '', tooltip = false) {
     return td;
 }
 
+function createStatusBadge(statusName) {
+    const td = document.createElement('td');
+    const badge = document.createElement('span');
+    badge.className = 'status-badge';
+    badge.textContent = statusName;
+
+    if (statusName === '사용가능' || statusName === '사용 가능') {
+        badge.classList.add('status-available');
+    } else if (statusName === '점검중') {
+        badge.classList.add('status-maintenance');
+    } else if (statusName === '사용불가' || statusName === '사용 불가') {
+        badge.classList.add('status-unavailable');
+    }
+
+    td.appendChild(badge);
+    return td;
+}
+
 function createActionCell(id) {
     const td = document.createElement('td');
     const box = document.createElement('div');
@@ -86,11 +104,11 @@ async function loadMeetingRooms(page = 0) {
     try {
         const res = await apiFetch(
             `/api/admin/meetingrooms?page=${page}&size=${pageSize}&sort=id,asc`,
-            {method: 'GET'}
+            { method: 'GET' }
         );
         if (!res.ok) throw new Error();
 
-        const {data} = await res.json();
+        const { data } = await res.json();
         const tbody = document.querySelector('.resource-table tbody');
         tbody.innerHTML = '';
 
@@ -125,10 +143,10 @@ async function loadMeetingRooms(page = 0) {
             const tr = document.createElement('tr');
             tr.append(
                 createCell(startNumber + i + 1),
-                createCell(room.name),
+                createCell(room.name, true),
                 createCell(room.position, true),
                 createCell(room.description, true),
-                createCell(room.statusName),
+                createStatusBadge(room.statusName),
                 createActionCell(room.meetingroomId)
             );
             tbody.appendChild(tr);
@@ -199,7 +217,7 @@ async function deleteMeetingRoom(id) {
     try {
         const response = await apiFetch(
             `/api/admin/meetingrooms/${id}/delete`,
-            {method: 'PATCH'}
+            { method: 'PATCH' }
         );
 
         if (!response.ok) {

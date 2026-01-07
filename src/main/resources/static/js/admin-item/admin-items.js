@@ -52,6 +52,24 @@ function createCell(value = '', tooltip = false) {
     return td;
 }
 
+function createStatusBadge(statusName) {
+    const td = document.createElement('td');
+    const badge = document.createElement('span');
+    badge.className = 'status-badge';
+    badge.textContent = statusName;
+
+    if (statusName === '사용가능' || statusName === '사용 가능') {
+        badge.classList.add('status-available');
+    } else if (statusName === '점검중') {
+        badge.classList.add('status-maintenance');
+    } else if (statusName === '사용불가' || statusName === '사용 불가') {
+        badge.classList.add('status-unavailable');
+    }
+
+    td.appendChild(badge);
+    return td;
+}
+
 function createActionCell(id) {
     const td = document.createElement('td');
     const box = document.createElement('div');
@@ -92,15 +110,15 @@ async function loadItems(categoryId = null, page = 0) {
         if (categoryId) {
             url = `/api/admin/categories/${categoryId}/items`;
         }
-        
+
         // Pagination 파라미터 추가
         url += `?page=${page}&size=${pageSize}&sort=id,asc`;
 
-        const res = await apiFetch(url, {method: 'GET'});
+        const res = await apiFetch(url, { method: 'GET' });
 
         if (!res.ok) throw new Error();
 
-        const {data} = await res.json();
+        const { data } = await res.json();
         const tbody = document.querySelector('.resource-table tbody');
         tbody.innerHTML = '';
 
@@ -137,9 +155,9 @@ async function loadItems(categoryId = null, page = 0) {
             tr.append(
                 createCell(startNumber + i + 1),
                 createCell(item.itemCategoryName),
-                createCell(item.name),
+                createCell(item.name, true),
                 createCell(item.description, true),
-                createCell(item.statusName),
+                createStatusBadge(item.statusName),
                 createActionCell(item.itemId)
             );
             tbody.appendChild(tr);
@@ -197,12 +215,12 @@ async function loadCategories() {
     try {
         const res = await apiFetch(
             '/api/item-categories',
-            {method: 'GET'}
+            { method: 'GET' }
         );
 
         if (!res.ok) throw new Error();
 
-        const {data} = await res.json();
+        const { data } = await res.json();
         const select = document.getElementById('item-category-filter');
 
         // 기존 "전체" 옵션 유지
@@ -239,7 +257,7 @@ async function deleteItem(id) {
     try {
         const res = await apiFetch(
             `/api/admin/items/${id}/delete`,
-            {method: 'PATCH'}
+            { method: 'PATCH' }
         );
 
         if (!res.ok) throw new Error();
@@ -308,4 +326,3 @@ document.addEventListener('DOMContentLoaded', () => {
     initCategoryManageButton();
     initCategoryFilter();
 });
-
