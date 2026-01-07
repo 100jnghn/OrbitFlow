@@ -18,7 +18,7 @@
     --neutral-700: #374151;
     --neutral-800: #1F2937;
     --neutral-900: #111827;
-    --today-bg: #EFF6FF;
+    --today-bg: #ffffe5;
     --weekend-bg: #F9FAFB;
     --schedule-release: #3B82F6;
     --schedule-hold: #F59E0B;
@@ -1176,7 +1176,8 @@
 .holiday-name {
     font-size: 8px;
     font-weight: 600;
-    color: #DC2626; /* 빨간 계열 */
+    color: #DC2626;
+    /* 빨간 계열 */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
