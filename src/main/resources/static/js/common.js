@@ -333,13 +333,13 @@ function initSidebarToggle() {
     // 로컬 스토리지에서 상태 읽기
     const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
     if (isCollapsed) {
-        document.body.classList.add('sidebar-collapsed');
+        document.documentElement.classList.add('sidebar-collapsed');
     }
 
     toggleBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        const collapsed = document.body.classList.toggle('sidebar-collapsed');
+        const collapsed = document.documentElement.classList.toggle('sidebar-collapsed');
         localStorage.setItem('sidebarCollapsed', collapsed);
         console.log('사이드바 상태 변경:', collapsed ? '접힘' : '펼침');
     });
