@@ -130,7 +130,6 @@
     margin-bottom: 24px;
     background: white;
     border-radius: 12px;
-    overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border: 1px solid #e5e7eb;
     min-height: 470px;
@@ -138,30 +137,42 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+}
+
+.table-scroll-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+    width: 100%;
+    flex: 1;
 }
 
 .table-container {
-    margin-bottom: 24px;
-    background: white;
+    background: #fff;
     border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e5e7eb;
-    min-height: 550px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 /* =========================
    Resource Table (Base)
 ========================= */
-.resource-table {
+.board-table-container .resource-table {
     width: 100%;
     border-collapse: collapse;
-    background: #fff;
     table-layout: fixed;
     height: 100%;
+    background: #fff;
+}
+
+.resource-table {
+    width: max-content;
+    /* 핵심 */
+    min-width: 1000px;
+    /* 전체 테이블 최소 폭 */
+    table-layout: auto;
+    /* fixed ❌ */
+    border-collapse: collapse;
 }
 
 .resource-table thead {
@@ -178,10 +189,12 @@
 
     /* 한 줄 유지 */
     white-space: nowrap;
-    overflow: hidden;
+    /*overflow: hidden;*/
     text-overflow: ellipsis;
 
     position: relative;
+
+    min-width: 300px;
 }
 
 .resource-table th {
