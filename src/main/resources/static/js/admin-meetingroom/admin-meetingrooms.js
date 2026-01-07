@@ -143,7 +143,7 @@ async function loadMeetingRooms(page = 0) {
             const tr = document.createElement('tr');
             tr.append(
                 createCell(startNumber + i + 1),
-                createCell(room.name),
+                createCell(room.name, true),
                 createCell(room.position, true),
                 createCell(room.description, true),
                 createStatusBadge(room.statusName),

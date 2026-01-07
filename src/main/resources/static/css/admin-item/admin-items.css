@@ -130,6 +130,7 @@
     margin-bottom: 24px;
     background: white;
     border-radius: 12px;
+    overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border: 1px solid #e5e7eb;
     min-height: 470px;
@@ -137,14 +138,11 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
 }
 
 .table-scroll-wrapper {
-    overflow-x: auto;
-    overflow-y: auto;
     width: 100%;
-    flex: 1;
+    overflow: hidden;
 }
 
 .table-container {
@@ -155,7 +153,7 @@
 }
 
 /* =========================
-   Resource Table (Base)
+   Resource Table (Board Style)
 ========================= */
 .board-table-container .resource-table {
     width: 100%;
@@ -166,13 +164,9 @@
 }
 
 .resource-table {
-    width: max-content;
-    /* 핵심 */
-    min-width: 1000px;
-    /* 전체 테이블 최소 폭 */
-    table-layout: auto;
-    /* fixed ❌ */
+    width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
 }
 
 .resource-table thead {
@@ -186,15 +180,9 @@
     font-size: 14px;
     text-align: left;
     border-bottom: 1px solid #f0f0f0;
-
-    /* 한 줄 유지 */
     white-space: nowrap;
-    /*overflow: hidden;*/
     text-overflow: ellipsis;
-
     position: relative;
-
-    min-width: 300px;
 }
 
 .resource-table th {
@@ -202,13 +190,52 @@
     color: #495057;
 }
 
-/* 6번째 열 (관리) - 상하좌우 가운데 정렬 */
+.resource-table td {
+    color: #555;
+}
+
+/* Column Width Definitions */
+.resource-table th:nth-child(1),
+.resource-table td:nth-child(1) {
+    width: 60px;
+    text-align: center;
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.resource-table th:nth-child(2),
+.resource-table td:nth-child(2) {
+    width: 100px;
+}
+
+.resource-table th:nth-child(3),
+.resource-table td:nth-child(3) {
+    width: auto;
+    min-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.resource-table th:nth-child(4),
+.resource-table td:nth-child(4) {
+    width: auto;
+    min-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .resource-table th:nth-child(5),
-.resource-table th:nth-child(6) {
+.resource-table td:nth-child(5) {
+    width: 100px;
     text-align: center;
     vertical-align: middle;
-    justify-content: center;
-    align-items: center;
+}
+
+.resource-table th:nth-child(6),
+.resource-table td:nth-child(6) {
+    width: 100px;
+    text-align: center;
+    vertical-align: middle;
 }
 
 .resource-table td {
@@ -448,4 +475,18 @@
     font-size: 13px;
     color: #666;
     margin: 0 16px;
+}
+
+/* =========================
+   Responsive Column Hiding
+========================= */
+/* 1000px 이하: 번호, 비고 열 숨김 */
+@media (max-width: 1000px) {
+
+    .resource-table th:nth-child(1),
+    .resource-table td:nth-child(1),
+    .resource-table th:nth-child(4),
+    .resource-table td:nth-child(4) {
+        display: none;
+    }
 }
