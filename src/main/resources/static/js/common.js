@@ -317,7 +317,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadMe();
     initAdminSidebar(); // 페이지 로드 시 실행
+    initSidebarToggle(); // 사이드바 토글 초기화
 });
+
+/**
+ * 사이드바 토글 기능 초기화
+ */
+function initSidebarToggle() {
+    const toggleBtn = document.getElementById('sidebar-toggle');
+    if (!toggleBtn) {
+        console.warn('사이드바 토글 버튼을 찾을 수 없습니다.');
+        return;
+    }
+
+    // 로컬 스토리지에서 상태 읽기
+    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    if (isCollapsed) {
+        document.body.classList.add('sidebar-collapsed');
+    }
+
+    toggleBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const collapsed = document.body.classList.toggle('sidebar-collapsed');
+        localStorage.setItem('sidebarCollapsed', collapsed);
+        console.log('사이드바 상태 변경:', collapsed ? '접힘' : '펼침');
+    });
+
+    console.log('사이드바 토글 초기화 완료');
+}
 
 function saveSessionExpiry(refreshExpiresAt) {
     sessionStorage.setItem(

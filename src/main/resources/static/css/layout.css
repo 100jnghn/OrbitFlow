@@ -141,6 +141,10 @@ body {
     color: #fff;
     display: flex;
     flex-direction: column;
+    position: relative;
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 100;
+    /* 콘텐츠보다 위에 오도록 */
 }
 
 .sidebar-inner {
@@ -216,3 +220,75 @@ body {
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
 }
+
+/* =========================
+   Sidebar Toggle Wing Button (Improved)
+   ========================= */
+.sidebar-toggle-wing {
+    position: absolute;
+    right: -14px;
+    /* 반쯤 걸치게 */
+    top: 15px;
+    /* 최상단 */
+    width: 28px;
+    height: 28px;
+    background: #ffffff;
+    /* 흰색 배경 */
+    color: #000000;
+    /* 검은색 화살표 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    z-index: 1000;
+    border: 1px solid #00000070;
+    /* 검은색 테두리 */
+}
+
+.sidebar-toggle-wing:hover {
+    background: #f3f4f6;
+    /* 호버 시 약간 어둡게 */
+    transform: scale(1.1);
+}
+
+.sidebar-toggle-wing i {
+    font-size: 10px;
+    transition: transform 0.3s ease;
+}
+
+/* =========================
+   Collapsed State (Side Effect on Button)
+   ========================= */
+.sidebar-collapsed .sidebar {
+    margin-left: -250px;
+}
+
+.sidebar-collapsed .sidebar-toggle-wing {
+    right: -32px;
+    /* 숨겨졌을 때 버튼이 더 밖으로 나오게 */
+    background: #4a69bd;
+    /* 접혔을 때는 초기 파란색으로 반전 */
+    color: #ffffff;
+    /* 흰색 화살표 */
+    border: 1px solid #ffffff;
+    /* 흰색 테두리 */
+}
+
+.sidebar-collapsed .sidebar-toggle-wing i {
+    transform: rotate(180deg);
+}
+
+.sidebar-collapsed .sidebar-toggle-wing:hover {
+    background: #3c55a5;
+}
+
+/* 메인 콘텐츠 영역 조정 */
+.app-content {
+    transition: padding-left 0.3s ease;
+}
+
+/* 사이드바가 접혔을 때 메인 콘텐츠 레이아웃은 flex-1에 의해 자동으로 확장되지만, 
+   필요한 경우 추가 스타일을 여기에 정의할 수 있습니다. */
