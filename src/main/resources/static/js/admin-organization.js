@@ -42,7 +42,6 @@ const els = {
     orgName: () => document.getElementById('orgName'),
     parentSelect: () => document.getElementById('parentOrgSelect'),
     btnSave: () => document.getElementById('btnSaveOrg'),
-    btnCloseIcon: () => document.getElementById('btnModalCloseIcon'),
     btnCancel: () => document.getElementById('btnModalCancel'),
 };
 
@@ -244,7 +243,6 @@ function bindEvents() {
 
     els.btnCreate().addEventListener('click', openCreate);
     els.btnSaveOrder().addEventListener('click', saveOrder);
-    els.btnCloseIcon().addEventListener('click', closeModal);
     els.btnCancel().addEventListener('click', closeModal);
     els.btnSave().addEventListener('click', saveOrg);
 }
