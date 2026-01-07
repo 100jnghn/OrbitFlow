@@ -1,9 +1,13 @@
 /**
- * 챗봇 JavaScript
+ * Orbitflow Chatbot JS (RAG & 대화 저장 지원 버전 - FIX)
+ * ✅ 수정 사항
+ * 1) 카테고리 API 경로 수정: /api/auth/manual/categories  ->  /api/manual/categories
+ * 2) result.status === 'OK' 같은 비교 제거(환경마다 status 포맷이 달라 실패 가능)
+ *    -> response.ok 기반 처리 + result.data 사용
+ * 3) 챗봇 열 때마다 카테고리 재조회(관리자 변경 반영)
  */
-
-document.addEventListener('DOMContentLoaded', function() {
-    // DOM 요소
+document.addEventListener('DOMContentLoaded', function () {
+    // === DOM 요소 ===
     const floatIcon = document.getElementById('chatbotFloatIcon');
     const chatbotWindow = document.getElementById('chatbotWindow');
     const closeBtn = document.getElementById('chatbotCloseBtn');
@@ -17,39 +21,49 @@ document.addEventListener('DOMContentLoaded', function() {
     const inputField = document.getElementById('chatbotInput');
     const sendBtn = document.getElementById('chatbotSendBtn');
 
-    // 상태
-    let selectedCategoryId = null;
-    let selectedCategoryName = null;
+    // === 상태 관리 ===
+    let currentConversationId = sessionStorage.getItem('activeChatId'); // 대화방 ID 세션 복원
+    let selectedCategoryName = sessionStorage.getItem('activeCategoryName');
     let categories = [];
 
-    // 초기화
     init();
 
     function init() {
-        loadCategories();
         setupEventListeners();
+
+        // 카테고리는 미리 로드
+        loadCategories();
+
+        // 기존에 진행 중인 대화가 있다면 복원
+        if (currentConversationId) {
+            restoreConversation(currentConversationId);
+        }
     }
 
-    // 이벤트 리스너 설정
+    // === 이벤트 리스너 ===
     function setupEventListeners() {
-        // 플로팅 아이콘 클릭
         floatIcon.addEventListener('click', () => {
-            openChatbot();
+            chatbotWindow.style.display = 'flex';
+
+            // ✅ 열 때마다 최신 카테고리 다시 로드(관리자 변경 반영)
+            loadCategories();
+
+            if (!currentConversationId) showCategoryView(false);
+            else showChatView();
         });
 
-        // 닫기 버튼들
-        closeBtn.addEventListener('click', closeChatbot);
-        closeBottomBtn.addEventListener('click', closeChatbot);
+        closeBtn.addEventListener('click', () => chatbotWindow.style.display = 'none');
+        closeBottomBtn.addEventListener('click', () => chatbotWindow.style.display = 'none');
 
-        // 뒤로가기 버튼
         backBtn.addEventListener('click', () => {
-            showCategoryView();
+            if (confirm('현재 대화를 종료하고 카테고리 목록으로 돌아가시겠습니까?')) {
+                clearChatSession();
+                showCategoryView(true);
+            }
         });
 
-        // 전송 버튼
         sendBtn.addEventListener('click', sendMessage);
 
-        // 엔터 키로 전송
         inputField.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -58,136 +72,198 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 챗봇 열기
-    function openChatbot() {
-        chatbotWindow.style.display = 'flex';
-        if (!selectedCategoryId) {
-            showCategoryView();
-        } else {
-            showChatView();
-        }
-    }
-
-    // 챗봇 닫기
-    function closeChatbot() {
-        chatbotWindow.style.display = 'none';
-    }
-
-    // 카테고리 목록 로드
+    // === 1. 카테고리 로드 (사용자용) ===
     async function loadCategories() {
         try {
-            const response = await apiFetch('/api/manual/categories');
+            categoryButtons.innerHTML = `<div style="padding:10px;font-size:13px;">카테고리를 불러오는 중...</div>`;
+
+            // ✅ FIX: 올바른 카테고리 API 경로
+            const response = await apiFetch('/api/manual/categories', { method: 'GET' });
+
+            if (response.status === 401 || response.status === 403) {
+                categoryButtons.innerHTML = `
+                    <div style="padding:10px;font-size:13px;line-height:1.5;">
+                        카테고리를 불러올 수 없습니다.<br/>
+                        로그인/권한을 확인해주세요. (HTTP ${response.status})
+                    </div>`;
+                console.error('[loadCategories] auth error:', response.status);
+                return;
+            }
+
             if (!response.ok) {
-                console.error('카테고리 목록 로드 실패');
+                categoryButtons.innerHTML = `
+                    <div style="padding:10px;font-size:13px;line-height:1.5;">
+                        카테고리 로드 실패 (HTTP ${response.status})
+                    </div>`;
+                console.error('[loadCategories] http error:', response.status);
                 return;
             }
 
             const result = await response.json();
-            categories = result.data || [];
+            console.log('[loadCategories] result:', result);
+
+            const data = result?.data ?? [];
+            categories = Array.isArray(data) ? data : [];
+
             renderCategoryButtons();
         } catch (error) {
-            console.error('카테고리 로드 오류:', error);
+            console.error('[loadCategories] Error:', error);
+            categoryButtons.innerHTML = `
+                <div style="padding:10px;font-size:13px;line-height:1.5;">
+                    카테고리 로드 중 오류가 발생했습니다.<br/>콘솔을 확인해주세요.
+                </div>`;
         }
     }
 
-    // 카테고리 버튼 렌더링
     function renderCategoryButtons() {
         categoryButtons.innerHTML = '';
 
-        // 카테고리별 예시 텍스트 매핑 (실제로는 카테고리 description을 사용하거나 DB에서 가져올 수 있음)
-        const categoryExamples = {
-            '결재 문서 정책': '출퇴근, 지각 등',
-            '근태 및 휴가 정책': '연차, 경조사 등',
-            '자원 예약 및 일정': '취업규칙, 복지 등',
-            '기타 질문': '자유 검색'
-        };
+        if (!categories || categories.length === 0) {
+            categoryButtons.innerHTML = `<div style="padding:10px;font-size:13px;">표시할 카테고리가 없습니다.</div>`;
+            return;
+        }
 
         categories.forEach(category => {
+            // snake_case / camelCase 방어
+            const id = category.id ?? category.categoryId ?? category.category_id;
+            const name = category.categoryName ?? category.category_name ?? category.name;
+            const desc = category.description ?? category.desc ?? category.categoryDescription;
+
+            if (id == null || !name) {
+                console.warn('[renderCategoryButtons] invalid category:', category);
+                return;
+            }
+
             const button = document.createElement('button');
             button.className = 'chatbot-category-btn';
             button.innerHTML = `
-                <span class="category-name">${category.categoryName}</span>
-                ${category.description ? `<span class="category-examples">${category.description}</span>` : ''}
+                <span class="category-name">${escapeHtml(String(name))}</span>
+                ${desc ? `<span class="category-examples">${escapeHtml(String(desc))}</span>` : ''}
             `;
 
-            button.addEventListener('click', () => {
-                selectCategory(category.id, category.categoryName);
-            });
-
+            button.addEventListener('click', () => createNewConversation(Number(id), String(name)));
             categoryButtons.appendChild(button);
         });
     }
 
-    // 카테고리 선택
-    function selectCategory(categoryId, categoryName) {
-        selectedCategoryId = categoryId;
-        selectedCategoryName = categoryName;
-        currentCategorySpan.textContent = categoryName;
-        showChatView();
-
-        // 환영 메시지 추가
-        addBotMessage(`${categoryName} 관련 질문을 입력해주세요.`);
-    }
-
-    // 카테고리 화면 보이기
-    function showCategoryView() {
-        categoryView.style.display = 'block';
-        chatView.style.display = 'none';
-        selectedCategoryId = null;
-        selectedCategoryName = null;
-        messagesContainer.innerHTML = '';
-    }
-
-    // 채팅 화면 보이기
-    function showChatView() {
-        categoryView.style.display = 'none';
-        chatView.style.display = 'flex';
-        inputField.focus();
-    }
-
-    // 메시지 전송
-    async function sendMessage() {
-        const question = inputField.value.trim();
-        if (!question) return;
-
-        if (!selectedCategoryId) {
-            alert('카테고리를 먼저 선택해주세요.');
-            return;
-        }
-
-        // 사용자 메시지 추가
-        addUserMessage(question);
-        inputField.value = '';
-        sendBtn.disabled = true;
-
-        // 로딩 메시지 추가
-        const loadingId = addBotMessage('답변을 생성하고 있습니다...', true);
-
+    // === 2. 대화방 생성 (카테고리 선택 시점) ===
+    async function createNewConversation(categoryId, categoryName) {
         try {
-            const response = await apiFetch('/api/chatbot/ask', {
+            const response = await apiFetch('/api/auth/chatbot/conversations', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    question: question,
-                    categoryId: selectedCategoryId
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ manualCategoryId: categoryId })
             });
 
+            if (response.status === 401 || response.status === 403) {
+                alert(`권한이 없거나 로그인 정보가 만료되었습니다. (HTTP ${response.status})`);
+                return;
+            }
+
             if (!response.ok) {
-                throw new Error('답변 생성 실패');
+                throw new Error(`대화방 생성 실패 (HTTP ${response.status})`);
             }
 
             const result = await response.json();
-            const answer = result.data || '답변을 생성할 수 없습니다.';
+            console.log('[createNewConversation] result:', result);
 
-            // 로딩 메시지 제거하고 실제 답변 추가
+            const convId = result?.data?.conversationId;
+            if (!convId) {
+                throw new Error('conversationId가 응답에 없습니다.');
+            }
+
+            currentConversationId = String(convId);
+            selectedCategoryName = categoryName;
+
+            sessionStorage.setItem('activeChatId', currentConversationId);
+            sessionStorage.setItem('activeCategoryName', selectedCategoryName);
+
+            currentCategorySpan.textContent = selectedCategoryName;
+            showChatView();
+            messagesContainer.innerHTML = '';
+            addBotMessage(`${selectedCategoryName} 관련 질문을 입력해주세요.`);
+        } catch (error) {
+            console.error('[createNewConversation] Error:', error);
+            alert('대화 시작 중 오류가 발생했습니다.');
+        }
+    }
+
+    // === 3. 대화 내역 복원 (기존 ID가 있을 때) ===
+    async function restoreConversation(convId) {
+        try {
+            const response = await apiFetch(`/api/auth/chatbot/conversations/${convId}/messages`, { method: 'GET' });
+
+            if (response.status === 401 || response.status === 403) {
+                console.warn('[restoreConversation] auth error:', response.status);
+                clearChatSession();
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error(`대화 복원 실패 (HTTP ${response.status})`);
+            }
+
+            const result = await response.json();
+            console.log('[restoreConversation] result:', result);
+
+            const msgs = result?.data ?? [];
+            if (!Array.isArray(msgs)) throw new Error('메시지 data가 배열이 아닙니다.');
+
+            showChatView();
+            currentCategorySpan.textContent = selectedCategoryName || '이전 대화';
+            messagesContainer.innerHTML = '';
+
+            msgs.forEach(msg => {
+                if (msg.role === 'USER') addUserMessage(msg.content);
+                else addBotMessage(msg.content);
+            });
+
+            scrollToBottom();
+        } catch (error) {
+            console.error('[restoreConversation] Error:', error);
+            clearChatSession();
+        }
+    }
+
+    // === 4. 메시지 전송 (대화방 기반) ===
+    async function sendMessage() {
+        const content = inputField.value.trim();
+        if (!content || !currentConversationId) return;
+
+        addUserMessage(content);
+        inputField.value = '';
+        sendBtn.disabled = true;
+
+        const loadingId = addBotMessage('답변을 생성하고 있습니다...', true);
+
+        try {
+            const response = await apiFetch(`/api/auth/chatbot/conversations/${currentConversationId}/messages`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: content })
+            });
+
             removeMessage(loadingId);
-            addBotMessage(answer);
+
+            if (response.status === 401 || response.status === 403) {
+                addBotMessage(`권한이 없거나 로그인 정보가 만료되었습니다. (HTTP ${response.status})`);
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error(`메시지 전송 실패 (HTTP ${response.status})`);
+            }
+
+            const result = await response.json();
+            console.log('[sendMessage] result:', result);
+
+            // ChatMessageResponseDto: data.assistant.content
+            const answer = result?.data?.assistant?.content;
+            if (answer) addBotMessage(answer);
+            else addBotMessage('답변을 생성할 수 없습니다.');
 
         } catch (error) {
-            console.error('메시지 전송 오류:', error);
+            console.error('[sendMessage] Error:', error);
             removeMessage(loadingId);
             addBotMessage('오류가 발생했습니다. 다시 시도해주세요.');
         } finally {
@@ -195,60 +271,88 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // 사용자 메시지 추가
+    // === UI 유틸리티 ===
+    function showCategoryView(reload) {
+        categoryView.style.display = 'block';
+        chatView.style.display = 'none';
+        if (reload) loadCategories();
+    }
+
+    function showChatView() {
+        categoryView.style.display = 'none';
+        chatView.style.display = 'flex';
+        inputField.focus();
+    }
+
+    function clearChatSession() {
+        sessionStorage.removeItem('activeChatId');
+        sessionStorage.removeItem('activeCategoryName');
+        currentConversationId = null;
+        selectedCategoryName = null;
+        currentCategorySpan.textContent = '카테고리';
+        messagesContainer.innerHTML = '';
+    }
+
     function addUserMessage(text) {
-        const messageId = 'msg-' + Date.now();
-        const messageElement = createMessageElement('user', text, messageId);
-        messagesContainer.appendChild(messageElement);
+        const msgEl = createMessageElement('user', text);
+        messagesContainer.appendChild(msgEl);
         scrollToBottom();
     }
 
-    // 봇 메시지 추가
     function addBotMessage(text, isLoading = false) {
-        const messageId = 'msg-' + Date.now();
-        const messageElement = createMessageElement('bot', text, messageId, isLoading);
-        messagesContainer.appendChild(messageElement);
+        const id = 'bot-' + Date.now();
+        const msgEl = createMessageElement('bot', text, id, isLoading);
+        messagesContainer.appendChild(msgEl);
         scrollToBottom();
-        return messageId;
+        return id;
     }
 
-    // 메시지 요소 생성
     function createMessageElement(type, text, id, isLoading = false) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `chatbot-message ${type}`;
-        messageDiv.id = id;
+        const div = document.createElement('div');
+        div.className = `chatbot-message ${type}`;
+        if (id) div.id = id;
 
         const bubble = document.createElement('div');
         bubble.className = 'chatbot-message-bubble';
         bubble.textContent = text;
+        if (isLoading) bubble.style.fontStyle = 'italic';
 
         const time = document.createElement('div');
         time.className = 'chatbot-message-time';
         const now = new Date();
         time.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-        messageDiv.appendChild(bubble);
-        messageDiv.appendChild(time);
-
-        if (isLoading) {
-            bubble.style.opacity = '0.6';
-            bubble.style.fontStyle = 'italic';
-        }
-
-        return messageDiv;
+        div.appendChild(bubble);
+        div.appendChild(time);
+        return div;
     }
 
-    // 메시지 제거
-    function removeMessage(messageId) {
-        const messageElement = document.getElementById(messageId);
-        if (messageElement) {
-            messageElement.remove();
-        }
+    function removeMessage(id) {
+        const el = document.getElementById(id);
+        if (el) el.remove();
     }
 
-    // 스크롤을 맨 아래로
     function scrollToBottom() {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
-});
 
+    // ✅ 공통 fetch: 세션스토리지 토큰 + 쿠키(세션) 포함
+    async function apiFetch(url, options = {}) {
+        const token = sessionStorage.getItem('accessToken');
+        const headers = { ...(options.headers || {}) };
+        if (token && !headers['Authorization']) headers['Authorization'] = `Bearer ${token}`;
+
+        return fetch(url, {
+            ...options,
+            headers,
+            credentials: 'include'
+        });
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>"']/g, m => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[m]));
+    }
+});

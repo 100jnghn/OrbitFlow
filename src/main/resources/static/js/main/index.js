@@ -19,10 +19,17 @@ async function loadDashboardData() {
     }
 }
 
+// 안전하게 텍스트를 설정하는 헬퍼 함수
+function safeSetText(id, text) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.textContent = text;
+    }
+}
+
 // 사용자 프로필 로드
 async function loadUserProfile() {
     try {
-        // 1. 로그인 정보 조회
         const meResponse = await apiFetch('/api/auth/me');
         if (!meResponse.ok) {
             if (meResponse.status === 401) {
@@ -35,11 +42,8 @@ async function loadUserProfile() {
         const meResult = await meResponse.json();
         const user = meResult.data;
 
-        document.getElementById('profileName').textContent = user.name || '-';
+        safeSetText('profileName', user.name || '-');
 
-        // 2. 부서명과 직책명 조회 (관리자 권한이 필요한 API이므로 제거)
-        // 일반 사용자는 부서명과 직책명을 조회할 수 있는 별도 API가 필요합니다.
-        // 현재는 기본값으로 표시합니다.
         let organizationName = '-';
         let positionName = '';
 
@@ -47,12 +51,12 @@ async function loadUserProfile() {
         if (user.role === 'ADMIN' || user.role === 'COMPANY_ADMIN') {
             try {
                 if (user.name && user.name.length >= 2) {
-                    const searchResponse = await apiFetch(`/api/admin/rules/employees/search?keyword=${encodeURIComponent(user.name)}`);
+                    const searchResponse = await apiFetch(`/api/rules/employees/search?keyword=${encodeURIComponent(user.name)}`);
+                    // 403 에러 발생 시를 대비해 응답 상태 확인
                     if (searchResponse.ok) {
                         const result = await searchResponse.json();
                         const employees = result.data || result;
                         if (Array.isArray(employees)) {
-                            // 본인 employeeId와 일치하는 사원 찾기
                             const currentEmployee = employees.find(emp => emp.id === user.employeeId);
                             if (currentEmployee) {
                                 organizationName = currentEmployee.organizationName || '-';
@@ -62,33 +66,31 @@ async function loadUserProfile() {
                     }
                 }
             } catch (searchError) {
-                // 403 에러 등은 조용히 처리 (콘솔에 표시하지 않음)
-                // console.warn('사원 정보 검색 실패, 기본값 사용:', searchError);
+                // API 권한 문제(403) 등은 로그에 남기지 않고 기본값 유지
             }
         }
 
-        document.getElementById('profileDept').textContent = organizationName;
-        document.getElementById('profileRank').textContent = positionName ? `(${positionName})` : '';
+        safeSetText('profileDept', organizationName);
+        safeSetText('profileRank', positionName ? `(${positionName})` : '');
 
-        // 프로필 이미지 설정
         const profileImage = document.getElementById('profileImage');
         if (profileImage) {
             profileImage.src = '/images/male.png';
         }
     } catch (error) {
         console.error('프로필 로드 실패:', error);
-        document.getElementById('profileName').textContent = '로드 실패';
-        document.getElementById('profileDept').textContent = '-';
-        document.getElementById('profileRank').textContent = '';
+        safeSetText('profileName', '로드 실패');
+        safeSetText('profileDept', '-');
+        safeSetText('profileRank', '');
     }
 }
 
-// 공지사항 로드 (전사 공지사항 게시글 목록)
+// 공지사항 로드
 async function loadNotices() {
     const noticeList = document.getElementById('noticeList');
+    if (!noticeList) return;
 
     try {
-        // 먼저 공지사항 게시판 찾기
         const categoryResponse = await apiFetch('/api/board-categories/accessible');
         if (!categoryResponse.ok) {
             if (categoryResponse.status === 401) {
@@ -102,7 +104,6 @@ async function loadNotices() {
         const categoryResult = await categoryResponse.json();
         const categories = categoryResult.data || [];
 
-        // 전사 공지사항 게시판 찾기 (boardType이 '공지사항' 또는 'NOTICE'이고 organizationId가 null인 게시판)
         const noticeCategory = categories.find(cat =>
             (cat.boardType === '공지사항' || cat.boardType === 'NOTICE') &&
             cat.organizationId === null
@@ -113,14 +114,11 @@ async function loadNotices() {
             return;
         }
 
-        // 전사 공지사항 게시글 목록 조회 (최근 10개)
         const boardResponse = await apiFetch(
             `/api/boards/categories/${noticeCategory.id}?page=0&size=8&sort=createdAt,desc`
         );
 
-        if (!boardResponse.ok) {
-            throw new Error('공지사항 조회 실패');
-        }
+        if (!boardResponse.ok) throw new Error('공지사항 조회 실패');
 
         const boardResult = await boardResponse.json();
         const boards = boardResult.data?.content || [];
@@ -131,14 +129,11 @@ async function loadNotices() {
         }
 
         noticeList.innerHTML = boards.map(board => {
-            // createdAt이 없거나 유효하지 않은 경우 처리
             let date = '-';
             if (board.createdAt) {
                 try {
                     date = formatDate(board.createdAt);
-                } catch (error) {
-                    console.error('날짜 포맷팅 오류:', error, board.createdAt);
-                    // 날짜 파싱 실패 시 원본 값 표시
+                } catch (e) {
                     date = board.createdAt;
                 }
             }
@@ -160,11 +155,9 @@ async function loadNotices() {
     }
 }
 
-
 // 근태 정보 로드
 async function loadAttendance() {
     try {
-        // 오늘의 근태 정보와 월별 근무시간, 연차 현황을 병렬로 로드
         await Promise.all([
             loadTodayAttendance(),
             loadMonthlyWorkHours(),
@@ -173,8 +166,8 @@ async function loadAttendance() {
         ]);
     } catch (error) {
         console.error('근태 정보 로드 실패:', error);
-        document.getElementById('attendanceDate').textContent = '-';
-        document.getElementById('attendanceStatus').textContent = '조회 실패';
+        safeSetText('attendanceDate', '-');
+        safeSetText('attendanceStatus', '조회 실패');
     }
 }
 
@@ -194,32 +187,18 @@ async function loadTodayAttendance() {
         const attendance = result.data;
 
         const now = new Date();
-        const timeStr = now.toLocaleTimeString('ko-KR', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        });
-
         const dateStr = now.toLocaleDateString('ko-KR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            weekday: 'short'
+            year: 'numeric', month: 'long', day: 'numeric', weekday: 'short'
         });
 
-        document.getElementById('attendanceDate').textContent = dateStr;
+        safeSetText('attendanceDate', dateStr);
 
-        if (attendance.attendance) {
-            const commuteAt = new Date(attendance.attendance.commuteAt);
-            const workTimeMs = now - commuteAt;
-            const workHours = Math.floor(workTimeMs / (1000 * 60 * 60));
-            const workMinutes = Math.floor((workTimeMs % (1000 * 60 * 60)) / (1000 * 60));
-
+        // attendance.attendance가 존재하는지 안전하게 확인
+        if (attendance && attendance.attendance) {
             const statusText = attendance.attendance.status === 'ON_TIME' ? '정상 출근' : '지각';
-            document.getElementById('attendanceStatus').textContent = statusText;
-
+            safeSetText('attendanceStatus', statusText);
         } else {
-            document.getElementById('attendanceStatus').textContent = '근무 예정';
+            safeSetText('attendanceStatus', '근무 예정');
         }
     } catch (error) {
         console.error('오늘 근태 정보 로드 실패:', error);
@@ -234,25 +213,15 @@ async function loadMonthlyWorkHours() {
         const month = now.getMonth() + 1;
 
         const response = await apiFetch(`/api/attendance/history/monthly?year=${year}&month=${month}`);
-        if (!response.ok) {
-            if (response.status === 401) {
-                location.href = '/login';
-                return;
-            }
-            throw new Error('월별 근무시간 조회 실패');
-        }
-
-        const result = await response.json();
-        const data = result.data;
-
-        if (data && data.summary && data.summary.totalWorkTimeDisplay) {
-            document.getElementById('totalWorkHours').textContent = data.summary.totalWorkTimeDisplay;
-        } else {
-            document.getElementById('totalWorkHours').textContent = '0h 0m';
+        if (response.ok) {
+            const result = await response.json();
+            const data = result.data;
+            const display = data?.summary?.totalWorkTimeDisplay || '0h 0m';
+            safeSetText('totalWorkHours', display);
         }
     } catch (error) {
         console.error('월별 근무시간 로드 실패:', error);
-        document.getElementById('totalWorkHours').textContent = '-';
+        safeSetText('totalWorkHours', '-');
     }
 }
 
@@ -261,28 +230,16 @@ async function loadLeaveBalance() {
     try {
         const now = new Date();
         const year = now.getFullYear();
-
         const response = await apiFetch(`/api/leave/summary?year=${year}`);
-        if (!response.ok) {
-            if (response.status === 401) {
-                location.href = '/login';
-                return;
-            }
-            throw new Error('연차 현황 조회 실패');
-        }
-
-        const result = await response.json();
-        const data = result.data;
-
-        if (data && data.remainingDays !== null && data.remainingDays !== undefined) {
-            const remainingDays = parseFloat(data.remainingDays);
-            document.getElementById('remainingLeave').textContent = remainingDays.toFixed(1) + '일';
-        } else {
-            document.getElementById('remainingLeave').textContent = '0일';
+        if (response.ok) {
+            const result = await response.json();
+            const data = result.data;
+            const remaining = (data && data.remainingDays !== undefined) ? parseFloat(data.remainingDays).toFixed(1) + '일' : '0일';
+            safeSetText('remainingLeave', remaining);
         }
     } catch (error) {
         console.error('연차 현황 로드 실패:', error);
-        document.getElementById('remainingLeave').textContent = '-';
+        safeSetText('remainingLeave', '-');
     }
 }
 
@@ -292,213 +249,103 @@ async function loadLeaveInfo() {
         const now = new Date();
         const year = now.getFullYear();
 
-        // 연차 현황 조회
         const summaryResponse = await apiFetch(`/api/leave/summary?year=${year}`);
-        if (!summaryResponse.ok) {
-            if (summaryResponse.status === 401) {
-                location.href = '/login';
-                return;
+        if (summaryResponse.ok) {
+            const summaryResult = await summaryResponse.json();
+            const summaryData = summaryResult.data;
+            if (summaryData) {
+                const total = parseFloat(summaryData.totalGranted || 0).toFixed(1);
+                const used = parseFloat(summaryData.usedDays || 0).toFixed(1);
+                safeSetText('leaveUsage', `${used}일 / ${total}일`);
             }
-            throw new Error('연차 현황 조회 실패');
         }
 
-        const summaryResult = await summaryResponse.json();
-        const summaryData = summaryResult.data;
-
-        // 사용/부여 연차 표시
-        if (summaryData) {
-            const totalGranted = parseFloat(summaryData.totalGranted || 0);
-            const usedDays = parseFloat(summaryData.usedDays || 0);
-            document.getElementById('leaveUsage').textContent = `${usedDays.toFixed(1)}일 / ${totalGranted.toFixed(1)}일`;
-        } else {
-            document.getElementById('leaveUsage').textContent = '-';
-        }
-
-        // 휴가 신청 내역 조회 (대기 중인 신청 확인 - SUBMITTED, IN_PROGRESS 상태)
         const historyResponse = await apiFetch(`/api/leave/history?page=0&size=50`);
         if (historyResponse.ok) {
             const historyResult = await historyResponse.json();
-            const historyData = historyResult.data;
-
-            // 대기 중인 신청 건수 (SUBMITTED, IN_PROGRESS 상태)
-            if (historyData && historyData.content) {
-                const pendingCount = historyData.content.filter(leave =>
-                    leave.statusCode === 'SUBMITTED' || leave.statusCode === 'IN_PROGRESS'
-                ).length;
-                document.getElementById('pendingLeaveCount').textContent = pendingCount > 0 ? `${pendingCount}건` : '없음';
-            } else {
-                document.getElementById('pendingLeaveCount').textContent = '없음';
-            }
-        } else {
-            document.getElementById('pendingLeaveCount').textContent = '-';
+            const content = historyResult.data?.content || [];
+            const pendingCount = content.filter(l => l.statusCode === 'SUBMITTED' || l.statusCode === 'IN_PROGRESS').length;
+            safeSetText('pendingLeaveCount', pendingCount > 0 ? `${pendingCount}건` : '없음');
         }
 
-        // 승인된 휴가 중 다음 예정일 조회
         const approvedResponse = await apiFetch(`/api/leave/history?status=APPROVED&page=0&size=50`);
         if (approvedResponse.ok) {
             const approvedResult = await approvedResponse.json();
-            const approvedData = approvedResult.data;
+            const content = approvedResult.data?.content || [];
 
-            if (approvedData && approvedData.content && approvedData.content.length > 0) {
-                // 오늘 이후의 가장 가까운 휴가 날짜 찾기
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
+            let nextLeaveDate = null;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
 
-                let nextLeaveDate = null;
-                for (const leave of approvedData.content) {
-                    if (leave.period) {
-                        // period 형식: "2025-07-01 ~ 2025-07-02"
-                        const startDateStr = leave.period.split(' ~ ')[0];
-                        const startDate = new Date(startDateStr);
-                        startDate.setHours(0, 0, 0, 0);
-
-                        if (startDate >= today && (!nextLeaveDate || startDate < nextLeaveDate)) {
-                            nextLeaveDate = startDate;
-                        }
-                    } else if (leave.actionDate) {
-                        // actionDate 형식: "2025-07-01"
-                        const startDate = new Date(leave.actionDate);
-                        startDate.setHours(0, 0, 0, 0);
-
-                        if (startDate >= today && (!nextLeaveDate || startDate < nextLeaveDate)) {
-                            nextLeaveDate = startDate;
-                        }
+            content.forEach(leave => {
+                const dateStr = leave.period ? leave.period.split(' ~ ')[0] : leave.actionDate;
+                if (dateStr) {
+                    const startDate = new Date(dateStr);
+                    startDate.setHours(0, 0, 0, 0);
+                    if (startDate >= today && (!nextLeaveDate || startDate < nextLeaveDate)) {
+                        nextLeaveDate = startDate;
                     }
                 }
+            });
 
-                if (nextLeaveDate) {
-                    const formattedDate = nextLeaveDate.toLocaleDateString('ko-KR', {
-                        month: 'short',
-                        day: 'numeric'
-                    });
-                    document.getElementById('nextLeaveDate').textContent = formattedDate;
-                } else {
-                    document.getElementById('nextLeaveDate').textContent = '없음';
-                }
-            } else {
-                document.getElementById('nextLeaveDate').textContent = '없음';
-            }
-        } else {
-            document.getElementById('nextLeaveDate').textContent = '-';
+            const nextStr = nextLeaveDate ? nextLeaveDate.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) : '없음';
+            safeSetText('nextLeaveDate', nextStr);
         }
     } catch (error) {
         console.error('휴가 정보 로드 실패:', error);
-        document.getElementById('leaveUsage').textContent = '-';
-        document.getElementById('pendingLeaveCount').textContent = '-';
-        document.getElementById('nextLeaveDate').textContent = '-';
     }
 }
 
-// 일정 요약 로드 (AI 생성 요약)
+// 일정 요약 로드
 async function loadScheduleSummary() {
     const dailySummaryEl = document.getElementById('dailySummary');
     const weeklySummaryEl = document.getElementById('weeklySummary');
 
+    if (dailySummaryEl) dailySummaryEl.textContent = 'AI가 오늘의 일정을 요약 중입니다...';
+    if (weeklySummaryEl) weeklySummaryEl.textContent = 'AI가 주간 일정을 요약 중입니다...';
+
     try {
-        dailySummaryEl.textContent = 'AI가 오늘의 일정을 요약 중입니다...';
-        weeklySummaryEl.textContent = 'AI가 주간 일정을 요약 중입니다...';
-
         const response = await apiFetch('/api/schedule/summary');
-
-        if (!response.ok) {
-            if (response.status === 401) {
-                location.href = '/login';
-                return;
-            }
-            throw new Error('일정 요약 조회 실패');
+        if (response.ok) {
+            const result = await response.json();
+            const { dailySummary, weeklySummary } = result.data;
+            if (dailySummaryEl) dailySummaryEl.innerHTML = renderMarkdown(dailySummary || '오늘 일정이 없습니다.');
+            if (weeklySummaryEl) weeklySummaryEl.innerHTML = renderMarkdown(weeklySummary || '이번 주 일정이 없습니다.');
         }
-
-        const result = await response.json();
-        const { dailySummary, weeklySummary } = result.data;
-
-        // Markdown 형식 렌더링 (** 굵게, 줄바꿈)
-        dailySummaryEl.innerHTML = renderMarkdown(dailySummary || '오늘 일정이 없습니다.');
-        weeklySummaryEl.innerHTML = renderMarkdown(weeklySummary || '이번 주 일정이 없습니다.');
-
     } catch (error) {
         console.error('일정 요약 로드 실패:', error);
-        dailySummaryEl.textContent = '일정 요약을 불러올 수 없습니다.';
-        weeklySummaryEl.textContent = '일정 요약을 불러올 수 없습니다.';
     }
 }
 
-// Markdown 렌더링 함수
 function renderMarkdown(text) {
     if (!text) return '';
-
-    return text
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // **굵게**
-        .replace(/\n/g, '<br>');                          // 줄바꿈
+    return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
 }
 
 // 결재 통계 로드
 async function loadApprovalStats() {
-    try {
-        // 결재 통계 API가 없으므로 임시로 기본값 표시
-        // TODO: 결재 통계 API 구현 후 연동
-        document.getElementById('pendingApprovals').textContent = '-';
-        document.getElementById('documentsCreated').textContent = '-';
-        document.getElementById('approvedThisWeek').textContent = '-';
-        document.getElementById('rejected').textContent = '-';
-
-        document.getElementById('pendingChange').textContent = '';
-        document.getElementById('createdChange').textContent = '';
-        document.getElementById('approvedChange').textContent = '';
-        document.getElementById('rejectedChange').textContent = '';
-    } catch (error) {
-        console.error('결재 통계 로드 실패:', error);
-    }
+    // 요소가 있는 경우에만 기본값 설정
+    ['pendingApprovals', 'documentsCreated', 'approvedThisWeek', 'rejected'].forEach(id => {
+        safeSetText(id, '-');
+    });
 }
 
-
-// 날짜 포맷팅 (시간 전 형식으로만 표시)
+// 날짜 포맷팅
 function formatDate(dateString) {
     if (!dateString) return '-';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '-';
 
-    try {
-        // Instant 형식 (ISO 8601) 또는 일반 날짜 문자열 처리
-        const date = new Date(dateString);
+    const diffMs = new Date() - date;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-        // 유효하지 않은 날짜인 경우
-        if (isNaN(date.getTime())) {
-            console.warn('유효하지 않은 날짜:', dateString);
-            return '-';
-        }
-
-        const now = new Date();
-        const diffMs = now - date;
-
-        // 미래 날짜인 경우 "방금 전"으로 표시
-        if (diffMs < 0) {
-            return '방금 전';
-        }
-
-        const diffMins = Math.floor(diffMs / (1000 * 60));
-        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        const diffWeeks = Math.floor(diffDays / 7);
-        const diffMonths = Math.floor(diffDays / 30);
-        const diffYears = Math.floor(diffDays / 365);
-
-        if (diffMins < 1) {
-            return '방금 전';
-        } else if (diffMins < 60) {
-            return `${diffMins}분 전`;
-        } else if (diffHours < 24) {
-            return `${diffHours}시간 전`;
-        } else if (diffDays < 7) {
-            return `${diffDays}일 전`;
-        } else if (diffWeeks < 4) {
-            return `${diffWeeks}주 전`;
-        } else if (diffMonths < 12) {
-            return `${diffMonths}개월 전`;
-        } else {
-            return `${diffYears}년 전`;
-        }
-    } catch (error) {
-        console.error('날짜 포맷팅 오류:', error, dateString);
-        return '-';
-    }
+    if (diffMins < 1) return '방금 전';
+    if (diffMins < 60) return `${diffMins}분 전`;
+    if (diffHours < 24) return `${diffHours}시간 전`;
+    if (diffDays < 7) return `${diffDays}일 전`;
+    return date.toLocaleDateString();
 }
 
 // HTML 이스케이프
@@ -508,4 +355,3 @@ function escapeHTML(str) {
     div.textContent = str;
     return div.innerHTML;
 }
-

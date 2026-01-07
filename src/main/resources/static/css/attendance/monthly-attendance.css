@@ -97,7 +97,7 @@
     border-radius: 12px;
     border: 1px solid var(--neutral-200);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    padding: 24px;
+    padding: 16px 24px;
     margin-bottom: 24px;
 }
 
@@ -111,6 +111,7 @@
     text-align: center;
     position: relative;
     border-right: none;
+    padding: 4px 0; /* 내부 상하 여백 추가 축소 */
 }
 
 .summary-item:not(:last-child)::after {
@@ -131,12 +132,13 @@
     display: block;
     font-size: 13px;
     color: var(--neutral-500);
-    margin-bottom: 10px;
+    margin-bottom: 4px; /* 기존 10px -> 4px로 대폭 축소 */
 }
 
 .summary-value {
-    font-size: 28px;
+    font-size: 24px; /* 기존 28px -> 24px로 축소 */
     font-weight: 800;
+    line-height: 1.2; /* 줄 간격 조절 */
 }
 
 .val-blue { 
