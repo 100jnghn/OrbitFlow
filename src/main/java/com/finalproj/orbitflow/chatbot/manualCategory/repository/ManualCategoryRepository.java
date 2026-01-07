@@ -20,4 +20,6 @@ public interface ManualCategoryRepository extends JpaRepository<ManualCategory,L
     Optional<ManualCategory> findById(Long categoryId);
     
     List<ManualCategory> findByCompanyIdAndIsActiveTrueOrderBySortOrderAsc(Long companyId);
+
+    Optional<ManualCategory> findByIdAndCompanyIdAndIsActiveTrue(Long manualCategoryId, Long companyId);
 }
