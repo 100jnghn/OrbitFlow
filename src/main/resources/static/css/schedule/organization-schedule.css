@@ -22,7 +22,8 @@
     --weekend-bg: #F9FAFB;
     --schedule-release: #3B82F6;
     --schedule-hold: #F59E0B;
-    --schedule-organization: #FEF08A; /* 연노랑색 */
+    --schedule-organization: #FEF08A;
+    /* 연노랑색 */
 }
 
 /* 필터 및 컨트롤 */
@@ -65,7 +66,8 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    height: 32px; /* 버튼 높이에 맞춰 고정 높이 설정 (padding 6px * 2 + font-size 12px * line-height ≈ 32px) */
+    height: 32px;
+    /* 버튼 높이에 맞춰 고정 높이 설정 (padding 6px * 2 + font-size 12px * line-height ≈ 32px) */
 }
 
 .checkbox-control-buttons {
@@ -84,8 +86,10 @@
     font-weight: 500;
 
     display: flex;
-    align-items: center;      /* 세로 가운데 */
-    justify-content: center;  /* 가로 가운데 */
+    align-items: center;
+    /* 세로 가운데 */
+    justify-content: center;
+    /* 가로 가운데 */
 
     cursor: pointer;
     transition: all 0.2s ease;
@@ -112,7 +116,8 @@
     color: var(--neutral-700);
     transition: all 0.2s ease;
     box-sizing: border-box;
-    height: 44px; /* padding 10px * 2 + border 1px * 2 + font-size 14px * line-height 1.5 ≈ 44px */
+    height: 44px;
+    /* padding 10px * 2 + border 1px * 2 + font-size 14px * line-height 1.5 ≈ 44px */
 }
 
 .filter-select:focus {
@@ -135,7 +140,8 @@
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 12px;
     box-sizing: border-box;
-    min-height: 44px; /* filter-select와 동일한 높이 */
+    min-height: 44px;
+    /* filter-select와 동일한 높이 */
 }
 
 .org-filter-checkbox-item {
@@ -309,12 +315,14 @@
 }
 
 .calendar-day.selected {
-    border-color: #FCA5A5; /* 연한 빨간색 테두리 */
+    border-color: #FCA5A5;
+    /* 연한 빨간색 테두리 */
     border-width: 2px;
 }
 
 .calendar-day.selected.today {
-    border-color: #FCA5A5; /* 연한 빨간색 테두리 */
+    border-color: #FCA5A5;
+    /* 연한 빨간색 테두리 */
     border-width: 2px;
 }
 
@@ -481,6 +489,7 @@
         opacity: 0;
         transform: translateY(-20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -591,6 +600,51 @@
     word-wrap: break-word;
 }
 
+/* ===== 주말 / 공휴일 배경 (강제 우선) ===== */
+
+/* 일요일 */
+.calendar-day.sunday {
+    background: #ffeded !important;
+}
+
+/* 토요일 */
+.calendar-day.saturday {
+    background: #e9f4ff !important;
+}
+
+/* 공휴일 (주말보다 우선) */
+.calendar-day.holiday {
+    background: #ffeded !important;
+}
+
+/* 날짜 상단 (날짜 + 공휴일명 한 줄 정렬) */
+.day-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+}
+
+/* 날짜 숫자 */
+.day-number {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--neutral-800);
+}
+
+/* 공휴일 이름 */
+.holiday-name {
+    font-size: 8px;
+    font-weight: 600;
+    color: #DC2626;
+    /* 빨간 계열 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    text-align: left;
+}
+
 /* 반응형 디자인 */
 @media (max-width: 1200px) {
     .schedule-main-content {
@@ -623,4 +677,3 @@
         margin: 10% auto;
     }
 }
-
