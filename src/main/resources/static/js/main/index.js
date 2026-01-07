@@ -115,7 +115,7 @@ async function loadNotices() {
         }
 
         const boardResponse = await apiFetch(
-            `/api/boards/categories/${noticeCategory.id}?page=0&size=8&sort=createdAt,desc`
+            `/api/boards/categories/${noticeCategory.id}?page=0&size=5&sort=createdAt,desc`
         );
 
         if (!boardResponse.ok) throw new Error('공지사항 조회 실패');

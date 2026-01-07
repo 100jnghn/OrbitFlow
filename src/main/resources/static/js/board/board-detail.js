@@ -189,11 +189,9 @@ function updateSidebarSelection(selectedCategoryId) {
                                 menuTitle.setAttribute('aria-expanded', 'true');
                             }
                         }
-                        console.log('[사이드바 선택 효과] 부서게시판 선택:', selectedCategoryId);
                     } else if (menuItem) {
                         // 일반 게시판인 경우
                         menuItem.classList.add('selected');
-                        console.log('[사이드바 선택 효과] 일반 게시판 선택:', selectedCategoryId);
                     }
                 }
             } catch (e) {
@@ -216,11 +214,9 @@ function updateSidebarSelection(selectedCategoryId) {
                                 menuTitle.setAttribute('aria-expanded', 'true');
                             }
                         }
-                        console.log('[사이드바 선택 효과] 부서게시판 선택:', selectedCategoryId);
                     } else if (menuItem) {
                         // 일반 게시판인 경우
                         menuItem.classList.add('selected');
-                        console.log('[사이드바 선택 효과] 일반 게시판 선택:', selectedCategoryId);
                     }
                 }
             }
@@ -788,7 +784,6 @@ async function submitComment() {
         updateCommentCharCount(); // 카운터 초기화 (0/500 표시)
         loadComments(currentCommentPage);
     } catch (error) {
-        console.error('Error submitting comment:', error);
         showError('commentError', error.message || '댓글 작성에 실패했습니다.');
     }
 }
