@@ -147,7 +147,7 @@ const FORM_COMPONENT_SCHEMAS = {
     },
     checkbox: {
         type: "checkbox",
-        label: "체크박스",
+        label: "체크 박스",
         required: false,
         meta: {
             options: [
@@ -273,7 +273,7 @@ let templateGroupCategoryCode = null;
 
 
 // -- 입력 제한/정책 상수
-const DOCUMENT_TITLE_MAX = 50;
+const DOCUMENT_TITLE_MAX = 25;
 const COMPONENT_LABEL_MAX = 20;
 const NOTICE_MESSAGE_MAX = 200;
 const TABLE_ROW_MIN = 1;
@@ -288,21 +288,16 @@ let dragBlockSize = 1;
 
 function bindAutoClearInvalidFocus() {
     const getScope = (target) =>
+        target.closest('.table-column-item') ||
         target.closest('#option-list-pane > div') ||
-        target.closest('#table-column-list > div') ||
         target.closest('.setting-row');
 
-    /* =========================
-       입력 중: error만 제거
-    ========================= */
     const clearError = (target) => {
         if (!(target instanceof HTMLElement)) return;
 
-        // invalid-focus 제거
         target.classList.remove('invalid-focus');
         target.closest('.invalid-focus')?.classList.remove('invalid-focus');
 
-        // error hint만 제거
         const scope = getScope(target);
         scope?.querySelectorAll('.hint.error').forEach(hint => {
             hint.textContent = '';
@@ -313,9 +308,6 @@ function bindAutoClearInvalidFocus() {
     document.addEventListener('input', e => clearError(e.target));
     document.addEventListener('change', e => clearError(e.target));
 
-    /* =========================
-       포커스 이탈: success 제거
-    ========================= */
     document.addEventListener('focusout', e => {
         const scope = getScope(e.target);
         scope?.querySelectorAll('.hint.success').forEach(hint => {
@@ -325,6 +317,29 @@ function bindAutoClearInvalidFocus() {
     });
 }
 
+function focusDocumentSettingError({field, message, autoFocus = true}) {
+    if (!(field instanceof HTMLElement)) return;
+
+    // 기존 invalid-focus 초기화
+    document
+        .querySelectorAll('.invalid-focus')
+        .forEach(el => el.classList.remove('invalid-focus'));
+
+    // 하이라이트
+    field.classList.add('invalid-focus');
+
+    // 포커스
+    if (autoFocus && typeof field.focus === "function") {
+        field.focus({preventScroll: false});
+    }
+
+    // 같은 setting-row 안의 hint를 찾아서 메시지 표시(선택)
+    if (message) {
+        const hint = field.closest('.setting-row')?.querySelector('.hint');
+        if (hint) showMsg(hint, message, 'error');
+    }
+}
+
 
 function focusComponentError({
                                  componentId,
@@ -332,7 +347,7 @@ function focusComponentError({
                                  message,
                                  autoFocus = true
                              }) {
-    // 🔒 실시간 입력 중(table 컬럼/옵션)은 포커스 이동 금지
+    // 실시간 입력 중이면 중단
     if (
         document.activeElement &&
         (
@@ -345,57 +360,72 @@ function focusComponentError({
 
     if (componentId) {
         highlightComponent(componentId);
-        selectedComponentId = componentId;
-        showComponentSettingPanel(componentId);
+
+        if (selectedComponentId !== componentId) {
+            selectedComponentId = componentId;
+            showComponentSettingPanel(componentId);
+        }
     }
 
+
+    // ⚠️ DOM 재생성 이후에 실행
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
 
-            // 🔑 이 줄이 핵심 (이전 코드에 있었음)
+            // invalid-focus 초기화
             document
                 .querySelectorAll('.invalid-focus')
                 .forEach(el => el.classList.remove('invalid-focus'));
 
             let field = null;
+            let hint = null;
 
+            /* =========================
+               panelField가 함수인 경우
+               (테이블 컬럼 index 기반)
+            ========================= */
             if (typeof panelField === "function") {
                 field = panelField();
-            } else if (typeof panelField === "string") {
+
+                if (field) {
+                    field.classList.add('invalid-focus');
+
+                    // ✅ 테이블 컬럼 hint 재탐색
+                    const columnItem = field.closest('.table-column-item');
+                    if (columnItem) {
+                        const next = columnItem.nextElementSibling;
+                        if (next && next.classList.contains('column-hint')) {
+                            hint = next;
+                        }
+                    }
+                }
+            }
+
+            /* =========================
+               selector 문자열인 경우
+            ========================= */
+            if (!field && typeof panelField === "string") {
                 field = document.querySelector(panelField);
+
+                if (field) {
+                    field.classList.add('invalid-focus');
+                    hint =
+                        field.closest('.setting-row')
+                            ?.querySelector('.hint');
+                }
             }
 
             if (!field) return;
-
-            field.classList.add('invalid-focus');
 
             if (autoFocus && typeof field.focus === 'function') {
                 field.focus({preventScroll: true});
             }
 
-            let hint =
-                field.closest('#option-list-pane > div')?.querySelector('.option-hint') ||
-                field.closest('#table-column-list > div')?.querySelector('.column-hint') ||
-                field.closest('.setting-row')?.querySelector('.hint');
             if (hint && message) {
                 showMsg(hint, message, 'error');
             }
         });
     });
-}
-
-
-function focusDocumentSettingError({field, hintId, message}) {
-    document
-        .querySelectorAll('.invalid-focus')
-        .forEach(el => el.classList.remove('invalid-focus'));
-
-    // 포커스 + 스타일
-    if (field) {
-        field.classList.add('invalid-focus');
-        field.focus({preventScroll: false});
-    }
-
 }
 
 
@@ -426,7 +456,11 @@ function enforceMaxLength(inputEl, max) {
 }
 
 function showMsg(el, message, type) {
-    if (!el) return;
+    if (!el) {
+        console.warn('[showMsg] hint element not found');
+        return;
+    }
+    console.log('[showMsg]', {el, message, type});
     el.textContent = message;
     el.className = `hint active ${type}`;
 }
@@ -470,15 +504,19 @@ function removeComponent(componentId) {
     // 선택 상태 정리
     if (selectedComponentId === componentId) {
         selectedComponentId = null;
-        const panel = document.getElementById('component-setting-content');
-        if (panel) {
-            panel.innerHTML = `<span style="color:#9ab;">컴포넌트를 선택하세요.</span>`;
+
+        const body = document.getElementById('component-setting-body');
+        if (body) {
+            body.innerHTML = `
+                <span class="hint-msg" id="component-setting-hint">
+                    컴포넌트를 선택하세요.
+                </span>
+            `;
         }
     }
 
     renderFormComponents();
 }
-
 
 
 // =====================
@@ -512,34 +550,25 @@ function validateDocumentSettingPanel() {
 
     // 제목 필수
     if (!title) {
-        focusDocumentSettingError({field: titleInput});
-        showMsg(titleHint, '문서 제목은 필수입니다.', 'error');
+        focusDocumentSettingError({
+            field: titleInput,
+            message: '문서 제목은 필수입니다.'
+        });
         return false;
     }
 
+
     if (title.length > DOCUMENT_TITLE_MAX) {
-        focusDocumentSettingError({field: titleInput});
-        showMsg(
-            titleHint,
-            `문서 제목은 ${DOCUMENT_TITLE_MAX}자 이하로 입력하세요.`,
-            'error'
-        );
+        focusDocumentSettingError({
+            field: titleInput,
+            message: `문서 제목은 ${DOCUMENT_TITLE_MAX}자 이하로 입력하세요.`
+        });
         return false;
     }
+
 
     titleHint.textContent = '';
     titleHint.className = 'hint';
-
-    const finalCategory = templateGroupCategoryCode ?? category;
-    if (!finalCategory) {
-        focusDocumentSettingError({field: categorySelect});
-        showMsg(categoryHint, '카테고리를 선택하세요.', 'error');
-        return false;
-    }
-
-    categoryHint.textContent = '';
-    categoryHint.className = 'hint';
-
     return true;
 }
 
@@ -677,6 +706,7 @@ function validateOptionComponent(comp) {
 
 function validateTableComponent(comp) {
     const columns = comp.meta?.columns ?? [];
+    const list = document.getElementById('table-column-list');
 
     if (columns.length === 0) {
         focusComponentError({
@@ -695,14 +725,9 @@ function validateTableComponent(comp) {
             focusComponentError({
                 componentId: comp.id,
                 panelField: () => {
-                    const list = document.getElementById('table-column-list');
                     if (!list) return null;
-
-                    const rows = list.querySelectorAll('.table-column-row');
-                    const row = rows[i];
-                    if (!row) return null;
-
-                    return row.querySelector('.table-col-label-input');
+                    const items = list.querySelectorAll('.table-column-item');
+                    return items[i]?.querySelector('.table-col-label-input') ?? null;
                 },
                 message: `컬럼 ${i + 1}의 이름을 입력해주세요.`
             });
@@ -722,6 +747,7 @@ function validateTableComponent(comp) {
 
     return true;
 }
+
 
 function validateAllComponents() {
     if (!validateAllComponentLabels()) return false;
@@ -1416,10 +1442,15 @@ function enforceSystemRequiredRules() {
 
 function showComponentSettingPanel(componentId) {
     const comp = formComponents.find(c => c.id === componentId);
-    const panel = document.getElementById('component-setting-content');
+    const body = document.getElementById('component-setting-body');
+    if (!body) return;
 
     if (!comp) {
-        panel.innerHTML = `<span style="color:#9ab;">컴포넌트를 선택하세요.</span>`;
+        body.innerHTML = `
+            <span class="hint-msg" id="component-setting-hint">
+                컴포넌트를 선택하세요.
+            </span>
+        `;
         return;
     }
 
@@ -1430,21 +1461,22 @@ function showComponentSettingPanel(componentId) {
        1. 공통 정보 영역
     ====================== */
     let html = `
-    <div style="margin-bottom:11px;">
-        <div style="font-weight:600;margin-bottom:4px;">${comp.label || ''}</div>
-        <div style="color:#888;font-size:0.97em;">타입: ${comp.type}</div>
-    </div>
+        <div style="margin-bottom:11px;">
+            <div style="color:#888;font-size:0.9em;">
+                타입: ${comp.type}
+            </div>
+        </div>
 
-    <div class="setting-row" style="display:flex;flex-direction:column;">
-        <label style="margin-bottom:4px;">이름</label>
-        <input
-            type="text"
-            id="input-comp-label"
-            value="${(comp.label || '').replace(/"/g, '&quot;')}"
-            ${isFixed ? 'disabled' : ''}
-        >
-        <div class="hint" id="component-label-hint"></div>
-    </div>
+        <div class="setting-row">
+            <label>이름</label>
+            <input
+                type="text"
+                id="input-comp-label"
+                value="${(comp.label || '').replace(/"/g, '&quot;')}"
+                ${isFixed ? 'disabled' : ''}
+            >
+            <div class="hint" id="component-label-hint"></div>
+        </div>
     `;
 
     const isForceRequired = comp.type === "event-date-range";
@@ -1452,18 +1484,22 @@ function showComponentSettingPanel(componentId) {
 
     if (!isFixed && !isForceRequired && !hideRequiredToggle) {
         html += `
-        <div class="setting-row" style="margin-top:8px;">
-            <label style="flex:1;">필수 입력</label>
-            <input type="checkbox" id="toggle-required"
-                   ${comp.required ? "checked" : ""}>
-        </div>`;
+            <div class="setting-row">
+                <label>
+                    <input type="checkbox" id="toggle-required"
+                        ${comp.required ? "checked" : ""}>
+                    필수 입력
+                </label>
+            </div>
+        `;
     }
 
     if (isForceRequired) {
         html += `
-        <div class="setting-row" style="margin-top:8px;color:#888;font-size:0.9em;">
-            ⚠ 이 항목은 일정/근태 정책에 따라 필수 입력 항목입니다.
-        </div>`;
+            <div class="setting-row" style="color:#888;font-size:0.85em;">
+                ⚠ 이 항목은 정책상 필수 입력입니다.
+            </div>
+        `;
     }
 
     /* ======================
@@ -1471,9 +1507,10 @@ function showComponentSettingPanel(componentId) {
     ====================== */
     if (comp.type === "divider") {
         html += `
-        <div class="setting-row" style="margin-top:12px;color:#888;font-size:0.9em;">
-            구분선은 문서의 시각적 영역을 나누는 용도입니다.
-        </div>`;
+            <div class="setting-row" style="margin-top:12px;color:#888;font-size:0.9em;">
+                구분선은 문서의 시각적 영역을 나누는 용도입니다.
+            </div>
+        `;
     }
 
     /* ======================
@@ -1481,14 +1518,13 @@ function showComponentSettingPanel(componentId) {
     ====================== */
     if (comp.type === "notice") {
         html += `
-        <div class="setting-row" style="margin-top:14px;display:flex;flex-direction:column;">
-            <label style="margin-bottom:4px;">안내 문구</label>
-            <textarea
-                id="input-notice-message"
-                style="width:100%;min-height:60px;"
-            >${comp.meta.message ?? ""}</textarea>
-            <div class="hint" id="notice-message-hint"></div>
-        </div>`;
+            <div class="setting-row" style="margin-top:14px;">
+                <label>안내 문구</label>
+                <textarea id="input-notice-message"
+                          style="width:100%;min-height:60px;">${comp.meta.message ?? ""}</textarea>
+                <div class="hint" id="notice-message-hint"></div>
+            </div>
+        `;
     }
 
     /* ======================
@@ -1498,23 +1534,22 @@ function showComponentSettingPanel(componentId) {
         const currentMax = comp.meta.maxCount ?? IMAGE_COMPONENT_DEFAULT_MAX;
 
         html += `
-    <div class="setting-row" style="margin-top:14px;">
-        <label style="font-weight:600;">최대 이미지 개수</label>
-        <input
-            type="number"
-            id="image-max-count"
-            min="1"
-            max="${IMAGE_COMPONENT_SYSTEM_MAX}"
-            value="${currentMax}"
-        />
-        <div class="hint" id="image-max-hint"></div>
-        <div style="font-size:0.85em;color:#888;margin-top:4px;">
-            ※ 문서 본문에 출력되는 이미지 수입니다 (최대 ${IMAGE_COMPONENT_SYSTEM_MAX}장)
-        </div>
-    </div>
-    `;
+            <div class="setting-row" style="margin-top:14px;">
+                <label style="font-weight:600;">최대 이미지 개수</label>
+                <input
+                    type="number"
+                    id="image-max-count"
+                    min="1"
+                    max="${IMAGE_COMPONENT_SYSTEM_MAX}"
+                    value="${currentMax}"
+                />
+                <div class="hint" id="image-max-hint"></div>
+                <div style="font-size:0.85em;color:#888;margin-top:4px;">
+                    ※ 문서 본문에 출력되는 이미지 수입니다 (최대 ${IMAGE_COMPONENT_SYSTEM_MAX}장)
+                </div>
+            </div>
+        `;
     }
-
 
     /* ======================
        radio / checkbox
@@ -1523,25 +1558,22 @@ function showComponentSettingPanel(componentId) {
         comp.meta.options ??= [{id: generateOptionId(), label: "옵션 1"}];
 
         html += `
-        <div class="setting-row" style="margin-top:14px;">
-            <div style="font-weight:600;">옵션 목록</div>
-            <div id="option-list-pane"></div>
-            <button type="button" id="add-option-btn">옵션 추가</button>
-        </div>
+            <div class="setting-row" style="margin-top:14px;">
+                <div style="font-weight:600;">옵션 목록</div>
+                <div id="option-list-pane"></div>
+                <button type="button" id="add-option-btn">옵션 추가</button>
+            </div>
 
-        <div class="setting-row" style="margin-top:12px;">
-            <label>최소 선택 수</label>
-            <input type="number" id="option-min-selected"
-                   min="0"
-                   value="${comp.meta.minSelected ?? ''}">
-        </div>
-
-        <div class="setting-row">
-            <label>최대 선택 수</label>
-            <input type="number" id="option-max-selected"
-                   min="0"
-                   value="${comp.meta.maxSelected ?? ''}">
-        </div>`;
+            <div class="setting-row option-limit-row">
+                <label>최소 선택 수</label>
+                <input type="number" id="option-min-selected" min="0">
+            </div>
+            
+            <div class="setting-row option-limit-row">
+                <label>최대 선택 수</label>
+                <input type="number" id="option-max-selected" min="0">
+            </div>
+        `;
     }
 
     /* ======================
@@ -1549,41 +1581,40 @@ function showComponentSettingPanel(componentId) {
     ====================== */
     if (comp.type === "table") {
         comp.meta.columns ??= [];
-        comp.meta.rowPolicy ??= {
-            min: 1,
-            max: undefined,
-            addable: true,
-            removable: true
-        };
+        comp.meta.rowPolicy ??= {min: 1, max: undefined, addable: true, removable: true};
 
         html += `
-        <div class="setting-row" style="margin-top:14px;">
-            <div style="font-weight:600;">컬럼 목록</div>
-            <div id="table-column-list"></div>
-            <button type="button" id="add-table-column-btn">+ 컬럼 추가</button>
-        </div>
+            <div class="setting-row" style="margin-top:14px;">
+                <div style="font-weight:600;">컬럼 목록</div>
+                <div id="table-column-list"></div>
+                <button type="button" id="add-table-column-btn">+ 컬럼 추가</button>
+            </div>
 
-        <div class="setting-row" style="margin-top:14px;">
-            <div style="font-weight:600;">행 설정</div>
-            <label>최소 행
-                <input type="number" id="table-row-min"
-                       value="${comp.meta.rowPolicy.min}">
-            </label><br>
-            <label>최대 행
-                <input type="number" id="table-row-max"
-                       value="${comp.meta.rowPolicy.max ?? ""}">
-            </label><br>
-            <label>
-                <input type="checkbox" id="table-row-addable"
-                       ${comp.meta.rowPolicy.addable ? "checked" : ""}>
-                행 추가 가능
-            </label><br>
-            <label>
-                <input type="checkbox" id="table-row-removable"
-                       ${comp.meta.rowPolicy.removable ? "checked" : ""}>
-                행 삭제 가능
-            </label>
-        </div>`;
+            <div class="setting-row table-row-setting" style="margin-top:14px;">
+                <div style="font-weight:600;">행 설정</div>
+            
+                <label>
+                    최소 행
+                    <input type="number" id="table-row-min">
+                </label>
+            
+                <label>
+                    최대 행
+                    <input type="number" id="table-row-max">
+                </label>
+            
+                <label>
+                    <input type="checkbox" id="table-row-addable">
+                    행 추가 가능
+                </label>
+            
+                <label>
+                    <input type="checkbox" id="table-row-removable">
+                    행 삭제 가능
+                </label>
+            </div>
+
+        `;
     }
 
     /* ======================
@@ -1591,24 +1622,25 @@ function showComponentSettingPanel(componentId) {
     ====================== */
     if (comp.type === "event-date-range") {
         html += `
-        <div class="setting-row" style="margin-top:14px;">
-            <div style="font-weight:600;">일정 유형</div>
+            <div class="setting-row" style="margin-top:14px;">
+                <div style="font-weight:600;">일정 유형</div>
 
-            <label><input type="radio" disabled ${comp.meta.baseRole === "VACATION" ? "checked" : ""}> 휴가</label>
-            <label><input type="radio" disabled ${comp.meta.baseRole === "BUSINESS_TRIP" ? "checked" : ""}> 출장</label>
-            <label><input type="radio" disabled ${comp.meta.baseRole === "OUTWORK" ? "checked" : ""}> 외근</label>
-            <label><input type="radio" disabled ${comp.meta.baseRole === "COMPANY_EVENT" ? "checked" : ""}> 회사 일정</label>
+                <label><input type="radio" disabled ${comp.meta.baseRole === "VACATION" ? "checked" : ""}> 휴가</label>
+                <label><input type="radio" disabled ${comp.meta.baseRole === "BUSINESS_TRIP" ? "checked" : ""}> 출장</label>
+                <label><input type="radio" disabled ${comp.meta.baseRole === "OUTWORK" ? "checked" : ""}> 외근</label>
+                <label><input type="radio" disabled ${comp.meta.baseRole === "COMPANY_EVENT" ? "checked" : ""}> 회사 일정</label>
 
-            <div style="color:#888;font-size:0.85em;margin-top:6px;">
-                ※ 일정 유형은 문서 양식에서 고정됩니다.
+                <div style="color:#888;font-size:0.85em;margin-top:6px;">
+                    ※ 일정 유형은 문서 양식에서 고정됩니다.
+                </div>
             </div>
-        </div>`;
+        `;
     }
 
     /* ======================
        2. DOM 반영 (단 1회)
     ====================== */
-    panel.innerHTML = html;
+    body.innerHTML = html;
 
     /* ======================
        3. 공통 이벤트
@@ -1617,7 +1649,7 @@ function showComponentSettingPanel(componentId) {
         const labelInput = document.getElementById("input-comp-label");
         const labelHint = document.getElementById("component-label-hint");
 
-        labelInput.addEventListener("input", () => {
+        labelInput?.addEventListener("input", () => {
             enforceMaxLength(labelInput, COMPONENT_LABEL_MAX);
             comp.label = labelInput.value;
             validateComponentLabel(labelInput, labelHint);
@@ -1638,7 +1670,7 @@ function showComponentSettingPanel(componentId) {
         const textarea = document.getElementById("input-notice-message");
         const hint = document.getElementById("notice-message-hint");
 
-        textarea.addEventListener("input", () => {
+        textarea?.addEventListener("input", () => {
             enforceMaxLength(textarea, NOTICE_MESSAGE_MAX);
             comp.meta.message = textarea.value;
             validateNoticeMessage(textarea, hint);
@@ -1653,23 +1685,17 @@ function showComponentSettingPanel(componentId) {
         const input = document.getElementById("image-max-count");
         const hint = document.getElementById("image-max-hint");
 
-        input.addEventListener("input", () => {
+        input?.addEventListener("input", () => {
             let v = Number(input.value);
-
             if (!v || v < 1) v = 1;
             if (v > IMAGE_COMPONENT_SYSTEM_MAX) v = IMAGE_COMPONENT_SYSTEM_MAX;
 
             input.value = v;
             comp.meta.maxCount = v;
 
-            showMsg(
-                hint,
-                `최대 ${v}장까지 업로드 가능`,
-                'success'
-            );
+            showMsg(hint, `최대 ${v}장까지 업로드 가능`, 'success');
         });
     }
-
 
     /* ======================
        5. radio / checkbox 이벤트
@@ -1679,20 +1705,18 @@ function showComponentSettingPanel(componentId) {
         const addBtn = document.getElementById("add-option-btn");
 
         const renderOptions = () => {
+            if (!pane) return;
             pane.innerHTML = "";
+
             comp.meta.options.forEach((opt, idx) => {
                 const row = document.createElement("div");
                 row.innerHTML = `
                     <div class="option-row">
-                        <input
-                            class="option-label-input"
-                            value="${(opt.label ?? '').replace(/"/g, '&quot;')}"
-                        >
-                        <button
-                            type="button"
-                            class="option-delete-btn"
-                            aria-label="옵션 삭제"
-                        >🗑️</button>
+                        <input class="option-label-input"
+                               value="${(opt.label ?? '').replace(/"/g, '&quot;')}">
+                        <button type="button"
+                                class="option-delete-btn"
+                                aria-label="옵션 삭제">🗑️</button>
                     </div>
                     <div class="hint option-hint"></div>
                 `;
@@ -1721,7 +1745,7 @@ function showComponentSettingPanel(componentId) {
 
         renderOptions();
 
-        addBtn.addEventListener("click", () => {
+        addBtn?.addEventListener("click", () => {
             comp.meta.options.push({id: generateOptionId(), label: "옵션"});
             renderOptions();
             renderFormComponents();
@@ -1729,16 +1753,12 @@ function showComponentSettingPanel(componentId) {
 
         document.getElementById("option-min-selected")
             ?.addEventListener("input", e => {
-                comp.meta.minSelected = e.target.value === ""
-                    ? undefined
-                    : Number(e.target.value);
+                comp.meta.minSelected = e.target.value === "" ? undefined : Number(e.target.value);
             });
 
         document.getElementById("option-max-selected")
             ?.addEventListener("input", e => {
-                comp.meta.maxSelected = e.target.value === ""
-                    ? undefined
-                    : Number(e.target.value);
+                comp.meta.maxSelected = e.target.value === "" ? undefined : Number(e.target.value);
             });
     }
 
@@ -1750,35 +1770,47 @@ function showComponentSettingPanel(componentId) {
         const addBtn = document.getElementById("add-table-column-btn");
 
         const renderColumns = () => {
+            if (!list) return;
             list.innerHTML = "";
 
             comp.meta.columns.forEach((col, idx) => {
                 const wrapper = document.createElement("div");
 
                 wrapper.innerHTML = `
-                <div class="table-column-row">
-                    <input
-                        class="table-col-label-input"
-                        value="${(col.label ?? '').replace(/"/g, '&quot;')}"
-                    >
+            <div class="table-column-item">
+                <!-- 1️⃣ 컬럼명 -->
+                <input
+                    class="table-col-label-input"
+                    placeholder="컬럼명"
+                    value="${(col.label ?? '').replace(/"/g, '&quot;')}"
+                >
+
+                <!-- 2️⃣ 옵션 영역 -->
+                <div class="table-column-controls">
                     <select class="table-col-type-select">
                         ${["text", "number", "currency"].map(t =>
                     `<option value="${t}" ${t === col.type ? "selected" : ""}>${t}</option>`
                 ).join("")}
                     </select>
-                    <input
-                        type="checkbox"
-                        class="table-col-required-checkbox"
-                        ${col.required ? "checked" : ""}
-                    >
+
+                    <label class="table-col-required">
+                        <input type="checkbox"
+                               class="table-col-required-checkbox"
+                               ${col.required ? "checked" : ""}>
+                        필수
+                    </label>
+
                     <button
                         type="button"
                         class="table-col-delete-btn"
-                        aria-label="컬럼 삭제"
-                    >🗑️</button>
+                        aria-label="컬럼 삭제">
+                        🗑️
+                    </button>
                 </div>
-                <div class="hint column-hint"></div>
-            `;
+            </div>
+
+            <div class="hint column-hint"></div>
+        `;
 
                 const labelInput = wrapper.querySelector(".table-col-label-input");
                 const typeSelect = wrapper.querySelector(".table-col-type-select");
@@ -1786,39 +1818,33 @@ function showComponentSettingPanel(componentId) {
                 const delBtn = wrapper.querySelector(".table-col-delete-btn");
                 const hint = wrapper.querySelector(".column-hint");
 
-                /* 🔒 checkbox는 포커스 체인 제거 */
+                /* 🔒 checkbox 포커스 제거 */
                 reqCheck.tabIndex = -1;
 
-                /* =========================
-                   컬럼명 입력
-                ========================= */
-
-                // 입력 중: 데이터 + validation만
+                /* 컬럼명 */
                 labelInput.addEventListener("input", () => {
                     enforceMaxLength(labelInput, COMPONENT_LABEL_MAX);
                     col.label = labelInput.value;
                     validateComponentLabel(labelInput, hint);
                 });
 
-                // 값 확정 시점에만 렌더 (blur ❌)
                 labelInput.addEventListener("change", () => {
                     renderFormComponents();
                 });
 
-                /* =========================
-                   기타 컨트롤
-                ========================= */
-
+                /* 타입 */
                 typeSelect.addEventListener("change", e => {
                     col.type = e.target.value;
                     renderFormComponents();
                 });
 
+                /* 필수 */
                 reqCheck.addEventListener("change", e => {
                     col.required = e.target.checked;
                     renderFormComponents();
                 });
 
+                /* 삭제 */
                 delBtn.addEventListener("click", () => {
                     comp.meta.columns.splice(idx, 1);
                     renderColumns();
@@ -1828,9 +1854,10 @@ function showComponentSettingPanel(componentId) {
                 list.appendChild(wrapper);
             });
         };
+
         renderColumns();
 
-        addBtn.addEventListener("click", () => {
+        addBtn?.addEventListener("click", () => {
             if (comp.meta.columns.length >= TABLE_COLUMN_MAX) {
                 alert(`컬럼은 최대 ${TABLE_COLUMN_MAX}개까지 추가할 수 있습니다.`);
                 return;
@@ -1851,7 +1878,7 @@ function showComponentSettingPanel(componentId) {
         const addableEl = document.getElementById("table-row-addable");
         const removableEl = document.getElementById("table-row-removable");
 
-        minEl.addEventListener("input", e => {
+        minEl?.addEventListener("input", e => {
             let v = Number(e.target.value);
             if (!v || v < TABLE_ROW_MIN) v = TABLE_ROW_MIN;
             if (v > TABLE_ROW_MAX) v = TABLE_ROW_MAX;
@@ -1860,12 +1887,12 @@ function showComponentSettingPanel(componentId) {
 
             if (comp.meta.rowPolicy.max !== undefined && comp.meta.rowPolicy.max < v) {
                 comp.meta.rowPolicy.max = v;
-                maxEl.value = String(v);
+                if (maxEl) maxEl.value = String(v);
             }
             renderFormComponents();
         });
 
-        maxEl.addEventListener("input", e => {
+        maxEl?.addEventListener("input", e => {
             if (e.target.value === "") {
                 comp.meta.rowPolicy.max = undefined;
                 renderFormComponents();
@@ -1882,12 +1909,12 @@ function showComponentSettingPanel(componentId) {
             renderFormComponents();
         });
 
-        addableEl.addEventListener("change", e => {
+        addableEl?.addEventListener("change", e => {
             comp.meta.rowPolicy.addable = e.target.checked;
             renderFormComponents();
         });
 
-        removableEl.addEventListener("change", e => {
+        removableEl?.addEventListener("change", e => {
             comp.meta.rowPolicy.removable = e.target.checked;
             renderFormComponents();
         });
@@ -2012,11 +2039,10 @@ function bindDocumentTitleSync() {
     titleInput.addEventListener('input', () => {
         enforceMaxLength(titleInput, DOCUMENT_TITLE_MAX);
 
-        // 🔑 상태 동기화
         syncDocumentTitle(titleInput.value);
-
-        // 🔄 미리보기 즉시 반영
         renderFormComponents();
+
+        validateDocumentTitle();
     });
 }
 
