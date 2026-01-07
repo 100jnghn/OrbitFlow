@@ -215,7 +215,7 @@
 
 .resource-table th:nth-child(2),
 .resource-table td:nth-child(2) {
-    width: 100px;
+    width: 80px;
     text-align: center;
 }
 
