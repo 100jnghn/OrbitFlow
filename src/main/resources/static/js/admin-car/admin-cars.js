@@ -144,8 +144,8 @@ async function loadCars(page = 0) {
             const tr = document.createElement('tr');
             tr.append(
                 createCell(startNumber + i + 1),
-                createCell(car.number),
-                createCell(car.name),
+                createCell(car.number, true),
+                createCell(car.name, true),
                 createCell(car.description, true),
                 createStatusBadge(car.statusName),
                 createActionCell(car.carId)

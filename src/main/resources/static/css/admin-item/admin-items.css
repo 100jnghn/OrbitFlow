@@ -205,13 +205,13 @@
 
 .resource-table th:nth-child(2),
 .resource-table td:nth-child(2) {
-    width: 100px;
+    width: 80px;
 }
 
 .resource-table th:nth-child(3),
 .resource-table td:nth-child(3) {
     width: auto;
-    min-width: 120px;
+    min-width: 140px;
     overflow: hidden;
     text-overflow: ellipsis;
 }

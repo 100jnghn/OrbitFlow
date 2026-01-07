@@ -155,7 +155,7 @@ async function loadItems(categoryId = null, page = 0) {
             tr.append(
                 createCell(startNumber + i + 1),
                 createCell(item.itemCategoryName),
-                createCell(item.name),
+                createCell(item.name, true),
                 createCell(item.description, true),
                 createStatusBadge(item.statusName),
                 createActionCell(item.itemId)
