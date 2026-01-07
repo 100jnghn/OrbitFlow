@@ -3,96 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <title>계정 활성화 | OrbitFlow</title>
+
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap">
+
     <style>
-        body {
-            margin: 0;
-            height: 100vh;
-            background: #f6f8fb;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        * {
+            box-sizing: border-box;
             font-family: 'Noto Sans KR', sans-serif;
         }
+
+        body {
+            margin: 0;
+            background: #f6f8fb;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         .card {
             width: 420px;
             background: #fff;
             border-radius: 16px;
-            padding: 40px;
-            box-shadow: 0 20px 50px rgba(0,0,0,.12);
-            text-align: center;
+            padding: 48px 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
         }
+
         h1 {
-            margin-bottom: 12px;
-            font-size: 22px;
-            font-weight: 900;
+            text-align: center;
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 32px;
         }
-        p {
-            margin: 0;
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
             font-size: 14px;
-            font-weight: 600;
-            color: #6b7280;
+            font-weight: 500;
         }
-        .success { color: #15803d; }
-        .error { color: #b91c1c; }
-        .spinner {
-            margin: 24px auto;
-            width: 36px;
-            height: 36px;
-            border: 4px solid #e5e7eb;
-            border-top-color: #2563eb;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+
+        input {
+            width: 100%;
+            height: 44px;
+            padding: 0 14px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
         }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+
+        .error {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #ef4444;
         }
+
         .btn {
-            margin-top: 28px;
-            padding: 12px 18px;
-            border-radius: 12px;
+            width: 100%;
+            height: 48px;
+            border-radius: 10px;
             border: none;
-            background: #2563eb;
+            background: #4f7cff;
             color: #fff;
-            font-size: 14px;
-            font-weight: 800;
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
+            margin-top: 12px;
         }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h1 id="title">계정 활성화 중</h1>
-    <div class="spinner" id="spinner"></div>
-    <p id="message">잠시만 기다려 주세요.</p>
+    <h1>계정 활성화</h1>
 
-    <button id="loginBtn" class="btn" style="display:none"
-            onclick="location.href='/login'">
-        로그인 페이지로 이동
-    </button>
+    <!-- form 사용 → 엔터키 자동 제출 -->
+    <form onsubmit="activate(event)">
+        <div class="form-group">
+            <label for="password">비밀번호</label>
+            <input type="password" id="password" required>
+        </div>
+
+        <div class="form-group">
+            <label for="passwordConfirm">비밀번호 확인</label>
+            <input type="password" id="passwordConfirm" required>
+        </div>
+
+        <div id="error" class="error"></div>
+
+        <button class="btn" type="submit">계정 활성화</button>
+    </form>
 </div>
 
 <script>
     const token = '[[${token}]]';
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{8,}$/;
 
-    fetch(`/api/email/activate?token=${token}`, { method: 'POST' })
-        .then(res => {
-            if (!res.ok) throw new Error();
-            document.getElementById('title').innerText = '계정 활성화 완료';
-            document.getElementById('title').className = 'success';
-            document.getElementById('message').innerText =
-                '이제 OrbitFlow를 이용하실 수 있습니다.';
+    function activate(event) {
+        event.preventDefault();
+
+        const passwordInput = document.getElementById('password');
+        const confirmInput  = document.getElementById('passwordConfirm');
+        const errorEl = document.getElementById('error');
+
+        const pw = passwordInput.value;
+        const cf = confirmInput.value;
+
+        errorEl.textContent = '';
+
+        if (!passwordRegex.test(pw)) {
+            errorEl.textContent =
+                '비밀번호는 영문, 숫자, 특수문자를 포함한 8자 이상이어야 합니다.';
+            return;
+        }
+
+        if (pw !== cf) {
+            errorEl.textContent = '비밀번호가 일치하지 않습니다.';
+            return;
+        }
+
+        fetch(`/api/email/activate?token=${encodeURIComponent(token)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: pw })
         })
-        .catch(() => {
-            document.getElementById('title').innerText = '활성화 실패';
-            document.getElementById('title').className = 'error';
-            document.getElementById('message').innerText =
-                '이미 사용되었거나 만료된 링크입니다.';
-        })
-        .finally(() => {
-            document.getElementById('spinner').style.display = 'none';
-            document.getElementById('loginBtn').style.display = 'inline-block';
-        });
+            .then(async res => {
+                const data = await res.json().catch(() => null);
+
+                if (!res.ok) {
+                    throw new Error(data?.message || '요청 처리 중 오류가 발생했습니다.');
+                }
+
+                alert('계정이 활성화되었습니다. 로그인해 주세요.');
+                location.href = '/login';
+            })
+            .catch(err => {
+                console.error(err);
+                errorEl.textContent = err.message;
+            });
+    }
 </script>
 
 </body>

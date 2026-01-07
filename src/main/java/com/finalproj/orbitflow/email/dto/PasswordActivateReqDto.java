@@ -5,14 +5,14 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 
 /**
- * Please explain the class!!!
+ * 계정 활성화 시 최초 비밀번호 설정 DTO
  *
  * @author : seunga03
- * @filename : PasswordResetReqDto
+ * @filename : PasswordActivateReqDto
  * @since : 2026-01-02 금요일
  */
 @Getter
-public class PasswordResetReqDto {
+public class PasswordActivateReqDto {
 
     @NotBlank
     @Pattern(
