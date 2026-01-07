@@ -19,36 +19,40 @@
             border-radius: 16px;
             padding: 40px;
             box-shadow: 0 20px 50px rgba(0,0,0,.12);
-            text-align: center;
         }
         h1 {
-            margin-bottom: 12px;
+            margin-bottom: 18px;
             font-size: 22px;
             font-weight: 900;
+            text-align: center;
         }
-        p {
-            margin: 0;
+        .form-group {
+            margin-bottom: 14px;
+        }
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        input {
+            width: 100%;
+            height: 44px;
+            padding: 0 12px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
             font-size: 14px;
-            font-weight: 600;
-            color: #6b7280;
         }
-        .success { color: #15803d; }
-        .error { color: #b91c1c; }
-        .spinner {
-            margin: 24px auto;
-            width: 36px;
-            height: 36px;
-            border: 4px solid #e5e7eb;
-            border-top-color: #2563eb;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .error {
+            margin-top: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #b91c1c;
         }
         .btn {
-            margin-top: 28px;
-            padding: 12px 18px;
+            margin-top: 24px;
+            width: 100%;
+            height: 46px;
             border-radius: 12px;
             border: none;
             background: #2563eb;
@@ -62,37 +66,60 @@
 <body>
 
 <div class="card">
-    <h1 id="title">계정 활성화 중</h1>
-    <div class="spinner" id="spinner"></div>
-    <p id="message">잠시만 기다려 주세요.</p>
+    <h1>계정 활성화</h1>
 
-    <button id="loginBtn" class="btn" style="display:none"
-            onclick="location.href='/login'">
-        로그인 페이지로 이동
-    </button>
+    <div class="form-group">
+        <label>비밀번호</label>
+        <input type="password" id="password">
+    </div>
+
+    <div class="form-group">
+        <label>비밀번호 확인</label>
+        <input type="password" id="confirm">
+    </div>
+
+    <div id="error" class="error"></div>
+
+    <button class="btn" onclick="activate()">계정 활성화</button>
 </div>
 
 <script>
     const token = '[[${token}]]';
+    const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{8,}$/;
 
-    fetch(`/api/email/activate?token=${token}`, { method: 'POST' })
-        .then(res => {
-            if (!res.ok) throw new Error();
-            document.getElementById('title').innerText = '계정 활성화 완료';
-            document.getElementById('title').className = 'success';
-            document.getElementById('message').innerText =
-                '이제 OrbitFlow를 이용하실 수 있습니다.';
+    function activate() {
+        const pw = document.getElementById('password').value;
+        const confirm = document.getElementById('confirm').value;
+        const error = document.getElementById('error');
+
+        error.innerText = '';
+
+        if (!regex.test(pw)) {
+            error.innerText =
+                '비밀번호는 영문, 숫자, 특수문자를 포함한 8자 이상이어야 합니다.';
+            return;
+        }
+
+        if (pw !== confirm) {
+            error.innerText = '비밀번호가 일치하지 않습니다.';
+            return;
+        }
+
+        fetch(`/api/email/activate?token=${encodeURIComponent(token)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: pw })
         })
-        .catch(() => {
-            document.getElementById('title').innerText = '활성화 실패';
-            document.getElementById('title').className = 'error';
-            document.getElementById('message').innerText =
-                '이미 사용되었거나 만료된 링크입니다.';
-        })
-        .finally(() => {
-            document.getElementById('spinner').style.display = 'none';
-            document.getElementById('loginBtn').style.display = 'inline-block';
-        });
+            .then(res => {
+                if (!res.ok) throw new Error();
+                alert('계정이 활성화되었습니다. 로그인해 주세요.');
+                location.href = '/login';
+            })
+            .catch(() => {
+                error.innerText =
+                    '만료되었거나 이미 사용된 링크입니다.';
+            });
+    }
 </script>
 
 </body>

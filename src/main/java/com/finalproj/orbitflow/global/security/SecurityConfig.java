@@ -52,9 +52,9 @@ public class SecurityConfig {
                                 "/favicon.ico",
                                 "/internal/**",
                                 "/favicon.ico",
-                                "/activate",
-                                "/reset-password",
-                                "/find-password",
+                                "/activate/**",
+                                "/reset-password/**",
+                                "/find-password/**",
                                 "/api/email/**"
                         ).permitAll()
 

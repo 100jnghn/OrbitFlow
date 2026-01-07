@@ -26,7 +26,7 @@ public class SmtpMailSender implements MailSender {
         msg.setTo(to);
         msg.setSubject(subject);
         msg.setText(content);
-        msg.setFrom("OrbitFlow <seungalee220@gmail.com>");
+        msg.setFrom("OrbitFlow");
         mailSender.send(msg);
     }
 }

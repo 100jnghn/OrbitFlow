@@ -25,12 +25,12 @@ CREATE TABLE org_category
     is_active          BOOLEAN     NOT NULL DEFAULT TRUE,
 
     active_order_index INT
-        GENERATED ALWAYS AS (
-            CASE
-                WHEN is_active = TRUE THEN order_index
-                ELSE NULL
-                END
-            ) STORED,
+                       GENERATED ALWAYS AS (
+                           CASE
+                               WHEN is_active = TRUE THEN order_index
+                               ELSE NULL
+                               END
+                           ) STORED,
 
     created_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -59,12 +59,12 @@ CREATE TABLE organization
 
     -- 활성 조직만 정렬 대상
     active_order_index INT
-        GENERATED ALWAYS AS (
-            CASE
-                WHEN is_active = TRUE THEN order_index
-                ELSE NULL
-                END
-            ) STORED,
+                       GENERATED ALWAYS AS (
+                           CASE
+                               WHEN is_active = TRUE THEN order_index
+                               ELSE NULL
+                               END
+                           ) STORED,
 
     created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -115,12 +115,12 @@ CREATE TABLE position_category
     is_active          BOOLEAN     NOT NULL DEFAULT TRUE,
     -- 활성일 때만 정렬 유니크를 적용하기 위한 가상 컬럼
     active_order_index INT
-        GENERATED ALWAYS AS (
-            CASE
-                WHEN is_active = TRUE THEN order_index
-                ELSE NULL
-                END
-            ) STORED,
+                       GENERATED ALWAYS AS (
+                           CASE
+                               WHEN is_active = TRUE THEN order_index
+                               ELSE NULL
+                               END
+                           ) STORED,
     created_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
@@ -257,6 +257,24 @@ CREATE TABLE refresh_token
 );
 
 
+CREATE TABLE email_verification_token
+(
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT      NOT NULL,
+    token       VARCHAR(64) NOT NULL,
+    type        VARCHAR(30) NOT NULL,
+    expired_at  DATETIME    NOT NULL,
+    used_at     DATETIME    NULL,
+    created_at  DATETIME    NOT NULL,
+    updated_at  DATETIME    NOT NULL,
+    CONSTRAINT uq_email_verification_token UNIQUE (token),
+    CONSTRAINT fk_email_verification_employee
+        FOREIGN KEY (employee_id)
+            REFERENCES employee (id)
+            ON DELETE CASCADE
+);
+
+
 -- =========================================================
 -- 1. LEAVE TYPE
 -- =========================================================
@@ -362,12 +380,12 @@ CREATE TABLE form_template
         ON UPDATE CURRENT_TIMESTAMP,
 
     active_version     INT
-        GENERATED ALWAYS AS (
-            CASE
-                WHEN status = 'ACTIVE' THEN version
-                ELSE NULL
-                END
-            ) STORED,
+                       GENERATED ALWAYS AS (
+                           CASE
+                               WHEN status = 'ACTIVE' THEN version
+                               ELSE NULL
+                               END
+                           ) STORED,
 
     CONSTRAINT fk_ft_company
         FOREIGN KEY (company_id)
@@ -864,12 +882,12 @@ CREATE TABLE employee_signature
 
     -- 활성 서명만 UNIQUE 제약을 걸기 위한 가상 컬럼
     active_flag TINYINT
-        GENERATED ALWAYS AS (
-            CASE
-                WHEN is_active = TRUE THEN 1
-                ELSE NULL
-                END
-            ),
+                GENERATED ALWAYS AS (
+                    CASE
+                        WHEN is_active = TRUE THEN 1
+                        ELSE NULL
+                        END
+                    ),
 
     created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
