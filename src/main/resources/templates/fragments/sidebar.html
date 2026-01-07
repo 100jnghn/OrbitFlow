@@ -1,33 +1,35 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <body>
-<nav th:fragment="shell(sidebarFragment)" class="sidebar">
-    <div class="sidebar-inner">
-        <div class="sidebar-title">
-            <i class="fas fa-desktop sidebar-logo-icon"></i>
-            <span th:text="${companyName ?: '엠터캠피스'}">엠터캠피스</span>
+    <nav th:fragment="shell(sidebarFragment)" class="sidebar">
+        <!-- 사이드바 날개 버튼 (상단 우측 배치) -->
+        <div id="sidebar-toggle" class="sidebar-toggle-wing" title="사이드바 접기/펴기">
+            <i class="fas fa-chevron-left"></i>
         </div>
 
-        <div class="sidebar-menu-wrapper">
-            <!-- 각 팀/도메인에서 정의한 메뉴 fragment 가 이 안으로 주입됨 -->
-            <th:block th:insert="${sidebarFragment}"></th:block>
-        </div>
-
-        <div class="sidebar-footer">
-
-            <div id="extension-toggle" class="extension-title">
-                <span>내선번호</span>
-                <i class="fas fa-chevron-up"></i>
+        <div class="sidebar-inner">
+            <div class="sidebar-title">
+                <i class="fas fa-desktop sidebar-logo-icon"></i>
+                <span th:text="${companyName ?: '엠터캠피스'}">엠터캠피스</span>
             </div>
 
-            <div id="extension-tree" class="extension-tree hidden">
-                <!-- JS 렌더링 영역 -->
+            <div class="sidebar-menu-wrapper">
+                <!-- 각 팀/도메인에서 정의한 메뉴 fragment 가 이 안으로 주입됨 -->
+                <th:block th:insert="${sidebarFragment}"></th:block>
             </div>
 
+            <div class="sidebar-footer">
+                <div id="extension-toggle" class="extension-title">
+                    <span>내선번호</span>
+                    <i class="fas fa-chevron-up"></i>
+                </div>
+                <div id="extension-tree" class="extension-tree hidden">
+                    <!-- JS 렌더링 영역 -->
+                </div>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 </body>
+
 </html>
-
-

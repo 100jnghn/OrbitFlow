@@ -1,0 +1,41 @@
+/* 공용게시판 관리 페이지 전용 스타일 */
+
+/* 컨테이너 높이 조정 */
+.board-admin-container {
+    min-height: calc(100vh - 180px) !important;
+}
+
+/* Section 높이 조정 - 추가 버튼 높이 보정 */
+.admin-section:has(#boardTableBody) {
+    height: calc(100vh - 240px) !important;
+    min-height: calc(100vh - 240px) !important;
+    margin-bottom: 0 !important;
+}
+
+/* 테이블 컨테이너 */
+.admin-section:has(#boardTableBody) .table-container {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+/* 테이블 셀 높이 - 공용게시판 전용 */
+.admin-section:has(#boardTableBody) .admin-table td {
+    padding: 12px !important;
+    font-size: 14px !important;
+    color: var(--neutral-800) !important;
+    border-bottom: 1px solid var(--neutral-200) !important;
+    vertical-align: middle !important;
+    text-align: center !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    height: 44px !important;
+    box-sizing: border-box !important;
+}
+
+/* 페이지네이션 여백 */
+.admin-section:has(#boardTableBody) .pagination {
+    margin-top: 4px !important;
+    margin-bottom: 4px !important;
+}
