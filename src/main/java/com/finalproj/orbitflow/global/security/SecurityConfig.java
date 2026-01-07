@@ -58,6 +58,9 @@ public class SecurityConfig {
                                 "/api/email/**"
                         ).permitAll()
 
+                        .requestMatchers("/api/chatbot/**").authenticated()
+                        .requestMatchers("/api/manual/**").authenticated()
+
                         .requestMatchers("/api/admin/**")
                         .hasAnyRole("ADMIN", "COMPANY_ADMIN")
 
