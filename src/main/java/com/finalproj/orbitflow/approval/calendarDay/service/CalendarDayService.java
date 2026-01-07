@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.approval.calendarDay.service;
 
 import com.finalproj.orbitflow.approval.calendarDay.dto.CalendarDayResDto;
 import com.finalproj.orbitflow.approval.calendarDay.entity.CalendarDay;
+import com.finalproj.orbitflow.approval.calendarDay.enums.CalendarDayType;
 import com.finalproj.orbitflow.approval.calendarDay.repository.CalendarDayRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ public class CalendarDayService {
     @Transactional(readOnly = true)
     public List<CalendarDayResDto> getHolidays() {
 
-        List<CalendarDay> list = calendarDayRepository.findAllByIsPublicHolidayTrue();
+        List<CalendarDay> list = calendarDayRepository.findByDayTypeNot(CalendarDayType.WORKDAY);
 
         return list.stream().map(CalendarDayResDto::from).toList();
     }

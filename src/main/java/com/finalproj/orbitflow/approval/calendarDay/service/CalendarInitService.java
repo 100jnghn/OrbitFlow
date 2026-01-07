@@ -46,9 +46,6 @@ public class CalendarInitService {
         Map<LocalDate, String> publicHolidays =
                 holidayProvider.getHolidays(year); // 공공 공휴일 only
 
-        boolean isPublicHoliday = false;
-
-
         for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
 
             if (calendarDayRepository.existsById(date)) continue;
@@ -62,19 +59,16 @@ public class CalendarInitService {
             if (date.getMonthValue() == 5 && date.getDayOfMonth() == 1) {
                 dayType = CalendarDayType.PAID_HOLIDAY;
                 holidayName = "근로자의 날";
-                isPublicHoliday = true;
             }
             /* 2️⃣ 공공 공휴일 */
             else if (publicHolidays.containsKey(date)) {
                 dayType = CalendarDayType.PUBLIC_HOLIDAY;
                 holidayName = publicHolidays.get(date);
-                isPublicHoliday = true;
             }
 
             CalendarDay day = new CalendarDay(
                     date,
                     dow.getValue(),
-                    isPublicHoliday,
                     dayType,
                     holidayName
             );
