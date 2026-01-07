@@ -203,9 +203,12 @@
 }
 
 /* 6번째 열 (관리) - 상하좌우 가운데 정렬 */
+.resource-table th:nth-child(5),
 .resource-table th:nth-child(6) {
     text-align: center;
     vertical-align: middle;
+    justify-content: center;
+    align-items: center;
 }
 
 .resource-table td {
@@ -213,9 +216,12 @@
 }
 
 /* 6번째 열 td - 상하좌우 가운데 정렬 */
+.resource-table td:nth-child(5),
 .resource-table td:nth-child(6) {
     text-align: center;
     vertical-align: middle;
+    justify-content: center;
+    align-items: center;
 }
 
 .resource-table td:first-child {
@@ -234,6 +240,37 @@
 
 .resource-table tbody tr:last-child td {
     border-bottom: none;
+}
+
+/* =========================
+   Status Badges
+========================= */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 56px;
+    height: 22px;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.status-available {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.status-maintenance {
+    background: #f5f5f5;
+    color: #616161;
+}
+
+.status-unavailable {
+    background: #fde2e2;
+    color: #b42318;
 }
 
 /* =========================

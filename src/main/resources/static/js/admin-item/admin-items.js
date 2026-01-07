@@ -52,6 +52,24 @@ function createCell(value = '', tooltip = false) {
     return td;
 }
 
+function createStatusBadge(statusName) {
+    const td = document.createElement('td');
+    const badge = document.createElement('span');
+    badge.className = 'status-badge';
+    badge.textContent = statusName;
+
+    if (statusName === '사용가능' || statusName === '사용 가능') {
+        badge.classList.add('status-available');
+    } else if (statusName === '점검중') {
+        badge.classList.add('status-maintenance');
+    } else if (statusName === '사용불가' || statusName === '사용 불가') {
+        badge.classList.add('status-unavailable');
+    }
+
+    td.appendChild(badge);
+    return td;
+}
+
 function createActionCell(id) {
     const td = document.createElement('td');
     const box = document.createElement('div');
@@ -139,7 +157,7 @@ async function loadItems(categoryId = null, page = 0) {
                 createCell(item.itemCategoryName),
                 createCell(item.name),
                 createCell(item.description, true),
-                createCell(item.statusName),
+                createStatusBadge(item.statusName),
                 createActionCell(item.itemId)
             );
             tbody.appendChild(tr);
