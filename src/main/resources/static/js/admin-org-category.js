@@ -34,7 +34,6 @@ const els = {
     toggleText: () => document.getElementById('toggleText'),
     nameHelp: () => document.getElementById('nameHelp'),
 
-    btnCloseModal: () => document.getElementById('btnCloseModal'),
     btnCancel: () => document.getElementById('btnCancel'),
     btnSaveCategory: () => document.getElementById('btnSaveCategory'),
 };
@@ -44,6 +43,7 @@ const els = {
 ====================== */
 document.addEventListener('DOMContentLoaded', () => {
     bindEvents();
+    bindNameCounter();
     loadCategories();
 });
 
@@ -60,7 +60,10 @@ function filterCategories() {
 
     const hint = document.getElementById('orderHint');
     if (hint) {
-        hint.style.display = activeCount > 1 ? 'block' : 'none';
+        hint.style.display =
+            !isSearchMode() && activeCount > 1
+                ? 'block'
+                : 'none';
     }
 
     const searchMode = isSearchMode();
@@ -93,7 +96,6 @@ function bindEvents() {
             filterCategories();
         }
     });
-    els.btnCloseModal()?.addEventListener('click', closeModal);
     els.btnCancel()?.addEventListener('click', closeModal);
     els.btnSaveCategory()?.addEventListener('click', saveCategory);
 
@@ -192,17 +194,26 @@ function renderRow(category) {
     const isActive = normalizeActive(category);
 
     tr.innerHTML = `
-      <td>
+      <td class="col-order">
         ${isActive && !isSearchMode() ? dragHandleHtml() : ''}
       </td>
-      <td><strong>${escapeHtml(category.name)}</strong></td>
-      <td>
-        <span class="status-badge ${isActive ? 'status-active' : 'status-inactive'}">
-          ${isActive ? '활성' : '비활성'}
-        </span>
+
+      <td class="col-name">
+        <strong>${escapeHtml(category.name)}</strong>
       </td>
-      <td>
-        <button class="table-btn" data-edit="${category.id}">수정</button>
+
+      <td class="col-status">
+        <div class="cell-center">
+          <span class="status-badge ${isActive ? 'status-active' : 'status-inactive'}">
+            ${isActive ? '활성' : '비활성'}
+          </span>
+        </div>
+      </td>
+
+      <td class="col-action">
+        <div class="cell-center">
+          <button class="table-btn" data-edit="${category.id}">수정</button>
+        </div>
       </td>
     `;
 
@@ -331,6 +342,11 @@ async function saveCategory() {
         return;
     }
 
+    if (name.length > 50) {
+        els.nameHelp().textContent = '카테고리명은 최대 50자까지 입력 가능합니다.';
+        return;
+    }
+
     const payload = {name, isActive};
 
     const isEdit = !!selectedCategoryId;
@@ -418,4 +434,27 @@ function toggleSaveOrderButton(show) {
     if (!btn) return;
 
     btn.style.display = show ? 'inline-flex' : 'none';
+}
+const MAX_CATEGORY_NAME_LENGTH = 50;
+
+function bindNameCounter() {
+    const input = els.categoryName();
+    const counter = document.getElementById('nameCount');
+
+    if (!input || !counter) return;
+
+    const update = () => {
+        let value = input.value;
+
+        // 혹시라도 초과되면 강제로 잘라냄
+        if (value.length > MAX_CATEGORY_NAME_LENGTH) {
+            value = value.slice(0, MAX_CATEGORY_NAME_LENGTH);
+            input.value = value;
+        }
+
+        counter.textContent = value.length;
+    };
+
+    input.addEventListener('input', update);
+    update(); // 초기 값 반영
 }
