@@ -223,6 +223,8 @@
 .resource-table td:nth-child(3) {
     width: auto;
     min-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .resource-table th:nth-child(4),
