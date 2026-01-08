@@ -5,7 +5,6 @@ import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.InvalidStateException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
-import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import com.finalproj.orbitflow.hr.orgCategory.repository.OrgCategoryRepository;
 import com.finalproj.orbitflow.hr.orgPositionUsage.repository.OrgPositionUsageRepository;
@@ -102,7 +101,7 @@ public class OrgService {
         return orgs.stream()
                 .map(o -> OrgAdminResDto.from(
                         o,
-                        employeeRepository.countActiveByOrg(companyId, o.getId()),
+                        employeeRepository.countActiveEmployeesByOrg(companyId, o.getId()),
                         orgRepository.countByCompanyIdAndParentOrgIdAndIsActiveTrue(companyId, o.getId())
                 ))
                 .toList();
@@ -217,7 +216,7 @@ public class OrgService {
                 .filter(o -> resultIds.contains(o.getId()))
                 .map(o -> OrgAdminResDto.from(
                         o,
-                        employeeRepository.countActiveByOrg(companyId, o.getId()),
+                        employeeRepository.countActiveEmployeesByOrg(companyId, o.getId()),
                         orgRepository.countByCompanyIdAndParentOrgIdAndIsActiveTrue(companyId, o.getId())
                 ))
                 .toList();
@@ -244,6 +243,14 @@ public class OrgService {
     /* ================= 수정 ================= */
     public void update(Long companyId, Long organizationId, OrgUpdateReqDto request) {
 
+        log.info(
+                "[ORG UPDATE] orgId={}, req.isActive={}, req.parentOrgId={}, req.name={}",
+                organizationId,
+                request.getIsActive(),
+                request.getParentOrgId(),
+                request.getName()
+        );
+
         Organization org = getOrgInCompanyOrThrow(companyId, organizationId);
         String oldName = org.getName();
 
@@ -252,7 +259,7 @@ public class OrgService {
         Boolean reqActive = request.getIsActive();
 
         // 비활성화 요청 처리
-        if (Boolean.FALSE.equals(reqActive) && Boolean.TRUE.equals(org.getIsActive())) {
+        if (Boolean.FALSE.equals(reqActive) && !Boolean.FALSE.equals(org.getIsActive())) {
             deactivateInternal(companyId, org);
             return;
         }
@@ -449,17 +456,21 @@ public class OrgService {
             throw new InvalidStateException("하위 조직이 존재하여 비활성화할 수 없습니다.");
         }
 
-        if (employeeRepository.existsByCompanyIdAndOrganizationIdAndStatusNot(
-                companyId, organizationId, EmployeeStatus.RESIGNED)) {
-            throw new InvalidStateException("재직 중인 사원이 존재하여 비활성화할 수 없습니다.");
+        if (employeeRepository.existsActiveEmployeeInOrg(companyId, organizationId)) {
+            throw new InvalidStateException("ACTIVE 사원이 존재하는 조직은 비활성화할 수 없습니다.");
         }
 
         orgPositionUsageRepository
                 .deleteByCompany_IdAndOrganization_Id(companyId, organizationId);
 
+        log.info("[ORG DEACTIVATE] before org.deactivate() id={}", organizationId);
         org.deactivate();
+        log.info("[ORG DEACTIVATE] after org.deactivate() id={}", organizationId);
+
         organizationBoardCategorySyncService.
                 deactivateBoard(companyId, organizationId);
+        log.info("[ORG DEACTIVATE] after deactivateBoard id={}", organizationId);
+
     }
 
 
@@ -475,11 +486,10 @@ public class OrgService {
         }
 
         // 재직 중 사원 존재
-        if (employeeRepository.existsByCompanyIdAndOrganizationIdAndStatusNot(
-                companyId, orgId, EmployeeStatus.RESIGNED)) {
+        if (employeeRepository.existsActiveEmployeeInOrg(companyId, orgId)) {
             return new OrgDeactivateCheckResDto(
                     false,
-                    "재직 중인 사원이 존재하여 비활성화할 수 없습니다."
+                    "재직중인 사원이 존재하여 비활성화할 수 없습니다."
             );
         }
 
