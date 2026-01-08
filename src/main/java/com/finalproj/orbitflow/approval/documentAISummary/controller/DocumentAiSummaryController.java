@@ -1,6 +1,7 @@
 package com.finalproj.orbitflow.approval.documentAISummary.controller;
 
 import com.finalproj.orbitflow.approval.documentAISummary.dto.AiSummaryResDto;
+import com.finalproj.orbitflow.approval.documentAISummary.enums.SummaryType;
 import com.finalproj.orbitflow.approval.documentAISummary.service.DocumentAiSummaryService;
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUtils;
@@ -33,14 +34,16 @@ public class DocumentAiSummaryController {
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.ACCEPTED, "ai 요약 생성 시작", null));
     }
 
-    @GetMapping("/{documentId}/summary")
+    @GetMapping("/{documentId}")
     public ResponseEntity<ResponseDto<AiSummaryResDto>> readSummary(
-            @PathVariable Long documentId
+            @PathVariable Long documentId,
+            @RequestParam SummaryType summaryType
     ) {
         AiSummaryResDto result =
                 documentAiSummaryService.readSummary(
                         SecurityUtils.getEmployeeId(),
-                        documentId
+                        documentId,
+                        summaryType
                 );
 
         if (result == null) {
@@ -53,7 +56,7 @@ public class DocumentAiSummaryController {
                     )
             );
         }
-        return switch (result.getSummaryStatus()) {
+        return switch (result.getAiStatus()) {
             case PROCESSING -> ResponseEntity.ok(
                     new ResponseDto<>(
                             HttpStatus.OK,

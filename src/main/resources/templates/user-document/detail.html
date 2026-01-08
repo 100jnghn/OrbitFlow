@@ -97,18 +97,41 @@
             <!-- ===== AI 요약 ===== -->
             <section class="side-panel-box" id="aiSummaryPanel">
                 <h3>AI 문서 요약</h3>
-                <div class="panel-placeholder">
-                    아직 생성되지 않았습니다.
+
+                <!-- 생성 전 / 안내 -->
+                <div class="ai-empty hidden" id="aiSummaryEmpty">
+                    <div class="ai-empty-text" id="aiSummaryEmptyText">
+                        아직 생성되지 않았습니다.
+                    </div>
+                    <button id="aiSummaryCreateBtn" class="ai-create-btn">
+                        AI 요약 생성
+                    </button>
                 </div>
+
+
+                <!-- 생성 완료 -->
+                <pre class="ai-result hidden" id="aiSummaryResult"></pre>
             </section>
+
 
             <!-- ===== AI 비교 ===== -->
             <section class="side-panel-box" id="aiComparePanel">
                 <h3>AI 문서 비교</h3>
-                <div class="panel-placeholder">
-                    비교 대상이 없습니다.
+
+                <!-- 생성 전 / 안내 -->
+                <div class="ai-empty hidden" id="aiDiffEmpty">
+                    <div class="ai-empty-text" id="aiDiffEmptyText">
+                        비교 대상이 없습니다.
+                    </div>
+                    <button id="aiDiffCreateBtn" class="ai-create-btn">
+                        AI 비교 생성
+                    </button>
                 </div>
+
+                <!-- 생성 완료 -->
+                <pre class="ai-result hidden" id="aiDiffResult"></pre>
             </section>
+
 
         </aside>
     </section>

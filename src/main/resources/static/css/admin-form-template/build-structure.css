@@ -13,21 +13,58 @@ html, body {
 
 .app-content {
     flex: 1;
-    padding: 24px 40px 16px;
     display: flex;
+
     min-height: 0;
     overflow: hidden;
-    justify-content: center;
+
+    padding: 24px 40px 16px;
+    justify-content: center; /* 유지 */
 }
 
+
 .form-editor-container {
+    /* ===============================
+       Layout policy (fragment-level)
+       =============================== */
+
+    /* 좌 / 우 패널 비율 (viewport 기준 체감용) */
+    --left-panel-ratio: 18%;
+    --right-panel-ratio: 26%;
+
+    /* 좌 / 우 패널 안전 폭 */
+    --left-panel-min: 180px;
+    --left-panel-max: 260px;
+
+    --right-panel-min: 300px;
+    --right-panel-max: 420px;
+
     height: 100%;
-    display: flex;
+    min-height: 0;
+
     width: 100%;
-    min-width: 1600px;
-    max-width: 1800px;
-    overflow: hidden;
+    max-width: min(1600px, 96vw); /* 중앙 기준 유지 */
+
+    display: grid;
+    grid-template-columns:
+        clamp(
+            var(--left-panel-min),
+            var(--left-panel-ratio),
+            var(--left-panel-max)
+        )
+        1fr
+        clamp(
+            var(--right-panel-min),
+            var(--right-panel-ratio),
+            var(--right-panel-max)
+        );
+
+    gap: 12px;
+
+    overflow-y: auto;
+    overflow-x: hidden;
 }
+
 
 /* ======================================================
    공통 패널 컨테이너
@@ -42,7 +79,8 @@ html, body {
     padding: 18px;
     box-shadow: 0 2px 8px #e2e6ed35;
     box-sizing: border-box;
-    min-height: 0;
+
+    min-height: 0; /* 🔑 필수 */
     overflow: hidden;
 }
 
@@ -51,45 +89,84 @@ html, body {
    ====================================================== */
 
 #component-list-panel {
-    min-width: 190px;
-    max-width: 230px;
-    flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 16px;
+
+    padding: 16px;
     overflow-y: auto;
+    overflow-x: hidden;
+
+    /* 패널 내부 아이템 기준 정렬 */
+    align-items: stretch;
 }
+
 
 #component-list-panel h3 {
-    margin: 0 0 8px;
-    font-size: 1.1em;
-    color: #253464;
+    margin: 0;
+    padding: 4px 0 8px;
+
+    font-size: 0.95em;
     font-weight: 600;
+    color: #253464;
+
+    text-align: center; /* 가로 중앙 */
+    line-height: 1.4;
 }
 
+
 .component-btn-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* ✅ 기본 2열 */
+    gap: 10px;
+}
+
+@container (min-width: 260px) {
+    .component-btn-list {
+        grid-template-columns: 1fr; /* ✅ 1열 */
+    }
 }
 
 .component-btn {
+    display: flex;
+    align-items: center; /* 세로 중앙 */
+    justify-content: center; /* 가로 중앙 */
+
+    min-height: 44px; /* 터치/클릭 안정 높이 */
+    padding: 8px 6px;
+
     background: #f0f2f5;
     border: 1px solid #bbc5d6;
-    border-radius: 6px;
-    color: #203157;
+    border-radius: 8px;
+
+    font-size: 0.9em;
     font-weight: 500;
-    font-size: 1em;
-    padding: 11px 8px;
+    color: #203157;
+    text-align: center;
+    line-height: 1.3;
+
     cursor: pointer;
-    transition: background 0.14s, border 0.14s;
-    text-align: left;
+    user-select: none;
+
+    transition: background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.08s ease;
+
+    white-space: normal; /* 줄바꿈 허용 */
+    word-break: keep-all; /* 한글 단어 유지 */
+    overflow-wrap: break-word; /* 영문 대응 */
 }
 
+
 .component-btn:hover {
-    border-color: #7e9be2;
     background: #eaefff;
+    border-color: #7e9be2;
 }
+
+.component-btn:active {
+    transform: translateY(1px);
+}
+
 
 /* ======================================================
    중앙 – 문서 편집 영역
@@ -99,9 +176,13 @@ html, body {
     flex: 1;
     display: flex;
     flex-direction: column;
+
     min-width: 0;
+    min-height: 0;
+
     align-items: stretch;
 }
+
 
 #form-edit-title {
     margin-bottom: 20px;
@@ -115,9 +196,11 @@ html, body {
     flex: 1;
     min-height: 0;
     min-width: 0;
+
     width: 100%;
-    max-width: 1200px;
+    max-width: min(1200px, 100%);
     margin: 0 auto;
+
     background: #f6f8fc;
     border-radius: 4px;
     padding: 26px 18px;
@@ -127,9 +210,10 @@ html, body {
     flex-direction: column;
     gap: 14px;
 
-    overflow-y: auto;
+    overflow-y: auto; /* ✅ 중앙만도 스크롤 가능 */
     scrollbar-gutter: stable;
 }
+
 
 /* ======================================================
    폼 컴포넌트 Row
@@ -178,6 +262,7 @@ html, body {
     grid-template-columns: 140px minmax(0, 1fr);
     column-gap: 12px;
     align-items: flex-start;
+    min-width: 0;
 }
 
 .preview-row > * {
@@ -186,15 +271,18 @@ html, body {
 
 .comp-label {
     display: inline-flex;
-    align-items: flex-start; /* 🔑 여러 줄일 때 상단 정렬 */
+    align-items: flex-start;
     gap: 2px;
 
     font-weight: 500;
     color: #1f2949;
 
-    white-space: normal; /* 🔑 줄바꿈 허용 */
-    word-break: keep-all; /* 🔑 한글 단어 단위 유지 */
-    overflow-wrap: break-word; /* 🔑 영문/긴 문자열 대응 */
+    min-width: 0; /* ✅ 추가 */
+    max-width: 100%; /* ✅ 추가 */
+
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: break-word;
     line-height: 1.4;
 }
 
@@ -206,20 +294,26 @@ html, body {
 .preview-input,
 .preview-textarea {
     box-sizing: border-box;
+
+    min-width: 0; /* ✅ 추가 */
+    max-width: 100%; /* ✅ 추가 */
 }
 
-/* 길이 계열 */
 .input-long {
+    width: 100%; /* ✅ 추가 */
     max-width: 420px;
 }
 
 .input-medium {
+    width: 100%; /* ✅ 추가 */
     max-width: 220px;
 }
 
 .input-compact {
+    width: 100%; /* ✅ 추가 */
     max-width: 140px;
 }
+
 
 .unit {
     font-size: 0.9em;
@@ -234,12 +328,16 @@ html, body {
     display: flex;
     align-items: center;
     gap: 6px;
-    max-width: 320px;
+
+    min-width: 0; /* ✅ 추가 */
+    max-width: 100%; /* ✅ 추가 */
 }
 
 .range-preview input {
     flex: 1;
+    min-width: 0; /* ✅ 추가 */
 }
+
 
 .range-sep {
     margin: 0 4px;
@@ -252,6 +350,7 @@ html, body {
 .table-preview-wrapper {
     width: 100%;
     min-width: 0;
+    max-width: 100%; /* ✅ 추가 */
     overflow-x: auto;
 }
 
@@ -286,45 +385,75 @@ html, body {
     box-sizing: border-box;
 }
 
+#form-edit-area-wrapper,
+#form-edit-area {
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+
 /* ===============================
    ✅ 테이블 컬럼: hint는 아래줄
    =============================== */
 
-#component-setting-panel #table-column-list > div {
+#table-column-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* ✅ 행 간 여백 */
+}
+
+#component-setting-panel .table-column-row {
     display: grid;
-    grid-template-columns: 1fr auto auto auto;
-    column-gap: 6px;
-    row-gap: 4px;
+    grid-template-columns:
+        minmax(120px, 1fr)  /* 컬럼명 */
+        90px                /* 타입 */
+        28px                /* 필수 */
+        36px; /* 삭제 */
+    column-gap: 10px; /* ✅ 좌우 여백 증가 */
+    row-gap: 6px;
     align-items: center;
 }
 
-/* row는 레이아웃 제거 */
-#component-setting-panel .table-column-row {
-    display: contents;
-}
 
-/* 위치 지정 */
+/* 컬럼명 input */
 .table-col-label-input {
-    grid-column: 1;
+    height: 32px; /* ✅ 클릭 안정 */
+    padding: 0 8px;
+    font-size: 0.9em;
 }
 
+/* 타입 select */
 .table-col-type-select {
-    grid-column: 2;
+    height: 32px;
+    font-size: 0.9em;
 }
 
+/* 필수 체크박스 */
 .table-col-required-checkbox {
-    grid-column: 3;
+    transform: scale(1.05); /* 살짝만 */
 }
+
 
 .table-col-delete-btn {
-    grid-column: 4;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
 }
 
-/* ⭐ 힌트는 무조건 input 아래 */
-#component-setting-panel .column-hint {
-    grid-column: 1;
-    margin-top: 2px;
+.table-col-delete-btn:hover {
+    background: #f2f4f8;
 }
+
+
+#component-setting-panel .column-hint {
+    margin-top: 2px;
+    font-size: 0.8em;
+    line-height: 1.4;
+}
+
 
 /* ======================================================
    컴포넌트 설정 패널 전용 (문서 패널 영향 없음)
@@ -417,33 +546,96 @@ html, body {
 }
 
 /* ======================================================
-   우측 설정 패널
+   우측 패널 (Right Panel)
    ====================================================== */
 
 #right-panel {
-    flex: 0 0 360px;
-    width: 360px;
-    min-width: 360px;
-    max-width: 360px;
-
     display: flex;
     flex-direction: column;
-    gap: 24px;
-    min-height: 0;
-}
+    gap: 16px;
 
-#component-setting-panel {
-    background: #f8fafc;
-    border-radius: 7px;
-    padding: 15px;
-    box-shadow: 0 0.5px 2px #e8ebf2a3;
-
-    flex: 1;
-    min-height: 0;
     min-width: 0;
+    min-height: 0;
+
+    /* ✅ 패널 전체 스크롤 */
     overflow-y: auto;
     overflow-x: hidden;
 }
+
+
+/* ======================================================
+   우측 패널 섹션 타이틀
+   ====================================================== */
+
+#right-panel h4 {
+    margin: 0 0 12px;
+    font-size: 0.95em;
+    font-weight: 600;
+    color: #253464;
+}
+
+
+/* ======================================================
+   컴포넌트 설정 패널 (레이아웃 컨테이너)
+   ====================================================== */
+
+#component-setting-panel {
+    flex: 1;
+
+    /* 🔼 기존보다 훨씬 여유 있게 */
+    min-height: 320px;
+    max-height: 72vh; /* ✅ 기존 55vh → 확대 */
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden; /* 스크롤은 내부 body가 담당 */
+}
+
+
+/* ======================================================
+   컴포넌트 설정 카드
+   ====================================================== */
+
+#component-setting-card {
+    flex: 1;
+    min-height: 0; /* 🔑 내부 스크롤을 위한 필수 */
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* ======================================================
+   컴포넌트 설정 카드 본문 (스크롤 영역)
+   ====================================================== */
+
+#component-setting-body {
+    flex: 1;
+    min-height: 0; /* 🔑 flex + overflow 조합 핵심 */
+    overflow-y: auto; /* ✅ 내부 세로 스크롤 */
+    overflow-x: hidden;
+
+    padding-right: 6px; /* 스크롤바 여백 */
+    padding-bottom: 8px; /* 🔑 맨 아래 잘림 방지 */
+}
+
+
+/* ======================================================
+   설정 row 공통
+   ====================================================== */
+
+#right-panel .setting-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+#right-panel .setting-row label {
+    font-size: 0.85em;
+    color: #374151;
+}
+
 
 /* ======================================================
    이미지 / 주소 / 검색
@@ -817,13 +1009,16 @@ html, body {
 }
 
 /* ======================================================
-   🔘 우측 패널 상단 액션 버튼
+   우측 패널 상단 액션 버튼 (고정)
    ====================================================== */
 
 .right-panel-action-buttons {
+    flex-shrink: 0;
+
     display: flex;
     gap: 8px;
-    flex-shrink: 0;
+    height: 40px;
+    padding-bottom: 8px;
 }
 
 .right-panel-action-buttons button {
@@ -844,6 +1039,21 @@ html, body {
     background: #e9eef9;
     border-color: #89afe2;
 }
+
+/* ======================================================
+   문서 설정 패널
+   ====================================================== */
+
+#form-setting-panel {
+    flex-shrink: 0;
+
+    min-height: 220px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
 
 /* ======================================================
    하단 액션 버튼 (이전/저장/다음)
@@ -913,3 +1123,292 @@ html, body {
     /* 에러 테두리 대체 */
     box-shadow: inset 0 0 0 2px #e22719;
 }
+
+/* ======================================================
+   설정 카드 공통 스타일
+   ====================================================== */
+
+.setting-card {
+    background: #f8fafc;
+    border: 1px solid #dde1f0;
+    border-radius: 7px;
+    padding: 15px;
+    box-shadow: 0 0.5px 2px #e8ebf2a3;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.setting-card h4 {
+    margin: 0;
+    font-size: 0.95em;
+    font-weight: 600;
+    color: #253464;
+}
+
+
+/* ===============================
+   table 행 설정 (세로 흐름 유지)
+   =============================== */
+
+#component-setting-panel
+.table-row-setting {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+#component-setting-panel
+.table-row-setting label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    white-space: nowrap; /* 줄바꿈 방지 */
+}
+
+#component-setting-panel
+.table-row-setting input[type="number"] {
+    width: 90px;
+}
+
+/* ===============================
+   radio / checkbox 선택 수 설정
+   =============================== */
+
+#component-setting-panel
+.option-limit-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#component-setting-panel
+.option-limit-row label {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    font-size: 0.85em;
+}
+
+#component-setting-panel
+.option-limit-row input[type="number"] {
+    width: 80px; /* 🔑 컴팩트 */
+}
+
+#form-template-group-info input {
+    min-width: 0;
+    box-sizing: border-box;
+    white-space: pre-wrap; /* 줄바꿈 유지 */
+}
+
+/* ===============================
+   AI 생성 팝업 스타일 보정
+   =============================== */
+
+#createPopup {
+    position: fixed;
+    inset: 0; /* top:0; right:0; bottom:0; left:0 */
+    background: rgba(27, 32, 54, 0.36);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 100;
+}
+#createPopup .modal-content {
+    width: 380px;
+    padding: 36px 32px 32px;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 6px 30px rgba(31, 36, 73, 0.17);
+}
+
+#createPopup .modal-title {
+    font-size: 1.22rem;
+    font-weight: 700;
+    color: #18246e;
+    margin-bottom: 14px;
+}
+
+#createPopup .modal-form-group {
+    margin-bottom: 12px;
+}
+
+#createPopup .modal-input,
+#createPopup .modal-textarea {
+    background: #fafbff;
+    border: 1.3px solid #bfc4e0;
+    border-radius: 7px;
+    font-family: 'Noto Sans KR', Arial, Helvetica, sans-serif;
+    font-size: 1.01rem;
+    padding: 9px 13px;
+}
+
+#createPopup .modal-textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+#createPopup .modal-actions {
+    margin-top: 18px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+#createPopup .modal-cancel-btn {
+    background: #f4f6fa;
+    color: #4b515c;
+    border: 1.4px solid #c2c7d1;
+}
+
+#createPopup .modal-cancel-btn:hover {
+    background: #eceef1;
+}
+
+#createPopup .modal-create-btn {
+    background: #3563e9;
+    color: #fff;
+    border: 1.4px solid #3563e9;
+}
+
+#createPopup .modal-create-btn:hover {
+    background: #264cbd;
+}
+
+#createPopup .modal-create-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ===============================
+   AI 생성 팝업 - 세로 폼 레이아웃
+   =============================== */
+
+#createPopup .modal-form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+}
+
+/* 라벨 스타일 */
+#createPopup .modal-form-group label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2b2e46;
+}
+
+/* input / textarea 공통 */
+#createPopup .modal-input,
+#createPopup .modal-textarea {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* ===============================
+   AI 생성 팝업 버튼 스타일
+   =============================== */
+
+#createPopup .modal-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+}
+
+/* 공통 버튼 베이스 */
+#createPopup .modal-cancel-btn,
+#createPopup .modal-create-btn {
+    padding: 8px 28px;
+    min-width: 96px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease,
+    color 0.15s ease,
+    border 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+/* 취소 버튼 (secondary / cancel) */
+#createPopup .modal-cancel-btn {
+    background: #f4f6fa;
+    color: #4b515c;
+    border: 1.4px solid #c2c7d1;
+}
+
+#createPopup .modal-cancel-btn:hover {
+    background: #eceef1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* AI 생성 버튼 (primary) */
+#createPopup .modal-create-btn {
+    background: #3563e9;
+    color: #fff;
+    border: 1.4px solid #3563e9;
+}
+
+#createPopup .modal-create-btn:hover {
+    background: #264cbd;
+    box-shadow: 0 4px 12px rgba(53, 99, 233, 0.35);
+}
+
+/* 비활성화 상태 */
+#createPopup .modal-create-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* ===============================
+   AI 생성 중 UI 차단 오버레이
+   =============================== */
+
+#ai-block-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(27, 32, 54, 0.45);
+    z-index: 999; /* createPopup(100) 위 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ai-block-content {
+    background: #fff;
+    padding: 28px 36px;
+    border-radius: 14px;
+    box-shadow: 0 8px 28px rgba(31, 36, 73, 0.22);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+
+.ai-block-text {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #18246e;
+}
+
+/* 간단한 spinner */
+.spinner {
+    width: 42px;
+    height: 42px;
+    border: 4px solid #e0e3f0;
+    border-top-color: #3563e9;
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+

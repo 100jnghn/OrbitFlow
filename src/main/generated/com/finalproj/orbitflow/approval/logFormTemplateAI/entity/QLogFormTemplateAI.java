@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.logFormTemplateAI.entity;
+package com.finalproj.orbitflow.approval.logFormTemplateAi.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -49,7 +49,7 @@ public class QLogFormTemplateAI extends EntityPathBase<LogFormTemplateAI> {
 
     public final StringPath prompt = createString("prompt");
 
-    public final EnumPath<com.finalproj.orbitflow.approval.logFormTemplateAI.enums.AiStatus> status = createEnum("status", com.finalproj.orbitflow.approval.logFormTemplateAI.enums.AiStatus.class);
+    public final EnumPath<com.finalproj.orbitflow.approval.logFormTemplateAi.enums.AiStatus> status = createEnum("status", com.finalproj.orbitflow.approval.logFormTemplateAi.enums.AiStatus.class);
 
     public final com.finalproj.orbitflow.approval.formTemplateGroup.entity.QFormTemplateGroup templateGroup;
 
