@@ -606,9 +606,37 @@ async function loadOrganizationsWithSearch() {
     filteredOrgList = allOrgList;
 
     expandedSet.clear();
-    allOrgList.forEach(o => expandParents(o));
+
+    // 검색어가 있을 때만 자동 확장
+    if (keyword) {
+        allOrgList.forEach(o => expandParents(o));
+    }
 
     renderTree();
     destroySortable();
     resetOrderChanged();
 }
+
+
+let isAllExpanded = false;
+const toggleBtn = document.getElementById('btnToggleAll');
+const toggleIcon = toggleBtn.querySelector('i');
+
+toggleBtn.addEventListener('click', () => {
+    if (isAllExpanded) {
+        expandedSet.clear();
+        toggleIcon.className = 'fa-solid fa-expand-alt';
+    } else {
+        allOrgList.forEach(o => {
+            if (o.parentOrgId) {
+                expandedSet.add(o.parentOrgId);
+            }
+        });
+        toggleIcon.className = 'fa-solid fa-compress-alt';
+    }
+
+    isAllExpanded = !isAllExpanded;
+
+    renderTree();
+    initSortable();
+});
