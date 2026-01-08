@@ -17,6 +17,8 @@ let sortable = null;
 let orgCategories = [];
 
 const expandedSet = new Set();
+const MAX_ORG_NAME_LENGTH = 100;
+
 
 /* ======================
    직책 정책 상태
@@ -50,9 +52,11 @@ const els = {
 ====================== */
 document.addEventListener('DOMContentLoaded', async () => {
     bindEvents();
+    bindOrgNameCounter();
     await loadOrgCategories();
     await loadOrganizations();
 });
+
 
 /* ======================
    Load
@@ -265,6 +269,8 @@ function openCreate() {
 
     els.modalTitle().textContent = '조직 생성';
     els.orgName().value = '';
+    document.getElementById('orgNameCount').textContent = '0';
+    document.getElementById('orgNameHelp').textContent = '';
 
     buildCategorySelect(null);
     buildParentSelect(null);
@@ -298,6 +304,9 @@ async function openEdit(id) {
 
     els.modalTitle().textContent = '조직 수정';
     els.orgName().value = org.name ?? '';
+    document.getElementById('orgNameCount').textContent =
+        (org.name ?? '').length;
+    document.getElementById('orgNameHelp').textContent = '';
 
     buildCategorySelect(org.categoryId);
     buildParentSelect(org.parentOrgId ?? null);
@@ -333,7 +342,17 @@ async function openEdit(id) {
 
 async function saveOrg() {
     const name = els.orgName().value.trim();
-    if (!name) return alert('조직명을 입력해주세요.');
+    const help = document.getElementById('orgNameHelp');
+
+    if (!name) {
+        help.textContent = '조직명을 입력해주세요.';
+        return;
+    }
+
+    if (name.length > MAX_ORG_NAME_LENGTH) {
+        help.textContent = `조직명은 최대 ${MAX_ORG_NAME_LENGTH}자까지 입력 가능합니다.`;
+        return;
+    }
 
     const payload = {
         name,
@@ -640,3 +659,31 @@ toggleBtn.addEventListener('click', () => {
     renderTree();
     initSortable();
 });
+
+
+
+function bindOrgNameCounter() {
+    const input = els.orgName();
+    const counter = document.getElementById('orgNameCount');
+    const help = document.getElementById('orgNameHelp');
+
+    if (!input || !counter || !help) return;
+
+    const update = () => {
+        let value = input.value;
+
+        if (value.length > MAX_ORG_NAME_LENGTH) {
+            value = value.slice(0, MAX_ORG_NAME_LENGTH);
+            input.value = value;
+
+            help.textContent = `조직명은 최대 ${MAX_ORG_NAME_LENGTH}자까지 입력 가능합니다.`;
+        } else {
+            help.textContent = '';
+        }
+
+        counter.textContent = value.length;
+    };
+
+    input.addEventListener('input', update);
+    update(); // 초기 반영
+}
