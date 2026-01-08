@@ -37,3 +37,4 @@ public class SummaryBasePromptComponent
                 """);
     }
 }
+//TODO 개괄식으로 변경

@@ -135,6 +135,56 @@
 
         </aside>
     </div>
+
+    <!-- AI 문서 양식 생성 팝업 -->
+    <div id="createPopup"
+         class="modal-backdrop"
+         style="display:none;">
+        <div class="modal-content">
+            <div class="modal-title">AI 문서 양식 생성</div>
+
+            <div class="modal-form-group">
+                <label for="popupTemplateName">문서 양식 이름</label>
+                <input type="text"
+                       id="popupTemplateName"
+                       class="modal-input"
+                       placeholder="예: 근무 형태 변경 신청서"/>
+                <div class="hint" id="popup-name-hint"></div>
+            </div>
+
+            <div class="modal-form-group">
+                <label for="popupTemplateDesc">문서 양식 목적</label>
+                <textarea
+                        id="popupTemplateDesc"
+                        class="modal-textarea"
+                        rows="3"
+                        placeholder="이 문서가 언제, 왜 사용되는지 설명하세요."></textarea>
+                <div class="hint" id="popup-desc-hint"></div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button"
+                        class="modal-cancel-btn"
+                        id="popupCancelBtn">취소
+                </button>
+                <button type="button"
+                        class="modal-create-btn"
+                        id="popupCreateBtn">AI 생성
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI 생성 중 UI 차단 오버레이 -->
+    <div id="ai-block-overlay" style="display:none;">
+        <div class="ai-block-content">
+            <div class="spinner"></div>
+            <div class="ai-block-text">
+                AI가 문서 양식을 생성 중입니다…
+            </div>
+        </div>
+    </div>
+
 </div>
 
 </body>

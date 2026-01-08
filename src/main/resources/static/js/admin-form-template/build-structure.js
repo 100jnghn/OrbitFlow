@@ -276,10 +276,14 @@ let templateGroupCategoryCode = null;
 const DOCUMENT_TITLE_MAX = 25;
 const COMPONENT_LABEL_MAX = 20;
 const NOTICE_MESSAGE_MAX = 200;
+const POPUP_TEMPLATE_DESC_MAX = 200;
 const TABLE_ROW_MIN = 1;
 const TABLE_ROW_MAX = 10;
 const TABLE_COLUMN_MAX = 10;
 let dragBlockSize = 1;
+
+let aiGenerating = false;
+
 
 // =====================
 // 3. 유틸리티 함수
@@ -2159,6 +2163,201 @@ function renderFormTemplateGroupInfo(group) {
 }
 
 // ============================
+// AI 양식 생성 (팝업 + API)
+// ============================
+
+function lockUiForAi() {
+    const overlay = document.getElementById('ai-block-overlay');
+    if (overlay) overlay.style.display = 'flex';
+
+    // 스크롤도 막기
+    document.body.style.overflow = 'hidden';
+}
+
+function unlockUiForAi() {
+    const overlay = document.getElementById('ai-block-overlay');
+    if (overlay) overlay.style.display = 'none';
+
+    document.body.style.overflow = '';
+}
+
+
+function bindAiGeneratePopup() {
+    const aiBtn = document.querySelector('.ai-btn');
+    const popup = document.getElementById('createPopup');
+
+    const nameInput = document.getElementById('popupTemplateName');
+    const descInput = document.getElementById('popupTemplateDesc');
+
+    const cancelBtn = document.getElementById('popupCancelBtn');
+    const createBtn = document.getElementById('popupCreateBtn');
+
+    if (!aiBtn || !popup) return;
+
+    const hidePopup = () => {
+        popup.style.display = 'none';
+    };
+
+    const resetPopup = () => {
+        popup.style.display = 'none';
+        if (nameInput) nameInput.value = '';
+        if (descInput) descInput.value = '';
+    };
+
+    aiBtn.addEventListener('click', () => {
+        popup.style.display = 'flex';
+        nameInput?.focus();
+    });
+
+    cancelBtn?.addEventListener('click', resetPopup);
+
+    popup.addEventListener('click', e => {
+        if (e.target === popup) resetPopup();
+    });
+
+    createBtn?.addEventListener('click', async () => {
+        if (aiGenerating) return;
+
+        const formName = nameInput.value.trim();
+        const purpose = descInput.value.trim();
+
+        if (!formName) {
+            alert('문서 양식 이름을 입력하세요.');
+            nameInput.focus();
+            return;
+        }
+
+        if (!purpose) {
+            alert('문서 양식 목적을 입력하세요.');
+            descInput.focus();
+            return;
+        }
+
+        aiGenerating = true;
+        createBtn.disabled = true;
+        createBtn.textContent = '생성 중...';
+
+        hidePopup();
+        lockUiForAi();
+
+        try {
+            const res = await apiFetch(
+                '/api/admin/form-template/ai/generate',
+                {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        formTemplateId: templateId,
+                        formName,
+                        purpose
+                    })
+                }
+            );
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err?.message || 'AI 양식 생성에 실패했습니다.');
+            }
+
+            const result = await res.json();
+            const templateJson = result?.data?.templateJson;
+
+            if (!templateJson) {
+                throw new Error('AI 응답에 templateJson이 없습니다.');
+            }
+
+            loadTemplateJsonToFormComponents(
+                templateJson,
+                templateGroupBaseRole
+            );
+
+            const titleComp = formComponents.find(c => c.type === 'document-title');
+            const titleInput = document.getElementById('form-title-input');
+
+            if (titleComp && titleInput) {
+                titleInput.value = titleComp.meta?.value ?? formName;
+            }
+
+            renderFormComponents();
+            resetPopup();
+
+        } catch (e) {
+            console.error('[AI GENERATE ERROR]', e);
+            alert(e.message || 'AI 양식 생성 중 오류가 발생했습니다.');
+            popup.style.display = 'flex';
+        } finally {
+            aiGenerating = false;
+            createBtn.disabled = false;
+            createBtn.textContent = 'AI 생성';
+            unlockUiForAi();
+        }
+    });
+}
+
+
+function bindPopupLiveHints() {
+    const nameInput = document.getElementById('popupTemplateName');
+    const nameHint = document.getElementById('popup-name-hint');
+
+    const descInput = document.getElementById('popupTemplateDesc');
+    const descHint = document.getElementById('popup-desc-hint');
+
+    if (nameInput && nameHint) {
+        nameInput.addEventListener('input', () => {
+            enforceMaxLength(nameInput, DOCUMENT_TITLE_MAX);
+
+            const v = nameInput.value.trim();
+            if (!v) {
+                nameHint.textContent = '';
+                nameHint.className = 'hint';
+                return;
+            }
+
+            if (v.length > DOCUMENT_TITLE_MAX) {
+                showMsg(
+                    nameHint,
+                    `이름은 ${DOCUMENT_TITLE_MAX}자 이내여야 합니다.`,
+                    'error'
+                );
+            } else {
+                showMsg(
+                    nameHint,
+                    `입력됨 (${v.length}/${DOCUMENT_TITLE_MAX})`,
+                    'success'
+                );
+            }
+        });
+    }
+
+    if (descInput && descHint) {
+        descInput.addEventListener('input', () => {
+            enforceMaxLength(descInput, POPUP_TEMPLATE_DESC_MAX);
+
+            const v = descInput.value.trim();
+            if (!v) {
+                descHint.textContent = '';
+                descHint.className = 'hint';
+                return;
+            }
+
+            if (v.length > POPUP_TEMPLATE_DESC_MAX) {
+                showMsg(
+                    descHint,
+                    `목적은 ${POPUP_TEMPLATE_DESC_MAX}자 이내로 입력하세요.`,
+                    'error'
+                );
+            } else {
+                showMsg(
+                    descHint,
+                    `입력됨 (${v.length}/${POPUP_TEMPLATE_DESC_MAX})`,
+                    'success'
+                );
+            }
+        });
+    }
+}
+
+// ============================
 // 10. 이벤트 바인딩 관련 함수
 // ============================
 
@@ -2303,6 +2502,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     bindPreviewButton();
     observeComponentButtonHeight();
     bindDocumentTitleSync();
-
+    bindAiGeneratePopup();
+    bindPopupLiveHints();
 });
 

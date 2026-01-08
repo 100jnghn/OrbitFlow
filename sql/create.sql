@@ -418,25 +418,27 @@ CREATE TABLE log_form_template_ai
 (
     id                      BIGINT AUTO_INCREMENT PRIMARY KEY,
 
-    company_id              BIGINT                  NOT NULL,
-    template_group_id       BIGINT                  NULL,
-    created_template_id     BIGINT                  NULL,
+    company_id              BIGINT      NOT NULL,
+    template_group_id       BIGINT      NULL,
+    created_template_id     BIGINT      NULL,
 
-    prompt                  TEXT                    NOT NULL,
+    prompt                  TEXT        NOT NULL,
+
+    request_context         JSON        NOT NULL,
     generated_template_json JSON,
-    generated_rule_json     JSON,
+    response_context        JSON,
 
     model                   VARCHAR(50),
-    status                  ENUM ('SUCCESS','FAIL') NOT NULL,
+
+    status                  VARCHAR(20) NOT NULL,
     error_message           TEXT,
 
-    created_by              BIGINT                  NULL,
-    created_at              TIMESTAMP               NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by              BIGINT      NULL,
+    created_at              TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     /* =========================
        Foreign Keys
        ========================= */
-
     CONSTRAINT fk_log_ai_company
         FOREIGN KEY (company_id)
             REFERENCES company (id)
@@ -456,7 +458,6 @@ CREATE TABLE log_form_template_ai
         FOREIGN KEY (created_by)
             REFERENCES employee (id)
             ON DELETE SET NULL
-
 ) ENGINE = InnoDB;
 
 CREATE INDEX idx_log_ai_company_created_at
@@ -467,7 +468,6 @@ CREATE INDEX idx_log_ai_group
 
 CREATE INDEX idx_log_ai_status
     ON log_form_template_ai (status);
-
 
 -- =========================================================
 -- 6. DOCUMENT (Soft Delete)

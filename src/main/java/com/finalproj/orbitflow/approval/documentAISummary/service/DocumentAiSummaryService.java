@@ -9,7 +9,7 @@ import com.finalproj.orbitflow.approval.documentAISummary.aiBuilder.diff.AiDiffP
 import com.finalproj.orbitflow.approval.documentAISummary.aiBuilder.summary.AiSummaryPromptBuilder;
 import com.finalproj.orbitflow.approval.documentAISummary.dto.*;
 import com.finalproj.orbitflow.approval.documentAISummary.entity.DocumentAISummary;
-import com.finalproj.orbitflow.approval.documentAISummary.enums.SummaryStatus;
+import com.finalproj.orbitflow.approval.documentAISummary.enums.AiStatus;
 import com.finalproj.orbitflow.approval.documentAISummary.enums.SummaryType;
 import com.finalproj.orbitflow.approval.documentAISummary.repository.DocumentAiSummaryRepository;
 import com.finalproj.orbitflow.approval.documentContent.service.DocumentContentService;
@@ -86,7 +86,7 @@ public class DocumentAiSummaryService {
 
         documentAiSummaryRepository
                 .findByDocumentAndSummaryType(document, SummaryType.CONTENT)
-                .filter(summary -> summary.getStatus() == SummaryStatus.COMPLETED)
+                .filter(summary -> summary.getStatus() == AiStatus.COMPLETED)
                 .ifPresent(summary -> {
                     throw new InvalidRequestException("이미 완료된 ai 요약이 존재합니다.");
                 });
@@ -124,7 +124,7 @@ public class DocumentAiSummaryService {
                         .document(document)
                         .company(document.getCompany())
                         .summaryType(SummaryType.CONTENT)
-                        .status(SummaryStatus.PROCESSING)
+                        .status(AiStatus.PROCESSING)
                         .prompt(prompt)
                         .content("")
                         .model(openaiModel)
@@ -317,7 +317,7 @@ public class DocumentAiSummaryService {
                         beforeDocument,
                         SummaryType.DIFF
                 )
-                .filter(summary -> summary.getStatus() == SummaryStatus.COMPLETED)
+                .filter(summary -> summary.getStatus() == AiStatus.COMPLETED)
                 .ifPresent(summary -> {
                     throw new InvalidRequestException("이미 완료된 AI 비교가 존재합니다.");
                 });
@@ -392,7 +392,7 @@ public class DocumentAiSummaryService {
                         .beforeDocument(document.getBeforeDocument())
                         .company(document.getCompany())
                         .summaryType(SummaryType.DIFF)
-                        .status(SummaryStatus.PROCESSING)
+                        .status(AiStatus.PROCESSING)
                         .prompt(prompt)
                         .content("")
                         .model(openaiModel)

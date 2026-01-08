@@ -1201,3 +1201,214 @@ html, body {
     box-sizing: border-box;
     white-space: pre-wrap; /* 줄바꿈 유지 */
 }
+
+/* ===============================
+   AI 생성 팝업 스타일 보정
+   =============================== */
+
+#createPopup {
+    position: fixed;
+    inset: 0; /* top:0; right:0; bottom:0; left:0 */
+    background: rgba(27, 32, 54, 0.36);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 100;
+}
+#createPopup .modal-content {
+    width: 380px;
+    padding: 36px 32px 32px;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 6px 30px rgba(31, 36, 73, 0.17);
+}
+
+#createPopup .modal-title {
+    font-size: 1.22rem;
+    font-weight: 700;
+    color: #18246e;
+    margin-bottom: 14px;
+}
+
+#createPopup .modal-form-group {
+    margin-bottom: 12px;
+}
+
+#createPopup .modal-input,
+#createPopup .modal-textarea {
+    background: #fafbff;
+    border: 1.3px solid #bfc4e0;
+    border-radius: 7px;
+    font-family: 'Noto Sans KR', Arial, Helvetica, sans-serif;
+    font-size: 1.01rem;
+    padding: 9px 13px;
+}
+
+#createPopup .modal-textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+#createPopup .modal-actions {
+    margin-top: 18px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+#createPopup .modal-cancel-btn {
+    background: #f4f6fa;
+    color: #4b515c;
+    border: 1.4px solid #c2c7d1;
+}
+
+#createPopup .modal-cancel-btn:hover {
+    background: #eceef1;
+}
+
+#createPopup .modal-create-btn {
+    background: #3563e9;
+    color: #fff;
+    border: 1.4px solid #3563e9;
+}
+
+#createPopup .modal-create-btn:hover {
+    background: #264cbd;
+}
+
+#createPopup .modal-create-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ===============================
+   AI 생성 팝업 - 세로 폼 레이아웃
+   =============================== */
+
+#createPopup .modal-form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+}
+
+/* 라벨 스타일 */
+#createPopup .modal-form-group label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2b2e46;
+}
+
+/* input / textarea 공통 */
+#createPopup .modal-input,
+#createPopup .modal-textarea {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* ===============================
+   AI 생성 팝업 버튼 스타일
+   =============================== */
+
+#createPopup .modal-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+}
+
+/* 공통 버튼 베이스 */
+#createPopup .modal-cancel-btn,
+#createPopup .modal-create-btn {
+    padding: 8px 28px;
+    min-width: 96px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease,
+    color 0.15s ease,
+    border 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+/* 취소 버튼 (secondary / cancel) */
+#createPopup .modal-cancel-btn {
+    background: #f4f6fa;
+    color: #4b515c;
+    border: 1.4px solid #c2c7d1;
+}
+
+#createPopup .modal-cancel-btn:hover {
+    background: #eceef1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* AI 생성 버튼 (primary) */
+#createPopup .modal-create-btn {
+    background: #3563e9;
+    color: #fff;
+    border: 1.4px solid #3563e9;
+}
+
+#createPopup .modal-create-btn:hover {
+    background: #264cbd;
+    box-shadow: 0 4px 12px rgba(53, 99, 233, 0.35);
+}
+
+/* 비활성화 상태 */
+#createPopup .modal-create-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* ===============================
+   AI 생성 중 UI 차단 오버레이
+   =============================== */
+
+#ai-block-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(27, 32, 54, 0.45);
+    z-index: 999; /* createPopup(100) 위 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ai-block-content {
+    background: #fff;
+    padding: 28px 36px;
+    border-radius: 14px;
+    box-shadow: 0 8px 28px rgba(31, 36, 73, 0.22);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+
+.ai-block-text {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #18246e;
+}
+
+/* 간단한 spinner */
+.spinner {
+    width: 42px;
+    height: 42px;
+    border: 4px solid #e0e3f0;
+    border-top-color: #3563e9;
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+

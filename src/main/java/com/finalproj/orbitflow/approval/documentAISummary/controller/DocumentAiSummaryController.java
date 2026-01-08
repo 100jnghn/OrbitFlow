@@ -56,7 +56,7 @@ public class DocumentAiSummaryController {
                     )
             );
         }
-        return switch (result.getSummaryStatus()) {
+        return switch (result.getAiStatus()) {
             case PROCESSING -> ResponseEntity.ok(
                     new ResponseDto<>(
                             HttpStatus.OK,
