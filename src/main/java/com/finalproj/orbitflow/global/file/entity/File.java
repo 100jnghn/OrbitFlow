@@ -9,6 +9,7 @@ package com.finalproj.orbitflow.global.file.entity;
  */
 
 
+import com.finalproj.orbitflow.board.boardPost.entity.Board;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.global.file.enums.FileDomain;
 import com.finalproj.orbitflow.hr.company.entity.Company;
@@ -52,4 +53,8 @@ public class File extends BaseEntity {
 
     @Column(name = "file_size")
     private Long fileSize;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "board_id")
+    private Board board;
 }

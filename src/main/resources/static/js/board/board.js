@@ -385,6 +385,7 @@ function renderBoardTable(boards) {
             <td>
                 <a href="#" class="board-title-link" onclick="viewBoard(${board.id}); return false;">
                     ${escapeHTML(title)}
+                    ${(board.hasFile === true || board.has_file === true) ? '<i class="fas fa-paperclip attachment-icon" title="첨부파일 있음"></i>' : ''}
                 </a>
             </td>
             <td>${escapeHTML(authorName)}</td>
