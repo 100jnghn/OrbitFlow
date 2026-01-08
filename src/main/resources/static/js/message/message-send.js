@@ -338,7 +338,7 @@ async function handleSubmit(event) {
     const content = document.getElementById('messageContent').value.trim();
 
     if (!title) {
-        alert('제목을 입력해주세요.');
+        alert('제목을 입력하세요');
         document.getElementById('messageTitle').focus();
         return;
     }
@@ -351,7 +351,7 @@ async function handleSubmit(event) {
     }
 
     if (!content) {
-        alert('내용을 입력해주세요.');
+        alert('내용을 입력하세요');
         document.getElementById('messageContent').focus();
         return;
     }

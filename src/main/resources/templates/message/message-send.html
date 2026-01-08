@@ -42,7 +42,8 @@
                         <div class="form-group">
                             <label for="messageTitle">제목</label>
                             <input type="text" id="messageTitle" name="messageTitle" class="form-input"
-                                placeholder="제목을 입력해주세요" maxlength="100" required>
+                                placeholder="제목을 입력해주세요" maxlength="100" required oninput="this.setCustomValidity('')"
+                                oninvalid="this.setCustomValidity('제목을 입력하세요')">
                             <div id="titleCharCount" class="char-count" style="display: none;"></div>
                         </div>
 
@@ -77,7 +78,9 @@
                         <div class="form-group">
                             <label for="messageContent">내용</label>
                             <textarea id="messageContent" name="messageContent" class="form-textarea"
-                                placeholder="내용을 입력해주세요" rows="10" maxlength="3000" required></textarea>
+                                placeholder="내용을 입력해주세요" rows="10" maxlength="3000" required
+                                oninput="this.setCustomValidity('')"
+                                oninvalid="this.setCustomValidity('내용을 입력하세요')"></textarea>
                             <div id="contentCharCount" class="char-count" style="display: none;"></div>
                         </div>
 

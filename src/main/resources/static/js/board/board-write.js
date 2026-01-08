@@ -355,7 +355,7 @@ async function handleSubmit(e) {
     const content = document.getElementById('boardContent').value.trim();
 
     if (!title) {
-        showError('boardTitleError', '제목을 입력해주세요.');
+        showError('boardTitleError', '제목을 입력하세요');
         return;
     }
 
@@ -365,7 +365,7 @@ async function handleSubmit(e) {
     }
 
     if (!content) {
-        showError('boardContentError', '내용을 입력해주세요.');
+        showError('boardContentError', '내용을 입력하세요');
         return;
     }
 

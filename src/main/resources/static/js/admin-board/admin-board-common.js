@@ -372,7 +372,7 @@ async function handleBoardSubmit(e) {
     hideError('boardNameError');
 
     if (!boardName) {
-        showError('boardNameError', '게시판 이름을 입력해주세요.');
+        showError('boardNameError', '게시판 이름을 입력하세요');
         return;
     }
 
