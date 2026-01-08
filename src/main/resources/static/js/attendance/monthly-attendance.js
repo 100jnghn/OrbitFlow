@@ -1,6 +1,6 @@
 let currentParams = { page: 0, size: 31, status: 'ALL' };
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // 초기 상태: 날짜 필드를 빈 값으로 설정 (연차 조회와 동일)
     const startDateInput = document.getElementById('startDate');
     const endDateInput = document.getElementById('endDate');
@@ -8,16 +8,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // 날짜 필드는 초기 상태(빈 값)로 설정
     startDateInput.value = '';
     endDateInput.value = '';
-    
+
     // 초기 데이터 로드 (날짜가 없으므로 백엔드에서 현재 월로 처리하여 목록 표시)
-        executeSearch();
+    executeSearch();
 
     // 검색 버튼 클릭 이벤트
     document.getElementById('searchBtn').addEventListener('click', () => {
-    const statusFilter = document.getElementById('statusFilter');
+        const statusFilter = document.getElementById('statusFilter');
         if (statusFilter) {
-        currentParams.status = statusFilter.value;
-    }
+            currentParams.status = statusFilter.value;
+        }
         currentParams.page = 0;
         executeSearch();
     });
@@ -26,20 +26,38 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('resetBtn').addEventListener('click', () => {
         resetFilters();
     });
+
+    updateSidebarSelection();
 });
+
+function updateSidebarSelection() {
+    // 모든 no-sub 메뉴 선택 해제
+    document.querySelectorAll('.menu-item.no-sub').forEach(item => {
+        item.classList.remove('selected');
+    });
+
+    // 월별 근태 현황 선택
+    const monthlyLink = document.getElementById('monthlyLink');
+    if (monthlyLink) {
+        const menuItem = monthlyLink.closest('.menu-item.no-sub');
+        if (menuItem) {
+            menuItem.classList.add('selected');
+        }
+    }
+}
 
 function executeSearch() {
     const startDateInput = document.getElementById('startDate');
     const endDateInput = document.getElementById('endDate');
     const start = startDateInput.value || null;
     const end = endDateInput.value || null;
-    
+
     // 시작일이 종료일보다 늦은 경우 검증 (잘못된 기간설정 알림)
     if (start && end && start > end) {
         alert('잘못된 기간설정입니다.');
         return;
     }
-    
+
     loadAttendanceData(start, end);
 }
 
@@ -48,11 +66,11 @@ function resetFilters() {
     document.getElementById('statusFilter').value = 'ALL';
     document.getElementById('startDate').value = '';
     document.getElementById('endDate').value = '';
-    
+
     // 파라미터 초기화
     currentParams.status = 'ALL';
     currentParams.page = 0;
-    
+
     // 초기 상태로 되돌린 후 데이터 다시 로드 (연차 조회와 동일)
     executeSearch();
 }
@@ -67,26 +85,26 @@ async function loadAttendanceData(start, end) {
     if (end) url += `&endDate=${end}`;
 
     try {
-    const response = await fetch(url, {
-        headers: { 'Authorization': `Bearer ${sessionStorage.getItem('accessToken')}` }
-    });
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${sessionStorage.getItem('accessToken')}` }
+        });
 
-    const res = await response.json();
-        
+        const res = await response.json();
+
         // 에러 응답 처리
         if (!response.ok) {
             alert(res.message || '근태 내역을 조회하는 중 오류가 발생했습니다.');
             return;
         }
 
-    const data = res.data;
+        const data = res.data;
 
-    if (data) {
-        document.getElementById('totalWorkHours').innerText = data.summary.totalWorkTimeDisplay || '0h 00m';
-        document.getElementById('lateCount').innerText = data.summary.lateCount || 0;
-        document.getElementById('absentCount').innerText = data.summary.leaveAbsentCount || 0;
-        renderTable(data.pagedData.content);
-        renderPagination(data.pagedData);
+        if (data) {
+            document.getElementById('totalWorkHours').innerText = data.summary.totalWorkTimeDisplay || '0h 00m';
+            document.getElementById('lateCount').innerText = data.summary.lateCount || 0;
+            document.getElementById('absentCount').innerText = data.summary.leaveAbsentCount || 0;
+            renderTable(data.pagedData.content);
+            renderPagination(data.pagedData);
         }
     } catch (error) {
         console.error('근태 내역 조회 오류:', error);
