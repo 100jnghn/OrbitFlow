@@ -1006,12 +1006,8 @@ async function fetchRevisionInfo(documentId) {
 }
 
 async function fetchDocumentFiles(documentId) {
-    console.group("[ATTACHMENT API] fetchDocumentFiles");
-
-    console.log("request documentId:", documentId);
 
     const res = await apiFetch(`/api/document-file/${documentId}/files`);
-    console.log("response status:", res.status);
 
     if (!res.ok) {
         console.error("response not ok");
@@ -1020,10 +1016,6 @@ async function fetchDocumentFiles(documentId) {
     }
 
     const json = await res.json();
-
-    console.log("raw response:", json);
-    console.log("data:", json.data);
-    console.log("data length:", Array.isArray(json.data) ? json.data.length : "not array");
 
     console.groupEnd();
 
@@ -1349,10 +1341,10 @@ function startPolling(documentId, type, panelEls) {
             }
 
             // 처리 중이면 계속
-            if (data.summaryStatus === AI_STATUS.PROCESSING) return;
+            if (data.aiStatus === AI_STATUS.PROCESSING) return;
 
             // 완료면 중단 + 완료 표시
-            if (data.summaryStatus === AI_STATUS.COMPLETED) {
+            if (data.aiStatus === AI_STATUS.COMPLETED) {
                 stopPolling(type);
                 applyAiPanelState(panelEls, "COMPLETED", {
                     resultText: data.context
@@ -1406,14 +1398,14 @@ async function initAiSummaryPanel(documentId) {
         }
 
         // 2) PROCESSING → 스피너 + 폴링
-        if (data.summaryStatus === AI_STATUS.PROCESSING) {
+        if (data.aiStatus === AI_STATUS.PROCESSING) {
             applyAiPanelState(els, "PROCESSING", {loadingMsg: "AI 요약을 생성 중입니다..."});
             startPolling(documentId, AI_TYPE.CONTENT, els);
             return;
         }
 
         // 3) COMPLETED → 결과
-        if (data.summaryStatus === AI_STATUS.COMPLETED) {
+        if (data.aiStatus === AI_STATUS.COMPLETED) {
             applyAiPanelState(els, "COMPLETED", {resultText: data.context});
         }
     } catch (e) {
@@ -1469,14 +1461,14 @@ async function initAiDiffPanel(documentId, beforeDocumentId) {
         }
 
         // 2) PROCESSING → 스피너 + 폴링
-        if (data.summaryStatus === AI_STATUS.PROCESSING) {
+        if (data.aiStatus === AI_STATUS.PROCESSING) {
             applyAiPanelState(els, "PROCESSING", {loadingMsg: "AI 비교를 생성 중입니다..."});
             startPolling(documentId, AI_TYPE.DIFF, els);
             return;
         }
 
         // 3) COMPLETED → 결과
-        if (data.summaryStatus === AI_STATUS.COMPLETED) {
+        if (data.aiStatus === AI_STATUS.COMPLETED) {
             applyAiPanelState(els, "COMPLETED", {resultText: data.context});
         }
     } catch (e) {
