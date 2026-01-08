@@ -37,8 +37,8 @@ public class Board extends BaseEntity {
     @Column(name = "board_title", length = 255, nullable = false)
     private String boardTitle; // 게시글 제목
 
-    @Lob // TEXT 길이 제한 없음
-    @Column(name = "board_content", nullable = false)
+    @Lob
+    @Column(name = "board_content", nullable = false, columnDefinition = "LONGTEXT")
     private String boardContent; // 게시글 내용
 
     @Column(name = "view_count", nullable = false)
@@ -81,8 +81,7 @@ public class Board extends BaseEntity {
             BoardCategory category,
             Employee writer,
             String title,
-            String content
-    ) {
+            String content) {
         Board board = new Board();
         board.category = category;
         board.writer = writer;
