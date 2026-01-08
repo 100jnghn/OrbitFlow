@@ -61,7 +61,7 @@ async function loadOrganizations() {
     const includeInactive = els.includeInactive().checked;
 
     const res = await apiFetch(
-        `${API_BASE}?includeInactive=${includeInactive}`
+        `${API_BASE}/trees?includeInactive=${includeInactive}`
     );
 
     const json = await res.json();
@@ -130,10 +130,19 @@ function renderNode(org, depth, container) {
             ? `<span class="org-toggle">${isExpanded ? '▾' : '▸'}</span>`
             : `<span class="org-toggle-placeholder"></span>`
     }
-        <span class="org-label">${highlight(org.name, keyword)}</span>
+        <span class="org-label">
+            ${highlight(org.name, keyword)}
+            <span class="org-meta-item" title="하위 조직 수">${org.childOrgCount ?? 0}</span>
+        </span>
+            
+        <span class="org-meta">
+            <span class="org-meta-item" title="소속 사원 수">소속 사원 수: ${org.employeeCount ?? 0}</span>
+        </span>
+        
         <span class="status-badge ${normalizeActive(org) ? 'status-active' : 'status-inactive'}">
             ${normalizeActive(org) ? '활성' : '비활성'}
         </span>
+        
         <button class="table-btn">수정</button>
       </div>
     `;
@@ -306,7 +315,7 @@ async function openEdit(id) {
 
     // 활성 상태일 때만 "비활성화 가능 여부" 체크
     if (normalizeActive(org)) {
-        const res = await apiFetch(`/api/admin/organizations/${id}/deactivate-check`);
+        const res = await apiFetch(`${API_BASE}/${id}/deactivate-check`);
         const json = await res.json();
         const check = json.data;
 
@@ -590,7 +599,7 @@ async function loadOrganizationsWithSearch() {
         params.append('keyword', keyword);
     }
 
-    const res = await apiFetch(`${API_BASE}?${params.toString()}`);
+    const res = await apiFetch(`${API_BASE}/trees?${params.toString()}`);
     const json = await res.json();
 
     allOrgList = json.data || [];

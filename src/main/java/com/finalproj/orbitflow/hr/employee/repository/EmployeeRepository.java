@@ -214,4 +214,16 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
                 where e.organization.id = :orgId
             """)
     List<Long> findEmployeeIdsByOrganizationId(@Param("orgId") Long orgId);
+
+    @Query("""
+                SELECT COUNT(e)
+                FROM Employee e
+                WHERE e.company.id = :companyId
+                  AND e.organization.id = :orgId
+                  AND e.status <> com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.RESIGNED
+            """)
+    long countActiveByOrg(
+            @Param("companyId") Long companyId,
+            @Param("orgId") Long orgId
+    );
 }
