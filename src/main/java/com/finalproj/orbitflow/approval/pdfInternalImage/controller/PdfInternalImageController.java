@@ -26,13 +26,13 @@ public class PdfInternalImageController {
 
     private final PdfInternalImageService pdfInternalImageService;
 
-    @GetMapping("/documents/{documentId}/images/{documentFileId}")
-    public ResponseEntity<Resource> servePdfImage(
+    @GetMapping("/documents/{documentId}/component/image/{documentFileId}")
+    public ResponseEntity<Resource> servePdfComponentImage(
             @PathVariable Long documentId,
             @PathVariable Long documentFileId
     ) {
         PdfImageResponse res =
-                pdfInternalImageService.loadApprovedDocumentImage(
+                pdfInternalImageService.loadApprovedDocumentComponentImage(
                         documentId,
                         documentFileId
                 );
@@ -41,4 +41,21 @@ public class PdfInternalImageController {
                 .contentType(res.mediaType())
                 .body(res.resource());
     }
+
+    @GetMapping("/documents/{documentId}/signature/images/{approvalLineId}")
+    public ResponseEntity<Resource> servePdfSignatureImage(
+            @PathVariable Long documentId,
+            @PathVariable Long approvalLineId
+    ) {
+        PdfImageResponse res =
+                pdfInternalImageService.loadApprovedDocumentSignatureImage(
+                        documentId,
+                        approvalLineId
+                );
+
+        return ResponseEntity.ok()
+                .contentType(res.mediaType())
+                .body(res.resource());
+    }
+
 }

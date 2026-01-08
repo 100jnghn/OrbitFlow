@@ -30,7 +30,7 @@ public class PdfInternalImageService {
     private final DocumentFileService documentFileService;
     private final DocumentFileRepository documentFileRepository;
 
-    public PdfImageResponse loadApprovedDocumentImage(
+    public PdfImageResponse loadApprovedDocumentComponentImage(
             Long documentId,
             Long documentFileId
     ) {
@@ -61,5 +61,43 @@ public class PdfInternalImageService {
 
 
         return new PdfImageResponse(resource, mediaType);
+    }
+
+
+    public PdfImageResponse loadApprovedDocumentSignatureImage(
+            Long documentId,
+            Long approvalLineId
+    ) {
+        //TODO
+        //Document document = documentRepository.findById(documentId)
+        //        .orElseThrow(() -> new InvalidRequestException("Document not found"));
+        //
+        //if (document.getStatus() != DocumentStatus.APPROVED) {
+        //    throw new InvalidRequestException("PDF 이미지 접근 불가");
+        //}
+        //
+        //
+        //DocumentFile documentFile = documentFileRepository.findById(approvalLineId)
+        //        .orElseThrow(() -> new InvalidRequestException("Document file not found"));
+        //
+        //
+        //
+        //if (!documentFile.getDocument().getId().equals(documentId)) {
+        //    throw new InvalidRequestException("문서-파일 불일치");
+        //}
+        //
+        //Resource resource =
+        //        documentFileService.loadImage(approvalLineId);
+        //
+        //MediaType mediaType;
+        //try {
+        //    mediaType = MediaType.parseMediaType(documentFile.getFile().getContentType());
+        //} catch (Exception e) {
+        //    mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        //}
+        //
+        //
+        //return new PdfImageResponse(resource, mediaType);
+        return null;
     }
 }

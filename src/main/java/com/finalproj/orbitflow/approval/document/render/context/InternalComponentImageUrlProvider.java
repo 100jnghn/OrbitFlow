@@ -6,19 +6,19 @@ import org.springframework.stereotype.Component;
  * Please explain the class!!!
  *
  * @author : Choi MinHyeok
- * @filename : InternalImageUrlProvider
+ * @filename : InternalComponentImageUrlProvider
  * @since : 26. 1. 4. 일요일
  **/
 
 
 @Component
-public class InternalImageUrlProvider implements ImageUrlProvider {
+public class InternalComponentImageUrlProvider implements ImageUrlProvider {
 
     @Override
     public String generate(Long documentId, Long documentFileId) {
         return "/internal/pdf/documents/"
                 + documentId
-                + "/images/"
+                + "/component/images/"
                 + documentFileId;
     }
 }

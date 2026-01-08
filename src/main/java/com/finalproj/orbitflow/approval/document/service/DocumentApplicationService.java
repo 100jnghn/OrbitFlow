@@ -16,6 +16,7 @@ import com.finalproj.orbitflow.approval.documentContent.repository.DocumentConte
 import com.finalproj.orbitflow.approval.documentFile.entity.DocumentFile;
 import com.finalproj.orbitflow.approval.documentFile.enums.DocumentFileStatus;
 import com.finalproj.orbitflow.approval.documentFile.repository.DocumentFileRepository;
+import com.finalproj.orbitflow.approval.documentSignature.service.DocumentSignatureService;
 import com.finalproj.orbitflow.approval.formTemplate.entity.FormTemplate;
 import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateRepository;
 import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
@@ -79,6 +80,7 @@ public class DocumentApplicationService {
     private final PdfHtmlBuilder pdfHtmlBuilder;
     private final PdfContentSchemaAssembler pdfContentSchemaAssembler;
     private final PdfApprovalLineAssembler pdfApprovalLineAssembler;
+    private final DocumentSignatureService documentSignatureService;
 
     @Value("${app.base-url}")
     private String baseUrl;
@@ -194,6 +196,8 @@ public class DocumentApplicationService {
 
         // 4. 내 결재선 승인
         myLine.markApproved(comment); // → APPROVED
+
+        documentSignatureService.snapShotDocumentSignature(document, myLine);
 
         // 5. 다음 결재선 찾기
         ApprovalLine nextLine = lines.stream()

@@ -4,10 +4,10 @@ import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 /**
  * Please explain the class!!!
@@ -30,6 +30,8 @@ import java.time.LocalDateTime;
 )
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class EmployeeSignature {
 
     @Id
@@ -51,20 +53,8 @@ public class EmployeeSignature {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
-    public static EmployeeSignature create(
-            Company company,
-            Employee employee,
-            File file
-    ) {
-        EmployeeSignature signature = new EmployeeSignature();
-        signature.company = company;
-        signature.employee = employee;
-        signature.file = file;
-        signature.isActive = true;
-        return signature;
-    }
-
     public void deactivate() {
         this.isActive = false;
     }
+
 }
