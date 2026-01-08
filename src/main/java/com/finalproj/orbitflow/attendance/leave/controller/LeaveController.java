@@ -29,17 +29,11 @@ public class LeaveController {
     private final LeaveTypeService leaveTypeService;
 
 
+    // 정기 연차 일괄 부여
     @PostMapping("/admin/leave/batch-grant")
-    public ResponseEntity<?> manualBatchGrant(
-            @RequestParam Long companyId,
-            @RequestParam Integer year) {
-
+    public ResponseEntity<ResponseDto<Void>> manualBatchGrant(@RequestParam Long companyId, @RequestParam Integer year) {
         leaveService.batchGrantAnnualLeave(companyId, year);
-
-        return ResponseEntity.ok(new ResponseDto<>(
-                HttpStatus.OK,
-                year + "년도 회계년도 기준 연차 일괄 부여가 완료되었습니다.",
-                null));
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, year + "년도 연차 부여 완료", null));
     }
 
 
@@ -54,17 +48,28 @@ public class LeaveController {
     }
 
 
+    // 내 연차 현황 요약
     @GetMapping("/leave/summary")
-    public ResponseEntity<?> getMySummary(
+    public ResponseEntity<ResponseDto<LeaveBalanceResDto>> getMySummary(
             @AuthenticationPrincipal SecurityUser user,
             @RequestParam(required = false) Integer year) {
-
         LeaveBalanceResDto result = leaveService.getMySummary(user.getCompanyId(), user.getEmployeeId(), year);
-        String message = (year == null ? "올해" : year + "년도") + " 실제 승인 내역이 반영된 연차 현황입니다.";
-
-        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, message, result));
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "연차 요약 조회 성공", result));
     }
 
+
+    // 모든 신청 내역 조회 (필터 포함)
+    @GetMapping("/leave/history")
+    public ResponseEntity<ResponseDto<Page<LeaveHistoryResDto>>> getMyHistory(
+            @AuthenticationPrincipal SecurityUser user,
+            @PageableDefault(size = 10, sort = "startDate", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable,
+            @ModelAttribute LeaveSearchReqDto searchDto) {
+
+        Page<LeaveHistoryResDto> history = leaveService.getAllLeaveHistory(
+                user.getCompanyId(), user.getEmployeeId(), searchDto, pageable);
+
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "휴가 신청 내역 조회 완료", history));
+    }
 
     @GetMapping("/leave/usage")
     public ResponseEntity<?> getMyLeaveUsage(
@@ -89,21 +94,6 @@ public class LeaveController {
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, targetYear + "년도 연차 차감 내역입니다.", usageHistory));
     }
 
-
-    @GetMapping("/leave/history")
-    public ResponseEntity<?> getMyHistory(
-            @AuthenticationPrincipal SecurityUser user,
-            @RequestParam(required = false) String typeName,
-            @RequestParam(required = false) DocumentStatus status,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @PageableDefault(size = 10, sort = "startDate") Pageable pageable) {
-
-        Page<LeaveHistoryResDto> history = leaveService.getAllLeaveHistory(
-                user.getCompanyId(), user.getEmployeeId(), typeName, status, startDate, endDate, pageable);
-
-        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "휴가 신청 내역 조회가 완료되었습니다.", history));
-    }
 
 
     @GetMapping("/leave/types")

@@ -42,41 +42,47 @@ public class LeaveService {
     private final AttendanceRecordRepository attendanceRecordRepository;
     private final LeaveTypeRepository leaveTypeRepository;
 
+    /**
+     * [스케줄러/관리자] 정기 연차 부여 (회계년도 기준)
+     */
     @Transactional
     public void batchGrantAnnualLeave(Long companyId, Integer year) {
         LocalDate grantDate = LocalDate.of(year, 1, 1);
         List<Employee> activeEmployees = employeeRepository.findByCompanyIdAndStatus(companyId, EmployeeStatus.ACTIVE);
 
         for (Employee emp : activeEmployees) {
-            try {
-                if (emp.getHireDate() == null) {
-                    log.warn("사원 ID: {} 의 입사일 정보가 없어 연차 부여를 건너뜁니다.", emp.getId());
-                    continue;
-                }
-
-                if (leaveGrantRepository.existsByEmployeeIdAndGrantTypeAndGrantDate(emp.getId(), "ANNUAL_REGULAR", grantDate)) {
-                    continue;
-                }
-
-                BigDecimal grantDays;
-                String type = "ANNUAL_REGULAR";
-
-                if (!emp.getHireDate().isAfter(grantDate.minusYears(1))) {
-                    int yearsOfService = Period.between(emp.getHireDate(), grantDate).getYears();
-                    grantDays = calculateStandardDays(yearsOfService);
-                } else {
-                    grantDays = calculateProportionalDays(emp.getHireDate(), year);
-                    type = "ANNUAL_PROPORTIONAL";
-                }
-
-                saveGrantAndBalance(emp, grantDate, grantDays, type);
-            } catch (Exception e) {
-                log.error("사원 ID: {} 연차 계산 중 예외 발생: {}", emp.getId(), e.getMessage());
-            }
+            processEmployeeAnnualLeave(emp, grantDate, year);
         }
     }
 
+    private void processEmployeeAnnualLeave(Employee emp, LocalDate grantDate, Integer year) {
+        if (emp.getHireDate() == null) return;
 
+        // 중복 부여 방지
+        if (leaveGrantRepository.existsByEmployeeIdAndGrantTypeAndGrantDate(emp.getId(), "ANNUAL_REGULAR", grantDate)) {
+            return;
+        }
+
+        BigDecimal grantDays;
+        String type = "ANNUAL_REGULAR";
+
+        // 입사 1년 이상 여부 확인
+        if (!emp.getHireDate().isAfter(grantDate.minusYears(1))) {
+            int yearsOfService = Period.between(emp.getHireDate(), grantDate).getYears();
+            grantDays = calculateStandardDays(yearsOfService);
+        } else {
+            // 1년 미만자 비례 계산
+            grantDays = calculateProportionalDays(emp.getHireDate(), year);
+            type = "ANNUAL_PROPORTIONAL";
+        }
+
+        saveGrantAndBalance(emp, grantDate, grantDays, type);
+    }
+
+
+    /**
+     * [스케줄러] 신입사원 월차 부여 (1년 미만자 매월 1일)
+     */
     @Transactional
     public void grantMonthlyLeaveForCompany(Long companyId) {
         LocalDate today = LocalDate.now();
@@ -84,19 +90,22 @@ public class LeaveService {
 
         for (Employee e : active) {
             if (e.getHireDate() == null) continue;
+            // 1년 이상자는 월차 부여 대상 제외
             if (!e.getHireDate().isAfter(today.minusYears(1))) continue;
-            if (leaveGrantRepository.existsByEmployeeIdAndGrantTypeAndGrantDate(e.getId(), "ANNUAL_MONTHLY", today))
-                continue;
+            if (leaveGrantRepository.existsByEmployeeIdAndGrantTypeAndGrantDate(e.getId(), "ANNUAL_MONTHLY", today)) continue;
 
             saveGrantAndBalance(e, today, new BigDecimal("1.00"), "ANNUAL_MONTHLY");
         }
     }
 
-
+    /**
+     * [스케줄러] 연차 소멸 처리
+     */
     @Transactional
     public void expireOutdatedLeaves() {
         LocalDate today = LocalDate.now();
         List<LeaveGrant> expired = leaveGrantRepository.findByExpirationDateBeforeAndIsExpiredFalse(today);
+
         for (LeaveGrant g : expired) {
             g.updateExpiredStatus(true);
             leaveBalanceRepository.findByCompanyIdAndEmployeeIdAndYear(g.getCompanyId(), g.getEmployeeId(), g.getGrantDate().getYear())
@@ -108,13 +117,15 @@ public class LeaveService {
     }
 
 
+    /**
+     * [API] 연차 현황 요약 데이터 생성
+     */
     @Transactional
     public LeaveBalanceResDto getMySummary(Long companyId, Long employeeId, Integer year) {
         int targetYear = (year != null) ? year : LocalDate.now().getYear();
 
-        // 사원 정보 조회 (입사일 추출용)
         Employee emp = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new RuntimeException("사원을 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("사원을 찾을 수 없습니다."));
 
         LeaveBalance balance = leaveBalanceRepository.findByCompanyIdAndEmployeeIdAndYear(companyId, employeeId, targetYear)
                 .orElseGet(() -> createInitialBalance(companyId, employeeId, targetYear));
@@ -133,6 +144,17 @@ public class LeaveService {
     }
 
 
+    /**
+     * [API] 모든 휴가 신청 내역 통합 조회 (페이지네이션 해결)
+     */
+    public Page<LeaveHistoryResDto> getAllLeaveHistory(Long companyId, Long employeeId, LeaveSearchReqDto searchDto, Pageable pageable) {
+        return attendanceRecordRepository.findAllLeaveHistoryWithFilters(
+                        companyId, employeeId, searchDto.getTypeName(), searchDto.getStatus(),
+                        searchDto.getStartDate(), searchDto.getEndDate(), pageable)
+                .map(this::mapRecordToDto);
+    }
+
+
     public Page<LeaveHistoryResDto> getLeaveUsageHistory(
             Long companyId, Long employeeId, int year,
             String typeName, DocumentStatus status, LocalDate startDate, LocalDate endDate,
@@ -144,16 +166,6 @@ public class LeaveService {
                 .map(this::mapRecordToDto);
     }
 
-
-    public Page<LeaveHistoryResDto> getAllLeaveHistory(
-            Long companyId, Long employeeId, String typeName, DocumentStatus status,
-            LocalDate startDate, LocalDate endDate, Pageable pageable) {
-
-        // 레포지토리의 동적 쿼리 호출
-        return attendanceRecordRepository.findAllLeaveHistoryWithFilters(
-                        companyId, employeeId, typeName, status, startDate, endDate, pageable)
-                .map(this::mapRecordToDto);
-    }
 
     private BigDecimal calculateActualUsedDays(Long companyId, Long employeeId, int year) {
         return attendanceRecordRepository.findByCompanyIdAndEmployeeId(companyId, employeeId).stream()
