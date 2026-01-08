@@ -189,11 +189,9 @@ function updateSidebarSelection(selectedCategoryId) {
                                 menuTitle.setAttribute('aria-expanded', 'true');
                             }
                         }
-                        console.log('[사이드바 선택 효과] 부서게시판 선택:', selectedCategoryId);
                     } else if (menuItem) {
                         // 일반 게시판인 경우
                         menuItem.classList.add('selected');
-                        console.log('[사이드바 선택 효과] 일반 게시판 선택:', selectedCategoryId);
                     }
                 }
             } catch (e) {
@@ -216,11 +214,9 @@ function updateSidebarSelection(selectedCategoryId) {
                                 menuTitle.setAttribute('aria-expanded', 'true');
                             }
                         }
-                        console.log('[사이드바 선택 효과] 부서게시판 선택:', selectedCategoryId);
                     } else if (menuItem) {
                         // 일반 게시판인 경우
                         menuItem.classList.add('selected');
-                        console.log('[사이드바 선택 효과] 일반 게시판 선택:', selectedCategoryId);
                     }
                 }
             }
@@ -271,8 +267,12 @@ async function loadBoardDetail() {
                 location.href = '/login';
                 return;
             }
+            if (response.status === 403) {
+                showError('접근 권한이 없습니다.');
+                return;
+            }
             if (response.status === 404) {
-                showError('게시글을 찾을 수 없습니다.');
+                showError('게시글이 존재하지 않거나 삭제되었습니다.');
                 return;
             }
             throw new Error('게시글을 불러오는데 실패했습니다.');
@@ -282,14 +282,24 @@ async function loadBoardDetail() {
         const board = result.data;
 
         if (board) {
-            // URL에서 categoryId가 없으면 게시글에서 가져오기 (무조건 설정)
-            const boardCategoryId = board.categoryId || board.category?.id;
+            // 1. API 응답에서 categoryId 추출
+            const boardCategoryId = board.categoryId || board.category_id || board.category?.id;
+
             if (boardCategoryId) {
-                // URL에 categoryId가 없거나, 게시글의 categoryId가 다르면 게시글의 categoryId 사용
-                if (!categoryId || categoryId !== parseInt(boardCategoryId)) {
-                    categoryId = parseInt(boardCategoryId);
+                const parsedId = parseInt(boardCategoryId);
+                if (!isNaN(parsedId)) {
+                    // URL 파라미터가 없거나 API 결과가 다를 경우 업데이트
+                    if (!categoryId || categoryId !== parsedId) {
+                        categoryId = parsedId;
+                        sessionStorage.setItem('lastBoardCategoryId', categoryId);
+                    }
                 }
+            } else if (!categoryId) {
+                // API 결과도 없고 URL도 없으면 세션 저장소 시도
+                const savedId = sessionStorage.getItem('lastBoardCategoryId');
+                if (savedId) categoryId = parseInt(savedId);
             }
+
             // categoryId 설정 후 사이드바 선택 효과 업데이트
             // 게시판 목록이 이미 로드되어 있으면 사이드바 다시 렌더링 후 선택 효과 적용
             if (categoryId) {
@@ -471,7 +481,13 @@ async function deleteBoard() {
                 location.href = '/login';
                 return;
             }
-            const errorData = await response.json();
+            if (response.status === 403) {
+                throw new Error('게시글 삭제 권한이 없습니다.');
+            }
+            if (response.status === 404) {
+                throw new Error('이미 삭제되었거나 존재하지 않는 게시글입니다.');
+            }
+            const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.message || '게시글 삭제에 실패했습니다.');
         }
 
@@ -679,8 +695,8 @@ function renderComments(comments) {
     }).join('');
 }
 
-// 에러 메시지 표시/숨김 함수
-function showError(elementId, message) {
+// 에러 메시지 표시/숨김 함수 (댓글 등 폼 요소용)
+function showCommentError(elementId, message) {
     const errorElement = document.getElementById(elementId);
     if (errorElement) {
         errorElement.textContent = message;
@@ -688,7 +704,7 @@ function showError(elementId, message) {
     }
 }
 
-function hideError(elementId) {
+function hideCommentError(elementId) {
     const errorElement = document.getElementById(elementId);
     if (errorElement) {
         errorElement.style.display = 'none';
@@ -745,21 +761,21 @@ async function submitComment() {
     const content = commentInput?.value.trim();
 
     // 에러 메시지 초기화
-    hideError('commentError');
+    hideCommentError('commentError');
 
     if (!content || content.length === 0) {
-        showError('commentError', '댓글 내용을 입력해주세요.');
+        showCommentError('commentError', '댓글 내용을 입력해주세요.');
         return;
     }
 
     // 공백만 입력된 경우 체크
     if (!content.replace(/\s/g, '').length) {
-        showError('commentError', '공백만 입력된 댓글은 등록할 수 없습니다.');
+        showCommentError('commentError', '공백만 입력된 댓글은 등록할 수 없습니다.');
         return;
     }
 
     if (content.length > 500) {
-        showError('commentError', '댓글은 500자 이하여야 합니다.');
+        showCommentError('commentError', '댓글은 500자 이하여야 합니다.');
         return;
     }
 
@@ -784,12 +800,11 @@ async function submitComment() {
         }
 
         commentInput.value = '';
-        hideError('commentError');
+        hideCommentError('commentError');
         updateCommentCharCount(); // 카운터 초기화 (0/500 표시)
         loadComments(currentCommentPage);
     } catch (error) {
-        console.error('Error submitting comment:', error);
-        showError('commentError', error.message || '댓글 작성에 실패했습니다.');
+        showCommentError('commentError', error.message || '댓글 작성에 실패했습니다.');
     }
 }
 

@@ -76,7 +76,8 @@
                         <div class="form-group">
                             <label for="boardName" class="form-label">제목</label>
                             <input type="text" id="boardName" name="boardName" required placeholder="게시판 이름을 입력하세요"
-                                class="form-input" maxlength="100">
+                                class="form-input" maxlength="100" oninput="this.setCustomValidity('')"
+                                oninvalid="this.setCustomValidity('게시판 이름을 입력하세요')">
                             <div id="boardNameError" class="error-message" style="display: none;"></div>
                         </div>
 

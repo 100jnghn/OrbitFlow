@@ -310,6 +310,17 @@
     color: var(--primary-color);
 }
 
+.attachment-icon {
+    font-size: 13px;
+    color: var(--neutral-400);
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.board-title-link:hover .attachment-icon {
+    color: var(--primary-color);
+}
+
 /* 페이지네이션 및 글쓰기 버튼 컨테이너 */
 .board-bottom-actions {
     display: flex;

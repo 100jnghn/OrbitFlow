@@ -115,7 +115,7 @@ async function loadNotices() {
         }
 
         const boardResponse = await apiFetch(
-            `/api/boards/categories/${noticeCategory.id}?page=0&size=8&sort=createdAt,desc`
+            `/api/boards/categories/${noticeCategory.id}?page=0&size=5&sort=createdAt,desc`
         );
 
         if (!boardResponse.ok) throw new Error('공지사항 조회 실패');
@@ -140,7 +140,7 @@ async function loadNotices() {
             const author = board.writer?.name || '작성자';
             const title = board.boardTitle || board.title || '제목 없음';
             return `
-                <li class="notice-item" onclick="location.href='/view/board/detail?boardId=${board.id}'">
+                <li class="notice-item" onclick="location.href='/view/board/detail?boardId=${board.id}&categoryId=${noticeCategory.id}'">
                     <div class="notice-title">${escapeHTML(title)}</div>
                     <div class="notice-meta">
                         <span class="notice-author">${escapeHTML(author)}</span>

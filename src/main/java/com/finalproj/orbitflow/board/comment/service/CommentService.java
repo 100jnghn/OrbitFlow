@@ -91,8 +91,13 @@ public class CommentService {
         // 게시글 작성자에게 알림 전송 (본인이 작성한 댓글 제외)
         Employee boardWriter = board.getWriter();
         if (!boardWriter.getId().equals(employeeId)) {
+            String contentSample = savedComment.getCommentContent();
+            if (contentSample.length() > 100) {
+                contentSample = contentSample.substring(0, 100) + "...";
+            }
+
             String notificationMessage = String.format("작성하신 게시물에 새로운 댓글이 달렸습니다.\n내용: %s",
-                    savedComment.getCommentContent());
+                    contentSample);
 
             notificationCommandService.createNotification(
                     companyId,

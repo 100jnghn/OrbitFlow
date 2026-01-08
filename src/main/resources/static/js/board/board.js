@@ -48,6 +48,12 @@ async function loadBoardCategories() {
                 location.href = '/login';
                 return;
             }
+            if (accessibleResponse.status === 403 || orgResponse.status === 403) {
+                throw new Error('접근 권한이 없는 게시판이 포함되어 있습니다.');
+            }
+            if (accessibleResponse.status === 404 || orgResponse.status === 404) {
+                throw new Error('일부 게시판 정보를 찾을 수 없습니다.');
+            }
             throw new Error('게시판 목록을 불러오는데 실패했습니다.');
         }
 
@@ -334,6 +340,12 @@ async function loadBoardList(page = 0) {
                 location.href = '/login';
                 return;
             }
+            if (response.status === 403) {
+                throw new Error('접근 권한이 없습니다.');
+            }
+            if (response.status === 404) {
+                throw new Error('존재하지 않거나 삭제된 게시판입니다.');
+            }
             throw new Error('게시글 목록을 불러오는데 실패했습니다.');
         }
 
@@ -385,6 +397,7 @@ function renderBoardTable(boards) {
             <td>
                 <a href="#" class="board-title-link" onclick="viewBoard(${board.id}); return false;">
                     ${escapeHTML(title)}
+                    ${(board.hasFile === true || board.has_file === true) ? '<i class="fas fa-paperclip attachment-icon" title="첨부파일 있음"></i>' : ''}
                 </a>
             </td>
             <td>${escapeHTML(authorName)}</td>
