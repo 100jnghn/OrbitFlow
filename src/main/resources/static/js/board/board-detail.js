@@ -267,8 +267,12 @@ async function loadBoardDetail() {
                 location.href = '/login';
                 return;
             }
+            if (response.status === 403) {
+                showError('접근 권한이 없습니다.');
+                return;
+            }
             if (response.status === 404) {
-                showError('게시글을 찾을 수 없습니다.');
+                showError('게시글이 존재하지 않거나 삭제되었습니다.');
                 return;
             }
             throw new Error('게시글을 불러오는데 실패했습니다.');
@@ -477,7 +481,13 @@ async function deleteBoard() {
                 location.href = '/login';
                 return;
             }
-            const errorData = await response.json();
+            if (response.status === 403) {
+                throw new Error('게시글 삭제 권한이 없습니다.');
+            }
+            if (response.status === 404) {
+                throw new Error('이미 삭제되었거나 존재하지 않는 게시글입니다.');
+            }
+            const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.message || '게시글 삭제에 실패했습니다.');
         }
 

@@ -72,8 +72,12 @@ async function loadMessageDetail() {
                 location.href = '/login';
                 return;
             }
+            if (response.status === 403) {
+                showError('접근 권한이 없습니다.');
+                return;
+            }
             if (response.status === 404) {
-                showError('메시지를 찾을 수 없습니다.');
+                showError('메시지를 찾을 수 없거나 이미 삭제되었습니다.');
                 return;
             }
             throw new Error('메시지를 불러오는데 실패했습니다.');
@@ -370,6 +374,12 @@ async function deleteMessage() {
             if (response.status === 401) {
                 location.href = '/login';
                 return;
+            }
+            if (response.status === 403) {
+                throw new Error('메시지 삭제 권한이 없습니다.');
+            }
+            if (response.status === 404) {
+                throw new Error('이미 삭제되었거나 존재하지 않는 메시지입니다.');
             }
             throw new Error('메시지 삭제에 실패했습니다.');
         }

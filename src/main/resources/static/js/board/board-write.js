@@ -175,6 +175,16 @@ async function loadBoardDetail() {
                 location.href = '/login';
                 return;
             }
+            if (response.status === 403) {
+                alert('수정 권한이 없습니다.');
+                location.href = `/view/board/detail?boardId=${boardId}`;
+                return;
+            }
+            if (response.status === 404) {
+                alert('게시글이 존재하지 않거나 삭제되었습니다.');
+                location.href = '/view/board';
+                return;
+            }
             throw new Error('게시글을 불러오는데 실패했습니다.');
         }
 
@@ -420,7 +430,13 @@ async function handleSubmit(e) {
                 location.href = '/login';
                 return;
             }
-            const errorData = await response.json();
+            if (response.status === 403) {
+                throw new Error(boardId ? '게시글 수정 권한이 없습니다.' : '게시글 작성 권한이 없습니다.');
+            }
+            if (response.status === 404) {
+                throw new Error('게시판 또는 게시글 정보를 찾을 수 없습니다.');
+            }
+            const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.message || '게시글 저장에 실패했습니다.');
         }
 

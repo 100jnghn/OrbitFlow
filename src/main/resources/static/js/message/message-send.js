@@ -97,6 +97,9 @@ async function searchEmployees(keyword) {
                 location.href = '/login';
                 return;
             }
+            if (response.status === 403) {
+                throw new Error('사원 검색 권한이 없습니다.');
+            }
             throw new Error('사원 검색에 실패했습니다.');
         }
 
@@ -401,6 +404,12 @@ async function handleSubmit(event) {
             if (response.status === 401) {
                 location.href = '/login';
                 return;
+            }
+            if (response.status === 403) {
+                throw new Error('메시지 전송 권한이 없습니다.');
+            }
+            if (response.status === 404) {
+                throw new Error('수신자 정보를 찾을 수 없습니다.');
             }
 
             const errorData = await response.json().catch(() => ({}));
