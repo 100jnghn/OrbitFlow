@@ -149,21 +149,6 @@
     gap: 24px;
 }
 
-/* 반응형 */
-@media (max-width: 720px) {
-    .org-row {
-        padding: 6px 12px;
-    }
-
-    .org-label {
-        font-size: 13px;
-    }
-
-    .org-modal-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
 /* ===============================
    조직 모달 - 직책 사용 정책 UI
 =============================== */
@@ -363,9 +348,106 @@
     color: #9ca3af;
 }
 
-/* 모바일에서는 메타 숨김 */
-@media (max-width: 720px) {
+
+.icon-btn i {
+    font-size: 14px;
+}
+
+html {
+    overflow-y: scroll;
+}
+
+@media (max-width: 1024px) {
+
+    /* 사원 수 숨김 */
     .org-meta {
+        display: none;
+    }
+
+    /* 하위 조직 수는 작게 */
+    .org-label .org-meta-item {
+        font-size: 11px;
+        padding: 1px 6px;
+    }
+
+    /* 버튼 간격 축소 */
+    .org-row {
+        padding: 6px 12px;
+    }
+}
+
+
+@media (max-width: 768px) {
+
+    /* Drag 핸들 제거 (터치 UX 불리) */
+    .drag-handle {
+        display: none !important;
+    }
+
+    /* 상태 배지는 텍스트만 */
+    .status-badge {
+        font-size: 11px;
+        padding: 2px 6px;
+    }
+
+    /* 수정 버튼 아이콘화 */
+    .org-row .table-btn {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 640px) {
+
+    /* 하위 조직 수도 숨김 */
+    .org-label .org-meta-item {
+        display: none;
+    }
+
+    /* 상태 배지 숨김 */
+    .status-badge {
+        display: none;
+    }
+
+    /* 수정 버튼만 남기고 최소화 */
+    .org-row .table-btn {
+        margin-left: auto;
+        padding: 6px;
+    }
+
+    /* depth indent 축소 */
+    .org-node {
+        margin-left: 0 !important;
+    }
+
+    .org-node::before {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+
+    .orgcat-toolbar {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .toolbar-left {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    /* 검색 버튼 텍스트 제거 */
+    #btnSearch {
+        padding: 0 10px;
+    }
+
+    #btnSearch::after {
+        content: "";
+    }
+
+    /* 체크박스 라벨 축약 */
+    .inactive-toggle .label-text {
         display: none;
     }
 }
