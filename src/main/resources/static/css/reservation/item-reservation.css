@@ -156,9 +156,9 @@
     background: #f8f9fa;
     border: 1px solid #e9ecef;
     border-left: none;
-    font-weight: 600;
-    font-size: 12px;
-    text-align: center;
+    font-weight: 300;
+    font-size: 10px;
+    text-align: left;
     white-space: nowrap;
     box-sizing: border-box;
 }
