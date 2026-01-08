@@ -96,7 +96,8 @@ async function loadMessageDetail() {
             showError('메시지 데이터가 없습니다.');
         }
     } catch (error) {
-        showError('메시지를 불러오는데 실패했습니다.');
+        console.error('Error loading message detail:', error);
+        showError(error.message || '메시지를 불러오는 데 실패했습니다.');
     }
 }
 
