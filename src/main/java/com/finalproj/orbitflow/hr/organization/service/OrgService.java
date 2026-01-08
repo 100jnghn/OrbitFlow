@@ -5,7 +5,6 @@ import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.InvalidStateException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
-import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import com.finalproj.orbitflow.hr.orgCategory.repository.OrgCategoryRepository;
 import com.finalproj.orbitflow.hr.orgPositionUsage.repository.OrgPositionUsageRepository;
@@ -93,6 +92,23 @@ public class OrgService {
     }
 
     @Transactional(readOnly = true)
+    public List<OrgAdminResDto> findAllForAdmin(Long companyId, boolean includeInactive) {
+
+        List<Organization> orgs = includeInactive
+                ? orgRepository.findByCompanyIdOrderByIsActiveDescParentOrgIdAscOrderIndexAsc(companyId)
+                : orgRepository.findByCompanyIdAndIsActiveTrueOrderByParentOrgIdAscOrderIndexAsc(companyId);
+
+        return orgs.stream()
+                .map(o -> OrgAdminResDto.from(
+                        o,
+                        employeeRepository.countActiveEmployeesByOrg(companyId, o.getId()),
+                        orgRepository.countByCompanyIdAndParentOrgIdAndIsActiveTrue(companyId, o.getId())
+                ))
+                .toList();
+    }
+
+
+    @Transactional(readOnly = true)
     public List<OrgResDto> search(
             Long companyId,
             String keyword,
@@ -147,6 +163,65 @@ public class OrgService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<OrgAdminResDto> searchForAdmin(
+            Long companyId,
+            String keyword,
+            boolean includeInactive,
+            boolean includeDescendants
+    ) {
+        String normalized = keyword.trim().toLowerCase();
+
+        // 기준 데이터 로딩
+        List<Organization> baseList = includeInactive
+                ? orgRepository.findByCompanyIdOrderByIsActiveDescParentOrgIdAscOrderIndexAsc(companyId)
+                : orgRepository.findByCompanyIdAndIsActiveTrueOrderByParentOrgIdAscOrderIndexAsc(companyId);
+
+        // 빠른 탐색용 Map
+        var orgMap = baseList.stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        Organization::getId,
+                        o -> o
+                ));
+
+        // 검색 히트 조직
+        var matched = baseList.stream()
+                .filter(o -> o.getName().toLowerCase().contains(normalized))
+                .toList();
+
+        java.util.Set<Long> resultIds = new java.util.HashSet<>();
+
+        for (Organization org : matched) {
+
+            // 2-1) 자기 자신
+            resultIds.add(org.getId());
+
+            // 2-2) 부모 체인 포함
+            Long cursor = org.getParentOrgId();
+            while (cursor != null) {
+                Organization parent = orgMap.get(cursor);
+                if (parent == null) break;
+                resultIds.add(parent.getId());
+                cursor = parent.getParentOrgId();
+            }
+
+            // 2-3) 하위 조직 포함 (옵션)
+            if (includeDescendants) {
+                collectDescendants(org.getId(), orgMap, resultIds);
+            }
+        }
+
+        // 결과 DTO 변환 (관리자용: 사원 수 + 하위 조직 수 포함)
+        return baseList.stream()
+                .filter(o -> resultIds.contains(o.getId()))
+                .map(o -> OrgAdminResDto.from(
+                        o,
+                        employeeRepository.countActiveEmployeesByOrg(companyId, o.getId()),
+                        orgRepository.countByCompanyIdAndParentOrgIdAndIsActiveTrue(companyId, o.getId())
+                ))
+                .toList();
+    }
+
     /**
      * 하위 조직 재귀 수집
      */
@@ -168,6 +243,14 @@ public class OrgService {
     /* ================= 수정 ================= */
     public void update(Long companyId, Long organizationId, OrgUpdateReqDto request) {
 
+        log.info(
+                "[ORG UPDATE] orgId={}, req.isActive={}, req.parentOrgId={}, req.name={}",
+                organizationId,
+                request.getIsActive(),
+                request.getParentOrgId(),
+                request.getName()
+        );
+
         Organization org = getOrgInCompanyOrThrow(companyId, organizationId);
         String oldName = org.getName();
 
@@ -176,7 +259,7 @@ public class OrgService {
         Boolean reqActive = request.getIsActive();
 
         // 비활성화 요청 처리
-        if (Boolean.FALSE.equals(reqActive) && Boolean.TRUE.equals(org.getIsActive())) {
+        if (Boolean.FALSE.equals(reqActive) && !Boolean.FALSE.equals(org.getIsActive())) {
             deactivateInternal(companyId, org);
             return;
         }
@@ -373,17 +456,21 @@ public class OrgService {
             throw new InvalidStateException("하위 조직이 존재하여 비활성화할 수 없습니다.");
         }
 
-        if (employeeRepository.existsByCompanyIdAndOrganizationIdAndStatusNot(
-                companyId, organizationId, EmployeeStatus.RESIGNED)) {
-            throw new InvalidStateException("재직 중인 사원이 존재하여 비활성화할 수 없습니다.");
+        if (employeeRepository.existsActiveEmployeeInOrg(companyId, organizationId)) {
+            throw new InvalidStateException("ACTIVE 사원이 존재하는 조직은 비활성화할 수 없습니다.");
         }
 
         orgPositionUsageRepository
                 .deleteByCompany_IdAndOrganization_Id(companyId, organizationId);
 
+        log.info("[ORG DEACTIVATE] before org.deactivate() id={}", organizationId);
         org.deactivate();
+        log.info("[ORG DEACTIVATE] after org.deactivate() id={}", organizationId);
+
         organizationBoardCategorySyncService.
                 deactivateBoard(companyId, organizationId);
+        log.info("[ORG DEACTIVATE] after deactivateBoard id={}", organizationId);
+
     }
 
 
@@ -399,11 +486,10 @@ public class OrgService {
         }
 
         // 재직 중 사원 존재
-        if (employeeRepository.existsByCompanyIdAndOrganizationIdAndStatusNot(
-                companyId, orgId, EmployeeStatus.RESIGNED)) {
+        if (employeeRepository.existsActiveEmployeeInOrg(companyId, orgId)) {
             return new OrgDeactivateCheckResDto(
                     false,
-                    "재직 중인 사원이 존재하여 비활성화할 수 없습니다."
+                    "재직중인 사원이 존재하여 비활성화할 수 없습니다."
             );
         }
 
