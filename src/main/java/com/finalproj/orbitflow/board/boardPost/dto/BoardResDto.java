@@ -70,6 +70,8 @@ public class BoardResDto {
     @Builder
     public static class ListInfo {
         private Long id;
+        @com.fasterxml.jackson.annotation.JsonProperty("categoryId")
+        private Long categoryId;
         private String boardTitle;
         private String categoryName;
         private WriterInfo writer;
@@ -82,6 +84,7 @@ public class BoardResDto {
             boolean attached = board.getFiles() != null && !board.getFiles().isEmpty();
             return ListInfo.builder()
                     .id(board.getId())
+                    .categoryId(board.getCategory() != null ? board.getCategory().getId() : null)
                     .boardTitle(board.getBoardTitle())
                     .categoryName(board.getCategory() != null ? board.getCategory().getBoardName() : "N/A")
                     .writer(WriterInfo.from(board.getWriter()))
@@ -102,6 +105,8 @@ public class BoardResDto {
         private Long id;
         private String boardTitle;
         private String boardContent;
+        @com.fasterxml.jackson.annotation.JsonProperty("categoryId")
+        private Long categoryId;
         private String categoryName;
         private WriterInfo writer;
         private int viewCount;
@@ -115,6 +120,7 @@ public class BoardResDto {
                     .id(board.getId())
                     .boardTitle(board.getBoardTitle())
                     .boardContent(board.getBoardContent())
+                    .categoryId(board.getCategory() != null ? board.getCategory().getId() : null)
                     .categoryName(board.getCategory() != null ? board.getCategory().getBoardName() : "N/A")
                     .writer(WriterInfo.from(board.getWriter()))
                     .viewCount(board.getViewCount())

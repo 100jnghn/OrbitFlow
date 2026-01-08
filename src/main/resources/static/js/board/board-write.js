@@ -194,12 +194,22 @@ async function loadBoardDetail() {
                 updateContentCharCount();
             }
 
-            // categoryId 설정 (URL 파라미터가 없으면 게시글에서 가져옴)
-            if (!categoryId) {
-                categoryId = board.categoryId || board.category?.id;
-                if (categoryId) {
-                    categoryId = parseInt(categoryId);
+            // 1. API 응답에서 categoryId 추출
+            const boardCategoryId = board.categoryId || board.category_id || board.category?.id;
+
+            if (boardCategoryId) {
+                const parsedId = parseInt(boardCategoryId);
+                if (!isNaN(parsedId)) {
+                    // URL 파라미터가 없거나 API 결과가 다를 경우 업데이트
+                    if (!categoryId || categoryId !== parsedId) {
+                        categoryId = parsedId;
+                        sessionStorage.setItem('lastBoardCategoryId', categoryId);
+                    }
                 }
+            } else if (!categoryId) {
+                // API 결과도 없고 URL도 없으면 세션 저장소 시도
+                const savedId = sessionStorage.getItem('lastBoardCategoryId');
+                if (savedId) categoryId = parseInt(savedId);
             }
 
             // categoryId 설정 후 사이드바 다시 렌더링하여 선택 상태 표시

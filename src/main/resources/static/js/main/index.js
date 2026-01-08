@@ -140,7 +140,7 @@ async function loadNotices() {
             const author = board.writer?.name || '작성자';
             const title = board.boardTitle || board.title || '제목 없음';
             return `
-                <li class="notice-item" onclick="location.href='/view/board/detail?boardId=${board.id}'">
+                <li class="notice-item" onclick="location.href='/view/board/detail?boardId=${board.id}&categoryId=${noticeCategory.id}'">
                     <div class="notice-title">${escapeHTML(title)}</div>
                     <div class="notice-meta">
                         <span class="notice-author">${escapeHTML(author)}</span>
