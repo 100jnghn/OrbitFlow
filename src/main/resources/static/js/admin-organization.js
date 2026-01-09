@@ -73,10 +73,20 @@ async function loadOrganizations() {
     filteredOrgList = allOrgList;
 
     expandedSet.clear();
+    isAllExpanded = false;
+    updateToggleIcon();
+
     renderTree();
     initSortable();
     resetOrderChanged();
 }
+
+function updateToggleIcon() {
+    toggleIcon.className = isAllExpanded
+        ? 'fa-solid fa-compress-alt'
+        : 'fa-solid fa-expand-alt';
+}
+
 
 async function loadOrgCategories() {
     const res = await apiFetch('/api/admin/org-categories/selectable');
@@ -260,6 +270,12 @@ function bindEvents() {
     els.btnSaveOrder().addEventListener('click', saveOrder);
     els.btnCancel().addEventListener('click', closeModal);
     els.btnSave().addEventListener('click', saveOrg);
+
+    document.getElementById('activeToggle')
+        ?.addEventListener('change', () => {
+            document.getElementById('orgNameHelp').textContent = '';
+        });
+
 }
 
 /* ======================
@@ -273,6 +289,7 @@ function openCreate() {
     els.orgName().value = '';
     document.getElementById('orgNameCount').textContent = '0';
     document.getElementById('orgNameHelp').textContent = '';
+    document.getElementById('inactiveHelp').style.display = 'none';
 
     buildCategorySelect(orgCategories[0]?.id);
     buildParentSelect(null);
@@ -297,6 +314,8 @@ function openCreate() {
 
 async function openEdit(id) {
     isEditMode = true;
+    document.getElementById('orgNameHelp').textContent = '';
+    document.getElementById('inactiveHelp').style.display = 'none';
 
     const org = allOrgList.find(o => o.id === id);
     if (!org) return;
@@ -358,6 +377,25 @@ async function saveOrg() {
     const categoryValue = document.getElementById('categorySelectValue').value;
     const parentOrgValue = document.getElementById('parentOrgSelectValue').value;
 
+    const org = allOrgList.find(o => o.id === selectedOrgId);
+    const activeToggle = document.getElementById('activeToggle');
+
+    // 비활성화 사전 검증 (EDIT 모드)
+    if (isEditMode && org && normalizeActive(org) && activeToggle.checked === false) {
+        if ((org.childOrgCount ?? 0) > 0) {
+            help.textContent = '하위 조직이 존재하여 비활성화할 수 없습니다.';
+            activeToggle.checked = true;
+            return;
+        }
+
+        if ((org.employeeCount ?? 0) > 0) {
+            help.textContent = '소속 사원이 존재하여 비활성화할 수 없습니다.';
+            activeToggle.checked = true;
+            return;
+        }
+    }
+
+
     // 생성 시 상위 조직 필수
     if (!isEditMode && !parentOrgValue) {
         help.textContent = '상위 조직은 반드시 선택해야 합니다.';
@@ -384,11 +422,13 @@ async function saveOrg() {
     const payload = {
         name,
         categoryId: Number(categoryValue),
-        parentOrgId: parentOrgValue ? Number(parentOrgValue) : null,
-        isActive: isEditMode
-            ? document.getElementById('activeToggle').checked
-            : true
+        parentOrgId: parentOrgValue ? Number(parentOrgValue) : null
     };
+
+    // 활성 토글이 사용 가능한 경우만 전달
+    if (isEditMode && !activeToggle.disabled) {
+        payload.isActive = activeToggle.checked;
+    }
 
     const url = selectedOrgId ? `${API_BASE}/${selectedOrgId}` : API_BASE;
     const method = selectedOrgId ? 'PUT' : 'POST';
@@ -740,20 +780,19 @@ const toggleBtn = document.getElementById('btnToggleAll');
 const toggleIcon = toggleBtn.querySelector('i');
 
 toggleBtn.addEventListener('click', () => {
-    if (isAllExpanded) {
+    const hasExpanded = expandedSet.size > 0;
+
+    if (hasExpanded) {
         expandedSet.clear();
-        toggleIcon.className = 'fa-solid fa-expand-alt';
+        isAllExpanded = false;
     } else {
         allOrgList.forEach(o => {
-            if (o.parentOrgId) {
-                expandedSet.add(o.parentOrgId);
-            }
+            if (o.parentOrgId) expandedSet.add(o.parentOrgId);
         });
-        toggleIcon.className = 'fa-solid fa-compress-alt';
+        isAllExpanded = true;
     }
 
-    isAllExpanded = !isAllExpanded;
-
+    updateToggleIcon();
     renderTree();
     initSortable();
 });

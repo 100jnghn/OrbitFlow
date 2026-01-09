@@ -288,7 +288,7 @@ public class OrgService {
         Boolean reqActive = request.getIsActive();
 
         // 비활성화 요청 처리
-        if (Boolean.FALSE.equals(reqActive) && !Boolean.FALSE.equals(org.getIsActive())) {
+        if (Boolean.FALSE.equals(request.getIsActive())) {
             deactivateInternal(companyId, org);
             return;
         }
@@ -492,12 +492,14 @@ public class OrgService {
             throw new InvalidStateException("ACTIVE 사원이 존재하는 조직은 비활성화할 수 없습니다.");
         }
 
-        orgPositionUsageRepository
-                .deleteByCompany_IdAndOrganization_Id(companyId, organizationId);
-
         log.info("[ORG DEACTIVATE] before org.deactivate() id={}", organizationId);
         org.deactivate();
         log.info("[ORG DEACTIVATE] after org.deactivate() id={}", organizationId);
+
+        orgRepository.save(org);
+        orgRepository.flush();
+        orgPositionUsageRepository
+                .deleteByCompany_IdAndOrganization_Id(companyId, organizationId);
 
         organizationBoardCategorySyncService.
                 deactivateBoard(companyId, organizationId);
