@@ -228,6 +228,26 @@
 .modal-panel-wide {
     width: 760px;
     max-width: 92vw;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-scroll-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;                 /* 좌우 여백 확보 */
+
+    display: flex;                 /* 핵심 */
+    justify-content: center;       /* 가로 중앙 */
+}
+
+
+/* 작은 화면에서만 내부 스크롤 허용 */
+@media (max-height: 700px) {
+    .modal-panel-wide {
+        max-height: 85vh;
+    }
 }
 
 /* ===============================
@@ -450,4 +470,71 @@ html {
     .inactive-toggle .label-text {
         display: none;
     }
+}
+
+.custom-select {
+    position: relative;
+}
+
+.custom-select-selected {
+    height: 40px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+
+    font-size: 13.5px;
+    cursor: pointer;
+}
+
+.custom-select-options {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+    max-height: 200px;
+    overflow-y: auto;
+
+    z-index: 1000;
+    display: none;
+}
+
+.custom-select.active .custom-select-options {
+    display: block;
+}
+
+.custom-select-option {
+    padding: 10px 12px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.custom-select-option:hover {
+    background: #f9fafb;
+}
+
+.custom-select-option.selected {
+    background: #eef2ff;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+
+.custom-select.disabled {
+    pointer-events: none;   /* 클릭 자체 차단 */
+    opacity: 0.6;           /* 비활성화 시각 표현 */
+}
+
+.custom-select.disabled .custom-select-selected {
+    background: #f9fafb;
+    cursor: not-allowed;
 }

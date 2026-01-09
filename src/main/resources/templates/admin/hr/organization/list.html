@@ -89,7 +89,7 @@
             </div>
 
             <!-- modal-body는 grid 금지 -->
-            <div class="modal-body">
+            <div class="modal-body modal-scroll-body">
                 <div class="org-modal-grid">
 
                     <!-- 좌측: 조직 정보 -->
@@ -97,7 +97,11 @@
 
                         <div class="form-group">
                             <label class="form-label">조직 카테고리</label>
-                            <select id="categorySelect" class="form-input"></select>
+                            <div class="custom-select" id="categorySelect">
+                                <div class="custom-select-selected">조직 카테고리 선택</div>
+                                <div class="custom-select-options"></div>
+                            </div>
+                            <input type="hidden" id="categorySelectValue">
                         </div>
 
                         <div class="form-group">
@@ -119,7 +123,11 @@
 
                         <div class="form-group">
                             <label class="form-label">상위 조직</label>
-                            <select id="parentOrgSelect" class="form-input"></select>
+                            <div class="custom-select" id="parentOrgSelect">
+                                <div class="custom-select-selected">상위 조직 선택</div>
+                                <div class="custom-select-options"></div>
+                            </div>
+                            <input type="hidden" id="parentOrgSelectValue">
                         </div>
 
                         <div class="form-group toggle-row">

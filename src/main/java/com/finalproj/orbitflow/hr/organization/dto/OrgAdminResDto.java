@@ -21,6 +21,7 @@ public class OrgAdminResDto {
     private String name;
     private Integer orderIndex;
     private Boolean isActive;
+    private Boolean isRootOrg;
 
     private Long employeeCount;     // 소속 사원 수
     private Long childOrgCount;     // 직계 하위 조직 수
@@ -37,6 +38,7 @@ public class OrgAdminResDto {
                 o.getName(),
                 o.getOrderIndex(),
                 o.getIsActive(),
+                o.getParentOrgId() == null,
                 employeeCount,
                 childOrgCount
         );

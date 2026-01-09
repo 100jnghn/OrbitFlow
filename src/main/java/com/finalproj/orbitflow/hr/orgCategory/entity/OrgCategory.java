@@ -42,16 +42,21 @@ public class OrgCategory extends BaseEntity {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;                           // 사용 여부 (소프트 삭제)
 
+    @Column(name = "is_root", nullable = false)
+    private Boolean isRoot;
+
     public static OrgCategory create(
             Long companyId,
             String name,
-            Integer orderIndex
+            Integer orderIndex,
+            Boolean isRoot
     ) {
         OrgCategory category = new OrgCategory();
         category.companyId = companyId;
         category.name = name;
         category.orderIndex = orderIndex;
         category.isActive = true;
+        category.isRoot = isRoot;
         return category;
     }
 
