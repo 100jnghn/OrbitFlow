@@ -49,9 +49,6 @@ public interface PositionCategoryRepository extends JpaRepository<PositionCatego
     /* 목록 */
     List<PositionCategory> findByCompanyIdAndIsActiveTrueOrderByOrderIndexAsc(Long companyId);
 
-    /* 중복 */
-    boolean existsByCompanyIdAndName(Long companyId, String name);
-
     boolean existsByCompanyIdAndNameAndIdNot(
             Long companyId,
             String name,
@@ -88,4 +85,11 @@ public interface PositionCategoryRepository extends JpaRepository<PositionCatego
             @Param("companyId") Long companyId,
             @Param("includeInactive") boolean includeInactive
     );
+
+    boolean existsByCompanyIdAndOrgCategoryIdAndName(
+            Long companyId,
+            Long orgCategoryId,
+            String name
+    );
+
 }
