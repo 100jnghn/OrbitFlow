@@ -62,4 +62,19 @@ public class LeaveScheduler {
             }
         }
     }
+
+
+    /**
+     * [매일 00:05] 당일 휴가/출장자 근무 상태(Badge) 자동 업데이트
+     */
+    @Scheduled(cron = "0 5 0 * * *") // 매일 00시 05분에 실행
+    public void updateDailyWorkStatus() {
+        log.info("당일 근태 기반 근무 상태 업데이트 배치를 시작합니다.");
+        try {
+            leaveService.updateAllEmployeesWorkStatus(LocalDate.now());
+            log.info("근무 상태 업데이트 완료");
+        } catch (Exception e) {
+            log.error("근무 상태 업데이트 중 오류 발생", e);
+        }
+    }
 }

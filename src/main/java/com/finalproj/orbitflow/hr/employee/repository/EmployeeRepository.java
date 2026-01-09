@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.hr.employee.repository;
 
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
+import com.finalproj.orbitflow.hr.employee.enums.WorkStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -214,4 +215,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
                 where e.organization.id = :orgId
             """)
     List<Long> findEmployeeIdsByOrganizationId(@Param("orgId") Long orgId);
+
+    List<Employee> findByStatusAndWorkStatusIn(EmployeeStatus employeeStatus, java.util.List<com.finalproj.orbitflow.hr.employee.enums.WorkStatus> specialStatuses);
 }

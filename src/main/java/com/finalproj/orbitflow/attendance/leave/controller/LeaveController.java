@@ -7,6 +7,8 @@ import com.finalproj.orbitflow.attendance.leave.service.LeaveTypeService;
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import com.finalproj.orbitflow.global.security.SecurityUtils;
+import com.finalproj.orbitflow.hr.employee.entity.Employee;
+import com.finalproj.orbitflow.hr.employee.enums.WorkStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,15 +30,16 @@ public class LeaveController {
     private final LeaveService leaveService;
     private final LeaveTypeService leaveTypeService;
 
-
     // 정기 연차 일괄 부여
     @PostMapping("/admin/leave/batch-grant")
-    public ResponseEntity<ResponseDto<Void>> manualBatchGrant(@RequestParam Long companyId, @RequestParam Integer year) {
+    public ResponseEntity<ResponseDto<Void>> manualBatchGrant(@RequestParam Long companyId,
+            @RequestParam Integer year) {
         leaveService.batchGrantAnnualLeave(companyId, year);
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, year + "년도 연차 부여 완료", null));
     }
 
 
+    // 연차 소멸
     @PostMapping("/admin/leave/expire-process")
     public ResponseEntity<?> manualExpireProcess() {
         leaveService.expireOutdatedLeaves();
@@ -46,7 +49,6 @@ public class LeaveController {
                 "연차 소멸 프로세스가 성공적으로 실행되었습니다.",
                 null));
     }
-
 
     // 내 연차 현황 요약
     @GetMapping("/leave/summary")
@@ -71,6 +73,8 @@ public class LeaveController {
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "휴가 신청 내역 조회 완료", history));
     }
 
+
+    // 연차 차감 내역조회
     @GetMapping("/leave/usage")
     public ResponseEntity<?> getMyLeaveUsage(
             @AuthenticationPrincipal SecurityUser user,
@@ -95,14 +99,16 @@ public class LeaveController {
     }
 
 
-
+    //휴가 유형 목록조회
     @GetMapping("/leave/types")
     public ResponseEntity<?> getLeaveTypes(@RequestParam(required = false) Boolean isCountable) {
-        List<LeaveTypeResDto> types = (isCountable != null && isCountable) ?
-                leaveTypeService.getCountableLeaveTypes() : leaveTypeService.getAllLeaveTypes();
+        List<LeaveTypeResDto> types = (isCountable != null && isCountable) ? leaveTypeService.getCountableLeaveTypes()
+                : leaveTypeService.getAllLeaveTypes();
 
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "신청 가능한 휴가 유형 목록입니다.", types));
     }
+
+
 
     @GetMapping("/leave/remaining")
     public ResponseEntity<?> getLeaveRemaining() {
@@ -113,9 +119,39 @@ public class LeaveController {
 
     @PostMapping("/leave/validate")
     public ResponseEntity<?> validateLeave(
-            @RequestBody LeaveValidationReqDto reqDto
-    ) {
+            @RequestBody LeaveValidationReqDto reqDto) {
         LeaveValidationResDto result = leaveService.validateLeave(SecurityUtils.getEmployeeId(), reqDto);
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "연차 사용 검증 결과 반환", result));
     }
+
+    @PostMapping("/leave/return")
+    public ResponseEntity<?> earlyReturn(@AuthenticationPrincipal SecurityUser user) {
+        leaveService.processEarlyReturn(user.getEmployeeId());
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "복귀 처리가 완료되었습니다.", null));
+    }
+
+    @PostMapping("/grant-monthly")
+    public ResponseEntity<?> grantMonthlyLeave(@RequestParam Long companyId) {
+        leaveService.grantMonthlyLeaveForCompany(companyId);
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "신입사원 월차 부여가 완료되었습니다.\")", null));
+
+    }
+
+    /**
+     * [관리자] 특정 신입사원에게 가입 즉시 비례 연차 부여 실행
+     * POST /api/admin/leave/grant-initial?employeeId=10
+     */
+    @PostMapping("/grant-initial")
+    public ResponseEntity<?> grantInitialLeave(@RequestParam Long employeeId) {
+
+        Employee employee = leaveService.getEmployeeById(employeeId);
+
+        // 2. LeaveService의 즉시 부여 로직 호출 (수정된 파라미터: Employee 객체 하나만 전달)
+        leaveService.grantInitialLeave(employee);
+
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "신입사원 비례 연차 부여가 완료되었습니다.", null));
+    }
+
+
+
 }
