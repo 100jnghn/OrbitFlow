@@ -113,12 +113,12 @@ function renderRow(r) {
       <td><strong>${r.name}</strong></td>
       <td>${r.parentRankName ?? '-'}</td>
       <td>${r.employeeCount}</td>
-      <td>
+      <td class="td-center">
         <span class="status-badge ${r.isActive ? 'status-active' : 'status-inactive'}">
           ${r.isActive ? '활성' : '비활성'}
         </span>
       </td>
-      <td>
+      <td class="td-center">
         <button class="table-btn">수정</button>
       </td>
     `;

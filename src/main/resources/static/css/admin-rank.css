@@ -392,6 +392,10 @@
     vertical-align: middle;
 }
 
+.td-center {
+    text-align: center;
+}
+
 
 /* =========================
    Modal UI (ORG CATEGORY STYLE) - FINAL
