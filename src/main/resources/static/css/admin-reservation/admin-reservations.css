@@ -330,23 +330,25 @@
    Responsive Breakpoints
 ========================= */
 
-/* Phase 1: 1400px - 번호 숨김 & 카테고리 채움 */
+/* Phase 1: 1400px - 번호 & 카테고리 숨김, 신청자 채움 */
 @media (max-width: 1400px) {
 
-    /* 1. 번호 숨김 */
+    /* 1. 번호 & 2. 카테고리 숨김 */
     .resource-table th:nth-child(1),
-    .resource-table td:nth-child(1) {
+    .resource-table td:nth-child(1),
+    .resource-table th:nth-child(2),
+    .resource-table td:nth-child(2) {
         display: none !important;
     }
 
-    /* 2. 카테고리 채움 */
-    .resource-table th:nth-child(2),
-    .resource-table td:nth-child(2) {
+    /* 3. 신청자 채움 */
+    .resource-table th:nth-child(3),
+    .resource-table td:nth-child(3) {
         width: auto !important;
     }
 }
 
-/* Phase 2: 1250px - 날짜/시간 숨김 & 예약 사유 채움 */
+/* Phase 2: 1250px - 날짜/시간/승인 숨김 & 상태 채움 */
 @media (max-width: 1250px) {
 
     /* 날짜/시간(4개 열) + 승인(마지막 열) 숨김 */
@@ -363,9 +365,15 @@
         display: none !important;
     }
 
-    /* 카테고리 다시 고정 (예약 사유에게 양보, 원래 8%로 복귀) */
+    /* 2. 카테고리 확실히 숨김 (혹시 모를 상속 방지) */
     .resource-table th:nth-child(2),
     .resource-table td:nth-child(2) {
+        display: none !important;
+    }
+
+    /* 3. 신청자 다시 고정 (상태에게 양보) */
+    .resource-table th:nth-child(3),
+    .resource-table td:nth-child(3) {
         width: 8% !important;
     }
 
