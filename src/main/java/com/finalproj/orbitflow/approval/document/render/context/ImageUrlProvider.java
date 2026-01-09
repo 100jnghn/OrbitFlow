@@ -14,8 +14,8 @@ public interface ImageUrlProvider {
 
     /**
      * @param documentId 문서 ID
-     * @param documentFileId 파일 ID
+     * @param targetId 파일 ID
      * @return 접근 가능한 이미지 URL
      */
-    String generate(Long documentId, Long documentFileId);
+    String generate(Long documentId, Long targetId);
 }

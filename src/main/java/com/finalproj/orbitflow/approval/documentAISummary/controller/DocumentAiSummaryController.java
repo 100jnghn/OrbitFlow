@@ -35,7 +35,7 @@ public class DocumentAiSummaryController {
     }
 
     @GetMapping("/{documentId}")
-    public ResponseEntity<ResponseDto<AiSummaryResDto>> readSummary(
+    public ResponseEntity<?> readSummary(
             @PathVariable Long documentId,
             @RequestParam SummaryType summaryType
     ) {

@@ -24,7 +24,8 @@
     --schedule-hold: #F59E0B;
     --schedule-deleted: #DC2626;
     --schedule-etc: #6B7280;
-    --schedule-company: #7DD3FC; /* 하늘색 - 전사 일정 */
+    --schedule-company: #7DD3FC;
+    /* 하늘색 - 전사 일정 */
 }
 
 .schedule-container {
@@ -465,6 +466,7 @@
     from {
         transform: rotate(0deg);
     }
+
     to {
         transform: rotate(360deg);
     }
@@ -500,6 +502,7 @@
         opacity: 0;
         transform: translateY(-20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -612,6 +615,108 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    position: relative;
+}
+
+/* 커스텀 드롭다운 스타일 */
+.custom-select {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+}
+
+.custom-select-selected {
+    width: 100%;
+    padding: 10px 30px 10px 14px;
+    border: 1px solid var(--neutral-300);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    color: var(--neutral-800);
+    position: relative;
+}
+
+.custom-select-selected::after {
+    content: '▼';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: var(--neutral-500);
+    transition: transform 0.2s ease;
+}
+
+.custom-select.active .custom-select-selected::after {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+.custom-select-selected:hover {
+    border-color: var(--primary-color);
+}
+
+.custom-select.active .custom-select-selected {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.custom-select-options {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid var(--neutral-300);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    scrollbar-width: thin;
+    scrollbar-color: var(--neutral-400) var(--neutral-100);
+}
+
+.custom-select-options::-webkit-scrollbar {
+    width: 8px;
+}
+
+.custom-select-options::-webkit-scrollbar-track {
+    background: var(--neutral-100);
+    border-radius: 4px;
+}
+
+.custom-select-options::-webkit-scrollbar-thumb {
+    background: var(--neutral-400);
+    border-radius: 4px;
+}
+
+.custom-select-options::-webkit-scrollbar-thumb:hover {
+    background: var(--neutral-500);
+}
+
+.custom-select-option {
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    font-size: 14px;
+    color: var(--neutral-800);
+}
+
+.custom-select-option:hover {
+    background-color: var(--neutral-100);
+}
+
+.custom-select-option.selected {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.custom-select-option.selected:hover {
+    background-color: var(--primary-hover);
 }
 
 .time-select {
@@ -743,3 +848,47 @@
     }
 }
 
+/* ===== 주말 / 공휴일 배경 (강제 우선) ===== */
+
+/* 일요일 */
+.calendar-day.sunday {
+    background: #ffeded !important;
+}
+
+/* 토요일 */
+.calendar-day.saturday {
+    background: #e9f4ff !important;
+}
+
+/* 공휴일 (주말보다 우선) */
+.calendar-day.holiday {
+    background: #ffeded !important;
+}
+
+/* 날짜 상단 (날짜 + 공휴일명 한 줄 정렬) */
+.day-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+}
+
+/* 날짜 숫자 */
+.day-number {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--neutral-800);
+}
+
+/* 공휴일 이름 */
+.holiday-name {
+    font-size: 8px;
+    font-weight: 600;
+    color: #DC2626;
+    /* 빨간 계열 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    text-align: left;
+}

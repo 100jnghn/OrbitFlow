@@ -13,13 +13,18 @@ import com.finalproj.orbitflow.approval.documentAISummary.enums.AiStatus;
 import com.finalproj.orbitflow.approval.documentAISummary.enums.SummaryType;
 import com.finalproj.orbitflow.approval.documentAISummary.repository.DocumentAiSummaryRepository;
 import com.finalproj.orbitflow.approval.documentContent.service.DocumentContentService;
+import com.finalproj.orbitflow.approval.documentFile.entity.DocumentFile;
+import com.finalproj.orbitflow.approval.documentFile.enums.DocumentFileStatus;
+import com.finalproj.orbitflow.approval.documentFile.enums.ReferenceType;
 import com.finalproj.orbitflow.approval.documentFile.repository.DocumentFileRepository;
 import com.finalproj.orbitflow.approval.formTemplate.schema.FormFieldSchema;
 import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
+import com.finalproj.orbitflow.global.file.entity.File;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -95,10 +100,10 @@ public class DocumentAiSummaryService {
         FormTemplateSchema schema =
                 documentContentService.getDocumentContentByDocumentId(documentId);
 
-        List<String> list = documentFileRepository.findByDocument_Id(documentId).stream().map(documentFile -> documentFile.getFile().getOriginFile()).toList();
+        List<String> attachmentFiles = getAttachmentFiles(documentId);
 
 
-        AiSummaryReqDto request = buildAiSummaryRequest(schema, list);
+        AiSummaryReqDto request = buildAiSummaryRequest(schema, attachmentFiles);
 
         String prompt = aiSummaryPromptBuilder.build(request, schema);
 
@@ -114,6 +119,19 @@ public class DocumentAiSummaryService {
         );
 
     }
+
+    @NotNull
+    private List<String> getAttachmentFiles(Long documentId) {
+        return documentFileRepository.findByDocument_Id(documentId)
+                .stream()
+                .filter(df -> df.getReferenceType() == ReferenceType.ATTACHMENT)
+                .filter(df -> df.getStatus() == DocumentFileStatus.FINAL)
+                .map(DocumentFile::getFile)
+                .filter(Objects::nonNull)
+                .map(File::getOriginFile)
+                .toList();
+    }
+
 
     protected DocumentAISummary saveProcessingSummary(
             Document document,
@@ -184,7 +202,7 @@ public class DocumentAiSummaryService {
     /**
      * 값이 실제로 입력되었는지 판단
      */
-    private boolean hasMeaningfulValue(FormFieldSchema field) {
+    public static boolean hasMeaningfulValue(FormFieldSchema field) {
         Object value = field.getValue();
 
         if (value == null) return false;
@@ -327,17 +345,9 @@ public class DocumentAiSummaryService {
                 documentContentService.getDocumentContentByDocumentId(documentId);
 
         // 첨부파일명 조회
-        List<String> beforeAttachedNames =
-                documentFileRepository.findByDocument_Id(beforeDocument.getId())
-                        .stream()
-                        .map(df -> df.getFile().getOriginFile())
-                        .toList();
+        List<String> beforeAttachedNames = getAttachmentFiles(beforeDocument.getId());
 
-        List<String> currentAttachedNames =
-                documentFileRepository.findByDocument_Id(documentId)
-                        .stream()
-                        .map(df -> df.getFile().getOriginFile())
-                        .toList();
+        List<String> currentAttachedNames = getAttachmentFiles(document.getId());
 
         // 동일 규칙으로 정규화
         AiSummaryReqDto before =

@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.attendance.leave.controller;
 
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
 import com.finalproj.orbitflow.attendance.leave.dto.*;
+import com.finalproj.orbitflow.attendance.leave.service.AttendanceValidService;
 import com.finalproj.orbitflow.attendance.leave.service.LeaveService;
 import com.finalproj.orbitflow.attendance.leave.service.LeaveTypeService;
 import com.finalproj.orbitflow.global.common.ResponseDto;
@@ -27,7 +28,7 @@ public class LeaveController {
 
     private final LeaveService leaveService;
     private final LeaveTypeService leaveTypeService;
-
+    private final AttendanceValidService attendanceValidService;
 
     @PostMapping("/admin/leave/batch-grant")
     public ResponseEntity<?> manualBatchGrant(
@@ -125,7 +126,7 @@ public class LeaveController {
     public ResponseEntity<?> validateLeave(
             @RequestBody LeaveValidationReqDto reqDto
     ) {
-        LeaveValidationResDto result = leaveService.validateLeave(SecurityUtils.getEmployeeId(), reqDto);
+        LeaveValidationResDto result = attendanceValidService.validateLeave(SecurityUtils.getEmployeeId(), reqDto);
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "연차 사용 검증 결과 반환", result));
     }
 }

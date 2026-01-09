@@ -10,6 +10,8 @@ let selectedItem = null;
 let selectedStartHour = null;
 let selectedEndHour = null;
 let isSelectingRange = false;
+let currentUserName = null;
+
 
 const HOURS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 
@@ -256,7 +258,7 @@ function checkReservation(itemId, hour) {
 /* ==========================
    Cell Selection Functions
 ========================== */
-function handleCellClick(cell, item, hour) {
+async function handleCellClick(cell, item, hour) {
     const itemId = parseInt(cell.dataset.itemId);
 
     // 다른 자원을 클릭하면 초기화
@@ -271,7 +273,7 @@ function handleCellClick(cell, item, hour) {
         selectedStartHour = hour;
         selectedEndHour = hour + 1;
         updateSelection();
-        updateReservationForm();
+        await updateReservationForm();
         return;
     }
 
@@ -295,7 +297,7 @@ function handleCellClick(cell, item, hour) {
     }
 
     updateSelection();
-    updateReservationForm();
+    await updateReservationForm();
 }
 
 function isRangeAvailable(itemId, startHour, endHour) {
@@ -308,7 +310,7 @@ function isRangeAvailable(itemId, startHour, endHour) {
     return true;
 }
 
-function clearSelection() {
+async function clearSelection() {
     selectedItem = null;
     selectedStartHour = null;
     selectedEndHour = null;
@@ -318,7 +320,7 @@ function clearSelection() {
         cell.classList.remove('selected');
     });
 
-    updateReservationForm();
+    await updateReservationForm();
 }
 
 function updateSelection() {
@@ -343,8 +345,16 @@ function updateSelection() {
 }
 
 async function updateReservationForm() {
-    // 신청자 (현재 사용자 정보 - 추후 API에서 가져오기)
-    document.getElementById('applicant-name').textContent = '사용자'; // TODO:    // 자원 정보
+
+    // 신청자 이름
+    const applicantNameEl = document.getElementById('applicant-name');
+
+    if (applicantNameEl) {
+        const name = await loadCurrentUserName();
+        applicantNameEl.textContent = name || '사용자';
+    }
+
+
     if (selectedItem) {
         document.getElementById('selected-item-name').textContent = selectedItem.name;
         document.getElementById('selected-item-category').textContent = selectedItem.itemCategoryName || '-';
@@ -375,6 +385,33 @@ async function updateReservationForm() {
 
     // 신청 버튼 활성화/비활성화
     updateSubmitButtonState();
+}
+
+async function loadCurrentUserName() {
+    if (currentUserName) return currentUserName;
+
+    try {
+        const response = await apiFetch('/api/employees/me', {
+            method: 'GET'
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                location.href = '/login';
+                return null;
+            }
+            throw new Error('사용자 정보를 불러오지 못했습니다.');
+        }
+
+        const result = await response.json();
+        currentUserName = result.data?.name || '사용자';
+
+        return currentUserName;
+
+    } catch (error) {
+        console.error('사용자 정보 조회 실패:', error);
+        return '사용자';
+    }
 }
 
 /* ==========================
@@ -609,7 +646,7 @@ function updateApprovalSidebarSelection() {
 document.addEventListener('DOMContentLoaded', async () => {
     initDateSelector();
     initEventListeners();
-    updateReservationForm();
+    await updateReservationForm();
     updateApprovalSidebarSelection();
 
     // 시간 헤더 먼저 표시

@@ -249,4 +249,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
             @Param("companyId") Long companyId,
             @Param("orgId") Long orgId
     );
+
+    Optional<Employee> findByIdAndStatus(Long id, EmployeeStatus status);
 }

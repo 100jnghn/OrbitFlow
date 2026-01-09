@@ -1,6 +1,5 @@
 package com.finalproj.orbitflow.approval.documentFile.service;
 
-import com.finalproj.orbitflow.approval.approvalLine.repository.ApprovalLineRepository;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
 import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
@@ -26,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Please explain the class!!!
@@ -46,7 +44,6 @@ public class DocumentFileService {
     private final DocumentRepository documentRepository;
     private final FileService fileService;
     private final DocumentService documentService;
-    private final ApprovalLineRepository approvalLineRepository;
 
 
     @Transactional
@@ -90,9 +87,11 @@ public class DocumentFileService {
             throw new InvalidRequestException("이미지 업로드에는 fieldId가 필요합니다.");
         }
 
-        if (!Objects.requireNonNull(multipartFile.getContentType()).startsWith("image/")) {
+        String contentType = multipartFile.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
             throw new InvalidRequestException("이미지 파일만 업로드할 수 있습니다.");
         }
+
 
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new NotFoundException("Document Not Found"));

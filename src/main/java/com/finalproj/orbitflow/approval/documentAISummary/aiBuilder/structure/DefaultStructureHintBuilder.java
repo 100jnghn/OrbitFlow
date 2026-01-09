@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.approval.documentAISummary.aiBuilder.structure;
 
+import com.finalproj.orbitflow.approval.documentAISummary.service.DocumentAiSummaryService;
 import com.finalproj.orbitflow.approval.formTemplate.schema.FormFieldSchema;
 import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
 import org.springframework.stereotype.Component;
@@ -21,7 +22,12 @@ public class DefaultStructureHintBuilder implements StructureHintBuilder {
 
     @Override
     public String build(FormTemplateSchema templateSchema) {
-        List<FormFieldSchema> fields = templateSchema.getFields();
+
+        List<FormFieldSchema> fields =
+                templateSchema.getFields().stream()
+                        .filter(DocumentAiSummaryService::hasMeaningfulValue)
+                        .toList();
+
         Set<String> hints = new LinkedHashSet<>();
 
         addTextHints(fields, hints);
@@ -35,6 +41,7 @@ public class DefaultStructureHintBuilder implements StructureHintBuilder {
                 .limit(5)
                 .collect(Collectors.joining("\n"));
     }
+
 
     private void addTextHints(List<FormFieldSchema> fields, Set<String> hints) {
         long count = fields.stream()

@@ -932,3 +932,87 @@ button.active {
 .ai-result::-webkit-scrollbar-track {
     background: transparent;
 }
+
+/* =========================================================
+   결재 서명 업로드
+========================================================= */
+
+.signature-upload-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.signature-preview-box {
+    width: 100%;
+    height: 160px; /* ⭐ 팝업용 축소 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #f8f9fa;
+    border: 2px dashed #ddd;
+    border-radius: 12px;
+
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.signature-preview-box:hover {
+    border-color: var(--primary-color);
+    background: #f0f4ff;
+}
+
+.signature-preview-box img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.signature-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    text-align: center;
+    color: #777;
+}
+
+.signature-placeholder i {
+    font-size: 42px; /* ⭐ 축소 */
+    opacity: 0.35;
+}
+
+.signature-placeholder p {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.signature-hint {
+    font-size: 12px;
+    color: #999;
+}
+
+/* 제거 버튼 */
+.signature-remove-btn {
+    align-self: flex-end;
+
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: none;
+
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+
+    background: #e74c3c;
+    color: #fff;
+}
+
+.signature-remove-btn:hover {
+    background: #c0392b;
+}

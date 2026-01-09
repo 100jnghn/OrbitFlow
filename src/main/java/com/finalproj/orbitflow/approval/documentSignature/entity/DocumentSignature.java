@@ -2,14 +2,15 @@ package com.finalproj.orbitflow.approval.documentSignature.entity;
 
 import com.finalproj.orbitflow.approval.approvalLine.entity.ApprovalLine;
 import com.finalproj.orbitflow.approval.document.entity.Document;
+import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.Instant;
 
 
 /**
@@ -33,7 +34,9 @@ import java.time.Instant;
 )
 @Getter
 @NoArgsConstructor
-public class DocumentSignature {
+@AllArgsConstructor
+@Builder
+public class DocumentSignature extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,14 +54,12 @@ public class DocumentSignature {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "signer_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "signer_id", nullable = false)
     private Employee signer;
+
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "signature_file_id", nullable = false)
     private File signatureFile;
-
-    @Column(name = "signed_at", nullable = false, updatable = false)
-    private Instant signedAt;
 }

@@ -205,6 +205,74 @@
         </div>
     </div>
 
+    <!-- ===============================
+         결재 서명 등록 / 갱신 팝업
+    =============================== -->
+    <div id="signatureModal" class="modal-backdrop hidden">
+        <div class="approval-modal signature-modal">
+
+            <div class="modal-title">결재 서명 등록</div>
+
+            <div class="modal-form-group">
+
+                <div class="signature-guide">
+                    결재 승인 시 사용될 서명 이미지를 등록해주세요.
+                </div>
+
+                <!-- 서명 업로드 영역 -->
+                <div class="signature-upload-container">
+                    <div
+                            class="signature-preview-box"
+                            id="signaturePreviewBox"
+                    >
+                        <img
+                                id="signaturePreviewImage"
+                                style="display:none;"
+                                alt="서명 미리보기"
+                        />
+                        <div
+                                class="signature-placeholder"
+                                id="signaturePlaceholder"
+                        >
+                            <i class="fa-solid fa-signature"></i>
+                            <p>서명 이미지 업로드</p>
+                            <span class="signature-hint">
+                            클릭하여 이미지 선택
+                        </span>
+                        </div>
+                    </div>
+
+                    <button
+                            type="button"
+                            class="signature-remove-btn"
+                            id="signatureRemoveBtn"
+                            style="display:none;"
+                    >
+                        제거
+                    </button>
+                </div>
+
+                <input
+                        type="file"
+                        id="signatureInput"
+                        accept="image/png, image/jpeg"
+                        hidden
+                />
+
+                <div class="hint error" id="signatureHint"></div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="modal-cancel-btn" id="signatureCancelBtn">
+                    취소
+                </button>
+                <button class="modal-create-btn" id="signatureSaveBtn">
+                    서명 등록
+                </button>
+            </div>
+        </div>
+    </div>
+
 
 </div>
 

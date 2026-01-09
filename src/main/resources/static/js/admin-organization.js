@@ -73,15 +73,25 @@ async function loadOrganizations() {
     filteredOrgList = allOrgList;
 
     expandedSet.clear();
+    isAllExpanded = false;
+    updateToggleIcon();
+
     renderTree();
     initSortable();
     resetOrderChanged();
 }
 
+function updateToggleIcon() {
+    toggleIcon.className = isAllExpanded
+        ? 'fa-solid fa-compress-alt'
+        : 'fa-solid fa-expand-alt';
+}
+
+
 async function loadOrgCategories() {
-    const res = await apiFetch('/api/admin/org-categories');
+    const res = await apiFetch('/api/admin/org-categories/selectable');
     const json = await res.json();
-    orgCategories = (json.data || []).filter(c => c.isActive === true);
+    orgCategories = json.data || [];
 }
 
 /* ======================
@@ -116,6 +126,7 @@ function renderTree() {
 function renderNode(org, depth, container) {
     const hasChildren = filteredOrgList.some(o => o.parentOrgId === org.id);
     const isExpanded = expandedSet.has(org.id);
+    const isRoot = org.parentOrgId == null;
 
     const node = document.createElement('div');
     node.className = 'org-node';
@@ -127,33 +138,33 @@ function renderNode(org, depth, container) {
     const keyword = els.search().value.trim();
 
     node.innerHTML = `
-      <div class="org-row">
-        ${normalizeActive(org) ? dragHandleHtml() : ''}
-        ${
-        hasChildren
-            ? `<span class="org-toggle">${isExpanded ? '▾' : '▸'}</span>`
-            : `<span class="org-toggle-placeholder"></span>`
-    }
-        <span class="org-label">
-            ${highlight(org.name, keyword)}
-            <span class="org-meta-item" title="하위 조직 수">${org.childOrgCount ?? 0}</span>
-        </span>
+        <div class="org-row">
+            ${normalizeActive(org) && !isRoot ? dragHandleHtml() : ''}
+            ${hasChildren ? `<span class="org-toggle">${isExpanded ? '▾' : '▸'}</span>` : `<span class="org-toggle-placeholder"></span>`}
+            <span class="org-label">
+                ${highlight(org.name, keyword)}
+                <span class="org-meta-item" title="하위 조직 수">${org.childOrgCount ?? 0}</span>
+            </span>
+                
+            <span class="org-meta">
+                <span class="org-meta-item" title="소속 사원 수">소속 사원 수: ${org.employeeCount ?? 0}</span>
+            </span>
             
-        <span class="org-meta">
-            <span class="org-meta-item" title="소속 사원 수">소속 사원 수: ${org.employeeCount ?? 0}</span>
-        </span>
-        
-        <span class="status-badge ${normalizeActive(org) ? 'status-active' : 'status-inactive'}">
-            ${normalizeActive(org) ? '활성' : '비활성'}
-        </span>
-        
-        <button class="table-btn">수정</button>
-      </div>
+            <span class="status-badge ${normalizeActive(org) ? 'status-active' : 'status-inactive'}">
+                ${normalizeActive(org) ? '활성' : '비활성'}
+            </span>
+            
+            <button class="table-btn"
+                title="${isRoot ? '회사명 수정' : '조직 수정'}">
+                수정
+            </button>      
+        </div>
     `;
 
     container.appendChild(node);
 
-    node.querySelector('.table-btn').onclick = () => openEdit(org.id);
+    const editBtn = node.querySelector('.table-btn');
+    editBtn.onclick = () => openEdit(org.id);
 
     const toggle = node.querySelector('.org-toggle');
     if (toggle) {
@@ -191,6 +202,7 @@ function initSortable() {
         },
 
         onMove(evt) {
+            if (evt.dragged.dataset.parentId === 'root') return false;
             return evt.dragged.dataset.parentId === evt.related?.dataset.parentId;
         },
 
@@ -258,6 +270,17 @@ function bindEvents() {
     els.btnSaveOrder().addEventListener('click', saveOrder);
     els.btnCancel().addEventListener('click', closeModal);
     els.btnSave().addEventListener('click', saveOrg);
+
+    document.getElementById('activeToggle')
+        ?.addEventListener('change', () => {
+            document.getElementById('orgNameHelp').textContent = '';
+        });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && !els.modal().classList.contains('hidden')) {
+            closeModal();
+        }
+    });
 }
 
 /* ======================
@@ -271,8 +294,9 @@ function openCreate() {
     els.orgName().value = '';
     document.getElementById('orgNameCount').textContent = '0';
     document.getElementById('orgNameHelp').textContent = '';
+    document.getElementById('inactiveHelp').style.display = 'none';
 
-    buildCategorySelect(null);
+    buildCategorySelect(orgCategories[0]?.id);
     buildParentSelect(null);
 
     currentOrgCategoryId = orgCategories[0]?.id;
@@ -280,8 +304,8 @@ function openCreate() {
 
 
     // 생성 시: 카테고리 / 부모조직 활성화
-    document.getElementById('categorySelect').disabled = false;
-    els.parentSelect().disabled = false;
+    document.getElementById('categorySelect').classList.remove('disabled');
+    document.getElementById('parentOrgSelect').classList.remove('disabled');
 
     // 생성 시: 사용 여부는 항상 활성 + 잠금
     const toggle = document.getElementById('activeToggle');
@@ -295,54 +319,94 @@ function openCreate() {
 
 async function openEdit(id) {
     isEditMode = true;
+    document.getElementById('orgNameHelp').textContent = '';
+    document.getElementById('inactiveHelp').style.display = 'none';
 
     const org = allOrgList.find(o => o.id === id);
     if (!org) return;
 
+    const isRootOrg = org.isRootOrg === true;
+
     selectedOrgId = id;
     currentOrgCategoryId = org.categoryId;
 
-    els.modalTitle().textContent = '조직 수정';
+    els.modalTitle().textContent = isRootOrg
+        ? '회사명 수정'
+        : '조직 수정';
+
     els.orgName().value = org.name ?? '';
-    document.getElementById('orgNameCount').textContent =
-        (org.name ?? '').length;
-    document.getElementById('orgNameHelp').textContent = '';
+    document.getElementById('orgNameCount').textContent = (org.name ?? '').length;
 
     buildCategorySelect(org.categoryId);
     buildParentSelect(org.parentOrgId ?? null);
 
-    // 수정 시: 카테고리 / 부모조직 수정 불가
-    document.getElementById('categorySelect').disabled = true;
-    els.parentSelect().disabled = true;
+    // 회사 루트 조직 전용 제어
+    if (isRootOrg) {
+        const label = document.querySelector('#categorySelect .custom-select-selected');
+        const hidden = document.getElementById('categorySelectValue');
 
-    const toggle = document.getElementById('activeToggle');
-    const help = document.getElementById('inactiveHelp');
+        // 강제 세팅
+        label.textContent = '회사';
+        hidden.value = ''; // 서버에서 categoryId 안 써도 OK (update 로직도 허용함)
 
-    toggle.checked = normalizeActive(org);
-    toggle.disabled = false;
-    help.style.display = 'none';
+        // 카테고리 고정
+        document.getElementById('categorySelect').classList.add('disabled');
 
-    // 활성 상태일 때만 "비활성화 가능 여부" 체크
-    if (normalizeActive(org)) {
-        const res = await apiFetch(`${API_BASE}/${id}/deactivate-check`);
-        const json = await res.json();
-        const check = json.data;
+        // 상위 조직 없음
+        document.getElementById('parentOrgSelect').classList.add('disabled');
 
-        if (!check.canDeactivate) {
-            toggle.disabled = true;
-            help.textContent = check.reason;
-            help.style.display = 'block';
-        }
+        // 활성 고정
+        const toggle = document.getElementById('activeToggle');
+        toggle.checked = true;
+        toggle.disabled = true;
+
+        document.getElementById('inactiveHelp').style.display = 'none';
+    } else {
+        // 기존 로직 그대로
+        document.getElementById('categorySelect').classList.add('disabled');
+        document.getElementById('parentOrgSelect').classList.add('disabled');
+
+        const toggle = document.getElementById('activeToggle');
+        toggle.checked = normalizeActive(org);
+        toggle.disabled = false;
     }
 
     await loadPositionPolicies(id, currentOrgCategoryId);
-
     openModal();
 }
 
 async function saveOrg() {
     const name = els.orgName().value.trim();
     const help = document.getElementById('orgNameHelp');
+
+    const categoryValue = document.getElementById('categorySelectValue').value;
+    const parentOrgValue = document.getElementById('parentOrgSelectValue').value;
+
+    const org = allOrgList.find(o => o.id === selectedOrgId);
+    const activeToggle = document.getElementById('activeToggle');
+
+    // 비활성화 사전 검증 (EDIT 모드)
+    if (isEditMode && org && normalizeActive(org) && activeToggle.checked === false) {
+        if ((org.childOrgCount ?? 0) > 0) {
+            help.textContent = '하위 조직이 존재하여 비활성화할 수 없습니다.';
+            activeToggle.checked = true;
+            return;
+        }
+
+        if ((org.employeeCount ?? 0) > 0) {
+            help.textContent = '소속 사원이 존재하여 비활성화할 수 없습니다.';
+            activeToggle.checked = true;
+            return;
+        }
+    }
+
+
+    // 생성 시 상위 조직 필수
+    if (!isEditMode && !parentOrgValue) {
+        help.textContent = '상위 조직은 반드시 선택해야 합니다.';
+        return;
+    }
+
 
     if (!name) {
         help.textContent = '조직명을 입력해주세요.';
@@ -354,16 +418,22 @@ async function saveOrg() {
         return;
     }
 
+
+    if (!categoryValue && !(isEditMode && allOrgList.find(o => o.id === selectedOrgId)?.isRootOrg)) {
+        help.textContent = '조직 카테고리를 선택해주세요.';
+        return;
+    }
+
     const payload = {
         name,
-        categoryId: Number(document.getElementById('categorySelect').value),
-        parentOrgId: els.parentSelect().value
-            ? Number(els.parentSelect().value)
-            : null,
-        isActive: isEditMode
-            ? document.getElementById('activeToggle').checked
-            : true
+        categoryId: Number(categoryValue),
+        parentOrgId: parentOrgValue ? Number(parentOrgValue) : null
     };
+
+    // 활성 토글이 사용 가능한 경우만 전달
+    if (isEditMode && !activeToggle.disabled) {
+        payload.isActive = activeToggle.checked;
+    }
 
     const url = selectedOrgId ? `${API_BASE}/${selectedOrgId}` : API_BASE;
     const method = selectedOrgId ? 'PUT' : 'POST';
@@ -392,20 +462,102 @@ async function saveOrg() {
 
 function buildCategorySelect(selectedId) {
     const select = document.getElementById('categorySelect');
-    select.innerHTML = orgCategories.map(c =>
-        `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>${c.name}</option>`
-    ).join('');
+    const options = select.querySelector('.custom-select-options');
+    const label = select.querySelector('.custom-select-selected');
+    const hidden = document.getElementById('categorySelectValue');
+
+    //  초기화
+    label.textContent = '조직 카테고리 선택';
+    hidden.value = '';
+    options.innerHTML = '';
+
+    orgCategories.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'custom-select-option';
+        div.textContent = c.name;
+
+        if (c.id === selectedId) {
+            div.classList.add('selected');
+            label.textContent = c.name;
+            hidden.value = c.id;
+        }
+
+        div.onclick = () => {
+            options.querySelectorAll('.selected')
+                .forEach(el => el.classList.remove('selected'));
+
+            div.classList.add('selected');
+            label.textContent = c.name;
+            hidden.value = c.id;
+
+            currentOrgCategoryId = c.id;
+            selectedPositionIds.clear();
+            renderPolicyTable(currentOrgCategoryId);
+
+            select.classList.remove('active');
+        };
+
+        options.appendChild(div);
+    });
 }
 
-function buildParentSelect(selected) {
-    els.parentSelect().innerHTML = `
-      <option value="">상위 조직 없음</option>
-      ${allOrgList
-        .filter(o => normalizeActive(o) && o.id !== selectedOrgId)
-        .map(o => `<option value="${o.id}" ${o.id === selected ? 'selected' : ''}>${escapeHtml(o.name)}</option>`)
-        .join('')}
-    `;
+function buildParentSelect(selectedParentId) {
+    const select = document.getElementById('parentOrgSelect');
+    const options = select.querySelector('.custom-select-options');
+    const label = select.querySelector('.custom-select-selected');
+    const hidden = document.getElementById('parentOrgSelectValue');
+
+    options.innerHTML = '';
+    select.classList.remove('disabled');
+
+    // 1. 상위 조직이 "회사 루트 조직"인 경우
+    const parent = allOrgList.find(o => o.id === selectedParentId);
+
+    if (parent && parent.isRootOrg) {
+        label.textContent = parent.name;     // 회사명 표시
+        hidden.value = parent.id;
+
+        // 선택 불가 처리
+        select.classList.add('disabled');
+        return;
+    }
+
+    // 2. 일반 케이스
+    label.textContent = '상위 조직 선택';
+    hidden.value = '';
+
+    allOrgList
+        .filter(o =>
+            normalizeActive(o) &&
+            !o.isRootOrg &&
+            o.id !== selectedOrgId
+        )
+        .forEach(o => {
+            const div = document.createElement('div');
+            div.className = 'custom-select-option';
+            div.textContent = o.name;
+
+            if (o.id === selectedParentId) {
+                div.classList.add('selected');
+                label.textContent = o.name;
+                hidden.value = o.id;
+            }
+
+            div.onclick = () => {
+                options.querySelectorAll('.selected')
+                    .forEach(el => el.classList.remove('selected'));
+
+                div.classList.add('selected');
+                label.textContent = o.name;
+                hidden.value = o.id;
+
+                select.classList.remove('active');
+            };
+
+            options.appendChild(div);
+        });
 }
+
 
 function openModal() {
     els.modal().classList.remove('hidden');
@@ -584,14 +736,6 @@ function togglePolicy(id, checked) {
 }
 
 
-document.getElementById('categorySelect')
-    .addEventListener('change', e => {
-        currentOrgCategoryId = Number(e.target.value);
-        selectedPositionIds.clear();
-        renderPolicyTable(currentOrgCategoryId);
-    });
-
-
 document.getElementById('policyKeyword')
     .addEventListener('input', () =>
         renderPolicyTable(currentOrgCategoryId)
@@ -601,7 +745,6 @@ document.getElementById('policyHeadFilter')
     .addEventListener('change', () =>
         renderPolicyTable(currentOrgCategoryId)
     );
-
 
 
 async function loadOrganizationsWithSearch() {
@@ -642,24 +785,22 @@ const toggleBtn = document.getElementById('btnToggleAll');
 const toggleIcon = toggleBtn.querySelector('i');
 
 toggleBtn.addEventListener('click', () => {
-    if (isAllExpanded) {
+    const hasExpanded = expandedSet.size > 0;
+
+    if (hasExpanded) {
         expandedSet.clear();
-        toggleIcon.className = 'fa-solid fa-expand-alt';
+        isAllExpanded = false;
     } else {
         allOrgList.forEach(o => {
-            if (o.parentOrgId) {
-                expandedSet.add(o.parentOrgId);
-            }
+            if (o.parentOrgId) expandedSet.add(o.parentOrgId);
         });
-        toggleIcon.className = 'fa-solid fa-compress-alt';
+        isAllExpanded = true;
     }
 
-    isAllExpanded = !isAllExpanded;
-
+    updateToggleIcon();
     renderTree();
     initSortable();
 });
-
 
 
 function bindOrgNameCounter() {
@@ -687,3 +828,17 @@ function bindOrgNameCounter() {
     input.addEventListener('input', update);
     update(); // 초기 반영
 }
+
+document.querySelectorAll('.custom-select').forEach(select => {
+    const label = select.querySelector('.custom-select-selected');
+
+    label.addEventListener('click', () => {
+        select.classList.toggle('active');
+    });
+});
+
+document.addEventListener('click', e => {
+    document.querySelectorAll('.custom-select.active').forEach(cs => {
+        if (!cs.contains(e.target)) cs.classList.remove('active');
+    });
+});

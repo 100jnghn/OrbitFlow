@@ -24,11 +24,11 @@ const els = {
 
     btnSaveRank: () => document.getElementById('btnSaveRank'),
     btnCancel: () => document.getElementById('btnCancel'),
-    btnCloseModal: () => document.getElementById('btnCloseModal'),
 };
 
 document.addEventListener('DOMContentLoaded', () => {
     bindEvents();
+    bindRankNameCounter();
     loadRanks();
 });
 
@@ -48,10 +48,15 @@ function bindEvents() {
     els.btnSaveOrder().onclick = saveOrder;
 
     els.btnCancel().onclick = closeModal;
-    els.btnCloseModal().onclick = closeModal;
 
     els.rankActive().onchange = () =>
         els.toggleText().textContent = els.rankActive().checked ? '사용' : '미사용';
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && !els.modal().classList.contains('hidden')) {
+            closeModal();
+        }
+    });
 }
 
 async function loadRanks() {
@@ -244,4 +249,24 @@ function closeModal() {
 function resetOrder() {
     isOrderChanged = false;
     els.btnSaveOrder().disabled = true;
+}
+
+const MAX_RANK_NAME_LENGTH = 50;
+
+function bindRankNameCounter() {
+    const input = els.rankName();
+    const counter = document.getElementById('nameCount');
+    if (!input || !counter) return;
+
+    const update = () => {
+        let v = input.value;
+        if (v.length > MAX_RANK_NAME_LENGTH) {
+            v = v.slice(0, MAX_RANK_NAME_LENGTH);
+            input.value = v;
+        }
+        counter.textContent = v.length;
+    };
+
+    input.addEventListener('input', update);
+    update();
 }
