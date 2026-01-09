@@ -9,16 +9,17 @@
       )}">
 
 <th:block th:fragment="pageCss">
+  <link rel="stylesheet" th:href="@{/css/admin-org-category.css}">
   <link rel="stylesheet" th:href="@{/css/admin-position-category.css}">
 </th:block>
 
 <th:block th:fragment="content">
 
-  <div class="orgcat-title-row">
-    <h1 class="orgcat-title">직책 관리</h1>
-  </div>
-
   <section class="orgcat-card">
+
+    <div class="orgcat-card-head">
+      <h1 class="orgcat-title">직책 관리</h1>
+    </div>
 
     <!-- 툴바 -->
     <div class="orgcat-toolbar">
@@ -33,7 +34,9 @@
 
         <label class="inactive-toggle">
           <input type="checkbox" id="includeInactive">
-          <span>비활성 포함</span>
+          <span class="checkmark"></span>
+          <span class="label-text">비활성 포함</span>
+          <small>(정렬 제외)</small>
         </label>
 
       </div>
@@ -50,12 +53,12 @@
       <table class="orgcat-table">
         <thead>
         <tr>
-          <th style="width:80px">순서</th>
-          <th>직책명</th>
-          <th>상위 직책</th>
-          <th>결재처리자</th>
-          <th>상태</th>
-          <th>관리</th>
+          <th class="col-order">순서</th>
+          <th class="col-name">직책명</th>
+          <th class="col-parent">상위 직책</th>
+          <th class="col-head">결재처리자</th>
+          <th class="col-status">상태</th>
+          <th class="col-action">관리</th>
         </tr>
         </thead>
         <tbody id="tableBody"></tbody>
@@ -74,58 +77,78 @@
 
   </section>
 
-  <!-- 모달 -->
-  <div id="modal" class="modal hidden">
-    <div class="modal-panel">
+  <!-- ================= 모달 ================= -->
+  <div id="modal" class="modal hidden" aria-hidden="true">
+    <div class="modal-panel" role="dialog" aria-modal="true">
 
+      <!-- 헤더 -->
       <div class="modal-head">
-        <h2 id="modalTitle">직책 생성</h2>
-        <button class="icon-btn" id="btnCloseModal">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
+        <div class="modal-head-text">
+          <h2 id="modalTitle">직책 생성</h2>
+          <p class="modal-sub">
+            조직 유형 기준으로 직책을 생성하고, 결재 처리 여부를 설정합니다.
+          </p>
+        </div>
       </div>
 
+      <!-- 바디 -->
       <div class="modal-body">
 
-        <input type="hidden" id="positionId">
-
+        <!-- 조직 유형 -->
         <div class="form-group">
           <label class="form-label">조직 유형 기준</label>
           <select id="orgCategorySelect" class="form-input"></select>
-          <p class="form-help">
-            결재선 및 직책 사용 정책의 기준이 되는 조직 유형입니다.
+        </div>
+
+        <!-- 상위 직책 -->
+        <div class="form-group">
+          <label class="form-label">상위 직책</label>
+          <select id="parentPositionSelect" class="form-input"></select>
+          <p class="form-help muted">
+            선택하지 않으면 최상위 직책으로 생성됩니다.
           </p>
         </div>
 
+        <!-- 직책명 -->
         <div class="form-group">
-          <label>상위 직책</label>
-          <select id="parentPositionSelect" class="form-input"></select>
-          <p class="form-help">최상위 직책은 선택하지 않아도 됩니다.</p>
-        </div>
-
-        <div class="form-group">
-          <label>직책명</label>
-          <input id="positionName" class="form-input">
+          <label class="form-label">직책명</label>
+          <input id="positionName" class="form-input" placeholder="예: 팀장">
           <p class="form-help" id="nameHelp"></p>
         </div>
 
+        <!-- 결재처리자 -->
         <div class="form-group">
-          <label>
-            <input type="checkbox" id="isHead">
-            결재처리자
-          </label>
+          <label class="form-label">결재 처리자</label>
+          <div class="toggle-row">
+            <label class="switch">
+              <input type="checkbox" id="isHead">
+              <span class="slider"></span>
+            </label>
+            <span class="toggle-text">결재처리자</span>
+          </div>
+          <p class="form-help hidden" id="headHelp">
+            상위 직책이 없는 결재처리자는 최상위 결재자로 동작합니다.
+          </p>
         </div>
 
+        <!-- 사용 여부 -->
         <div class="form-group">
-          <label>사용 여부</label>
-          <label class="switch">
-            <input type="checkbox" id="isActive" checked>
-            <span class="slider"></span>
-          </label>
+          <label class="form-label">사용 여부</label>
+          <div class="toggle-row">
+            <label class="switch">
+              <input type="checkbox" id="isActive" checked>
+              <span class="slider"></span>
+            </label>
+            <span class="toggle-text">사용</span>
+          </div>
+          <p class="form-help hidden" id="inactiveHelp">
+            이미 조직에 할당된 직책이 있으면 비활성화할 수 없습니다.
+          </p>
         </div>
 
       </div>
 
+      <!-- 하단 버튼 -->
       <div class="modal-actions">
         <button class="btn btn-ghost" id="btnCancel">취소</button>
         <button class="btn btn-primary" id="btnSave">저장</button>
