@@ -499,6 +499,32 @@ SET @c1_pos_tm := (SELECT id
                      AND name = '팀원'
                    LIMIT 1);
 
+-- 팀원의 상위 → 팀장
+UPDATE position_category
+SET parent_position_id = @c1_pos_tl
+WHERE id = @c1_pos_tm;
+
+-- 팀장의 상위 → 부장
+UPDATE position_category
+SET parent_position_id = @c1_pos_dept
+WHERE id = @c1_pos_tl;
+
+-- 부장의 상위 → 본부장
+UPDATE position_category
+SET parent_position_id = @c1_pos_hq
+WHERE id = @c1_pos_dept;
+
+-- 본부장의 상위 → 사장
+UPDATE position_category
+SET parent_position_id = @c1_pos_ceo
+WHERE id = @c1_pos_hq;
+
+-- 사장은 최상위
+UPDATE position_category
+SET parent_position_id = NULL
+WHERE id = @c1_pos_ceo;
+
+
 -- ORG_POSITION_USAGE (Ignore로 재실행 안전)
 INSERT IGNORE INTO org_position_usage (company_id, org_id, position_category_id, created_at, updated_at)
 SELECT @c1,
@@ -1116,6 +1142,33 @@ SET @c2_pos_tm := (SELECT id
                      AND name = '팀원'
                    LIMIT 1);
 
+
+-- 팀원의 상위 → 팀장
+UPDATE position_category
+SET parent_position_id = @c2_pos_tl
+WHERE id = @c2_pos_tm;
+
+-- 팀장의 상위 → 부장
+UPDATE position_category
+SET parent_position_id = @c2_pos_dept
+WHERE id = @c2_pos_tl;
+
+-- 부장의 상위 → 본부장
+UPDATE position_category
+SET parent_position_id = @c2_pos_hq
+WHERE id = @c2_pos_dept;
+
+-- 본부장의 상위 → 사장
+UPDATE position_category
+SET parent_position_id = @c2_pos_ceo
+WHERE id = @c2_pos_hq;
+
+-- 사장은 최상위
+UPDATE position_category
+SET parent_position_id = NULL
+WHERE id = @c2_pos_ceo;
+
+
 INSERT IGNORE INTO org_position_usage (company_id, org_id, position_category_id, created_at, updated_at)
 SELECT @c2,
        o.id,
@@ -1689,6 +1742,33 @@ SET @c3_pos_tm := (SELECT id
                      AND org_category_id = @c3_cat_team
                      AND name = '팀원'
                    LIMIT 1);
+
+
+-- 팀원의 상위 → 팀장
+UPDATE position_category
+SET parent_position_id = @c3_pos_tl
+WHERE id = @c3_pos_tm;
+
+-- 팀장의 상위 → 부장
+UPDATE position_category
+SET parent_position_id = @c3_pos_dept
+WHERE id = @c3_pos_tl;
+
+-- 부장의 상위 → 본부장
+UPDATE position_category
+SET parent_position_id = @c3_pos_hq
+WHERE id = @c3_pos_dept;
+
+-- 본부장의 상위 → 사장
+UPDATE position_category
+SET parent_position_id = @c3_pos_ceo
+WHERE id = @c3_pos_hq;
+
+-- 사장은 최상위
+UPDATE position_category
+SET parent_position_id = NULL
+WHERE id = @c3_pos_ceo;
+
 
 INSERT IGNORE INTO org_position_usage (company_id, org_id, position_category_id, created_at, updated_at)
 SELECT @c3,
