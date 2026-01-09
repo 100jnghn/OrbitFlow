@@ -28,11 +28,13 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
     @Query("""
                 SELECT a FROM AuditLog a
                 JOIN a.actor act
-                WHERE (:entityType IS NULL OR a.entityType = :entityType)
+                WHERE a.company.id = :companyId
+                  AND (:entityType IS NULL OR a.entityType = :entityType)
                   AND (:eventType IS NULL OR a.eventType = :eventType)
                   AND (:actorName IS NULL OR act.name LIKE %:actorName%)
             """)
     Page<AuditLog> search(
+            @Param("companyId") Long companyId,
             @Param("entityType") AuditEntityType entityType,
             @Param("eventType") AuditEventType eventType,
             @Param("actorName") String actorName,
