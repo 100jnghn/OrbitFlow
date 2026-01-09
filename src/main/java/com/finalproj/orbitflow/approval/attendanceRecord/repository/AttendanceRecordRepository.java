@@ -25,44 +25,53 @@ import java.util.Optional;
 @Repository
 public interface AttendanceRecordRepository extends JpaRepository<AttendanceRecord, Long> {
 
-    List<AttendanceRecord> findByCompanyIdAndEmployeeId(Long companyId, Long employeeId);
+        List<AttendanceRecord> findByCompanyIdAndEmployeeId(Long companyId, Long employeeId);
 
-    @Query("SELECT ar FROM AttendanceRecord ar " +
-            "WHERE ar.company.id = :companyId " +
-            "AND ar.employee.id = :employeeId " +
-            "AND (:status IS NULL OR ar.status = :status) " +
-            "AND (:typeName IS NULL OR ar.leaveType.typeName = :typeName) " +
-            "AND (:startDate IS NULL OR ar.startDate >= :startDate) " +
-            "AND (:endDate IS NULL OR ar.startDate <= :endDate) " +
-            "ORDER BY ar.startDate DESC")
-    Page<AttendanceRecord> findAllLeaveHistoryWithFilters(
-            @Param("companyId") Long companyId,
-            @Param("employeeId") Long employeeId,
-            @Param("typeName") String typeName,
-            @Param("status") DocumentStatus status,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate,
-            Pageable pageable);
+        @Query("SELECT ar FROM AttendanceRecord ar " +
+                        "WHERE ar.company.id = :companyId " +
+                        "AND ar.employee.id = :employeeId " +
+                        "AND (:status IS NULL OR ar.status = :status) " +
+                        "AND (:typeName IS NULL OR ar.leaveType.typeName = :typeName) " +
+                        "AND (:startDate IS NULL OR ar.startDate >= :startDate) " +
+                        "AND (:endDate IS NULL OR ar.startDate <= :endDate) " +
+                        "ORDER BY ar.startDate DESC")
+        Page<AttendanceRecord> findAllLeaveHistoryWithFilters(
+                        @Param("companyId") Long companyId,
+                        @Param("employeeId") Long employeeId,
+                        @Param("typeName") String typeName,
+                        @Param("status") DocumentStatus status,
+                        @Param("startDate") LocalDate startDate,
+                        @Param("endDate") LocalDate endDate,
+                        Pageable pageable);
 
+        @Query("SELECT r FROM AttendanceRecord r " +
+                        "WHERE r.company.id = :companyId " +
+                        "AND r.employee.id = :employeeId " +
+                        "AND r.leaveType.isCountable = true " +
+                        "AND r.status = com.finalproj.orbitflow.approval.document.enums.DocumentStatus.APPROVED " +
+                        "AND FUNCTION('YEAR', r.startDate) = :year " +
+                        "AND (:typeName IS NULL OR r.leaveType.typeName = :typeName) " +
+                        "AND (:status IS NULL OR r.status = :status) " +
+                        "AND (:startDate IS NULL OR r.startDate >= :startDate) " +
+                        "AND (:endDate IS NULL OR r.startDate <= :endDate) " +
+                        "ORDER BY r.startDate DESC")
+        Page<AttendanceRecord> findUsageHistoryWithFilters(
+                        @Param("companyId") Long companyId,
+                        @Param("employeeId") Long employeeId,
+                        @Param("year") int year,
+                        @Param("typeName") String typeName,
+                        @Param("status") DocumentStatus status,
+                        @Param("startDate") LocalDate startDate,
+                        @Param("endDate") LocalDate endDate,
+                        Pageable pageable);
 
-    @Query("SELECT r FROM AttendanceRecord r " +
-            "WHERE r.company.id = :companyId " +
-            "AND r.employee.id = :employeeId " +
-            "AND r.leaveType.isCountable = true " +
-            "AND r.status = com.finalproj.orbitflow.approval.document.enums.DocumentStatus.APPROVED " +
-            "AND FUNCTION('YEAR', r.startDate) = :year " +
-            "AND (:typeName IS NULL OR r.leaveType.typeName = :typeName) " +
-            "AND (:status IS NULL OR r.status = :status) " +
-            "AND (:startDate IS NULL OR r.startDate >= :startDate) " +
-            "AND (:endDate IS NULL OR r.startDate <= :endDate) " +
-            "ORDER BY r.startDate DESC")
-    Page<AttendanceRecord> findUsageHistoryWithFilters(
-            @Param("companyId") Long companyId,
-            @Param("employeeId") Long employeeId,
-            @Param("year") int year,
-            @Param("typeName") String typeName,
-            @Param("status") DocumentStatus status,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate,
-            Pageable pageable);
+        @Query("SELECT r FROM AttendanceRecord r WHERE :today BETWEEN r.startDate AND r.endDate AND r.status = 'APPROVED'")
+        List<AttendanceRecord> findActiveAttendanceRecords(@Param("today") LocalDate today);
+
+        @Query("SELECT r FROM AttendanceRecord r " +
+                        "WHERE r.employee.id = :employeeId " +
+                        "AND :date BETWEEN r.startDate AND r.endDate " +
+                        "AND r.status = 'APPROVED'")
+        Optional<AttendanceRecord> findActiveRecord(@Param("employeeId") Long employeeId,
+                        @Param("date") LocalDate date);
 }
