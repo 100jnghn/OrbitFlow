@@ -703,3 +703,20 @@
         padding: 4px 6px;
     }
 }
+
+@media (max-width: 380px) {
+    .filter-select {
+        min-width: 100%;
+    }
+
+    .org-filter-checkbox-list {
+        grid-template-columns: repeat(1, 1fr) !important;
+        padding: 4px;
+        min-width: 200px;
+    }
+
+    .org-filter-checkbox-item {
+        width: 100%;
+        box-sizing: border-box;
+    }
+}
