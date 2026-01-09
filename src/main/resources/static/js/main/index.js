@@ -138,8 +138,9 @@ async function processEarlyReturn() {
 }
 
 /**
- * 3. 사용자 프로필 로드 (이름 옆 배지 포함)
+ * 3. 사용자 프로필 로드 (이름, 부서, 직급, 배지 포함)
  */
+
 async function loadUserProfile() {
     try {
         const response = await apiFetch('/api/auth/me');
@@ -154,53 +155,59 @@ async function loadUserProfile() {
         const result = await response.json();
         const user = result.data;
 
-        // 이름 및 배지 업데이트
-        safeSetText('profileName', user.name || '-');
-
-        // 🔥 서버에서 받아온 실제 상태를 전역 변수에 저장
-        // workStatus가 null이거나 undefined일 수 있으므로 안전하게 처리
-        const workStatus = (user && user.workStatus) ? user.workStatus : null;
-        window.currentServerStatus = workStatus;
-
-        // 디버깅 로그: workStatus 확인
-        if (!workStatus) {
-            console.warn('[loadUserProfile] workStatus가 없습니다. user:', user);
-        } else {
-            console.log('[loadUserProfile] workStatus:', workStatus);
+        // 1. 사용자 이름 표시 (id="profileName")
+        const nameEl = document.getElementById('profileName');
+        if (nameEl) {
+            // 기존 텍스트('-')를 사용자 이름으로 교체
+            nameEl.textContent = user.name || '사용자';
         }
 
-        // 이름 옆에 배지 생성/업데이트 함수 호출
-        // workStatus가 없으면 기본값(DEFAULT)으로 표시
-        updateNameAdjacentBadge(workStatus || 'DEFAULT');
+        // 2. 부서 및 직급 표시
+        // 직급이 있을 경우에만 괄호를 붙이거나 스타일을 맞춤
+        safeSetText('profileDept', user.organizationName || '소속 없음');
+        safeSetText('profileRank', user.positionName || '');
 
-        // commute.js의 버튼 상태도 업데이트
+        // 3. 근무 상태 배지 업데이트
+        // 이름 옆에 배지를 생성하거나 업데이트하는 로직 호출
+        const workStatus = user.workStatus || 'DEFAULT';
+        window.currentServerStatus = workStatus;
+
+        if (typeof updateNameAdjacentBadge === 'function') {
+            updateNameAdjacentBadge(workStatus);
+        }
+
+        // 4. 프로필 이미지 처리
+        const profileImgEl = document.getElementById('profileImage');
+        const profileIconEl = document.getElementById('profileIcon');
+
+        if (user.profileImageUrl) {
+            if (profileImgEl) {
+                profileImgEl.src = user.profileImageUrl;
+                profileImgEl.style.display = 'block';
+            }
+            if (profileIconEl) profileIconEl.style.display = 'none';
+        } else {
+            // 이미지가 없을 때 기본 아이콘 표시 및 엑박 방지
+            if (profileImgEl) {
+                profileImgEl.style.display = 'none';
+                profileImgEl.src = ''; // 이전 경로 제거
+            }
+            if (profileIconEl) profileIconEl.style.display = 'block';
+        }
+
+        // 5. 버튼 상태 동기화 (Commute.js 등 연동)
         setTimeout(() => {
             if (typeof window.updateCommuteButtonStates === 'function') {
                 window.updateCommuteButtonStates();
             }
         }, 100);
 
-        // 부서 및 직급 (직급 필드명은 백엔드 DTO에 따라 positionName 또는 positionRankName 확인 필요)
-        safeSetText('profileDept', user.organizationName || '-');
-        safeSetText('profileRank', user.positionName ? `(${user.positionName})` : '');
-
-        // 세션 스토리지에 저장된 임시 상태(Optimistic UI)가 서버 상태와 일치하면 삭제
-        const optimisticStatus = getOptimisticWorkStatus();
-        if (user.workStatus && optimisticStatus === user.workStatus) {
-            clearOptimisticWorkStatus();
-        }
-
-        // 프로필 이미지 (없을 경우 기본 이미지)
-        const profileImgEl = document.getElementById('profileImage');
-        if (profileImgEl && user.profileImageUrl) {
-            profileImgEl.src = user.profileImageUrl;
-        }
-
     } catch (error) {
         console.error('프로필 로드 중 오류 발생:', error);
+        // 에러 발생 시 기본값 표시
+        safeSetText('profileName', '사용자');
     }
 }
-
 /**
  * 2. 이름 옆 근무 상태 배지 UI 업데이트
  */
