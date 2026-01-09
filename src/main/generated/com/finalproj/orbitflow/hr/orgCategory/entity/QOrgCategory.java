@@ -33,6 +33,8 @@ public class QOrgCategory extends EntityPathBase<OrgCategory> {
 
     public final BooleanPath isActive = createBoolean("isActive");
 
+    public final BooleanPath isRoot = createBoolean("isRoot");
+
     //inherited
     public final NumberPath<Long> modifiedBy = _super.modifiedBy;
 
