@@ -74,4 +74,6 @@ public interface AttendanceRecordRepository extends JpaRepository<AttendanceReco
                         "AND r.status = 'APPROVED'")
         Optional<AttendanceRecord> findActiveRecord(@Param("employeeId") Long employeeId,
                         @Param("date") LocalDate date);
+
+    boolean existsByEmployee_IdAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(Long employeeId, DocumentStatus documentStatus, LocalDate date, LocalDate date1);
 }
