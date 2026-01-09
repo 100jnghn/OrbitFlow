@@ -9,131 +9,147 @@
       )}">
 
 <th:block th:fragment="pageCss">
-  <link rel="stylesheet" th:href="@{/css/admin-rank.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-rank.css}">
 </th:block>
 
 <th:block th:fragment="content">
 
-  <!-- 타이틀 -->
-  <div class="rank-title-row">
-    <h1 class="rank-title">직급 관리</h1>
-  </div>
 
-  <section class="rank-card">
+    <section class="rank-card">
 
-    <!-- ===== Toolbar ===== -->
-    <div class="rank-toolbar">
+        <!-- 타이틀 -->
+        <h1 class="rank-title">직급 관리</h1>
 
-      <div class="toolbar-left">
+        <!-- ===== Toolbar ===== -->
+        <div class="rank-toolbar">
 
-        <div class="rank-search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input id="searchKeyword"
-                 type="text"
-                 placeholder="직급명 검색">
+            <div class="toolbar-left">
+
+                <div class="rank-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input id="searchKeyword"
+                           type="text"
+                           placeholder="직급명 검색">
+                </div>
+
+                <button class="btn btn-outline" id="btnSearch">검색</button>
+
+                <label class="inactive-toggle">
+                    <input type="checkbox" id="includeInactive">
+                    <span class="checkmark"></span>
+                    <span class="label-text">비활성 포함</span>
+                    <small>(정렬 제외)</small>
+                </label>
+
+            </div>
+
+            <div class="toolbar-right">
+                <button class="btn btn-primary" id="btnOpenCreate">
+                    직급 추가
+                </button>
+            </div>
+
         </div>
 
-        <button class="btn btn-outline" id="btnSearch">검색</button>
-
-        <label class="inactive-toggle">
-          <input type="checkbox" id="includeInactive">
-          <span>비활성 포함</span>
-          <small>(정렬 제외)</small>
-        </label>
-
-      </div>
-
-      <div class="toolbar-right">
-        <button class="btn btn-primary" id="btnOpenCreate">
-          + 직급 추가
-        </button>
-      </div>
-
-    </div>
-
-    <!-- ===== Table ===== -->
-    <div class="rank-table-wrap">
-      <table class="rank-table">
-        <thead>
-        <tr>
-          <th class="col-order">순서</th>
-          <th>직급명</th>
-          <th>상위 직급</th>
-          <th>부여 인원</th>
-          <th class="col-status">상태</th>
-          <th class="col-action">관리</th>
-        </tr>
-        </thead>
-        <tbody id="rankTableBody"></tbody>
-      </table>
-    </div>
-
-    <!-- ===== Footer ===== -->
-    <div class="rank-footer">
-      <div class="rank-hint" id="orderHint">
-        드래그앤드롭으로 순서를 변경할 수 있습니다.
-      </div>
-      <button class="btn btn-outline"
-              id="btnSaveOrder"
-              disabled>
-        변경사항저장
-      </button>
-    </div>
-
-  </section>
-
-  <!-- ===== Modal ===== -->
-  <div id="rankModal" class="modal hidden">
-    <div class="modal-panel" role="dialog">
-
-      <div class="modal-head">
-        <h2 id="modalTitle">직급 추가 / 수정</h2>
-        <button class="icon-btn" id="btnCloseModal">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <input type="hidden" id="rankId">
-
-      <div class="modal-body">
-
-        <div class="form-group">
-          <label class="form-label">직급명</label>
-          <input id="rankName" class="form-input" type="text">
-          <p class="form-help" id="nameHelp"></p>
+        <!-- ===== Table ===== -->
+        <div class="rank-table-wrap">
+            <table class="rank-table">
+                <thead>
+                <tr>
+                    <th class="col-order">순서</th>
+                    <th>직급명</th>
+                    <th>상위 직급</th>
+                    <th>부여 인원</th>
+                    <th class="col-status">상태</th>
+                    <th class="col-action">관리</th>
+                </tr>
+                </thead>
+                <tbody id="rankTableBody"></tbody>
+            </table>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">상위 직급</label>
-          <select id="parentRank" class="form-input"></select>
+        <!-- ===== Footer ===== -->
+        <div class="rank-footer">
+            <div class="rank-hint" id="orderHint">
+                드래그앤드롭으로 순서를 변경할 수 있습니다.
+            </div>
+            <button class="btn btn-outline"
+                    id="btnSaveOrder"
+                    disabled>
+                변경사항저장
+            </button>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">사용 여부</label>
-          <div class="toggle-row">
-            <label class="switch">
-              <input type="checkbox" id="rankActive" checked>
-              <span class="slider"></span>
-            </label>
-            <span class="toggle-text" id="toggleText">사용</span>
-          </div>
+    </section>
+
+    <!-- ===== Modal ===== -->
+    <div id="rankModal" class="modal hidden">
+        <div class="modal-panel" role="dialog">
+
+            <div class="modal-head">
+                <div class="modal-head-text">
+                    <h2 id="modalTitle">직급 생성 / 수정</h2>
+                    <p class="modal-sub">
+                        회사에서 사용하는 직급을 추가하고 관리할 수 있습니다.
+                    </p>
+                </div>
+            </div>
+
+
+            <input type="hidden" id="rankId">
+
+            <div class="modal-body">
+
+                <!-- 직급명 -->
+                <div class="form-group">
+                    <label class="form-label" for="rankName">직급명</label>
+                    <input
+                            id="rankName"
+                            class="form-input"
+                            type="text"
+                            placeholder="예: 사원 / 대리 / 과장"
+                    >
+
+                    <div class="input-meta">
+                        <span id="nameCount">0</span>/50
+                    </div>
+
+                    <p class="form-help" id="nameHelp"></p>
+                </div>
+
+                <!-- 상위 직급 -->
+                <div class="form-group">
+                    <label class="form-label" for="parentRank">상위 직급</label>
+                    <select id="parentRank" class="form-input"></select>
+                </div>
+
+                <!-- 사용 여부 -->
+                <div class="form-group">
+                    <label class="form-label">사용 여부</label>
+                    <div class="toggle-row">
+                        <label class="switch">
+                            <input type="checkbox" id="rankActive" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span class="toggle-text" id="toggleText">사용</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-ghost" id="btnCancel">취소</button>
+                <button class="btn btn-primary" id="btnSaveRank">저장</button>
+            </div>
+
         </div>
-
-      </div>
-
-      <div class="modal-actions">
-        <button class="btn btn-ghost" id="btnCancel">취소</button>
-        <button class="btn btn-primary" id="btnSaveRank">저장</button>
-      </div>
-
     </div>
-  </div>
 
 </th:block>
 
 <th:block th:fragment="pageScript">
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-  <script th:src="@{/js/admin-rank.js}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    <script th:src="@{/js/admin-rank.js}"></script>
 </th:block>
 
 </html>

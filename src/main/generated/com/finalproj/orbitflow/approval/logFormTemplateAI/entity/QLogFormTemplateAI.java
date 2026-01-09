@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.logFormTemplateAI.entity;
+package com.finalproj.orbitflow.approval.logFormTemplateAi.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -11,16 +11,16 @@ import com.querydsl.core.types.dsl.PathInits;
 
 
 /**
- * QLogFormTemplateAI is a Querydsl query type for LogFormTemplateAI
+ * QLogFormTemplateAi is a Querydsl query type for LogFormTemplateAi
  */
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
-public class QLogFormTemplateAI extends EntityPathBase<LogFormTemplateAI> {
+public class QLogFormTemplateAi extends EntityPathBase<LogFormTemplateAi> {
 
-    private static final long serialVersionUID = 2030843856L;
+    private static final long serialVersionUID = -1271489584L;
 
     private static final PathInits INITS = PathInits.DIRECT2;
 
-    public static final QLogFormTemplateAI logFormTemplateAI = new QLogFormTemplateAI("logFormTemplateAI");
+    public static final QLogFormTemplateAi logFormTemplateAi = new QLogFormTemplateAi("logFormTemplateAi");
 
     public final com.finalproj.orbitflow.global.common.QBaseEntity _super = new com.finalproj.orbitflow.global.common.QBaseEntity(this);
 
@@ -36,8 +36,6 @@ public class QLogFormTemplateAI extends EntityPathBase<LogFormTemplateAI> {
 
     public final StringPath errorMessage = createString("errorMessage");
 
-    public final StringPath generatedRuleJson = createString("generatedRuleJson");
-
     public final StringPath generatedTemplateJson = createString("generatedTemplateJson");
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
@@ -49,30 +47,34 @@ public class QLogFormTemplateAI extends EntityPathBase<LogFormTemplateAI> {
 
     public final StringPath prompt = createString("prompt");
 
-    public final EnumPath<com.finalproj.orbitflow.approval.logFormTemplateAI.enums.AiStatus> status = createEnum("status", com.finalproj.orbitflow.approval.logFormTemplateAI.enums.AiStatus.class);
+    public final StringPath requestContext = createString("requestContext");
+
+    public final StringPath responseContext = createString("responseContext");
+
+    public final EnumPath<com.finalproj.orbitflow.approval.documentAISummary.enums.AiStatus> status = createEnum("status", com.finalproj.orbitflow.approval.documentAISummary.enums.AiStatus.class);
 
     public final com.finalproj.orbitflow.approval.formTemplateGroup.entity.QFormTemplateGroup templateGroup;
 
     //inherited
     public final DateTimePath<java.time.Instant> updatedAt = _super.updatedAt;
 
-    public QLogFormTemplateAI(String variable) {
-        this(LogFormTemplateAI.class, forVariable(variable), INITS);
+    public QLogFormTemplateAi(String variable) {
+        this(LogFormTemplateAi.class, forVariable(variable), INITS);
     }
 
-    public QLogFormTemplateAI(Path<? extends LogFormTemplateAI> path) {
+    public QLogFormTemplateAi(Path<? extends LogFormTemplateAi> path) {
         this(path.getType(), path.getMetadata(), PathInits.getFor(path.getMetadata(), INITS));
     }
 
-    public QLogFormTemplateAI(PathMetadata metadata) {
+    public QLogFormTemplateAi(PathMetadata metadata) {
         this(metadata, PathInits.getFor(metadata, INITS));
     }
 
-    public QLogFormTemplateAI(PathMetadata metadata, PathInits inits) {
-        this(LogFormTemplateAI.class, metadata, inits);
+    public QLogFormTemplateAi(PathMetadata metadata, PathInits inits) {
+        this(LogFormTemplateAi.class, metadata, inits);
     }
 
-    public QLogFormTemplateAI(Class<? extends LogFormTemplateAI> type, PathMetadata metadata, PathInits inits) {
+    public QLogFormTemplateAi(Class<? extends LogFormTemplateAi> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.company = inits.isInitialized("company") ? new com.finalproj.orbitflow.hr.company.entity.QCompany(forProperty("company")) : null;
         this.createdTemplate = inits.isInitialized("createdTemplate") ? new com.finalproj.orbitflow.approval.formTemplate.entity.QFormTemplate(forProperty("createdTemplate"), inits.get("createdTemplate")) : null;

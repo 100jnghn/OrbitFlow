@@ -194,6 +194,9 @@ public class BoardService {
         if (!category.getCompany().getId().equals(companyId)) {
             throw new ForbiddenException("접근 권한이 없는 게시판입니다.");
         }
+        if (category.getDeletedAt() != null) {
+            throw new ForbiddenException("삭제된 게시판입니다.");
+        }
         if (!category.isActivated()) {
             throw new ForbiddenException("비활성화된 게시판입니다.");
         }

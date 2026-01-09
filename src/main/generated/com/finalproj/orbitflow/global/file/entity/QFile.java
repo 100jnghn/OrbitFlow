@@ -24,6 +24,8 @@ public class QFile extends EntityPathBase<File> {
 
     public final com.finalproj.orbitflow.global.common.QBaseEntity _super = new com.finalproj.orbitflow.global.common.QBaseEntity(this);
 
+    public final com.finalproj.orbitflow.board.boardPost.entity.QBoard board;
+
     public final com.finalproj.orbitflow.hr.company.entity.QCompany company;
 
     public final StringPath contentType = createString("contentType");
@@ -70,6 +72,7 @@ public class QFile extends EntityPathBase<File> {
 
     public QFile(Class<? extends File> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
+        this.board = inits.isInitialized("board") ? new com.finalproj.orbitflow.board.boardPost.entity.QBoard(forProperty("board"), inits.get("board")) : null;
         this.company = inits.isInitialized("company") ? new com.finalproj.orbitflow.hr.company.entity.QCompany(forProperty("company")) : null;
     }
 

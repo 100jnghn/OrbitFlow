@@ -113,6 +113,12 @@ async function loadMessageList(page = 0) {
                 location.href = '/login';
                 return;
             }
+            if (response.status === 403) {
+                throw new Error('접근 권한이 없습니다.');
+            }
+            if (response.status === 404) {
+                throw new Error('메시지 함을 찾을 수 없습니다.');
+            }
             throw new Error('메시지 목록을 불러오는데 실패했습니다.');
         }
 

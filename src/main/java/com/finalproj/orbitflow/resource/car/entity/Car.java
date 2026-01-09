@@ -65,4 +65,8 @@ public class Car extends BaseEntity {
     public void delete(ResourceStatus deletedStatus) {
         this.resourceStatus = deletedStatus;
     }
+
+    public void deleteFile() {
+        this.file = null;
+    }
 }

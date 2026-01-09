@@ -12,6 +12,7 @@ let currentStatus = 'ALL';
 let schedules = [];
 let isEditMode = false;
 let editingScheduleId = null;
+let holidayMap = new Map(); // key: yyyy-MM-dd, value: CalendarDayResDto
 
 // 상태별 색상 매핑
 const statusColorMap = {
@@ -29,6 +30,7 @@ const statusNameMap = {
 document.addEventListener('DOMContentLoaded', function () {
     initializePage();
     setupEventListeners();
+    loadHolidays(currentYear);
     loadSchedules();
 });
 
@@ -169,9 +171,38 @@ async function loadSchedules() {
     } catch (error) {
         console.error('Error loading schedules:', error);
         if (error.message !== 'SESSION_EXPIRED') {
-            alert('일정을 불러오는데 실패했습니다.');
+            await sweetError('일정을 불러오는데 실패했습니다.');
         }
         hideLoading();
+    }
+}
+
+/**
+ * 휴일 + 주말 정보 로드 (연 단위 1회)
+ */
+async function loadHolidays(year) {
+    try {
+        const response = await apiFetch(`/api/calendar/holidays?year=${year}`);
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                location.href = '/login';
+                return;
+            }
+            throw new Error('휴일 정보를 불러오지 못했습니다.');
+        }
+
+        const result = await response.json();
+        const list = result.data || [];
+
+        holidayMap.clear();
+        list.forEach(day => {
+            holidayMap.set(day.date, day);
+        });
+
+        console.log(`휴일 ${list.length}건 로드 완료`);
+    } catch (error) {
+        console.error('휴일 로드 실패:', error);
     }
 }
 
@@ -222,12 +253,38 @@ function renderCalendar() {
             isOtherMonth = true;
         }
 
+        // 휴일 정보 가져오기
+        const yyyyMMdd = formatDateForComparison(date);
+        const holiday = holidayMap.get(yyyyMMdd);
+
+        if (holiday) {
+            console.log('휴일 매칭:', yyyyMMdd, holiday.dayType, holiday.holidayName);
+        }
+
+        // JS 기준 요일
+        const jsDay = date.getDay(); // 0=일, 6=토
+
+        // 일요일
+        if (jsDay === 0) {
+            dayCell.classList.add('sunday');
+        }
+
+        // 토요일
+        if (jsDay === 6) {
+            dayCell.classList.add('saturday');
+        }
+
+        // 공휴일 (주말보다 우선)
+        if (holiday && holiday.dayType !== 'WORKDAY') {
+            dayCell.classList.add('holiday');
+        }
+
         // 오늘 날짜 체크
         if (isCurrentMonth && dayNumber === today.getDate() && !isOtherMonth) {
             dayCell.classList.add('today');
         }
 
-        // 주말 체크
+        // 주말 체크 (기존 코드 유지)
         if (date.getDay() === 0 || date.getDay() === 6) {
             dayCell.classList.add('weekend');
         }
@@ -236,11 +293,27 @@ function renderCalendar() {
             dayCell.classList.add('other-month');
         }
 
-        // 날짜 번호
+        /* =========================
+           날짜 상단: 날짜 + 공휴일명
+        ========================== */
+        const dayHeaderRow = document.createElement('div');
+        dayHeaderRow.className = 'day-header-row';
+
         const dayNumberEl = document.createElement('div');
         dayNumberEl.className = 'day-number';
         dayNumberEl.textContent = dayNumber;
-        dayCell.appendChild(dayNumberEl);
+        dayHeaderRow.appendChild(dayNumberEl);
+
+        // 공휴일이면 holidayName 오른쪽에 표시
+        if (holiday && holiday.holidayName) {
+            const holidayNameEl = document.createElement('div');
+            holidayNameEl.className = 'holiday-name';
+            holidayNameEl.textContent = holiday.holidayName;
+            holidayNameEl.title = holiday.holidayName;
+            dayHeaderRow.appendChild(holidayNameEl);
+        }
+
+        dayCell.appendChild(dayHeaderRow);
 
         // 해당 날짜의 일정 표시
         const daySchedules = getSchedulesForDate(date);
@@ -426,7 +499,7 @@ async function openEditScheduleModal(schedule) {
     const endDateInput = document.getElementById('scheduleEndDate');
     const startDateStr = formatDateForInput(startDate);
     const endDateStr = formatDateForInput(endDate);
-    
+
     startDateInput.value = startDateStr;
     endDateInput.value = endDateStr;
     // 종료 날짜의 min을 시작 날짜로 설정
@@ -446,6 +519,10 @@ async function openEditScheduleModal(schedule) {
     document.getElementById('scheduleStartMinute').value = startMinute;
     document.getElementById('scheduleEndHour').value = endHour;
     document.getElementById('scheduleEndMinute').value = endMinute;
+
+    // 커스텀 드롭다운 표시 업데이트
+    updateCustomSelectDisplay('scheduleStartHour', startHour);
+    updateCustomSelectDisplay('scheduleEndHour', endHour);
 
     // 조직 카테고리를 '회사'로 고정
     await setCompanyOrgCategory();
@@ -532,7 +609,7 @@ function hideLoading() {
 function handleStartDateChange() {
     const startDateInput = document.getElementById('scheduleStartDate');
     const endDateInput = document.getElementById('scheduleEndDate');
-    
+
     if (startDateInput && endDateInput && startDateInput.value) {
         endDateInput.min = startDateInput.value;
         // 종료 날짜가 시작 날짜보다 이전이면 시작 날짜로 설정
@@ -577,11 +654,15 @@ async function openAddScheduleModal() {
     startDateInput.removeEventListener('change', handleStartDateChange);
     startDateInput.addEventListener('change', handleStartDateChange);
 
-    // 기본 시간 설정 (09:00, 18:00)
-    document.getElementById('scheduleStartHour').value = '09';
+    // 기본 시간 설정 (00:00, 00:00)
+    document.getElementById('scheduleStartHour').value = '00';
     document.getElementById('scheduleStartMinute').value = '00';
-    document.getElementById('scheduleEndHour').value = '18';
+    document.getElementById('scheduleEndHour').value = '00';
     document.getElementById('scheduleEndMinute').value = '00';
+
+    // 커스텀 드롭다운 표시 업데이트
+    updateCustomSelectDisplay('scheduleStartHour', '00');
+    updateCustomSelectDisplay('scheduleEndHour', '00');
 
     // 조직 카테고리를 '회사'로 고정
     await setCompanyOrgCategory();
@@ -622,43 +703,171 @@ function closeScheduleModal() {
 }
 
 /**
- * 시간/분 select 옵션 초기화
+ * 시간/분 select 옵션 초기화 (시간만 커스텀 드롭다운)
  */
+let timeSelectsInitialized = false;
 function initializeTimeSelects() {
-    // 시간 select (00~23시)
+    const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+    const minutes = ['00', '10', '20', '30', '40', '50'];
+
+    // 시간 선택만 커스텀 드롭다운으로
     const hourSelects = [
-        document.getElementById('scheduleStartHour'),
-        document.getElementById('scheduleEndHour')
+        { id: 'scheduleStartHour', options: hours },
+        { id: 'scheduleEndHour', options: hours }
     ];
 
-    hourSelects.forEach(select => {
+    hourSelects.forEach(({ id, options }) => {
+        const select = document.getElementById(id);
         if (!select) return;
-        select.innerHTML = '';
-        for (let hour = 0; hour < 24; hour++) {
-            const option = document.createElement('option');
-            option.value = String(hour).padStart(2, '0');
-            option.textContent = `${String(hour).padStart(2, '0')}시`;
-            select.appendChild(option);
+
+        const wrapper = select.parentElement;
+
+        // 이미 커스텀 드롭다운이 생성되어 있으면 스킵
+        if (wrapper.querySelector('.custom-select')) {
+            return;
         }
+
+        // 원본 select에 option 추가 (값 설정을 위해 필요)
+        select.innerHTML = '';
+        options.forEach(opt => {
+            const option = document.createElement('option');
+            option.value = opt;
+            option.textContent = opt;
+            select.appendChild(option);
+        });
+
+        // 기본값 설정
+        select.value = options[0];
+
+        // 원래 select 숨기기
+        select.style.display = 'none';
+
+        // 커스텀 드롭다운 생성
+        const customSelect = document.createElement('div');
+        customSelect.className = 'custom-select';
+        customSelect.dataset.selectId = id;
+
+        const selected = document.createElement('div');
+        selected.className = 'custom-select-selected';
+        selected.textContent = options[0];
+
+        const optionsContainer = document.createElement('div');
+        optionsContainer.className = 'custom-select-options';
+        optionsContainer.style.display = 'none';
+
+        options.forEach(opt => {
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'custom-select-option';
+            optionDiv.textContent = opt;
+            optionDiv.dataset.value = opt;
+
+            optionDiv.addEventListener('click', () => {
+                selected.textContent = opt;
+                select.value = opt;
+
+                // 값이 제대로 설정되었는지 확인
+                console.log(`[${id}] Clicked: ${opt}, Select value after: ${select.value}`);
+
+                // 강제로 change 이벤트 발생
+                const event = new Event('change', { bubbles: true });
+                select.dispatchEvent(event);
+
+                optionsContainer.style.display = 'none';
+                customSelect.classList.remove('active');
+
+                // 모든 옵션의 selected 클래스 제거
+                optionsContainer.querySelectorAll('.custom-select-option').forEach(o => {
+                    o.classList.remove('selected');
+                });
+                optionDiv.classList.add('selected');
+            });
+
+            optionsContainer.appendChild(optionDiv);
+        });
+
+        // 첫 번째 옵션을 selected로 표시
+        optionsContainer.querySelector('.custom-select-option').classList.add('selected');
+
+        selected.addEventListener('click', (e) => {
+            e.stopPropagation();
+
+            // 다른 모든 드롭다운 닫기
+            document.querySelectorAll('.custom-select').forEach(cs => {
+                if (cs !== customSelect) {
+                    cs.querySelector('.custom-select-options').style.display = 'none';
+                    cs.classList.remove('active');
+                }
+            });
+
+            // 현재 드롭다운 토글
+            const isVisible = optionsContainer.style.display === 'block';
+            optionsContainer.style.display = isVisible ? 'none' : 'block';
+            customSelect.classList.toggle('active', !isVisible);
+        });
+
+        customSelect.appendChild(selected);
+        customSelect.appendChild(optionsContainer);
+        wrapper.insertBefore(customSelect, select);
     });
 
-    // 분 select (00, 10, 20, 30, 40, 50분)
+    // 분 선택은 기본 select로
     const minuteSelects = [
         document.getElementById('scheduleStartMinute'),
         document.getElementById('scheduleEndMinute')
     ];
 
-    const minutes = [0, 10, 20, 30, 40, 50];
     minuteSelects.forEach(select => {
         if (!select) return;
         select.innerHTML = '';
         minutes.forEach(minute => {
             const option = document.createElement('option');
-            option.value = String(minute).padStart(2, '0');
-            option.textContent = `${String(minute).padStart(2, '0')}분`;
+            option.value = minute;
+            option.textContent = `${minute}분`;
             select.appendChild(option);
         });
     });
+
+    // 외부 클릭 시 모든 드롭다운 닫기 (한 번만 등록)
+    if (!timeSelectsInitialized) {
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.custom-select-options').forEach(opt => {
+                opt.style.display = 'none';
+            });
+            document.querySelectorAll('.custom-select').forEach(cs => {
+                cs.classList.remove('active');
+            });
+        });
+        timeSelectsInitialized = true;
+    }
+}
+
+/**
+ * 커스텀 드롭다운 표시 값 업데이트
+ */
+function updateCustomSelectDisplay(selectId, value) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    const wrapper = select.parentElement;
+    const customSelect = wrapper.querySelector('.custom-select');
+    if (!customSelect) return;
+
+    const selected = customSelect.querySelector('.custom-select-selected');
+    if (selected) {
+        selected.textContent = value;
+    }
+
+    // 옵션의 selected 클래스 업데이트
+    const options = customSelect.querySelectorAll('.custom-select-option');
+    options.forEach(opt => {
+        if (opt.dataset.value === value) {
+            opt.classList.add('selected');
+        } else {
+            opt.classList.remove('selected');
+        }
+    });
+
+    select.value = value;
 }
 
 /**
@@ -775,29 +984,31 @@ async function handleScheduleSubmit(e) {
     const title = document.getElementById('scheduleTitle').value.trim();
     const description = document.getElementById('scheduleDescription').value.trim();
     const startDate = document.getElementById('scheduleStartDate').value;
-    const startHour = document.getElementById('scheduleStartHour').value;
-    const startMinute = document.getElementById('scheduleStartMinute').value;
+    const startHour = document.getElementById('scheduleStartHour').value || '00';
+    const startMinute = document.getElementById('scheduleStartMinute').value || '00';
     const endDate = document.getElementById('scheduleEndDate').value;
-    const endHour = document.getElementById('scheduleEndHour').value;
-    const endMinute = document.getElementById('scheduleEndMinute').value;
+    const endHour = document.getElementById('scheduleEndHour').value || '00';
+    const endMinute = document.getElementById('scheduleEndMinute').value || '00';
     const status = document.getElementById('scheduleStatus').value;
     const orgCategoryId = document.getElementById('scheduleOrgCategory').value;
 
+    console.log('Form values:', { startHour, startMinute, endHour, endMinute });
+
     if (!title) {
-        alert('제목을 입력해주세요.');
+        await sweetInfo('제목을 입력해주세요.');
         return;
     }
 
     // 제목 글자 수 검증
     if (title.length > 20) {
-        alert('제목은 최대 20자까지 입력 가능합니다.');
+        await sweetInfo('제목은 최대 20자까지 입력 가능합니다.');
         document.getElementById('scheduleTitle').focus();
         return;
     }
 
     // 설명 글자 수 검증
     if (description.length > 200) {
-        alert('설명은 최대 200자까지 입력 가능합니다.');
+        await sweetInfo('설명은 최대 200자까지 입력 가능합니다.');
         document.getElementById('scheduleDescription').focus();
         return;
     }
@@ -810,8 +1021,8 @@ async function handleScheduleSubmit(e) {
     const startDateTime = new Date(`${startDate}T${startTime}`);
     const endDateTime = new Date(`${endDate}T${endTime}`);
 
-    if (endDateTime <= startDateTime) {
-        alert('종료 날짜/시간은 시작 날짜/시간보다 이후여야 합니다.');
+    if (endDateTime < startDateTime) {
+        await sweetInfo('종료 날짜/시간은 시작 날짜/시간보다 이전일 수 없습니다.');
         return;
     }
 
@@ -863,13 +1074,13 @@ async function handleScheduleSubmit(e) {
             throw new Error(error.message || (isEditMode ? '일정 수정에 실패했습니다.' : '일정 등록에 실패했습니다.'));
         }
 
-        alert(isEditMode ? '일정이 수정되었습니다.' : '일정이 등록되었습니다.');
+        await sweetSuccess(isEditMode ? '일정이 수정되었습니다.' : '일정이 등록되었습니다.');
         closeScheduleModal();
         loadSchedules();  // 일정 목록 새로고침
     } catch (error) {
         console.error(`Error ${isEditMode ? 'updating' : 'creating'} schedule:`, error);
         if (error.message !== 'SESSION_EXPIRED') {
-            alert(error.message || (isEditMode ? '일정 수정에 실패했습니다.' : '일정 등록에 실패했습니다.'));
+            await sweetError(error.message || (isEditMode ? '일정 수정에 실패했습니다.' : '일정 등록에 실패했습니다.'));
         }
     }
 }
@@ -921,12 +1132,12 @@ async function deleteSchedule(scheduleId, event) {
             throw new Error(error.message || '일정 삭제에 실패했습니다.');
         }
 
-        alert('일정이 삭제되었습니다.');
+        await sweetSuccess('일정이 삭제되었습니다.');
         loadSchedules();  // 일정 목록 새로고침
     } catch (error) {
         console.error('Error deleting schedule:', error);
         if (error.message !== 'SESSION_EXPIRED') {
-            alert(error.message || '일정 삭제에 실패했습니다.');
+            await sweetError(error.message || '일정 삭제에 실패했습니다.');
         }
     }
 }

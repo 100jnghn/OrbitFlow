@@ -76,6 +76,35 @@ public class OrgController {
         );
     }
 
+    @GetMapping("/trees")
+    public ResponseEntity<ResponseDto<List<OrgAdminResDto>>> listOrSearchForAdmin(
+            @RequestParam(defaultValue = "false") boolean includeInactive,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "false") boolean includeDescendants
+    ) {
+        Long companyId = SecurityUtils.getCompanyId();
+
+        // 검색어 없으면 기존 목록
+        if (keyword == null || keyword.isBlank()) {
+            return ResponseEntity.ok(
+                    new ResponseDto<>(
+                            HttpStatus.OK,
+                            "조직 목록 조회",
+                            orgService.findAllForAdmin(companyId, includeInactive)
+                    )
+            );
+        }
+
+        // 검색어 있으면 검색
+        return ResponseEntity.ok(
+                new ResponseDto<>(
+                        HttpStatus.OK,
+                        "조직 검색 결과 조회",
+                        orgService.searchForAdmin(companyId, keyword, includeInactive, includeDescendants)
+                )
+        );
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<ResponseDto<Void>> update(
             @PathVariable Long id,

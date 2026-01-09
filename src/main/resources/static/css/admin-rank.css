@@ -1,6 +1,6 @@
 /* ==================================================
-   admin-rank.css
-   - 직급 관리 화면 전용 CSS (독립 파일)
+   admin-rank.css (FINAL)
+   - 조직 카테고리 디자인 기준 100% 통일
 ================================================== */
 
 :root {
@@ -10,52 +10,53 @@
     --text: #111827;
     --muted: #6b7280;
 
-    --primary: #2f6af6;
-    --primary-weak: rgba(47, 106, 246, .12);
+    --primary: #3B82F6;
+    --primary-hover: #2563EB;
+    --primary-weak: rgba(59, 130, 246, .12);
 
-    --success-bg: #dff7e7;
-    --success-text: #137a3a;
+    --success-bg: #ecfdf5;
+    --success-border: #10b981;
 
-    --danger-bg: #fde2e2;
-    --danger-text: #b42318;
+    --danger-bg: #fef2f2;
+    --danger-border: #f87171;
 
-    --shadow: 0 12px 36px rgba(16, 24, 40, 0.08);
-}
-
-/* =========================
-   Title
-========================= */
-.rank-title-row {
-    margin-bottom: 18px;
-}
-
-.rank-title {
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: -0.2px;
-    color: var(--text);
-    margin: 0;
+    --neutral-700: #374151;
+    --neutral-800: #1F2937;
 }
 
 /* =========================
    Card
 ========================= */
+
 .rank-card {
     background: var(--card);
     border: 1px solid var(--line);
-    border-radius: 18px;
-    box-shadow: var(--shadow);
-    padding: 18px 18px 14px;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+/* =========================
+   Title
+========================= */
+
+.rank-title {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--neutral-800);
+    letter-spacing: -0.02em;
+    margin: 0 0 16px;
 }
 
 /* =========================
    Toolbar
 ========================= */
+
 .rank-toolbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
+    gap: 12px;
 }
 
 .toolbar-left {
@@ -64,127 +65,78 @@
     gap: 12px;
 }
 
-.toolbar-right {
-    display: flex;
-    align-items: center;
-}
-
 /* =========================
    Search
 ========================= */
+
 .rank-search {
     display: flex;
     align-items: center;
-    gap: 10px;
-    height: 44px;
-    border: 1px solid var(--line);
-    border-radius: 12px;
+    gap: 8px;
+    height: 40px;
     padding: 0 14px;
-    background: #fbfcff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
 }
 
 .rank-search i {
-    color: #9aa3b2;
     font-size: 14px;
-    pointer-events: none;
+    color: #9ca3af;
 }
 
 .rank-search input {
-    width: 220px;
     border: none;
     outline: none;
+    font-size: 14px;
     background: transparent;
-    font-size: 13.5px;
-    color: var(--text);
-    pointer-events: auto;
-    position: relative;
-    z-index: 1;
-}
-
-.rank-search input::placeholder {
-    color: #9aa3b2;
 }
 
 /* =========================
-   Buttons
+   Buttons (공통)
 ========================= */
+
 .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    height: 42px;
+    height: 40px;
     padding: 0 16px;
-    border-radius: 12px;
-    border: 1px solid transparent;
-    font-size: 13.5px;
-    font-weight: 700;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
-    transition: transform .06s ease, background .15s ease, border-color .15s ease;
-}
-
-.btn:active {
-    transform: translateY(1px);
+    border: 1px solid transparent;
+    background: #fff;
+    transition: all .2s ease;
 }
 
 .btn-primary {
     background: var(--primary);
     color: #fff;
-    box-shadow: 0 10px 24px rgba(47, 106, 246, .22);
 }
 
 .btn-primary:hover {
-    filter: brightness(0.98);
+    background: var(--primary-hover);
 }
 
 .btn-outline {
-    background: #fff;
+    border-color: var(--primary);
     color: var(--primary);
-    border-color: rgba(47, 106, 246, .35);
 }
 
 .btn-outline:hover {
     background: var(--primary-weak);
 }
 
-.btn-outline:disabled {
-    cursor: not-allowed;
-    opacity: .45;
-}
-
-.btn-ghost {
-    background: #fff;
-    color: #374151;
-    border-color: #e5e7eb;
-}
-
-.btn-ghost:hover {
-    background: #f3f4f6;
-}
-
-/* =========================
-   Inactive toggle
-========================= */
-.inactive-toggle {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #475467;
-}
-
-.inactive-toggle small {
-    font-weight: 500;
-    color: #98a2b3;
-}
-
 /* =========================
    Table
 ========================= */
+
 .rank-table-wrap {
     border: 1px solid var(--line);
-    border-radius: 16px;
+    border-radius: 12px;
     overflow: hidden;
     background: #fff;
 }
@@ -192,57 +144,99 @@
 .rank-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13.5px;
+    font-size: 14px;
 }
 
 .rank-table thead th {
-    background: #f6f7fb;
-    color: #667085;
-    text-align: left;
+    background: #f9fafb;
+    color: var(--neutral-700);
     padding: 14px 16px;
-    font-weight: 800;
+    font-weight: 600;
     border-bottom: 1px solid var(--line);
+    text-align: left;
 }
 
 .rank-table tbody td {
-    padding: 16px 16px;
+    height: 52px;
+    padding: 14px 16px;
     border-bottom: 1px solid var(--line);
     vertical-align: middle;
-    color: var(--text);
+    box-sizing: border-box;
+}
+
+.rank-table tbody tr:hover {
+    background: #f9fafb;
 }
 
 .rank-table tbody tr:last-child td {
     border-bottom: none;
 }
 
-.col-order {
-    width: 90px;
+
+/* column width */
+.col-order { width: 90px; }
+.col-status { width: 140px; }
+.col-action { width: 140px; }
+
+/* =========================
+   Status Badge
+========================= */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 56px;
+    height: 22px;
+    padding: 3px 14px;
+
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+
+    border: 1.2px solid transparent;
+    color: dimgray;
+    background: #f5f5f5;
 }
 
-.col-status {
-    width: 120px;
+.status-active {
+    background: #ecfdf5;          /* 연한 민트 */
+    border-color: var(--success-border);
+    color: dimgray;
 }
 
-.col-action {
-    width: 120px;
+.status-inactive {
+    background: #fef2f2;          /* 연한 레드 */
+    border-color: var(--danger-border);
+    color: dimgray;
 }
 
 /* =========================
-   Drag handle
+   Table Button
 ========================= */
+
+.table-btn {
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    background: #e3f2fd;
+    border: 1.2px solid #6d8cdc;
+    color: #1976d2;
+    cursor: pointer;
+}
+
+/* =========================
+   Drag Handle
+========================= */
+
 .drag-handle {
     width: 34px;
     height: 34px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 10px;
     cursor: grab;
-    color: #98a2b3;
-}
-
-.drag-handle:active {
-    cursor: grabbing;
 }
 
 .drag-dots {
@@ -257,183 +251,100 @@
 .drag-dots span {
     width: 4px;
     height: 4px;
-    background: #a9b1c3;
+    background: #9ca3af;
     border-radius: 50%;
-}
-
-/* =========================
-   Status badge
-========================= */
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 56px;
-    height: 22px;
-    padding: 3px 14px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    line-height: 1;
-}
-
-.status-active {
-    background: var(--success-bg);
-    color: var(--success-text);
-}
-
-.status-inactive {
-    background: var(--danger-bg);
-    color: var(--danger-text);
-}
-
-/* =========================
-   Table button
-========================= */
-.table-btn {
-    height: 36px;
-    padding: 0 14px;
-    border-radius: 12px;
-    border: 1px solid #d0d5dd;
-    background: #fff;
-    font-weight: 800;
-    font-size: 13px;
-    color: #344054;
-    cursor: pointer;
-}
-
-.table-btn:hover {
-    background: #f3f4f6;
 }
 
 /* =========================
    Footer
 ========================= */
+
 .rank-footer {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    padding: 12px 6px 0;
+    align-items: center;
+    margin-top: 16px;
 }
 
 .rank-hint {
-    font-size: 12.5px;
-    color: #98a2b3;
+    font-size: 13px;
+    color: #9ca3af;
 }
 
 /* =========================
-   Modal
+   Inactive Toggle (Checkbox)
 ========================= */
-.modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.45);
-    display: flex;
-    justify-content: center;
+
+.inactive-toggle {
+    display: inline-flex;
     align-items: center;
-    z-index: 2000;
-    padding: 18px;
-}
-
-.modal.hidden {
-    display: none;
-}
-
-.modal-panel {
-    width: 720px;
-    max-width: 92vw;
-    background: #fff;
-    border-radius: 18px;
-    box-shadow: 0 22px 70px rgba(0, 0, 0, 0.32);
-    overflow: hidden;
-}
-
-.modal-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 22px 24px 10px;
-}
-
-.modal-head h2 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 900;
-}
-
-.icon-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    border: 1px solid #eef2f7;
-    background: #fff;
+    gap: 8px;
     cursor: pointer;
+    user-select: none;
+    font-size: 14px;
+    color: var(--neutral-700);
 }
 
-.icon-btn:hover {
-    background: #f3f4f6;
+/* 기본 checkbox 숨김 */
+.inactive-toggle input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
 }
 
-.modal-body {
-    padding: 8px 24px 18px;
-}
-
-/* =========================
-   Form
-========================= */
-.form-group {
-    margin-top: 14px;
-}
-
-.form-label {
-    display: block;
-    font-size: 12.5px;
-    font-weight: 900;
-    color: #667085;
-    margin-bottom: 8px;
-}
-
-.form-input {
-    width: 100%;
-    height: 46px;
-    padding: 0 14px;
-    border-radius: 12px;
-    border: 1px solid #e6eaf2;
-    background: #fbfcff;
-    font-size: 13.5px;
-}
-
-.form-input:focus {
-    outline: none;
-    border-color: rgba(47, 106, 246, .55);
-    box-shadow: 0 0 0 4px rgba(47, 106, 246, .12);
-}
-
-.form-help {
-    margin-top: 6px;
-    font-size: 12.5px;
-    color: #ef4444;
-}
-
-/* =========================
-   Toggle switch
-========================= */
-.toggle-row {
-    display: flex;
+/* 커스텀 박스 */
+.inactive-toggle .checkmark {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1.6px solid #cbd5f5;
+    background: #fff;
+    display: inline-flex;
     align-items: center;
-    gap: 12px;
+    justify-content: center;
+    transition: all .2s ease;
 }
 
-.toggle-text {
-    font-weight: 900;
-    font-size: 13.5px;
+/* 체크 아이콘 */
+.inactive-toggle .checkmark::after {
+    content: '';
+    width: 5px;
+    height: 9px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    opacity: 0;
+}
+
+/* 체크 상태 */
+.inactive-toggle input:checked + .checkmark {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.inactive-toggle input:checked + .checkmark::after {
+    opacity: 1;
+}
+
+/* hover */
+.inactive-toggle:hover .checkmark {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-weak);
+}
+
+.inactive-toggle .label-text {
+    font-weight: 500;
+}
+
+.inactive-toggle small {
+    font-size: 12px;
+    color: #9ca3af;
 }
 
 .switch {
     position: relative;
-    width: 54px;
-    height: 30px;
+    width: 44px;
+    height: 24px;
 }
 
 .switch input {
@@ -443,22 +354,22 @@
 .slider {
     position: absolute;
     inset: 0;
-    background: #d0d5dd;
+    background: #e5e7eb;
     border-radius: 999px;
     transition: .2s;
 }
 
 .slider::before {
-    content: "";
+    content: '';
     position: absolute;
-    width: 24px;
-    height: 24px;
-    left: 3px;
     top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
     background: #fff;
     border-radius: 50%;
     transition: .2s;
-    box-shadow: 0 8px 18px rgba(0, 0, 0, .12);
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
 }
 
 .switch input:checked + .slider {
@@ -466,51 +377,165 @@
 }
 
 .switch input:checked + .slider::before {
-    transform: translateX(24px);
+    transform: translateX(20px);
 }
 
 /* =========================
-   Modal actions
+   상태 / 관리 컬럼 중앙 정렬
 ========================= */
+
+.rank-table th.col-status,
+.rank-table td.col-status,
+.rank-table th.col-action,
+.rank-table td.col-action {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.td-center {
+    text-align: center;
+}
+
+
+/* =========================
+   Modal UI (ORG CATEGORY STYLE) - FINAL
+========================= */
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-panel {
+    width: 560px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow:
+            0 20px 40px rgba(0, 0, 0, 0.12),
+            0 8px 16px rgba(0, 0, 0, 0.08);
+    animation: modalFadeUp .18s ease-out;
+}
+
+@keyframes modalFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ===== Header ===== */
+
+.modal-head {
+    padding: 24px 28px 16px;
+    border-bottom: 1px solid var(--line);
+}
+
+.modal-head h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--neutral-800);
+    margin: 0;
+}
+
+.modal-sub {
+    margin-top: 6px;
+    font-size: 14px;
+    color: var(--muted);
+}
+
+/* ===== Body ===== */
+
+.modal-body {
+    padding: 24px 28px;
+}
+
+.form-group {
+    margin-bottom: 24px;
+    max-width: 480px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--neutral-700);
+}
+
+.form-input {
+    width: 100%;
+    height: 44px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    font-size: 14px;
+    transition: all .2s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(59,130,246,.12);
+}
+
+.input-meta {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #2563eb;
+    text-align: right;
+}
+
+.form-help {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--danger-border);
+}
+
+/* ===== Toggle ===== */
+
+.toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.toggle-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--neutral-700);
+}
+
+/* ===== Actions ===== */
+
 .modal-actions {
+    padding: 16px 28px 24px;
+    border-top: 1px solid var(--line);
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    padding: 16px 24px 22px;
-    border-top: 1px solid #eef2f7;
 }
 
-/* =========================
-   Sortable
-========================= */
-.sortable-chosen {
-    background: #f7f9ff;
-}
 
-.sortable-ghost {
-    opacity: .6;
-}
 
-/* =========================
-   Responsive
-========================= */
-@media (max-width: 720px) {
-    .rank-toolbar {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
-    }
 
-    .rank-search {
-        width: 100%;
-    }
 
-    .rank-footer {
-        flex-direction: column;
-        align-items: stretch;
-    }
 
-    .rank-footer .btn {
-        width: 100%;
-    }
+.inactive-sep {
+    background: #f9fafb;
+    font-weight: 700;
+    color: #667085;
 }

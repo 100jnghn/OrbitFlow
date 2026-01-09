@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentCarId = getCarId();
 
     if (!currentCarId) {
-        alert('차량 정보를 찾을 수 없습니다.');
+        sweetError('차량 정보를 찾을 수 없습니다.');
         history.back();
         return;
     }
@@ -267,7 +267,7 @@ async function handleImageSelect(event) {
     const validation = await validateImageFile(file);
 
     if (!validation.valid) {
-        alert(validation.message);
+        await sweetWarning(validation.message);
         // 파일 입력 초기화
         event.target.value = '';
         return;
@@ -345,9 +345,12 @@ function handleImageRemove() {
  * 기존 이미지 삭제 핸들러 (서버에서 완전 삭제)
  */
 async function handleDeleteImage() {
-    if (!confirm('기존 이미지를 삭제하시겠습니까?')) {
-        return;
-    }
+    const result = await sweetConfirm(
+        '삭제 확인',
+        '기존 이미지를 삭제하시겠습니까?'
+    );
+
+    if (!result.isConfirmed) return;
 
     try {
         const response = await apiFetch(
@@ -360,14 +363,14 @@ async function handleDeleteImage() {
         }
 
         const result = await response.json();
-        alert(result.message);
+        await sweetSuccess(result.message);
 
         // 이미지 뷰 초기화
         displayCarImage(null);
 
     } catch (error) {
         console.error(error);
-        alert('이미지 삭제에 실패했습니다.');
+        await sweetError('이미지 삭제에 실패했습니다.');
     }
 }
 
@@ -377,7 +380,7 @@ async function handleDeleteImage() {
 async function handleEdit() {
     // validation 검증
     if (!validateCarModel() || !validateCarAge() || !validateCarStatus()) {
-        alert('입력 항목을 확인해주세요.');
+        await sweetInfo('입력 항목을 확인해주세요.');
         return;
     }
 
@@ -406,19 +409,19 @@ async function handleEdit() {
         console.log(response);
 
         if (response.ok) {
-            alert('차량이 수정되었습니다.');
+            await sweetSuccess('차량이 수정되었습니다.');
 
             // 관리자 차량 목록 화면으로 이동
             window.location.href = '/view/resource/admin/cars';
 
         } else {
             const result = await response.json();
-            alert(result.message)
+            await sweetError(result.message)
         }
 
     } catch (error) {
         console.error(error);
-        alert(error.message);
+        await sweetWarning(error.message);
     }
 }
 
@@ -427,9 +430,12 @@ async function handleEdit() {
  * 삭제 버튼
  */
 async function handleDelete() {
-    if (!confirm('정말로 이 차량을 삭제하시겠습니까?')) {
-        return;
-    }
+    const result = await sweetConfirm(
+        '삭제 확인',
+        '차량을 삭제하시겠습니까?'
+    );
+
+    if (!result.isConfirmed) return;
 
     try {
         const response = await apiFetch(
@@ -445,7 +451,7 @@ async function handleDelete() {
 
     } catch (error) {
         console.error(error);
-        alert('차량 삭제에 실패했습니다.');
+        await sweetError('차량 삭제에 실패했습니다.');
     }
 }
 
@@ -478,7 +484,7 @@ async function loadStatusOptions(selectedStatusId) {
 
     } catch (e) {
         console.error(e);
-        alert('상태 목록을 불러오지 못했습니다.');
+        await sweetError('상태 목록을 불러오지 못했습니다.');
     }
 }
 

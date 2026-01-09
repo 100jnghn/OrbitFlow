@@ -44,7 +44,8 @@ public class BoardResDto {
         private Long fileSize;
 
         public static FileInfo from(File file) {
-            if (file == null) return null;
+            if (file == null)
+                return null;
             return FileInfo.builder()
                     .id(file.getId())
                     .originalFileName(file.getOriginFile())
@@ -54,12 +55,14 @@ public class BoardResDto {
         }
 
         public static List<FileInfo> fromFiles(List<File> files) {
-            if (files == null || files.isEmpty()) return List.of();
+            if (files == null || files.isEmpty())
+                return List.of();
             return files.stream()
                     .map(FileInfo::from)
                     .toList();
         }
     }
+
     /** 게시글 목록 조회 DTO */
     @Data
     @NoArgsConstructor
@@ -67,22 +70,27 @@ public class BoardResDto {
     @Builder
     public static class ListInfo {
         private Long id;
+        @com.fasterxml.jackson.annotation.JsonProperty("categoryId")
+        private Long categoryId;
         private String boardTitle;
         private String categoryName;
         private WriterInfo writer;
         private int viewCount;
         private Instant createdAt;
-        private boolean hasFile;
+        @com.fasterxml.jackson.annotation.JsonProperty("hasFile")
+        private boolean fileAttached;
 
         public static ListInfo from(Board board) {
+            boolean attached = board.getFiles() != null && !board.getFiles().isEmpty();
             return ListInfo.builder()
                     .id(board.getId())
+                    .categoryId(board.getCategory() != null ? board.getCategory().getId() : null)
                     .boardTitle(board.getBoardTitle())
                     .categoryName(board.getCategory() != null ? board.getCategory().getBoardName() : "N/A")
                     .writer(WriterInfo.from(board.getWriter()))
                     .viewCount(board.getViewCount())
                     .createdAt(board.getCreatedAt())
-                    .hasFile(board.getFiles() != null)
+                    .fileAttached(attached)
                     .build();
         }
 
@@ -97,6 +105,8 @@ public class BoardResDto {
         private Long id;
         private String boardTitle;
         private String boardContent;
+        @com.fasterxml.jackson.annotation.JsonProperty("categoryId")
+        private Long categoryId;
         private String categoryName;
         private WriterInfo writer;
         private int viewCount;
@@ -110,6 +120,7 @@ public class BoardResDto {
                     .id(board.getId())
                     .boardTitle(board.getBoardTitle())
                     .boardContent(board.getBoardContent())
+                    .categoryId(board.getCategory() != null ? board.getCategory().getId() : null)
                     .categoryName(board.getCategory() != null ? board.getCategory().getBoardName() : "N/A")
                     .writer(WriterInfo.from(board.getWriter()))
                     .viewCount(board.getViewCount())

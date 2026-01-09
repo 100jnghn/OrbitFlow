@@ -30,8 +30,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     await loadDashboardData();
 });
 
+// 대시보드 데이터 로드
 async function loadDashboardData() {
     try {
+        // 병렬로 모든 데이터 로드
         await Promise.all([
             loadUserProfile(),
             loadNotices(),
@@ -76,7 +78,7 @@ async function syncWorkStatusFromServer() {
 
 /**
  * 2. 출퇴근 버튼 인터랙션 및 특수 상태 제어
- * 
+ *
  * 🔥 출퇴근/자리비움 버튼 클릭은 commute.js에서 처리합니다.
  * commute.js에서 API 호출 성공 후 workStatusChanged 이벤트를 dispatch하여
  * index.js의 이벤트 리스너가 상태를 업데이트합니다.
@@ -92,7 +94,7 @@ function initWorkStatusBadgeInteractions() {
         if (window.currentServerStatus !== status) {
             window.currentServerStatus = status;
         }
-        
+
         // commute.js의 버튼 상태도 업데이트되도록 함수 호출
         setTimeout(() => {
             if (typeof window.updateCommuteButtonStates === 'function') {
@@ -109,10 +111,10 @@ async function processEarlyReturn() {
         if (response.ok) {
             clearOptimisticWorkStatus();
             alert('업무로 복귀 처리되었습니다.');
-            
+
             // 서버 상태 즉시 동기화
             await loadUserProfile();
-            
+
             // workStatusChanged 이벤트를 dispatch하여 commute.js에도 알림
             const currentStatus = window.currentServerStatus;
             if (currentStatus) {
@@ -120,7 +122,7 @@ async function processEarlyReturn() {
                     detail: { status: currentStatus }
                 }));
             }
-            
+
             // commute.js의 버튼 상태도 업데이트되도록 이벤트 발생
             if (typeof window.updateCommuteButtons === 'function') {
                 window.updateCommuteButtons();
@@ -159,7 +161,7 @@ async function loadUserProfile() {
         // workStatus가 null이거나 undefined일 수 있으므로 안전하게 처리
         const workStatus = (user && user.workStatus) ? user.workStatus : null;
         window.currentServerStatus = workStatus;
-        
+
         // 디버깅 로그: workStatus 확인
         if (!workStatus) {
             console.warn('[loadUserProfile] workStatus가 없습니다. user:', user);
@@ -170,7 +172,7 @@ async function loadUserProfile() {
         // 이름 옆에 배지 생성/업데이트 함수 호출
         // workStatus가 없으면 기본값(DEFAULT)으로 표시
         updateNameAdjacentBadge(workStatus || 'DEFAULT');
-        
+
         // commute.js의 버튼 상태도 업데이트
         setTimeout(() => {
             if (typeof window.updateCommuteButtonStates === 'function') {
@@ -205,7 +207,7 @@ async function loadUserProfile() {
 function updateNameAdjacentBadge(status) {
     const nameEl = document.getElementById('profileName');
     if (!nameEl) return;
-    
+
     // awayBtn은 commute.js에서도 사용하므로 여기서 찾음
     const awayBtn = document.getElementById('awayBtn');
 
@@ -228,7 +230,7 @@ function updateNameAdjacentBadge(status) {
     badge.className = `work-status-badge ${config.className}`;
     badge.style.display = 'inline-block';
     badge.style.marginLeft = '8px';
-    
+
     // 🔥 디버깅 로그: workStatus 확인 (필요시 제거 가능)
     if (!status || normalizedStatus === 'DEFAULT') {
         console.warn('[updateNameAdjacentBadge] status가 없거나 DEFAULT입니다. status:', status);
@@ -247,29 +249,40 @@ function updateNameAdjacentBadge(status) {
     }
 }
 
-/**
- * 5. 기타 대시보드 위젯 로드 로직
- */
+
+// 공지사항 로드
 async function loadNotices() {
     const noticeList = document.getElementById('noticeList');
     if (!noticeList) return;
+
     try {
         const categoryResponse = await apiFetch('/api/board-categories/accessible');
         if (!categoryResponse.ok) {
-            if (categoryResponse.status === 401) { location.href = '/login'; return; }
+            if (categoryResponse.status === 401) {
+                location.href = '/login';
+                return;
+            }
             noticeList.innerHTML = '<li class="notice-item empty">공지사항 게시판을 찾을 수 없습니다.</li>';
             return;
         }
+
         const categoryResult = await categoryResponse.json();
         const categories = categoryResult.data || [];
-        const noticeCategory = categories.find(cat => (cat.boardType === '공지사항' || cat.boardType === 'NOTICE') && cat.organizationId === null);
+
+        const noticeCategory = categories.find(cat =>
+            (cat.boardType === '공지사항' || cat.boardType === 'NOTICE') &&
+            cat.organizationId === null
+        );
 
         if (!noticeCategory) {
             noticeList.innerHTML = '<li class="notice-item empty">전사 공지사항 게시판이 없습니다.</li>';
             return;
         }
 
-        const boardResponse = await apiFetch(`/api/boards/categories/${noticeCategory.id}?page=0&size=8&sort=createdAt,desc`);
+        const boardResponse = await apiFetch(
+            `/api/boards/categories/${noticeCategory.id}?page=0&size=5&sort=createdAt,desc`
+        );
+
         if (!boardResponse.ok) throw new Error('공지사항 조회 실패');
 
         const boardResult = await boardResponse.json();
@@ -282,103 +295,194 @@ async function loadNotices() {
 
         noticeList.innerHTML = boards.map(board => {
             let date = '-';
-            if (board.createdAt) { try { date = formatDate(board.createdAt); } catch (e) { date = board.createdAt; } }
+            if (board.createdAt) {
+                try {
+                    date = formatDate(board.createdAt);
+                } catch (e) {
+                    date = board.createdAt;
+                }
+            }
             const author = board.writer?.name || '작성자';
             const title = board.boardTitle || board.title || '제목 없음';
-            return `<li class="notice-item" onclick="location.href='/view/board/detail?boardId=${board.id}'">
-                <div class="notice-title">${escapeHTML(title)}</div>
-                <div class="notice-meta"><span class="notice-author">${escapeHTML(author)}</span><span class="notice-date">${date}</span></div>
-            </li>`;
+            return `
+                <li class="notice-item" onclick="location.href='/view/board/detail?boardId=${board.id}&categoryId=${noticeCategory.id}'">
+                    <div class="notice-title">${escapeHTML(title)}</div>
+                    <div class="notice-meta">
+                        <span class="notice-author">${escapeHTML(author)}</span>
+                        <span class="notice-date">${date}</span>
+                    </div>
+                </li>
+            `;
         }).join('');
     } catch (error) {
         console.error('공지사항 로드 실패:', error);
         noticeList.innerHTML = '<li class="notice-item empty">공지사항을 불러올 수 없습니다.</li>';
     }
 }
-
+// 근태 정보 로드
 async function loadAttendance() {
     try {
-        await Promise.all([loadTodayAttendance(), loadMonthlyWorkHours(), loadLeaveBalance(), loadLeaveInfo()]);
+        await Promise.all([
+            loadTodayAttendance(),
+            loadMonthlyWorkHours(),
+            loadLeaveBalance(),
+            loadLeaveInfo()
+        ]);
     } catch (error) {
         console.error('근태 정보 로드 실패:', error);
+        safeSetText('attendanceDate', '-');
+        safeSetText('attendanceStatus', '조회 실패');
     }
 }
 
+// 오늘의 근태 정보 로드
 async function loadTodayAttendance() {
     try {
         const response = await apiFetch('/api/attendance/today');
-        if (!response.ok) return;
+        if (!response.ok) {
+            if (response.status === 401) {
+                location.href = '/login';
+                return;
+            }
+            throw new Error('근태 정보 조회 실패');
+        }
+
         const result = await response.json();
         const attendance = result.data;
+
         const now = new Date();
-        const dateStr = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+        const dateStr = now.toLocaleDateString('ko-KR', {
+            year: 'numeric', month: 'long', day: 'numeric', weekday: 'short'
+        });
+
         safeSetText('attendanceDate', dateStr);
+
+        // attendance.attendance가 존재하는지 안전하게 확인
         if (attendance && attendance.attendance) {
             const statusText = attendance.attendance.status === 'ON_TIME' ? '정상 출근' : '지각';
             safeSetText('attendanceStatus', statusText);
         } else {
             safeSetText('attendanceStatus', '근무 예정');
         }
-    } catch (e) { }
+    } catch (error) {
+        console.error('오늘 근태 정보 로드 실패:', error);
+    }
 }
 
+// 월별 총 근무시간 로드
 async function loadMonthlyWorkHours() {
     try {
         const now = new Date();
-        const response = await apiFetch(`/api/attendance/history/monthly?year=${now.getFullYear()}&month=${now.getMonth() + 1}`);
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1;
+
+        const response = await apiFetch(`/api/attendance/history/monthly?year=${year}&month=${month}`);
         if (response.ok) {
             const result = await response.json();
-            safeSetText('totalWorkHours', result.data?.summary?.totalWorkTimeDisplay || '0h 0m');
+            const data = result.data;
+            const display = data?.summary?.totalWorkTimeDisplay || '0h 0m';
+            safeSetText('totalWorkHours', display);
         }
-    } catch (e) { }
+    } catch (error) {
+        console.error('월별 근무시간 로드 실패:', error);
+        safeSetText('totalWorkHours', '-');
+    }
 }
 
+// 연차 현황 로드
 async function loadLeaveBalance() {
     try {
-        const response = await apiFetch(`/api/leave/summary?year=${new Date().getFullYear()}`);
+        const now = new Date();
+        const year = now.getFullYear();
+        const response = await apiFetch(`/api/leave/summary?year=${year}`);
         if (response.ok) {
             const result = await response.json();
             const data = result.data;
             const remaining = (data && data.remainingDays !== undefined) ? parseFloat(data.remainingDays).toFixed(1) + '일' : '0일';
             safeSetText('remainingLeave', remaining);
         }
-    } catch (e) { }
+    } catch (error) {
+        console.error('연차 현황 로드 실패:', error);
+        safeSetText('remainingLeave', '-');
+    }
 }
 
+
+
+
+// 휴가 관련 정보 로드
 async function loadLeaveInfo() {
     try {
-        const year = new Date().getFullYear();
+        const now = new Date();
+        const year = now.getFullYear();
+
         const summaryResponse = await apiFetch(`/api/leave/summary?year=${year}`);
         if (summaryResponse.ok) {
-            const result = await summaryResponse.json();
-            const data = result.data;
-            if (data) safeSetText('leaveUsage', `${parseFloat(data.usedDays || 0).toFixed(1)}일 / ${parseFloat(data.totalGranted || 0).toFixed(1)}일`);
+            const summaryResult = await summaryResponse.json();
+            const summaryData = summaryResult.data;
+            if (summaryData) {
+                const total = parseFloat(summaryData.totalGranted || 0).toFixed(1);
+                const used = parseFloat(summaryData.usedDays || 0).toFixed(1);
+                safeSetText('leaveUsage', `${used}일 / ${total}일`);
+            }
         }
-    } catch (e) { }
+
+        const historyResponse = await apiFetch(`/api/leave/history?page=0&size=50`);
+        if (historyResponse.ok) {
+            const historyResult = await historyResponse.json();
+            const content = historyResult.data?.content || [];
+            const pendingCount = content.filter(l => l.statusCode === 'SUBMITTED' || l.statusCode === 'IN_PROGRESS').length;
+            safeSetText('pendingLeaveCount', pendingCount > 0 ? `${pendingCount}건` : '없음');
+        }
+
+        const approvedResponse = await apiFetch(`/api/leave/history?status=APPROVED&page=0&size=50`);
+        if (approvedResponse.ok) {
+            const approvedResult = await approvedResponse.json();
+            const content = approvedResult.data?.content || [];
+
+            let nextLeaveDate = null;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            content.forEach(leave => {
+                const dateStr = leave.period ? leave.period.split(' ~ ')[0] : leave.actionDate;
+                if (dateStr) {
+                    const startDate = new Date(dateStr);
+                    startDate.setHours(0, 0, 0, 0);
+                    if (startDate >= today && (!nextLeaveDate || startDate < nextLeaveDate)) {
+                        nextLeaveDate = startDate;
+                    }
+                }
+            });
+
+            const nextStr = nextLeaveDate ? nextLeaveDate.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) : '없음';
+            safeSetText('nextLeaveDate', nextStr);
+        }
+    } catch (error) {
+        console.error('휴가 정보 로드 실패:', error);
+    }
 }
 
+
+// 일정 요약 로드
 async function loadScheduleSummary() {
-    const dailyEl = document.getElementById('dailySummary');
-    const weeklyEl = document.getElementById('weeklySummary');
+    const dailySummaryEl = document.getElementById('dailySummary');
+    const weeklySummaryEl = document.getElementById('weeklySummary');
+
+    if (dailySummaryEl) dailySummaryEl.textContent = 'AI가 오늘의 일정을 요약 중입니다...';
+    if (weeklySummaryEl) weeklySummaryEl.textContent = 'AI가 주간 일정을 요약 중입니다...';
+
     try {
         const response = await apiFetch('/api/schedule/summary');
         if (response.ok) {
             const result = await response.json();
             const { dailySummary, weeklySummary } = result.data;
-            if (dailyEl) dailyEl.innerHTML = renderMarkdown(dailySummary || '오늘 일정이 없습니다.');
-            if (weeklyEl) weeklyEl.innerHTML = renderMarkdown(weeklySummary || '이번 주 일정이 없습니다.');
+            if (dailySummaryEl) dailySummaryEl.innerHTML = renderMarkdown(dailySummary || '오늘 일정이 없습니다.');
+            if (weeklySummaryEl) weeklySummaryEl.innerHTML = renderMarkdown(weeklySummary || '이번 주 일정이 없습니다.');
         }
-    } catch (e) { }
-}
-
-async function loadApprovalStats() {
-    ['pendingApprovals', 'documentsCreated', 'approvedThisWeek', 'rejected'].forEach(id => { safeSetText(id, '-'); });
-}
-
-// --- 유틸리티 및 헬퍼 함수 ---
-function safeSetText(id, text) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = text;
+    } catch (error) {
+        console.error('일정 요약 로드 실패:', error);
+    }
 }
 
 function renderMarkdown(text) {
@@ -386,17 +490,33 @@ function renderMarkdown(text) {
     return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
 }
 
+// 결재 통계 로드
+async function loadApprovalStats() {
+    // 요소가 있는 경우에만 기본값 설정
+    ['pendingApprovals', 'documentsCreated', 'approvedThisWeek', 'rejected'].forEach(id => {
+        safeSetText(id, '-');
+    });
+}
+
+// 날짜 포맷팅
 function formatDate(dateString) {
+    if (!dateString) return '-';
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return '-';
+
     const diffMs = new Date() - date;
     const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return '방금 전';
     if (diffMins < 60) return `${diffMins}분 전`;
-    const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) return `${diffHours}시간 전`;
+    if (diffDays < 7) return `${diffDays}일 전`;
     return date.toLocaleDateString();
 }
 
+// HTML 이스케이프
 function escapeHTML(str) {
     if (!str) return '';
     const div = document.createElement('div');

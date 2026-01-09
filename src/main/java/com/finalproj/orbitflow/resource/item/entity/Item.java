@@ -53,7 +53,6 @@ public class Item extends BaseEntity {
     private File file;
 
 
-
     public void update(ItemCategory itemCategory, String name, String description,
                        ResourceStatus resourceStatus, File file) {
         this.itemCategory = itemCategory;
@@ -65,5 +64,9 @@ public class Item extends BaseEntity {
 
     public void delete(ResourceStatus deletedStatus) {
         this.resourceStatus = deletedStatus;
+    }
+
+    public void deleteFile() {
+        this.file = null;
     }
 }

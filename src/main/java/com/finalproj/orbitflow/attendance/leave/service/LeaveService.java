@@ -6,6 +6,9 @@ import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
 import com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole;
 import com.finalproj.orbitflow.attendance.leave.dto.*;
+import com.finalproj.orbitflow.attendance.leave.dto.LeaveBalanceResDto;
+import com.finalproj.orbitflow.attendance.leave.dto.LeaveHistoryResDto;
+import com.finalproj.orbitflow.attendance.leave.dto.LeaveRemainingResDto;
 import com.finalproj.orbitflow.attendance.leave.entity.LeaveBalance;
 import com.finalproj.orbitflow.attendance.leave.entity.LeaveGrant;
 import com.finalproj.orbitflow.attendance.leave.entity.LeaveType;
@@ -438,8 +441,8 @@ public class LeaveService {
 
         // 4. 연차 환불 처리 (차감 대상인 경우)
         // 🔥 null 체크 강화: 출장/외근의 경우 leaveType이 null일 수 있음
-        if (record.getLeaveType() != null 
-                && Boolean.TRUE.equals(record.getLeaveType().getIsCountable()) 
+        if (record.getLeaveType() != null
+                && Boolean.TRUE.equals(record.getLeaveType().getIsCountable())
                 && refundDays.compareTo(BigDecimal.ZERO) > 0) {
             LeaveBalance balance = leaveBalanceRepository
                     .findTopByEmployeeIdOrderByYearDesc(employeeId)

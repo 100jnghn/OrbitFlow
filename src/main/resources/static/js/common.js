@@ -603,3 +603,56 @@ window.addEventListener("beforeunload", () => {
         eventSource = null;
     }
 });
+
+
+// ---------- sweet alert 공통 래퍼 ---------- //
+window.sweetSuccess = function (message, type = 'success') {
+    return Swal.fire({
+        text: message,
+        icon: type,
+        confirmButtonText: '확인'
+    });
+};
+
+window.sweetError = function (message, type = 'error') {
+    return Swal.fire({
+        text: message,
+        icon: type,
+        confirmButtonText: '확인'
+    });
+};
+
+window.sweetWarning = function (message, type = 'warning') {
+    return Swal.fire({
+        text: message,
+        icon: type,
+        confirmButtonText: '확인'
+    });
+};
+
+window.sweetConfirm = function (title, message) {
+    return Swal.fire({
+        title: title,
+        text: message,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '확인',
+        cancelButtonText: '취소'
+    });
+};
+
+window.sweetInfo = function (message, type = 'info') {
+    return Swal.fire({
+        text: message,
+        icon: type,
+        confirmButtonText: '확인'
+    });
+};
+
+window.sweetQuestion = function (message, type = 'question') {
+    return Swal.fire({
+        text: message,
+        icon: type,
+        confirmButtonText: '확인'
+    });
+};

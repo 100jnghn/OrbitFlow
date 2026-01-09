@@ -9,7 +9,7 @@ package com.finalproj.orbitflow.approval.documentAISummary.enums;
  **/
 
 
-public enum SummaryStatus {
+public enum AiStatus {
     PROCESSING,
     COMPLETED,
     FAILED

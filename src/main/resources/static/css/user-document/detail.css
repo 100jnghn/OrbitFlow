@@ -774,3 +774,245 @@ button.active {
         transform: translate(-50%, -50%) rotate(360deg);
     }
 }
+
+.hidden {
+    display: none !important;
+}
+
+/* ===============================
+   AI 패널 공통
+=============================== */
+#aiSummaryPanel,
+#aiComparePanel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* ===============================
+   생성 전 / 빈 상태
+=============================== */
+.ai-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    min-height: 120px; /* ⭐ 텍스트 박스와 높이 통일 */
+    padding: 12px;
+
+    background: var(--neutral-50);
+    border: 1px dashed var(--neutral-200);
+    border-radius: 6px;
+}
+
+.ai-empty-text {
+    font-size: 13px;
+    color: var(--neutral-500);
+    text-align: center;
+    line-height: 1.4;
+}
+
+/* ===============================
+   AI 생성 버튼
+=============================== */
+.ai-create-btn {
+    min-width: 120px;
+    height: 34px;
+
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 500;
+
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+
+    background-color: var(--primary-color);
+    color: #ffffff;
+}
+
+.ai-create-btn:hover {
+    background-color: var(--primary-hover);
+}
+
+.ai-create-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ===============================
+   AI 결과 영역
+=============================== */
+.ai-result {
+    position: relative;
+    min-height: 120px;
+
+    padding: 12px;
+    border-radius: 6px;
+
+    background: #f9fafb;
+    border: 1px solid var(--neutral-200);
+
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--neutral-800);
+
+    white-space: pre-wrap;
+    word-break: break-word;
+
+    overflow-y: auto;
+}
+
+/* ===============================
+   로딩 상태
+=============================== */
+.ai-result.loading {
+    color: transparent; /* 텍스트 숨김 */
+}
+
+/* 반투명 오버레이 */
+.ai-result.loading::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+
+    background: rgba(249, 250, 251, 0.6);
+    border-radius: 6px;
+    z-index: 1;
+}
+
+/* ✅ 스피너 (ai-result 기준 중앙) */
+.ai-result.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+
+    width: 22px;
+    height: 22px;
+
+    border: 3px solid #e5e7eb;
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+
+    transform: translate(-50%, -50%);
+    animation: spin 0.8s linear infinite;
+
+    z-index: 2;
+}
+
+/* 로딩 텍스트 (spinner 아래) */
+.ai-result.loading .ai-loading-text {
+    position: absolute;
+    top: calc(50% + 22px);
+    left: 50%;
+    transform: translateX(-50%);
+
+    font-size: 13px;
+    color: var(--neutral-600);
+    white-space: nowrap;
+
+    z-index: 2;
+}
+
+/* ===============================
+   스크롤바 (선택)
+=============================== */
+.ai-result::-webkit-scrollbar {
+    width: 6px;
+}
+
+.ai-result::-webkit-scrollbar-thumb {
+    background: var(--neutral-300);
+    border-radius: 4px;
+}
+
+.ai-result::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* =========================================================
+   결재 서명 업로드
+========================================================= */
+
+.signature-upload-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.signature-preview-box {
+    width: 100%;
+    height: 160px; /* ⭐ 팝업용 축소 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #f8f9fa;
+    border: 2px dashed #ddd;
+    border-radius: 12px;
+
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.signature-preview-box:hover {
+    border-color: var(--primary-color);
+    background: #f0f4ff;
+}
+
+.signature-preview-box img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.signature-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    text-align: center;
+    color: #777;
+}
+
+.signature-placeholder i {
+    font-size: 42px; /* ⭐ 축소 */
+    opacity: 0.35;
+}
+
+.signature-placeholder p {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.signature-hint {
+    font-size: 12px;
+    color: #999;
+}
+
+/* 제거 버튼 */
+.signature-remove-btn {
+    align-self: flex-end;
+
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: none;
+
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+
+    background: #e74c3c;
+    color: #fff;
+}
+
+.signature-remove-btn:hover {
+    background: #c0392b;
+}

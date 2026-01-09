@@ -22,19 +22,31 @@ public class QDocumentSignature extends EntityPathBase<DocumentSignature> {
 
     public static final QDocumentSignature documentSignature = new QDocumentSignature("documentSignature");
 
+    public final com.finalproj.orbitflow.global.common.QBaseEntity _super = new com.finalproj.orbitflow.global.common.QBaseEntity(this);
+
     public final com.finalproj.orbitflow.approval.approvalLine.entity.QApprovalLine approvalLine;
 
     public final com.finalproj.orbitflow.hr.company.entity.QCompany company;
+
+    //inherited
+    public final DateTimePath<java.time.Instant> createdAt = _super.createdAt;
+
+    //inherited
+    public final NumberPath<Long> createdBy = _super.createdBy;
 
     public final com.finalproj.orbitflow.approval.document.entity.QDocument document;
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
+    //inherited
+    public final NumberPath<Long> modifiedBy = _super.modifiedBy;
+
     public final com.finalproj.orbitflow.global.file.entity.QFile signatureFile;
 
-    public final DateTimePath<java.time.Instant> signedAt = createDateTime("signedAt", java.time.Instant.class);
-
     public final com.finalproj.orbitflow.hr.employee.entity.QEmployee signer;
+
+    //inherited
+    public final DateTimePath<java.time.Instant> updatedAt = _super.updatedAt;
 
     public QDocumentSignature(String variable) {
         this(DocumentSignature.class, forVariable(variable), INITS);

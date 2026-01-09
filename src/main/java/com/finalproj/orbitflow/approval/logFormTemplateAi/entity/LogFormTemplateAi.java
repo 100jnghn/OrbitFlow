@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.logFormTemplateAI.entity;
+package com.finalproj.orbitflow.approval.logFormTemplateAi.entity;
 
 /*
  * Please explain the class!!!
@@ -9,13 +9,14 @@ package com.finalproj.orbitflow.approval.logFormTemplateAI.entity;
  */
 
 
+import com.finalproj.orbitflow.approval.documentAISummary.enums.AiStatus;
 import com.finalproj.orbitflow.approval.formTemplate.entity.FormTemplate;
 import com.finalproj.orbitflow.approval.formTemplateGroup.entity.FormTemplateGroup;
-import com.finalproj.orbitflow.approval.logFormTemplateAI.enums.AiStatus;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -25,38 +26,43 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class LogFormTemplateAI extends BaseEntity {
+@Builder
+public class LogFormTemplateAi extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "template_group_id")
     private FormTemplateGroup templateGroup;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_template_id")
     private FormTemplate createdTemplate;
 
+    // 🔹 AI에게 실제로 보낸 프롬프트
     @Column(nullable = false, columnDefinition = "text")
     private String prompt;
 
+    // 🔹 AI 판단 전제 (formName, baseRole 등)
+    @Column(name = "request_context", nullable = false, columnDefinition = "json")
+    private String requestContext;
+
+    // 🔹 AI가 그대로 반환한 JSON (절대 수정 금지)
     @Column(name = "generated_template_json", columnDefinition = "json")
     private String generatedTemplateJson;
 
-    @Column(name = "generated_rule_json", columnDefinition = "json")
-    private String generatedRuleJson;
+    // 🔹 서버가 AI 응답을 어떻게 처리했는지
+    @Column(name = "response_context", columnDefinition = "json")
+    private String responseContext;
 
     @Column(length = 50)
     private String model;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 10)
+    @Column(nullable = false, length = 20)
     private AiStatus status;
 
     @Column(name = "error_message", columnDefinition = "text")

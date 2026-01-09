@@ -30,6 +30,117 @@
 }
 
 /* =========================================================
+   결재선 (TABLE 기반 – PDF 안정판)
+========================================================= */
+
+/* 결재선 전체 테이블 */
+.approval-table {
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    font-size: 11px;
+}
+
+/* 모든 셀 공통 */
+.approval-table th,
+.approval-table td {
+    border: 1.5px solid #333;
+    padding: 0;
+    vertical-align: top;
+}
+
+/* =========================
+   좌측 세로 "결재" 라벨
+========================= */
+.approval-table th.approval-label {
+    width: 36px;
+    background: #d1d5db;
+
+    writing-mode: vertical-rl;
+    text-orientation: upright; /* 한 글자씩 */
+
+    text-align: center;
+    vertical-align: middle;
+
+    font-weight: 700;
+}
+
+/* =========================
+   결재자 개별 칸 (고정 크기)
+========================= */
+.approval-table td.approval-cell {
+    width: 90px;
+    height: 120px;
+    position: relative;
+}
+
+/* =========================
+   빈 결재 칸 (사선 – PDF 안전)
+========================= */
+.approval-table td.approval-cell.empty {
+    background: #fff;
+}
+
+/* 사선 */
+.approval-table td.approval-cell.empty::after {
+    content: "";
+    position: absolute;
+
+    left: -15%;
+    top: 50%;
+
+    width: 130%;
+    height: 1px;
+
+    background: #999;
+    transform: rotate(45deg);
+}
+
+/* =========================
+   결재자 내부 3단 구조
+========================= */
+
+/* 직책 */
+.approval-table .stamp-position {
+    background: #e5e7eb;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    font-weight: 600;
+    border-bottom: 1px solid #333;
+}
+
+/* 서명 영역 */
+.approval-table .stamp-signature {
+    height: 68px;
+    border-bottom: 1px solid #333;
+
+    display: table;
+    width: 100%;
+}
+
+/* 서명 이미지 중앙 정렬 */
+.approval-table .stamp-signature img {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+
+    max-width: 100%;
+    max-height: 100%;
+
+    margin: auto;
+}
+
+/* 이름 */
+.approval-table .stamp-name {
+    background: #e5e7eb;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    font-weight: 500;
+}
+
+
+/* =========================================================
    문서 제목
    (BOTTOM border만)
 ========================================================= */
@@ -504,39 +615,6 @@
     border-bottom: none;
 }
 
-.approval-line-wrapper {
-    width: 100%;
-    text-align: right;
-    margin-bottom: 8px;
-}
-
-.approval-line {
-    display: inline-block;
-}
-
-.approver-box {
-    display: inline-block;
-    width: 90px;
-    height: 140px;
-    border: 1px solid #000;
-    margin-left: 6px;
-    text-align: center;
-    font-size: 11px;
-}
-
-.approver-signature {
-    height: 90px;
-}
-
-.approver-signature img {
-    max-width: 100%;
-    max-height: 100%;
-}
-
-.approver-name {
-    margin-top: 4px;
-    font-weight: 600;
-}
 
 /* ===============================
    문서 하단 메타 정보

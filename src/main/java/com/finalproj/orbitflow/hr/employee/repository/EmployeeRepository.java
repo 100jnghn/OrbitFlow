@@ -43,11 +43,34 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     List<Employee> findAllByIdIn(List<Long> ids);
 
-    boolean existsByCompanyIdAndOrganizationIdAndStatusNot(
+    /**
+     * 조직 비활성화 가능 여부 판단용
+     * - ACTIVE 사원이 존재하면 true
+     */
+    boolean existsByCompanyIdAndOrganizationIdAndStatus(
             Long companyId,
             Long organizationId,
             EmployeeStatus status
     );
+
+
+    /**
+     * 조직에 실제 근무 중인 사원이 존재하는지 확인
+     * (조직 비활성화 차단 조건)
+     */
+    @Query("""
+            select count(e) > 0
+            from Employee e
+            where e.company.id = :companyId
+            and e.organization.id = :orgId
+            and e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE
+                    """)
+    boolean existsActiveEmployeeInOrg(
+            @Param("companyId") Long companyId,
+            @Param("orgId") Long orgId
+    );
+
+
 
     /**
      * 회사 ID + 이름, 사번 또는 이메일로 사원 검색
@@ -82,15 +105,15 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
 
     @Query("""
-                select e
-                from Employee e
-                join e.positionCategory pc
-                join e.organization o
-                where o.id = :organizationId
-                  and pc.orgCategory.id = :orgCategoryId
-                  and pc.isHead = true
-                  and pc.isActive = true
-                  and e.status = "ACTIVE"
+                        select e
+                        from Employee e
+                        join e.positionCategory pc
+                        join e.organization o
+                        where o.id = :organizationId
+                          and pc.orgCategory.id = :orgCategoryId
+                          and pc.isHead = true
+                          and pc.isActive = true
+                          and e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE
             """)
     Optional<Employee> findHeadByOrganizationAndOrgCategory(
             @Param("organizationId") Long organizationId,
@@ -215,6 +238,20 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
                 where e.organization.id = :orgId
             """)
     List<Long> findEmployeeIdsByOrganizationId(@Param("orgId") Long orgId);
+
+    @Query("""
+                SELECT COUNT(e)
+                FROM Employee e
+                WHERE e.company.id = :companyId
+                  AND e.organization.id = :orgId
+                  AND e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE
+            """)
+    long countActiveEmployeesByOrg(
+            @Param("companyId") Long companyId,
+            @Param("orgId") Long orgId
+    );
+
+    Optional<Employee> findByIdAndStatus(Long id, EmployeeStatus status);
 
     List<Employee> findByStatusAndWorkStatusIn(EmployeeStatus employeeStatus, java.util.List<com.finalproj.orbitflow.hr.employee.enums.WorkStatus> specialStatuses);
 }
