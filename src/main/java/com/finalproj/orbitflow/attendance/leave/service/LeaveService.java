@@ -4,7 +4,9 @@ import com.finalproj.orbitflow.approval.attendanceRecord.entity.AttendanceRecord
 import com.finalproj.orbitflow.approval.attendanceRecord.repository.AttendanceRecordRepository;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
-import com.finalproj.orbitflow.attendance.leave.dto.*;
+import com.finalproj.orbitflow.attendance.leave.dto.LeaveBalanceResDto;
+import com.finalproj.orbitflow.attendance.leave.dto.LeaveHistoryResDto;
+import com.finalproj.orbitflow.attendance.leave.dto.LeaveRemainingResDto;
 import com.finalproj.orbitflow.attendance.leave.entity.LeaveBalance;
 import com.finalproj.orbitflow.attendance.leave.entity.LeaveGrant;
 import com.finalproj.orbitflow.attendance.leave.entity.LeaveType;
@@ -256,67 +258,6 @@ public class LeaveService {
                         .orElseThrow(() -> new NotFoundException("잔여 연차 조회 실패"));
 
         return new LeaveRemainingResDto(leaveBalance.getRemainingDays());
-    }
-
-    public LeaveValidationResDto validateLeave(
-            Long employeeId,
-            LeaveValidationReqDto reqDto
-    ) {
-        // 1. 잔여 연차 조회
-        LeaveBalance leaveBalance =
-                leaveBalanceRepository
-                        .findTopByEmployeeIdOrderByYearDesc(employeeId)
-                        .orElseThrow(() -> new NotFoundException("잔여 연차 조회 실패"));
-
-        // 2. 휴가 유형 조회
-        LeaveType leaveType =
-                leaveTypeRepository.findById(reqDto.getLeaveTypeId())
-                        .orElseThrow(() -> new NotFoundException("휴가 유형 조회 실패"));
-
-        BigDecimal remainingDays = leaveBalance.getRemainingDays();
-
-        /* =========================
-           차감되지 않는 휴가
-        ========================= */
-        if (!leaveType.getIsCountable()) {
-            return LeaveValidationResDto.builder()
-                    .valid(true)
-                    .requiredDays(BigDecimal.ZERO)
-                    .remainingDays(remainingDays)
-                    .message("연차 차감 대상이 아닌 휴가입니다")
-                    .build();
-        }
-
-        /* =========================
-           차감되는 휴가
-        ========================= */
-
-        // 3. 전체 기간 (inclusive)
-        long totalDays =
-                ChronoUnit.DAYS.between(
-                        reqDto.getStartDate(),
-                        reqDto.getEndDate()
-                ) + 1;
-
-        // 4. 필요 연차 계산
-        BigDecimal requiredDays =
-                leaveType.getUnitDays()
-                        .multiply(BigDecimal.valueOf(totalDays));
-
-        // 5. 검증
-        boolean valid =
-                remainingDays.compareTo(requiredDays) >= 0;
-
-        String message = valid
-                ? "신청 가능한 휴가입니다"
-                : "잔여 연차가 부족합니다";
-
-        return LeaveValidationResDto.builder()
-                .valid(valid)
-                .requiredDays(requiredDays)
-                .remainingDays(remainingDays)
-                .message(message)
-                .build();
     }
 
 }

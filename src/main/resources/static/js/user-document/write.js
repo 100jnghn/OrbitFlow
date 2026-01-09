@@ -2092,29 +2092,6 @@ async function reloadApprovalLines() {
 }
 
 
-function createVacationDateUI(field) {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'vacation-date-ui';
-
-    const start = document.createElement('input');
-    start.type = 'date';
-
-    const end = document.createElement('input');
-    end.type = 'date';
-
-    start.dataset.fieldId = field.fieldId;
-    start.dataset.rangeType = 'start';
-    end.dataset.fieldId = field.fieldId;
-    end.dataset.rangeType = 'end';
-
-    wrapper.append(
-        labeled('시작일', start),
-        labeled('종료일', end)
-    );
-
-    return wrapper;
-}
-
 async function createEventDateRange(field) {
     const baseRole = field.meta?.baseRole;
     const ui = field.meta?.ui ?? {};
@@ -2795,14 +2772,14 @@ function getScheduleGroupByFieldIdAndSubKey(fieldId, subKey) {
 }
 
 const leaveValidationCache = new Map();
-// key: `${start}|${end}|${leaveTypeId}`
-// value: { valid: boolean, message?: string }
+// key: `${start}|${end}|${leaveTypeKey}`
+// leaveTypeKey: vacationTypeId | 'NO_LEAVE'
 
 async function validateEventDateRange(field, value) {
     console.log('[EVENT] validateEventDateRange start', field.fieldId, value);
 
     /* =========================
-       1️⃣ 로컬 필수 / 형식 검증
+       1️⃣ 로컬 필수 / 형식 검증 (유지)
     ========================= */
 
     if (!value?.start) {
@@ -2832,7 +2809,7 @@ async function validateEventDateRange(field, value) {
         return false;
     }
 
-    /* 휴가 유형 */
+    /* 휴가 유형 (VACATION만) */
     if (field.meta?.baseRole === 'VACATION' && !value?.vacationTypeId) {
         const selectEl = document.querySelector(
             `select[data-field-id="${field.fieldId}"][data-sub-key="vacationTypeId"]`
@@ -2894,94 +2871,117 @@ async function validateEventDateRange(field, value) {
     }
 
     /* =========================
-       2️⃣ 서버 연차 검증 (캐싱)
+       2️⃣ 서버 검증 대상 판단
     ========================= */
-    if (field.meta?.baseRole === 'VACATION') {
 
-        const cacheKey =
-            `${value.start}|${value.end}|${value.vacationTypeId}`;
+    const baseRole = field.meta?.baseRole;
 
-        // ✅ 캐시 히트
-        // ✅ 캐시 히트
-        if (leaveValidationCache.has(cacheKey)) {
-            const cached = leaveValidationCache.get(cacheKey);
+    const shouldValidate =
+        baseRole != null &&
+        baseRole !== 'COMPANY_EVENT';
 
-            if (!cached.valid) {
+    if (!shouldValidate) {
+        return true;
+    }
 
-                const detailMessage =
-                    cached.remainingDays != null && cached.requiredDays != null
-                        ? `잔여 연차 ${cached.remainingDays}일 / 필요 연차 ${cached.requiredDays}일`
-                        : (cached.message || '잔여 연차가 부족합니다.');
+    /* =========================
+       3️⃣ 요청 payload 구성
+    ========================= */
 
-                showScheduleDateRangeError(
-                    field.fieldId,
-                    detailMessage,
-                    'start'
-                );
-            }
+    const isVacation = baseRole === 'VACATION';
 
-            return cached.valid;
-        }
+    const payload = {
+        startDate: value.start,
+        endDate: value.end
+    };
 
+    if (isVacation) {
+        payload.leaveTypeId = value.vacationTypeId;
+    }
 
-        // ❌ 캐시 미스 → 서버 호출
-        try {
-            const res = await apiFetch('/api/leave/validate', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    startDate: value.start,
-                    endDate: value.end,
-                    leaveTypeId: value.vacationTypeId
-                })
-            });
+    const leaveTypeKey = isVacation
+        ? value.vacationTypeId
+        : 'NO_LEAVE';
 
-            if (!res.ok) {
-                showScheduleDateRangeError(
-                    field.fieldId,
-                    '연차 검증 중 오류가 발생했습니다.',
-                    'start'
-                );
-                return false;
-            }
+    const cacheKey =
+        `${value.start}|${value.end}|${leaveTypeKey}`;
 
-            const result = await res.json();
-            const data = result.data;
+    /* =========================
+       4️⃣ 캐시 히트
+    ========================= */
 
-            // ✅ 결과 캐싱
-            leaveValidationCache.set(cacheKey, {
-                valid: data.valid,
-                message: data.message,
-                requiredDays: data.requiredDays,
-                remainingDays: data.remainingDays
-            });
+    if (leaveValidationCache.has(cacheKey)) {
+        const cached = leaveValidationCache.get(cacheKey);
 
-            if (!data.valid) {
+        if (!cached.valid) {
+            const detailMessage =
+                cached.remainingDays != null && cached.requiredDays != null
+                    ? `잔여 연차 ${cached.remainingDays}일 / 필요 연차 ${cached.requiredDays}일`
+                    : (cached.message || '일정 검증에 실패했습니다.');
 
-                const detailMessage =
-                    data.remainingDays != null && data.requiredDays != null
-                        ? `잔여 연차 ${data.remainingDays}일 / 필요 연차 ${data.requiredDays}일`
-                        : (data.message || '잔여 연차가 부족합니다.');
-
-                showScheduleDateRangeError(
-                    field.fieldId,
-                    detailMessage,
-                    'start'
-                );
-
-                return false;
-            }
-
-
-        } catch (e) {
-            console.error(e);
             showScheduleDateRangeError(
                 field.fieldId,
-                '연차 검증 중 오류가 발생했습니다.',
+                detailMessage,
+                'start'
+            );
+        }
+
+        return cached.valid;
+    }
+
+    /* =========================
+       5️⃣ 서버 호출
+    ========================= */
+
+    try {
+        const res = await apiFetch('/api/leave/validate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            showScheduleDateRangeError(
+                field.fieldId,
+                '일정 검증 중 오류가 발생했습니다.',
                 'start'
             );
             return false;
         }
+
+        const result = await res.json();
+        const data = result.data;
+
+        leaveValidationCache.set(cacheKey, {
+            valid: data.valid,
+            message: data.message,
+            requiredDays: data.requiredDays,
+            remainingDays: data.remainingDays
+        });
+
+        if (!data.valid) {
+            const detailMessage =
+                data.remainingDays != null && data.requiredDays != null
+                    ? `잔여 연차 ${data.remainingDays}일 / 필요 연차 ${data.requiredDays}일`
+                    : (data.message || '일정 검증에 실패했습니다.');
+
+            showScheduleDateRangeError(
+                field.fieldId,
+                detailMessage,
+                'start'
+            );
+
+            return false;
+        }
+
+    } catch (e) {
+        console.error(e);
+        showScheduleDateRangeError(
+            field.fieldId,
+            '일정 검증 중 오류가 발생했습니다.',
+            'start'
+        );
+        return false;
     }
 
     return true;
