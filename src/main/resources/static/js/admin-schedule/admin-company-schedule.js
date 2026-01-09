@@ -520,6 +520,10 @@ async function openEditScheduleModal(schedule) {
     document.getElementById('scheduleEndHour').value = endHour;
     document.getElementById('scheduleEndMinute').value = endMinute;
 
+    // 커스텀 드롭다운 표시 업데이트
+    updateCustomSelectDisplay('scheduleStartHour', startHour);
+    updateCustomSelectDisplay('scheduleEndHour', endHour);
+
     // 조직 카테고리를 '회사'로 고정
     await setCompanyOrgCategory();
 
@@ -656,6 +660,10 @@ async function openAddScheduleModal() {
     document.getElementById('scheduleEndHour').value = '18';
     document.getElementById('scheduleEndMinute').value = '00';
 
+    // 커스텀 드롭다운 표시 업데이트
+    updateCustomSelectDisplay('scheduleStartHour', '09');
+    updateCustomSelectDisplay('scheduleEndHour', '18');
+
     // 조직 카테고리를 '회사'로 고정
     await setCompanyOrgCategory();
 
@@ -719,6 +727,18 @@ function initializeTimeSelects() {
             return;
         }
 
+        // 원본 select에 option 추가 (값 설정을 위해 필요)
+        select.innerHTML = '';
+        options.forEach(opt => {
+            const option = document.createElement('option');
+            option.value = opt;
+            option.textContent = opt;
+            select.appendChild(option);
+        });
+
+        // 기본값 설정
+        select.value = options[0];
+
         // 원래 select 숨기기
         select.style.display = 'none';
 
@@ -730,7 +750,6 @@ function initializeTimeSelects() {
         const selected = document.createElement('div');
         selected.className = 'custom-select-selected';
         selected.textContent = options[0];
-        select.value = options[0];
 
         const optionsContainer = document.createElement('div');
         optionsContainer.className = 'custom-select-options';
@@ -745,6 +764,14 @@ function initializeTimeSelects() {
             optionDiv.addEventListener('click', () => {
                 selected.textContent = opt;
                 select.value = opt;
+
+                // 값이 제대로 설정되었는지 확인
+                console.log(`[${id}] Clicked: ${opt}, Select value after: ${select.value}`);
+
+                // 강제로 change 이벤트 발생
+                const event = new Event('change', { bubbles: true });
+                select.dispatchEvent(event);
+
                 optionsContainer.style.display = 'none';
                 customSelect.classList.remove('active');
 
@@ -812,6 +839,35 @@ function initializeTimeSelects() {
         });
         timeSelectsInitialized = true;
     }
+}
+
+/**
+ * 커스텀 드롭다운 표시 값 업데이트
+ */
+function updateCustomSelectDisplay(selectId, value) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    const wrapper = select.parentElement;
+    const customSelect = wrapper.querySelector('.custom-select');
+    if (!customSelect) return;
+
+    const selected = customSelect.querySelector('.custom-select-selected');
+    if (selected) {
+        selected.textContent = value;
+    }
+
+    // 옵션의 selected 클래스 업데이트
+    const options = customSelect.querySelectorAll('.custom-select-option');
+    options.forEach(opt => {
+        if (opt.dataset.value === value) {
+            opt.classList.add('selected');
+        } else {
+            opt.classList.remove('selected');
+        }
+    });
+
+    select.value = value;
 }
 
 /**
@@ -935,6 +991,8 @@ async function handleScheduleSubmit(e) {
     const endMinute = document.getElementById('scheduleEndMinute').value || '00';
     const status = document.getElementById('scheduleStatus').value;
     const orgCategoryId = document.getElementById('scheduleOrgCategory').value;
+
+    console.log('Form values:', { startHour, startMinute, endHour, endMinute });
 
     if (!title) {
         alert('제목을 입력해주세요.');
