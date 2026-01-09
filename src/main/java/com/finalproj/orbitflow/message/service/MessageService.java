@@ -143,6 +143,8 @@ public class MessageService {
                             .peerName(peerName) // 수신자 이름
                             .senderName(recipient.getMessage().getSender().getName())
                             .recipientName(null)
+                            .hasFile(recipient.getMessage().getFiles() != null
+                                    && !recipient.getMessage().getFiles().isEmpty())
                             .createdAt(recipient.getMessage().getCreatedAt()) // 메시지 생성일 (발신일)
                             .build();
                     resultList.add(item);
@@ -217,6 +219,7 @@ public class MessageService {
                         .peerName(item.getPeerName())
                         .senderName(item.getSenderName())
                         .recipientName(recipientName)
+                        .hasFile(item.isHasFile())
                         .createdAt(item.getCreatedAt())
                         .build();
             }
