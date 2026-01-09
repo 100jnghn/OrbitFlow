@@ -45,6 +45,8 @@
     align-items: flex-start;
     gap: 16px;
     flex-wrap: wrap;
+    min-width: 0;
+    /* flex item shrink allow */
 }
 
 .filter-group {
@@ -52,6 +54,8 @@
     flex-direction: column;
     gap: 8px;
     align-self: flex-start;
+    min-width: 0;
+    /* flex item shrink allow */
 }
 
 .filter-label {
@@ -128,10 +132,10 @@
 
 /* 조직 필터 체크박스 리스트 */
 .org-filter-checkbox-list {
-    min-width: 400px;
-    max-width: 800px;
-    min-height: 45px;
     width: 100%;
+    max-width: 800px;
+    max-height: 200px;
+    overflow-y: auto;
     padding: 8px;
     border: 1px solid var(--neutral-300);
     border-radius: 8px;
@@ -149,6 +153,7 @@
     align-items: center;
     gap: 8px;
     padding: 6px 8px;
+    min-height: 32px;
     border-radius: 6px;
     cursor: pointer;
     transition: background-color 0.2s ease;
@@ -157,6 +162,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    box-sizing: border-box;
 }
 
 .org-filter-checkbox-item:hover {
@@ -650,9 +656,17 @@
     .schedule-main-content {
         grid-template-columns: 1fr;
     }
+
+    .org-filter-checkbox-list {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
 }
 
 @media (max-width: 768px) {
+    .org-filter-checkbox-list {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+
     .schedule-controls {
         flex-direction: column;
         align-items: stretch;
@@ -675,5 +689,17 @@
     .modal-content {
         width: 95%;
         margin: 10% auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .org-filter-checkbox-list {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 8px;
+    }
+
+    .org-filter-checkbox-item {
+        font-size: 12px;
+        padding: 4px 6px;
     }
 }
