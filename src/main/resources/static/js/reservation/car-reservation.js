@@ -7,6 +7,8 @@ let selectedCar = null;
 let selectedStartDate = null;
 let selectedEndDate = null;
 let dates = []; // 오늘부터 14일 후까지의 날짜 배열
+let currentUserName = null;
+
 
 /* ==========================
    Generate Dates
@@ -222,7 +224,7 @@ function checkReservation(carId, dateString) {
 /* ==========================
    Cell Selection Functions
 ========================== */
-function handleCellClick(cell, car, dateString) {
+async function handleCellClick(cell, car, dateString) {
     const carId = parseInt(cell.dataset.carId);
 
     // 다른 차량을 클릭하면 초기화
@@ -241,7 +243,7 @@ function handleCellClick(cell, car, dateString) {
         selectedStartDate = dateString;
         selectedEndDate = dateString;
         updateSelection();
-        updateReservationForm();
+        await updateReservationForm();
         return;
     }
 
@@ -266,7 +268,7 @@ function handleCellClick(cell, car, dateString) {
     }
 
     updateSelection();
-    updateReservationForm();
+    await updateReservationForm();
 }
 
 function isRangeAvailable(carId, startDate, endDate) {
@@ -285,7 +287,7 @@ function isRangeAvailable(carId, startDate, endDate) {
     return true;
 }
 
-function clearSelection() {
+async function clearSelection() {
     selectedCar = null;
     selectedStartDate = null;
     selectedEndDate = null;
@@ -295,7 +297,7 @@ function clearSelection() {
         cell.classList.remove('selected');
     });
 
-    updateReservationForm();
+    await updateReservationForm();
 }
 
 function updateSelection() {
@@ -329,9 +331,14 @@ function updateSelection() {
 }
 
 async function updateReservationForm() {
-    // 신청자 (현재 사용자 정보 - 추후 API에서 가져오기)
-    document.getElementById('applicant-name').textContent = '사용자'; // TODO: 실제 사용자 정보
 
+    // 신청자 이름
+    const applicantNameEl = document.getElementById('applicant-name');
+
+    if (applicantNameEl) {
+        const name = await loadCurrentUserName();
+        applicantNameEl.textContent = name || '사용자';
+    }
     // 차량 정보
     if (selectedCar) {
         document.getElementById('selected-car-name').textContent = selectedCar.name;
@@ -354,6 +361,33 @@ async function updateReservationForm() {
 
     // 신청 버튼 활성화/비활성화
     updateSubmitButtonState();
+}
+
+async function loadCurrentUserName() {
+    if (currentUserName) return currentUserName;
+
+    try {
+        const response = await apiFetch('/api/employees/me', {
+            method: 'GET'
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                location.href = '/login';
+                return null;
+            }
+            throw new Error('사용자 정보를 불러오지 못했습니다.');
+        }
+
+        const result = await response.json();
+        currentUserName = result.data?.name || '사용자';
+
+        return currentUserName;
+
+    } catch (error) {
+        console.error('사용자 정보 조회 실패:', error);
+        return '사용자';
+    }
 }
 
 /* ==========================
@@ -556,7 +590,7 @@ function updateApprovalSidebarSelection() {
 document.addEventListener('DOMContentLoaded', async () => {
     generateDates();
     initEventListeners();
-    updateReservationForm();
+    await updateReservationForm();
     updateApprovalSidebarSelection();
 
     await loadCars();
