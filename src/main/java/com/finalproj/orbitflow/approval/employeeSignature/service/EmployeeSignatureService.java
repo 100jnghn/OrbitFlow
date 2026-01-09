@@ -56,7 +56,11 @@ public class EmployeeSignatureService {
 
         Optional<EmployeeSignature> curActiveSig = getEmployeeActiveSignature(employeeId);
 
-        curActiveSig.ifPresent(EmployeeSignature::deactivate);
+        curActiveSig.ifPresent(sig -> {
+            sig.deactivate();
+            employeeSignatureRepository.save(sig);
+            employeeSignatureRepository.flush();
+        });
 
         File file = fileService.upload(
                 employee.getCompany().getId(),

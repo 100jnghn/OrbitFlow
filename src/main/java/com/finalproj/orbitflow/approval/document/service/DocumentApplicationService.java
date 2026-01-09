@@ -8,6 +8,7 @@ import com.finalproj.orbitflow.approval.document.dto.DocumentCreateResDto;
 import com.finalproj.orbitflow.approval.document.dto.PdfApprovalLineDto;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
+import com.finalproj.orbitflow.approval.document.render.factory.PdfImageStreamFactory;
 import com.finalproj.orbitflow.approval.document.render.pdf.PdfHtmlBuilder;
 import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
 import com.finalproj.orbitflow.approval.document.schema.PdfContentSchema;
@@ -20,6 +21,7 @@ import com.finalproj.orbitflow.approval.documentSignature.service.DocumentSignat
 import com.finalproj.orbitflow.approval.formTemplate.entity.FormTemplate;
 import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateRepository;
 import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
+import com.finalproj.orbitflow.approval.pdfInternalImage.service.PdfInternalImageService;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
@@ -80,6 +82,7 @@ public class DocumentApplicationService {
     private final PdfHtmlBuilder pdfHtmlBuilder;
     private final PdfContentSchemaAssembler pdfContentSchemaAssembler;
     private final PdfApprovalLineAssembler pdfApprovalLineAssembler;
+    private final PdfInternalImageService pdfInternalImageService;
     private final DocumentSignatureService documentSignatureService;
 
     @Value("${app.base-url}")
@@ -232,9 +235,9 @@ public class DocumentApplicationService {
         // 2️⃣ 문서 본문(JSON)
         DocumentContent content = documentContentRepository
                 .findByDocument_Id(documentId)
-                .orElseThrow(() -> new NotFoundException(
-                        "DocumentContent not found. documentId=" + documentId
-                ));
+                .orElseThrow(() ->
+                        new NotFoundException("DocumentContent not found. documentId=" + documentId)
+                );
 
         // 3️⃣ JSON → FormTemplateSchema
         FormTemplateSchema schema = parseSchema(content.getContentJson());
@@ -268,10 +271,22 @@ public class DocumentApplicationService {
 
             PdfRendererBuilder builder = new PdfRendererBuilder();
 
-            // 🔥 성능 + 안정 모드
+        /* =========================
+           기본 설정
+        ========================= */
             builder.useFastMode();
 
-            // 🔥 폰트 먼저 등록 (시스템 폰트 스캔 차단)
+        /* =========================
+           🔥 pdf-image:// 스트림 팩토리 등록 (핵심)
+        ========================= */
+            builder.useProtocolsStreamImplementation(
+                    new PdfImageStreamFactory(pdfInternalImageService),
+                    "pdf-image"
+            );
+
+        /* =========================
+           🔥 폰트 등록
+        ========================= */
             builder.useFont(
                     () -> {
                         try {
@@ -302,12 +317,10 @@ public class DocumentApplicationService {
                     true
             );
 
-      /*      String baseUri = requireNonNull(
-                    getClass().getClassLoader().getResource("static/")
-            ).toExternalForm();*/
-
+        /* =========================
+           HTML → PDF
+        ========================= */
             builder.withHtmlContent(html, baseUrl);
-
             builder.toStream(os);
             builder.run();
 
@@ -320,10 +333,11 @@ public class DocumentApplicationService {
                     pdfBytes
             );
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException("PDF 생성 실패", e);
         }
     }
+
 
     @Transactional
     public void reject(Long employeeId, Long documentId, String comment) {

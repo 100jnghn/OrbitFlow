@@ -52,11 +52,4 @@ public class DocumentSignatureService {
         documentSignatureRepository.save(snapShot);
     }
 
-
-    //public ResponseEntity<?> getSignatureImage(Long documentId, Long approvalLineId) {
-    //    Document document = documentRepository.findById(documentId)
-    //            .orElseThrow(() -> new NotFoundException("문서를 찾을 수 없습니다."));
-    //
-    //
-    //}
 }

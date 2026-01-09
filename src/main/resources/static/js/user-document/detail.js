@@ -81,8 +81,80 @@ function bindApprovalOutsideClickOnce() {
         if (modalContent.contains(e.target)) return;
 
         // 진짜 바깥 클릭
-        resetApprovalCommentHint();
+        hideApprovalCommentHint();
     });
+}
+
+/* ===============================
+   서명 업로드 UI 바인딩 (최종)
+=============================== */
+let selectedSignatureFile = null;
+
+function bindSignatureUpload() {
+    const box = document.getElementById("signaturePreviewBox");
+    const input = document.getElementById("signatureInput");
+    const img = document.getElementById("signaturePreviewImage");
+    const placeholder = document.getElementById("signaturePlaceholder");
+    const removeBtn = document.getElementById("signatureRemoveBtn");
+    const hint = document.getElementById("signatureHint");
+
+    if (!box || !input || !img || !placeholder) return;
+
+    // 클릭 → 파일 선택
+    box.addEventListener("click", () => input.click());
+
+    // 파일 선택
+    input.addEventListener("change", e => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            showSignatureError("이미지 파일만 업로드 가능합니다.");
+            input.value = "";
+            return;
+        }
+
+        selectedSignatureFile = file;
+
+        const reader = new FileReader();
+        reader.onload = ev => {
+            img.src = ev.target.result;
+            img.style.display = "block";
+            placeholder.style.display = "none";
+            removeBtn.style.display = "inline-flex";
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // 제거
+    removeBtn?.addEventListener("click", e => {
+        e.stopPropagation();
+        resetSignatureInput();
+    });
+
+    function resetSignatureInput() {
+        selectedSignatureFile = null;
+        input.value = "";
+        img.src = "";
+        img.style.display = "none";
+        placeholder.style.display = "flex";
+        removeBtn.style.display = "none";
+        clearSignatureHint();
+    }
+
+    function showSignatureError(msg) {
+        if (!hint) return;
+        hint.textContent = msg;
+        hint.classList.add("error");
+        hint.style.display = "block";
+    }
+
+    function clearSignatureHint() {
+        if (!hint) return;
+        hint.textContent = "";
+        hint.classList.remove("error", "success");
+        hint.style.display = "none";
+    }
 }
 
 
@@ -171,6 +243,94 @@ function closeApprovalModal() {
     modal.classList.add("hidden");
 }
 
+/* ===============================
+   서명 등록 팝업
+=============================== */
+function openSignatureModal() {
+    const modal = document.getElementById("signatureModal");
+    modal && modal.classList.remove("hidden");
+}
+
+function closeSignatureModal() {
+    const modal = document.getElementById("signatureModal");
+    modal?.classList.add("hidden");
+
+    selectedSignatureFile = null;
+
+    const img = document.getElementById("signaturePreviewImage");
+    const placeholder = document.getElementById("signaturePlaceholder");
+    const removeBtn = document.getElementById("signatureRemoveBtn");
+    const input = document.getElementById("signatureInput");
+    const hint = document.getElementById("signatureHint");
+
+    if (img) {
+        img.src = "";
+        img.style.display = "none";
+    }
+    if (placeholder) placeholder.style.display = "flex";
+    if (removeBtn) removeBtn.style.display = "none";
+    if (input) input.value = "";
+    if (hint) {
+        hint.textContent = "";
+        hint.classList.remove("error", "success");
+        hint.style.display = "none";
+    }
+}
+
+
+/* ===============================
+   결재 서명 조회
+=============================== */
+async function fetchMySignatureExists() {
+    const res = await apiFetch("/api/employee-signature", {
+        method: "GET"
+    });
+
+    if (!res.ok) {
+        throw new Error("서명 조회 실패");
+    }
+
+    const json = await res.json();
+    return json.data === true;
+}
+
+async function submitSignature() {
+    const hint = document.getElementById("signatureHint");
+
+    if (!selectedSignatureFile) {
+        if (hint) {
+            hint.textContent = "서명 이미지를 선택해주세요.";
+            hint.classList.add("error");
+            hint.style.display = "block";
+        }
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", selectedSignatureFile);
+
+    try {
+        const res = await apiFetch("/api/employee-signature", {
+            method: "POST",
+            body: formData
+        });
+
+        if (!res.ok) throw new Error();
+
+        closeSignatureModal();
+        openApprovalModal("approve");
+
+    } catch (e) {
+        console.error(e);
+        if (hint) {
+            hint.textContent = "서명 등록 중 오류가 발생했습니다.";
+            hint.classList.add("error");
+            hint.style.display = "block";
+        }
+    }
+}
+
+
 async function submitApprovalAction() {
     if (!currentDocumentId || !currentActionType) return;
 
@@ -242,7 +402,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         .getElementById("approvalConfirmBtn")
         ?.addEventListener("click", submitApprovalAction);
 
+    document
+        .getElementById("signatureCancelBtn")
+        ?.addEventListener("click", closeSignatureModal);
+
+    document
+        .getElementById("signatureSaveBtn")
+        ?.addEventListener("click", submitSignature);
+
     bindApprovalOutsideClickOnce();
+
+    bindSignatureUpload();
 
     const documentId = getDocumentIdFromPath();
     if (!documentId) return;
@@ -964,7 +1134,20 @@ function controlActionButtons(data) {
 
     if (approveBtn) {
         approveBtn.style.display = canApproveOrReject ? "inline-block" : "none";
-        approveBtn.onclick = () => openApprovalModal("approve");
+        approveBtn.onclick = async () => {
+            try {
+                const hasSignature = await fetchMySignatureExists();
+
+                if (hasSignature) {
+                    openApprovalModal("approve");
+                } else {
+                    openSignatureModal();
+                }
+            } catch (e) {
+                console.error(e);
+                alert("서명 정보를 확인할 수 없습니다.");
+            }
+        };
     }
 
     if (rejectBtn) {
