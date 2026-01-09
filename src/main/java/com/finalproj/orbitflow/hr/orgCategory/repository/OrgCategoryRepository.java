@@ -46,4 +46,18 @@ public interface OrgCategoryRepository extends JpaRepository<OrgCategory, Long> 
             Long companyId, String keyword);
 
     boolean existsByCompanyIdAndNameAndIdNot(Long companyId, String name, Long id);
+
+
+    // 회사 루트 카테고리
+    Optional<OrgCategory> findByCompanyIdAndIsRootTrue(Long companyId);
+
+    // 조직 생성용 (루트 제외)
+    List<OrgCategory> findByCompanyIdAndIsActiveTrueAndIsRootFalseOrderByOrderIndexAsc(
+            Long companyId
+    );
+
+    boolean existsByCompanyIdAndIsRootTrue(Long companyId);
+
+    long countByCompanyIdAndIsActiveTrueAndIsRootFalse(Long companyId);
+
 }

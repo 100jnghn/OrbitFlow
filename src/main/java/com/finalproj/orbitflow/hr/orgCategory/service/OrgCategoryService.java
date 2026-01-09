@@ -62,17 +62,27 @@ public class OrgCategoryService {
             throw new BusinessException("이미 존재하는 조직 카테고리입니다.");
         }
 
+        // 회사 루트는 수동 생성 금지
+        if (repository.existsByCompanyIdAndIsRootTrue(companyId)
+                && "회사".equals(name)) {
+            throw new InvalidRequestException("회사 카테고리는 시스템에서 자동 생성됩니다.");
+        }
+
         Integer max = repository.findMaxActiveOrderIndexByCompanyId(companyId);
         int nextOrder = (max == null) ? 1 : max + 1;
 
         return repository.save(
-                OrgCategory.create(companyId, name, nextOrder)
+                OrgCategory.create(companyId, name, nextOrder, false)
         ).getId();
     }
 
     /* ================= 수정 (이름 + 활성/비활성/재활성화) ================= */
     public void update(Long companyId, Long id, OrgCategoryUpdateReqDto request) {
         OrgCategory category = get(companyId, id);
+
+        if (category.getIsRoot()) {
+            throw new InvalidStateException("회사 카테고리는 수정할 수 없습니다.");
+        }
 
         String name = request.getName().trim();
         if (repository.existsByCompanyIdAndNameAndIdNot(companyId, name, id)) {
@@ -91,6 +101,11 @@ public class OrgCategoryService {
 
         // 비활성화
         if (willDeactivate) {
+
+            if (category.getIsRoot()) {
+                throw new InvalidStateException("회사 카테고리는 비활성화할 수 없습니다.");
+            }
+
             if (orgRepository.existsByCompanyIdAndCategoryIdAndIsActiveTrue(companyId, id)) {
                 throw new InvalidStateException(
                         "해당 카테고리를 사용하는 조직이 존재하여 비활성화할 수 없습니다."
@@ -109,7 +124,7 @@ public class OrgCategoryService {
             throw new InvalidRequestException("순서 정보가 비어 있습니다.");
         }
 
-        long activeCount = repository.countByCompanyIdAndIsActiveTrue(companyId);
+        long activeCount = repository.countByCompanyIdAndIsActiveTrueAndIsRootFalse(companyId); // 루트 카테고리는 카운트에서 제외
         if (activeCount != orders.size()) {
             throw new InvalidStateException("정렬 대상 개수가 일치하지 않습니다.");
         }
@@ -117,7 +132,13 @@ public class OrgCategoryService {
         // 1단계: 임시 order_index (충돌 방지)
         int temp = -1;
         for (var item : orders) {
-            get(companyId, item.getId()).updateOrderIndex(temp--);
+            OrgCategory category = get(companyId, item.getId());
+
+            if (category.getIsRoot()) {
+                throw new InvalidStateException("회사 카테고리는 정렬할 수 없습니다.");
+            }
+
+            category.updateOrderIndex(temp--);
         }
         repository.flush();
 
@@ -131,5 +152,14 @@ public class OrgCategoryService {
     private OrgCategory get(Long companyId, Long id) {
         return repository.findByCompanyIdAndId(companyId, id)
                 .orElseThrow(() -> new NotFoundException("조직 카테고리를 찾을 수 없습니다."));
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrgCategoryResDto> findSelectableForOrg(Long companyId) {
+        return repository
+                .findByCompanyIdAndIsActiveTrueAndIsRootFalseOrderByOrderIndexAsc(companyId)
+                .stream()
+                .map(OrgCategoryResDto::from)
+                .toList();
     }
 }

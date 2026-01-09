@@ -19,13 +19,15 @@ public class OrgCategoryResDto {
     private String name;
     private Integer orderIndex;
     private Boolean isActive;
+    private Boolean isRoot;
 
     public static OrgCategoryResDto from(OrgCategory entity) {
         return new OrgCategoryResDto(
                 entity.getId(),
                 entity.getName(),
                 entity.getOrderIndex(),
-                entity.getIsActive()
+                entity.getIsActive(),
+                entity.getIsRoot()
         );
     }
 }
