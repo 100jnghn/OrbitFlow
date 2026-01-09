@@ -139,19 +139,19 @@ async function handleSave() {
 
     // 최종 검증
     if (!validateRoomName()) {
-        alert('회의실명을 확인해주세요.');
+        await sweetInfo('회의실명을 확인해주세요.');
         roomName.focus();
         return;
     }
 
     if (!validateRoomPosition()) {
-        alert('위치를 확인해주세요.');
+        await sweetInfo('위치를 확인해주세요.');
         roomPosition.focus();
         return;
     }
 
     if (!validateRoomStatus()) {
-        alert('상태를 선택해주세요.');
+        await sweetInfo('상태를 선택해주세요.');
         roomStatus.focus();
         return;
     }
@@ -181,13 +181,13 @@ async function handleSave() {
             throw new Error(error.message || '회의실 등록 실패');
         }
 
-        alert('회의실이 등록되었습니다.');
+        await sweetSuccess('회의실이 등록되었습니다.');
         // 관리자 회의실 목록 화면으로 이동
         window.location.href = '/view/resource/admin/meetingrooms';
 
     } catch (error) {
         console.error(error);
-        alert(error.message || '회의실 등록에 실패했습니다.');
+        await sweetError(error.message || '회의실 등록에 실패했습니다.');
     }
 }
 
@@ -195,9 +195,13 @@ async function handleSave() {
  * 취소 버튼 핸들러
  */
 function handleCancel() {
-    if (confirm('작성 중인 내용이 저장되지 않습니다. 취소하시겠습니까?')) {
-        window.location.href = '/view/resource/admin/meetingrooms';
-    }
+
+    const result = sweetConfirm(
+        '삭제 확인',
+        '작성 중인 내용이 저장되지 않습니다. 취소하시겠습니까?'
+    );
+
+    if (!result.isConfirmed) return;
 }
 
 /**
@@ -227,7 +231,7 @@ async function loadStatusOptions() {
 
     } catch (e) {
         console.error(e);
-        alert('상태 목록을 불러오지 못했습니다.');
+        await sweetError('상태 목록을 불러오지 못했습니다.');
     }
 }
 

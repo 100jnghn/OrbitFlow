@@ -211,7 +211,7 @@ async function loadStatuses() {
         });
     } catch(e) {
         console.error(e);
-        alert("상태 목록 조회 실패");
+        await sweetError("상태 목록 조회 실패");
     }
 }
 
@@ -291,7 +291,7 @@ async function loadReservations(page = 0) {
 
     } catch (e) {
         console.error(e);
-        alert('예약 목록을 불러오지 못했습니다.');
+        await sweetError('예약 목록을 불러오지 못했습니다.');
     }
 }
 
@@ -534,12 +534,12 @@ async function updateReservationStatusWithReason(reservationId, statusId, status
         }
 
         closeStatusReasonModal();
-        alert(`예약 상태가 "${statusName}"으로 변경되었습니다.`);
+        await sweetSuccess(`예약 상태가 "${statusName}"으로 변경되었습니다.`);
         loadReservations(currentPage);
 
     } catch (e) {
         console.error(e);
-        alert(e.message || '상태 변경에 실패했습니다.');
+        await sweetError(e.message || '상태 변경에 실패했습니다.');
     }
 }
 
@@ -558,17 +558,22 @@ async function updateReservationStatus(reservationId, statusId, statusName) {
             throw new Error(error.message || '상태 변경에 실패했습니다.');
         }
 
-        alert(`예약 상태가 "${statusName}"으로 변경되었습니다.`);
+        await sweetSuccess(`예약 상태가 "${statusName}"으로 변경되었습니다.`);
         loadReservations(currentPage);
 
     } catch (e) {
         console.error(e);
-        alert(e.message || '상태 변경에 실패했습니다.');
+        await sweetError(e.message || '상태 변경에 실패했습니다.');
     }
 }
 
 async function approveReservation(id) {
-    if (!confirm('예약을 승인하시겠습니까?')) return;
+    const result = await sweetConfirm(
+        '승인 확인',
+        '예약을 승인하시겠습니까?'
+    );
+
+    if (!result.isConfirmed) return;
 
     try {
         const res = await apiFetch(`/api/admin/reservations/${id}/approve`, {
@@ -577,12 +582,12 @@ async function approveReservation(id) {
 
         if (!res.ok) throw new Error();
 
-        alert('예약이 승인되었습니다.');
+        await sweetSuccess('예약이 승인되었습니다.');
         loadReservations(currentPage);
 
     } catch (e) {
         console.error(e);
-        alert('예약 승인에 실패했습니다.');
+        await sweetError('예약 승인에 실패했습니다.');
     }
 }
 
@@ -599,13 +604,16 @@ async function batchApproveReservations() {
     // '승인 대기' 상태인지 확인
     const selectedOption = statusSelect?.options[statusSelect?.selectedIndex];
     if (selectedOption?.textContent !== '승인 대기') {
-        alert('승인 대기 상태를 선택해주세요.');
+        await sweetInfo('승인 대기 상태를 선택해주세요.');
         return;
     }
 
-    if (!confirm(`승인 대기 상태의 예약을 일괄 승인하시겠습니까?`)) {
-        return;
-    }
+    const result = await sweetConfirm(
+        '승인 확인',
+        '승인 대기 상태의 예약을 일괄 승인하시겠습니까?'
+    );
+
+    if (!result.isConfirmed) return;
 
     try {
         const params = new URLSearchParams();
@@ -629,12 +637,12 @@ async function batchApproveReservations() {
 
         const result = await res.json();
 
-        alert(`${result.data}개 예약이 일괄 승인되었습니다.`);
+        await sweetSuccess(`${result.data}개 예약이 일괄 승인되었습니다.`);
         loadReservations(currentPage);
 
     } catch (e) {
         console.error(e);
-        alert(e.message || '일괄 승인에 실패했습니다.');
+        await sweetError(e.message || '일괄 승인에 실패했습니다.');
     }
 }
 

@@ -158,7 +158,7 @@ async function loadCars(page = 0) {
 
     } catch (e) {
         console.error(e);
-        alert('차량 목록을 불러오지 못했습니다.');
+        await sweetError('차량 목록을 불러오지 못했습니다.');
     }
 }
 
@@ -207,7 +207,12 @@ function editCar(id) {
 }
 
 async function deleteCar(id) {
-    if (!confirm('정말 삭제하시겠습니까?')) return;
+    const result = await sweetConfirm(
+        '삭제 확인',
+        '차량을 삭제하시겠습니까?'
+    );
+
+    if (!result.isConfirmed) return;
 
     try {
         const res = await apiFetch(
@@ -217,13 +222,13 @@ async function deleteCar(id) {
 
         if (!res.ok) throw new Error();
 
-        alert('차량이 삭제되었습니다.');
+        await sweetSuccess('차량이 삭제되었습니다.');
         // 현재 페이지 유지하며 다시 로드
         loadCars(currentPage);
 
     } catch (e) {
         console.error(e);
-        alert('차량 삭제에 실패했습니다.');
+        await sweetError('차량 삭제에 실패했습니다.');
     }
 }
 

@@ -157,7 +157,7 @@ async function loadMeetingRooms(page = 0) {
 
     } catch (e) {
         console.error(e);
-        alert('회의실 목록을 불러오지 못했습니다.');
+        await sweetError('회의실 목록을 불러오지 못했습니다.');
     }
 }
 
@@ -197,22 +197,18 @@ function renderPagination(pageData) {
     container.appendChild(nextBtn);
 }
 
-/* ==========================
-   Actions
-========================== */
-// function editMeetingRoom(id) {
-//     alert(`회의실 ID ${id} 수정 기능을 구현하세요.`);
-// }
-
 function editMeetingRoom(id) {
     // 상세 페이지로 이동 (id 전달)
     window.location.href = `/view/resource/admin/meetingrooms/detail?id=${id}`;
 }
 
 async function deleteMeetingRoom(id) {
-    if (!confirm('정말로 이 회의실을 삭제하시겠습니까?')) {
-        return;
-    }
+    const result = await sweetConfirm(
+        '삭제 확인',
+        '회의실을 삭제하시겠습니까?'
+    );
+
+    if (!result.isConfirmed) return;
 
     try {
         const response = await apiFetch(
@@ -224,13 +220,13 @@ async function deleteMeetingRoom(id) {
             throw new Error();
         }
 
-        alert('회의실이 삭제되었습니다.');
+        await sweetSuccess('회의실이 삭제되었습니다.');
         // 현재 페이지 유지하며 다시 로드
         loadMeetingRooms(currentPage);
 
     } catch (error) {
         console.error(error);
-        alert('회의실 삭제에 실패했습니다.');
+        await sweetError('회의실 삭제에 실패했습니다.');
     }
 }
 

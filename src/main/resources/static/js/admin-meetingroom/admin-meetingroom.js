@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentRoomId = getMeetingroomId();
 
     if (!currentRoomId) {
-        alert('회의실 정보를 찾을 수 없습니다.');
+        sweetError('회의실 정보를 찾을 수 없습니다.');
         history.back();
         return;
     }
@@ -156,7 +156,7 @@ function initEventListeners() {
 async function handleEdit() {
     // validation 검증
     if (!validateRoomName() || !validateRoomPosition() || !validateRoomStatus()) {
-        alert('입력 항목을 확인해주세요.');
+        await sweetInfo('입력 항목을 확인해주세요.');
         return;
     }
 
@@ -188,7 +188,7 @@ async function handleEdit() {
 
     } catch (error) {
         console.error(error);
-        alert('회의실 수정에 실패했습니다.');
+        await sweetError('회의실 수정에 실패했습니다.');
     }
 }
 
@@ -198,9 +198,14 @@ async function handleEdit() {
  * ※ Controller 기준: PATCH /admin/meetingrooms/{id}/delete
  */
 async function handleDelete() {
-    if (!confirm('정말로 이 회의실을 삭제하시겠습니까?')) {
-        return;
-    }
+
+    const result = await sweetConfirm(
+        '삭제 확인',
+        '회의실을 삭제하시겠습니까?'
+    );
+
+    if (!result.isConfirmed) return;
+
 
     try {
         const response = await apiFetch(
@@ -216,7 +221,7 @@ async function handleDelete() {
 
     } catch (error) {
         console.error(error);
-        alert('회의실 삭제에 실패했습니다.');
+        await sweetError('회의실 삭제에 실패했습니다.');
     }
 }
 
@@ -246,7 +251,7 @@ async function loadStatusOptions(selectedStatusId) {
 
     } catch (e) {
         console.error(e);
-        alert('상태 목록을 불러오지 못했습니다.');
+        await sweetError('상태 목록을 불러오지 못했습니다.');
     }
 }
 

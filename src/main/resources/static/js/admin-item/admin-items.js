@@ -168,7 +168,7 @@ async function loadItems(categoryId = null, page = 0) {
 
     } catch (e) {
         console.error(e);
-        alert('비품 목록을 불러오지 못했습니다.');
+        await sweetError('비품 목록을 불러오지 못했습니다.');
     }
 }
 
@@ -237,7 +237,7 @@ async function loadCategories() {
 
     } catch (e) {
         console.error(e);
-        alert('카테고리 목록을 불러오지 못했습니다.');
+        await sweetError('카테고리 목록을 불러오지 못했습니다.');
     }
 }
 
@@ -252,7 +252,12 @@ function editItem(id) {
 }
 
 async function deleteItem(id) {
-    if (!confirm('정말 삭제하시겠습니까?')) return;
+    const result = await sweetConfirm(
+        '삭제 확인',
+        '자원을 삭제하시겠습니까?'
+    );
+
+    if (!result.isConfirmed) return;
 
     try {
         const res = await apiFetch(
@@ -262,14 +267,14 @@ async function deleteItem(id) {
 
         if (!res.ok) throw new Error();
 
-        alert('비품이 삭제되었습니다.');
+        await sweetSuccess('비품이 삭제되었습니다.');
 
         // 현재 페이지 유지하며 다시 로드
         loadItems(currentCategoryId, currentPage);
 
     } catch (e) {
         console.error(e);
-        alert('비품 삭제에 실패했습니다.');
+        await sweetError('비품 삭제에 실패했습니다.');
     }
 }
 

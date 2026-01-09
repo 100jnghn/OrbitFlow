@@ -171,7 +171,7 @@ async function loadSchedules() {
     } catch (error) {
         console.error('Error loading schedules:', error);
         if (error.message !== 'SESSION_EXPIRED') {
-            alert('일정을 불러오는데 실패했습니다.');
+            await sweetError('일정을 불러오는데 실패했습니다.');
         }
         hideLoading();
     }
@@ -995,20 +995,20 @@ async function handleScheduleSubmit(e) {
     console.log('Form values:', { startHour, startMinute, endHour, endMinute });
 
     if (!title) {
-        alert('제목을 입력해주세요.');
+        await sweetInfo('제목을 입력해주세요.');
         return;
     }
 
     // 제목 글자 수 검증
     if (title.length > 20) {
-        alert('제목은 최대 20자까지 입력 가능합니다.');
+        await sweetInfo('제목은 최대 20자까지 입력 가능합니다.');
         document.getElementById('scheduleTitle').focus();
         return;
     }
 
     // 설명 글자 수 검증
     if (description.length > 200) {
-        alert('설명은 최대 200자까지 입력 가능합니다.');
+        await sweetInfo('설명은 최대 200자까지 입력 가능합니다.');
         document.getElementById('scheduleDescription').focus();
         return;
     }
@@ -1022,7 +1022,7 @@ async function handleScheduleSubmit(e) {
     const endDateTime = new Date(`${endDate}T${endTime}`);
 
     if (endDateTime < startDateTime) {
-        alert('종료 날짜/시간은 시작 날짜/시간보다 이전일 수 없습니다.');
+        await sweetInfo('종료 날짜/시간은 시작 날짜/시간보다 이전일 수 없습니다.');
         return;
     }
 
@@ -1074,13 +1074,13 @@ async function handleScheduleSubmit(e) {
             throw new Error(error.message || (isEditMode ? '일정 수정에 실패했습니다.' : '일정 등록에 실패했습니다.'));
         }
 
-        alert(isEditMode ? '일정이 수정되었습니다.' : '일정이 등록되었습니다.');
+        await sweetSuccess(isEditMode ? '일정이 수정되었습니다.' : '일정이 등록되었습니다.');
         closeScheduleModal();
         loadSchedules();  // 일정 목록 새로고침
     } catch (error) {
         console.error(`Error ${isEditMode ? 'updating' : 'creating'} schedule:`, error);
         if (error.message !== 'SESSION_EXPIRED') {
-            alert(error.message || (isEditMode ? '일정 수정에 실패했습니다.' : '일정 등록에 실패했습니다.'));
+            await sweetError(error.message || (isEditMode ? '일정 수정에 실패했습니다.' : '일정 등록에 실패했습니다.'));
         }
     }
 }
@@ -1132,12 +1132,12 @@ async function deleteSchedule(scheduleId, event) {
             throw new Error(error.message || '일정 삭제에 실패했습니다.');
         }
 
-        alert('일정이 삭제되었습니다.');
+        await sweetSuccess('일정이 삭제되었습니다.');
         loadSchedules();  // 일정 목록 새로고침
     } catch (error) {
         console.error('Error deleting schedule:', error);
         if (error.message !== 'SESSION_EXPIRED') {
-            alert(error.message || '일정 삭제에 실패했습니다.');
+            await sweetError(error.message || '일정 삭제에 실패했습니다.');
         }
     }
 }
