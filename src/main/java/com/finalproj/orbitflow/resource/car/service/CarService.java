@@ -23,11 +23,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -87,19 +87,26 @@ public class CarService {
             throw new DuplicateCarNumberException("이미 존재하는 차량 번호입니다");
         }
 
-        // 이미지 저장
-        if (!Objects.requireNonNull(dto.getImgFile().getContentType()).startsWith("image/")) {
-            throw new InvalidRequestException("이미지 파일만 업로드할 수 있습니다.");
-        }
-
         // 관리자만 업로드할 수 있도록 확인
         String role = employee.getRole().toString();
         if (!role.endsWith("ADMIN")) {
             throw new InvalidRequestException("관리자만 업로드할 수 있습니다.");
         }
 
-        // 이미지 저장 기능 추가
-        File imgFile = fileService.upload(companyId, FileDomain.RESOURCE, dto.getImgFile());
+        // 파일 검증
+        File file = null;
+        MultipartFile imgFile = dto.getImgFile();
+
+        if (imgFile != null && !imgFile.isEmpty()) {
+
+            String contentType = imgFile.getContentType();
+
+            if (contentType == null || !contentType.startsWith("image/")) {
+                throw new InvalidRequestException("이미지 파일만 업로드할 수 있습니다.");
+            }
+
+            file = fileService.upload(companyId, FileDomain.RESOURCE, imgFile);
+        }
 
         Car car = Car.builder()
                 .company(company)
@@ -108,7 +115,7 @@ public class CarService {
                 .driverAge(dto.getDriverAge())
                 .description(dto.getDescription())
                 .resourceStatus(resourceStatus)
-                .file(imgFile)
+                .file(file)
                 .build();
 
         carRepository.save(car);
@@ -195,6 +202,7 @@ public class CarService {
         }
 
         File file = car.getFile();
+        car.deleteFile();
 
         // db file 삭제, 반영
         fileRepository.delete(file);

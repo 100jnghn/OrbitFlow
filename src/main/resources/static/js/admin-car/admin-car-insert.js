@@ -360,9 +360,11 @@ async function handleSave() {
     formData.append('description', description);
     formData.append('statusId', statusValue);
 
-    // 이미지 파일이 있으면 추가 (선택사항)
+    // 이미지 파일이 있으면 추가
     if (selectedImageFile) {
         formData.append('imgFile', selectedImageFile);
+    } else {
+        formData.append('imgFile', new Blob([]), '');
     }
 
     try {
