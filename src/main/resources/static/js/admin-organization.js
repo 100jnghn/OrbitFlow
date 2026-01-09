@@ -276,6 +276,11 @@ function bindEvents() {
             document.getElementById('orgNameHelp').textContent = '';
         });
 
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && !els.modal().classList.contains('hidden')) {
+            closeModal();
+        }
+    });
 }
 
 /* ======================
