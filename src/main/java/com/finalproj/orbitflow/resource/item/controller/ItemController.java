@@ -118,6 +118,7 @@ public class ItemController {
     ) {
         Long companyId = user.getCompanyId();
         Long employeeId = user.getEmployeeId();
+
         itemService.insertItem(companyId, employeeId, dto);
 
         return ResponseEntity.ok().body(

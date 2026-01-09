@@ -187,7 +187,6 @@ public class CarService {
     // 차량 이미지 삭제
     @Transactional
     public boolean deleteCarFile(Long carId) {
-        log.info("CAR IMAGE : 외부적으로 차량 이미지 삭제 함수 호출");
 
         Car car = findCarById(carId);
         boolean result = deleteCarFileInternal(car);
@@ -201,8 +200,6 @@ public class CarService {
         if (car.getFile() == null) {
             return false;
         }
-
-        log.info("CAR IMAGE : 내부적으로 차량 이미지 삭제 함수 호출");
 
         File file = car.getFile();
         car.deleteFile();
