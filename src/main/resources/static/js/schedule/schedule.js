@@ -49,11 +49,6 @@
         // 해당 년도 휴일 조회
         await loadHolidays(selectedDate.getFullYear());
 
-        // AI 일정 요약 기능 호출
-        // 시간은 백엔드에서 계산
-        await loadScheduleSummary();
-
-
         // 초기 로드 시 list-title 업데이트
         updateScheduleListTitle();
 
@@ -62,6 +57,11 @@
 
         // 오늘 날짜의 일정 로드
         await loadDateSchedules(selectedDate);
+
+        // AI 일정 요약 기능 호출
+        // 시간은 백엔드에서 계산
+        loadScheduleSummary();
+
     });
 
     function renderMarkdown(text) {
