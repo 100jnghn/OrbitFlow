@@ -274,10 +274,10 @@
     text-align: center;
 }
 
-/* 3. 신청자 (8%) */
+/* 3. 신청자 (8% - min 80px) */
 .resource-table th:nth-child(3),
 .resource-table td:nth-child(3) {
-    width: 8%;
+    width: max(8%, 80px);
     text-align: center;
 }
 
@@ -371,10 +371,10 @@
         display: none !important;
     }
 
-    /* 3. 신청자 다시 고정 (상태에게 양보) */
+    /* 3. 신청자 다시 고정 (상태에게 양보 - min 80px 보장) */
     .resource-table th:nth-child(3),
     .resource-table td:nth-child(3) {
-        width: 8% !important;
+        width: max(8%, 80px) !important;
     }
 
     /* 5. 예약 사유 고정 (상태에게 양보) */
