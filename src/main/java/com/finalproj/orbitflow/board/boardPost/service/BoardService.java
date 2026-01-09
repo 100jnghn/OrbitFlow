@@ -140,6 +140,8 @@ public class BoardService {
         List<File> attachedFiles = null;
         if (files != null && !files.isEmpty()) {
             attachedFiles = files.stream()
+                    .filter(file -> file != null && file.getOriginalFilename() != null
+                            && !file.getOriginalFilename().isBlank())
                     .map(file -> fileService.upload(companyId, FileDomain.BOARD, file))
                     .toList();
         }
@@ -255,6 +257,8 @@ public class BoardService {
         List<File> attachedFiles = null;
         if (files != null && !files.isEmpty()) {
             attachedFiles = files.stream()
+                    .filter(file -> file != null && file.getOriginalFilename() != null
+                            && !file.getOriginalFilename().isBlank())
                     .map(file -> fileService.upload(companyId, FileDomain.BOARD, file))
                     .toList();
         }

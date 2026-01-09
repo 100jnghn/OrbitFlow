@@ -210,7 +210,7 @@ function renderMessageDetail(message) {
                         <li class="file-item">
                             <a href="#" class="file-link" onclick="downloadMessageFile(${file.id}); return false;">
                                 <i class="fas fa-file"></i> ${escapeHTML(file.originalFileName)}
-                                ${file.fileSize ? `<span class="file-size">(${formatFileSize(file.fileSize)})</span>` : ''}
+                                ${(file.fileSize !== undefined && file.fileSize !== null) ? `<span class="file-size">(${formatFileSize(file.fileSize)})</span>` : ''}
                             </a>
                         </li>
                     `).join('')}
@@ -461,7 +461,7 @@ function replyMessage() {
 
 // 파일 크기 포맷팅
 function formatFileSize(bytes) {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) return '0 KB';
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -528,15 +528,6 @@ async function downloadMessageFile(fileId) {
     } catch (error) {
         alert('파일 다운로드에 실패했습니다.');
     }
-}
-
-// 파일 크기 포맷팅
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 // HTML 이스케이프

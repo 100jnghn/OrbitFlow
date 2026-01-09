@@ -390,7 +390,7 @@ public class MessageService {
         java.util.List<File> uploadedFiles = new java.util.ArrayList<>();
         if (files != null && !files.isEmpty()) {
             for (MultipartFile file : files) {
-                if (!file.isEmpty()) {
+                if (file != null && file.getOriginalFilename() != null && !file.getOriginalFilename().isBlank()) {
                     uploadedFiles.add(fileService.upload(companyId, FileDomain.MESSAGE, file));
                 }
             }
