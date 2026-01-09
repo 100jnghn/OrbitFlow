@@ -12,6 +12,9 @@ import com.finalproj.orbitflow.attendance.rule.repository.EmployeeRuleRepository
 import com.finalproj.orbitflow.global.exception.BusinessException;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
+import com.finalproj.orbitflow.notification.enums.NotificationType;
+import com.finalproj.orbitflow.notification.repository.NotificationRepository;
+import com.finalproj.orbitflow.notification.service.NotificationCommandService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +33,7 @@ public class AttendanceRuleService {
     private final EmployeeRuleRepository employeeRuleRepository;
     private final AttendanceRuleRepository defaultRuleRepository;
     private final EmployeeRepository employeeRepository;
-
+    private final NotificationCommandService notificationService;
 
     public DefaultRuleResDto getDefaultRule(Long companyId) {
         return new DefaultRuleResDto(findDefaultRuleOrThrow(companyId));
@@ -42,7 +45,6 @@ public class AttendanceRuleService {
         rule.updateRule(request.defaultStartTime(), request.defaultEndTime(), request.defaultBreakMinutes());
         return new DefaultRuleResDto(rule);
     }
-
 
     public List<EmployeeRuleResDto> getExceptionRules(Long companyId) {
         List<EmployeeRule> rules = employeeRuleRepository.findByCompanyIdAndIsActiveTrueOrderByAppliedAtDesc(companyId);
@@ -74,9 +76,17 @@ public class AttendanceRuleService {
                 .appliedAt(LocalDateTime.now())
                 .build();
 
-        return toEmployeeRuleResDto(employeeRuleRepository.save(rule), employee);
-    }
+        EmployeeRule savedRule = employeeRuleRepository.save(rule);
 
+        notificationService.createNotification(
+                companyId,
+                employee.getId(),
+                NotificationType.ATTENDANCE,
+                "새로운 근태 예외 규칙이 적용되었습니다. 적용 시작일: " + request.validFrom(),
+                "/");
+
+        return toEmployeeRuleResDto(savedRule, employee);
+    }
 
     public EmployeeRuleResDto getExceptionRuleDetail(Long companyId, Long ruleId) {
         EmployeeRule rule = findExceptionRuleOrThrow(ruleId);
@@ -87,26 +97,26 @@ public class AttendanceRuleService {
         return toEmployeeRuleResDto(rule, employee);
     }
 
-
     @Transactional
     public EmployeeRuleResDto updateExceptionRule(Long companyId, Long ruleId, EmpAttRuleUpdateReqDto request) {
         EmployeeRule rule = findExceptionRuleOrThrow(ruleId);
         validateCompanyAccess(companyId, rule.getCompanyId());
 
         rule.updateRule(
-                request.startTime(),
-                request.endTime(),
-                request.breakMinutes(),
-                request.reason(),
-                request.validFrom(),
-                request.validTo(),
-                request.isActive()
-        );
+                request.startTime(), request.endTime(), request.breakMinutes(),
+                request.reason(), request.validFrom(), request.validTo(), request.isActive());
 
         Employee employee = findEmployeeOrThrow(rule.getEmployeeId());
+
+        notificationService.createNotification(
+                companyId,
+                employee.getId(),
+                NotificationType.ATTENDANCE,
+                "적용 중인 근태 예외 규칙이 수정되었습니다.",
+                "/");
+
         return toEmployeeRuleResDto(rule, employee);
     }
-
 
     @Transactional
     public void deleteExceptionRule(Long companyId, Long ruleId) {
@@ -115,7 +125,6 @@ public class AttendanceRuleService {
 
         rule.delete();
     }
-
 
     private void validateRuleDates(LocalDate from, LocalDate to) {
         if (from != null && to != null && to.isBefore(from)) {
@@ -127,8 +136,7 @@ public class AttendanceRuleService {
         return new EmployeeRuleResDto(
                 rule,
                 employee != null ? employee.getName() : "이름 미확인",
-                employee != null ? employee.getEmployeeNo() : null
-        );
+                employee != null ? employee.getEmployeeNo() : null);
     }
 
     private AttendanceRule findDefaultRuleOrThrow(Long companyId) {

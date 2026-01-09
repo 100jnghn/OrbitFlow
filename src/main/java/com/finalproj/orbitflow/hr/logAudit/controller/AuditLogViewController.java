@@ -18,12 +18,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class AuditLogViewController {
 
     @GetMapping
-    public String listPage() {
+    public String listPage(org.springframework.ui.Model model) {
+        model.addAttribute("currentMenu", "audit-log");
         return "admin/audit-log/list";
     }
 
     @GetMapping("/detail")
-    public String detailPage() {
+    public String detailPage(org.springframework.ui.Model model) {
+        model.addAttribute("currentMenu", "audit-log");
         return "admin/audit-log/detail";
     }
 }

@@ -1,7 +1,7 @@
 package com.finalproj.orbitflow.approval.documentAISummary.dto;
 
 import com.finalproj.orbitflow.approval.documentAISummary.entity.DocumentAISummary;
-import com.finalproj.orbitflow.approval.documentAISummary.enums.SummaryStatus;
+import com.finalproj.orbitflow.approval.documentAISummary.enums.AiStatus;
 import com.finalproj.orbitflow.approval.documentAISummary.enums.SummaryType;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,14 +18,14 @@ import lombok.Getter;
 @Builder
 public class AiSummaryResDto {
     private SummaryType summaryType;
-    private SummaryStatus summaryStatus;
+    private AiStatus aiStatus;
     private String context;
     private Long beforeDocumentId;
 
     public static AiSummaryResDto from(DocumentAISummary documentAISummary) {
         return AiSummaryResDto.builder()
                 .summaryType(documentAISummary.getSummaryType())
-                .summaryStatus(documentAISummary.getStatus())
+                .aiStatus(documentAISummary.getStatus())
                 .context(documentAISummary.getContent())
                 .beforeDocumentId(
                         documentAISummary.getBeforeDocument() != null

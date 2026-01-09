@@ -77,6 +77,7 @@ public class PdfApprovalLineAssembler {
         //}
 
         return new PdfApproverDto(
+                approvalLine.getId(),
                 approvalLine.getOrderNo(),
                 approver.getName(),
                 approver.getPositionCategory() != null

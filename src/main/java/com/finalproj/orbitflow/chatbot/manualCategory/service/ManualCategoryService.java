@@ -49,8 +49,8 @@ public class ManualCategoryService {
                 .orElseThrow(() -> new NotFoundException("카테고리를 찾을 수 없습니다."));
 
         // 1. 해당 카테고리에 등록된 매뉴얼이 있는지 확인
-        if (!manualRepository.findByCompanyIdAndCategoryIdOrderByIdDesc(companyId, categoryId).isEmpty()) {
-            throw new InvalidRequestException("해당 카테고리에 등록된 매뉴얼이 있어 삭제할 수 없습니다. 매뉴얼을 먼저 삭제해주세요.");
+        if (manualRepository.existsByCompanyIdAndCategoryIdAndIsActiveTrue(companyId, categoryId)) {
+            throw new InvalidRequestException("해당 카테고리에 사용 중인 매뉴얼이 있어 삭제할 수 없습니다.");
         }
 
         categoryRepository.delete(category);

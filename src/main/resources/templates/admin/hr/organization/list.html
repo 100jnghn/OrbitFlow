@@ -16,36 +16,55 @@
 
 <th:block th:fragment="content">
 
-    <div class="orgcat-title-row">
-        <h1 class="orgcat-title">조직 관리</h1>
-    </div>
-
+    <!-- ================= 메인 카드 ================= -->
     <section class="orgcat-card">
 
+        <!-- 카드 헤더 -->
+        <div class="orgcat-card-head">
+            <h1 class="orgcat-title">조직 관리</h1>
+        </div>
+
+        <!-- ================= 툴바 ================= -->
         <div class="orgcat-toolbar">
             <div class="toolbar-left">
+
                 <div class="orgcat-search">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input id="searchKeyword" type="text" placeholder="조직명 검색 (예: 팀)">
+                    <input id="searchKeyword"
+                           type="text"
+                           placeholder="조직명 검색 (예: 팀)">
                 </div>
+
                 <button class="btn btn-outline" id="btnSearch">검색</button>
+
                 <label class="inactive-toggle">
                     <input type="checkbox" id="includeInactive">
-                    <span>비활성 포함</span>
+                    <span class="checkmark"></span>
+                    <span class="label-text">비활성 포함</span>
                 </label>
+
                 <label class="inactive-toggle">
                     <input type="checkbox" id="includeDescendants">
-                    <span>하위 조직 함께 보기</span>
+                    <span class="checkmark"></span>
+                    <span class="label-text">하위 조직 함께 보기</span>
                 </label>
             </div>
 
             <div class="toolbar-right">
-                <button class="btn btn-primary" id="btnOpenCreate">조직 추가</button>
+                <button class="btn btn-outline icon-btn" id="btnToggleAll"
+                        title="전체 열기 / 닫기">
+                    <i class="fa-solid fa-expand-alt"></i>
+                </button>
+                <button class="btn btn-primary" id="btnOpenCreate">
+                    조직 추가
+                </button>
             </div>
         </div>
 
+        <!-- ================= 조직 트리 ================= -->
         <div class="org-tree" id="orgTree"></div>
 
+        <!-- ================= 하단 ================= -->
         <div class="orgcat-footer">
             <div class="orgcat-hint">
                 같은 상위 조직 내에서만 순서를 변경할 수 있습니다.
@@ -57,85 +76,111 @@
 
     </section>
 
-    <!-- 조직 생성 / 수정 모달 -->
+    <!-- ================= 조직 생성 / 수정 모달 ================= -->
     <div id="orgModal" class="modal hidden">
-        <div class="modal-panel">
+        <div class="modal-panel modal-panel-wide">
 
+            <!-- 모달 헤더 -->
             <div class="modal-head">
-                <h2 id="modalTitle">조직 생성 / 수정</h2>
-                <button class="icon-btn" id="btnModalCloseIcon">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+                <div class="modal-head-text">
+                    <h2 id="modalTitle">조직 생성 / 수정</h2>
+                    <p class="modal-sub">조직 정보와 직책 사용 정책을 설정합니다.</p>
+                </div>
             </div>
 
-            <div class="modal-body org-modal-grid">
-                <!-- ================= 좌측: 조직 정보 (기존 코드 그대로) ================= -->
-                <div class="org-form-panel">
-                    <div class="form-group">
-                        <label class="form-label">조직 카테고리</label>
-                        <select id="categorySelect" class="form-input"></select>
+            <!-- modal-body는 grid 금지 -->
+            <div class="modal-body modal-scroll-body">
+                <div class="org-modal-grid">
+
+                    <!-- 좌측: 조직 정보 -->
+                    <div class="org-form-panel">
+
+                        <div class="form-group">
+                            <label class="form-label">조직 카테고리</label>
+                            <div class="custom-select" id="categorySelect">
+                                <div class="custom-select-selected">조직 카테고리 선택</div>
+                                <div class="custom-select-options"></div>
+                            </div>
+                            <input type="hidden" id="categorySelectValue">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">조직명</label>
+                            <input
+                                    id="orgName"
+                                    class="form-input"
+                                    type="text"
+                                    placeholder="예: 인사팀"
+                                    autocomplete="off"
+                            >
+
+                            <div class="input-meta">
+                                <span id="orgNameCount">0</span>/100
+                            </div>
+
+                            <p class="form-help" id="orgNameHelp"></p>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">상위 조직</label>
+                            <div class="custom-select" id="parentOrgSelect">
+                                <div class="custom-select-selected">상위 조직 선택</div>
+                                <div class="custom-select-options"></div>
+                            </div>
+                            <input type="hidden" id="parentOrgSelectValue">
+                        </div>
+
+                        <div class="form-group toggle-row">
+                            <span class="toggle-text">사용 여부</span>
+                            <label class="switch">
+                                <input type="checkbox" id="activeToggle">
+                                <span class="slider"></span>
+                            </label>
+                            <span id="activeLabel">사용</span>
+                        </div>
+
+                        <p class="form-help" id="inactiveHelp" style="display:none;">
+                            비활성화하려면 해당 조직에 소속된 사원이 없어야 합니다.
+                        </p>
+
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">조직명</label>
-                        <input id="orgName" class="form-input" type="text" placeholder="예: 인사팀">
-                    </div>
+                    <!-- 우측: 직책 정책 -->
+                    <section class="org-policy-panel">
 
-                    <div class="form-group">
-                        <label class="form-label">상위 조직</label>
-                        <select id="parentOrgSelect" class="form-input"></select>
-                    </div>
+                        <h3>직책 사용 정책</h3>
+                        <p>이 조직에서 사용할 직책을 선택하세요.</p>
 
-                    <div class="form-group toggle-row">
-                        <span class="toggle-text">사용 여부</span>
-                        <label class="switch">
-                            <input type="checkbox" id="activeToggle">
-                            <span class="slider"></span>
-                        </label>
-                        <span id="activeLabel">사용</span>
-                    </div>
+                        <div class="policy-toolbar">
+                            <input id="policyKeyword" placeholder="직책명 검색">
+                            <select id="policyHeadFilter">
+                                <option value="">전체</option>
+                                <option value="HEAD">HEAD</option>
+                                <option value="NORMAL">일반</option>
+                            </select>
+                        </div>
 
-                    <div class="form-help" id="inactiveHelp" style="display:none;">
-                        비활성화하려면 해당 조직에 소속된 사원이 없어야 합니다.
-                    </div>
+                        <table class="policy-table">
+                            <thead>
+                            <tr>
+                                <th>직책명</th>
+                                <th>부여 인원</th>
+                                <th>사용</th>
+                            </tr>
+                            </thead>
+                            <tbody id="policyTableBody"></tbody>
+                        </table>
+
+                        <p class="form-help">
+                            비활성 직책은 선택할 수 없습니다.
+                        </p>
+
+                    </section>
 
                 </div>
-
-                <!-- ================= 우측: 직책 정책 ================= -->
-                <section class="org-policy-panel">
-
-                    <h3>직책 사용 정책</h3>
-                    <p>이 조직에서 사용할 직책을 선택하세요.</p>
-
-                    <div class="policy-toolbar">
-                        <input id="policyKeyword" placeholder="직책명 검색">
-                        <select id="policyHeadFilter">
-                            <option value="">전체</option>
-                            <option value="HEAD">HEAD</option>
-                            <option value="NORMAL">일반</option>
-                        </select>
-                    </div>
-
-                    <table class="policy-table">
-                        <thead>
-                        <tr>
-                            <th>직책명</th>
-                            <th>부여 인원</th>
-                            <th>사용</th>
-                        </tr>
-                        </thead>
-                        <tbody id="policyTableBody">
-                        <!-- JS 렌더링 -->
-                        </tbody>
-                    </table>
-
-                    <div class="form-help">
-                        비활성 직책은 선택할 수 없습니다.
-                    </div>
-
-                </section>
             </div>
 
+            <!-- 모달 하단 -->
             <div class="modal-actions">
                 <button class="btn btn-ghost" id="btnModalCancel">취소</button>
                 <button class="btn btn-primary" id="btnSaveOrg">저장</button>

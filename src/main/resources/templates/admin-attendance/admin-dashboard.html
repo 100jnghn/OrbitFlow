@@ -9,88 +9,69 @@
       )}">
 <head>
     <th:block th:fragment="pageCss">
-        <link rel="stylesheet" th:href="@{/css/admin-board/admin-board.css}">
         <link rel="stylesheet" th:href="@{/css/admin-attendance/dashboard.css}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     </th:block>
 </head>
+
 <body>
 <div th:fragment="content">
     <div class="board-admin-container">
-        <!-- 게시판 제목 -->
-        <div class="board-header">
-            <h1>직원 근태 종합 현황 대시보드</h1>
-        </div>
+        <div class="board-header"><h1>직원 근태 종합 현황 대시보드</h1></div>
 
-        <!-- 요약 카드 섹션 -->
         <div class="summary-section">
-            <h2 class="section-title" id="todayLabel">금일 요약 현황 (로드 중...)</h2>
+            <h2 class="section-title" id="todayLabel">금일 요약 현황</h2>
             <div class="summary-cards">
                 <div class="summary-card card-green">
-                    <span class="card-label">출근 완료 인원</span>
+                    <span class="card-label">출근 완료</span>
                     <div class="card-value">
                         <span id="onTimeCount">0</span> <small>/ <span id="totalEmployees">0</span></small>
                     </div>
                 </div>
                 <div class="summary-card card-orange">
-                    <span class="card-label">금일 지각 인원</span>
+                    <span class="card-label">금일 지각</span>
                     <div class="card-value"><span id="lateCount">0</span> <small>명</small></div>
                 </div>
                 <div class="summary-card card-red">
-                    <span class="card-label">퇴근 미처리 (근무중)</span>
+                    <span class="card-label">근무중</span>
                     <div class="card-value"><span id="notLeavingCount">0</span> <small>명</small></div>
                 </div>
             </div>
         </div>
 
-        <!-- 검색 및 필터 -->
         <div class="board-search-section">
             <div class="search-filters">
                 <div class="date-field-wrapper">
-                    <label for="startDate" class="filter-label">시작일</label>
+                    <label class="filter-label">시작일</label>
                     <input type="date" id="startDate" class="date-input">
-                    <span class="error-message" id="startDateError"></span>
                 </div>
+
                 <div class="date-field-wrapper">
-                    <label for="endDate" class="filter-label">종료일</label>
+                    <label class="filter-label">종료일</label>
                     <input type="date" id="endDate" class="date-input">
-                    <span class="error-message" id="endDateError"></span>
                 </div>
-                
+
                 <div class="filter-select-wrapper">
-                    <label for="statusFilter" class="filter-label">상태</label>
+                    <label class="filter-label">상태</label>
                     <select id="statusFilter" class="filter-select">
                         <option value="ALL">전체</option>
                         <option value="ON_TIME">정상</option>
                         <option value="LATE">지각</option>
                         <option value="ABSENT">결근</option>
+                        <option value="BEFORE_WORK">출근전</option>
                     </select>
                 </div>
-                
+
                 <div class="search-input-wrapper">
-                    <label for="searchKeyword" class="filter-label">검색</label>
-                    <input type="text" id="searchKeyword" class="search-input" 
-                           placeholder="이름 또는 사번 입력" maxlength="100"
-                           onkeyup="if(window.event.keyCode==13){handleSearch()}">
-                    <span class="error-message" id="searchKeywordError"></span>
+                    <label class="filter-label">검색</label>
+                    <input type="text" id="searchKeyword" class="search-input" placeholder="이름/사번">
                 </div>
-                
-                <div class="button-wrapper">
-                    <label class="filter-label" style="opacity: 0;">버튼</label>
-                    <div style="display: flex; gap: 8px;">
-                        <button type="button" class="btn-search" onclick="handleSearch()">
-                            <i class="fas fa-search" style="margin-right: 6px;"></i>
-                            검색
-                        </button>
-                        <button type="button" class="btn-reset" onclick="resetFilters()">
-                            초기화
-                        </button>
-                    </div>
-                </div>
+
+                <button type="button" class="btn-search" onclick="handleSearch()">검색</button>
+                <button type="button" class="btn-reset" onclick="resetFilters()">초기화</button>
             </div>
         </div>
 
-        <!-- 게시글 목록 테이블 -->
         <div class="board-table-container">
             <table class="board-table" id="attendanceTable">
                 <thead>
@@ -114,44 +95,46 @@
             </table>
         </div>
 
-        <!-- 페이지네이션 -->
         <div class="board-bottom-actions">
-            <div class="pagination" id="boardPagination">
-                <!-- 동적으로 생성됨 -->
-            </div>
+            <div class="pagination" id="boardPagination"></div>
         </div>
     </div>
 
-    <!-- 근태 기록 정정 모달 -->
-    <div id="correctionModal" class="modal" style="display: none;">
-        <div class="modal-content">
+    <!-- 정정 모달 -->
+    <div id="correctionModal" class="modal" onclick="handleModalBackdropClick(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
                 <h3>근태 기록 정정</h3>
+                <button class="close" type="button" onclick="closeModal()">×</button>
             </div>
+
             <div class="modal-body">
                 <input type="hidden" id="targetAttendanceId">
+
                 <div class="form-group">
-                    <label for="modalStatus">변경할 상태</label>
+                    <label>변경할 상태</label>
                     <select id="modalStatus" class="form-select">
-                        <option value="ON_TIME">정상 출근</option>
+                        <option value="ON_TIME">정상</option>
                         <option value="LATE">지각</option>
                         <option value="ABSENT">결근</option>
+                        <option value="BEFORE_WORK">출근전</option>
                     </select>
                 </div>
+
                 <div class="form-group">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <label for="modalReason" style="margin: 0;">정정 사유 <span style="color: var(--danger-color);">*</span></label>
-                        <span id="charCount" style="font-size: 12px; color: var(--neutral-500);">0 / 40</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <label>정정 사유 *</label>
+                        <span id="charCount">0 / 40</span>
                     </div>
-                    <textarea id="modalReason" class="form-textarea"
-                              placeholder="사유를 입력하세요 (예: 단말기 오류, 외근 후 퇴근 등)" 
-                              maxlength="40" rows="4"></textarea>
+                    <textarea id="modalReason" class="form-textarea" maxlength="40" rows="4"
+                              placeholder="정정 사유를 입력해주세요 (최대 40자)"></textarea>
                     <span class="error-message" id="modalReasonError"></span>
                 </div>
             </div>
+
             <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeModal()" type="button">닫기</button>
-                <button class="btn-submit" onclick="submitCorrection()" type="button">저장하기</button>
+                <button class="btn-cancel" type="button" onclick="closeModal()">닫기</button>
+                <button class="btn-submit" type="button" onclick="submitCorrection()">저장하기</button>
             </div>
         </div>
     </div>

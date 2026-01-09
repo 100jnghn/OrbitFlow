@@ -77,44 +77,28 @@ async function loadCars() {
 ========================== */
 async function loadReservations() {
     try {
-        // 날짜 범위로 예약 조회 (오늘부터 14일 후까지)
-        const startDate = dates[0].dateString;
-        const endDate = dates[dates.length - 1].dateString;
+        const allReservations = [];
 
-        const params = new URLSearchParams({
-            startDate: startDate,
-            endDate: endDate,
-            typeCode: 'CAR'
-        });
+        for (const dateObj of dates) {
+            const params = new URLSearchParams({
+                date: dateObj.dateString,
+                typeCode: 'CAR'
+            });
 
-        const res = await apiFetch(`/api/reservations/range?${params.toString()}`, {
-            method: 'GET'
-        });
+            const res = await apiFetch(
+                `/api/reservations/date?${params.toString()}`,
+                { method: 'GET' }
+            );
 
-        if (!res.ok) {
-            // 범위 조회가 안되면 각 날짜별로 조회
-            const allReservations = [];
-            for (const dateObj of dates) {
-                const dateParams = new URLSearchParams({
-                    date: dateObj.dateString,
-                    typeCode: 'CAR'
-                });
-                const dateRes = await apiFetch(`/api/reservations/date?${dateParams.toString()}`, {
-                    method: 'GET'
-                });
-                if (dateRes.ok) {
-                    const { data } = await dateRes.json();
-                    if (data) {
-                        allReservations.push(...data);
-                    }
+            if (res.ok) {
+                const { data } = await res.json();
+                if (data) {
+                    allReservations.push(...data);
                 }
             }
-            reservations = allReservations;
-        } else {
-            const { data } = await res.json();
-            reservations = data || [];
         }
 
+        reservations = allReservations;
         renderGrid();
 
     } catch (e) {
@@ -123,6 +107,7 @@ async function loadReservations() {
         renderGrid();
     }
 }
+
 
 /* ==========================
    Render Date Headers

@@ -32,7 +32,8 @@
 .sidebar-menu-wrapper {
     flex: 1;
     overflow-y: auto;
-    min-height: 0; /* flexbox에서 스크롤이 작동하도록 */
+    min-height: 0;
+    /* flexbox에서 스크롤이 작동하도록 */
 }
 
 .sidebar-menu {
@@ -99,7 +100,8 @@
     background: #0f1729;
     padding: 0;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    flex-shrink: 0; /* footer가 축소되지 않도록 */
+    flex-shrink: 0;
+    /* footer가 축소되지 않도록 */
 }
 
 .sidebar-organization {
@@ -107,7 +109,8 @@
     color: #c9ccdd;
     max-height: 300px;
     overflow-y: auto;
-    min-height: 200px; /* 최소 높이 보장 */
+    min-height: 200px;
+    /* 최소 높이 보장 */
 }
 
 .organization-title {
@@ -157,8 +160,8 @@
     display: none;
 }
 
-.organization-tree .org-item.expanded + .org-children,
-.organization-tree .org-item.expanded ~ .org-children {
+.organization-tree .org-item.expanded+.org-children,
+.organization-tree .org-item.expanded~.org-children {
     display: block;
 }
 
@@ -179,9 +182,12 @@
 .sidebar-menu li a:visited,
 .sidebar-menu li a:active,
 .sidebar-menu li a:focus {
-    text-decoration: none !important; /* 밑줄 절대 금지 */
-    color: #c9ccdd !important;       /* 기본 연회색 고정 */
-    outline: none !important;        /* 클릭 시 테두리 제거 */
+    text-decoration: none !important;
+    /* 밑줄 절대 금지 */
+    color: #c9ccdd !important;
+    /* 기본 연회색 고정 */
+    outline: none !important;
+    /* 클릭 시 테두리 제거 */
     display: block;
     padding: 8px 0;
     transition: color 0.2s;
@@ -198,7 +204,3 @@
     color: #ffffff !important;
     font-weight: bold;
 }
-
-
-
-

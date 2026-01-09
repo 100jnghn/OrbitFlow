@@ -1,6 +1,3 @@
-/**
- * 전역 상태 관리
- */
 let currentSearchParams = {
     page: 0,
     size: 10,
@@ -10,7 +7,12 @@ let currentSearchParams = {
     keyword: ''
 };
 
-document.addEventListener('DOMContentLoaded', function() {
+// 툴팁 전역 상태
+let reasonPopoverEl = null;
+let reasonPopoverAnchorEl = null;
+let hoverCloseTimer = null;
+
+document.addEventListener('DOMContentLoaded', function () {
     // 오늘 날짜 표시
     const today = new Date();
     const formattedToday = today.getFullYear() + '.' +
@@ -18,68 +20,99 @@ document.addEventListener('DOMContentLoaded', function() {
         String(today.getDate()).padStart(2, '0');
 
     const todayLabel = document.getElementById('todayLabel');
-    if (todayLabel) {
-        todayLabel.innerText = `금일 요약 현황 (${formattedToday})`;
-    }
+    if (todayLabel) todayLabel.innerText = `금일 요약 현황 (${formattedToday})`;
 
-    // 날짜 입력 필드 실시간 검증 제거 (에러 메시지 표시하지 않음)
-
-    // 정정 모달 정정 사유 실시간 검증 및 글자 수 카운터
+    // 모달 글자수 카운터
     const modalReasonInput = document.getElementById('modalReason');
     const charCountElement = document.getElementById('charCount');
+
     if (modalReasonInput) {
-        modalReasonInput.addEventListener('input', function() {
-            clearFieldError('modalReasonError', 'modalReason');
+        modalReasonInput.addEventListener('input', function () {
+            clearFieldError('modalReasonError');
+
             const reason = this.value;
             const currentLength = reason.length;
             const maxLength = 40;
-            
-            // 글자 수 업데이트
+
             if (charCountElement) {
                 charCountElement.textContent = `${currentLength} / ${maxLength}`;
-                // 40자에 가까워지면 색상 변경
-                if (currentLength >= maxLength) {
-                    charCountElement.style.color = 'var(--danger-color)';
-                } else if (currentLength >= maxLength * 0.8) {
-                    charCountElement.style.color = '#f59e0b';
-                } else {
-                    charCountElement.style.color = 'var(--neutral-500)';
-                }
+                if (currentLength >= maxLength) charCountElement.style.color = 'var(--danger-color)';
+                else if (currentLength >= maxLength * 0.8) charCountElement.style.color = '#f59e0b';
+                else charCountElement.style.color = 'var(--neutral-500)';
             }
-            
+
             if (reason.trim() && reason.length > maxLength) {
                 showError('modalReasonError', `정정 사유는 ${maxLength}자 이하여야 합니다.`);
             }
         });
     }
 
-    // 모달 외부 클릭 시 닫기
-    const modal = document.getElementById('correctionModal');
-    if (modal) {
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                closeModal();
-            }
-        });
+    // ✅ 테이블에 호버 이벤트 위임(정정됨 요소가 동적으로 생성되기 때문)
+    const table = document.getElementById('attendanceTable');
+    if (table) {
+        table.addEventListener('mouseover', handleCorrectedMouseOver);
+        table.addEventListener('mouseout', handleCorrectedMouseOut);
     }
 
-    // ESC 키로 모달 닫기
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            const modal = document.getElementById('correctionModal');
-            if (modal && modal.style.display === 'flex') {
-                closeModal();
-            }
-        }
+    // ESC로 닫기(안전장치)
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeReasonPopover();
     });
 
-    // 초기 데이터 로드
+    // 스크롤/리사이즈 시 위치 재계산
+    window.addEventListener('scroll', () => {
+        if (reasonPopoverEl && reasonPopoverAnchorEl) positionReasonPopover(reasonPopoverAnchorEl, reasonPopoverEl);
+    }, true);
+
+    window.addEventListener('resize', () => {
+        if (reasonPopoverEl && reasonPopoverAnchorEl) positionReasonPopover(reasonPopoverAnchorEl, reasonPopoverEl);
+    });
+
     loadSummaryData();
     loadAttendanceList();
 });
 
 /**
- * 상단 통계 데이터 로드
+ * ✅ 정정됨 호버 처리
+ */
+function handleCorrectedMouseOver(e) {
+    const target = e.target.closest('.badge-corrected');
+    if (!target) return;
+
+    // 같은 요소에 대해 중복 오픈 방지
+    if (reasonPopoverEl && reasonPopoverAnchorEl === target) return;
+
+    clearTimeout(hoverCloseTimer);
+
+    const reason = target.getAttribute('data-reason') || '';
+    openReasonPopover(target, reason);
+
+    // 툴팁 위로 마우스가 가도 유지되게
+    if (reasonPopoverEl) {
+        reasonPopoverEl.addEventListener('mouseenter', () => clearTimeout(hoverCloseTimer));
+        reasonPopoverEl.addEventListener('mouseleave', () => scheduleClosePopover());
+    }
+}
+
+function handleCorrectedMouseOut(e) {
+    const target = e.target.closest('.badge-corrected');
+    if (!target) return;
+
+    // badge에서 빠져나갔지만, 툴팁으로 이동한 경우는 닫지 않기
+    const toEl = e.relatedTarget;
+    const movedToPopover = reasonPopoverEl && toEl && reasonPopoverEl.contains(toEl);
+    if (movedToPopover) return;
+
+    scheduleClosePopover();
+}
+
+function scheduleClosePopover() {
+    clearTimeout(hoverCloseTimer);
+    hoverCloseTimer = setTimeout(() => closeReasonPopover(), 120);
+}
+
+/**
+ * 상단 통계
  */
 async function loadSummaryData() {
     try {
@@ -97,20 +130,13 @@ async function loadSummaryData() {
         console.error("통계 데이터 로드 실패:", error);
     }
 }
+
 /**
- * 근태 목록 데이터 로드 (정렬 로직 제거 버전)
+ * 목록
  */
 async function loadAttendanceList() {
     const { page, size, startDate, endDate, status, keyword } = currentSearchParams;
-
-    const params = new URLSearchParams({
-        page: page,
-        size: size,
-        startDate: startDate,
-        endDate: endDate,
-        status: status,
-        keyword: keyword
-    });
+    const params = new URLSearchParams({ page, size, startDate, endDate, status, keyword });
 
     try {
         const response = await fetch(`/api/admin/attendance/list?${params.toString()}`, {
@@ -119,15 +145,9 @@ async function loadAttendanceList() {
 
         if (response.ok) {
             const data = await response.json();
-            // 서버에서 이미 정렬되어 오므로 content를 그대로 사용합니다.
             const list = data.content || (Array.isArray(data) ? data : []);
-
-
             renderAttendanceTable(list);
             renderPagination(data);
-        } else {
-            const tbody = document.querySelector('#attendanceTable tbody');
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="color:red;">데이터 로드 실패</td></tr>';
         }
     } catch (error) {
         console.error("목록 로드 실패:", error);
@@ -135,7 +155,9 @@ async function loadAttendanceList() {
 }
 
 /**
- * 테이블 렌더링 (보완된 근무 중 로직 포함)
+ * ✅ 테이블 렌더링
+ * - 정정 전: 정정 버튼
+ * - 정정 후: 정정됨 버튼(호버 시 사유 툴팁)
  */
 function renderAttendanceTable(list) {
     const tbody = document.querySelector('#attendanceTable tbody');
@@ -147,24 +169,46 @@ function renderAttendanceTable(list) {
     }
 
     tbody.innerHTML = list.map(item => {
-        const commuteStyle = item.statusCode === 'LATE' ? 'color: #ff9800; font-weight: bold;' : '';
+        const commuteStyle = item.statusCode === 'LATE' ? 'color:#ff9800; font-weight:bold;' : '';
 
-        // 출근 기록이 있을 때만 "근무 중" 여부 판단 로직
         let leaveTimeDisplay = item.leaveAt || '-';
         if (item.commuteAt && item.commuteAt !== '-' && (!item.leaveAt || item.leaveAt === '-')) {
-            leaveTimeDisplay = '<span style="color: #2196F3; font-weight: bold;">근무 중</span>';
-        } else if (!item.commuteAt || item.commuteAt === '-') {
-            leaveTimeDisplay = '-';
+            leaveTimeDisplay = '<span style="color:#2196F3; font-weight:bold;">근무 중</span>';
         }
 
-        // 정정 사유 표시 아이콘
-        const correctionIcon = item.isCorrected && item.correctionReason 
-            ? `<i class="fas fa-info-circle correction-info-icon" 
-                  data-reason="${escapeHtml(item.correctionReason)}" 
-                  onmouseenter="showCorrectionTooltip(event)" 
-                  onmouseleave="hideCorrectionTooltip(event)"
-                  style="margin-left: 6px; color: #6b7280; cursor: help; font-size: 14px;"></i>` 
-            : '';
+        // 서버 필드명이 다를 가능성까지 커버
+        const corrected =
+            item.isCorrected === true ||
+            item.corrected === true ||
+            item.correctionYn === 'Y' ||
+            item.correctionStatus === 'CORRECTED';
+
+        const reason =
+            item.correctionReason ??
+            item.reason ??
+            item.correctionMsg ??
+            '';
+
+        let actionButtons = '';
+        if (corrected) {
+            // ✅ 사유 버튼 없음 + ✅ 체크 아이콘 제거
+            actionButtons = `
+                <div class="action-group">
+                    <span class="badge-corrected"
+                          data-reason="${escapeHtml(String(reason))}">
+                        정정됨
+                    </span>
+                </div>
+            `;
+        } else {
+            actionButtons = `
+                <button type="button"
+                        class="btn-table-action"
+                        onclick="openCorrectionModal(${item.attendanceId}, '${item.statusCode}')">
+                    정정
+                </button>
+            `;
+        }
 
         return `
             <tr>
@@ -172,201 +216,150 @@ function renderAttendanceTable(list) {
                 <td style="${commuteStyle}">${item.commuteAt || '-'}</td>
                 <td>${leaveTimeDisplay}</td>
                 <td>${item.workingTime || '-'}</td>
-                <td style="position: relative;">
-                    <span class="status-badge ${item.statusCode}">${item.statusName}</span>
-                    ${correctionIcon}
-                </td>
+                <td><span class="status-badge ${item.statusCode}">${item.statusName}</span></td>
                 <td>${item.workDate || '-'}</td>
-                <td>
-                    <button class="btn-table-action" onclick="openCorrectionModal(${item.attendanceId}, '${item.statusCode}')">
-                        ${item.isCorrected ? '수정됨' : '정정'}
-                    </button>
-                </td>
+                <td>${actionButtons}</td>
             </tr>
         `;
     }).join('');
 }
 
-
 /**
- * 에러 메시지 초기화 함수
+ * ✅ 호버 툴팁 열기
  */
-function clearAllErrors() {
-    const errorElements = document.querySelectorAll('.error-message');
-    errorElements.forEach(el => {
-        el.textContent = '';
-        el.style.display = 'none';
-    });
-    
-    const errorInputs = document.querySelectorAll('.error');
-    errorInputs.forEach(el => {
-        el.classList.remove('error');
-    });
+function openReasonPopover(anchorEl, reason) {
+    const msg = (reason || '').trim() || '등록된 정정 사유가 없습니다.';
+
+    closeReasonPopover();
+    reasonPopoverAnchorEl = anchorEl;
+
+    const pop = document.createElement('div');
+    pop.className = 'reason-popover';
+    pop.setAttribute('role', 'tooltip');
+
+    pop.innerHTML = `
+        <div class="reason-popover-arrow"></div>
+        <div class="reason-popover-title">
+            <i class="fa-solid fa-circle-info"></i>
+            정정 사유
+        </div>
+        <div class="reason-popover-body">${escapeHtml(msg)}</div>
+    `;
+
+    document.body.appendChild(pop);
+    reasonPopoverEl = pop;
+
+    applyReasonPopoverSizing(pop, msg);
+    positionReasonPopover(anchorEl, pop);
 }
 
 /**
- * 에러 메시지 표시 함수
+ * ✅ 메시지 길이에 따른 폭 보정
  */
-function showError(elementId, message) {
-    const errorElement = document.getElementById(elementId);
-    const inputElement = document.getElementById(elementId.replace('Error', ''));
-    
-    if (errorElement) {
-        errorElement.textContent = message;
-        errorElement.style.display = 'block';
-    }
-    
-    if (inputElement) {
-        inputElement.classList.add('error');
-        inputElement.focus();
-    }
+function applyReasonPopoverSizing(popEl, msg) {
+    const viewportMax = Math.min(520, window.innerWidth - 24);
+    const minW = 200;
+
+    const len = (msg || '').length;
+    const target = Math.min(viewportMax, Math.max(minW, 220 + len * 6.2));
+
+    popEl.style.width = `${target}px`;
+    popEl.style.maxWidth = `${viewportMax}px`;
 }
 
 /**
- * 개별 필드 에러 초기화 함수
+ * ✅ 위치 계산(아래 우선, 공간 부족하면 위로)
  */
-function clearFieldError(errorElementId, inputElementId) {
-    const errorElement = document.getElementById(errorElementId);
-    const inputElement = document.getElementById(inputElementId);
-    if (errorElement) {
-        errorElement.textContent = '';
-        errorElement.style.display = 'none';
-    }
-    if (inputElement) {
-        inputElement.classList.remove('error');
-    }
-}
+function positionReasonPopover(anchorEl, popEl) {
+    const rect = anchorEl.getBoundingClientRect();
+    const gap = 8;
 
-/**
- * 검색 필터 유효성 검사 (에러 메시지 없이 검증만 수행)
- */
-function validateSearchFilters() {
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-    const keyword = document.getElementById('searchKeyword').value.trim();
+    const popW = popEl.offsetWidth;
+    const popH = popEl.offsetHeight;
 
-    // 시작일과 종료일 검증 (에러 메시지 표시하지 않음)
-    if (startDate && endDate) {
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        
-        if (end < start) {
-            return false; // 검색 차단만 함
+    let top = rect.bottom + gap;
+    let left = rect.left + rect.width / 2 - popW / 2;
+
+    const minLeft = 12;
+    const maxLeft = window.innerWidth - popW - 12;
+    left = Math.max(minLeft, Math.min(left, maxLeft));
+
+    if (top + popH > window.innerHeight - 12) {
+        top = rect.top - popH - gap;
+    }
+
+    popEl.style.top = `${Math.max(12, top)}px`;
+    popEl.style.left = `${left}px`;
+
+    const arrow = popEl.querySelector('.reason-popover-arrow');
+    if (arrow) {
+        const anchorCenterX = rect.left + rect.width / 2;
+        const arrowLeft = Math.max(18, Math.min(popW - 18, anchorCenterX - left));
+        arrow.style.left = `${arrowLeft}px`;
+
+        const isAbove = top < rect.top;
+        if (isAbove) {
+            arrow.style.top = 'auto';
+            arrow.style.bottom = '-6px';
+            arrow.style.transform = 'rotate(225deg)';
+        } else {
+            arrow.style.bottom = 'auto';
+            arrow.style.top = '-6px';
+            arrow.style.transform = 'rotate(45deg)';
         }
     }
+}
 
-    // 검색어 길이 검증 (이미 maxlength 있지만 추가 검증)
-    if (keyword && keyword.length > 100) {
-        return false; // 검색 차단만 함
+function closeReasonPopover() {
+    if (reasonPopoverEl && reasonPopoverEl.parentNode) {
+        reasonPopoverEl.parentNode.removeChild(reasonPopoverEl);
     }
-
-    return true;
+    reasonPopoverEl = null;
+    reasonPopoverAnchorEl = null;
 }
 
 /**
- * 검색 처리
- */
-function handleSearch() {
-    // 유효성 검사 (에러 메시지 표시하지 않고 검색만 차단)
-    if (!validateSearchFilters()) {
-        return; // 검색하지 않음
-    }
-
-    currentSearchParams.keyword = document.getElementById('searchKeyword').value.trim();
-    currentSearchParams.startDate = document.getElementById('startDate').value;
-    currentSearchParams.endDate = document.getElementById('endDate').value;
-    currentSearchParams.status = document.getElementById('statusFilter').value;
-    currentSearchParams.page = 0;
-
-    const tbody = document.querySelector('#attendanceTable tbody');
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center">데이터를 검색 중입니다...</td></tr>';
-
-    loadAttendanceList();
-}
-
-/**
- * 필터 초기화
- */
-function resetFilters() {
-    document.getElementById('startDate').value = '';
-    document.getElementById('endDate').value = '';
-    document.getElementById('statusFilter').value = 'ALL';
-    document.getElementById('searchKeyword').value = '';
-    
-    currentSearchParams = {
-        page: 0,
-        size: 10,
-        startDate: '',
-        endDate: '',
-        status: 'ALL',
-        keyword: ''
-    };
-    
-    loadAttendanceList();
-}
-
-/**
- * 모달 및 정정 제출
+ * 모달
  */
 function openCorrectionModal(id, status) {
-    clearFieldError('modalReasonError', 'modalReason');
     document.getElementById('targetAttendanceId').value = id;
     document.getElementById('modalStatus').value = status;
-    document.getElementById('modalReason').value = '';
-    
-    // 글자 수 카운터 초기화
+
+    const modalReason = document.getElementById('modalReason');
+    modalReason.value = '';
+    clearFieldError('modalReasonError');
+
     const charCountElement = document.getElementById('charCount');
     if (charCountElement) {
-        charCountElement.textContent = '0 / 40';
+        charCountElement.textContent = `0 / 40`;
         charCountElement.style.color = 'var(--neutral-500)';
     }
-    
-    const modal = document.getElementById('correctionModal');
-    modal.style.display = 'flex';
-    modal.style.alignItems = 'center';
-    modal.style.justifyContent = 'center';
-    // 모달이 열릴 때 body 스크롤 방지
+
+    document.getElementById('correctionModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 }
 
 function closeModal() {
-    const modal = document.getElementById('correctionModal');
-    modal.style.display = 'none';
-    document.getElementById('modalReason').value = '';
-    clearFieldError('modalReasonError', 'modalReason');
-    // 모달이 닫힐 때 body 스크롤 복원
+    document.getElementById('correctionModal').style.display = 'none';
     document.body.style.overflow = '';
 }
 
-/**
- * 정정 모달 유효성 검사
- */
-function validateCorrectionForm() {
-    clearFieldError('modalReasonError', 'modalReason');
-    let isValid = true;
-
-    const reason = document.getElementById('modalReason').value.trim();
-
-    if (!reason) {
-        showError('modalReasonError', '정정 사유를 입력해주세요.');
-        isValid = false;
-    } else if (reason.length > 40) {
-        showError('modalReasonError', '정정 사유는 40자 이하여야 합니다.');
-        isValid = false;
-    }
-
-    return isValid;
+function handleModalBackdropClick(e) {
+    if (e.target && e.target.id === 'correctionModal') closeModal();
 }
 
+/**
+ * 저장
+ */
 async function submitCorrection() {
-    // 유효성 검사
-    if (!validateCorrectionForm()) {
+    const reason = document.getElementById('modalReason').value.trim();
+    if (!reason) {
+        showError('modalReasonError', '정정 사유를 입력해주세요.');
         return;
     }
 
     const id = document.getElementById('targetAttendanceId').value;
     const status = document.getElementById('modalStatus').value;
-    const reason = document.getElementById('modalReason').value.trim();
 
     try {
         const response = await fetch(`/api/admin/attendance/update/${id}`, {
@@ -375,192 +368,105 @@ async function submitCorrection() {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${sessionStorage.getItem('accessToken')}`
             },
-            body: JSON.stringify({ status: status, correctionReason: reason.trim() })
+            body: JSON.stringify({ status: status, correctionReason: reason })
         });
 
         if (response.ok) {
-            alert("성공적으로 정정되었습니다.");
             closeModal();
-            loadAttendanceList();
-            loadSummaryData();
-        } else {
-            const errorData = await response.json().catch(() => ({}));
-            alert(errorData.message || "정정 처리에 실패했습니다.");
+            closeReasonPopover();
+            await loadAttendanceList();
+            await loadSummaryData();
+            return;
         }
+
+        let errorMessage = '정정 처리에 실패했습니다.';
+        try {
+            const err = await response.json();
+            if (err && err.message) errorMessage = err.message;
+        } catch (_) {}
+        alert(errorMessage);
+
     } catch (error) {
-        console.error("정정 요청 중 오류:", error);
+        console.error(error);
+        alert("네트워크 오류로 정정 처리에 실패했습니다.");
     }
 }
 
 /**
- * 페이징 렌더링 (게시판과 동일한 구조)
+ * 검색
  */
-function renderPagination(pageData) {
-    const pagination = document.getElementById('boardPagination');
-    if (!pagination || pageData.totalPages === undefined) return;
+function handleSearch() {
+    currentSearchParams.keyword = document.getElementById('searchKeyword').value.trim();
+    currentSearchParams.startDate = document.getElementById('startDate').value;
+    currentSearchParams.endDate = document.getElementById('endDate').value;
+    currentSearchParams.status = document.getElementById('statusFilter').value;
+    currentSearchParams.page = 0;
 
-    pagination.innerHTML = '';
+    closeReasonPopover();
+    loadAttendanceList();
+}
 
-    const page = pageData.number;
-    const totalPages = pageData.totalPages;
+function resetFilters() {
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+    document.getElementById('statusFilter').value = 'ALL';
+    document.getElementById('searchKeyword').value = '';
+    currentSearchParams = { page: 0, size: 10, startDate: '', endDate: '', status: 'ALL', keyword: '' };
 
-    // 이전 버튼
-    const prevBtn = document.createElement('button');
-    prevBtn.className = 'page-btn';
-    prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
-    prevBtn.disabled = page === 0;
-    prevBtn.onclick = () => {
-        if (page > 0) {
-            currentSearchParams.page = page - 1;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            loadAttendanceList();
-        }
-    };
-    pagination.appendChild(prevBtn);
-
-    // 페이지 번호
-    const maxVisible = 5;
-    let startPage = Math.max(0, page - Math.floor(maxVisible / 2));
-    let endPage = Math.min(totalPages - 1, startPage + maxVisible - 1);
-
-    if (endPage - startPage < maxVisible - 1) {
-        startPage = Math.max(0, endPage - maxVisible + 1);
-    }
-
-    if (startPage > 0) {
-        const firstBtn = document.createElement('button');
-        firstBtn.className = 'page-number';
-        firstBtn.textContent = '1';
-        firstBtn.onclick = () => {
-            currentSearchParams.page = 0;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            loadAttendanceList();
-        };
-        pagination.appendChild(firstBtn);
-
-        if (startPage > 1) {
-            const ellipsis = document.createElement('span');
-            ellipsis.className = 'ellipsis';
-            ellipsis.textContent = '...';
-            pagination.appendChild(ellipsis);
-        }
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-        const pageBtn = document.createElement('button');
-        pageBtn.className = 'page-number';
-        if (i === page) {
-            pageBtn.classList.add('active');
-        }
-        pageBtn.textContent = i + 1;
-        pageBtn.onclick = () => {
-            currentSearchParams.page = i;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            loadAttendanceList();
-        };
-        pagination.appendChild(pageBtn);
-    }
-
-    if (endPage < totalPages - 1) {
-        if (endPage < totalPages - 2) {
-            const ellipsis = document.createElement('span');
-            ellipsis.className = 'ellipsis';
-            ellipsis.textContent = '...';
-            pagination.appendChild(ellipsis);
-        }
-
-        const lastBtn = document.createElement('button');
-        lastBtn.className = 'page-number';
-        lastBtn.textContent = totalPages;
-        lastBtn.onclick = () => {
-            currentSearchParams.page = totalPages - 1;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            loadAttendanceList();
-        };
-        pagination.appendChild(lastBtn);
-    }
-
-    // 다음 버튼
-    const nextBtn = document.createElement('button');
-    nextBtn.className = 'page-btn';
-    nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
-    nextBtn.disabled = page >= totalPages - 1;
-    nextBtn.onclick = () => {
-        if (page < totalPages - 1) {
-            currentSearchParams.page = page + 1;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            loadAttendanceList();
-        }
-    };
-    pagination.appendChild(nextBtn);
+    closeReasonPopover();
+    loadAttendanceList();
 }
 
 /**
- * HTML 이스케이프 함수
+ * XSS 방지
  */
 function escapeHtml(text) {
-    if (!text) return '';
+    if (text === null || text === undefined) return '';
     const div = document.createElement('div');
-    div.textContent = text;
+    div.textContent = String(text);
     return div.innerHTML;
 }
 
 /**
- * 정정 사유 툴팁 표시
+ * 에러
  */
-function showCorrectionTooltip(event) {
-    const icon = event.target;
-    const reason = icon.getAttribute('data-reason');
-    if (!reason) return;
-
-    // 기존 툴팁 제거
-    const existingTooltip = document.getElementById('correction-tooltip');
-    if (existingTooltip) {
-        existingTooltip.remove();
+function showError(id, msg) {
+    const err = document.getElementById(id);
+    if (err) {
+        err.textContent = msg;
+        err.style.display = 'block';
     }
-
-    // 툴팁 생성
-    const tooltip = document.createElement('div');
-    tooltip.id = 'correction-tooltip';
-    tooltip.className = 'correction-tooltip';
-    tooltip.innerHTML = `
-        <div class="tooltip-header">
-            <i class="fas fa-info-circle" style="margin-right: 6px;"></i>
-            <strong>정정 사유</strong>
-        </div>
-        <div class="tooltip-content">${escapeHtml(reason)}</div>
-    `;
-
-    document.body.appendChild(tooltip);
-
-    // 툴팁 위치 계산
-    const iconRect = icon.getBoundingClientRect();
-    const tooltipRect = tooltip.getBoundingClientRect();
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-
-    // 아이콘 오른쪽에 표시, 화면 밖이면 왼쪽으로
-    let left = iconRect.right + scrollLeft + 8;
-    if (left + tooltipRect.width > window.innerWidth + scrollLeft) {
-        left = iconRect.left + scrollLeft - tooltipRect.width - 8;
+}
+function clearFieldError(errId) {
+    const err = document.getElementById(errId);
+    if (err) {
+        err.textContent = '';
+        err.style.display = 'none';
     }
-
-    // 아이콘 위에 표시, 화면 밖이면 아래로
-    let top = iconRect.top + scrollTop - tooltipRect.height - 8;
-    if (top < scrollTop) {
-        top = iconRect.bottom + scrollTop + 8;
-    }
-
-    tooltip.style.left = left + 'px';
-    tooltip.style.top = top + 'px';
 }
 
 /**
- * 정정 사유 툴팁 숨기기
+ * 페이지네이션
  */
-function hideCorrectionTooltip(event) {
-    const tooltip = document.getElementById('correction-tooltip');
-    if (tooltip) {
-        tooltip.remove();
+function renderPagination(pageData) {
+    const pagination = document.getElementById('boardPagination');
+    if (!pagination || pageData.totalPages === undefined || pageData.totalPages === null) return;
+
+    pagination.innerHTML = '';
+
+    const currentPage = pageData.number ?? 0;
+    const totalPages = pageData.totalPages ?? 0;
+
+    for (let i = 0; i < totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.className = i === currentPage ? 'page-number active' : 'page-number';
+        btn.textContent = i + 1;
+        btn.type = 'button';
+        btn.onclick = () => {
+            currentSearchParams.page = i;
+            closeReasonPopover();
+            loadAttendanceList();
+        };
+        pagination.appendChild(btn);
     }
 }

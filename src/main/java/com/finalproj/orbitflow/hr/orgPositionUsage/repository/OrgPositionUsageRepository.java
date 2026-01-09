@@ -35,4 +35,9 @@ public interface OrgPositionUsageRepository extends JpaRepository<OrgPositionUsa
 """)
     List<OrgPositionUsage> findAllUsagesByOrgId(Long orgId);
 
+    boolean existsByCompanyIdAndOrganizationIdAndPositionCategoryId(Long companyId, Long id, Long positionCategoryId);
+
+    void deleteByCompany_IdAndOrganization_IdAndPositionCategory_IdIn(Long companyId, Long id, List<Long> list);
+
+    List<OrgPositionUsage> findByCompany_IdAndOrganization_Id(Long companyId, Long id);
 }

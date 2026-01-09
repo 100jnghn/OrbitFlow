@@ -34,14 +34,18 @@ SET @c1 := (SELECT id
             LIMIT 1);
 
 -- ORG_CATEGORY
-INSERT INTO org_category (company_id, name, order_index)
-VALUES (@c1, '회사', 1),
-       (@c1, '본부', 2),
-       (@c1, '부서', 3),
-       (@c1, '팀', 4)
-ON DUPLICATE KEY UPDATE order_index = VALUES(order_index),
-                        is_active   = TRUE,
-                        updated_at  = NOW();
+-- ORG_CATEGORY (is_root 반영)
+INSERT INTO org_category (company_id, name, order_index, is_root)
+VALUES
+    (@c1, '회사', NULL, TRUE),
+    (@c1, '본부', 1, FALSE),
+    (@c1, '부서', 2, FALSE),
+    (@c1, '팀', 3, FALSE)
+ON DUPLICATE KEY UPDATE
+                     order_index = VALUES(order_index),
+                     is_root     = VALUES(is_root),
+                     is_active   = TRUE,
+                     updated_at  = NOW();
 
 SET @c1_cat_company := (SELECT id
                         FROM org_category
@@ -656,14 +660,16 @@ SET @c2 := (SELECT id
             LIMIT 1);
 
 -- ORG_CATEGORY
-INSERT INTO org_category (company_id, name, order_index)
-VALUES (@c2, '회사', 1),
-       (@c2, '본부', 2),
-       (@c2, '부서', 3),
-       (@c2, '팀', 4)
-ON DUPLICATE KEY UPDATE order_index=VALUES(order_index),
-                        is_active= TRUE,
-                        updated_at=NOW();
+INSERT INTO org_category (company_id, name, order_index, is_root)
+VALUES
+    (@c2, '회사', NULL, TRUE),
+    (@c2, '본부', 1, FALSE),
+    (@c2, '부서', 2, FALSE),
+    (@c2, '팀', 3, FALSE)
+ON DUPLICATE KEY UPDATE order_index = VALUES(order_index),
+                     is_root     = VALUES(is_root),
+                     is_active   = TRUE,
+                     updated_at  = NOW();
 
 SET @c2_cat_company := (SELECT id
                         FROM org_category
@@ -1228,14 +1234,17 @@ SET @c3 := (SELECT id
             LIMIT 1);
 
 -- ORG_CATEGORY
-INSERT INTO org_category (company_id, name, order_index)
-VALUES (@c3, '회사', 1),
-       (@c3, '본부', 2),
-       (@c3, '부서', 3),
-       (@c3, '팀', 4)
-ON DUPLICATE KEY UPDATE order_index=VALUES(order_index),
-                        is_active= TRUE,
-                        updated_at=NOW();
+INSERT INTO org_category (company_id, name, order_index, is_root)
+VALUES
+    (@c3, '회사', NULL, TRUE),
+    (@c3, '본부', 1, FALSE),
+    (@c3, '부서', 2, FALSE),
+    (@c3, '팀', 3, FALSE)
+ON DUPLICATE KEY UPDATE
+                     order_index = VALUES(order_index),
+                     is_root     = VALUES(is_root),
+                     is_active   = TRUE,
+                     updated_at  = NOW();
 
 SET @c3_cat_company := (SELECT id
                         FROM org_category

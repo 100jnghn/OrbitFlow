@@ -30,7 +30,7 @@ public class PdfHtmlBuilder {
             String name,
             Instant submittedAt
     ) {
-        String approvalLineHtml = renderApprovalLine(approvalLine);
+        String approvalLineHtml = renderApprovalLine(documentId, approvalLine);
         String bodyHtml = renderService.render(documentId, schema);
         String footerHtml = renderFooter(name, submittedAt);
 
@@ -61,7 +61,10 @@ public class PdfHtmlBuilder {
     }
 
 
-    private String renderApprovalLine(PdfApprovalLineDto approvalLine) {
+    private String renderApprovalLine(
+            Long documentId,
+            PdfApprovalLineDto approvalLine
+    ) {
 
         if (approvalLine == null || approvalLine.getApprovers().isEmpty()) {
             return "";
@@ -69,41 +72,81 @@ public class PdfHtmlBuilder {
 
         StringBuilder sb = new StringBuilder();
 
-        sb.append("<div class=\"approval-line-wrapper\">");
-        sb.append("<div class=\"approval-line\">");
+        sb.append("<table class=\"approval-table\">");
 
-        for (var approver : approvalLine.getApprovers()) {
-            sb.append("<div class=\"approver-box\">");
+        int index = 0;
+        int total = approvalLine.getApprovers().size();
+        int rowCount = (int) Math.ceil(total / 5.0);
 
-            // 서명 영역 (img 전용)
-            sb.append("<div class=\"approver-signature\">");
-            if (approver.getSignatureImageUrl() != null) {
-                sb.append("<img src=\"")
-                        .append(approver.getSignatureImageUrl())
-                        .append("\" />");
+        for (int row = 0; row < rowCount; row++) {
+
+            sb.append("<tr>");
+
+        /* =========================
+           좌측 세로 '결재' 라벨
+           (첫 줄에만 rowspan)
+        ========================= */
+            if (row == 0) {
+                sb.append("<th class=\"approval-label\" rowspan=\"")
+                        .append(rowCount)
+                        .append("\">결<br/>재</th>");
+
             }
-            sb.append("</div>");
 
-            // 이름
-            sb.append("<div class=\"approver-name\">")
-                    .append(approver.getName())
-                    .append("</div>");
+            int colCount = 0;
 
-            // 직책 (optional)
-            if (approver.getPosition() != null) {
-                sb.append("<div class=\"approver-position\">")
-                        .append(approver.getPosition())
+        /* =========================
+           실제 결재자 (최대 5명)
+        ========================= */
+            while (index < total && colCount < 5) {
+
+                var approver = approvalLine.getApprovers().get(index);
+
+                sb.append("<td class=\"approval-cell\">");
+
+                // 직급
+                sb.append("<div class=\"stamp-position\">")
+                        .append(approver.getPosition() != null ? approver.getPosition() : "")
                         .append("</div>");
+
+                // 서명
+                sb.append("<div class=\"stamp-signature\">");
+                if (approver.getApproverLineId() != null) {
+                    sb.append("<img src=\"pdf-image://signature/")
+                            .append(documentId)
+                            .append("/")
+                            .append(approver.getApproverLineId())
+                            .append("\" />");
+                }
+                sb.append("</div>");
+
+                // 이름
+                sb.append("<div class=\"stamp-name\">")
+                        .append(approver.getName())
+                        .append("</div>");
+
+                sb.append("</td>");
+
+                index++;
+                colCount++;
             }
 
-            sb.append("</div>");
+        /* =========================
+           빈 셀 채우기 (5칸 고정)
+        ========================= */
+            while (colCount < 5) {
+                sb.append("<td class=\"approval-cell empty\"></td>");
+                colCount++;
+            }
+
+            sb.append("</tr>");
         }
 
-        sb.append("</div>");
-        sb.append("</div>");
+        sb.append("</table>");
 
         return sb.toString();
     }
+
 
     private String renderFooter(String name, Instant submittedAt) {
 

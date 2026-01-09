@@ -437,6 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+// rule.js의 searchEmployee 함수 수정
     async function searchEmployee() {
         const keyword = document.getElementById('employeeSearchInput').value.trim();
         if (!keyword) {
@@ -445,9 +446,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const res = await apiFetch(`/api/admin/employees?keyword=${encodeURIComponent(keyword)}&page=0&size=20`);
+            // 관리자용 API 경로 호출 (페이지 사이즈를 명시적으로 지정)
+            const res = await apiFetch(`/api/admin/employees?keyword=${encodeURIComponent(keyword)}&page=0&size=100`);
+
             if (res.ok) {
                 const response = await res.json();
+                // 핵심 수정: Page 객체이므로 .data.content에서 리스트를 추출해야 함
                 const employees = response.data?.content || [];
                 displayEmployeeResults(employees);
             } else {

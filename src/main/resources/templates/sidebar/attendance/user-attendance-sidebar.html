@@ -4,31 +4,24 @@
 <!-- 사이드바 메뉴 -->
 <th:block th:fragment="sidebar">
     <ul class="sidebar-menu">
-        <li class="menu-item active">
-            <div class="menu-title" role="button" onclick="toggleAttendanceMenu(this)" aria-expanded="true">
-                <span>출퇴근</span>
-                <i class="fas fa-chevron-down arrow"></i>
-            </div>
-            <ul class="sub-menu">
-                <li th:classappend="${currentMenu == 'monthly'} ? 'selected' : ''">
-                    <a th:href="@{/view/attendance/monthly}" class="sidebar-link" id="monthlyLink">
-                        월별 근태 현황
-                    </a>
-                </li>
-            </ul>
+        <li class="menu-item no-sub">
+            <a th:href="@{/view/attendance/monthly}" class="sidebar-link" id="monthlyLink">
+                월별 근태 현황
+            </a>
         </li>
+
         <li class="menu-item active">
             <div class="menu-title" role="button" onclick="toggleAttendanceMenu(this)" aria-expanded="true">
                 <span>휴가</span>
                 <i class="fas fa-chevron-down arrow"></i>
             </div>
             <ul class="sub-menu">
-                <li th:classappend="${currentMenu == 'annual-leave'} ? 'selected' : ''">
+                <li>
                     <a th:href="@{/view/attendance/annual-leave}" class="sidebar-link" id="annualLeaveLink">
                         내 연차 현황
                     </a>
                 </li>
-                <li th:classappend="${currentMenu == 'leave-history'} ? 'selected' : ''">
+                <li>
                     <a th:href="@{/view/attendance/leave-history}" class="sidebar-link" id="leaveHistoryLink">
                         휴가 신청 현황
                     </a>

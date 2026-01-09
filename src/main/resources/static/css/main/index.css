@@ -1,6 +1,6 @@
 /* 대시보드 메인 컨테이너 */
 .dashboard-container {
-    width: 100%;
+    flex: 1;
     padding: 0 18px 18px 18px;
     height: 100%;
     box-sizing: border-box;
@@ -35,11 +35,12 @@
 .dashboard-widget {
     background: white;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     padding: 18px;
     min-height: 200px;
     display: flex;
     flex-direction: column;
+    border: 1px solid #f0f0f0;
 }
 
 /* 근태관리와 일정 영역 높이 맞추기 */
@@ -54,20 +55,20 @@
     align-items: center;
     margin-bottom: 12px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid #f5f5f5;
     flex-shrink: 0;
 }
 
 .widget-header h3 {
     margin: 0;
-    font-size: 17px;
-    font-weight: 600;
-    color: #111827;
+    font-size: 16px;
+    font-weight: 700;
+    color: #333333;
 }
 
 .widget-more {
-    font-size: 14px;
-    color: #6b7280;
+    font-size: 13px;
+    color: #999999;
     text-decoration: none;
     display: flex;
     align-items: center;
@@ -91,20 +92,22 @@
     display: flex;
     flex-direction: column;
     min-height: 140px !important;
-    padding: 14px !important;
+    padding: 20px !important;
 }
 
 .profile-avatar {
     text-align: center;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 
 .profile-avatar img {
-    width: 75px;
-    height: 75px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid #e5e7eb;
+    border: 1px solid #eeeeee;
+    padding: 3px;
+    background: white;
 }
 
 .profile-info {
@@ -112,143 +115,150 @@
 }
 
 .profile-dept {
-    font-size: 12px;
-    color: #6b7280;
-    margin-bottom: 5px;
+    font-size: 13px;
+    color: #888888;
+    margin-bottom: 4px;
     font-weight: 500;
 }
 
 .profile-name {
-    font-size: 17px;
-    font-weight: 600;
-    color: #111827;
+    font-size: 18px;
+    font-weight: 700;
+    color: #222222;
 }
 
 .profile-rank {
-    font-size: 12px;
-    color: #6b7280;
+    font-size: 13px;
+    color: #666666;
     font-weight: 500;
+    margin-left: 4px;
 }
 
 /* 근무상태 벳지 */
 .work-status-badge {
     display: inline-block;
-    padding: 4px 10px;
+    padding: 3px 10px;
     border-radius: 12px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     margin-left: 8px;
+    vertical-align: middle;
 }
 
-.work-status-badge.badge-before-work {
-    background-color: #DBEAFE;
-    color: #1E40AF;
-}
-
-.work-status-badge.badge-working {
-    background-color: #D1FAE5;
-    color: #065F46;
-}
-
-.work-status-badge.badge-away {
-    background-color: #FEF3C7;
-    color: #92400E;
-}
-
-.work-status-badge.badge-off-work {
-    background-color: #E5E7EB;
-    color: #374151;
-}
+.work-status-badge.badge-before-work { background-color: #f1f5f9; color: #64748b; }
+.work-status-badge.badge-working { background-color: #ecfdf5; color: #10b981; }
+.work-status-badge.badge-away { background-color: #fffbeb; color: #f59e0b; }
+.work-status-badge.badge-off-work { background-color: #fef2f2; color: #ef4444; }
 
 /* 출퇴근 버튼 그룹 */
 .profile-attendance-buttons {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: row;
+    gap: 6px;
     margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #e5e7eb;
+    padding: 15px 0;
+    border-top: 1px solid #f0f0f0;
 }
 
 .btn-attendance {
-    width: 100%;
-    padding: 14px 16px;
-    border: none;
-    border-radius: 10px;
+    flex: 1;
+    padding: 12px 0;
+    border-radius: 8px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
+    color: #000000 !important;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease; /* 호버 효과를 위한 트랜지션 */
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid transparent;
 }
 
+/* 아이콘 제거 */
+.btn-attendance i {
+    display: none !important;
+}
+
+/* 출근 버튼: 초록색 디자인 적용 및 호버 효과 */
 .btn-attendance.btn-checkin {
-    background: linear-gradient(135deg, #EDF2FF 0%, #DBE4FF 100%);
-    color: dimgray;
-    border: 1.5px solid #3b82f6;
+    background-color: #ecfdf5; /* 연한 초록색 배경 */
+    border-color: #a7f3d0;     /* 초록색 테두리 */
+}
+.btn-attendance.btn-checkin:hover {
+    background-color: #d1fae5; /* 호버 시 진해지는 효과 */
+    border-color: #10b981;
 }
 
+/* 자리비움 버튼: 호버 효과 추가 */
 .btn-attendance.btn-away {
-    background: linear-gradient(135deg, #FFF9DB 0%, #FFF3BF 100%);
-    color: dimgray;
-    border: 1.5px solid #f59e0b;
+    background-color: #fffbeb;
+    border-color: #fef3c7;
+}
+.btn-attendance.btn-away:hover {
+    background-color: #fef3c7; /* 호버 시 진해지는 효과 */
+    border-color: #f59e0b;
 }
 
+/* 퇴근 버튼: 호버 효과 추가 */
 .btn-attendance.btn-checkout {
-    background: linear-gradient(135deg, #FFF5F5 0%, #FFE3E3 100%);
-    color: dimgray;
-    border: 1.5px solid #ef4444;
+    background-color: #fef2f2;
+    border-color: #fee2e2;
+}
+.btn-attendance.btn-checkout:hover {
+    background-color: #fee2e2; /* 호버 시 진해지는 효과 */
+    border-color: #ef4444;
 }
 
-/* 출퇴근 정보 */
+/* 출퇴근 정보 섹션 (2줄 2열 그리드) */
 .profile-attendance-info {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #e5e7eb;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    margin-top: 10px;
+    padding: 15px;
+    background-color: #fafafa;
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px 10px;
 }
 
 .attendance-info-item {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    font-size: 13px;
-    border-bottom: 1px solid #f3f4f6;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
 }
 
-.attendance-info-item:last-child {
-    border-bottom: none;
+.attendance-info-item:nth-child(odd) {
+    border-right: 1px solid #eeeeee;
+    padding-right: 10px;
 }
 
 .attendance-info-item .info-label {
-    color: #6b7280;
+    color: #888888;
+    font-size: 11px;
     font-weight: 500;
 }
 
 .attendance-info-item .info-value {
-    color: #111827;
-    font-weight: 600;
+    color: #333333;
+    font-size: 14px;
+    font-weight: 700;
 }
 
 /* 2. 공지사항 위젯 */
 .notice-item {
-    padding: 9px 0;
-    border-bottom: 1px solid #f3f4f6;
+    padding: 10px 0;
+    border-bottom: 1px solid #f8f8f8;
     cursor: pointer;
     transition: background-color 0.2s;
 }
 
+.notice-item:hover { background-color: #fafafa; }
+
 .notice-title {
     font-size: 14px;
-    color: #111827;
-    margin-bottom: 6px;
+    color: #333333;
+    margin-bottom: 4px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -257,12 +267,12 @@
 
 /* 3. 근태관리 위젯 & 휴가 현황 */
 .attendance-summary {
-    margin-top: 24px;
-    padding-top: 20px;
-    border-top: 1px solid #e5e7eb;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #f0f0f0;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
 }
 
 .summary-item {
@@ -272,67 +282,62 @@
     padding: 12px;
     background: #f9fafb;
     border-radius: 8px;
+    border: 1px solid #f0f0f0;
 }
 
 .summary-icon {
-    width: 40px;
-    height: 40px;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    background: #eff6ff;
+    border-radius: 8px; color: #3b82f6; font-size: 16px;
+}
+
+.summary-icon.leave-icon { background: #ecfdf5; color: #10b981; }
+
+.summary-label { font-size: 12px; color: #777777; }
+.summary-value { font-size: 15px; font-weight: 700; color: #111111; }
+
+/* 휴가 정보 섹션 */
+.leave-info-section {
+    margin-top: 18px;
+    padding: 15px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    border: 1px solid #eeeeee;
+}
+
+.leave-info-header {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #444444;
     display: flex;
     align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    border-radius: 10px;
-    color: #fff;
-    font-size: 18px;
-}
-
-.summary-icon.leave-icon {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-}
-
-/* 휴가 정보 섹션 (디자인 개선 반영) */
-.leave-info-section {
-    margin-top: 24px;
-    padding: 15px;
-    background-color: #f8fafc;
-    border-radius: 12px;
-    border: 1px solid #e5e7eb;
+    gap: 6px;
 }
 
 .leave-info-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+    gap: 10px;
 }
 
 .leave-info-item {
-    background: white;
+    background: #fcfcfc;
     padding: 12px 5px;
-    border-radius: 10px;
-    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    border: 1px solid #f0f0f0;
     text-align: center;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.leave-info-label {
-    display: block;
-    font-size: 11px;
-    color: #6b7280;
-    margin-bottom: 4px;
-}
+.leave-info-label { display: block; font-size: 11px; color: #999999; margin-bottom: 4px; }
+.leave-info-value { font-size: 15px; font-weight: 700; color: #222222; }
 
-.leave-info-value {
-    font-size: 15px;
-    font-weight: 700;
-    color: #111827;
-}
-
-/* 4. [핵심] 일정 바로 밑에 통계를 배치하는 래퍼 */
+/* 4. 일정 및 통계 래퍼 */
 .schedule-approval-wrapper {
     display: flex;
     flex-direction: column;
     gap: 18px;
-    /* 위젯과 통계 사이 밀착 간격 */
     height: 100%;
 }
 
@@ -343,91 +348,22 @@
     min-height: 0;
 }
 
-.widget-schedule .widget-content {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    min-height: 0;
-}
-
-/* 일정 요약 그리드 (좌우 2개 컬럼) */
-.schedule-summary-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    height: 100%;
-}
-
 .schedule-item {
-    display: flex;
-    flex-direction: column;
-    padding: 16px;
-    background: #f9fafb;
-    border-radius: 10px;
-    border: 1px solid #e5e7eb;
-    min-height: 200px;
-}
-
-.schedule-item-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #e5e7eb;
-    font-size: 14px;
-    font-weight: 600;
-    color: #374151;
-}
-
-.schedule-item-header i {
-    color: #3b82f6;
-    font-size: 16px;
-}
-
-.schedule-item-content {
-    flex: 1;
-    font-size: 14px;
-    line-height: 1.7;
-    color: #4b5563;
-    overflow-y: auto;
-    white-space: pre-line;
-}
-
-.schedule-item-content strong {
-    font-weight: 600;
-    color: #111827;
-}
-
-.schedule-item-content::-webkit-scrollbar {
-    width: 6px;
-}
-
-.schedule-item-content::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.schedule-item-content::-webkit-scrollbar-thumb {
-    background-color: #d1d5db;
-    border-radius: 3px;
-}
-
-.schedule-item-content::-webkit-scrollbar-thumb:hover {
-    background-color: #9ca3af;
+    padding: 12px 0;
+    border-bottom: 1px solid #f8f8f8;
 }
 
 .dashboard-stats {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
+    gap: 15px;
 }
 
 .dashboard-stat-card {
     background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    padding: 16px;
+    border: 1px solid #eeeeee;
+    border-radius: 10px;
+    padding: 15px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -435,72 +371,25 @@
     transition: transform 0.2s;
 }
 
-.dashboard-stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
+.dashboard-stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 
-.stat-label {
-    font-size: 13px;
-    color: #6b7280;
-    font-weight: 500;
-    margin: 0;
-}
-
-.stat-value {
-    font-size: 24px;
-    font-weight: 700;
-    color: #111827;
-    margin: 4px 0;
-}
-
-.stat-change {
-    font-size: 11px;
-    color: #10b981;
-    font-weight: 600;
-    margin: 0;
-}
+.stat-value { font-size: 22px; font-weight: 700; color: #111111; }
+.stat-label { font-size: 12px; color: #888888; font-weight: 500; }
 
 .stat-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
+    width: 38px; height: 38px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
 }
 
-/* 카드별 아이콘 색상 테마 유지 */
-.stat-pending .stat-icon {
-    background-color: #fef3c7;
-    color: #f59e0b;
-}
-
-.stat-created .stat-icon {
-    background-color: #dbeafe;
-    color: #3b82f6;
-}
-
-.stat-approved .stat-icon {
-    background-color: #d1fae5;
-    color: #10b981;
-}
-
-.stat-rejected .stat-icon {
-    background-color: #fee2e2;
-    color: #ef4444;
-}
+.stat-pending .stat-icon { background-color: #fffbeb; color: #f59e0b; }
+.stat-created .stat-icon { background-color: #eff6ff; color: #3b82f6; }
+.stat-approved .stat-icon { background-color: #ecfdf5; color: #10b981; }
+.stat-rejected .stat-icon { background-color: #fef2f2; color: #ef4444; }
 
 /* 반응형 설정 */
 @media (max-width: 1200px) {
-
-    .dashboard-row:first-child,
-    .dashboard-row:nth-child(2) {
-        grid-template-columns: 1fr;
-    }
-
-    .dashboard-stats {
-        grid-template-columns: repeat(2, 1fr);
-    }
+    .dashboard-row:first-child, .dashboard-row:nth-child(2) { grid-template-columns: 1fr; }
+    .dashboard-stats { grid-template-columns: repeat(2, 1fr); }
 }

@@ -18,7 +18,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 조직별 직책 사용 정책 서비스 (화이트리스트)
@@ -54,6 +57,7 @@ public class OrgPositionUsageService {
     }
 
     /* ================= 저장 (덮어쓰기) ================= */
+    @Transactional
     public void updatePolicy(
             Long companyId,
             OrgPositionPolicyUpdateReqDto request
@@ -61,23 +65,41 @@ public class OrgPositionUsageService {
         Company company = getCompany(companyId);
         Organization org = getActiveOrg(companyId, request.getOrgId());
 
-        List<Long> categoryIds = request.getPositionCategoryIds();
+        List<Long> requestedIds = request.getPositionCategoryIds();
 
-        // 중복 ID 검증
-        long distinctCount = categoryIds.stream().distinct().count();
-        if (distinctCount != categoryIds.size()) {
+        // 중복 검증
+        if (requestedIds.size() != requestedIds.stream().distinct().count()) {
             throw new InvalidRequestException("중복된 직책 카테고리가 포함되어 있습니다.");
         }
 
+        // 기존 정책 조회
+        List<OrgPositionUsage> existingUsages =
+                repository.findByCompany_IdAndOrganization_Id(companyId, org.getId());
 
-        // 기존 정책 전부 삭제 (화이트리스트 리셋)
-        repository.deleteByCompany_IdAndOrganization_Id(
-                companyId,
-                org.getId()
-        );
+        Set<Long> existingIds = existingUsages.stream()
+                .map(u -> u.getPositionCategory().getId())
+                .collect(Collectors.toSet());
 
-        // 신규 정책 등록
-        for (Long positionCategoryId : categoryIds) {
+        Set<Long> requestedSet = new HashSet<>(requestedIds);
+
+        // diff 계산
+        Set<Long> toAdd = new HashSet<>(requestedSet);
+        toAdd.removeAll(existingIds);
+
+        Set<Long> toRemove = new HashSet<>(existingIds);
+        toRemove.removeAll(requestedSet);
+
+        // 삭제 (빠진 것만)
+        if (!toRemove.isEmpty()) {
+            repository.deleteByCompany_IdAndOrganization_IdAndPositionCategory_IdIn(
+                    companyId,
+                    org.getId(),
+                    toRemove.stream().toList()
+            );
+        }
+
+        // 추가 (새로 들어온 것만)
+        for (Long positionCategoryId : toAdd) {
 
             PositionCategory category =
                     positionCategoryRepository.findById(positionCategoryId)
@@ -90,23 +112,23 @@ public class OrgPositionUsageService {
                 throw new ForbiddenException("해당 회사의 직책 카테고리가 아닙니다.");
             }
 
-            // 활성 여부 검증
+            // 활성 검증
             if (!Boolean.TRUE.equals(category.getIsActive())) {
                 throw new InvalidStateException("비활성 직책 카테고리는 정책에 포함할 수 없습니다.");
             }
 
-            // 조직 카테고리 일치 검증
-//            if (!category.getOrgCategory().getId().equals(org.getCategoryId())) {
-//                throw new InvalidStateException(
-//                        "해당 조직 유형에서 사용할 수 없는 직책 카테고리입니다."
-//                );
-//            }
+            // 멱등성 보호 (동시 요청 대비)
+            if (repository.existsByCompanyIdAndOrganizationIdAndPositionCategoryId(
+                    companyId, org.getId(), positionCategoryId)) {
+                continue;
+            }
 
             repository.save(
                     OrgPositionUsage.create(company, org, category)
             );
         }
     }
+
 
     /* ================= 내부 ================= */
     private Company getCompany(Long companyId) {

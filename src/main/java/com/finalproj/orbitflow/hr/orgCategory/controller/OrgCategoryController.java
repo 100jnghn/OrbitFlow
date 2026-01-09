@@ -6,6 +6,7 @@ import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryCreateReqDto;
 import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryOrderUpdateReqDto;
 import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryResDto;
 import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryUpdateReqDto;
+import com.finalproj.orbitflow.hr.orgCategory.repository.OrgCategoryRepository;
 import com.finalproj.orbitflow.hr.orgCategory.service.OrgCategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ import java.util.List;
 public class OrgCategoryController {
 
     private final OrgCategoryService service;
+    private final OrgCategoryRepository repository;
 
     @GetMapping
     public ResponseEntity<ResponseDto<List<OrgCategoryResDto>>> list(
@@ -41,6 +43,17 @@ public class OrgCategoryController {
                         HttpStatus.OK,
                         "조직 카테고리 목록 조회 성공",
                         service.findAll(SecurityUtils.getCompanyId(), keyword, includeInactive)
+                )
+        );
+    }
+
+    @GetMapping("/selectable")
+    public ResponseEntity<ResponseDto<List<OrgCategoryResDto>>> listSelectableForOrg() {
+        return ResponseEntity.ok(
+                new ResponseDto<>(
+                        HttpStatus.OK,
+                        "조직 생성용 카테고리 조회",
+                        service.findSelectableForOrg(SecurityUtils.getCompanyId())
                 )
         );
     }

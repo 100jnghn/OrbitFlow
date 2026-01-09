@@ -30,8 +30,8 @@ document.addEventListener('DOMContentLoaded', function () {
 async function loadBoardList(page = 0) {
     try {
         // Spring Data의 sort 파라미터 형식: sort=createdAt,desc (방향 포함)
-        // 페이지 크기를 8로 설정하여 페이징 처리
-        const response = await apiFetch(`${API_BASE_URL}?organizationOnly=false&page=${page}&size=8&sort=createdAt,desc`, {
+        // 페이지 크기를 10로 설정하여 페이징 처리
+        const response = await apiFetch(`${API_BASE_URL}?organizationOnly=false&page=${page}&size=10&sort=createdAt,desc`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -94,7 +94,7 @@ async function loadBoardList(page = 0) {
             number,
             totalPages,
             totalElements: totalElements,
-            size: data.size || 8,
+            size: data.size || 10,
             first: data.first !== undefined ? data.first : (number === 0),
             last: data.last !== undefined ? data.last : (number === totalPages - 1)
         });
@@ -126,7 +126,7 @@ function renderBoardTable(boards) {
 
     boards.forEach((board, index) => {
         const row = document.createElement('tr');
-        const rowNumber = currentBoardPage * 8 + index + 1;
+        const rowNumber = currentBoardPage * 10 + index + 1;
 
         const createdAt = new Date(board.createdAt).toLocaleString('ko-KR', {
             year: 'numeric',
@@ -372,7 +372,7 @@ async function handleBoardSubmit(e) {
     hideError('boardNameError');
 
     if (!boardName) {
-        showError('boardNameError', '게시판 이름을 입력해주세요.');
+        showError('boardNameError', '게시판 이름을 입력하세요');
         return;
     }
 

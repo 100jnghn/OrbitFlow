@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow.approval.documentAISummary.service;
 
-import com.finalproj.orbitflow.approval.documentAISummary.aiBuilder.common.AiClient;
+import com.finalproj.orbitflow.approval.aiClient.DocumentSummaryAiClient;
 import com.finalproj.orbitflow.approval.documentAISummary.entity.DocumentAISummary;
 import com.finalproj.orbitflow.approval.documentAISummary.repository.DocumentAiSummaryRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DocumentAiSummaryAsyncService {
 
     private final DocumentAiSummaryRepository documentAiSummaryRepository;
-    private final AiClient aiClient;
+    private final DocumentSummaryAiClient documentSummaryAiClient;
 
     /**
      * 비동기 요약 생성
@@ -40,7 +40,7 @@ public class DocumentAiSummaryAsyncService {
                         .orElseThrow(() -> new RuntimeException("Summary not found"));
 
         try {
-            String content = aiClient.summarize(prompt);
+            String content = documentSummaryAiClient.summarize(prompt);
 
             summaryEntity.markCompleted(content);
 
@@ -60,7 +60,7 @@ public class DocumentAiSummaryAsyncService {
                         .orElseThrow(() -> new RuntimeException("Summary not found"));
 
         try {
-            String content = aiClient.diff(prompt);
+            String content = documentSummaryAiClient.diff(prompt);
 
             summaryEntity.markCompleted(content);
 

@@ -10,7 +10,7 @@ package com.finalproj.orbitflow.approval.documentAISummary.entity;
 
 
 import com.finalproj.orbitflow.approval.document.entity.Document;
-import com.finalproj.orbitflow.approval.documentAISummary.enums.SummaryStatus;
+import com.finalproj.orbitflow.approval.documentAISummary.enums.AiStatus;
 import com.finalproj.orbitflow.approval.documentAISummary.enums.SummaryType;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
@@ -55,7 +55,7 @@ public class DocumentAISummary extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private SummaryStatus status;
+    private AiStatus status;
 
     @Column(name = "prompt", columnDefinition = "text")
     private String prompt;
@@ -75,11 +75,11 @@ public class DocumentAISummary extends BaseEntity {
     /* 상태 변경용 메서드 */
     public void markCompleted(String content) {
         this.content = content;
-        this.status = SummaryStatus.COMPLETED;
+        this.status = AiStatus.COMPLETED;
     }
 
 
     public void markFailed() {
-        this.status = SummaryStatus.FAILED;
+        this.status = AiStatus.FAILED;
     }
 }

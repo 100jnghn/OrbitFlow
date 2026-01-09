@@ -232,25 +232,29 @@ public class MessageService {
             Long messageId,
             Long recipientId // 보낸 메시지함에서 특정 수신자 선택 시 사용 (optional)
     ) {
+        // 1. 현재 사용자의 해당 메시지 레코드 조회 (자신이 삭제했는지 최우선 확인)
+        MessageRecipient currentUserRecord = messageRecipientRepository
+                .findByCompanyIdAndMessage_IdAndEmployee_IdAndDeletedAtIsNull(companyId, messageId, employeeId)
+                .orElseThrow(() -> new NotFoundException("메시지가 존재하지 않습니다."));
+
         MessageRecipient mr;
 
-        // recipientId가 제공되면 해당 레코드 조회 (보낸 메시지함에서 INBOX recipientId 사용)
+        // 2. recipientId가 제공된 경우 (보낸 메시지함에서 특정 수신자 선택 시)
         if (recipientId != null) {
             mr = messageRecipientRepository.findById(recipientId)
-                    .orElseThrow(() -> new NotFoundException("메시지가 존재하지 않습니다."));
-            // 권한 확인: 메시지가 해당 회사의 것이고, 해당 수신자 레코드인지 확인
+                    .filter(r -> r.getDeletedAt() == null) // 수신자 레코드도 삭제되지 않았어야 함
+                    .orElseThrow(() -> new NotFoundException("상대방의 수신 정보를 찾을 수 없습니다."));
+
+            // 권한 및 무결성 확인
             if (!mr.getCompanyId().equals(companyId) || !mr.getMessage().getId().equals(messageId)) {
-                throw new ForbiddenException("메시지에 접근할 수 없습니다.");
+                throw new ForbiddenException("메시지 정보가 일치하지 않습니다.");
             }
-            // 보낸 메시지함인 경우: 메시지의 발신자가 현재 사용자인지 확인
+            // 보낸 사람 본인인지 확인
             if (!mr.getMessage().getSender().getId().equals(employeeId)) {
-                throw new ForbiddenException("메시지에 접근할 수 없습니다.");
+                throw new ForbiddenException("메시지 수신 정보를 볼 권한이 없습니다.");
             }
         } else {
-            // 기존 방식: messageId와 employeeId로 조회
-            mr = messageRecipientRepository
-                    .findByCompanyIdAndMessage_IdAndEmployee_IdAndDeletedAtIsNull(companyId, messageId, employeeId)
-                    .orElseThrow(() -> new NotFoundException("메시지가 존재하지 않습니다."));
+            mr = currentUserRecord;
         }
 
         MessageResDto.Detail detail = MessageResDto.Detail.from(mr);

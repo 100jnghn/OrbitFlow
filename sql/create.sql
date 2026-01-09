@@ -23,7 +23,7 @@ CREATE TABLE org_category
     name               VARCHAR(50) NOT NULL,
     order_index        INT, -- NULL 허용
     is_active          BOOLEAN     NOT NULL DEFAULT TRUE,
-
+    is_root            BOOLEAN     NOT NULL DEFAULT FALSE,
     active_order_index INT
                        GENERATED ALWAYS AS (
                            CASE
@@ -380,12 +380,12 @@ CREATE TABLE form_template
         ON UPDATE CURRENT_TIMESTAMP,
 
     active_version     INT
-                       GENERATED ALWAYS AS (
-                           CASE
-                               WHEN status = 'ACTIVE' THEN version
-                               ELSE NULL
-                               END
-                           ) STORED,
+        GENERATED ALWAYS AS (
+            CASE
+                WHEN status = 'ACTIVE' THEN version
+                ELSE NULL
+                END
+            ) STORED,
 
     CONSTRAINT fk_ft_company
         FOREIGN KEY (company_id)
@@ -436,25 +436,27 @@ CREATE TABLE log_form_template_ai
 (
     id                      BIGINT AUTO_INCREMENT PRIMARY KEY,
 
-    company_id              BIGINT                  NOT NULL,
-    template_group_id       BIGINT                  NULL,
-    created_template_id     BIGINT                  NULL,
+    company_id              BIGINT      NOT NULL,
+    template_group_id       BIGINT      NULL,
+    created_template_id     BIGINT      NULL,
 
-    prompt                  TEXT                    NOT NULL,
+    prompt                  TEXT        NOT NULL,
+
+    request_context         JSON        NOT NULL,
     generated_template_json JSON,
-    generated_rule_json     JSON,
+    response_context        JSON,
 
     model                   VARCHAR(50),
-    status                  ENUM ('SUCCESS','FAIL') NOT NULL,
+
+    status                  VARCHAR(20) NOT NULL,
     error_message           TEXT,
 
-    created_by              BIGINT                  NULL,
-    created_at              TIMESTAMP               NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by              BIGINT      NULL,
+    created_at              TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     /* =========================
        Foreign Keys
        ========================= */
-
     CONSTRAINT fk_log_ai_company
         FOREIGN KEY (company_id)
             REFERENCES company (id)
@@ -882,12 +884,12 @@ CREATE TABLE employee_signature
 
     -- 활성 서명만 UNIQUE 제약을 걸기 위한 가상 컬럼
     active_flag TINYINT
-                GENERATED ALWAYS AS (
-                    CASE
-                        WHEN is_active = TRUE THEN 1
-                        ELSE NULL
-                        END
-                    ),
+        GENERATED ALWAYS AS (
+            CASE
+                WHEN is_active = TRUE THEN 1
+                ELSE NULL
+                END
+            ),
 
     created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -1482,3 +1484,133 @@ CREATE TABLE calendar_day
 
 CREATE INDEX idx_calendar_day_type
     ON calendar_day (day_type);
+
+
+CREATE TABLE chat_conversation
+(
+    id                     BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    company_id              BIGINT       NOT NULL,
+    employee_id             BIGINT       NOT NULL,
+
+    manual_category_id      BIGINT       NULL,
+    manual_category_name    VARCHAR(255) NULL, -- 카테고리명 스냅샷(선택이 없을 수도 있으면 NULL 허용)
+
+    title                   VARCHAR(255) NULL, -- 첫 질문 요약 등
+    status                  ENUM ('ACTIVE', 'CLOSED') NOT NULL DEFAULT 'ACTIVE',
+
+    is_deleted              BOOLEAN      NOT NULL DEFAULT FALSE,
+
+    created_at              TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at              TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_chat_conv_company
+        FOREIGN KEY (company_id) REFERENCES company (id)
+            ON DELETE CASCADE,
+
+    CONSTRAINT fk_chat_conv_employee
+        FOREIGN KEY (employee_id) REFERENCES employee (id)
+            ON DELETE CASCADE,
+
+    CONSTRAINT fk_chat_conv_manual_category
+        FOREIGN KEY (manual_category_id) REFERENCES manual_category (id)
+            ON DELETE SET NULL
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
+-- 사용자별 최근 대화 목록 조회 최적화
+CREATE INDEX idx_chat_conv_employee_updated
+    ON chat_conversation (company_id, employee_id, updated_at DESC);
+
+-- 카테고리별 대화 조회(운영/통계)
+CREATE INDEX idx_chat_conv_category
+    ON chat_conversation (company_id, manual_category_id, created_at DESC);
+
+-- (선택) 삭제 제외 조회가 매우 많으면
+CREATE INDEX idx_chat_conv_not_deleted
+    ON chat_conversation (company_id, employee_id, is_deleted);
+
+
+CREATE TABLE chat_message
+(
+    id                BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    company_id         BIGINT        NOT NULL,
+    conversation_id    BIGINT        NOT NULL,
+
+    role               ENUM ('USER', 'ASSISTANT', 'SYSTEM') NOT NULL,
+    content            LONGTEXT      NOT NULL,
+
+    meta_json          JSON          NULL, -- 모델명, 토큰 사용량, 근거 문서 등
+    created_at         TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_chat_msg_company
+        FOREIGN KEY (company_id) REFERENCES company (id)
+            ON DELETE CASCADE,
+
+    CONSTRAINT fk_chat_msg_conversation
+        FOREIGN KEY (conversation_id) REFERENCES chat_conversation (id)
+            ON DELETE CASCADE
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
+-- 대화 복원(메시지 타임라인) 핵심 인덱스
+CREATE INDEX idx_chat_msg_conv_created
+    ON chat_message (conversation_id, created_at ASC);
+
+-- 운영/감사(기간/회사별 조회)
+CREATE INDEX idx_chat_msg_company_created
+    ON chat_message (company_id, created_at DESC);
+
+
+
+CREATE TABLE chat_message_reference
+(
+    id               BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    company_id        BIGINT    NOT NULL,
+    message_id        BIGINT    NOT NULL,
+
+    manual_metadata_id BIGINT   NULL, -- 특정 매뉴얼(파일) 단위 근거
+    file_id           BIGINT    NULL, -- 또는 파일 직접 참조(둘 중 하나만 써도 됨)
+
+    -- 선택: 근거 범위/점수 같은 확장
+    ref_score         DECIMAL(6, 5) NULL,
+    ref_note          VARCHAR(255)  NULL,
+
+    created_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_chat_ref_company
+        FOREIGN KEY (company_id) REFERENCES company (id)
+            ON DELETE CASCADE,
+
+    CONSTRAINT fk_chat_ref_message
+        FOREIGN KEY (message_id) REFERENCES chat_message (id)
+            ON DELETE CASCADE,
+
+    CONSTRAINT fk_chat_ref_manual_metadata
+        FOREIGN KEY (manual_metadata_id) REFERENCES manual_metadata (id)
+            ON DELETE SET NULL,
+
+    CONSTRAINT fk_chat_ref_file
+        FOREIGN KEY (file_id) REFERENCES file (id)
+            ON DELETE SET NULL
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
+CREATE INDEX idx_chat_ref_message
+    ON chat_message_reference (message_id);
+
+CREATE INDEX idx_chat_ref_manual
+    ON chat_message_reference (manual_metadata_id);
+
+CREATE INDEX idx_chat_ref_file
+    ON chat_message_reference (file_id);
+
+
+
+

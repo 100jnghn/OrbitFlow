@@ -1,5 +1,7 @@
 let currentActionType = null;   // "approve" | "reject"
 let currentDocumentId = null;
+let currentBeforeDocumentId = null;
+
 const MAX_COMMENT_LENGTH = 200;
 
 const fieldRenderers = {
@@ -79,8 +81,80 @@ function bindApprovalOutsideClickOnce() {
         if (modalContent.contains(e.target)) return;
 
         // 진짜 바깥 클릭
-        resetApprovalCommentHint();
+        hideApprovalCommentHint();
     });
+}
+
+/* ===============================
+   서명 업로드 UI 바인딩 (최종)
+=============================== */
+let selectedSignatureFile = null;
+
+function bindSignatureUpload() {
+    const box = document.getElementById("signaturePreviewBox");
+    const input = document.getElementById("signatureInput");
+    const img = document.getElementById("signaturePreviewImage");
+    const placeholder = document.getElementById("signaturePlaceholder");
+    const removeBtn = document.getElementById("signatureRemoveBtn");
+    const hint = document.getElementById("signatureHint");
+
+    if (!box || !input || !img || !placeholder) return;
+
+    // 클릭 → 파일 선택
+    box.addEventListener("click", () => input.click());
+
+    // 파일 선택
+    input.addEventListener("change", e => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            showSignatureError("이미지 파일만 업로드 가능합니다.");
+            input.value = "";
+            return;
+        }
+
+        selectedSignatureFile = file;
+
+        const reader = new FileReader();
+        reader.onload = ev => {
+            img.src = ev.target.result;
+            img.style.display = "block";
+            placeholder.style.display = "none";
+            removeBtn.style.display = "inline-flex";
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // 제거
+    removeBtn?.addEventListener("click", e => {
+        e.stopPropagation();
+        resetSignatureInput();
+    });
+
+    function resetSignatureInput() {
+        selectedSignatureFile = null;
+        input.value = "";
+        img.src = "";
+        img.style.display = "none";
+        placeholder.style.display = "flex";
+        removeBtn.style.display = "none";
+        clearSignatureHint();
+    }
+
+    function showSignatureError(msg) {
+        if (!hint) return;
+        hint.textContent = msg;
+        hint.classList.add("error");
+        hint.style.display = "block";
+    }
+
+    function clearSignatureHint() {
+        if (!hint) return;
+        hint.textContent = "";
+        hint.classList.remove("error", "success");
+        hint.style.display = "none";
+    }
 }
 
 
@@ -169,6 +243,94 @@ function closeApprovalModal() {
     modal.classList.add("hidden");
 }
 
+/* ===============================
+   서명 등록 팝업
+=============================== */
+function openSignatureModal() {
+    const modal = document.getElementById("signatureModal");
+    modal && modal.classList.remove("hidden");
+}
+
+function closeSignatureModal() {
+    const modal = document.getElementById("signatureModal");
+    modal?.classList.add("hidden");
+
+    selectedSignatureFile = null;
+
+    const img = document.getElementById("signaturePreviewImage");
+    const placeholder = document.getElementById("signaturePlaceholder");
+    const removeBtn = document.getElementById("signatureRemoveBtn");
+    const input = document.getElementById("signatureInput");
+    const hint = document.getElementById("signatureHint");
+
+    if (img) {
+        img.src = "";
+        img.style.display = "none";
+    }
+    if (placeholder) placeholder.style.display = "flex";
+    if (removeBtn) removeBtn.style.display = "none";
+    if (input) input.value = "";
+    if (hint) {
+        hint.textContent = "";
+        hint.classList.remove("error", "success");
+        hint.style.display = "none";
+    }
+}
+
+
+/* ===============================
+   결재 서명 조회
+=============================== */
+async function fetchMySignatureExists() {
+    const res = await apiFetch("/api/employee-signature", {
+        method: "GET"
+    });
+
+    if (!res.ok) {
+        throw new Error("서명 조회 실패");
+    }
+
+    const json = await res.json();
+    return json.data === true;
+}
+
+async function submitSignature() {
+    const hint = document.getElementById("signatureHint");
+
+    if (!selectedSignatureFile) {
+        if (hint) {
+            hint.textContent = "서명 이미지를 선택해주세요.";
+            hint.classList.add("error");
+            hint.style.display = "block";
+        }
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", selectedSignatureFile);
+
+    try {
+        const res = await apiFetch("/api/employee-signature", {
+            method: "POST",
+            body: formData
+        });
+
+        if (!res.ok) throw new Error();
+
+        closeSignatureModal();
+        openApprovalModal("approve");
+
+    } catch (e) {
+        console.error(e);
+        if (hint) {
+            hint.textContent = "서명 등록 중 오류가 발생했습니다.";
+            hint.classList.add("error");
+            hint.style.display = "block";
+        }
+    }
+}
+
+
 async function submitApprovalAction() {
     if (!currentDocumentId || !currentActionType) return;
 
@@ -240,14 +402,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         .getElementById("approvalConfirmBtn")
         ?.addEventListener("click", submitApprovalAction);
 
+    document
+        .getElementById("signatureCancelBtn")
+        ?.addEventListener("click", closeSignatureModal);
+
+    document
+        .getElementById("signatureSaveBtn")
+        ?.addEventListener("click", submitSignature);
+
     bindApprovalOutsideClickOnce();
+
+    bindSignatureUpload();
 
     const documentId = getDocumentIdFromPath();
     if (!documentId) return;
 
     try {
         const data = await fetchDocumentDetail(documentId);
-        initDocumentDetailPage(data);
+        await initDocumentDetailPage(data);
     } catch (e) {
         console.error(e);
         alert("문서 정보를 불러오지 못했습니다.");
@@ -258,8 +430,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 /* ===============================
    초기화
 =============================== */
-function initDocumentDetailPage(data) {
-    currentDocumentId = data.documentId
+async function initDocumentDetailPage(data) {
+    currentDocumentId = data.documentId;
 
     renderDocumentHeader(data);
     renderDocumentContent(data.contentSchema);
@@ -269,9 +441,13 @@ function initDocumentDetailPage(data) {
 
     updateApprovalSidebarSelection();
     controlActionButtons(data);
-    setupRevisionButtons(data);
+
+    await setupRevisionButtons(data);
+
     bindBackButton();
     addPdfPreviewButton(data.documentId);
+
+    initAiPanels(data.documentId);
 }
 
 
@@ -958,7 +1134,20 @@ function controlActionButtons(data) {
 
     if (approveBtn) {
         approveBtn.style.display = canApproveOrReject ? "inline-block" : "none";
-        approveBtn.onclick = () => openApprovalModal("approve");
+        approveBtn.onclick = async () => {
+            try {
+                const hasSignature = await fetchMySignatureExists();
+
+                if (hasSignature) {
+                    openApprovalModal("approve");
+                } else {
+                    openSignatureModal();
+                }
+            } catch (e) {
+                console.error(e);
+                alert("서명 정보를 확인할 수 없습니다.");
+            }
+        };
     }
 
     if (rejectBtn) {
@@ -1000,12 +1189,8 @@ async function fetchRevisionInfo(documentId) {
 }
 
 async function fetchDocumentFiles(documentId) {
-    console.group("[ATTACHMENT API] fetchDocumentFiles");
-
-    console.log("request documentId:", documentId);
 
     const res = await apiFetch(`/api/document-file/${documentId}/files`);
-    console.log("response status:", res.status);
 
     if (!res.ok) {
         console.error("response not ok");
@@ -1014,10 +1199,6 @@ async function fetchDocumentFiles(documentId) {
     }
 
     const json = await res.json();
-
-    console.log("raw response:", json);
-    console.log("data:", json.data);
-    console.log("data length:", Array.isArray(json.data) ? json.data.length : "not array");
 
     console.groupEnd();
 
@@ -1104,28 +1285,34 @@ async function fetchDocumentDetail(documentId) {
 /* ===============================
    유틸
 =============================== */
+
 async function setupRevisionButtons(docData) {
     const reviseBtn = document.getElementById("reviseBtn");
     const goRevisionBtn = document.getElementById("goRevisionBtn");
     const goOriginalBtn = document.getElementById("goOriginalBtn");
 
-    // 초기 상태 (존재하는 버튼만)
     reviseBtn && (reviseBtn.style.display = "none");
     goRevisionBtn && (goRevisionBtn.style.display = "none");
     goOriginalBtn && (goOriginalBtn.style.display = "none");
 
     const revisionInfo = await fetchRevisionInfo(docData.documentId);
-    if (!revisionInfo || !revisionInfo.isMine) return;
+    if (!revisionInfo) return;
 
     const {
         beforeDocumentId,
         nextDocumentId,
-        nextDocumentStatus
+        nextDocumentStatus,
+        isMine
     } = revisionInfo;
+
+    // ✅⭐️ 여기!
+    currentBeforeDocumentId = beforeDocumentId ?? null;
+
+    if (!isMine) return;
 
     /* ===============================
        1️⃣ 원본 문서로 이동
-       =============================== */
+    =============================== */
     if (goOriginalBtn && beforeDocumentId != null) {
         goOriginalBtn.style.display = "inline-flex";
         goOriginalBtn.onclick = () => {
@@ -1135,10 +1322,9 @@ async function setupRevisionButtons(docData) {
 
     /* ===============================
        2️⃣ 재기안 관련 버튼
-       =============================== */
+    =============================== */
     if (docData.status !== "REJECTED") return;
 
-    // 2-1️⃣ 재기안 문서 없음
     if (nextDocumentId == null) {
         if (!reviseBtn) return;
 
@@ -1152,14 +1338,11 @@ async function setupRevisionButtons(docData) {
             );
 
             const json = await res.json();
-            const newDocId = json.data.documentId;
-
-            location.href = `/view/document/write/${newDocId}`;
+            location.href = `/view/document/write/${json.data.documentId}`;
         };
         return;
     }
 
-    // 2-2️⃣ 재기안 문서 존재
     if (!goRevisionBtn) return;
 
     goRevisionBtn.style.display = "inline-flex";
@@ -1207,4 +1390,281 @@ function getApprovalStatusText(status) {
         default:
             return status ?? "-";
     }
+}
+
+/* ===============================
+   AI 패널 공통
+=============================== */
+
+const AI_STATUS = {
+    PROCESSING: "PROCESSING",
+    COMPLETED: "COMPLETED"
+};
+
+const AI_TYPE = {
+    CONTENT: "CONTENT",
+    DIFF: "DIFF"
+};
+
+const AI_POLL_INTERVAL = 3000;
+
+// 폴링 중복 방지용
+const aiPollTimers = {
+    [AI_TYPE.CONTENT]: null,
+    [AI_TYPE.DIFF]: null
+};
+
+function show(el) {
+    el && el.classList.remove("hidden");
+}
+
+function hide(el) {
+    el && el.classList.add("hidden");
+}
+
+function stopPolling(type) {
+    const t = aiPollTimers[type];
+    if (t) clearInterval(t);
+    aiPollTimers[type] = null;
+}
+
+async function fetchAi(documentId, type) {
+    const res = await apiFetch(`/api/document-ai/${documentId}?summaryType=${type}`);
+    if (!res.ok) throw new Error("AI 조회 실패");
+    return await res.json(); // {status, message, data}
+}
+
+async function createAi(documentId, type) {
+    const url =
+        type === AI_TYPE.CONTENT
+            ? `/api/document-ai/${documentId}/summary`
+            : `/api/document-ai/${documentId}/diff`;
+
+    const res = await apiFetch(url, {method: "POST"});
+    if (!res.ok) throw new Error("AI 생성 요청 실패");
+}
+
+/**
+ * panelEls = { empty, emptyText, loading, loadingText, result, createBtn }
+ * mode:
+ *  - "NONE": data=null (생성 전) → placeholder + 버튼
+ *  - "NO_TARGET": 비교대상 없음 → placeholder만, 버튼 숨김
+ *  - "PROCESSING": spinner + 버튼 숨김(비활성) + placeholder 문구 변경은 loadingText로
+ *  - "COMPLETED": 결과만
+ */
+function applyAiPanelState(panelEls, mode, opts = {}) {
+    const {emptyMsg, resultText, canCreate} = opts;
+
+    // 초기화
+    hide(panelEls.empty);
+    hide(panelEls.result);
+
+    if (panelEls.result) {
+        panelEls.result.classList.remove("loading");
+    }
+
+    if (panelEls.createBtn) {
+        panelEls.createBtn.disabled = true;
+        hide(panelEls.createBtn);
+    }
+
+    // 문구 반영
+    if (emptyMsg != null && panelEls.emptyText) {
+        panelEls.emptyText.textContent = emptyMsg;
+    }
+    if (resultText != null && panelEls.result) {
+        panelEls.result.textContent = resultText;
+    }
+
+    switch (mode) {
+        case "NONE": {
+            show(panelEls.empty);
+            if (panelEls.createBtn && canCreate !== false) {
+                show(panelEls.createBtn);
+                panelEls.createBtn.disabled = false;
+            }
+            break;
+        }
+
+        case "NO_TARGET": {
+            show(panelEls.empty);
+            break;
+        }
+
+        case "PROCESSING": {
+            show(panelEls.result);
+            panelEls.result.classList.add("loading");
+            panelEls.result.textContent = "";
+            break;
+        }
+
+        case "COMPLETED": {
+            show(panelEls.result);
+            panelEls.result.classList.remove("loading");
+            break;
+        }
+    }
+}
+
+function startPolling(documentId, type, panelEls) {
+    stopPolling(type);
+
+    aiPollTimers[type] = setInterval(async () => {
+        try {
+            const {data} = await fetchAi(documentId, type);
+
+            // data=null이면 아직 생성 안된 상태로 되돌아간 것 → 폴링 중단 + NONE 처리
+            if (!data) {
+                stopPolling(type);
+                applyAiPanelState(panelEls, "NONE", {
+                    emptyMsg: "아직 생성되지 않았습니다.",
+                    canCreate: true
+                });
+                return;
+            }
+
+            // 처리 중이면 계속
+            if (data.aiStatus === AI_STATUS.PROCESSING) return;
+
+            // 완료면 중단 + 완료 표시
+            if (data.aiStatus === AI_STATUS.COMPLETED) {
+                stopPolling(type);
+                applyAiPanelState(panelEls, "COMPLETED", {
+                    resultText: data.context
+                });
+            }
+        } catch (e) {
+            console.error(`[AI POLL ${type}]`, e);
+            stopPolling(type);
+        }
+    }, AI_POLL_INTERVAL);
+}
+
+/* ===============================
+   AI 요약 패널
+=============================== */
+
+function getSummaryPanelEls() {
+    return {
+        empty: document.getElementById("aiSummaryEmpty"),
+        emptyText: document.getElementById("aiSummaryEmptyText"),
+        result: document.getElementById("aiSummaryResult"),
+        createBtn: document.getElementById("aiSummaryCreateBtn")
+    };
+}
+
+
+async function initAiSummaryPanel(documentId) {
+    const els = getSummaryPanelEls();
+    if (!els.empty || !els.result || !els.createBtn) return;
+
+    // ✅ init 순간에 절대 스피너가 돌면 안됨 → 일단 전부 숨김 후 서버 상태로 결정
+    applyAiPanelState(els, "NONE", {emptyMsg: "AI 요약 상태를 불러오는 중...", canCreate: false});
+
+    try {
+        const {data} = await fetchAi(documentId, AI_TYPE.CONTENT);
+
+        // 1) data=null → 생성 전(버튼 활성 + placeholder)
+        if (!data) {
+            applyAiPanelState(els, "NONE", {
+                emptyMsg: "아직 생성되지 않았습니다.",
+                canCreate: true
+            });
+
+            els.createBtn.onclick = async () => {
+                // 버튼 누른 순간: placeholder 제거 + 스피너 + 폴링 시작
+                applyAiPanelState(els, "PROCESSING", {loadingMsg: "AI 요약을 생성 중입니다..."});
+                await createAi(documentId, AI_TYPE.CONTENT);
+                startPolling(documentId, AI_TYPE.CONTENT, els);
+            };
+            return;
+        }
+
+        // 2) PROCESSING → 스피너 + 폴링
+        if (data.aiStatus === AI_STATUS.PROCESSING) {
+            applyAiPanelState(els, "PROCESSING", {loadingMsg: "AI 요약을 생성 중입니다..."});
+            startPolling(documentId, AI_TYPE.CONTENT, els);
+            return;
+        }
+
+        // 3) COMPLETED → 결과
+        if (data.aiStatus === AI_STATUS.COMPLETED) {
+            applyAiPanelState(els, "COMPLETED", {resultText: data.context});
+        }
+    } catch (e) {
+        console.error("[AI SUMMARY INIT]", e);
+        applyAiPanelState(els, "NONE", {emptyMsg: "AI 요약 정보를 불러오지 못했습니다.", canCreate: false});
+    }
+}
+
+/* ===============================
+   AI 비교 패널
+=============================== */
+
+function getDiffPanelEls() {
+    return {
+        empty: document.getElementById("aiDiffEmpty"),
+        emptyText: document.getElementById("aiDiffEmptyText"),
+        result: document.getElementById("aiDiffResult"),
+        createBtn: document.getElementById("aiDiffCreateBtn")
+    };
+}
+
+
+async function initAiDiffPanel(documentId, beforeDocumentId) {
+    const els = getDiffPanelEls();
+    if (!els.empty || !els.result || !els.createBtn) return;
+
+    // ✅ 비교 대상 없으면: 스피너 절대 X, 버튼 숨김
+    if (!beforeDocumentId) {
+        stopPolling(AI_TYPE.DIFF);
+        applyAiPanelState(els, "NO_TARGET", {emptyMsg: "비교 대상이 없습니다."});
+        return;
+    }
+
+    // init 순간 노출 방지
+    applyAiPanelState(els, "NONE", {emptyMsg: "AI 비교 상태를 불러오는 중...", canCreate: false});
+
+    try {
+        const {data} = await fetchAi(documentId, AI_TYPE.DIFF);
+
+        // 1) data=null → 생성 전(버튼 활성)
+        if (!data) {
+            applyAiPanelState(els, "NONE", {
+                emptyMsg: "아직 생성되지 않았습니다.",
+                canCreate: true
+            });
+
+            els.createBtn.onclick = async () => {
+                applyAiPanelState(els, "PROCESSING", {loadingMsg: "AI 비교를 생성 중입니다..."});
+                await createAi(documentId, AI_TYPE.DIFF);
+                startPolling(documentId, AI_TYPE.DIFF, els);
+            };
+            return;
+        }
+
+        // 2) PROCESSING → 스피너 + 폴링
+        if (data.aiStatus === AI_STATUS.PROCESSING) {
+            applyAiPanelState(els, "PROCESSING", {loadingMsg: "AI 비교를 생성 중입니다..."});
+            startPolling(documentId, AI_TYPE.DIFF, els);
+            return;
+        }
+
+        // 3) COMPLETED → 결과
+        if (data.aiStatus === AI_STATUS.COMPLETED) {
+            applyAiPanelState(els, "COMPLETED", {resultText: data.context});
+        }
+    } catch (e) {
+        console.error("[AI DIFF INIT]", e);
+        applyAiPanelState(els, "NONE", {emptyMsg: "AI 비교 정보를 불러오지 못했습니다.", canCreate: false});
+    }
+}
+
+/* ===============================
+   진입점
+=============================== */
+
+function initAiPanels(documentId) {
+    initAiSummaryPanel(documentId);
+    initAiDiffPanel(documentId, currentBeforeDocumentId);
 }
