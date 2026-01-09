@@ -37,7 +37,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class ScheduleSummaryService {
 
-    private static final Duration COOL_TIME = Duration.ofMinutes(60);    // 60분
+    private static final Duration COOL_TIME = Duration.ofMinutes(1);    // 60분
 
     private final ScheduleSummaryRepository scheduleSummaryRepository;
     private final OpenAiSummaryModelService aiService;
@@ -53,17 +53,17 @@ public class ScheduleSummaryService {
         ScheduleSummaryResDto result = new ScheduleSummaryResDto();
         ScheduleSummary summaryRecord = scheduleSummaryRepository.findByEmployee_Id(employeeId).orElse(null);
 
-        // 새로운 사용자가 요약 시도
+        // 새로운 사용자가 요약 시도 -> 요약 실행
         if (summaryRecord == null) {
             log.info("새로운 사용자 요약");
             result = doSummary(companyId, orgId, employeeId, false);
         }
-        // 기존 사용자가 요약 시도 + 시간 충족
+        // 기존 사용자가 요약 시도 + 시간 충족 -> 요약 실행
         else if (summaryRecord != null && getCoolTime(employeeId)) {
             log.info("기존 요약 업데이트 시도");
             result = doSummary(companyId, orgId, employeeId, true);
         }
-        // 기존 사용자가 요약 시도 + 시간 불충족
+        // 기존 사용자가 요약 시도 + 시간 불충족 -> 기존 데이터 반환
         else {
             log.info("시간 불충족. 업데이트 패스");
             ScheduleSummary scheduleSummary = scheduleSummaryRepository.findByEmployee_Id(employeeId).get();
@@ -109,24 +109,16 @@ public class ScheduleSummaryService {
         // 3. DTO 생성
         return schedules.stream()
                 .map(schedule -> {
-                    String organizationName;
+                    String organizationName = "개인";
 
-                    if (schedule.isCompany() && schedule.getOrgId() == null) {
+                    if (schedule.isCompany() && schedule.isPersonal()) {
                         organizationName = "전사";
 
-                    } else if (!schedule.isCompany()
-                            && schedule.getOrgCategoryId() == null
-                            && schedule.getOrgId() == null) {
+                    } else if (!schedule.isCompany() && schedule.isPersonal()){
                         organizationName = "개인";
 
-                    } else if (!schedule.isCompany()
-                            && schedule.getOrgCategoryId() != null
-                            && schedule.getOrgId() != null) {
-                        organizationName = orgNames.getOrDefault(
-                                schedule.getOrgId(), "조직"
-                        );
-                    } else {
-                        organizationName = "개인";    // 개인이면서 전사 (휴가, 출장 등)
+                    } else if (!schedule.isCompany() && !schedule.isPersonal()) {
+                        organizationName = "조직";
                     }
 
                     return ScheduleSummaryReqDto.builder()
@@ -172,6 +164,9 @@ public class ScheduleSummaryService {
         );
 
         List<Long> userOrgs = orgService.findOrgsByEmployeeId(employeeId).stream().map(OrgResDto::getId).collect(Collectors.toList());
+
+        log.info("사용자 조직 트리 : " + userOrgs);
+
         List<ScheduleResDto> orgSchedules = scheduleService.getOrganizationSchedules(
                 companyId,
                 today.getYear(),
@@ -179,6 +174,8 @@ public class ScheduleSummaryService {
                 userOrgs,
                 true
         );
+        log.info("조직 일정 수 : " + orgSchedules.size());
+        log.info("조직 일정 : " + orgSchedules);
 
         weeklySchedules = Stream
                 .of(companySchedules, employeeSchedules, orgSchedules)
