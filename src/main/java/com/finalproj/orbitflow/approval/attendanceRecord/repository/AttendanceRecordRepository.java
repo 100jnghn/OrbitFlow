@@ -10,9 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Please explain the class!!!
@@ -65,4 +63,11 @@ public interface AttendanceRecordRepository extends JpaRepository<AttendanceReco
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
             Pageable pageable);
+
+    boolean existsByEmployee_IdAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+            Long employeeId,
+            DocumentStatus status,
+            LocalDate endDate,
+            LocalDate startDate
+    );
 }
