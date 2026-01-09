@@ -695,43 +695,123 @@ function closeScheduleModal() {
 }
 
 /**
- * 시간/분 select 옵션 초기화
+ * 시간/분 select 옵션 초기화 (시간만 커스텀 드롭다운)
  */
+let timeSelectsInitialized = false;
 function initializeTimeSelects() {
-    // 시간 select (00~23시)
+    const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+    const minutes = ['00', '10', '20', '30', '40', '50'];
+
+    // 시간 선택만 커스텀 드롭다운으로
     const hourSelects = [
-        document.getElementById('scheduleStartHour'),
-        document.getElementById('scheduleEndHour')
+        { id: 'scheduleStartHour', options: hours },
+        { id: 'scheduleEndHour', options: hours }
     ];
 
-    hourSelects.forEach(select => {
+    hourSelects.forEach(({ id, options }) => {
+        const select = document.getElementById(id);
         if (!select) return;
-        select.innerHTML = '';
-        for (let hour = 0; hour < 24; hour++) {
-            const option = document.createElement('option');
-            option.value = String(hour).padStart(2, '0');
-            option.textContent = `${String(hour).padStart(2, '0')}시`;
-            select.appendChild(option);
+
+        const wrapper = select.parentElement;
+
+        // 이미 커스텀 드롭다운이 생성되어 있으면 스킵
+        if (wrapper.querySelector('.custom-select')) {
+            return;
         }
+
+        // 원래 select 숨기기
+        select.style.display = 'none';
+
+        // 커스텀 드롭다운 생성
+        const customSelect = document.createElement('div');
+        customSelect.className = 'custom-select';
+        customSelect.dataset.selectId = id;
+
+        const selected = document.createElement('div');
+        selected.className = 'custom-select-selected';
+        selected.textContent = options[0];
+        select.value = options[0];
+
+        const optionsContainer = document.createElement('div');
+        optionsContainer.className = 'custom-select-options';
+        optionsContainer.style.display = 'none';
+
+        options.forEach(opt => {
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'custom-select-option';
+            optionDiv.textContent = opt;
+            optionDiv.dataset.value = opt;
+
+            optionDiv.addEventListener('click', () => {
+                selected.textContent = opt;
+                select.value = opt;
+                optionsContainer.style.display = 'none';
+                customSelect.classList.remove('active');
+
+                // 모든 옵션의 selected 클래스 제거
+                optionsContainer.querySelectorAll('.custom-select-option').forEach(o => {
+                    o.classList.remove('selected');
+                });
+                optionDiv.classList.add('selected');
+            });
+
+            optionsContainer.appendChild(optionDiv);
+        });
+
+        // 첫 번째 옵션을 selected로 표시
+        optionsContainer.querySelector('.custom-select-option').classList.add('selected');
+
+        selected.addEventListener('click', (e) => {
+            e.stopPropagation();
+
+            // 다른 모든 드롭다운 닫기
+            document.querySelectorAll('.custom-select').forEach(cs => {
+                if (cs !== customSelect) {
+                    cs.querySelector('.custom-select-options').style.display = 'none';
+                    cs.classList.remove('active');
+                }
+            });
+
+            // 현재 드롭다운 토글
+            const isVisible = optionsContainer.style.display === 'block';
+            optionsContainer.style.display = isVisible ? 'none' : 'block';
+            customSelect.classList.toggle('active', !isVisible);
+        });
+
+        customSelect.appendChild(selected);
+        customSelect.appendChild(optionsContainer);
+        wrapper.insertBefore(customSelect, select);
     });
 
-    // 분 select (00, 10, 20, 30, 40, 50분)
+    // 분 선택은 기본 select로
     const minuteSelects = [
         document.getElementById('scheduleStartMinute'),
         document.getElementById('scheduleEndMinute')
     ];
 
-    const minutes = [0, 10, 20, 30, 40, 50];
     minuteSelects.forEach(select => {
         if (!select) return;
         select.innerHTML = '';
         minutes.forEach(minute => {
             const option = document.createElement('option');
-            option.value = String(minute).padStart(2, '0');
-            option.textContent = `${String(minute).padStart(2, '0')}분`;
+            option.value = minute;
+            option.textContent = `${minute}분`;
             select.appendChild(option);
         });
     });
+
+    // 외부 클릭 시 모든 드롭다운 닫기 (한 번만 등록)
+    if (!timeSelectsInitialized) {
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.custom-select-options').forEach(opt => {
+                opt.style.display = 'none';
+            });
+            document.querySelectorAll('.custom-select').forEach(cs => {
+                cs.classList.remove('active');
+            });
+        });
+        timeSelectsInitialized = true;
+    }
 }
 
 /**
@@ -848,11 +928,11 @@ async function handleScheduleSubmit(e) {
     const title = document.getElementById('scheduleTitle').value.trim();
     const description = document.getElementById('scheduleDescription').value.trim();
     const startDate = document.getElementById('scheduleStartDate').value;
-    const startHour = document.getElementById('scheduleStartHour').value;
-    const startMinute = document.getElementById('scheduleStartMinute').value;
+    const startHour = document.getElementById('scheduleStartHour').value || '00';
+    const startMinute = document.getElementById('scheduleStartMinute').value || '00';
     const endDate = document.getElementById('scheduleEndDate').value;
-    const endHour = document.getElementById('scheduleEndHour').value;
-    const endMinute = document.getElementById('scheduleEndMinute').value;
+    const endHour = document.getElementById('scheduleEndHour').value || '00';
+    const endMinute = document.getElementById('scheduleEndMinute').value || '00';
     const status = document.getElementById('scheduleStatus').value;
     const orgCategoryId = document.getElementById('scheduleOrgCategory').value;
 
@@ -883,8 +963,8 @@ async function handleScheduleSubmit(e) {
     const startDateTime = new Date(`${startDate}T${startTime}`);
     const endDateTime = new Date(`${endDate}T${endTime}`);
 
-    if (endDateTime <= startDateTime) {
-        alert('종료 날짜/시간은 시작 날짜/시간보다 이후여야 합니다.');
+    if (endDateTime < startDateTime) {
+        alert('종료 날짜/시간은 시작 날짜/시간보다 이전일 수 없습니다.');
         return;
     }
 
