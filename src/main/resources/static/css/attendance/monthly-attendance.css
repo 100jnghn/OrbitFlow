@@ -92,65 +92,77 @@
 }
 
 /* 요약 카드 디자인 (내 연차 현황과 동일한 크기) */
-.card {
+.card.summary-card {
+    display: flex;
     background: #ffffff;
     border-radius: 12px;
     border: 1px solid var(--neutral-200);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    padding: 16px 24px;
     margin-bottom: 24px;
+    padding: 12px 24px;
+
 }
 
 .summary-grid {
     display: flex;
+    width: 100%;
     padding: 0;
+    align-items: center;
+    min-height: auto;
+
 }
 
 .summary-item {
     flex: 1;
     text-align: center;
     position: relative;
-    border-right: none;
-    padding: 4px 0; /* 내부 상하 여백 추가 축소 */
+    border: none;
+    padding: 0;
 }
 
+/* 요약 아이템 사이 구분선 세로줄 */
 .summary-item:not(:last-child)::after {
     content: "";
     position: absolute;
     right: 0;
-    top: 20%;
-    height: 60%;
+    top: 15%;
+    height: 70%;
     width: 1px;
     background-color: var(--neutral-200);
-}
-
-.summary-item:last-child { 
-    border-right: none; 
 }
 
 .summary-label {
     display: block;
     font-size: 13px;
     color: var(--neutral-500);
-    margin-bottom: 4px; /* 기존 10px -> 4px로 대폭 축소 */
+    margin-bottom: 10px;
 }
+
 
 .summary-value {
-    font-size: 24px; /* 기존 28px -> 24px로 축소 */
+    font-size: 28px;
     font-weight: 800;
-    line-height: 1.2; /* 줄 간격 조절 */
+    line-height: 1.2;
 }
 
-.val-blue { 
-    color: var(--primary-color); 
+.summary-value .unit {
+    font-size: 16px;
+    color: var(--neutral-500);
+    font-weight: 400;
+    margin-left: 2px;
 }
 
-.val-orange { 
-    color: #F59E0B; 
+
+.val-blue {
+    color: var(--primary-color);
 }
 
-.val-red { 
-    color: #DC2626; 
+.val-orange {
+    color: #F59E0B;
+}
+
+.val-red {
+    color: #DC2626;
 }
 
 /* 상태 배지 - 크기 통일 */
