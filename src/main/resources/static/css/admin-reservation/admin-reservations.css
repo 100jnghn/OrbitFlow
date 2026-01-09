@@ -134,11 +134,11 @@
     transition: 0.3s;
 }
 
-.toggle-switch input:checked + .toggle-slider {
+.toggle-switch input:checked+.toggle-slider {
     background-color: #4a69bd;
 }
 
-.toggle-switch input:checked + .toggle-slider:before {
+.toggle-switch input:checked+.toggle-slider:before {
     transform: translateX(22px);
 }
 
@@ -250,46 +250,144 @@
     color: #555;
 }
 
-/* 번호 열 - 중앙 정렬 */
-.resource-table th:first-child,
-.resource-table td:first-child {
+/* =========================
+   Column Width Definitions (Percentage Base + 3-Phase Logic)
+   1. Base State: Exact % from original colgroup
+   2. Phase 1 (1400px): Number Hidden -> Category Fills
+   3. Phase 2 (1250px): Dates/Times Hidden -> Reason Fills
+   4. Phase 3 (900px): Reason Hidden -> Resource Name Fills
+========================= */
+
+/* 1. 번호 (5%) */
+.resource-table th:nth-child(1),
+.resource-table td:nth-child(1) {
+    width: 5%;
     text-align: center;
     font-weight: 600;
     color: #6c757d;
 }
 
-/* 카테고리 열 - 중앙 정렬 */
+/* 2. 카테고리 (8%) */
 .resource-table th:nth-child(2),
 .resource-table td:nth-child(2) {
+    width: 8%;
     text-align: center;
 }
 
-/* 예약일, 시작시간, 종료시간 - 중앙 정렬 */
+/* 3. 신청자 (8%) */
+.resource-table th:nth-child(3),
+.resource-table td:nth-child(3) {
+    width: 8%;
+    text-align: center;
+}
+
+/* 4. 자원 이름 (15%) */
+.resource-table th:nth-child(4),
+.resource-table td:nth-child(4) {
+    width: 15%;
+    min-width: 120px;
+}
+
+/* 5. 예약 사유 (18%) */
+.resource-table th:nth-child(5),
+.resource-table td:nth-child(5) {
+    width: 18%;
+}
+
+/* 6, 7. 시작일, 종료일 (각 8%) */
 .resource-table th:nth-child(6),
 .resource-table td:nth-child(6),
 .resource-table th:nth-child(7),
-.resource-table td:nth-child(7),
+.resource-table td:nth-child(7) {
+    width: 8%;
+    text-align: center;
+}
+
+/* 8, 9. 시작시간, 종료시간 (각 7%) */
 .resource-table th:nth-child(8),
-.resource-table td:nth-child(8) {
+.resource-table td:nth-child(8),
+.resource-table th:nth-child(9),
+.resource-table td:nth-child(9) {
+    width: 7%;
     text-align: center;
 }
 
-/* 상태 열 - 중앙 정렬 */
+/* 10. 상태 (9%) */
 .resource-table th:nth-child(10),
 .resource-table td:nth-child(10) {
+    width: 9%;
     text-align: center;
 }
 
-/* 상태 열 - 중앙 정렬 */
-.resource-table th:nth-child(10),
-.resource-table td:nth-child(10) {
-    text-align: center;
-}
-
-/* 승인 열 (마지막 열) - 중앙 정렬 */
+/* 11. 승인 (7%) */
 .resource-table th:last-child,
 .resource-table td:last-child {
+    width: 7%;
     text-align: center;
+}
+
+/* =========================
+   Responsive Breakpoints
+========================= */
+
+/* Phase 1: 1400px - 번호 숨김 & 카테고리 채움 */
+@media (max-width: 1400px) {
+
+    /* 1. 번호 숨김 */
+    .resource-table th:nth-child(1),
+    .resource-table td:nth-child(1) {
+        display: none !important;
+    }
+
+    /* 2. 카테고리 채움 */
+    .resource-table th:nth-child(2),
+    .resource-table td:nth-child(2) {
+        width: auto !important;
+    }
+}
+
+/* Phase 2: 1250px - 날짜/시간 숨김 & 예약 사유 채움 */
+@media (max-width: 1250px) {
+
+    /* 날짜/시간(4개 열) 숨김 */
+    .resource-table th:nth-child(6),
+    .resource-table td:nth-child(6),
+    .resource-table th:nth-child(7),
+    .resource-table td:nth-child(7),
+    .resource-table th:nth-child(8),
+    .resource-table td:nth-child(8),
+    .resource-table th:nth-child(9),
+    .resource-table td:nth-child(9) {
+        display: none !important;
+    }
+
+    /* 카테고리 다시 고정 (예약 사유에게 양보, 원래 8%로 복귀) */
+    .resource-table th:nth-child(2),
+    .resource-table td:nth-child(2) {
+        width: 8% !important;
+    }
+
+    /* 5. 예약 사유 채움 */
+    .resource-table th:nth-child(5),
+    .resource-table td:nth-child(5) {
+        width: auto !important;
+    }
+}
+
+/* Phase 3: 900px - 예약 사유 숨김 & 자원 이름 채움 */
+@media (max-width: 900px) {
+
+    /* 5. 예약 사유 숨김 */
+    .resource-table th:nth-child(5),
+    .resource-table td:nth-child(5) {
+        display: none !important;
+    }
+
+    /* 4. 자원 이름 채움 */
+    .resource-table th:nth-child(4),
+    .resource-table td:nth-child(4) {
+        width: auto !important;
+    }
 }
 
 /* 승인 열 내부 버튼도 가운데 정렬 */
@@ -346,10 +444,14 @@
 /* =========================
    CSS Hover Tooltip (카테고리, 신청자 이름, 자원 이름, 예약 사유)
 ========================= */
-.resource-table td:nth-child(2),  /* 카테고리 */
-.resource-table td:nth-child(3),  /* 신청자 이름 */
-.resource-table td:nth-child(4),  /* 자원 이름 */
-.resource-table td:nth-child(5) { /* 예약 사유 */
+.resource-table td:nth-child(2),
+/* 카테고리 */
+.resource-table td:nth-child(3),
+/* 신청자 이름 */
+.resource-table td:nth-child(4),
+/* 자원 이름 */
+.resource-table td:nth-child(5) {
+    /* 예약 사유 */
     cursor: help;
 }
 
@@ -401,22 +503,26 @@
 
 /* 상태별 배경색 */
 .status-badge-clickable.status-confirmed {
-    background: #f0f9ff; /* 하늘색 */
+    background: #f0f9ff;
+    /* 하늘색 */
     border: 1.2px solid #38bdf8
 }
 
 .status-badge-clickable.status-pending {
-    background: #fffbeb; /* 연노랑색 */
+    background: #fffbeb;
+    /* 연노랑색 */
     border: 1.2px solid #f5c417;
 }
 
 .status-badge-clickable.status-rejected {
-    background: #fef2f2; /* 연분홍 */
+    background: #fef2f2;
+    /* 연분홍 */
     border: 1.2px solid #f87171;
 }
 
 .status-badge-clickable.status-cancelled {
-    background: #e0e0e0; /* 회색 */
+    background: #e0e0e0;
+    /* 회색 */
     border: 1.2px solid #2b2b2b;
 }
 
@@ -736,4 +842,3 @@
     opacity: 0.5;
     cursor: not-allowed;
 }
-
