@@ -12,6 +12,7 @@ let currentStatus = 'ALL';
 let schedules = [];
 let isEditMode = false;
 let editingScheduleId = null;
+let holidayMap = new Map(); // key: yyyy-MM-dd, value: CalendarDayResDto
 
 // 상태별 색상 매핑
 const statusColorMap = {
@@ -29,6 +30,7 @@ const statusNameMap = {
 document.addEventListener('DOMContentLoaded', function () {
     initializePage();
     setupEventListeners();
+    loadHolidays(currentYear);
     loadSchedules();
 });
 
@@ -176,6 +178,35 @@ async function loadSchedules() {
 }
 
 /**
+ * 휴일 + 주말 정보 로드 (연 단위 1회)
+ */
+async function loadHolidays(year) {
+    try {
+        const response = await apiFetch(`/api/calendar/holidays?year=${year}`);
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                location.href = '/login';
+                return;
+            }
+            throw new Error('휴일 정보를 불러오지 못했습니다.');
+        }
+
+        const result = await response.json();
+        const list = result.data || [];
+
+        holidayMap.clear();
+        list.forEach(day => {
+            holidayMap.set(day.date, day);
+        });
+
+        console.log(`휴일 ${list.length}건 로드 완료`);
+    } catch (error) {
+        console.error('휴일 로드 실패:', error);
+    }
+}
+
+/**
  * 캘린더 렌더링
  */
 function renderCalendar() {
@@ -222,12 +253,38 @@ function renderCalendar() {
             isOtherMonth = true;
         }
 
+        // 휴일 정보 가져오기
+        const yyyyMMdd = formatDateForComparison(date);
+        const holiday = holidayMap.get(yyyyMMdd);
+
+        if (holiday) {
+            console.log('휴일 매칭:', yyyyMMdd, holiday.dayType, holiday.holidayName);
+        }
+
+        // JS 기준 요일
+        const jsDay = date.getDay(); // 0=일, 6=토
+
+        // 일요일
+        if (jsDay === 0) {
+            dayCell.classList.add('sunday');
+        }
+
+        // 토요일
+        if (jsDay === 6) {
+            dayCell.classList.add('saturday');
+        }
+
+        // 공휴일 (주말보다 우선)
+        if (holiday && holiday.dayType !== 'WORKDAY') {
+            dayCell.classList.add('holiday');
+        }
+
         // 오늘 날짜 체크
         if (isCurrentMonth && dayNumber === today.getDate() && !isOtherMonth) {
             dayCell.classList.add('today');
         }
 
-        // 주말 체크
+        // 주말 체크 (기존 코드 유지)
         if (date.getDay() === 0 || date.getDay() === 6) {
             dayCell.classList.add('weekend');
         }
@@ -236,11 +293,27 @@ function renderCalendar() {
             dayCell.classList.add('other-month');
         }
 
-        // 날짜 번호
+        /* =========================
+           날짜 상단: 날짜 + 공휴일명
+        ========================== */
+        const dayHeaderRow = document.createElement('div');
+        dayHeaderRow.className = 'day-header-row';
+
         const dayNumberEl = document.createElement('div');
         dayNumberEl.className = 'day-number';
         dayNumberEl.textContent = dayNumber;
-        dayCell.appendChild(dayNumberEl);
+        dayHeaderRow.appendChild(dayNumberEl);
+
+        // 공휴일이면 holidayName 오른쪽에 표시
+        if (holiday && holiday.holidayName) {
+            const holidayNameEl = document.createElement('div');
+            holidayNameEl.className = 'holiday-name';
+            holidayNameEl.textContent = holiday.holidayName;
+            holidayNameEl.title = holiday.holidayName;
+            dayHeaderRow.appendChild(holidayNameEl);
+        }
+
+        dayCell.appendChild(dayHeaderRow);
 
         // 해당 날짜의 일정 표시
         const daySchedules = getSchedulesForDate(date);
@@ -426,7 +499,7 @@ async function openEditScheduleModal(schedule) {
     const endDateInput = document.getElementById('scheduleEndDate');
     const startDateStr = formatDateForInput(startDate);
     const endDateStr = formatDateForInput(endDate);
-    
+
     startDateInput.value = startDateStr;
     endDateInput.value = endDateStr;
     // 종료 날짜의 min을 시작 날짜로 설정
@@ -532,7 +605,7 @@ function hideLoading() {
 function handleStartDateChange() {
     const startDateInput = document.getElementById('scheduleStartDate');
     const endDateInput = document.getElementById('scheduleEndDate');
-    
+
     if (startDateInput && endDateInput && startDateInput.value) {
         endDateInput.min = startDateInput.value;
         // 종료 날짜가 시작 날짜보다 이전이면 시작 날짜로 설정
