@@ -202,7 +202,7 @@ public class DocumentAiSummaryService {
     /**
      * 값이 실제로 입력되었는지 판단
      */
-    private boolean hasMeaningfulValue(FormFieldSchema field) {
+    public static boolean hasMeaningfulValue(FormFieldSchema field) {
         Object value = field.getValue();
 
         if (value == null) return false;
