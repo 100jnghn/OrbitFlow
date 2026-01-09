@@ -194,19 +194,18 @@
     }
 
 
-    // 시간 선택 옵션 초기화 (커스텀 드롭다운)
+    // 시간 선택 옵션 초기화 (시간만 커스텀 드롭다운)
     function initializeTimeSelects() {
         const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
         const minutes = ['00', '10', '20', '30', '40', '50'];
 
-        const selects = [
+        // 시간 선택만 커스텀 드롭다운으로
+        const hourSelects = [
             { id: 'scheduleStartHour', options: hours },
-            { id: 'scheduleEndHour', options: hours },
-            { id: 'scheduleStartMinute', options: minutes },
-            { id: 'scheduleEndMinute', options: minutes }
+            { id: 'scheduleEndHour', options: hours }
         ];
 
-        selects.forEach(({ id, options }) => {
+        hourSelects.forEach(({ id, options }) => {
             const select = document.getElementById(id);
             const wrapper = select.parentElement;
 
@@ -283,6 +282,23 @@
             customSelect.appendChild(selected);
             customSelect.appendChild(optionsContainer);
             wrapper.insertBefore(customSelect, select);
+        });
+
+        // 분 선택은 기본 select로
+        const minuteSelects = [
+            document.getElementById('scheduleStartMinute'),
+            document.getElementById('scheduleEndMinute')
+        ];
+
+        minuteSelects.forEach(select => {
+            if (!select) return;
+            select.innerHTML = '';
+            minutes.forEach(minute => {
+                const option = document.createElement('option');
+                option.value = minute;
+                option.textContent = `${minute}분`;
+                select.appendChild(option);
+            });
         });
 
         // 외부 클릭 시 모든 드롭다운 닫기
@@ -911,11 +927,9 @@
         document.getElementById('scheduleEndHour').value = '00';
         document.getElementById('scheduleEndMinute').value = '00';
 
-        // 커스텀 드롭다운 표시 업데이트
+        // 커스텀 드롭다운 표시 업데이트 (시간만)
         updateCustomSelectDisplay('scheduleStartHour', '00');
-        updateCustomSelectDisplay('scheduleStartMinute', '00');
         updateCustomSelectDisplay('scheduleEndHour', '00');
-        updateCustomSelectDisplay('scheduleEndMinute', '00');
 
         // 개인일정 체크박스 초기화
         document.getElementById('isPersonalSchedule').checked = false;
