@@ -16,6 +16,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class PdfApproverDto {
 
+    private Long approverLineId;
     private int order;              // 결재 순서
     private String name;             // 이름
     private String position;         // 직책 (optional)
