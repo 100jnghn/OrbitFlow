@@ -34,7 +34,7 @@ public class SchedulePromptBuilder {
                 - 주어진 일정만 근거로 작성할 것
                 - 추측하거나 없는 정보를 만들지 말 것
                 - 시간 흐름이 드러나도록 요약할 것
-                - 시작일, 시작 시간, 종료일, 종료 시간을 정확시 명시할 것
+                - 시작날짜와 종료 날짜가 다른 경우 종료 날짜를 정확시 명시할 것
                 - '전사', '조직', '개인' 일정 별로 구분하고 줄바꿈할 것
                 - 음슴체를 사용해서 최대 5문장 이내로 간결하게 작성할 것
                 
@@ -86,6 +86,7 @@ public class SchedulePromptBuilder {
                 - 추측하거나 없는 정보를 만들지 말 것
                 - 이번 주 전체 흐름을 먼저 요약할 것
                 - 이후 날짜별 특징을 자연스럽게 반영할 것
+                - 시작일, 종료일, 시작 시간, 종료 시간을 정확시 명시할 것
                 - '전사', '조직', '개인' 일정 별로 구분하고 줄바꿈할 것
                 - 음슴체를 사용해서 최대 10문장 이내로 간결하게 작성할 것
                 
@@ -145,7 +146,7 @@ public class SchedulePromptBuilder {
     }
 
 
-    // 섹션 출력 (조직명 포함 여부 선택)
+    // 섹션 출력
     private static void appendSection(
             StringBuilder sb,
             Map<String, List<ScheduleSummaryReqDto>> grouped,
@@ -179,15 +180,30 @@ public class SchedulePromptBuilder {
                         .append("] ");
             }
 
-            sb.append(s.getStartAt().toLocalTime())
-                    .append("~")
-                    .append(s.getEndAt().toLocalTime())
-                    .append(" ")
+            LocalDate startDate = s.getStartAt().toLocalDate();
+            LocalDate endDate = s.getEndAt().toLocalDate();
+
+            if (!startDate.equals(endDate)) {
+                sb.append(startDate)
+                        .append(" ")
+                        .append(s.getStartAt().toLocalTime())
+                        .append(" ~ ")
+                        .append(endDate)
+                        .append(" ")
+                        .append(s.getEndAt().toLocalTime());
+            } else {
+                sb.append(s.getStartAt().toLocalTime())
+                        .append("~")
+                        .append(s.getEndAt().toLocalTime());
+            }
+
+            sb.append(" ")
                     .append(s.getTitle())
                     .append("\n");
         }
 
         sb.append("\n");
     }
+
 
 }
