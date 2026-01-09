@@ -349,7 +349,7 @@
 /* Phase 2: 1250px - 날짜/시간 숨김 & 예약 사유 채움 */
 @media (max-width: 1250px) {
 
-    /* 날짜/시간(4개 열) 숨김 */
+    /* 날짜/시간(4개 열) + 승인(마지막 열) 숨김 */
     .resource-table th:nth-child(6),
     .resource-table td:nth-child(6),
     .resource-table th:nth-child(7),
@@ -357,7 +357,9 @@
     .resource-table th:nth-child(8),
     .resource-table td:nth-child(8),
     .resource-table th:nth-child(9),
-    .resource-table td:nth-child(9) {
+    .resource-table td:nth-child(9),
+    .resource-table th:last-child,
+    .resource-table td:last-child {
         display: none !important;
     }
 
@@ -367,9 +369,15 @@
         width: 8% !important;
     }
 
-    /* 5. 예약 사유 채움 */
+    /* 5. 예약 사유 고정 (상태에게 양보) */
     .resource-table th:nth-child(5),
     .resource-table td:nth-child(5) {
+        width: 18% !important;
+    }
+
+    /* 10. 상태 채움 */
+    .resource-table th:nth-child(10),
+    .resource-table td:nth-child(10) {
         width: auto !important;
     }
 }
