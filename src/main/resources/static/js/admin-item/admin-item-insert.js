@@ -105,7 +105,7 @@ function validateItemDescription() {
 /**
  * 이벤트 리스너 초기화
  */
-function initEventListeners() {
+async function initEventListeners() {
     if (saveBtn) {
         saveBtn.addEventListener('click', handleSave);
     }
@@ -239,7 +239,7 @@ async function handleImageSelect(event) {
     const validation = await validateImageFile(file);
 
     if (!validation.valid) {
-        alert(validation.message);
+        await sweetWarning(validation.message);
         // 파일 입력 초기화
         event.target.value = '';
         return;
@@ -309,7 +309,7 @@ function handleImageRemove() {
 async function handleSave() {
     // validation 검증
     if (!validateItemName() || !validateItemCategory() || !validateItemStatus()) {
-        alert('입력 항목을 확인해주세요.');
+        await sweetInfo('입력 항목을 확인해주세요.');
         return;
     }
 
@@ -346,23 +346,28 @@ async function handleSave() {
             throw new Error('비품 등록 실패');
         }
 
-        alert('비품이 등록되었습니다.');
+        await sweetSuccess('비품이 등록되었습니다.');
         // 관리자 비품 목록 화면으로 이동
         window.location.href = '/view/resource/admin/items';
 
     } catch (error) {
         console.error(error);
-        alert('비품 등록에 실패했습니다.');
+        await sweetError('비품 등록에 실패했습니다.');
     }
 }
 
 /**
  * 취소 버튼 핸들러
  */
-function handleCancel() {
-    if (confirm('작성 중인 내용이 저장되지 않습니다. 취소하시겠습니까?')) {
-        window.location.href = '/view/resource/admin/items';
-    }
+async function handleCancel() {
+    const result = await sweetConfirm(
+        '취소 확인',
+        '작성 중인 내용이 저장되지 않습니다. 취소하시겠습니까?'
+    );
+
+    if (!result.isConfirmed) return;
+
+    window.location.href = '/view/resource/admin/items';
 }
 
 /**
@@ -392,7 +397,7 @@ async function loadStatusOptions() {
 
     } catch (e) {
         console.error(e);
-        alert('상태 목록을 불러오지 못했습니다.');
+        await sweetError('상태 목록을 불러오지 못했습니다.');
     }
 }
 
@@ -423,7 +428,7 @@ async function loadCategoryOptions() {
 
     } catch (e) {
         console.error(e);
-        alert('카테고리 목록을 불러오지 못했습니다.');
+        await sweetError('카테고리 목록을 불러오지 못했습니다.');
     }
 }
 

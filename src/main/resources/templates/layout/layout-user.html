@@ -21,6 +21,8 @@
     <link rel="stylesheet" th:href="@{/css/chatbot/chatbot.css}">
     <link rel="stylesheet" th:href="@{/css/notification/notification.css}">
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.10/dist/sweetalert2.min.css">
+    
     <!-- 페이지별 CSS 삽입 위치 -->
     <th:block th:replace="${pageCss}"></th:block>
 
@@ -56,6 +58,9 @@
 
     <!-- Authentication 사용해서 eventSource(sse 연결)을 만드는 라이브러리 -->
     <script src="https://unpkg.com/event-source-polyfill/src/eventsource.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script th:src="@{/js/common.js}"></script>
     <script th:src="@{/js/notification/notification.js}"></script>
     <script th:src="@{/js/chatbot/chatbot.js}"></script>
