@@ -210,6 +210,18 @@
             const select = document.getElementById(id);
             const wrapper = select.parentElement;
 
+            // 원본 select에 option 추가 (값 설정을 위해 필요)
+            select.innerHTML = '';
+            options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                option.textContent = opt;
+                select.appendChild(option);
+            });
+
+            // 기본값 설정
+            select.value = options[0];
+
             // 원래 select 숨기기
             select.style.display = 'none';
 
@@ -221,7 +233,6 @@
             const selected = document.createElement('div');
             selected.className = 'custom-select-selected';
             selected.textContent = options[0];
-            select.value = options[0];
 
             const optionsContainer = document.createElement('div');
             optionsContainer.className = 'custom-select-options';
@@ -283,6 +294,35 @@
                 cs.classList.remove('active');
             });
         });
+    }
+
+    /**
+     * 커스텀 드롭다운 표시 값 업데이트
+     */
+    function updateCustomSelectDisplay(selectId, value) {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+
+        const wrapper = select.parentElement;
+        const customSelect = wrapper.querySelector('.custom-select');
+        if (!customSelect) return;
+
+        const selected = customSelect.querySelector('.custom-select-selected');
+        if (selected) {
+            selected.textContent = value;
+        }
+
+        // 옵션의 selected 클래스 업데이트
+        const options = customSelect.querySelectorAll('.custom-select-option');
+        options.forEach(opt => {
+            if (opt.dataset.value === value) {
+                opt.classList.add('selected');
+            } else {
+                opt.classList.remove('selected');
+            }
+        });
+
+        select.value = value;
     }
 
 
@@ -866,10 +906,16 @@
         document.getElementById('scheduleEndDate').value = startDateValue;
         // 종료 날짜의 min을 시작 날짜로 설정
         document.getElementById('scheduleEndDate').min = startDateValue;
-        document.getElementById('scheduleStartHour').value = '09';
+        document.getElementById('scheduleStartHour').value = '00';
         document.getElementById('scheduleStartMinute').value = '00';
-        document.getElementById('scheduleEndHour').value = '18';
+        document.getElementById('scheduleEndHour').value = '00';
         document.getElementById('scheduleEndMinute').value = '00';
+
+        // 커스텀 드롭다운 표시 업데이트
+        updateCustomSelectDisplay('scheduleStartHour', '00');
+        updateCustomSelectDisplay('scheduleStartMinute', '00');
+        updateCustomSelectDisplay('scheduleEndHour', '00');
+        updateCustomSelectDisplay('scheduleEndMinute', '00');
 
         // 개인일정 체크박스 초기화
         document.getElementById('isPersonalSchedule').checked = false;

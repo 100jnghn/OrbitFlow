@@ -654,15 +654,15 @@ async function openAddScheduleModal() {
     startDateInput.removeEventListener('change', handleStartDateChange);
     startDateInput.addEventListener('change', handleStartDateChange);
 
-    // 기본 시간 설정 (09:00, 18:00)
-    document.getElementById('scheduleStartHour').value = '09';
+    // 기본 시간 설정 (00:00, 00:00)
+    document.getElementById('scheduleStartHour').value = '00';
     document.getElementById('scheduleStartMinute').value = '00';
-    document.getElementById('scheduleEndHour').value = '18';
+    document.getElementById('scheduleEndHour').value = '00';
     document.getElementById('scheduleEndMinute').value = '00';
 
     // 커스텀 드롭다운 표시 업데이트
-    updateCustomSelectDisplay('scheduleStartHour', '09');
-    updateCustomSelectDisplay('scheduleEndHour', '18');
+    updateCustomSelectDisplay('scheduleStartHour', '00');
+    updateCustomSelectDisplay('scheduleEndHour', '00');
 
     // 조직 카테고리를 '회사'로 고정
     await setCompanyOrgCategory();
