@@ -91,68 +91,9 @@
     min-width: 120px;
 }
 
-/* 요약 카드 디자인 (내 연차 현황과 동일한 크기) */
-.card.summary-card {
-    display: flex;
-    background: #ffffff;
-    border-radius: 12px;
-    border: 1px solid var(--neutral-200);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    margin-bottom: 24px;
-    padding: 12px 24px;
+/* .card.summary-card, .summary-grid, .summary-item 등의 스타일은 leave.css에 정의된 것을 사용하므로 제거함 */
 
-}
-
-.summary-grid {
-    display: flex;
-    width: 100%;
-    padding: 0;
-    align-items: center;
-    min-height: auto;
-
-}
-
-.summary-item {
-    flex: 1;
-    text-align: center;
-    position: relative;
-    border: none;
-    padding: 0;
-}
-
-/* 요약 아이템 사이 구분선 세로줄 */
-.summary-item:not(:last-child)::after {
-    content: "";
-    position: absolute;
-    right: 0;
-    top: 15%;
-    height: 70%;
-    width: 1px;
-    background-color: var(--neutral-200);
-}
-
-.summary-label {
-    display: block;
-    font-size: 13px;
-    color: var(--neutral-500);
-    margin-bottom: 10px;
-}
-
-
-.summary-value {
-    font-size: 28px;
-    font-weight: 800;
-    line-height: 1.2;
-}
-
-.summary-value .unit {
-    font-size: 16px;
-    color: var(--neutral-500);
-    font-weight: 400;
-    margin-left: 2px;
-}
-
-
+/* 요약 카드 값 색상 유틸리티 */
 .val-blue {
     color: var(--primary-color);
 }
@@ -164,6 +105,7 @@
 .val-red {
     color: #DC2626;
 }
+
 
 /* 상태 배지 - 크기 통일 */
 .status-badge {
@@ -177,24 +119,24 @@
     box-sizing: border-box;
 }
 
-.badge-late { 
-    background-color: #FEF3C7; 
-    color: dimgray; 
+.badge-late {
+    background-color: #FEF3C7;
+    color: dimgray;
 }
 
-.badge-absent { 
-    background-color: #FEE2E2; 
-    color: dimgray; 
+.badge-absent {
+    background-color: #FEE2E2;
+    color: dimgray;
 }
 
-.badge-normal { 
-    background-color: #D1FAE5; 
-    color: dimgray; 
+.badge-normal {
+    background-color: #D1FAE5;
+    color: dimgray;
 }
 
-.badge-vacation { 
-    background-color: #DBEAFE; 
-    color: dimgray; 
+.badge-vacation {
+    background-color: #DBEAFE;
+    color: dimgray;
 }
 
 /* 기간 설정 영역 내의 시작일/종료일 박스 사이 간격 조정 */
