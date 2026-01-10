@@ -82,7 +82,7 @@ async function loadCategories() {
 
     } catch (e) {
         console.error(e);
-        alert('카테고리 목록을 불러오지 못했습니다.');
+        await sweetError('카테고리 목록을 불러오지 못했습니다.');
     }
 }
 
@@ -119,7 +119,7 @@ async function loadItems(categoryId = null) {
 
     } catch (e) {
         console.error(e);
-        alert('자원 목록을 불러오지 못했습니다.');
+        await sweetError('자원 목록을 불러오지 못했습니다.');
         renderGrid();
     }
 }
@@ -147,7 +147,7 @@ async function loadReservations(date) {
 
     } catch (e) {
         console.error(e);
-        alert('예약 정보를 불러오지 못했습니다.');
+        await sweetError('예약 정보를 불러오지 못했습니다.');
         renderGrid();
     }
 }
@@ -289,7 +289,7 @@ async function handleCellClick(cell, item, hour) {
 
     // 선택한 범위에 예약 불가능한 시간이 있는지 확인
     if (!isRangeAvailable(itemId, selectedStartHour, selectedEndHour)) {
-        alert('선택한 시간 범위에 예약 불가능한 시간이 포함되어 있습니다.');
+        await sweetWarning('선택한 시간 범위에 예약 불가능한 시간이 포함되어 있습니다.');
         clearSelection();
         selectedItem = item;
         selectedStartHour = hour;
@@ -460,7 +460,7 @@ function updateSubmitButtonState() {
 ========================== */
 async function submitReservation() {
     if (!selectedItem || selectedStartHour === null || selectedEndHour === null) {
-        alert('자원과 시간을 선택해주세요.');
+        await sweetInfo('자원과 시간을 선택해주세요.');
         return;
     }
 
@@ -491,10 +491,10 @@ async function submitReservation() {
 
         if (!res.ok) {
             const error = await res.json();
-            throw new Error(error.message || '예약에 실패했습니다.');
+            throw new Error(error.message || '예약 신청에 실패했습니다.');
         }
 
-        alert('예약이 완료되었습니다.');
+        await sweetSuccess('예약 신청이 완료되었습니다.');
 
         // 입력 초기화
         document.getElementById('reservation-reason').value = '';
@@ -508,7 +508,7 @@ async function submitReservation() {
 
     } catch (e) {
         console.error(e);
-        alert(e.message || '예약 중 오류가 발생했습니다.');
+        await sweetError(e.message || '예약 중 오류가 발생했습니다.');
     }
 }
 
