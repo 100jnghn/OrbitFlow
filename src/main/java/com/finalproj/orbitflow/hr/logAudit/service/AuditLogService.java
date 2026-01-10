@@ -61,35 +61,39 @@ public class AuditLogService {
     }
 
     @Transactional(readOnly = true)
-    public Page<AuditLogResDto> search(
+    public Page<AuditLogResDto> searchAdminAuditLogs(
             Long companyId,
-            AuditEntityType entityType,
-            AuditEventType eventType,
             String actorName,
             Pageable pageable
     ) {
-        return auditLogRepository.search(companyId, entityType, eventType, actorName, pageable)
-                .map(log -> {
 
-                    String entityName =
-                            entityNameResolver.resolve(log.getEntityType(), log.getEntityId());
+        List<AuditEntityType> allowedEntities = List.of(
+                AuditEntityType.ORGANIZATION,
+                AuditEntityType.EMPLOYEE,
+                AuditEntityType.HR_RANK,
+                AuditEntityType.POSITION,
+                AuditEntityType.ORG_POSITION_USAGE
+        );
 
-                    String display =
-                            log.getEntityType().getDisplayName() + " · " + entityName;
+        List<AuditEventType> allowedEvents = List.of(
+                AuditEventType.MOVE,
+                AuditEventType.ASSIGN,
+                AuditEventType.UNASSIGN,
+                AuditEventType.STATUS_CHANGE,
+                AuditEventType.ACTIVATE,
+                AuditEventType.DEACTIVATE,
+                AuditEventType.CREATE
+        );
 
-                    return new AuditLogResDto(
-                            log.getId(),
-                            log.getEntityType().name(),
-                            log.getEntityId(),
-                            display,
-                            log.getEventType().name(),
-                            log.getActor().getName(),
-                            log.getActor().getEmail(),
-                            log.getBeforeData(),
-                            log.getAfterData(),
-                            log.getCreatedAt()
-                    );
-                });
+        return auditLogRepository
+                .searchAdminAuditLogs(
+                        companyId,
+                        allowedEntities,
+                        allowedEvents,
+                        actorName,
+                        pageable
+                )
+                .map(this::toAdminDto);
     }
 
 
@@ -97,6 +101,28 @@ public class AuditLogService {
     public AuditLog findById(Long id) {
         return auditLogRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("AuditLog not found"));
+    }
+
+    private AuditLogResDto toAdminDto(AuditLog log) {
+
+        String entityName =
+                entityNameResolver.resolve(log.getEntityType(), log.getEntityId());
+
+        String entityDisplay =
+                log.getEntityType().getDisplayName() + " · " + entityName;
+
+        return new AuditLogResDto(
+                log.getId(),
+                log.getEntityType().name(),
+                log.getEntityId(),
+                entityDisplay,
+                log.getEventType().name(),
+                log.getActor().getName(),
+                log.getActor().getEmail(),
+                log.getBeforeData(),
+                log.getAfterData(),
+                log.getCreatedAt()
+        );
     }
 
 }
