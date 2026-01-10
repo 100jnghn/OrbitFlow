@@ -233,6 +233,8 @@ public class Employee extends BaseEntity {
         this.status = EmployeeStatus.ACTIVE;
     }
 
+    public void changeHireDate(LocalDate hireDate) { this.hireDate = hireDate; }
+
     public void clearContactInfo() {
         this.phone = null;
         this.internalPhone = null;
