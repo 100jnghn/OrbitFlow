@@ -134,6 +134,35 @@
                 currentAttendance = result.data || result;
                 isAway = currentAttendance ? (currentAttendance.isAway || false) : false;
                 updateUI();
+                
+                // 🔥 workStatus도 함께 가져와서 버튼 상태 업데이트
+                try {
+                    const profileResponse = await fetch('/api/auth/me', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (profileResponse.ok) {
+                        const profileResult = await profileResponse.json();
+                        const user = profileResult.data || profileResult;
+                        // 🔥 workStatus가 없어도 null로 설정하여 명확히 처리
+                        const workStatus = user ? (user.workStatus || null) : null;
+                        window.currentServerStatus = workStatus;
+                        updateButtonStates(); // 버튼 상태 업데이트
+                        
+                        // workStatusChanged 이벤트도 dispatch하여 index.js에 알림
+                        if (workStatus) {
+                            window.dispatchEvent(new CustomEvent('workStatusChanged', {
+                                detail: { status: workStatus }
+                            }));
+                        }
+                    }
+                } catch (e) {
+                    console.warn('workStatus 조회 실패:', e);
+                }
             }
         } catch (error) {
             console.error('현황 조회 실패:', error);
@@ -194,6 +223,28 @@
         const badgeEl = document.getElementById('workStatusBadge');
         if (!badgeEl) return;
 
+        // 🔥 window.currentServerStatus를 우선 확인 (서버 상태가 가장 정확)
+        const currentWorkStatus = window.currentServerStatus || '';
+        const normalizedStatus = currentWorkStatus ? currentWorkStatus.toUpperCase() : '';
+        
+        // 특수 상태(휴가/출장/외근)는 서버 상태를 우선 표시
+        if (normalizedStatus === 'VACATION' || normalizedStatus === 'BUSINESS_TRIP' || normalizedStatus === 'OUTWORK') {
+            badgeEl.style.display = 'inline-block';
+            badgeEl.className = 'work-status-badge';
+            
+            if (normalizedStatus === 'VACATION') {
+                badgeEl.textContent = '휴가중';
+                badgeEl.classList.add('badge-vacation');
+            } else if (normalizedStatus === 'BUSINESS_TRIP') {
+                badgeEl.textContent = '출장중';
+                badgeEl.classList.add('badge-business');
+            } else if (normalizedStatus === 'OUTWORK') {
+                badgeEl.textContent = '외근중';
+                badgeEl.classList.add('badge-outside');
+            }
+            return;
+        }
+
         // currentAttendance가 없으면 기본 상태 표시
         if (!currentAttendance) {
             badgeEl.style.display = 'inline-block';
@@ -214,7 +265,8 @@
             badgeEl.classList.add('badge-before-work');
         } else if (!leaveAt) {
             // 출근 후, 퇴근 전
-            if (isAway) {
+            // 🔥 AWAY 상태는 서버 상태를 우선 확인
+            if (normalizedStatus === 'AWAY' || isAway) {
                 badgeEl.textContent = '자리비움';
                 badgeEl.classList.add('badge-away');
             } else {
@@ -259,6 +311,42 @@
             // 즉시 UI 업데이트
             currentAttendance = data;
             isAway = data ? (data.isAway || false) : false;
+            
+            // 🔥 workStatus 동기화: 서버에서 최신 workStatus를 가져와서 이벤트로 전달
+            // 자리비움 시작/종료 시 workStatus가 변경되므로 먼저 동기화
+            try {
+                const profileResponse = await fetch('/api/auth/me', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (profileResponse.ok) {
+                    const profileResult = await profileResponse.json();
+                    const user = profileResult.data || profileResult;
+                    
+                    if (user) {
+                        // 🔥 workStatus가 없어도 null로 설정하여 명확히 처리
+                        const workStatus = user.workStatus || null;
+                        
+                        // window.currentServerStatus 업데이트
+                        window.currentServerStatus = workStatus;
+                        
+                        // workStatusChanged 이벤트를 dispatch하여 index.js에 알림
+                        if (workStatus) {
+                            window.dispatchEvent(new CustomEvent('workStatusChanged', {
+                                detail: { status: workStatus }
+                            }));
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('workStatus 동기화 실패:', e);
+            }
+            
+            // UI 업데이트 (workStatus 동기화 후)
             updateUI();
             
             // 최신 데이터 다시 로드
@@ -288,7 +376,7 @@
         });
     }
 
-    // 버튼 활성/비활성 제어
+    // 버튼 활성/비활성 제어 (전역에서도 접근 가능하도록 window에 노출)
     function updateButtonStates() {
         const btnIn = document.getElementById('checkInBtn');
         const btnOut = document.getElementById('checkOutBtn');
@@ -296,21 +384,59 @@
 
         if (!btnIn || !btnOut || !btnAway) return;
 
+        // 🔥 특수 상태 확인 (휴가/출장/외근)
+        const currentWorkStatus = window.currentServerStatus || '';
+        const normalizedStatus = currentWorkStatus ? currentWorkStatus.toUpperCase() : '';
+        const isSpecialStatus = normalizedStatus === 'VACATION' || 
+                                normalizedStatus === 'BUSINESS_TRIP' || 
+                                normalizedStatus === 'OUTWORK';
+
         const hasIn = !!(currentAttendance && currentAttendance.commuteAt);
         const hasOut = !!(currentAttendance && currentAttendance.leaveAt);
 
-        btnIn.disabled = hasIn;
-        btnOut.disabled = !hasIn || hasOut;
-        btnAway.disabled = !hasIn || hasOut;
-
-        if (isAway) {
-            btnAway.classList.add('active');
-            btnAway.textContent = '자리비움 해제';
+        // 특수 상태일 때는 출퇴근/자리비움 버튼 비활성화
+        if (isSpecialStatus) {
+            btnIn.disabled = true;
+            btnOut.disabled = true;
+            btnAway.disabled = false; // 자리 복귀 버튼은 활성화
+            
+            // 자리 복귀 버튼으로 변경
+            btnAway.classList.add('btn-return');
+            const btnText = btnAway.querySelector('span') || btnAway;
+            if (btnText.tagName === 'SPAN') {
+                btnText.textContent = '자리 복귀';
+            } else {
+                btnAway.textContent = '자리 복귀';
+            }
         } else {
-            btnAway.classList.remove('active');
-            btnAway.textContent = '자리비움';
+            // 일반 상태일 때는 기존 로직
+            btnIn.disabled = hasIn;
+            btnOut.disabled = !hasIn || hasOut;
+            btnAway.disabled = !hasIn || hasOut;
+            btnAway.classList.remove('btn-return');
+
+            if (isAway) {
+                btnAway.classList.add('active');
+                const btnText = btnAway.querySelector('span') || btnAway;
+                if (btnText.tagName === 'SPAN') {
+                    btnText.textContent = '자리비움 해제';
+                } else {
+                    btnAway.textContent = '자리비움 해제';
+                }
+            } else {
+                btnAway.classList.remove('active');
+                const btnText = btnAway.querySelector('span') || btnAway;
+                if (btnText.tagName === 'SPAN') {
+                    btnText.textContent = '자리비움';
+                } else {
+                    btnAway.textContent = '자리비움';
+                }
+            }
         }
     }
+    
+    // 전역에서 접근 가능하도록 window에 노출
+    window.updateCommuteButtonStates = updateButtonStates;
 
     function setupEventListeners() {
         const checkInBtn = document.getElementById('checkInBtn');
@@ -318,13 +444,100 @@
         const awayBtn = document.getElementById('awayBtn');
         
         if (checkInBtn) {
-            checkInBtn.onclick = () => handleAction('checkin', '출근하시겠습니까?');
+            checkInBtn.onclick = () => {
+                // 특수 상태 체크
+                const currentWorkStatus = window.currentServerStatus || '';
+                const normalizedStatus = currentWorkStatus ? currentWorkStatus.toUpperCase() : '';
+                if (normalizedStatus === 'VACATION' || normalizedStatus === 'BUSINESS_TRIP' || normalizedStatus === 'OUTWORK') {
+                    alert('현재 휴가/출장/외근 상태이므로 출근할 수 없습니다.\n조기 복귀 시 "자리 복귀" 버튼을 눌러주세요.');
+                    return;
+                }
+                handleAction('checkin', '출근하시겠습니까?');
+            };
         }
         if (checkOutBtn) {
-            checkOutBtn.onclick = () => handleAction('checkout', '퇴근하시겠습니까?');
+            checkOutBtn.onclick = () => {
+                // 특수 상태 체크
+                const currentWorkStatus = window.currentServerStatus || '';
+                const normalizedStatus = currentWorkStatus ? currentWorkStatus.toUpperCase() : '';
+                if (normalizedStatus === 'VACATION' || normalizedStatus === 'BUSINESS_TRIP' || normalizedStatus === 'OUTWORK') {
+                    alert('현재 휴가/출장/외근 상태이므로 퇴근할 수 없습니다.\n조기 복귀 시 "자리 복귀" 버튼을 눌러주세요.');
+                    return;
+                }
+                handleAction('checkout', '퇴근하시겠습니까?');
+            };
         }
         if (awayBtn) {
-            awayBtn.onclick = () => {
+            awayBtn.onclick = async () => {
+                // 특수 상태일 때는 자리 복귀 처리
+                const currentWorkStatus = window.currentServerStatus || '';
+                const normalizedStatus = currentWorkStatus ? currentWorkStatus.toUpperCase() : '';
+                
+                if (normalizedStatus === 'VACATION' || normalizedStatus === 'BUSINESS_TRIP' || normalizedStatus === 'OUTWORK') {
+                    const statusText = normalizedStatus === 'VACATION' ? '휴가중' : 
+                                     normalizedStatus === 'BUSINESS_TRIP' ? '출장중' : '외근중';
+                    if (confirm(`현재 ${statusText} 상태입니다. 업무로 복귀하시겠습니까?`)) {
+                        try {
+                            const token = getAuthToken();
+                            if (!token) {
+                                alert("로그인 정보가 없습니다.");
+                                return;
+                            }
+                            
+                            const response = await fetch('/api/leave/return', {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+                            
+                            if (response.ok) {
+                                alert('업무로 복귀 처리되었습니다.');
+                                
+                                // workStatus 동기화
+                                const profileResponse = await fetch('/api/auth/me', {
+                                    method: 'GET',
+                                    headers: {
+                                        'Authorization': `Bearer ${token}`,
+                                        'Content-Type': 'application/json'
+                                    }
+                                });
+                                
+                                if (profileResponse.ok) {
+                                    const profileResult = await profileResponse.json();
+                                    const user = profileResult.data || profileResult;
+                                    
+                                    if (user && user.workStatus) {
+                                        window.currentServerStatus = user.workStatus;
+                                        window.dispatchEvent(new CustomEvent('workStatusChanged', {
+                                            detail: { status: user.workStatus }
+                                        }));
+                                    }
+                                }
+                                
+                                // 오늘 근태 정보 다시 로드
+                                await loadTodayAttendance();
+                                
+                                // 홈화면인 경우 대시보드 데이터 새로고침
+                                if (window.location.pathname === '/' || window.location.pathname === '/view/main') {
+                                    if (typeof loadDashboardData === 'function') {
+                                        loadDashboardData();
+                                    }
+                                }
+                            } else {
+                                const result = await response.json();
+                                alert(result.message || '복귀 처리에 실패했습니다.');
+                            }
+                        } catch (error) {
+                            console.error('복귀 API 호출 오류:', error);
+                            alert('시스템 오류가 발생했습니다.');
+                        }
+                    }
+                    return;
+                }
+                
+                // 일반 상태일 때는 기존 자리비움 처리
                 const action = isAway ? 'away/end' : 'away/start';
                 handleAction(action, isAway ? '자리비움을 해제하시겠습니까?' : '자리비움을 시작하시겠습니까?');
             };

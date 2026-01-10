@@ -24,6 +24,24 @@
             <h1>월별 근태 현황 조회</h1>
     </div>
 
+        <!-- 요약 카드 -->
+        <div class="card summary-card" style="margin-bottom: 24px;">
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="summary-label">총 근무 시간 (누적)</span>
+                    <div class="summary-value"><span id="totalWorkHours" class="val-blue">0h 00m</span></div>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">지각 횟수</span>
+                    <div class="summary-value"><span id="lateCount" class="val-orange">0</span> <small>회</small></div>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">휴가/결근 일수</span>
+                    <div class="summary-value"><span id="absentCount" class="val-red">0</span> <small>일</small></div>
+                </div>
+            </div>
+        </div>
+
         <!-- 검색 및 필터 -->
         <div class="board-search-section">
             <div class="search-filters">
@@ -60,25 +78,9 @@
             </div>
     </div>
 
-        <!-- 요약 카드 -->
-        <div class="card summary-card" style="margin-bottom: 24px;">
-        <div class="summary-grid">
-            <div class="summary-item">
-                <span class="summary-label">총 근무 시간 (누적)</span>
-                <div class="summary-value"><span id="totalWorkHours" class="val-blue">0h 00m</span></div>
-            </div>
-            <div class="summary-item">
-                <span class="summary-label">지각 횟수</span>
-                <div class="summary-value"><span id="lateCount" class="val-orange">0</span> <small>회</small></div>
-            </div>
-            <div class="summary-item">
-                <span class="summary-label">휴가/결근 일수</span>
-                <div class="summary-value"><span id="absentCount" class="val-red">0</span> <small>일</small></div>
-            </div>
-        </div>
-    </div>
 
-        <!-- 게시글 목록 테이블 -->
+
+
         <div class="board-table-container">
         <table class="board-table" id="attendanceTable">
             <thead>

@@ -2,8 +2,9 @@ package com.finalproj.orbitflow.hr.positionCategory.controller;
 
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUtils;
+import com.finalproj.orbitflow.hr.positionCategory.dto.PositionCategoryCreateReqDto;
 import com.finalproj.orbitflow.hr.positionCategory.dto.PositionCategoryOrderUpdateReqDto;
-import com.finalproj.orbitflow.hr.positionCategory.dto.PositionCategoryReqDto;
+import com.finalproj.orbitflow.hr.positionCategory.dto.PositionCategoryUpdateReqDto;
 import com.finalproj.orbitflow.hr.positionCategory.service.PositionCategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ public class PositionCategoryController {
 
     @PostMapping
     public ResponseEntity<ResponseDto> create(
-            @RequestBody @Valid PositionCategoryReqDto request
+            @RequestBody @Valid PositionCategoryCreateReqDto request
     ) {
         return ResponseEntity.ok(
                 new ResponseDto(
@@ -59,7 +60,7 @@ public class PositionCategoryController {
     @PutMapping("/{id}")
     public ResponseEntity<ResponseDto> update(
             @PathVariable Long id,
-            @RequestBody @Valid PositionCategoryReqDto request
+            @RequestBody @Valid PositionCategoryUpdateReqDto request
     ) {
         positionCategoryService.update(SecurityUtils.getCompanyId(), id, request);
 

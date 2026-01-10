@@ -26,6 +26,7 @@ public class EmployeeUpdateReqDto {
     private String phone;
     private String internalPhone;
     private LocalDate birthDate;
+    private LocalDate hireDate;
 
     private Long orgId;
     private Long rankId;

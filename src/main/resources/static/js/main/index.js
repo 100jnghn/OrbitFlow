@@ -1,5 +1,32 @@
-// 대시보드 데이터 로드
+/**
+ * Orbit Flow 홈 대시보드 스크립트
+ * 사용자 프로필, 공지사항, 실시간 근무 상태 배지 연동을 담당합니다.
+ */
+
+// 1. 🚀 [수정] 통일된 WorkStatus Enum 값에 맞춰 매핑 테이블 정리
+const WORK_STATUS_MAP = {
+    'WORKING': { text: '근무중', className: 'badge-working' },
+    'VACATION': { text: '휴가중', className: 'badge-vacation' },
+    'BUSINESS_TRIP': { text: '출장중', className: 'badge-business' },
+    'OUTWORK': { text: '외근중', className: 'badge-outside' },
+    'AWAY': { text: '자리비움', className: 'badge-outside' },
+    'OFF_WORK': { text: '퇴근완료', className: 'badge-off-work' },
+    'BEFORE_WORK': { text: '출근전', className: 'badge-before-work' },
+    'DEFAULT': { text: '출근전', className: 'badge-before-work' }
+};
+
+// 🚀 특수 상태 정의 (차단 및 '자리 복귀' 전환용)
+const SPECIAL_STATUSES = {
+    'VACATION': '휴가중',
+    'BUSINESS_TRIP': '출장중',
+    'OUTWORK': '외근중'
+};
+
+const WORK_STATUS_STORAGE_KEY = 'optimisticWorkStatus';
+
 document.addEventListener('DOMContentLoaded', async function () {
+    initWorkStatusBadgeInteractions();
+    applyOptimisticWorkStatusIfAny();
     await loadDashboardData();
 });
 
@@ -19,71 +46,216 @@ async function loadDashboardData() {
     }
 }
 
-// 안전하게 텍스트를 설정하는 헬퍼 함수
-function safeSetText(id, text) {
-    const el = document.getElementById(id);
-    if (el) {
-        el.textContent = text;
+/**
+ * 1. 근무 상태 관리 유틸리티
+ */
+function getOptimisticWorkStatus() {
+    try { return sessionStorage.getItem(WORK_STATUS_STORAGE_KEY); } catch (e) { return null; }
+}
+
+function setOptimisticWorkStatus(status) {
+    try { sessionStorage.setItem(WORK_STATUS_STORAGE_KEY, status); } catch (e) { }
+    updateNameAdjacentBadge(status);
+}
+
+function clearOptimisticWorkStatus() {
+    try { sessionStorage.removeItem(WORK_STATUS_STORAGE_KEY); } catch (e) { }
+}
+
+function applyOptimisticWorkStatusIfAny() {
+    const status = getOptimisticWorkStatus();
+    if (status) updateNameAdjacentBadge(status);
+}
+
+/** 서버 상태와 화면 동기화 */
+async function syncWorkStatusFromServer() {
+    try {
+        await loadUserProfile(); // /api/auth/me 재조회 → 배지 및 전역 변수 갱신
+    } catch (e) {
+        console.warn('workStatus 서버 동기화 실패:', e);
     }
 }
 
-// 사용자 프로필 로드
+/**
+ * 2. 출퇴근 버튼 인터랙션 및 특수 상태 제어
+ *
+ * 🔥 출퇴근/자리비움 버튼 클릭은 commute.js에서 처리합니다.
+ * commute.js에서 API 호출 성공 후 workStatusChanged 이벤트를 dispatch하여
+ * index.js의 이벤트 리스너가 상태를 업데이트합니다.
+ */
+function initWorkStatusBadgeInteractions() {
+    // 외부 이벤트 수신 (commute.js 등)
+    window.addEventListener('workStatusChanged', (e) => {
+        const status = e?.detail?.status;
+        if (!status) return;
+        clearOptimisticWorkStatus();
+        updateNameAdjacentBadge(status);
+        // 서버 상태도 전역 변수에 저장
+        if (window.currentServerStatus !== status) {
+            window.currentServerStatus = status;
+        }
+
+        // commute.js의 버튼 상태도 업데이트되도록 함수 호출
+        setTimeout(() => {
+            if (typeof window.updateCommuteButtonStates === 'function') {
+                window.updateCommuteButtonStates();
+            }
+        }, 100);
+    });
+}
+
+/** 🚀 조기 복귀 처리 함수 (백엔드 LeaveService.processEarlyReturn 연동) */
+async function processEarlyReturn() {
+    try {
+        const response = await apiFetch('/api/leave/return', { method: 'POST' });
+        if (response.ok) {
+            clearOptimisticWorkStatus();
+            alert('업무로 복귀 처리되었습니다.');
+
+            // 서버 상태 즉시 동기화
+            await loadUserProfile();
+
+            // workStatusChanged 이벤트를 dispatch하여 commute.js에도 알림
+            const currentStatus = window.currentServerStatus;
+            if (currentStatus) {
+                window.dispatchEvent(new CustomEvent('workStatusChanged', {
+                    detail: { status: currentStatus }
+                }));
+            }
+
+            // commute.js의 버튼 상태도 업데이트되도록 이벤트 발생
+            if (typeof window.updateCommuteButtons === 'function') {
+                window.updateCommuteButtons();
+            }
+        } else {
+            const result = await response.json();
+            alert(result.message || '복귀 처리에 실패했습니다.');
+        }
+    } catch (error) {
+        console.error('복귀 API 호출 오류:', error);
+        alert('시스템 오류가 발생했습니다.');
+    }
+}
+
+/**
+ * 3. 사용자 프로필 로드 (이름, 부서, 직급, 배지 포함)
+ */
+
 async function loadUserProfile() {
     try {
-        const meResponse = await apiFetch('/api/auth/me');
-        if (!meResponse.ok) {
-            if (meResponse.status === 401) {
+        const response = await apiFetch('/api/auth/me');
+        if (!response.ok) {
+            if (response.status === 401) {
                 location.href = '/login';
                 return;
             }
-            throw new Error('프로필 조회 실패');
+            throw new Error('프로필 정보를 불러오지 못했습니다.');
         }
 
-        const meResult = await meResponse.json();
-        const user = meResult.data;
+        const result = await response.json();
+        const user = result.data;
 
-        safeSetText('profileName', user.name || '-');
+        // 1. 사용자 이름 표시 (id="profileName")
+        const nameEl = document.getElementById('profileName');
+        if (nameEl) {
+            // 기존 텍스트('-')를 사용자 이름으로 교체
+            nameEl.textContent = user.name || '사용자';
+        }
 
-        let organizationName = '-';
-        let positionName = '';
+        // 2. 부서 및 직급 표시
+        // 직급이 있을 경우에만 괄호를 붙이거나 스타일을 맞춤
+        safeSetText('profileDept', user.organizationName || '소속 없음');
+        safeSetText('profileRank', user.positionName || '');
 
-        // 관리자 권한이 있는 경우에만 사원 검색 API 사용
-        if (user.role === 'ADMIN' || user.role === 'COMPANY_ADMIN') {
-            try {
-                if (user.name && user.name.length >= 2) {
-                    const searchResponse = await apiFetch(`/api/rules/employees/search?keyword=${encodeURIComponent(user.name)}`);
-                    // 403 에러 발생 시를 대비해 응답 상태 확인
-                    if (searchResponse.ok) {
-                        const result = await searchResponse.json();
-                        const employees = result.data || result;
-                        if (Array.isArray(employees)) {
-                            const currentEmployee = employees.find(emp => emp.id === user.employeeId);
-                            if (currentEmployee) {
-                                organizationName = currentEmployee.organizationName || '-';
-                                positionName = currentEmployee.positionName || '';
-                            }
-                        }
-                    }
-                }
-            } catch (searchError) {
-                // API 권한 문제(403) 등은 로그에 남기지 않고 기본값 유지
+        // 3. 근무 상태 배지 업데이트
+        // 이름 옆에 배지를 생성하거나 업데이트하는 로직 호출
+        const workStatus = user.workStatus || 'DEFAULT';
+        window.currentServerStatus = workStatus;
+
+        if (typeof updateNameAdjacentBadge === 'function') {
+            updateNameAdjacentBadge(workStatus);
+        }
+
+        // 4. 프로필 이미지 처리
+        const profileImgEl = document.getElementById('profileImage');
+        const profileIconEl = document.getElementById('profileIcon');
+
+        if (user.profileImageUrl) {
+            if (profileImgEl) {
+                profileImgEl.src = user.profileImageUrl;
+                profileImgEl.style.display = 'block';
             }
+            if (profileIconEl) profileIconEl.style.display = 'none';
+        } else {
+            // 이미지가 없을 때 기본 아이콘 표시 및 엑박 방지
+            if (profileImgEl) {
+                profileImgEl.style.display = 'none';
+                profileImgEl.src = ''; // 이전 경로 제거
+            }
+            if (profileIconEl) profileIconEl.style.display = 'block';
         }
 
-        safeSetText('profileDept', organizationName);
-        safeSetText('profileRank', positionName ? `(${positionName})` : '');
+        // 5. 버튼 상태 동기화 (Commute.js 등 연동)
+        setTimeout(() => {
+            if (typeof window.updateCommuteButtonStates === 'function') {
+                window.updateCommuteButtonStates();
+            }
+        }, 100);
 
-        const profileImage = document.getElementById('profileImage');
-        if (profileImage) {
-            profileImage.src = '/images/male.png';
-        }
     } catch (error) {
-        console.error('프로필 로드 실패:', error);
-        safeSetText('profileName', '로드 실패');
-        safeSetText('profileDept', '-');
-        safeSetText('profileRank', '');
+        console.error('프로필 로드 중 오류 발생:', error);
+        // 에러 발생 시 기본값 표시
+        safeSetText('profileName', '사용자');
     }
 }
+/**
+ * 2. 이름 옆 근무 상태 배지 UI 업데이트
+ */
+function updateNameAdjacentBadge(status) {
+    const nameEl = document.getElementById('profileName');
+    if (!nameEl) return;
+
+    // awayBtn은 commute.js에서도 사용하므로 여기서 찾음
+    const awayBtn = document.getElementById('awayBtn');
+
+    // 🔥 대소문자 정규화: status가 null이거나 undefined, 또는 빈 문자열이면 DEFAULT로 처리
+    let normalizedStatus = 'DEFAULT';
+    if (status && typeof status === 'string' && status.trim() !== '') {
+        normalizedStatus = status.toUpperCase();
+    }
+
+    let badge = document.getElementById('workStatusBadge');
+    if (!badge) {
+        badge = document.createElement('span');
+        badge.id = 'workStatusBadge';
+        nameEl.parentNode.insertBefore(badge, nameEl.nextSibling);
+    }
+
+    const config = WORK_STATUS_MAP[normalizedStatus] || WORK_STATUS_MAP['DEFAULT'];
+
+    badge.textContent = config.text;
+    badge.className = `work-status-badge ${config.className}`;
+    badge.style.display = 'inline-block';
+    badge.style.marginLeft = '8px';
+
+    // 🔥 디버깅 로그: workStatus 확인 (필요시 제거 가능)
+    if (!status || normalizedStatus === 'DEFAULT') {
+        console.warn('[updateNameAdjacentBadge] status가 없거나 DEFAULT입니다. status:', status);
+    }
+
+    // 🚀 특수 상태일 때 '자리비움' 버튼을 '자리 복귀'로 전환
+    if (awayBtn) {
+        const btnText = awayBtn.querySelector('span');
+        if (SPECIAL_STATUSES[normalizedStatus]) {
+            if (btnText) btnText.textContent = '자리 복귀';
+            awayBtn.classList.add('btn-return');
+        } else {
+            if (btnText) btnText.textContent = '자리비움';
+            awayBtn.classList.remove('btn-return');
+        }
+    }
+}
+
 
 // 공지사항 로드
 async function loadNotices() {
@@ -154,7 +326,6 @@ async function loadNotices() {
         noticeList.innerHTML = '<li class="notice-item empty">공지사항을 불러올 수 없습니다.</li>';
     }
 }
-
 // 근태 정보 로드
 async function loadAttendance() {
     try {
@@ -243,6 +414,9 @@ async function loadLeaveBalance() {
     }
 }
 
+
+
+
 // 휴가 관련 정보 로드
 async function loadLeaveInfo() {
     try {
@@ -295,6 +469,7 @@ async function loadLeaveInfo() {
         console.error('휴가 정보 로드 실패:', error);
     }
 }
+
 
 // 일정 요약 로드
 async function loadScheduleSummary() {

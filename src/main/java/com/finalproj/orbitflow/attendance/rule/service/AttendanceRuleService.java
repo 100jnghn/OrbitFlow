@@ -10,21 +10,25 @@ import com.finalproj.orbitflow.attendance.rule.dto.response.EmployeeRuleResDto;
 import com.finalproj.orbitflow.attendance.rule.dto.request.EmpAttRuleUpdateReqDto;
 import com.finalproj.orbitflow.attendance.rule.repository.EmployeeRuleRepository;
 import com.finalproj.orbitflow.global.exception.BusinessException;
+import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import com.finalproj.orbitflow.notification.enums.NotificationType;
 import com.finalproj.orbitflow.notification.repository.NotificationRepository;
 import com.finalproj.orbitflow.notification.service.NotificationCommandService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -34,6 +38,7 @@ public class AttendanceRuleService {
     private final AttendanceRuleRepository defaultRuleRepository;
     private final EmployeeRepository employeeRepository;
     private final NotificationCommandService notificationService;
+    private final AttendanceRuleRepository attendanceRuleRepository;
 
     public DefaultRuleResDto getDefaultRule(Long companyId) {
         return new DefaultRuleResDto(findDefaultRuleOrThrow(companyId));
@@ -171,5 +176,34 @@ public class AttendanceRuleService {
 
         return employeeRepository.findAllByIdIn(employeeIds).stream()
                 .collect(Collectors.toMap(Employee::getId, emp -> emp));
+    }
+
+
+    /**
+     * 새로운 회사를 위한 기본 근태 규칙(09:00 - 18:00)을 생성합니다.
+     * @param company 신규 생성된 회사 엔티티
+     */
+    @Transactional
+    public void createDefaultAttendanceRule(Company company) {
+        // 중복 생성 방지 체크
+        if (attendanceRuleRepository.existsByCompanyId(company.getId())) {
+            log.info("회사 ID [{}]는 이미 근태 규칙이 존재합니다.", company.getId());
+            return;
+        }
+
+        AttendanceRule defaultRule = AttendanceRule.builder()
+                .companyId(company.getId())
+                .name("표준 근무 규칙")
+                .defaultStartTime(LocalTime.of(9, 0))  // 출근 시간 09:00
+                .defaultEndTime(LocalTime.of(18, 0))    // 퇴근 시간 18:00
+                .defaultBreakMinutes(60)                // 휴게시간 60분
+                .lateThresholdMin(10)                  // 10분 지각 허용
+                .isDefault(true)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        attendanceRuleRepository.save(defaultRule);
+        log.info("회사 ID [{}]에 대한 기본 근태 규칙(09:00-18:00)이 생성되었습니다.", company.getId());
     }
 }

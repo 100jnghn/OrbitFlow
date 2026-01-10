@@ -45,8 +45,8 @@ public class AuditLogService {
                 entityType,
                 entityId,
                 eventType,
-                beforeData,
-                afterData
+                AuditValueNormalizer.normalizeMap(beforeData),
+                AuditValueNormalizer.normalizeMap(afterData)
         );
 
         auditLogRepository.save(log);
@@ -62,12 +62,13 @@ public class AuditLogService {
 
     @Transactional(readOnly = true)
     public Page<AuditLogResDto> search(
+            Long companyId,
             AuditEntityType entityType,
             AuditEventType eventType,
             String actorName,
             Pageable pageable
     ) {
-        return auditLogRepository.search(entityType, eventType, actorName, pageable)
+        return auditLogRepository.search(companyId, entityType, eventType, actorName, pageable)
                 .map(log -> {
 
                     String entityName =

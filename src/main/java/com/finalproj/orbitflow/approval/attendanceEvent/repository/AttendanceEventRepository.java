@@ -23,4 +23,6 @@ public interface AttendanceEventRepository extends JpaRepository<AttendanceEvent
             LocalDate endDate,
             LocalDate startDate
     );
+
+    void deleteByEmployeeIdAndStartDateAfter(Long employeeId, LocalDate date);
 }

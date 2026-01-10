@@ -199,5 +199,10 @@ public class CompanyService {
         );
     }
 
+    @Transactional(readOnly = true)
+    public Company findById(Long companyId) {
+        return companyRepository.findById(companyId)
+                .orElseThrow(() -> new BusinessException("존재하지 않는 회사입니다."));
+    }
 }
 

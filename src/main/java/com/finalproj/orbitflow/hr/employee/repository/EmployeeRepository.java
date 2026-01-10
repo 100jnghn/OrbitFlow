@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.hr.employee.repository;
 
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
+import com.finalproj.orbitflow.hr.employee.enums.WorkStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -127,7 +128,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
                 where e.id = :employeeId
                   and o.id = :organizationId
                   and pc.id = :positionCategoryId
-                  and e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE
+                  and e.status = "ACTIVE"
                   and pc.isActive = true
             """)
     boolean existsInOrgAndPositionCategory(
@@ -251,4 +252,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     );
 
     Optional<Employee> findByIdAndStatus(Long id, EmployeeStatus status);
+
+    List<Employee> findByStatusAndWorkStatusIn(EmployeeStatus employeeStatus, java.util.List<com.finalproj.orbitflow.hr.employee.enums.WorkStatus> specialStatuses);
 }

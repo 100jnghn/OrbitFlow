@@ -7,12 +7,15 @@ import com.finalproj.orbitflow.auth.entity.RefreshToken;
 import com.finalproj.orbitflow.auth.service.AuthService;
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
+import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.global.exception.UnauthorizedException;
 import com.finalproj.orbitflow.global.security.CustomUserDetailsService;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import com.finalproj.orbitflow.global.security.SecurityUtils;
 import com.finalproj.orbitflow.global.security.jwt.JwtProvider;
+import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
+import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -43,6 +46,7 @@ public class AuthController {
 
     private final JwtProvider jwtProvider;
     private final AuthService authService;
+    private final EmployeeRepository employeeRepository;
 
     /**
      * 로그인
@@ -217,12 +221,17 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<ResponseDto> me() {
         SecurityUser user = SecurityUtils.getCurrentUser();
+        
+        // 🔥 최신 workStatus를 가져오기 위해 Employee를 다시 조회
+        Employee employee = employeeRepository.findById(user.getEmployeeId())
+                .orElseThrow(() -> new NotFoundException("사원을 찾을 수 없습니다."));
 
         MeResDto res = new MeResDto(
                 user.getEmployeeId(),
                 user.getName(),
                 user.getEmail(),
-                user.getRole().name()
+                user.getRole().name(),
+                employee.getWorkStatus() // 🔥 최신 workStatus 반환
         );
 
         return ResponseEntity.ok(

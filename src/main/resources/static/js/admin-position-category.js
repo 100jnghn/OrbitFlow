@@ -64,14 +64,35 @@ function render() {
 function row(v) {
     const tr = document.createElement('tr');
     tr.dataset.id = v.id;
+
     tr.innerHTML = `
-    <td>${v.isActive ? drag() : ''}</td>
-    <td>${v.name}</td>
-    <td>${v.parentPositionName ?? '-'}</td>
-    <td>${v.isHead ? `<span class="badge badge-head">HEAD</span>` : ''}</td>
-    <td>${v.isActive ? '활성' : '비활성'}</td>
-    <td><button data-edit>수정</button></td>
+    <td class="col-order">
+      ${v.isActive && !isSearch() ? drag() : ''}
+    </td>
+
+    <td class="col-name">
+      <strong>${v.name}</strong>
+    </td>
+
+    <td class="col-parent">
+      ${v.parentPositionName ?? '-'}
+    </td>
+
+    <td class="col-head">
+      ${v.isHead ? `<span class="badge badge-head">HEAD</span>` : ''}
+    </td>
+
+    <td class="col-status">
+      <span class="status-badge ${v.isActive ? 'status-active' : 'status-inactive'}">
+        ${v.isActive ? '활성' : '비활성'}
+      </span>
+    </td>
+
+    <td class="col-action">
+      <button class="table-btn" data-edit>수정</button>
+    </td>
   `;
+
     tr.querySelector('[data-edit]').onclick = () => openEdit(v.id);
     return tr;
 }
@@ -114,8 +135,12 @@ async function openCreate() {
     $('#isActive').checked = true;
     $('#isActive').disabled = true;
 
+    // 혹시 남아 있을 수 있는 help 숨김
+    $('#inactiveHelp')?.classList.add('hidden');
+
     buildParentPositionSelect(null, false);
     showModal();
+    updateHeadHelp();
 }
 
 
@@ -141,52 +166,77 @@ async function openEdit(id) {
     $('#isHead').checked = v.isHead;
     $('#isHead').disabled = true;
 
+    $('#headHelp').classList.add('hidden');
+
     // 사용 여부만 수정 가능
     $('#isActive').checked = v.isActive;
     $('#isActive').disabled = false;
 
-    // 상위 직책: 조회만
-    buildParentPositionSelect(parentPositionId, true);
+    // 1. 부모 후보 재구성 (자기 자신만 제외)
+    buildParentPositionSelect(selectedId, true);
+
+    // 2. 기존 parent를 명시적으로 선택
+    const parentSelect = $('#parentPositionSelect');
+    parentSelect.value = parentPositionId ?? '';
+
+
+    $('#inactiveHelp').classList.add('hidden');
 
     showModal();
+    updateHeadHelp();
+    bindActiveToggle();
 }
 
 
 
 /* ================= Save ================= */
 async function save() {
-    const parentValue = $('#parentPositionSelect').value;
 
+    const isCreate = !selectedId;
 
-    const payload = {
-        name: $('#positionName').value.trim(),
-        orgCategoryId: Number($('#orgCategorySelect').value),
-        parentPositionId: $('#parentPositionSelect').value
-            ? Number($('#parentPositionSelect').value)
-            : null,
-        isHead: $('#isHead').checked,
-        isActive: $('#isActive').checked
-    };
+    const name = $('#positionName').value.trim();
+    const orgCategoryId = Number($('#orgCategorySelect').value);
+    const parentPositionId = $('#parentPositionSelect').value
+        ? Number($('#parentPositionSelect').value)
+        : null;
+    const isHead = $('#isHead').checked;
+    const isActive = $('#isActive').checked;
 
+    const noParent = !parentPositionId;
 
-    const method = selectedId ? 'PUT' : 'POST';
-    const url = selectedId ? `${API}/${selectedId}` : API;
+    // 생성 + HEAD + parent 없음 경고
+    if (isCreate && noParent && isHead) {
+        const ok = confirm(
+            '상위 직책이 없는 최상위 결재처리자로 생성됩니다.\n계속 진행하시겠습니까?'
+        );
+        if (!ok) return;
+    }
 
-    await apiFetch(url, {
-        method,
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(payload)
-    });
+    const payload = isCreate
+        ? { name, orgCategoryId, parentPositionId, isHead }
+        : { name, isActive };
 
-    hideModal();
-    load();
+    const method = isCreate ? 'POST' : 'PUT';
+    const url = isCreate ? API : `${API}/${selectedId}`;
+
+    try {
+        await apiFetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        hideModal();
+        load();
+    } catch (e) {
+        alert(e.message || '요청 처리 중 오류가 발생했습니다.');
+    }
 }
 
 /* ================= Bind ================= */
 function bind() {
     $('#btnOpenCreate').onclick = openCreate;
     $('#btnCancel').onclick = hideModal;
-    $('#btnCloseModal').onclick = hideModal;
     $('#btnSave').onclick = save;
     $('#btnSearch').onclick = render;
     $('#includeInactive').onchange = load;
@@ -195,7 +245,15 @@ function bind() {
 
 /* ================= Utils ================= */
 const $ = s => document.querySelector(s);
-const drag = () => `<span class="drag-handle">⋮⋮</span>`;
+const drag = () => `
+  <span class="drag-handle">
+    <span class="drag-dots">
+      <span></span><span></span>
+      <span></span><span></span>
+      <span></span><span></span>
+    </span>
+  </span>
+`;
 const isSearch = () => $('#searchKeyword').value.trim().length > 0;
 
 function showModal() {
@@ -207,7 +265,7 @@ function hideModal() {
 }
 
 /* ================= 상위 직책 셀렉트 빌드 함수 ================= */
-function buildParentPositionSelect(selectedId, disabled = false) {
+function buildParentPositionSelect(excludeId, disabled = false) {
     const select = $('#parentPositionSelect');
 
     const currentOrgCategoryId =
@@ -218,18 +276,18 @@ function buildParentPositionSelect(selectedId, disabled = false) {
 
     const candidates = list.filter(v =>
         v.isActive &&
-        v.id !== selectedId &&
+        v.id !== excludeId &&
         allowedOrgCategoryIds.has(v.orgCategoryId)
     );
 
     select.innerHTML = `
-  ${candidates.map(v =>
-        `<option value="${v.id}" ${v.id === selectedId ? 'selected' : ''}>
-        ${v.name} (${v.orgCategoryName})${v.isHead ? ' · HEAD' : ''}
-    </option>`
-    ).join('')}
-`;
-// --> 부모 직책을 반드시 하나 선택해야 함 (“최상위 직책”이라는 개념이 사라짐, 모든 직책은 명시적 트리 안에 존재)
+      <option value="">(상위 직책 없음)</option>
+      ${candidates.map(v => `
+        <option value="${v.id}">
+          ${v.name} (${v.orgCategoryName})${v.isHead ? ' · HEAD' : ''}
+        </option>
+      `).join('')}
+    `;
 
     select.disabled = disabled;
 }
@@ -262,20 +320,6 @@ document
         buildParentPositionSelect(parentPositionId, false);
     });
 
-
-// function collectAllowedOrgCategoryIds(orgCategoryId) {
-//     const allowed = new Set();
-//     let currentId = orgCategoryId;
-//
-//     while (currentId) {
-//         allowed.add(currentId);
-//         const current = orgCategories.find(c => c.id === currentId);
-//         currentId = current?.parentId ?? null;
-//     }
-//
-//     return allowed;
-// }
-
 function collectAllowedOrgCategoryIds(orgCategoryId) {
     const current = orgCategories.find(c => c.id === orgCategoryId);
     if (!current) return new Set();
@@ -286,3 +330,33 @@ function collectAllowedOrgCategoryIds(orgCategoryId) {
             .map(c => c.id)
     );
 }
+
+function updateHeadHelp() {
+    const noParent = !$('#parentPositionSelect').value;
+    const isHead = $('#isHead').checked;
+
+    $('#headHelp').classList.toggle(
+        'hidden',
+        !(noParent && isHead)
+    );
+}
+
+$('#isHead')?.addEventListener('change', updateHeadHelp);
+$('#parentPositionSelect')?.addEventListener('change', updateHeadHelp);
+
+function bindActiveToggle() {
+    const toggle = $('#isActive');
+    const help = $('#inactiveHelp');
+
+    if (!toggle || !help) return;
+
+    toggle.onchange = () => {
+        if (selectedId && !toggle.checked) {
+            help.classList.remove('hidden');
+        } else {
+            help.classList.add('hidden');
+        }
+    };
+
+}
+

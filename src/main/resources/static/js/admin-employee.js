@@ -59,7 +59,6 @@ document.getElementById('empOrgId')?.addEventListener('change', async e => {
 });
 
 
-
 async function loadPositionsByOrg(orgId) {
     const select = document.getElementById('empPositionCategoryId');
     if (!select) return;
@@ -134,10 +133,10 @@ async function loadEmployees(page = 0) {
               <tr onclick="goDetail(${e.id})">
                 <td>${e.name}</td>
                 <td>${e.email}</td>
-                <td>${e.orgPath}</td>
+                <td class="col-org" title="${e.orgPath}"><span class="employee-org-path">${e.orgPath}</span></td>
                 <td>${e.rankName ?? '-'}</td>
                 <td>${e.positionName ?? '-'}</td>
-                <td class="status ${e.status}">${e.status}</td>
+                <td class="col-status"><span class="status-badge ${e.status}">${statusLabel(e.status)}</span></td>
               </tr>
             `);
         });
@@ -227,15 +226,15 @@ async function saveEmployee() {
     }
 
     closeEmployeeModal();
+    toast('사원이 생성되었습니다.');
     loadEmployees(0);
 }
 
 
-
 function renderPagination(pageData) {
-    const el = document.getElementById('pagination');
-    const wrapper = el.closest('.pagination-container');
-    el.innerHTML = '';
+    const container = document.getElementById('pagination');
+    const wrapper = container.closest('.pagination-container');
+    container.innerHTML = '';
 
     if (!pageData || pageData.totalPages <= 1) {
         wrapper.style.display = 'none';
@@ -244,16 +243,42 @@ function renderPagination(pageData) {
 
     wrapper.style.display = 'flex';
 
-    for (let i = 0; i < pageData.totalPages; i++) {
+    const {number, totalPages, first, last} = pageData;
+
+    // 이전 버튼
+    const prev = document.createElement('button');
+    prev.textContent = '<';
+    prev.disabled = first;
+    prev.onclick = () => loadEmployees(number - 1);
+    container.appendChild(prev);
+
+    // 페이지 번호
+    for (let i = 0; i < totalPages; i++) {
         const btn = document.createElement('button');
         btn.textContent = i + 1;
-        btn.className = '';
 
-        if (i === pageData.number) {
+        if (i === number) {
             btn.classList.add('active');
         }
 
         btn.onclick = () => loadEmployees(i);
-        el.appendChild(btn);
+        container.appendChild(btn);
     }
+
+    // 다음 버튼
+    const next = document.createElement('button');
+    next.textContent = '>';
+    next.disabled = last;
+    next.onclick = () => loadEmployees(number + 1);
+    container.appendChild(next);
+}
+
+
+function statusLabel(s) {
+    return {
+        ACTIVE: '재직',
+        SUSPENDED: '정지',
+        RESIGNED: '퇴사',
+        TEMP: '임시'
+    }[s] ?? s;
 }

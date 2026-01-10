@@ -5,6 +5,7 @@ import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.employee.dto.*;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
+import com.finalproj.orbitflow.hr.employee.enums.EmployeeRole;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.enums.WorkStatus;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
@@ -145,6 +146,16 @@ public class EmployeeService {
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
         }
 
+        Employee actor = getActorEmployee();
+
+        if (dto.getRole() != EmployeeRole.EMPLOYEE &&
+                actor.getRole() != EmployeeRole.COMPANY_ADMIN) {
+            throw new IllegalStateException(
+                    "대표 관리자만 관리자 계정을 생성할 수 있습니다."
+            );
+        }
+
+
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new IllegalArgumentException("회사 정보가 없습니다."));
 
@@ -159,7 +170,7 @@ public class EmployeeService {
                 ? positionCategoryRepository.findById(dto.getPositionCategoryId()).orElse(null)
                 : null;
 
-        // 임시 비번 발급 (메일 전송은 TODO)
+        // 임시 비번 발급
         String tempPassword = UUID.randomUUID().toString().substring(0, 10);
 
         // status는 무조건 TEMP로 엔티티에서 강제 설정
@@ -240,6 +251,19 @@ public class EmployeeService {
             employee.updateBasicInfo(null, null, null, dto.getBirthDate());
         }
 
+        // ===== 입사일 =====
+        if (dto.getHireDate() != null && !dto.getHireDate().equals(employee.getHireDate())) {
+            putDiff(
+                    before,
+                    after,
+                    "hireDate",
+                    employee.getHireDate() != null ? employee.getHireDate().toString() : null,
+                    dto.getHireDate() != null ? dto.getHireDate().toString() : null
+            );
+            employee.changeHireDate(dto.getHireDate());
+        }
+
+
         // ===== 조직/직급/직책 =====
         if (dto.getOrgId() != null && !dto.getOrgId().equals(employee.getOrganization().getId())) {
             putDiff(before, after, "orgId", employee.getOrganization().getId(), dto.getOrgId());
@@ -264,20 +288,36 @@ public class EmployeeService {
             }
         }
 
-        // ===== 고용/권한 =====
-        if (dto.getEmploymentType() != null && dto.getEmploymentType() != employee.getEmploymentType()) {
+        // 고용 형태 (권한 제한 없음)
+        if (dto.getEmploymentType() != null &&
+                dto.getEmploymentType() != employee.getEmploymentType()) {
+
             putDiff(
                     before,
                     after,
                     "employmentType",
-                    employee.getEmploymentType() != null ? employee.getEmploymentType().name() : null,
-                    dto.getEmploymentType() != null ? dto.getEmploymentType().name() : null
+                    employee.getEmploymentType().name(),
+                    dto.getEmploymentType().name()
             );
             employee.changeEmploymentType(dto.getEmploymentType());
         }
 
+        // 권한 (대표 관리자만)
         if (dto.getRole() != null && dto.getRole() != employee.getRole()) {
-            putDiff(before, after, "role", employee.getRole(), dto.getRole());
+
+            if (getActorEmployee().getRole() != EmployeeRole.COMPANY_ADMIN) {
+                throw new IllegalStateException(
+                        "대표 관리자만 사원 권한을 변경할 수 있습니다."
+                );
+            }
+
+            putDiff(
+                    before,
+                    after,
+                    "role",
+                    employee.getRole().name(),
+                    dto.getRole().name()
+            );
             employee.changeRole(dto.getRole());
         }
 
@@ -316,8 +356,30 @@ public class EmployeeService {
                 AuditEntityType.EMPLOYEE,
                 employee.getId(),
                 AuditEventType.ACTIVATE,
-                Map.of("status", EmployeeStatus.TEMP),
-                Map.of("status", EmployeeStatus.ACTIVE)
+                Map.of("status", EmployeeStatus.TEMP.name()),
+                Map.of("status", EmployeeStatus.ACTIVE.name())
+        );
+    }
+
+    /* =============================
+       이메일 인증을 통한 계정 활성화 (SUSPENDED → ACTIVE)
+       ============================= */
+    public void activateSuspended(Employee employee) {
+
+        if (employee.getStatus() != EmployeeStatus.SUSPENDED) {
+            throw new IllegalStateException("정지 계정만 활성화할 수 있습니다.");
+        }
+
+        employee.activate();
+
+        auditLogService.log(
+                employee.getCompany(),
+                employee,
+                AuditEntityType.EMPLOYEE,
+                employee.getId(),
+                AuditEventType.ACTIVATE,
+                Map.of("status", EmployeeStatus.SUSPENDED.name()),
+                Map.of("status", EmployeeStatus.ACTIVE.name())
         );
     }
 
@@ -365,8 +427,8 @@ public class EmployeeService {
                 AuditEntityType.EMPLOYEE,
                 employee.getId(),
                 AuditEventType.STATUS_CHANGE,
-                Map.of("status", current),
-                Map.of("status", newStatus)
+                Map.of("status", current.name()),
+                Map.of("status", newStatus.name())
         );
     }
 
@@ -433,9 +495,23 @@ public class EmployeeService {
     }
 
 
-    private void putDiff(Map<String, Object> before, Map<String, Object> after, String key, Object b, Object a) {
-        before.put(key, b);
-        after.put(key, a);
+    private void putDiff(
+            Map<String, Object> before,
+            Map<String, Object> after,
+            String key,
+            Object b,
+            Object a
+    ) {
+        before.put(key, normalizeValue(b));
+        after.put(key, normalizeValue(a));
+    }
+
+    private Object normalizeValue(Object v) {
+        if (v == null) return null;
+        if (v instanceof Enum<?> e) return e.name();
+        if (v instanceof java.time.LocalDate d) return d.toString();
+        if (v instanceof java.time.LocalDateTime dt) return dt.toString();
+        return v;
     }
 
     private String normalizeStr(String s) {

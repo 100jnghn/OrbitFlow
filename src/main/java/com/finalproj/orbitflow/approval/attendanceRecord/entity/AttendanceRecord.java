@@ -8,7 +8,6 @@ package com.finalproj.orbitflow.approval.attendanceRecord.entity;
  * @since       : 25. 12. 15. 월요일
  */
 
-
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
 import com.finalproj.orbitflow.attendance.leave.entity.LeaveType;
@@ -71,4 +70,9 @@ public class AttendanceRecord extends BaseEntity {
 
     @Column(name = "approved_at")
     private LocalDateTime approvedAt;
+
+    public void updateDuration(LocalDate newEndDate, BigDecimal newDays) {
+        this.endDate = newEndDate;
+        this.days = newDays;
+    }
 }
