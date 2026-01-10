@@ -1,6 +1,7 @@
 package com.finalproj.orbitflow.approval.documentFile.repository;
 
 import com.finalproj.orbitflow.approval.documentFile.enums.DocumentFileStatus;
+import com.finalproj.orbitflow.approval.documentFile.enums.ReferenceType;
 
 /**
  * Please explain the class!!!
@@ -12,11 +13,22 @@ import com.finalproj.orbitflow.approval.documentFile.enums.DocumentFileStatus;
 
 
 public interface DocumentFileAttachedProjection {
+
     Long getDocumentFileId();
+
     Long getFileId();
-    String getFileName();
+
+    String getDisplayName();
+
+    String getWriterName();
+
     Long getFileSize();
+
     Long getReferenceTargetId();
+
+    ReferenceType getReferenceType();
+
     DocumentFileStatus getStatus();
+
     String getFieldId();
 }

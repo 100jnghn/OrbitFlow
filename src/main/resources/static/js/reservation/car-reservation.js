@@ -70,7 +70,7 @@ async function loadCars() {
 
     } catch (e) {
         console.error(e);
-        alert('차량 목록을 불러오지 못했습니다.');
+        await sweetError('차량 목록을 불러오지 못했습니다.');
     }
 }
 
@@ -105,7 +105,7 @@ async function loadReservations() {
 
     } catch (e) {
         console.error(e);
-        alert('예약 정보를 불러오지 못했습니다.');
+        await sweetError('예약 정보를 불러오지 못했습니다.');
         renderGrid();
     }
 }
@@ -260,7 +260,7 @@ async function handleCellClick(cell, car, dateString) {
 
     // 선택한 범위에 예약 불가능한 날짜가 있는지 확인
     if (!isRangeAvailable(carId, selectedStartDate, selectedEndDate)) {
-        alert('선택한 날짜 범위에 예약 불가능한 날짜가 포함되어 있습니다.');
+        await sweetWarning('선택한 날짜 범위에 예약 불가능한 날짜가 포함되어 있습니다.');
         clearSelection();
         selectedCar = car;
         selectedStartDate = dateString;
@@ -436,7 +436,7 @@ function updateSubmitButtonState() {
 ========================== */
 async function submitReservation() {
     if (!selectedCar || !selectedStartDate || !selectedEndDate) {
-        alert('차량과 날짜 범위를 선택해주세요.');
+        await sweetInfo('차량과 날짜 범위를 선택해주세요.');
         return;
     }
 
@@ -470,9 +470,10 @@ async function submitReservation() {
 
         if (!res.ok) {
             const error = await res.json();
-            throw new Error(error.message || '예약에 실패했습니다.');
+            throw new Error(error.message || '예약 신청에 실패했습니다.');
         }
-        alert('예약이 완료되었습니다.');
+
+        await sweetSuccess('예약 신청이 완료되었습니다.');
 
         // 입력 초기화
         document.getElementById('reservation-reason').value = '';
@@ -486,7 +487,7 @@ async function submitReservation() {
 
     } catch (e) {
         console.error(e);
-        alert(e.message || '예약 중 오류가 발생했습니다.');
+        await sweetError(e.message || '예약 중 오류가 발생했습니다.');
     }
 }
 

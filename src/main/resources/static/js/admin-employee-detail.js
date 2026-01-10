@@ -16,6 +16,7 @@ let positionMap = {};
    Edit Modal Elements
 ========================= */
 const editName = document.getElementById('editName');
+const editGender = document.getElementById('editGender');
 const editPhone = document.getElementById('editPhone');
 const editInternalPhone = document.getElementById('editInternalPhone');
 const editBirthDate = document.getElementById('editBirthDate');
@@ -397,6 +398,7 @@ async function openEditModal() {
     editInternalPhone.value = e.internalPhone ?? '';
     editBirthDate.value = e.birthDate ?? '';
     editHireDate.value = e.hireDate ?? '';
+    editGender.value = e.gender ?? '';
 
     // lookup 먼저
     await loadEditLookupsFromDetail();
@@ -502,6 +504,7 @@ async function saveEdit() {
         internalPhone: editInternalPhone.value || null,
         birthDate: editBirthDate.value || null,
         hireDate: editHireDate.value || null,
+        gender: editGender.value || null,
 
         orgId: editOrgId.value ? Number(editOrgId.value) : null,
         rankId: editRankId.value ? Number(editRankId.value) : null,
@@ -593,19 +596,13 @@ function diffKeyLabel(k) {
         role: '권한',
         hireDate: '입사일',
         phone: '연락처',
-        internalPhone: '사내 번호'
+        internalPhone: '사내 번호',
+        gender: '성별',
+        birthDate: '생년월일'
     };
     return map[k] ?? k;
 }
 
 const map = {
-    orgId: '조직',
-    rankId: '직급',
-    positionCategoryId: '직책',
-    employmentType: '고용 형태',
-    role: '권한',
-    hireDate: '입사일',
-    phone: '연락처',
-    internalPhone: '사내 번호',
-    birthDate: '생년월일' // ← 나중에 로그 찍히면 대비
+
 };

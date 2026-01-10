@@ -19,8 +19,8 @@
 
     <!-- 페이지별 CSS -->
     <th:block th:fragment="pageCss">
-        <link rel="stylesheet" th:href="@{/css/user-document/my-submit.css}">
         <link rel="stylesheet" th:href="@{/css/user-document/inbox.css}">
+        <link rel="stylesheet" th:href="@{/css/user-document/my-submit.css}">
     </th:block>
 
     <!-- 페이지별 JS -->
@@ -95,17 +95,19 @@
                 <table class="approval-table">
                     <!-- ⭐ 컬럼 비율 고정 -->
                     <colgroup>
+                        <col style="width:6%">   <!-- 번호 -->
                         <col style="width:20%">  <!-- 문서 제목 -->
                         <col style="width:16%">  <!-- 양식명 -->
                         <col style="width:6%">   <!-- 양식 버전 -->
                         <col style="width:16%">  <!-- 작성일 -->
                         <col style="width:8%">   <!-- 상태 -->
                         <col style="width:10%">  <!-- 진행 단계 -->
-                        <col style="width:24%">  <!-- 결재 진행 상황 -->
+                        <col style="width:18%">  <!-- 결재 진행 상황 -->
                     </colgroup>
 
                     <thead>
                     <tr>
+                        <th class="index-col">번호</th>
                         <th>문서 제목</th>
                         <th>양식명</th>
                         <th>양식 버전</th>
@@ -118,7 +120,7 @@
 
                     <tbody id="mydocTbody">
                     <tr>
-                        <td colspan="7" class="approval-empty-row">
+                        <td colspan="8" class="approval-empty-row">
                             조회된 문서가 없습니다.
                         </td>
                     </tr>
