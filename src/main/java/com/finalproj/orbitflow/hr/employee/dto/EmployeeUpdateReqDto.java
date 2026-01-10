@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.hr.employee.dto;
 
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeRole;
 import com.finalproj.orbitflow.hr.employee.enums.EmploymentType;
+import com.finalproj.orbitflow.hr.employee.enums.Gender;
 import lombok.Getter;
 
 import java.time.LocalDate;
@@ -27,6 +28,7 @@ public class EmployeeUpdateReqDto {
     private String internalPhone;
     private LocalDate birthDate;
     private LocalDate hireDate;
+    private Gender gender;
 
     private Long orgId;
     private Long rankId;
