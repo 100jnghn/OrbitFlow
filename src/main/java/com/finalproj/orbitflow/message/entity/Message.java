@@ -29,7 +29,7 @@ public class Message extends BaseEntity {
     private String messageTitle;
 
     @Lob
-    @Column(name = "message_content", nullable = false)
+    @Column(name = "message_content", nullable = false, columnDefinition = "LONGTEXT")
     private String messageContent;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
