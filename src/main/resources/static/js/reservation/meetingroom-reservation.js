@@ -79,7 +79,7 @@ async function loadMeetingRooms() {
 
     } catch (e) {
         console.error(e);
-        alert('회의실 목록을 불러오지 못했습니다.');
+        await sweetError('회의실 목록을 불러오지 못했습니다.');
     }
 }
 
@@ -106,7 +106,7 @@ async function loadReservations(date) {
 
     } catch (e) {
         console.error(e);
-        alert('예약 정보를 불러오지 못했습니다.');
+        await sweetError('예약 정보를 불러오지 못했습니다.');
         renderGrid();
     }
 }
@@ -259,7 +259,7 @@ async function handleCellClick(cell, room, hour) {
 
     // 선택한 범위에 예약 불가능한 시간이 있는지 확인
     if (!isRangeAvailable(roomId, selectedStartHour, selectedEndHour)) {
-        alert('선택한 시간 범위에 예약 불가능한 시간이 포함되어 있습니다.');
+        await sweetWarning('선택한 시간 범위에 예약 불가능한 시간이 포함되어 있습니다.');
         clearSelection();
         selectedRoom = room;
         selectedStartHour = hour;
@@ -431,7 +431,7 @@ function updateSubmitButtonState() {
 ========================== */
 async function submitReservation() {
     if (!selectedRoom || selectedStartHour === null || selectedEndHour === null) {
-        alert('회의실과 시간을 선택해주세요.');
+        await sweetInfo('회의실과 시간을 선택해주세요.');
         return;
     }
 
@@ -464,7 +464,7 @@ async function submitReservation() {
             throw new Error(error.message || '예약에 실패했습니다.');
         }
 
-        alert('예약이 완료되었습니다.');
+        await sweetSuccess('예약이 완료되었습니다.');
 
         // 입력 초기화
         document.getElementById('reservation-reason').value = '';
@@ -478,7 +478,7 @@ async function submitReservation() {
 
     } catch (e) {
         console.error(e);
-        alert(e.message || '예약 중 오류가 발생했습니다.');
+        await sweetError(e.message || '예약 중 오류가 발생했습니다.');
     }
 }
 

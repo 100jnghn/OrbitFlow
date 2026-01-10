@@ -278,7 +278,7 @@
             renderScheduleList(dateSchedules);
         } catch (error) {
             console.error('Error loading date schedules:', error);
-            alert('일정을 불러오는데 실패했습니다.');
+            await sweetError('일정을 불러오는데 실패했습니다.');
         }
     }
 
@@ -338,7 +338,7 @@
             filterAndRenderSchedules();
         } catch (error) {
             console.error('Error loading schedules:', error);
-            alert('일정을 불러오는데 실패했습니다.');
+            await sweetError('일정을 불러오는데 실패했습니다.');
         }
     }
 

@@ -170,7 +170,7 @@ async function loadStatuses() {
         });
     } catch(e) {
         console.error(e);
-        alert("상태 목록 조회 실패");
+        await sweetError("상태 목록 조회 실패");
     }
 }
 
@@ -238,7 +238,7 @@ async function loadReservations(page = 0) {
 
     } catch (e) {
         console.error(e);
-        alert('예약 목록을 불러오지 못했습니다.');
+        await sweetError('예약 목록을 불러오지 못했습니다.');
     }
 }
 
@@ -277,7 +277,13 @@ function renderPagination(pageData) {
    Actions
 ========================== */
 async function cancelReservation(id) {
-    if (!confirm('예약을 취소하시겠습니까?')) return;
+
+    const result = await sweetConfirm(
+        '취소 확인',
+        '예약을 취소하시겠습니까?'
+    );
+
+    if (!result.isConfirmed) return;
 
     try {
         const res = await apiFetch(`/api/reservations/${id}/cancel`, {
@@ -286,12 +292,12 @@ async function cancelReservation(id) {
 
         if (!res.ok) throw new Error();
 
-        alert('예약이 취소되었습니다.');
+        await sweetSuccess('예약이 취소되었습니다.');
         loadReservations(currentPage);
 
     } catch (e) {
         console.error(e);
-        alert('예약 취소에 실패했습니다.');
+        await sweetError('예약 취소에 실패했습니다.');
     }
 }
 
