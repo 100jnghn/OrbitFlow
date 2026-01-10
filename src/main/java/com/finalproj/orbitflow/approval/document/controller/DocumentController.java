@@ -45,13 +45,24 @@ public class DocumentController {
 
     @GetMapping("/approvals")
     public ResponseEntity<?> getDocumentsToApprove(
-            @RequestParam(required = false, defaultValue = "0") int offset,
+            @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "10") int size,
             DocumentListReqDto reqDto
     ) {
-        Page<DocumentMyApprovalListResDto> documentsToApprove = documentService.getDocumentsToApprove(SecurityUtils.getCompanyId(), SecurityUtils.getEmployeeId(), offset, size, reqDto);
-        return ResponseEntity.ok(new ResponseDto(HttpStatus.OK, "내 결재 목록 조회 성공", documentsToApprove));
+        Page<DocumentMyApprovalListResDto> documentsToApprove =
+                documentService.getDocumentsToApprove(
+                        SecurityUtils.getCompanyId(),
+                        SecurityUtils.getEmployeeId(),
+                        page,
+                        size,
+                        reqDto
+                );
+
+        return ResponseEntity.ok(
+                new ResponseDto(HttpStatus.OK, "내 결재 목록 조회 성공", documentsToApprove)
+        );
     }
+
 
     @PostMapping("/draft/{formTemplateId}")
     public ResponseEntity<?> createDocument(

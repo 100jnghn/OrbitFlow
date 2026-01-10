@@ -76,10 +76,16 @@ public class DocumentService {
         }
     }
 
-    public Page<DocumentMyApprovalListResDto> getDocumentsToApprove(Long companyId, Long employeeId, int offset, int size, DocumentListReqDto reqDto) {
+    public Page<DocumentMyApprovalListResDto> getDocumentsToApprove(
+            Long companyId,
+            Long employeeId,
+            int page,
+            int size,
+            DocumentListReqDto reqDto
+    ) {
         dateValidCheck(reqDto);
 
-        Pageable pageable = PageRequest.of(offset, size);
+        Pageable pageable = PageRequest.of(page, size);
 
         return documentRepository.findMyApprovalDocuments(
                 companyId,

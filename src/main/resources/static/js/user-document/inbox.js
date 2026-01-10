@@ -47,9 +47,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadApprovalList(page = 0) {
     try {
+        const size = 10;
+
         const params = new URLSearchParams({
             page,
-            size: 10
+            size
         });
 
         // ===== 검색 조건 =====
@@ -86,8 +88,10 @@ async function loadApprovalList(page = 0) {
         const pageData = result.data;
 
         const approvals = pageData.content || [];
+
+        // ✅ 페이지네이션의 단일 기준
+        currentPage = page;
         totalPages = pageData.totalPages;
-        currentPage = pageData.number;
 
         renderApprovalTable(approvals);
         renderPagination(currentPage);
@@ -109,7 +113,7 @@ function renderApprovalTable(list) {
     if (!list.length) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" class="approval-empty-row">
+                <td colspan="8" class="approval-empty-row">
                     결재 문서가 없습니다.
                 </td>
             </tr>
@@ -122,18 +126,23 @@ function renderApprovalTable(list) {
 
         const number = currentPage * 10 + index + 1;
         const createdAt = formatDateTime(item.createdAt);
-        const statusText = formatApprovalStatus(item.myApprovalStatus);
+
+        const documentStatusBadge =
+            renderDocumentStatusBadge(item.documentDisplayStatus);
+
+        const myStatusBadge =
+            renderMyApprovalStatusBadge(item);
 
         row.innerHTML = `
             <td class="index-col">${number}</td>
             <td class="approval-title title-col">${escapeHTML(item.documentTitle)}</td>
+            <td>${documentStatusBadge}</td>
             <td>${escapeHTML(item.writerName)}</td>
             <td>${escapeHTML(item.templateName)}</td>
             <td>${escapeHTML(item.displayApproverName)}</td>
-            <td>${statusText}</td>
+            <td>${myStatusBadge}</td>
             <td>${createdAt}</td>
         `;
-
 
         row.addEventListener('click', () => {
             location.href = `/view/document/${item.documentId}`;
@@ -143,6 +152,62 @@ function renderApprovalTable(list) {
     });
 }
 
+function renderMyApprovalStatusBadge(item) {
+    const status = item.myApprovalStatus;
+    const remaining = item.remainingBeforeMyTurn;
+
+    let text = '';
+    let colorClass = 'status-gray';
+
+    // ✅ 내 차례
+    if (status === 'IN_PROGRESS' && remaining === 0) {
+        text = '결재 필요';
+        colorClass = 'status-blue';
+    }
+    // ✅ 아직 대기중
+    else if (status === 'WAITING' && typeof remaining === 'number') {
+        text = `대기중 (${remaining}명)`;
+        colorClass = 'status-yellow';
+    }
+    // ✅ 완료
+    else if (status === 'APPROVED') {
+        text = '승인';
+        colorClass = 'status-green';
+    } else if (status === 'REJECTED') {
+        text = '반려';
+        colorClass = 'status-red';
+    } else if (status === 'CANCELLED') {
+        text = '취소';
+        colorClass = 'status-gray';
+    }
+
+    return `<span class="status-badge ${colorClass}">${text}</span>`;
+}
+
+
+function renderDocumentStatusBadge(statusText) {
+    if (!statusText) {
+        return `<span class="status-badge status-gray">-</span>`;
+    }
+
+    let colorClass = 'status-gray';
+
+    switch (statusText) {
+        case '진행중':
+            colorClass = 'status-blue';
+            break;
+        case '승인 완료':
+            colorClass = 'status-green';
+            break;
+        case '반려 종료':
+            colorClass = 'status-red';
+            break;
+    }
+
+    return `<span class="status-badge ${colorClass}">${statusText}</span>`;
+}
+
+
 /* =========================
    페이지네이션
 ========================= */
@@ -151,7 +216,7 @@ function renderPagination(page) {
     const pagination = document.getElementById('approvalPagination');
     pagination.innerHTML = '';
 
-    // 이전
+    // 이전 버튼
     const prev = document.createElement('button');
     prev.className = 'page-btn';
     prev.innerHTML = '<i class="fas fa-chevron-left"></i>';
@@ -160,28 +225,42 @@ function renderPagination(page) {
     pagination.appendChild(prev);
 
     const maxVisible = 5;
-    let start = Math.max(0, page - Math.floor(maxVisible / 2));
-    let end = Math.min(totalPages - 1, start + maxVisible - 1);
 
-    if (end - start < maxVisible - 1) {
-        start = Math.max(0, end - maxVisible + 1);
+    let start, end;
+
+    // ✅ 핵심 분기
+    if (totalPages <= maxVisible) {
+        // 전체 페이지 수가 적으면 전부 노출
+        start = 0;
+        end = totalPages - 1;
+    } else {
+        start = Math.max(0, page - Math.floor(maxVisible / 2));
+        end = start + maxVisible - 1;
+
+        if (end >= totalPages - 1) {
+            end = totalPages - 1;
+            start = end - maxVisible + 1;
+        }
     }
 
+    // 첫 페이지 + ...
     if (start > 0) {
         addPageBtn(pagination, 0);
         if (start > 1) addEllipsis(pagination);
     }
 
+    // 페이지 버튼
     for (let i = start; i <= end; i++) {
         addPageBtn(pagination, i, i === page);
     }
 
+    // ... + 마지막 페이지
     if (end < totalPages - 1) {
         if (end < totalPages - 2) addEllipsis(pagination);
         addPageBtn(pagination, totalPages - 1);
     }
 
-    // 다음
+    // 다음 버튼
     const next = document.createElement('button');
     next.className = 'page-btn';
     next.innerHTML = '<i class="fas fa-chevron-right"></i>';
@@ -239,13 +318,25 @@ function bindDateFilterEvents() {
         end.style.display = 'none';
 
         let from = new Date(today);
-        if (dateFilter.value === 'week') from.setDate(today.getDate() - 7);
-        if (dateFilter.value === 'month') from.setMonth(today.getMonth() - 1);
+
+        if (dateFilter.value === 'today') {
+            // today 그대로
+        } else if (dateFilter.value === 'week') {
+            from.setDate(today.getDate() - 7);
+        } else if (dateFilter.value === 'month') {
+            from.setMonth(today.getMonth() - 1);
+        } else {
+            // 빈 값이면 초기화
+            start.value = '';
+            end.value = '';
+            return;
+        }
 
         start.value = toDateString(from);
         end.value = toDateString(today);
     });
 }
+
 
 /* =========================
    유틸
@@ -265,21 +356,6 @@ function formatDateTime(dateStr) {
     return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
 }
 
-
-function formatApprovalStatus(status) {
-    switch (status) {
-        case 'IN_PROGRESS':
-            return '처리 필요(me)';
-        case 'WAITING':
-            return '대기중';
-        case 'APPROVED':
-            return '승인';
-        case 'REJECTED':
-            return '반려';
-        default:
-            return status || '';
-    }
-}
 
 function toDateString(date) {
     return date.toISOString().split('T')[0];
