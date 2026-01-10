@@ -8,6 +8,7 @@ import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeRole;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.enums.WorkStatus;
+import com.finalproj.orbitflow.hr.employee.event.EmployeeCreatedEvent;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import com.finalproj.orbitflow.hr.logAudit.dto.AuditLogResDto;
 import com.finalproj.orbitflow.hr.logAudit.enums.AuditEntityType;
@@ -20,6 +21,8 @@ import com.finalproj.orbitflow.hr.positionCategory.repository.PositionCategoryRe
 import com.finalproj.orbitflow.hr.rank.entity.HrRank;
 import com.finalproj.orbitflow.hr.rank.repository.RankRepository;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,6 +39,7 @@ import java.util.*;
  * @since : 2025-12-23 화요일
  */
 
+@Slf4j
 @Service
 @Transactional
 @AllArgsConstructor
@@ -48,6 +52,8 @@ public class EmployeeService {
     private final PositionCategoryRepository positionCategoryRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
+    private final ApplicationEventPublisher applicationEventPublisher;
+
 
     /* =============================
        조회
@@ -184,6 +190,10 @@ public class EmployeeService {
         );
 
         Employee saved = employeeRepository.save(employee);
+
+        applicationEventPublisher.publishEvent(
+                new EmployeeCreatedEvent(saved.getId())
+        );
 
         Map<String, Object> after = new LinkedHashMap<>();
         after.put("name", saved.getName());
