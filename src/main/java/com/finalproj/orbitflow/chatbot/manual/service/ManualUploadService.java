@@ -7,7 +7,7 @@ import com.finalproj.orbitflow.chatbot.manualCategory.repository.ManualCategoryR
 
 import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.global.file.enums.FileDomain;
-import com.finalproj.orbitflow.global.file.repository.FileRepository;
+import com.finalproj.orbitflow.global.file.service.FileService;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
@@ -38,10 +38,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.UUID;
 
@@ -53,12 +49,9 @@ public class ManualUploadService {
     private final ManualRepository manualMetadataRepository;
     private final ManualCategoryRepository manualCategoryRepository;
     private final EmployeeRepository employeeRepository;
-    private final FileRepository fileRepository;
+    private final FileService fileService;
     private final EmbeddingModel embeddingModel;
     private final EmbeddingStore<TextSegment> embeddingStore;
-
-    @Value("${file.upload-dir}")
-    private String uploadDir;
 
     /**
      * 특정 회사의 매뉴얼 목록 조회
@@ -102,16 +95,16 @@ public class ManualUploadService {
         if (file.isEmpty()) {
             throw new InvalidRequestException("파일이 비어있습니다.");
         }
-        
+
         // 파일 확장자 확인
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null) {
             throw new InvalidRequestException("파일명이 없습니다.");
         }
-        
+
         String fileExtension = originalFileName.substring(originalFileName.lastIndexOf('.')).toLowerCase();
         List<String> allowedExtensions = List.of(".txt", ".pdf", ".doc");
-        
+
         if (!allowedExtensions.contains(fileExtension)) {
             throw new InvalidRequestException("TXT, PDF, DOC 파일만 업로드 가능합니다.");
         }
@@ -121,7 +114,7 @@ public class ManualUploadService {
             File savedFile = processFileStorage(file, employee);
 
             // 2. AI 학습 (벡터 인덱싱) - ChromaDB에 저장
-            processVectorIndexing(file, category, employee);
+            processVectorIndexing(file, category, employee, savedFile);
 
             // 3. 매뉴얼 메타데이터 저장 (DB)
             saveManualMetadata(file, category, employee, savedFile);
@@ -130,33 +123,17 @@ public class ManualUploadService {
             throw new InvalidRequestException("파일 처리 중 오류: " + e.getMessage());
         }
 
-
     }
 
     private File processFileStorage(MultipartFile file, Employee employee) throws IOException {
-        String originalFileName = file.getOriginalFilename();
-        String systemFileName = UUID.randomUUID() + "_" + originalFileName;
-
-        String objectKey = "manuals/" + systemFileName;
-
-        Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
-
-        Files.copy(file.getInputStream(), uploadPath.resolve(systemFileName), StandardCopyOption.REPLACE_EXISTING);
-
-        return fileRepository.save(File.builder()
-                .company(employee.getCompany())
-                .originFile(originalFileName)
-                .sysFile(systemFileName)
-                .objectKey(objectKey)
-                .fileSize(file.getSize())
-                .contentType(file.getContentType())
-                .domain(FileDomain.CHAT)
-                .build());
+        return fileService.upload(
+                employee.getCompany().getId(),
+                FileDomain.CHAT,
+                file);
     }
-    private void processVectorIndexing(MultipartFile file, ManualCategory category, Employee employee) throws IOException {
+
+    private void processVectorIndexing(MultipartFile file, ManualCategory category, Employee employee, File savedFile)
+            throws IOException {
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null) {
             log.error("[Vector Indexing] 실패: 파일명이 없습니다.");
@@ -207,6 +184,7 @@ public class ManualUploadService {
             segments.forEach(segment -> {
                 segment.metadata().add("company_id", employee.getCompany().getId().toString());
                 segment.metadata().add("category_id", category.getId().toString());
+                segment.metadata().add("file_id", savedFile.getId().toString()); // 파일 ID를 메타데이터로 저장
             });
 
             // 4. ChromaDB 저장 시도 로그
@@ -224,7 +202,7 @@ public class ManualUploadService {
             throw e; // 예외를 다시 던져서 상위 트랜잭션 처리
         }
     }
-    
+
     /**
      * DOC 파일에서 텍스트 추출
      */
@@ -240,17 +218,15 @@ public class ManualUploadService {
             throw new IOException("DOC 파일 파싱 중 오류가 발생했습니다: " + e.getMessage(), e);
         }
     }
-    
 
     private void saveManualMetadata(MultipartFile file, ManualCategory category, Employee employee, File savedFile) {
-        String fullPath = Paths.get(uploadDir).resolve(savedFile.getSysFile()).toString();
 
         ManualMetadata metadata = ManualMetadata.builder()
                 .company(employee.getCompany())
                 .category(category)
                 .file(savedFile)
                 .fileName(file.getOriginalFilename())
-                .filePath(fullPath)
+                .filePath(savedFile.getObjectKey()) // S3 Object Key 저장
                 .status("SUCCESS") // 학습 성공 상태로 저장
                 .isActive(true)
                 .build();
