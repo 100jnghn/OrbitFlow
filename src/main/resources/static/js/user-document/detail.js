@@ -368,18 +368,16 @@ async function submitApprovalAction() {
             throw new Error("결재 처리 실패");
         }
 
-        alert(
-            currentActionType === "approve"
-                ? "승인되었습니다."
-                : "반려되었습니다."
-        );
+        await sweetSuccess(currentActionType === "approve"
+            ? "승인되었습니다."
+            : "반려되었습니다.");
 
         closeApprovalModal();
         location.reload(); // 상태 갱신
 
     } catch (e) {
         console.error(e);
-        alert("처리 중 오류가 발생했습니다.");
+        await sweetWarning("처리 중 오류가 발생했습니다.");
     }
 }
 
@@ -422,7 +420,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         await initDocumentDetailPage(data);
     } catch (e) {
         console.error(e);
-        alert("문서 정보를 불러오지 못했습니다.");
+        await sweetWarning("문서 정보를 불러오지 못했습니다.");
     }
 });
 
@@ -1160,7 +1158,7 @@ function controlActionButtons(data) {
                 }
             } catch (e) {
                 console.error(e);
-                alert("서명 정보를 확인할 수 없습니다.");
+                await sweetWarning("서명 정보를 확인할 수 없습니다.");
             }
         };
     }
@@ -1211,7 +1209,7 @@ function addPdfDownloadButton(data) {
 
         } catch (e) {
             console.error(e);
-            alert("PDF 다운로드 중 오류가 발생했습니다.");
+            await sweetWarning("PDF 다운로드 중 오류가 발생했습니다.");
         } finally {
             pdfBtn.disabled = false;
             pdfBtn.textContent = "PDF 다운로드";
@@ -1314,7 +1312,7 @@ async function downloadAttachmentByFileId(fileId, fileName, event) {
 
     } catch (e) {
         console.error(e);
-        alert("파일 다운로드 중 오류가 발생했습니다.");
+        await sweetWarning("파일 다운로드 중 오류가 발생했습니다.");
         spinner.remove();
     } finally {
         downloadingFileId = null;

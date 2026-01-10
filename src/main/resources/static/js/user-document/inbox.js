@@ -98,7 +98,7 @@ async function loadApprovalList(page = 0) {
 
     } catch (e) {
         console.error(e);
-        alert('결재 문서를 불러오지 못했습니다.');
+        await sweetWarning('결재 목록 조회 실패.');
     }
 }
 

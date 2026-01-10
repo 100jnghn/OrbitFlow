@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateApprovalSidebarSelection();
 
     if (typeof DOCUMENT_ID === 'undefined' || !DOCUMENT_ID) {
-        alert('문서 정보가 올바르지 않습니다.');
+        await sweetWarning('문서 정보가 올바르지 않습니다.');
         return;
 
     }
@@ -236,7 +236,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         isInitializing = false;
     } catch (e) {
         console.error(e);
-        alert('문서 정보를 불러오는 중 오류가 발생했습니다.');
+        await sweetWarning('문서 정보를 불러오는 중 오류가 발생했습니다.');
     }
 });
 
@@ -2047,7 +2047,7 @@ async function fetchEmployeesForApproval(line) {
 
     const res = await apiFetch(`/api/admin/employees/by-org-and-position?${params}`);
     if (!res.ok) {
-        alert('사원 목록을 불러오지 못했습니다.');
+        await sweetWarning('사원 목록을 불러오지 못했습니다.');
         return [];
     }
 
@@ -3300,12 +3300,12 @@ async function bindEvents(documentId) {
                 });
 
                 // 7️⃣ 이동
-                alert('문서가 상신되었습니다.');
+                await sweetSuccess('문서가 상신되었습니다.');
                 location.href = '/view/document/my-documents';
 
             } catch (e) {
                 console.error(e);
-                alert('문서 상신 중 오류가 발생했습니다.');
+                await sweetWarning('문서 상신 중 오류가 발생했습니다.');
             }
         });
 
@@ -3721,7 +3721,7 @@ async function tempSave(documentId) {
     });
 
     if (!res.ok) {
-        alert('임시 저장에 실패했습니다.');
+        await sweetWarning('임시 저장에 실패했습니다.');
         return;
     }
     hasUnsavedChanges = false;

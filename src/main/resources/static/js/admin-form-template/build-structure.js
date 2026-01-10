@@ -897,14 +897,14 @@ function applyEventComponentPolicy(comp, baseRole) {
 }
 
 
-function addComponentByType(type) {
+async function addComponentByType(type) {
     if (!FORM_COMPONENT_SCHEMAS[type]) return;
 
     // 🔒 일정 컴포넌트는 1개만 허용
     if (type === "event-date-range") {
         const exists = formComponents.some(c => c.type === "event-date-range");
         if (exists) {
-            alert("일정 컴포넌트는 문서에 하나만 추가할 수 있습니다.");
+            await sweetWarning("일정 컴포넌트는 문서에 하나만 추가할 수 있습니다.");
             return;
         }
     }
@@ -1861,9 +1861,9 @@ function showComponentSettingPanel(componentId) {
 
         renderColumns();
 
-        addBtn?.addEventListener("click", () => {
+        addBtn?.addEventListener("click", async () => {
             if (comp.meta.columns.length >= TABLE_COLUMN_MAX) {
-                alert(`컬럼은 최대 ${TABLE_COLUMN_MAX}개까지 추가할 수 있습니다.`);
+                await sweetWarning(`컬럼은 최대 ${TABLE_COLUMN_MAX}개까지 추가할 수 있습니다.`);
                 return;
             }
             comp.meta.columns.push({
@@ -2061,7 +2061,7 @@ function syncDocumentTitle(value) {
 
 async function saveFormTemplateStructure(templateId) {
     if (!templateId) {
-        alert('저장할 문서 양식 ID(templateId)가 존재하지 않습니다.');
+        await sweetError('저장할 문서 양식 ID(templateId)가 존재하지 않습니다.');
         return false;
     }
 
@@ -2086,7 +2086,7 @@ async function saveFormTemplateStructure(templateId) {
         templateGroupCategoryCode ??
         document.getElementById('form-category-input')?.value;
     if (!categoryCode) {
-        alert('카테고리를 선택해주세요.');
+        await sweetWarning('카테고리를 선택해주세요.');
         return false;
     }
     const affectTags = buildAffectTagsFromComponents(formComponents);
@@ -2110,11 +2110,11 @@ async function saveFormTemplateStructure(templateId) {
             const err = await res.json().catch(() => ({}));
             throw new Error(err?.message || '문서 양식 저장에 실패했습니다.');
         }
-        alert('문서 양식이 저장되었습니다.');
+        await sweetSuccess('문서 양식이 저장되었습니다.');
         return true;
     } catch (e) {
         console.error('[FormTemplate SAVE ERROR]', e);
-        alert(e.message || '문서 양식 저장 중 오류가 발생했습니다.');
+        await sweetError(e.message || '문서 양식 저장 중 오류가 발생했습니다.');
         return false;
     }
 }
@@ -2222,13 +2222,13 @@ function bindAiGeneratePopup() {
         const purpose = descInput.value.trim();
 
         if (!formName) {
-            alert('문서 양식 이름을 입력하세요.');
+            await sweetWarning('문서 양식 이름을 입력하세요.');
             nameInput.focus();
             return;
         }
 
         if (!purpose) {
-            alert('문서 양식 목적을 입력하세요.');
+            await sweetWarning('문서 양식 목적을 입력하세요.');
             descInput.focus();
             return;
         }
@@ -2283,7 +2283,7 @@ function bindAiGeneratePopup() {
 
         } catch (e) {
             console.error('[AI GENERATE ERROR]', e);
-            alert(e.message || 'AI 양식 생성 중 오류가 발생했습니다.');
+            await sweetError(e.message || 'AI 양식 생성 중 오류가 발생했습니다.');
             popup.style.display = 'flex';
         } finally {
             aiGenerating = false;
@@ -2409,7 +2409,7 @@ function bindStepNavigationButtons() {
     if (nextBtn) {
         nextBtn.addEventListener('click', async () => {
             if (!templateId) {
-                alert("템플릿 ID가 없어 다음 단계로 이동할 수 없습니다.");
+                await sweetWarning("템플릿 ID가 없어 다음 단계로 이동할 수 없습니다.");
                 return;
             }
             nextBtn.disabled = true;
@@ -2426,9 +2426,9 @@ function bindStepNavigationButtons() {
 function bindPreviewButton() {
     const previewBtn = document.querySelector('.preview-btn');
     if (!previewBtn) return;
-    previewBtn.addEventListener('click', () => {
+    previewBtn.addEventListener('click', async () => {
         if (typeof templateId === "undefined" || !templateId) {
-            alert("템플릿 ID가 없어 미리보기를 열 수 없습니다.");
+            await sweetWarning("템플릿 ID가 없어 미리보기를 열 수 없습니다.");
             return;
         }
         window.location.href = `/view/admin/preview-template/${templateId}`;
