@@ -203,10 +203,19 @@ public class MessageService {
             Long messageId,
             Long recipientId // 보낸 메시지함에서 특정 수신자 선택 시 사용 (optional)
     ) {
-        // 1. 현재 사용자의 해당 메시지 레코드 조회 (자신이 삭제했는지 최우선 확인)
+        // 1. 메시지 존재 여부 먼저 확인 (404 체크)
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new NotFoundException("메시지를 찾을 수 없습니다."));
+
+        // 2. 회사 일치 여부 확인 (403 체크)
+        if (!message.getCompanyId().equals(companyId)) {
+            throw new ForbiddenException("해당 메시지에 접근 권한이 없습니다.");
+        }
+
+        // 3. 현재 사용자의 해당 메시지 레코드 조회 (발신자 혹은 수신자 기록 확인)
         MessageRecipient currentUserRecord = messageRecipientRepository
                 .findByCompanyIdAndMessage_IdAndEmployee_IdAndDeletedAtIsNull(companyId, messageId, employeeId)
-                .orElseThrow(() -> new NotFoundException("메시지가 존재하지 않습니다."));
+                .orElseThrow(() -> new ForbiddenException("이 메시지를 볼 권한이 없습니다."));
 
         MessageRecipient mr;
 
@@ -425,9 +434,14 @@ public class MessageService {
     /** 메시지 삭제(소프트 삭제: 내 recipient row만 deletedAt 처리) */
     @Transactional
     public void deleteMessage(Long companyId, Long employeeId, Long messageId) {
+        // 1. 메시지 존재 여부 확인 (404)
+        messageRepository.findById(messageId)
+                .orElseThrow(() -> new NotFoundException("삭제할 메시지를 찾을 수 없습니다."));
+
+        // 2. 권한 확인 (403)
         MessageRecipient mr = messageRecipientRepository
                 .findByCompanyIdAndMessage_IdAndEmployee_IdAndDeletedAtIsNull(companyId, messageId, employeeId)
-                .orElseThrow(() -> new NotFoundException("삭제할 메시지가 존재하지 않습니다."));
+                .orElseThrow(() -> new ForbiddenException("메시지를 삭제할 권한이 없습니다."));
 
         // 메시지에 첨부된 파일이 있고, 해당 메시지의 모든 recipient가 삭제된 경우에만 파일 삭제
         Message message = mr.getMessage();
@@ -453,9 +467,14 @@ public class MessageService {
     /** 보관함 이동 */
     @Transactional
     public void archiveMessage(Long companyId, Long employeeId, Long messageId) {
+        // 1. 메시지 존재 여부 확인 (404)
+        messageRepository.findById(messageId)
+                .orElseThrow(() -> new NotFoundException("보관할 메시지를 찾을 수 없습니다."));
+
+        // 2. 권한 확인 (403)
         MessageRecipient mr = messageRecipientRepository
                 .findByCompanyIdAndMessage_IdAndEmployee_IdAndDeletedAtIsNull(companyId, messageId, employeeId)
-                .orElseThrow(() -> new NotFoundException("보관할 메시지가 존재하지 않습니다."));
+                .orElseThrow(() -> new ForbiddenException("메시지를 보관할 권한이 없습니다."));
 
         mr.archive();
     }
@@ -463,9 +482,14 @@ public class MessageService {
     /** 보관함 해제(원래 폴더로 복귀 = folderType 유지 + isArchived만 false) */
     @Transactional
     public void unarchiveMessage(Long companyId, Long employeeId, Long messageId) {
+        // 1. 메시지 존재 여부 확인 (404)
+        messageRepository.findById(messageId)
+                .orElseThrow(() -> new NotFoundException("보관 해제할 메시지를 찾을 수 없습니다."));
+
+        // 2. 권한 확인 (403)
         MessageRecipient mr = messageRecipientRepository
                 .findByCompanyIdAndMessage_IdAndEmployee_IdAndDeletedAtIsNull(companyId, messageId, employeeId)
-                .orElseThrow(() -> new NotFoundException("보관 해제할 메시지가 존재하지 않습니다."));
+                .orElseThrow(() -> new ForbiddenException("메시지 보관을 해제할 권한이 없습니다."));
 
         mr.unarchive();
     }
