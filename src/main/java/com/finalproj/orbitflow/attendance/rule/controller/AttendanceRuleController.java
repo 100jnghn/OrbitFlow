@@ -2,12 +2,15 @@ package com.finalproj.orbitflow.attendance.rule.controller;
 
 import com.finalproj.orbitflow.attendance.rule.dto.response.DefaultRuleResDto;
 import com.finalproj.orbitflow.attendance.rule.dto.request.DefaultRuleUpdateReqDto;
+import com.finalproj.orbitflow.attendance.rule.entity.AttendanceRule;
 import com.finalproj.orbitflow.attendance.rule.service.AttendanceRuleService;
 import com.finalproj.orbitflow.attendance.rule.dto.request.EmpAttRuleCreateReqDto;
 import com.finalproj.orbitflow.attendance.rule.dto.response.EmployeeRuleResDto;
 import com.finalproj.orbitflow.attendance.rule.dto.request.EmpAttRuleUpdateReqDto;
 import com.finalproj.orbitflow.global.common.ResponseDto; // 공통 응답 DTO 임포트
 import com.finalproj.orbitflow.global.security.SecurityUser;
+import com.finalproj.orbitflow.hr.company.entity.Company;
+import com.finalproj.orbitflow.hr.company.service.CompanyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +25,7 @@ import java.util.List;
 public class AttendanceRuleController {
 
     private final AttendanceRuleService attendanceRuleService;
+    private final CompanyService companyService;
 
     @GetMapping("/default")
     public ResponseEntity<?> getDefaultRule(@AuthenticationPrincipal SecurityUser admin) {
@@ -81,5 +85,24 @@ public class AttendanceRuleController {
             @PathVariable Long ruleId) {
         attendanceRuleService.deleteExceptionRule(admin.getCompanyId(), ruleId);
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "해당 예외 규칙이 삭제되었습니다.", null));
+    }
+
+    /**
+     * 회사 가입 완료 후, 해당 회사의 기본 근태 규칙을 초기화합니다.
+     * POST /api/attendance/rule/initialize/{companyId}
+     */
+    @PostMapping("/initialize/{companyId}")
+    public ResponseEntity<ResponseDto<Void>> initializeDefaultRule(@PathVariable Long companyId) {
+        // 1. 존재하는 회사인지 확인
+        Company company = companyService.findById(companyId);
+
+        // 2. 기본 규칙 생성 로직 호출
+        attendanceRuleService.createDefaultAttendanceRule(company);
+
+        return ResponseEntity.ok(new ResponseDto<>(
+                HttpStatus.CREATED,
+                "회사의 기본 근태 규칙이 성공적으로 초기화되었습니다.",
+                null
+        ));
     }
 }
