@@ -253,7 +253,13 @@ public class EmployeeService {
 
         // ===== 입사일 =====
         if (dto.getHireDate() != null && !dto.getHireDate().equals(employee.getHireDate())) {
-            putDiff(before, after, "hireDate", employee.getHireDate(), dto.getHireDate());
+            putDiff(
+                    before,
+                    after,
+                    "hireDate",
+                    employee.getHireDate() != null ? employee.getHireDate().toString() : null,
+                    dto.getHireDate() != null ? dto.getHireDate().toString() : null
+            );
             employee.changeHireDate(dto.getHireDate());
         }
 
@@ -305,7 +311,13 @@ public class EmployeeService {
                 );
             }
 
-            putDiff(before, after, "role", employee.getRole(), dto.getRole());
+            putDiff(
+                    before,
+                    after,
+                    "role",
+                    employee.getRole().name(),
+                    dto.getRole().name()
+            );
             employee.changeRole(dto.getRole());
         }
 
@@ -344,8 +356,8 @@ public class EmployeeService {
                 AuditEntityType.EMPLOYEE,
                 employee.getId(),
                 AuditEventType.ACTIVATE,
-                Map.of("status", EmployeeStatus.TEMP),
-                Map.of("status", EmployeeStatus.ACTIVE)
+                Map.of("status", EmployeeStatus.TEMP.name()),
+                Map.of("status", EmployeeStatus.ACTIVE.name())
         );
     }
 
@@ -366,8 +378,8 @@ public class EmployeeService {
                 AuditEntityType.EMPLOYEE,
                 employee.getId(),
                 AuditEventType.ACTIVATE,
-                Map.of("status", EmployeeStatus.SUSPENDED),
-                Map.of("status", EmployeeStatus.ACTIVE)
+                Map.of("status", EmployeeStatus.SUSPENDED.name()),
+                Map.of("status", EmployeeStatus.ACTIVE.name())
         );
     }
 
@@ -415,8 +427,8 @@ public class EmployeeService {
                 AuditEntityType.EMPLOYEE,
                 employee.getId(),
                 AuditEventType.STATUS_CHANGE,
-                Map.of("status", current),
-                Map.of("status", newStatus)
+                Map.of("status", current.name()),
+                Map.of("status", newStatus.name())
         );
     }
 
@@ -483,9 +495,23 @@ public class EmployeeService {
     }
 
 
-    private void putDiff(Map<String, Object> before, Map<String, Object> after, String key, Object b, Object a) {
-        before.put(key, b);
-        after.put(key, a);
+    private void putDiff(
+            Map<String, Object> before,
+            Map<String, Object> after,
+            String key,
+            Object b,
+            Object a
+    ) {
+        before.put(key, normalizeValue(b));
+        after.put(key, normalizeValue(a));
+    }
+
+    private Object normalizeValue(Object v) {
+        if (v == null) return null;
+        if (v instanceof Enum<?> e) return e.name();
+        if (v instanceof java.time.LocalDate d) return d.toString();
+        if (v instanceof java.time.LocalDateTime dt) return dt.toString();
+        return v;
     }
 
     private String normalizeStr(String s) {

@@ -24,6 +24,8 @@ public class EmployeeUpdateResDto {
     private String internalPhone;
     private LocalDate birthDate;
 
+    private LocalDate hireDate;
+
     private Long orgId;
     private Long rankId;
     private Long positionCategoryId;
@@ -41,6 +43,7 @@ public class EmployeeUpdateResDto {
                 e.getPhone(),
                 e.getInternalPhone(),
                 e.getBirthDate(),
+                e.getHireDate(),
                 e.getOrganization().getId(),
                 e.getRank() != null ? e.getRank().getId() : null,
                 e.getPositionCategory() != null ? e.getPositionCategory().getId() : null,

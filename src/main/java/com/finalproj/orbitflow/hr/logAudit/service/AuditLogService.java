@@ -45,8 +45,8 @@ public class AuditLogService {
                 entityType,
                 entityId,
                 eventType,
-                beforeData,
-                afterData
+                AuditValueNormalizer.normalizeMap(beforeData),
+                AuditValueNormalizer.normalizeMap(afterData)
         );
 
         auditLogRepository.save(log);
