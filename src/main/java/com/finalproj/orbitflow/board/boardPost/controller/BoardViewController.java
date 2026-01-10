@@ -1,9 +1,7 @@
 package com.finalproj.orbitflow.board.boardPost.controller;
 
 import com.finalproj.orbitflow.board.boardPost.service.BoardService;
-import com.finalproj.orbitflow.global.security.SecurityUser;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,18 +33,11 @@ public class BoardViewController {
      */
     @GetMapping("/board/write")
     public String boardWritePage(
-            @AuthenticationPrincipal SecurityUser user,
             @RequestParam(required = false) Long categoryId,
             Model model) {
-        if (categoryId != null) {
-            // 카테고리 권한 체크
-            boardService.getVerifiedAccessibleCategory(
-                    user.getCompanyId(),
-                    user.getOrganizationId(),
-                    user.getEmployeeId(),
-                    categoryId,
-                    user.getRole());
-        }
+        // [NPE 해결] 서버 사이드에서는 @AuthenticationPrincipal을 사용하지 않습니다.
+        // 현재 프로젝트는 JWT를 sessionStorage에 저장하므로, 브라우저 직접 접속 시 서버가 인증 정보를 알 수 없습니다.
+        // 대신 프론트엔드(board-write.js 및 common.js)에서 API 호출을 통해 권한을 검증합니다.
 
         model.addAttribute("pageTitle", "글쓰기");
         model.addAttribute("currentGNB", "board");
@@ -72,18 +63,10 @@ public class BoardViewController {
      */
     @GetMapping("/board/edit")
     public String boardEditPage(
-            @AuthenticationPrincipal SecurityUser user,
             @RequestParam Long boardId,
             Model model) {
-        // 수정 시에도 게시판 권한 및 작성자 권한 체크가 필요할 수 있으나,
-        // 여기서는 카테고리 접근 권한을 먼저 체크합니다. (상세 내역은 BoardService.getBoardDetail 등에서 수행됨)
-        // 화면 진입 시점에도 최소한의 카테고리 활성화/삭제 여부 체크를 위해 getBoardDetail의 로직을 활용할 수 있습니다.
-        boardService.getBoardDetail(
-                user.getCompanyId(),
-                user.getOrganizationId(),
-                user.getEmployeeId(),
-                boardId,
-                user.getRole());
+        // [NPE 해결] 서버 사이드에서는 @AuthenticationPrincipal을 사용하지 않습니다.
+        // 게시글 정보 및 수정 권한 체크는 프론트엔드가 API(/api/boards/{id})를 호출할 때 수행됩니다.
 
         model.addAttribute("pageTitle", "글수정");
         model.addAttribute("currentGNB", "board");
