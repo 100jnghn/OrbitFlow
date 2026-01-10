@@ -59,6 +59,7 @@ public class BoardService {
     public Page<BoardResDto.ListInfo> getBoardList(
             Long companyId,
             Long organizationId,
+            Long employeeId,
             Long categoryId,
             EmployeeRole role,
             LocalDate startDate,
@@ -67,7 +68,7 @@ public class BoardService {
             String keyword,
             Pageable pageable) {
         // 1) 카테고리 접근 검증 + 조회
-        BoardCategory category = getVerifiedAccessibleCategory(companyId, organizationId, categoryId, role);
+        BoardCategory category = getVerifiedAccessibleCategory(companyId, organizationId, employeeId, categoryId, role);
 
         // 2) searchType 파싱
         BoardSearchType searchType;
@@ -97,15 +98,15 @@ public class BoardService {
                 .map(BoardResDto.ListInfo::from);
     }
 
-    /** [사용자용] 게시글 상세 조회 */
     @Transactional
-    public BoardResDto.DetailInfo getBoardDetail(Long companyId, Long organizationId, Long boardId, EmployeeRole role) {
+    public BoardResDto.DetailInfo getBoardDetail(Long companyId, Long organizationId, Long employeeId, Long boardId,
+            EmployeeRole role) {
         Board board = boardRepository.findByIdAndDeletedAtIsNull(boardId)
                 .orElseThrow(() -> new NotFoundException("게시글이 존재하지 않습니다."));
 
         BoardCategory category = board.getCategory();
 
-        validateCategoryAccess(companyId, organizationId, category, role);
+        validateCategoryAccess(companyId, organizationId, employeeId, category, role);
 
         board.increaseViewCount();
         return BoardResDto.DetailInfo.from(board);
@@ -118,13 +119,14 @@ public class BoardService {
             Long organizationId,
             Long employeeId,
             BoardReqDto.Create request,
-            List<MultipartFile> files) {
+            List<MultipartFile> files,
+            EmployeeRole role) {
         BoardCategory category = getVerifiedAccessibleCategory(
                 companyId,
                 organizationId,
+                employeeId,
                 request.getCategoryId(),
-                null // 생성 시에는 role 체크 불필요 (작성 권한은 별도 체크)
-        );
+                role);
 
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new NotFoundException("작성자 정보가 존재하지 않습니다."));
@@ -181,36 +183,52 @@ public class BoardService {
     }
 
     /** 게시판 카테고리 접근 검증 + 조회 */
-    private BoardCategory getVerifiedAccessibleCategory(Long companyId, Long organizationId, Long categoryId,
+    public BoardCategory getVerifiedAccessibleCategory(Long companyId, Long organizationId, Long employeeId,
+            Long categoryId,
             EmployeeRole role) {
         BoardCategory category = boardCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new NotFoundException("게시판 카테고리를 찾을 수 없습니다."));
 
-        validateCategoryAccess(companyId, organizationId, category, role);
+        validateCategoryAccess(companyId, organizationId, employeeId, category, role);
         return category;
     }
 
     /** 게시판 접근 가능 여부 검증 */
-    private void validateCategoryAccess(Long companyId, Long organizationId, BoardCategory category,
+    public void validateCategoryAccess(Long companyId, Long organizationId, Long employeeId, BoardCategory category,
             EmployeeRole role) {
         if (!category.getCompany().getId().equals(companyId)) {
-            throw new ForbiddenException("접근 권한이 없는 게시판입니다.");
+            throw new ForbiddenException("접근 권한이 없습니다.");
         }
         if (category.getDeletedAt() != null) {
-            throw new ForbiddenException("삭제된 게시판입니다.");
+            throw new ForbiddenException("게시글 작성 권한이 없습니다.");
         }
         if (!category.isActivated()) {
-            throw new ForbiddenException("비활성화된 게시판입니다.");
+            throw new ForbiddenException("게시글 작성 권한이 없습니다.");
         }
 
-        // 공용 게시판(organization이 null)이고 ADMIN 권한이 있으면 권한 체크 건너뛰기
+        // 1. ADMIN 권한이 있으면 모든 게시판 접근 허용
         boolean isAdmin = (role == EmployeeRole.ADMIN || role == EmployeeRole.COMPANY_ADMIN);
-        if (category.getOrganization() == null && isAdmin) {
-            // ADMIN은 공용 게시판에 대해 권한 체크 없이 접근 가능
+        if (isAdmin) {
             return;
         }
 
-        // 조직 게시판이면 소속 조직 또는 상위 조직 계층에 포함되어야 함
+        // 2. 공용 게시판(organization이 null)인 경우 권한 체크
+        if (category.getOrganization() == null) {
+            // 해당 게시판에 별도의 권한 설정이 있는지 확인
+            boolean hasPermissionEntries = !category.getBoardPermissions().isEmpty();
+            if (hasPermissionEntries) {
+                // 특정 사용자에게만 권한이 부여된 게시판인 경우, 본인이 포함되어 있는지 확인
+                boolean isAuthorized = category.getBoardPermissions().stream()
+                        .anyMatch(p -> p.getEmployee().getId().equals(employeeId));
+                if (!isAuthorized) {
+                    throw new ForbiddenException("접근 권한이 없습니다.");
+                }
+            }
+            // 권한 설정이 없으면 모든 직원이 접근 가능하므로 통과
+            return;
+        }
+
+        // 3. 조직 게시판인 경우
         if (category.getOrganization() != null) {
             if (organizationId == null) {
                 throw new ForbiddenException("조직 정보가 없습니다.");
@@ -239,7 +257,7 @@ public class BoardService {
                 .orElseThrow(() -> new NotFoundException("게시글이 존재하지 않습니다."));
 
         BoardCategory category = board.getCategory();
-        validateCategoryAccess(companyId, organizationId, category, null); // 수정 시에는 role 체크 불필요
+        validateCategoryAccess(companyId, organizationId, employeeId, category, null); // 수정 시에는 role 체크 대신 기본 로직 수행
 
         // 작성자 본인 또는 관리자만 허용(관리자 정책은 네 role에 맞게 조정)
         boolean isWriter = board.getWriter().getId().equals(employeeId);
@@ -289,7 +307,7 @@ public class BoardService {
                 .orElseThrow(() -> new NotFoundException("게시글이 존재하지 않습니다."));
 
         BoardCategory category = board.getCategory();
-        validateCategoryAccess(companyId, organizationId, category, null); // 삭제 시에는 role 체크 불필요
+        validateCategoryAccess(companyId, organizationId, employeeId, category, null); // 삭제 시에는 role 체크 대신 기본 로직 수행
 
         boolean isWriter = board.getWriter().getId().equals(employeeId);
         if (!isWriter) {
