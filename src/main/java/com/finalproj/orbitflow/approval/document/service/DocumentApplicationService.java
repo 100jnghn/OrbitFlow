@@ -17,6 +17,7 @@ import com.finalproj.orbitflow.approval.documentContent.repository.DocumentConte
 import com.finalproj.orbitflow.approval.documentFile.entity.DocumentFile;
 import com.finalproj.orbitflow.approval.documentFile.enums.DocumentFileStatus;
 import com.finalproj.orbitflow.approval.documentFile.repository.DocumentFileRepository;
+import com.finalproj.orbitflow.approval.documentFile.service.DocumentFileService;
 import com.finalproj.orbitflow.approval.documentSignature.service.DocumentSignatureService;
 import com.finalproj.orbitflow.approval.formTemplate.entity.FormTemplate;
 import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateRepository;
@@ -84,6 +85,7 @@ public class DocumentApplicationService {
     private final PdfApprovalLineAssembler pdfApprovalLineAssembler;
     private final PdfInternalImageService pdfInternalImageService;
     private final DocumentSignatureService documentSignatureService;
+    private final DocumentFileService documentFileService;
 
     @Value("${app.base-url}")
     private String baseUrl;
@@ -327,11 +329,13 @@ public class DocumentApplicationService {
             byte[] pdfBytes = os.toByteArray();
 
             // 8️⃣ PDF 저장
-            fileService.saveGeneratedPdf(
+            File pdfFile = fileService.saveGeneratedPdf(
                     document.getCompany().getId(),
                     documentId,
                     pdfBytes
             );
+
+            documentFileService.mappingPdf(document, pdfFile);
 
         } catch (Exception e) {
             throw new RuntimeException("PDF 생성 실패", e);

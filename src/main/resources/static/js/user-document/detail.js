@@ -445,7 +445,7 @@ async function initDocumentDetailPage(data) {
     await setupRevisionButtons(data);
 
     bindBackButton();
-    addPdfPreviewButton(data.documentId);
+    addPdfDownloadButton(data);
 
     initAiPanels(data.documentId);
 }
@@ -1066,10 +1066,10 @@ function renderAttachments(files = []) {
 
     listEl.innerHTML = "";
 
-    // ⭐ 핵심: fieldId가 null인 파일만
-    const attachments = files.filter(f => f.fieldId == null);
+    // fieldId가 null인 것만 (일반 첨부 + 참조 문서)
+    const items = files.filter(f => f.fieldId == null);
 
-    if (!attachments.length) {
+    if (!items.length) {
         const li = document.createElement("li");
         li.className = "attachment-empty";
         li.textContent = "첨부된 파일이 없습니다.";
@@ -1077,26 +1077,41 @@ function renderAttachments(files = []) {
         return;
     }
 
-    attachments.forEach(file => {
+    items.forEach(file => {
         const li = document.createElement("li");
         li.className = "attachment-item";
 
-        const typeSpan = document.createElement("span");
-        typeSpan.className = "attachment-type attachment";
-        typeSpan.textContent = "첨부";
+        const isReference = file.referenceTargetId != null;
 
+        // === 배지 ===
+        const typeSpan = document.createElement("span");
+        typeSpan.className = `attachment-type ${isReference ? "reference" : "attachment"}`;
+        typeSpan.textContent = isReference ? "참조" : "첨부";
+
+        // === 이름 ===
         const nameSpan = document.createElement("span");
         nameSpan.className = "attachment-name";
-        nameSpan.textContent = file.fileName;
 
+        if (isReference) {
+            // 참조: 작성자 | 문서명
+            nameSpan.textContent = `${file.writerName} | ${file.displayName}`;
+        } else {
+            // 첨부: 파일명(displayName)
+            nameSpan.textContent = file.displayName;
+        }
+
+        // === 파일 크기 (첨부만 표시해도 되고, 공통 표시도 가능) ===
         const sizeSpan = document.createElement("span");
         sizeSpan.className = "attachment-size";
         sizeSpan.textContent = formatFileSize(file.fileSize);
 
+        // === 다운로드 ===
         li.addEventListener("click", (e) => {
+            e.stopPropagation();
+
             downloadAttachmentByFileId(
                 file.fileId,
-                file.fileName,
+                file.displayName,
                 e
             );
         });
@@ -1157,15 +1172,50 @@ function controlActionButtons(data) {
 }
 
 
-function addPdfPreviewButton(documentId) {
+function addPdfDownloadButton(data) {
+    if (!data.pdfFileId) return;
+
     const actionLeft = document.querySelector(".action-left");
     if (!actionLeft) return;
 
     const pdfBtn = document.createElement("button");
     pdfBtn.className = "action-btn secondary";
-    pdfBtn.textContent = "PDF 미리보기 (임시)";
-    pdfBtn.onclick = () => {
-        window.open(`/internal/documents/${documentId}/pdf`, "_blank");
+    pdfBtn.textContent = "PDF 다운로드";
+
+    pdfBtn.onclick = async () => {
+        if (pdfBtn.disabled) return;
+
+        const MIN_DISPLAY_TIME = 800;
+        const startTime = Date.now();
+
+        try {
+            pdfBtn.disabled = true;
+            pdfBtn.textContent = "PDF 다운로드 중...";
+
+            const url = await fetchPresignedDownloadUrlByFileId(
+                data.pdfFileId
+            );
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            // ⭐ 너무 빨리 끝나면 기다렸다가 복구
+            const elapsed = Date.now() - startTime;
+            if (elapsed < MIN_DISPLAY_TIME) {
+                await delay(MIN_DISPLAY_TIME - elapsed);
+            }
+
+        } catch (e) {
+            console.error(e);
+            alert("PDF 다운로드 중 오류가 발생했습니다.");
+        } finally {
+            pdfBtn.disabled = false;
+            pdfBtn.textContent = "PDF 다운로드";
+        }
     };
 
     actionLeft.appendChild(pdfBtn);

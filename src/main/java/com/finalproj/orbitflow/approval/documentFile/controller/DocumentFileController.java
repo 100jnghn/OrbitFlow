@@ -30,7 +30,7 @@ public class DocumentFileController {
     private final DocumentFileService documentFileService;
 
     @PostMapping("/{documentId}")
-    public ResponseEntity<ResponseDto> upload(
+    public ResponseEntity<?> upload(
             @PathVariable Long documentId,
             @RequestParam MultipartFile file
     ) {
@@ -46,7 +46,7 @@ public class DocumentFileController {
     }
 
     @PostMapping("/{documentId}/image")
-    public ResponseEntity<ResponseDto> uploadImage(
+    public ResponseEntity<?> uploadImage(
             @PathVariable Long documentId,
             @RequestParam String fieldId,
             @RequestParam MultipartFile file
@@ -66,7 +66,7 @@ public class DocumentFileController {
     }
 
     @GetMapping("/{documentId}/files")
-    public ResponseEntity<ResponseDto> getAttachedFiles(
+    public ResponseEntity<?> getAttachedFiles(
             @PathVariable Long documentId
     ) {
         List<DocumentFileAttachedListResDto> result = documentFileService.getAttachedFiles(SecurityUtils.getEmployeeId(), documentId);
@@ -76,13 +76,13 @@ public class DocumentFileController {
 
 
     @PatchMapping("/{documentFileId}/status")
-    public ResponseEntity<ResponseDto> updateStatus(
+    public ResponseEntity<?> updateStatus(
             @PathVariable Long documentFileId,
             @RequestParam DocumentFileStatus status
     ) {
         documentFileService.updateStatus(SecurityUtils.getEmployeeId(), documentFileId, status);
 
-        return ResponseEntity.ok(new ResponseDto(HttpStatus.OK, "첨부 파일 상태 수정 성공", null));
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "첨부 파일 상태 수정 성공", null));
     }
 
 
@@ -97,4 +97,5 @@ public class DocumentFileController {
                 fileId
         );
     }
+
 }

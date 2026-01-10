@@ -5,16 +5,21 @@ import com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus;
 import com.finalproj.orbitflow.approval.document.dto.DocumentListReqDto;
 import com.finalproj.orbitflow.approval.document.dto.DocumentListResDto;
 import com.finalproj.orbitflow.approval.document.dto.DocumentMyApprovalListResDto;
+import com.finalproj.orbitflow.approval.document.dto.ReferenceSearchResDto;
 import com.finalproj.orbitflow.approval.document.entity.QDocument;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
+import com.finalproj.orbitflow.approval.documentFile.entity.QDocumentFile;
+import com.finalproj.orbitflow.approval.documentFile.enums.ReferenceType;
 import com.finalproj.orbitflow.approval.formTemplateGroup.entity.QFormTemplateGroup;
 import com.finalproj.orbitflow.hr.employee.entity.QEmployee;
 import com.finalproj.orbitflow.hr.organization.entity.QOrganization;
 import com.finalproj.orbitflow.hr.positionCategory.entity.QPositionCategory;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -414,5 +419,72 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
                         .toInstant()
                         .minusNanos(1)
         );
+    }
+
+    @Override
+    public List<ReferenceSearchResDto> searchReference(
+            Long employeeId,
+            Long companyId,
+            String keyword,
+            int limit
+    ) {
+        QDocument d = QDocument.document;
+        QDocumentFile df = QDocumentFile.documentFile;
+        QApprovalLine al = QApprovalLine.approvalLine;
+        QEmployee w = QEmployee.employee;
+
+        return queryFactory
+                .select(Projections.constructor(
+                        ReferenceSearchResDto.class,
+                        d.id,
+                        d.title,
+                        d.updatedAt,      // 승인 시점 없으니 이걸 사용
+                        w.name,
+                        df.id
+                ))
+                .from(d)
+                .join(df).on(
+                        df.document.eq(d),
+                        df.referenceType.eq(ReferenceType.DOCUMENT),
+                        df.referenceUrl.isNull()
+                )
+                .join(d.writer, w)
+                .leftJoin(al).on(
+                        al.document.eq(d),
+                        al.approver.id.eq(employeeId)
+                )
+                .where(
+                        d.company.id.eq(companyId),
+                        d.status.eq(DocumentStatus.APPROVED),
+                        d.isDeleted.isFalse(),
+                        d.title.contains(keyword),
+                        accessCondition(d, al, employeeId)
+                )
+                .orderBy(
+                        similarityOrder(d.title, keyword),
+                        d.updatedAt.desc()
+                )
+                .limit(limit)
+                .fetch();
+    }
+
+    private BooleanExpression accessCondition(
+            QDocument d,
+            QApprovalLine al,
+            Long employeeId
+    ) {
+        return d.writer.id.eq(employeeId)
+                .or(al.approver.id.eq(employeeId));
+    }
+
+    private OrderSpecifier<Integer> similarityOrder(
+            StringPath title,
+            String keyword
+    ) {
+        return new CaseBuilder()
+                .when(title.startsWithIgnoreCase(keyword)).then(0)
+                .when(title.containsIgnoreCase(keyword)).then(1)
+                .otherwise(2)
+                .asc();
     }
 }
