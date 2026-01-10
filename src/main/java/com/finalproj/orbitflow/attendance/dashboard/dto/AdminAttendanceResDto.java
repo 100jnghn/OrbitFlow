@@ -27,5 +27,5 @@ public class AdminAttendanceResDto {
     private String statusName;      // 상태 명칭 (정상, 지각, 결근 등)
     private String statusCode;      // 상태 코드 (LATE, ABSENT 등)
     private boolean isCorrected;    // 수정 여부 (0 또는 1)
-    private String correctionReason;
+    private String correctionReason; // 정정 사유
 }

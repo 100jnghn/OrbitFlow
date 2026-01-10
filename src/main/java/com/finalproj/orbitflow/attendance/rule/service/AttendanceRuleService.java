@@ -47,7 +47,12 @@ public class AttendanceRuleService {
     @Transactional
     public DefaultRuleResDto updateDefaultRule(Long companyId, DefaultRuleUpdateReqDto request) {
         AttendanceRule rule = findDefaultRuleOrThrow(companyId);
-        rule.updateRule(request.defaultStartTime(), request.defaultEndTime(), request.defaultBreakMinutes());
+        rule.updateRule(
+                request.defaultStartTime(),
+                request.defaultEndTime(),
+                request.lateThresholdMin(),
+                request.defaultBreakMinutes()
+                );
         return new DefaultRuleResDto(rule);
     }
 

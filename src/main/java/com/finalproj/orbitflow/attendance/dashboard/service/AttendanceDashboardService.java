@@ -32,6 +32,40 @@ public class AttendanceDashboardService {
     private final EmployeeRepository employeeRepository;
     private final AttendanceRuleRepository attendanceRuleRepository;
 
+
+    // 요약 통계
+    public AdminSummaryResDto getTodaySummary(Long companyId) {
+        LocalDate today = LocalDate.now();
+
+        // 1. 전체 재직 인원
+        int totalActive = employeeRepository.countByCompanyIdAndStatus(companyId, EmployeeStatus.ACTIVE);
+
+        // 2. 출근 기록 카운트
+        int onTime = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today, AttendanceStatus.ON_TIME);
+        int late = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today, AttendanceStatus.LATE);
+
+        // 3. 기타 승인된 상태 카운트
+        int vacation = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today, AttendanceStatus.VACATION);
+        int outside = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today, AttendanceStatus.OUTSIDE);
+        int businessTrip = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today, AttendanceStatus.BUSINESS_TRIP);
+
+        // 4. 결근 인원 계산: 전체 - (출근자 + 휴가 + 외근 + 출장)
+        int totalAccountedFor = (onTime + late + vacation + outside + businessTrip);
+        int absentCount = totalActive - totalAccountedFor;
+
+        return AdminSummaryResDto.builder()
+                .totalEmployees(totalActive)
+                .onTimeCount(onTime + late)
+                .lateCount(late)
+                .absentCount(Math.max(0, absentCount))
+                .vacationCount(vacation)
+                .outsideCount(outside)
+                .businessTripCount(businessTrip)
+                .build();
+    }
+
+
+
     public Page<AdminAttendanceResDto> getCompanyAttendanceList(
             Long companyId, String start, String end, String status, String keyword, Pageable pageable) {
 
@@ -57,29 +91,9 @@ public class AttendanceDashboardService {
                     return convertToCombinedDto(emp, att, recordDate, defaultRule);
                 });
     }
-    /**
-     * [관리자] 상단 요약 통계 (전체 인원 대비 출근 현황)
-     */
-    public AdminSummaryResDto getTodaySummary(Long companyId) {
-        LocalDate today = LocalDate.now();
 
-        // 1. 전체 재직 인원 (사원 엔티티의 status 필드 기준)
-        int totalActive = employeeRepository.countByCompanyIdAndStatus(companyId, EmployeeStatus.ACTIVE);
 
-        // 2. 출근 완료 및 지각 카운트
-        int onTime = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today, AttendanceStatus.ON_TIME);
-        int late = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today, AttendanceStatus.LATE);
 
-        // 3. 퇴근 미처리 (근무 중)
-        int notLeaving = commuteRepository.countByCompanyIdAndWorkDateAndLeaveAtIsNull(companyId, today);
-
-        return AdminSummaryResDto.builder()
-                .totalEmployees(totalActive)
-                .onTimeCount(onTime + late)
-                .lateCount(late)
-                .notLeavingCount(notLeaving)
-                .build();
-    }
 
     /**
      * 엔티티 결합 및 DTO 변환 (근무 시간 계산 로직 추가)
