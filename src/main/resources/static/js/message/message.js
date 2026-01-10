@@ -178,6 +178,7 @@ function renderMessageTable(messages) {
                 <td>
                     <a href="#" class="board-title-link ${titleClass}" onclick="viewMessage(${message.messageId}, '${folderType}'); return false;">
                         ${escapeHTML(title)}
+                        ${message.hasFile ? '<i class="fas fa-paperclip attachment-icon" title="첨부파일 있음"></i>' : ''}
                     </a>
                 </td>
                 <td>${escapeHTML(peerName)}</td>
@@ -193,6 +194,7 @@ function renderMessageTable(messages) {
                 <td>
                     <a href="#" class="board-title-link" onclick="viewMessage(${message.messageId}, '${folderType}', ${message.recipientId}); return false;">
                         ${escapeHTML(title)}
+                        ${message.hasFile ? '<i class="fas fa-paperclip attachment-icon" title="첨부파일 있음"></i>' : ''}
                     </a>
                 </td>
                 <td>${escapeHTML(peerName)}</td>
@@ -210,6 +212,7 @@ function renderMessageTable(messages) {
                 <td>
                     <a href="#" class="board-title-link" onclick="viewMessage(${message.messageId}, '${folderType}'); return false;">
                         ${escapeHTML(title)}
+                        ${message.hasFile ? '<i class="fas fa-paperclip attachment-icon" title="첨부파일 있음"></i>' : ''}
                     </a>
                 </td>
                 <td>${folderIcon}</td>
@@ -224,6 +227,7 @@ function renderMessageTable(messages) {
                 <td>
                     <a href="#" class="board-title-link" onclick="viewMessage(${message.messageId}, '${folderType}'); return false;">
                         ${escapeHTML(title)}
+                        ${message.hasFile ? '<i class="fas fa-paperclip attachment-icon" title="첨부파일 있음"></i>' : ''}
                     </a>
                 </td>
                 <td>${escapeHTML(peerName)}</td>

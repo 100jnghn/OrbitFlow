@@ -95,7 +95,8 @@ public class MessageService {
                                 companyId, employeeId, pageable);
             }
         } else {
-            if (hasSearch || hasDateFilter) {
+            // 보낸메시지함(SENT)은 검색어가 없더라도 수신자 단위 조회를 위해 Specification 사용이 필수적임
+            if (hasSearch || hasDateFilter || folder == MessageFolderType.SENT) {
                 Specification<MessageRecipient> spec = MessageRecipientSpecifications.listSpec(
                         companyId, employeeId, folder, startInstant, endExclusiveInstant, searchType, keyword);
                 // 정렬을 pageable에 포함
@@ -111,57 +112,26 @@ public class MessageService {
             }
         }
 
-        // SENT 폴더인 경우: 각 수신자마다 별도 행으로 표시하기 위해 INBOX 레코드 사용
+        // SENT 폴더인 경우: Specification에서 이미 INBOX 레코드(수신자별 행)를 조회하도록 구조가 변경됨
+        // 따라서 이전의 수동 확장 및 페이징 로직은 더 이상 필요 없음
         if (!archived && folder == MessageFolderType.SENT) {
-            // SENT 폴더 조회 시: 해당 메시지의 모든 INBOX 수신자 레코드를 조회
-            // 각 수신자마다 별도 행으로 표시하기 위함
-            List<MessageResDto.ListItem> resultList = new java.util.ArrayList<>();
-
-            // 먼저 SENT 레코드로 메시지 ID 목록 조회
-            List<Long> messageIds = page.getContent().stream()
-                    .map(mr -> mr.getMessage().getId())
-                    .distinct()
-                    .toList();
-
-            // 각 메시지의 INBOX 수신자 레코드 조회
-            for (Long messageId : messageIds) {
-                List<MessageRecipient> recipients = messageRecipientRepository
-                        .findByMessage_IdAndMessageFolderTypeAndDeletedAtIsNull(
-                                messageId, MessageFolderType.INBOX);
-
-                for (MessageRecipient recipient : recipients) {
-                    // 각 수신자마다 별도 ListItem 생성
-                    String peerName = recipient.getEmployee().getName();
-                    MessageResDto.ListItem item = MessageResDto.ListItem.builder()
-                            .messageId(recipient.getMessage().getId())
-                            .recipientId(recipient.getId()) // INBOX 레코드의 ID 사용
-                            .folderType(MessageFolderType.SENT) // 표시는 SENT로
-                            .archived(recipient.isArchived())
-                            .read(recipient.isRead()) // 수신자의 읽음 상태
-                            .readAt(recipient.getReadAt()) // 수신자가 읽은 일시
-                            .title(recipient.getMessage().getMessageTitle())
-                            .peerName(peerName) // 수신자 이름
-                            .senderName(recipient.getMessage().getSender().getName())
-                            .recipientName(null)
-                            .createdAt(recipient.getMessage().getCreatedAt()) // 메시지 생성일 (발신일)
-                            .build();
-                    resultList.add(item);
-                }
-            }
-
-            // 정렬: 생성일 기준 내림차순
-            resultList.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
-
-            // 페이징 처리
-            int start = (int) pageable.getOffset();
-            int end = Math.min(start + pageable.getPageSize(), resultList.size());
-            List<MessageResDto.ListItem> pagedList = resultList.subList(start, end);
-
-            // Page 객체로 변환
-            return new org.springframework.data.domain.PageImpl<>(
-                    pagedList,
-                    pageable,
-                    resultList.size());
+            return page.map(mr -> {
+                String peerName = mr.getEmployee().getName();
+                return MessageResDto.ListItem.builder()
+                        .messageId(mr.getMessage().getId())
+                        .recipientId(mr.getId())
+                        .folderType(MessageFolderType.SENT)
+                        .archived(mr.isArchived())
+                        .read(mr.isRead())
+                        .readAt(mr.getReadAt())
+                        .title(mr.getMessage().getMessageTitle())
+                        .peerName(peerName)
+                        .senderName(mr.getMessage().getSender().getName())
+                        .recipientName(null)
+                        .hasFile(mr.getMessage().getFiles() != null && !mr.getMessage().getFiles().isEmpty())
+                        .createdAt(mr.getMessage().getCreatedAt())
+                        .build();
+            });
         }
 
         // INBOX, ARCHIVE: 기존 로직 유지
@@ -217,6 +187,7 @@ public class MessageService {
                         .peerName(item.getPeerName())
                         .senderName(item.getSenderName())
                         .recipientName(recipientName)
+                        .hasFile(item.isHasFile())
                         .createdAt(item.getCreatedAt())
                         .build();
             }
@@ -232,10 +203,19 @@ public class MessageService {
             Long messageId,
             Long recipientId // 보낸 메시지함에서 특정 수신자 선택 시 사용 (optional)
     ) {
-        // 1. 현재 사용자의 해당 메시지 레코드 조회 (자신이 삭제했는지 최우선 확인)
+        // 1. 메시지 존재 여부 먼저 확인 (404 체크)
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new NotFoundException("메시지를 찾을 수 없습니다."));
+
+        // 2. 회사 일치 여부 확인 (403 체크)
+        if (!message.getCompanyId().equals(companyId)) {
+            throw new ForbiddenException("해당 메시지에 접근 권한이 없습니다.");
+        }
+
+        // 3. 현재 사용자의 해당 메시지 레코드 조회 (발신자 혹은 수신자 기록 확인)
         MessageRecipient currentUserRecord = messageRecipientRepository
                 .findByCompanyIdAndMessage_IdAndEmployee_IdAndDeletedAtIsNull(companyId, messageId, employeeId)
-                .orElseThrow(() -> new NotFoundException("메시지가 존재하지 않습니다."));
+                .orElseThrow(() -> new ForbiddenException("이 메시지를 볼 권한이 없습니다."));
 
         MessageRecipient mr;
 
@@ -387,7 +367,7 @@ public class MessageService {
         java.util.List<File> uploadedFiles = new java.util.ArrayList<>();
         if (files != null && !files.isEmpty()) {
             for (MultipartFile file : files) {
-                if (!file.isEmpty()) {
+                if (file != null && file.getOriginalFilename() != null && !file.getOriginalFilename().isBlank()) {
                     uploadedFiles.add(fileService.upload(companyId, FileDomain.MESSAGE, file));
                 }
             }
@@ -454,9 +434,14 @@ public class MessageService {
     /** 메시지 삭제(소프트 삭제: 내 recipient row만 deletedAt 처리) */
     @Transactional
     public void deleteMessage(Long companyId, Long employeeId, Long messageId) {
+        // 1. 메시지 존재 여부 확인 (404)
+        messageRepository.findById(messageId)
+                .orElseThrow(() -> new NotFoundException("삭제할 메시지를 찾을 수 없습니다."));
+
+        // 2. 권한 확인 (403)
         MessageRecipient mr = messageRecipientRepository
                 .findByCompanyIdAndMessage_IdAndEmployee_IdAndDeletedAtIsNull(companyId, messageId, employeeId)
-                .orElseThrow(() -> new NotFoundException("삭제할 메시지가 존재하지 않습니다."));
+                .orElseThrow(() -> new ForbiddenException("메시지를 삭제할 권한이 없습니다."));
 
         // 메시지에 첨부된 파일이 있고, 해당 메시지의 모든 recipient가 삭제된 경우에만 파일 삭제
         Message message = mr.getMessage();
@@ -482,9 +467,14 @@ public class MessageService {
     /** 보관함 이동 */
     @Transactional
     public void archiveMessage(Long companyId, Long employeeId, Long messageId) {
+        // 1. 메시지 존재 여부 확인 (404)
+        messageRepository.findById(messageId)
+                .orElseThrow(() -> new NotFoundException("보관할 메시지를 찾을 수 없습니다."));
+
+        // 2. 권한 확인 (403)
         MessageRecipient mr = messageRecipientRepository
                 .findByCompanyIdAndMessage_IdAndEmployee_IdAndDeletedAtIsNull(companyId, messageId, employeeId)
-                .orElseThrow(() -> new NotFoundException("보관할 메시지가 존재하지 않습니다."));
+                .orElseThrow(() -> new ForbiddenException("메시지를 보관할 권한이 없습니다."));
 
         mr.archive();
     }
@@ -492,9 +482,14 @@ public class MessageService {
     /** 보관함 해제(원래 폴더로 복귀 = folderType 유지 + isArchived만 false) */
     @Transactional
     public void unarchiveMessage(Long companyId, Long employeeId, Long messageId) {
+        // 1. 메시지 존재 여부 확인 (404)
+        messageRepository.findById(messageId)
+                .orElseThrow(() -> new NotFoundException("보관 해제할 메시지를 찾을 수 없습니다."));
+
+        // 2. 권한 확인 (403)
         MessageRecipient mr = messageRecipientRepository
                 .findByCompanyIdAndMessage_IdAndEmployee_IdAndDeletedAtIsNull(companyId, messageId, employeeId)
-                .orElseThrow(() -> new NotFoundException("보관 해제할 메시지가 존재하지 않습니다."));
+                .orElseThrow(() -> new ForbiddenException("메시지 보관을 해제할 권한이 없습니다."));
 
         mr.unarchive();
     }
