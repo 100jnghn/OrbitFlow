@@ -588,7 +588,7 @@ function escapeHTML(str) {
 
 // 파일 크기 포맷
 function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return '0 KB';
     if (!bytes) return '';
     const output = Math.log(bytes) / Math.log(1024);
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
