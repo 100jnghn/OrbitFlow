@@ -10,7 +10,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @SpringBootApplication
 @EnableConfigurationProperties({JwtProperties.class, HolidayApiProperties.class})
-
 public class OrbitflowApplication {
 
     public static void main(String[] args) {
