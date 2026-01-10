@@ -1074,8 +1074,10 @@ async function handleScheduleSubmit(e) {
             throw new Error(error.message || (isEditMode ? '일정 수정에 실패했습니다.' : '일정 등록에 실패했습니다.'));
         }
 
-        await sweetSuccess(isEditMode ? '일정이 수정되었습니다.' : '일정이 등록되었습니다.');
+        // 모달 먼저 닫고 alert 호출해야 함
         closeScheduleModal();
+
+        await sweetSuccess(isEditMode ? '일정이 수정되었습니다.' : '일정이 등록되었습니다.');
         loadSchedules();  // 일정 목록 새로고침
     } catch (error) {
         console.error(`Error ${isEditMode ? 'updating' : 'creating'} schedule:`, error);
@@ -1111,9 +1113,12 @@ async function deleteSchedule(scheduleId, event) {
         event.stopPropagation();
     }
 
-    if (!confirm('정말로 이 일정을 삭제하시겠습니까?')) {
-        return;
-    }
+    const result = await sweetConfirm(
+        '삭제 확인',
+        '일정을 삭제하시겠습니까?'
+    );
+
+    if (!result.isConfirmed) return;
 
     try {
         const response = await apiFetch(`/api/schedules/${scheduleId}`, {

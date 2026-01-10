@@ -151,6 +151,39 @@
 
     <!-- 토스트 -->
     <div id="toast-container"></div>
+    <!-- =========================
+     참조 문서 선택 팝업
+========================= -->
+    <div id="referencePopup" class="modal hidden">
+        <div class="modal-content reference-modal">
+
+            <div class="modal-header">
+                <h3>참조 문서 선택</h3>
+                <button class="modal-close-btn" type="button">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <input
+                        type="text"
+                        id="referenceSearchInput"
+                        placeholder="문서 제목으로 검색"
+                        autocomplete="off"
+                />
+
+                <ul id="referenceSearchResult" class="reference-result-list">
+                    <li class="empty">검색어를 입력하세요.</li>
+                </ul>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="modal-cancel-btn">
+                    취소
+                </button>
+            </div>
+
+        </div>
+    </div>
+
 </div>
 </body>
 </html>

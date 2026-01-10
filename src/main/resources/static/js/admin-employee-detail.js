@@ -27,6 +27,7 @@ const editEmploymentType = document.getElementById('editEmploymentType');
 const editRole = document.getElementById('editRole');
 
 const positionResetNotice = document.getElementById('positionResetNotice');
+const editHireDate = document.getElementById('editHireDate');
 
 
 async function loadLookups() {
@@ -160,9 +161,7 @@ btnResendActivate.onclick = async () => {
 function employmentLabel(v) {
     const map = {
         REGULAR: '정규직',
-        NON_REGULAR: '비정규직',
-        CONTRACT: '계약직',
-        TEMP: '임시'
+        NON_REGULAR: '비정규직'
     };
     return map[v] ?? v;
 }
@@ -214,15 +213,23 @@ async function loadAuditLogs(employeeId) {
             <span class="audit-actor">· ${log.actorName ?? '알 수 없음'}</span>
         </div>
     </div>
-    <details class="audit-detail" open>
-        <summary>${auditTypeLabel(log.eventType)} · 상세 보기</summary>
-        ${body}
+    <details class="audit-detail">
+    <summary>${auditSummaryLabel(log.eventType)}</summary>
+    ${body}
     </details>
 </li>
     `);
     });
 
 }
+
+function auditSummaryLabel(type) {
+    if (type === 'CREATE') return '사원 생성 정보';
+    if (type === 'UPDATE') return '사원 정보 변경';
+    if (type === 'STATUS_CHANGE') return '재직 상태 변경';
+    return '변경 상세';
+}
+
 
 function renderSideBySideDiff(beforeData, afterData) {
     const before = toObj(beforeData);
@@ -249,7 +256,7 @@ function renderSideBySideDiff(beforeData, afterData) {
 
         return `
         <div class="diff-row ${changed ? 'changed' : ''}">
-            <div class="diff-key">${k}</div>
+            <div class="diff-key">${diffKeyLabel(k)}</div>
             <div class="diff-before">${formatValueByKey(k, b)}</div>
             <div class="diff-after">${formatValueByKey(k, a)}</div>
         </div>`;
@@ -378,32 +385,37 @@ async function openEditModal() {
     const modal = document.getElementById('editEmployeeModal');
     const employeeId = document.getElementById('employeeId').value;
 
-    const res = await apiFetch(`/api/admin/employees/${employeeId}`);
+    const res = await apiFetch(`/api/admin/employees/${employeeId}/edit`);
     const result = await safeJson(res);
-
-    if (!res.ok) {
-        alert(result?.message || '사원 정보 조회 실패');
-        return;
-    }
+    if (!res.ok) return alert('사원 정보 조회 실패');
 
     const e = result.data;
 
-
-    // input들 세팅
+    // input
     editName.value = e.name ?? '';
     editPhone.value = e.phone ?? '';
     editInternalPhone.value = e.internalPhone ?? '';
     editBirthDate.value = e.birthDate ?? '';
+    editHireDate.value = e.hireDate ?? '';
 
-    // select들 세팅 (org/rank/pos는 ID 기반)
+    // lookup 먼저
     await loadEditLookupsFromDetail();
-    editOrgId.value = e.orgId ?? '';
-    editRankId.value = e.rankId ?? '';
+
+    // select value 세팅
+    editOrgId.value = String(e.orgId ?? '');
+    editRankId.value = String(e.rankId ?? '');
     editEmploymentType.value = e.employmentType ?? '';
+    console.log('API role raw:', e.role);
+    console.log('API role type:', typeof e.role);
+    console.log('API role length:', e.role?.length);
+
     editRole.value = e.role ?? '';
 
-    // 직책은 “조직 정책” 적용해서 로드
-    await loadEditPositionsByOrg(e.orgId, e.positionCategoryId);
+    console.log('select value after set:', editRole.value);
+
+    // 직책은 org 기준으로 option 만든 후 value
+    await loadEditPositionsByOrg(e.orgId);
+    editPositionCategoryId.value = String(e.positionCategoryId ?? '');
 
     modal.classList.remove('hidden');
 }
@@ -442,7 +454,9 @@ editOrgId.addEventListener('change', async e => {
 
     // 직책 초기화
     editPositionCategoryId.value = '';
-    positionResetNotice.style.display = 'block';
+    if (positionResetNotice) {
+        positionResetNotice.style.display = 'block';
+    }
 
     await loadEditPositionsByOrg(newOrgId, null);
 });
@@ -451,7 +465,7 @@ editOrgId.addEventListener('change', async e => {
 
 
 
-async function loadEditPositionsByOrg(orgId, selectedId = null) {
+async function loadEditPositionsByOrg(orgId) {
     const select = editPositionCategoryId;
     select.innerHTML = `<option value="">선택</option>`;
 
@@ -459,22 +473,16 @@ async function loadEditPositionsByOrg(orgId, selectedId = null) {
 
     const res = await apiFetch(`/api/admin/org-position-policies/${orgId}`);
     const result = await res.json().catch(() => null);
-
     const positions = result?.data ?? [];
 
     positions.forEach(p => {
         select.insertAdjacentHTML(
             'beforeend',
-            `<option value="${p.positionCategoryId}">
+            `<option value="${String(p.positionCategoryId)}">
                 ${p.positionCategoryName}
             </option>`
         );
     });
-
-    // 기존 값이 정책에 포함되어 있을 때만 유지
-    if (selectedId && positions.some(p => p.positionCategoryId === selectedId)) {
-        select.value = selectedId;
-    }
 }
 
 
@@ -493,6 +501,7 @@ async function saveEdit() {
         phone: editPhone.value || null,
         internalPhone: editInternalPhone.value || null,
         birthDate: editBirthDate.value || null,
+        hireDate: editHireDate.value || null,
 
         orgId: editOrgId.value ? Number(editOrgId.value) : null,
         rankId: editRankId.value ? Number(editRankId.value) : null,
@@ -568,9 +577,35 @@ function renderCreateLog(afterData) {
     </div>
     ${Object.entries(a).map(([k, v]) => `
         <div class="diff-row">
-            <div class="diff-key">${k}</div>
+            <div class="diff-key">${diffKeyLabel(k)}</div>
             <div class="diff-after">${formatValueByKey(k, v)}</div>
         </div>
     `).join('')}
 </div>`;
 }
+
+function diffKeyLabel(k) {
+    const map = {
+        orgId: '조직',
+        rankId: '직급',
+        positionCategoryId: '직책',
+        employmentType: '고용 형태',
+        role: '권한',
+        hireDate: '입사일',
+        phone: '연락처',
+        internalPhone: '사내 번호'
+    };
+    return map[k] ?? k;
+}
+
+const map = {
+    orgId: '조직',
+    rankId: '직급',
+    positionCategoryId: '직책',
+    employmentType: '고용 형태',
+    role: '권한',
+    hireDate: '입사일',
+    phone: '연락처',
+    internalPhone: '사내 번호',
+    birthDate: '생년월일' // ← 나중에 로그 찍히면 대비
+};

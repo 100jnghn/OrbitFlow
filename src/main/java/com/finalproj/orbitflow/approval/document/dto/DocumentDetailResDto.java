@@ -30,19 +30,22 @@ public class DocumentDetailResDto {
     private DocumentStatus status;
 
     private String submittedBy;
-
     private Instant submittedAt;
 
     private FormTemplateSchema contentSchema;
     private List<ApprovalLineViewResDto> approvalLines;
 
-    boolean myApprovalOrder;
+    private boolean myApprovalOrder;
+
+    private Long pdfFileId;
 
     public static DocumentDetailResDto from(
             Document document,
             FormTemplateSchema schema,
             List<ApprovalLineViewResDto> approvalLines,
-            boolean myApprovalOrder) {
+            boolean myApprovalOrder,
+            Long pdfFileId
+    ) {
         return DocumentDetailResDto.builder()
                 .documentId(document.getId())
                 .title(document.getTitle())
@@ -52,6 +55,7 @@ public class DocumentDetailResDto {
                 .contentSchema(schema)
                 .approvalLines(approvalLines)
                 .myApprovalOrder(myApprovalOrder)
+                .pdfFileId(pdfFileId)
                 .build();
     }
 }

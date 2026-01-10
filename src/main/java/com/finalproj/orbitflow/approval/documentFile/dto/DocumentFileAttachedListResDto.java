@@ -13,7 +13,8 @@ import com.finalproj.orbitflow.approval.documentFile.enums.DocumentFileStatus;
 public record DocumentFileAttachedListResDto(
         Long documentFileId,
         Long fileId,
-        String fileName,
+        String displayName,
+        String writerName,
         Long fileSize,
         Long referenceTargetId,
         DocumentFileStatus status,

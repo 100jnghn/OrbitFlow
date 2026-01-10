@@ -385,51 +385,6 @@ function fetchAndRender() {
 }
 
 
-function getProgressText(status) {
-    switch (status) {
-        case "SUBMITTED":
-            return "결재 대기";
-        case "IN_PROGRESS":
-            return "결재중";
-        case "REJECTED":
-            return "반려";
-        case "APPROVED":
-            return "결재 완료";
-        default:
-            return "-";
-    }
-}
-
-function formatCurrentApprover(doc) {
-
-    // ✅ 1️⃣ DRAFT는 결재자 개념 없음
-    if (doc.status === "DRAFT") {
-        return "-";
-    }
-
-    const org = doc.currentApproverOrgName;
-    const position = doc.currentApproverPositionName;
-    const name = doc.approvalName;
-
-    // ✅ 2️⃣ 결재 완료 상태
-    if (doc.status === "APPROVED") {
-        return "결재 완료";
-    }
-
-    // ✅ 3️⃣ 반려
-    if (doc.status === "REJECTED") {
-        return "반려";
-    }
-
-    // ✅ 4️⃣ 결재 진행 중
-    if (org && position && name) {
-        return `${org}/${position}/${name}`;
-    }
-
-    // ✅ fallback
-    return "-";
-}
-
 /* =========================
    초기화 버튼
 ========================= */
@@ -466,7 +421,7 @@ function renderTable(docs) {
     if (!docs.length) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" class="approval-empty-row">
+                <td colspan="8" class="approval-empty-row">
                     조회된 문서가 없습니다.
                 </td>
             </tr>
@@ -474,14 +429,18 @@ function renderTable(docs) {
         return;
     }
 
-    docs.forEach(doc => {
+    docs.forEach((doc, index) => {
         const tr = document.createElement("tr");
+
+        // ⭐ 번호 계산
+        const number = mydocState.offset * mydocState.size + index + 1;
 
         const revisionBadge = doc.hasRevision
             ? `<span class="revision-badge">재기안됨</span>`
             : '';
 
         tr.innerHTML = `
+            <td class="index-col">${number}</td>
             <td class="title-col ellipsis" title="${doc.title}">
                 <span class="title-text">${doc.title}</span>
                 ${revisionBadge}
@@ -489,9 +448,9 @@ function renderTable(docs) {
             <td class="title-col ellipsis">${doc.templateGroupName}</td>
             <td>v${doc.templateVersion}</td>
             <td>${formatDateTime(doc.createdAt)}</td>
-            <td>${getStatusText(doc.status)}</td>
-            <td>${getProgressText(doc.status)}</td>
-            <td class="ellipsis">${formatCurrentApprover(doc)}</td>
+            <td>${renderDocumentStatusBadge(doc.status)}</td>
+            <td>${renderApprovalStep(doc)}</td>
+            <td class="ellipsis">${renderCurrentApprover(doc)}</td>
         `;
 
         tr.classList.add("clickable");
@@ -503,6 +462,82 @@ function renderTable(docs) {
 
         tbody.appendChild(tr);
     });
+}
+
+function renderApprovalStep(doc) {
+    if (doc.status === 'DRAFT') {
+        return '-';
+    }
+
+    if (
+        doc.currentApprovalOrder == null ||
+        doc.totalApprovalCount == null
+    ) {
+        return '-';
+    }
+
+    return `${doc.currentApprovalOrder} / ${doc.totalApprovalCount}`;
+}
+
+
+function renderCurrentApprover(doc) {
+    if (doc.status === 'DRAFT') {
+        return '-';
+    }
+
+    if (doc.status === 'APPROVED') {
+        return '결재 완료';
+    }
+
+    if (doc.status === 'REJECTED') {
+        return '반려';
+    }
+
+    const {
+        currentApproverOrgName,
+        currentApproverPositionName,
+        currentApproverName
+    } = doc;
+
+    if (
+        currentApproverOrgName &&
+        currentApproverPositionName &&
+        currentApproverName
+    ) {
+        return `${currentApproverOrgName}/${currentApproverPositionName}/${currentApproverName}`;
+    }
+
+    return '-';
+}
+
+
+function renderDocumentStatusBadge(status) {
+    let text = '-';
+    let colorClass = 'status-gray';
+
+    switch (status) {
+        case 'DRAFT':
+            text = '작성중';
+            break;
+        case 'SUBMITTED':
+            text = '상신됨';
+            colorClass = 'status-blue';
+            break;
+        case 'IN_PROGRESS':
+            text = '결재중';
+            colorClass = 'status-blue';
+            break;
+        case 'APPROVED':
+            text = '승인완료';
+            colorClass = 'status-green';
+            break;
+        case 'REJECTED':
+            text = '반려';
+            colorClass = 'status-red';
+            break;
+    }
+
+    return `<span class="status-badge ${colorClass}">${text}</span>`;
 }
 
 
@@ -599,25 +634,6 @@ function enforceMaxLength(inputEl, max) {
 }
 
 
-// ===============================
-// 유틸
-// ===============================
-function getStatusText(status) {
-    switch (status) {
-        case "DRAFT":
-            return "작성중";
-        case "SUBMITTED":
-            return "상신";
-        case "IN_PROGRESS":
-            return "결재중";
-        case "APPROVED":
-            return "승인완료";
-        case "REJECTED":
-            return "반려";
-        default:
-            return status;
-    }
-}
 
 function formatDateTime(isoString) {
     if (!isoString) return "-";

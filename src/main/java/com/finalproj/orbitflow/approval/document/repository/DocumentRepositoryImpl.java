@@ -5,16 +5,18 @@ import com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus;
 import com.finalproj.orbitflow.approval.document.dto.DocumentListReqDto;
 import com.finalproj.orbitflow.approval.document.dto.DocumentListResDto;
 import com.finalproj.orbitflow.approval.document.dto.DocumentMyApprovalListResDto;
+import com.finalproj.orbitflow.approval.document.dto.ReferenceSearchResDto;
 import com.finalproj.orbitflow.approval.document.entity.QDocument;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
+import com.finalproj.orbitflow.approval.documentFile.entity.QDocumentFile;
+import com.finalproj.orbitflow.approval.documentFile.enums.ReferenceType;
 import com.finalproj.orbitflow.approval.formTemplateGroup.entity.QFormTemplateGroup;
 import com.finalproj.orbitflow.hr.employee.entity.QEmployee;
 import com.finalproj.orbitflow.hr.organization.entity.QOrganization;
 import com.finalproj.orbitflow.hr.positionCategory.entity.QPositionCategory;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
-import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.CaseBuilder;
-import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.core.types.dsl.*;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -67,6 +69,9 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
 
         QDocument revisionDoc = new QDocument("revisionDoc");
 
+    /* ===============================
+       WHERE 조건
+    =============================== */
         BooleanExpression whereCondition =
                 document.company.id.eq(companyId)
                         .and(document.writer.id.eq(employeeId))
@@ -74,10 +79,15 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
                         .and(keywordCondition(reqDto))
                         .and(createdAtBetween(reqDto));
 
+    /* ===============================
+       BASE QUERY
+    =============================== */
         var baseQuery =
                 queryFactory
                         .from(document)
                         .join(document.templateGroup, templateGroup)
+
+                        // 현재 결재 단계 (IN_PROGRESS 중 최소 orderNo)
                         .leftJoin(approvalLine).on(
                                 approvalLine.document.eq(document),
                                 approvalLine.status.eq(ApprovalStatus.IN_PROGRESS),
@@ -96,6 +106,9 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
                         .leftJoin(currentApprover.positionCategory, currentPosition)
                         .where(whereCondition);
 
+    /* ===============================
+       CONTENT QUERY
+    =============================== */
         List<DocumentListResDto> content =
                 baseQuery
                         .select(Projections.constructor(
@@ -107,30 +120,52 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
                                 document.createdAt,
                                 document.status,
 
+                                // 현재 결재 단계
+                                approvalLine.orderNo,
+
+                                // 전체 결재자 수
+                                JPAExpressions
+                                        .select(approvalLineSub.count())
+                                        .from(approvalLineSub)
+                                        .where(approvalLineSub.document.eq(document)),
+
+                                // 현재 결재자 표시 정보
                                 currentOrg.name,
                                 currentPosition.name,
                                 currentApprover.name,
 
-                                approvalLine.orderNo,
-
+                                // 재기안 여부
                                 JPAExpressions
                                         .selectOne()
                                         .from(revisionDoc)
                                         .where(revisionDoc.beforeDocument.id.eq(document.id))
                                         .exists()
                         ))
-                        .orderBy(document.createdAt.desc())
+                        .orderBy(
+                                document.updatedAt.desc(),
+                                document.createdAt.desc()
+                        )
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize())
                         .fetch();
 
+    /* ===============================
+       COUNT QUERY
+    =============================== */
         Long total =
-                baseQuery
-                        .select(document.count())
+                queryFactory
+                        .select(document.id.countDistinct())
+                        .from(document)
+                        .where(whereCondition)
                         .fetchOne();
 
-        return new PageImpl<>(content, pageable, total == null ? 0 : total);
+        return new PageImpl<>(
+                content,
+                pageable,
+                total == null ? 0 : total
+        );
     }
+
 
     // ======================================================
     // 2. 내가 결재자인 문서 조회 (결재함)
@@ -164,17 +199,17 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
     /* ===============================
        WHERE 조건
     =============================== */
+
         BooleanExpression visibleMyLine =
                 myLine.status.in(
-                                ApprovalStatus.WAITING,
-                                ApprovalStatus.IN_PROGRESS,
-                                ApprovalStatus.APPROVED,
-                                ApprovalStatus.REJECTED
-                        )
-                        .or(
-                                myLine.status.eq(ApprovalStatus.CANCELLED)
-                                        .and(document.status.eq(DocumentStatus.REJECTED))
-                        );
+                        ApprovalStatus.WAITING,
+                        ApprovalStatus.IN_PROGRESS,
+                        ApprovalStatus.APPROVED,
+                        ApprovalStatus.REJECTED
+                ).or(
+                        myLine.status.eq(ApprovalStatus.CANCELLED)
+                                .and(document.status.eq(DocumentStatus.REJECTED))
+                );
 
         BooleanExpression whereCondition =
                 document.company.id.eq(companyId)
@@ -186,37 +221,58 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
                         .and(documentStatusEq(reqDto.getDocumentStatus()))
                         .and(myApprovalStatusEq(reqDto.getApprovalStatus(), myLine));
 
+    /* ===============================
+       1️⃣ 정렬 우선순위 (핵심)
+       IN_PROGRESS → WAITING → 나머지
+    =============================== */
+
+        NumberExpression<Integer> sortPriority =
+                new CaseBuilder()
+                        .when(myLine.status.eq(ApprovalStatus.IN_PROGRESS)).then(0)
+                        .when(myLine.status.eq(ApprovalStatus.WAITING)).then(1)
+                        .otherwise(2);
 
     /* ===============================
-       내 차례까지 남은 결재 인원 수
-       =============================== */
-        NumberExpression<Integer> remainingBeforeMyTurn =
+       2️⃣ WAITING 전용 remaining (정렬용)
+    =============================== */
+
+        NumberExpression<Integer> remainingForWaiting =
                 new CaseBuilder()
+                        .when(
+                                myLine.status.eq(ApprovalStatus.WAITING)
+                                        .and(currentLine.orderNo.isNotNull())
+                        )
+                        .then(myLine.orderNo.subtract(currentLine.orderNo))
+                        .otherwise((Integer) null);
 
-                        // 1. 문서가 이미 반려/승인 → 결재 흐름 종료
-                        .when(document.status.in(
-                                DocumentStatus.REJECTED,
-                                DocumentStatus.APPROVED
-                        ))
-                        .then(0)
+    /* ===============================
+       3️⃣ WAITING 전용 remaining (표시용)
+       → "대기중 (3명)"
+    =============================== */
 
-                        // 2. 내 결재선이 이미 의미 없는 상태
-                        .when(myLine.status.in(
-                                ApprovalStatus.APPROVED,
-                                ApprovalStatus.REJECTED,
-                                ApprovalStatus.CANCELLED
-                        ))
-                        .then(0)
+        NumberExpression<Integer> remainingForDisplay =
+                new CaseBuilder()
+                        .when(myLine.status.eq(ApprovalStatus.WAITING))
+                        .then(myLine.orderNo.subtract(currentLine.orderNo))
+                        .otherwise(0);
 
-                        // 3. 현재 결재자가 없는 경우
-                        .when(currentLine.orderNo.isNull())
-                        .then(0)
+    /* ===============================
+       문서 상태 (화면 표시용)
+    =============================== */
 
-                        // 4. 정상 계산
-                        .otherwise(
-                                myLine.orderNo.subtract(currentLine.orderNo)
-                        );
+        StringExpression documentDisplayStatus =
+                new CaseBuilder()
+                        .when(document.status.eq(DocumentStatus.IN_PROGRESS))
+                        .then("진행중")
+                        .when(document.status.eq(DocumentStatus.APPROVED))
+                        .then("승인 완료")
+                        .when(document.status.eq(DocumentStatus.REJECTED))
+                        .then("반려 종료")
+                        .otherwise("기타");
 
+    /* ===============================
+       BASE QUERY
+    =============================== */
 
         var baseQuery =
                 queryFactory
@@ -266,12 +322,12 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
                         .leftJoin(finalLine.approver, finalApprover)
                         .leftJoin(finalApprover.organization, finalOrg)
                         .leftJoin(finalApprover.positionCategory, finalPosition)
-
                         .where(whereCondition);
 
     /* ===============================
-       SELECT
+       CONTENT QUERY
     =============================== */
+
         List<DocumentMyApprovalListResDto> content =
                 baseQuery
                         .select(Projections.constructor(
@@ -283,7 +339,9 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
                                 document.createdAt,
                                 myLine.decidedAt,
 
-                                // 상태별 표시 담당자 (조직)
+                                documentDisplayStatus,
+
+                                // 표시 조직
                                 new CaseBuilder()
                                         .when(document.status.in(
                                                 DocumentStatus.APPROVED,
@@ -292,7 +350,7 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
                                         .then(finalOrg.name)
                                         .otherwise(currentOrg.name),
 
-                                // 상태별 표시 담당자 (직책)
+                                // 표시 직책
                                 new CaseBuilder()
                                         .when(document.status.in(
                                                 DocumentStatus.APPROVED,
@@ -301,7 +359,7 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
                                         .then(finalPosition.name)
                                         .otherwise(currentPosition.name),
 
-                                // 상태별 표시 담당자 (이름)
+                                // 표시 이름
                                 new CaseBuilder()
                                         .when(document.status.in(
                                                 DocumentStatus.APPROVED,
@@ -313,24 +371,36 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
                                 // 내 결재 상태
                                 myLine.status,
 
-                                // 내 차례까지 남은 결재 인원 수
-                                remainingBeforeMyTurn
+                                // ⭐ 대기중 표시용 remaining
+                                remainingForDisplay
                         ))
                         .orderBy(
-                                // ⭐ UX 최적화: 내 차례 문서 우선
-                                remainingBeforeMyTurn.asc().nullsLast(),
+                                sortPriority.asc(),
+                                remainingForWaiting.asc().nullsLast(),
+                                myLine.decidedAt.desc().nullsLast(),
                                 document.createdAt.desc()
                         )
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize())
                         .fetch();
 
+    /* ===============================
+       COUNT QUERY
+    =============================== */
+
         Long total =
-                baseQuery
-                        .select(document.count())
+                queryFactory
+                        .select(document.id.countDistinct())
+                        .from(myLine)
+                        .join(myLine.document, document)
+                        .where(whereCondition)
                         .fetchOne();
 
-        return new PageImpl<>(content, pageable, total == null ? 0 : total);
+        return new PageImpl<>(
+                content,
+                pageable,
+                total == null ? 0 : total
+        );
     }
 
 
@@ -414,5 +484,72 @@ public class DocumentRepositoryImpl implements DocumentRepositoryCustom {
                         .toInstant()
                         .minusNanos(1)
         );
+    }
+
+    @Override
+    public List<ReferenceSearchResDto> searchReference(
+            Long employeeId,
+            Long companyId,
+            String keyword,
+            int limit
+    ) {
+        QDocument d = QDocument.document;
+        QDocumentFile df = QDocumentFile.documentFile;
+        QApprovalLine al = QApprovalLine.approvalLine;
+        QEmployee w = QEmployee.employee;
+
+        return queryFactory
+                .select(Projections.constructor(
+                        ReferenceSearchResDto.class,
+                        d.id,
+                        d.title,
+                        d.updatedAt,      // 승인 시점 없으니 이걸 사용
+                        w.name,
+                        df.id
+                ))
+                .from(d)
+                .join(df).on(
+                        df.document.eq(d),
+                        df.referenceType.eq(ReferenceType.DOCUMENT),
+                        df.referenceUrl.isNull()
+                )
+                .join(d.writer, w)
+                .leftJoin(al).on(
+                        al.document.eq(d),
+                        al.approver.id.eq(employeeId)
+                )
+                .where(
+                        d.company.id.eq(companyId),
+                        d.status.eq(DocumentStatus.APPROVED),
+                        d.isDeleted.isFalse(),
+                        d.title.contains(keyword),
+                        accessCondition(d, al, employeeId)
+                )
+                .orderBy(
+                        similarityOrder(d.title, keyword),
+                        d.updatedAt.desc()
+                )
+                .limit(limit)
+                .fetch();
+    }
+
+    private BooleanExpression accessCondition(
+            QDocument d,
+            QApprovalLine al,
+            Long employeeId
+    ) {
+        return d.writer.id.eq(employeeId)
+                .or(al.approver.id.eq(employeeId));
+    }
+
+    private OrderSpecifier<Integer> similarityOrder(
+            StringPath title,
+            String keyword
+    ) {
+        return new CaseBuilder()
+                .when(title.startsWithIgnoreCase(keyword)).then(0)
+                .when(title.containsIgnoreCase(keyword)).then(1)
+                .otherwise(2)
+                .asc();
     }
 }

@@ -126,23 +126,27 @@ public class DocumentFileService {
         );
     }
 
-    public List<DocumentFileAttachedListResDto> getAttachedFiles(Long employeeId, Long documentId) {
+    public List<DocumentFileAttachedListResDto> getAttachedFiles(
+            Long employeeId,
+            Long documentId
+    ) {
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new NotFoundException("Document Not Found"));
-        /*
-        * 권한 검증.
-        * case1. DRAFT이면 본인만
-        * case2. IN_PROGRESS 이상이라면 결재선 포함된 사람 모두
-        * */
+
         documentService.validateViewPermission(employeeId, document);
-        //검증 통과(본인 + 결재자만이 첨부파일 목록을 확인할 수 있도록 현재 설계
+
         return documentFileRepository
                 .findAttachedFilesByDocumentId(documentId)
                 .stream()
+                .filter(p ->
+                        !(p.getReferenceType() == ReferenceType.DOCUMENT
+                                && p.getReferenceTargetId() == null)
+                )
                 .map(p -> new DocumentFileAttachedListResDto(
                         p.getDocumentFileId(),
                         p.getFileId(),
-                        p.getFileName(),
+                        p.getDisplayName(),
+                        p.getWriterName(),
                         p.getFileSize(),
                         p.getReferenceTargetId(),
                         p.getStatus(),
@@ -150,6 +154,7 @@ public class DocumentFileService {
                 ))
                 .toList();
     }
+
 
     @Transactional
     public void updateStatus(Long employeeId, Long documentFileId, DocumentFileStatus status) {
@@ -214,5 +219,30 @@ public class DocumentFileService {
 
         return fileService.loadAsResource(documentFile.getFile());
     }
+
+    @Transactional
+    public void mappingPdf(Document document, File pdfFile) {
+
+        // 1️⃣ 기존 FINAL PDF 있으면 무효화
+        documentFileRepository
+                .findDocumentFileByDocumentAndType(
+                        document.getId(),
+                        ReferenceType.DOCUMENT,
+                        DocumentFileStatus.FINAL
+                )
+                .ifPresent(df -> df.updateStatus(DocumentFileStatus.DELETED));
+
+        // 2️⃣ 새 PDF 매핑
+        DocumentFile documentFile = DocumentFile.builder()
+                .document(document)
+                .file(pdfFile)
+                .referenceType(ReferenceType.DOCUMENT)
+                .referenceTargetId(null)
+                .status(DocumentFileStatus.FINAL)
+                .build();
+
+        documentFileRepository.save(documentFile);
+    }
+
 
 }

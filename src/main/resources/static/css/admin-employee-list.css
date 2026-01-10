@@ -1,155 +1,342 @@
 /* ==================================================
    admin-employee-list.css
-   - 사원 목록(list.html) 전용 스타일
-   - detail 페이지 영향 없음
+   - 사원 관리 목록 페이지
+   - admin-org-category.css 디자인 기준 확장
 ================================================== */
 
-/* =========================
-   Design Tokens
-========================= */
-:root {
-    --card: #ffffff;
-    --line: #e5e7eb;
+/* 이름 */
+th:nth-child(1), td:nth-child(1) { width: 10%; }
 
-    --text: #111827;
-    --muted: #6b7280;
+/* 이메일 */
+th:nth-child(2), td:nth-child(2) { width: 20%; }
 
-    --primary: #2563eb;
-    --primary-soft: rgba(37, 99, 235, 0.12);
+/* 조직 (핵심) */
+th:nth-child(3), td:nth-child(3) { width: 35%; }
 
-    --success-text: #15803d;
-    --warning-text: #b45309;
-    --danger-text: #b91c1c;
+/* 직급 */
+th:nth-child(4), td:nth-child(4) { width: 10%; }
 
-    --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
-    --shadow-md: 0 12px 30px rgba(0,0,0,0.08);
+/* 직책 */
+th:nth-child(5), td:nth-child(5) { width: 10%; }
+
+/* 상태 */
+th:nth-child(6), td:nth-child(6) { width: 15%; text-align: center; }
+
+
+/* Phase 1: 1200px - 이메일 숨김 → 조직 확장 */
+@media (max-width: 1200px) {
+    th:nth-child(2),
+    td:nth-child(2) {
+        display: none;
+    }
+
+    th:nth-child(3),
+    td:nth-child(3) {
+        width: auto;
+    }
+}
+
+/* Phase 2: 900px - 직책 숨김 */
+@media (max-width: 900px) {
+    th:nth-child(5),
+    td:nth-child(5) {
+        display: none;
+    }
+}
+
+/* Phase 3: 700px - 직급 숨김 */
+@media (max-width: 700px) {
+    th:nth-child(4),
+    td:nth-child(4) {
+        display: none;
+    }
+}
+
+
+/* 반응형: 모바일에서는 1열 */
+@media (max-width: 640px) {
+    th:nth-child(1),
+    td:nth-child(1) {
+        width: 25%;
+    }
+
+    th:nth-child(6),
+    td:nth-child(6) {
+        width: auto;
+    }
 }
 
 /* =========================
-   Page Title
+   조직 경로 표시
 ========================= */
-.orgcat-title-row {
-    margin-bottom: 20px;
+
+.employee-org-path {
+    font-size: 13.5px;
+    color: var(--neutral-700);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    display: block;
 }
 
-.orgcat-title {
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--text);
-    letter-spacing: -0.2px;
+.orgcat-table td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* =========================
+   상태 배지 (사원용)
+========================= */
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 60px;
+    height: 22px;
+    padding: 3px 14px;
+
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+
+    border: 1.2px solid transparent;
+}
+
+/* 재직 */
+.status-badge.ACTIVE {
+    background: #ecfdf5;
+    border-color: #10b981;
+    color: dimgray;
+}
+
+/* 정지 */
+.status-badge.SUSPENDED {
+    background: #fff7ed;
+    border-color: #fb923c;
+    color: dimgray;
+}
+
+/* 퇴사 */
+.status-badge.RESIGNED {
+    background: #fef2f2;
+    border-color: #f87171;
+    color: dimgray;
+}
+
+/* 임시 */
+.status-badge.TEMP {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    color: dimgray;
 }
 
 /* =========================
-   Card
+   테이블 UX
 ========================= */
-.orgcat-card {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    padding: 20px;
-    box-shadow: var(--shadow-md);
+
+.orgcat-table tbody tr:hover {
+    background: #f9fafb;
 }
 
-/* =========================
-   Toolbar
-========================= */
+
+
 .orgcat-toolbar {
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+}
+
+.toolbar-left > * {
+    height: 40px;
+}
+
+.toolbar-right .btn-primary {
+    height: 40px;
+}
+
+
+/* =========================
+   Table Fixed Height (10 rows)
+========================= */
+
+.orgcat-table-wrap {
+    min-height: calc(52px * 10 + 56px); /* 헤더 고려 */
+}
+
+/* 각 행 높이 고정 */
+.orgcat-table tbody tr {
+    height: 52px;
+    cursor: pointer;
+}
+
+.orgcat-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+
+/* ==================================================
+   Employee Modal (FINAL)
+================================================== */
+
+/* 배경 */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+/* 패널 */
+.modal-panel {
+    width: 560px;
+    max-width: 92vw;
+
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+
+    background: #fff;
+    border-radius: 16px;
+    box-shadow:
+            0 20px 40px rgba(0, 0, 0, 0.12),
+            0 8px 16px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    overflow-x: hidden;
+}
+
+
+/* 등장 애니메이션 */
+@keyframes modalFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* =========================
+   Header
+========================= */
+
+.modal-head {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 18px;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--line);
 }
 
-.toolbar-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+.modal-head h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--neutral-800);
+    margin: 0;
 }
 
-.toolbar-right {
-    display: flex;
-    align-items: center;
+/* 닫기 버튼 */
+.icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.icon-btn:hover {
+    background: #f3f4f6;
+    color: #111827;
 }
 
 /* =========================
-   Search
+   Body
 ========================= */
-.orgcat-search {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    height: 44px;
-    padding: 0 14px;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    background: #fbfcff;
+
+.modal-body {
+    padding: 24px 28px;
+    overflow-y: auto;          /* 스크롤 주체 */
+    flex: 1;                   /* 헤더/푸터 제외한 영역 차지 */
+    overflow-x: hidden;
 }
 
-.orgcat-search i {
+
+/* 폼 그룹 */
+.form-group {
+    margin-bottom: 20px;
+    max-width: 420px;
+}
+
+/* 라벨 */
+.form-group label {
+    display: block;
     font-size: 14px;
+    font-weight: 600;
+    color: var(--neutral-700);
+    margin-bottom: 8px;
+}
+
+/* 인풋 / 셀렉트 통일 */
+.form-group input,
+.form-group select {
+    width: 100%;
+    height: 44px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    font-size: 14px;
+    transition: all .2s ease;
+}
+
+.form-group input::placeholder {
     color: #9ca3af;
 }
 
-.orgcat-search input {
-    border: none;
+.form-group input:focus,
+.form-group select:focus {
     outline: none;
-    background: transparent;
-    font-size: 13.5px;
-    width: 220px;
-    color: var(--text);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(59,130,246,.12);
 }
 
-/* Status select */
-#status {
-    height: 44px;
-    border-radius: 12px;
-    border: 1px solid var(--line);
-    padding: 0 12px;
-    font-size: 13.5px;
-    background: #fff;
-    color: var(--text);
+/* 안내 문구 */
+.modal-body p {
+    font-size: 12.5px;
+    color: #9ca3af;
+    margin-top: 12px;
 }
 
 /* =========================
-   Buttons
+   Footer
 ========================= */
-.btn {
-    height: 42px;
-    padding: 0 16px;
-    border-radius: 12px;
-    border: 1px solid transparent;
-    font-size: 13.5px;
-    font-weight: 700;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 28px 24px;
+    border-top: 1px solid var(--line);
 }
 
-.btn-primary {
-    background: var(--primary);
-    color: #fff;
-    box-shadow: 0 8px 22px rgba(37, 99, 235, .25);
-}
-
-.btn-primary:hover {
-    filter: brightness(0.97);
-}
-
-.btn-outline {
-    background: #fff;
-    color: var(--primary);
-    border: 1px solid rgba(37, 99, 235, .35);
-}
-
-.btn-outline:hover {
-    background: var(--primary-soft);
-}
-
+/* 취소 */
 .btn-ghost {
     background: #fff;
-    color: var(--muted);
     border: 1px solid var(--line);
+    color: var(--neutral-700);
 }
 
 .btn-ghost:hover {
@@ -157,202 +344,145 @@
 }
 
 /* =========================
-   Table
+   Modal Form Grid
 ========================= */
-.orgcat-table-wrap {
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    overflow: hidden;
-}
 
-.orgcat-table {
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px 24px;
+    margin-bottom: 20px;
     width: 100%;
-    border-collapse: collapse;
-    font-size: 13.5px;
+    box-sizing: border-box;
 }
 
-.orgcat-table thead th {
-    background: #f9fafb;
-    color: var(--muted);
-    text-align: left;
-    padding: 14px 16px;
-    font-weight: 800;
-    border-bottom: 1px solid var(--line);
+/* 1열 전체 차지 */
+.form-group.full {
+    max-width: 100%;
 }
 
-.orgcat-table tbody td {
-    padding: 14px 16px;
-    border-bottom: 1px solid var(--line);
-    color: var(--text);
+/* grid 안에서는 width 제한 해제 */
+.form-grid .form-group {
+    max-width: none;
 }
 
-.orgcat-table tbody tr:hover {
-    background: #f9fafb;
+/* 하단 안내 */
+.form-help {
+    margin-top: 12px;
+    font-size: 12.5px;
+    color: #9ca3af;
+}
+
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.form-group,
+.form-group input,
+.form-group select {
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+select#status {
+    padding: 12px;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: #fff;
     cursor: pointer;
+    transition: all 0.2s;
 }
 
-/* =========================
-   Status (LIST ONLY)
-========================= */
-.status {
-    font-weight: 800;
-}
-
-.status.ACTIVE {
-    color: var(--success-text);
-}
-
-.status.SUSPENDED {
-    color: var(--warning-text);
-}
-
-.status.RESIGNED {
-    color: var(--danger-text);
-}
-
-/* =========================
-   Pagination
-========================= */
 .pagination-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px solid var(--line);
 }
 
 .pagination {
     display: flex;
+    justify-content: center;
+    align-items: center;
     gap: 8px;
+    flex: 1;
+    margin-top: 24px;
 }
 
+.page-btn,
+.page-number,
 .pagination button {
-    min-width: 36px;
+    min-width: 32px;
     height: 36px;
-    padding: 0 12px;
-    border: 1px solid var(--line);
+    padding: 0 8px;
+    border: 1px solid #ddd;
     background: #fff;
-    color: var(--muted);
-    border-radius: 10px;
-    font-size: 13.5px;
-    font-weight: 700;
+    border-radius: 6px;
     cursor: pointer;
-    transition: all .18s ease;
+    font-size: 14px;
+    color: #555;
+    text-align: center;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
+.page-btn:hover:not(:disabled),
+.page-number:hover:not(.active),
 .pagination button:hover:not(:disabled) {
-    background: #f8fafc;
-    border-color: var(--primary);
-    color: var(--primary);
+    background: #f8f9fa;
+    border-color: #4a69bd;
+    color: #4a69bd;
 }
 
-.pagination button.active {
-    background: var(--primary);
-    color: #fff;
-    border-color: var(--primary);
-}
-
+.page-btn:disabled,
 .pagination button:disabled {
-    opacity: .4;
+    opacity: 0.4;
     cursor: not-allowed;
 }
 
-/* =========================
-   Modal (Create / Edit)
-========================= */
-.modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.45);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
+.page-number.active,
+.pagination button.active {
+    background: #4a69bd;
+    color: #fff;
+    border-color: #4a69bd;
+    font-weight: 500;
 }
 
-.modal.hidden {
-    display: none;
-}
-
-.modal-panel {
-    width: 720px;
-    max-width: 94vw;
-    max-height: 85vh;
-    background: #fff;
-    border-radius: 18px;
-    box-shadow: 0 24px 70px rgba(0,0,0,.3);
-    display: flex;
-    flex-direction: column;
-}
-
-.modal-head {
-    padding: 22px 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.modal-head h2 {
-    font-size: 18px;
-    font-weight: 900;
-}
-
-.icon-btn {
-    background: none;
+.ellipsis {
+    min-width: 32px;
+    height: 36px;
+    padding: 0 4px;
+    color: #9ca3af;
     border: none;
-    font-size: 18px;
-    cursor: pointer;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.modal-body {
-    padding: 16px 24px;
-    overflow-y: auto;
+.pagination-info {
+    font-size: 13px;
+    color: #666;
+    margin: 0 16px;
 }
 
-.form-group {
-    margin-bottom: 14px;
+/* 조직 텍스트 UX만 유지 */
+.col-org {
+    white-space: nowrap;
 }
 
-.form-group label {
-    display: block;
-    font-size: 12.5px;
-    font-weight: 800;
-    color: var(--muted);
-    margin-bottom: 6px;
-}
-
-.form-group input,
-.form-group select {
-    width: 100%;
-    height: 44px;
-    border-radius: 12px;
-    border: 1px solid var(--line);
-    padding: 0 14px;
-    font-size: 13.5px;
-}
-
-.modal-actions {
-    padding: 16px 24px;
-    border-top: 1px solid var(--line);
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    background: #fff;
-}
-
-
-/* =========================
-   Responsive
-========================= */
-@media (max-width: 768px) {
-    .orgcat-toolbar {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
-    }
-
-    .toolbar-left {
-        flex-wrap: wrap;
-    }
+#tr-status {
+    text-align: center;
 }

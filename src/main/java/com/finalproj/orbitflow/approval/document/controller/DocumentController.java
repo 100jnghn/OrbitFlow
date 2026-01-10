@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.approval.document.controller;
 
+import com.finalproj.orbitflow.approval.approvalLine.dto.ReferenceCreateReqDto;
 import com.finalproj.orbitflow.approval.document.dto.*;
 import com.finalproj.orbitflow.approval.document.service.DocumentApplicationService;
 import com.finalproj.orbitflow.approval.document.service.DocumentService;
@@ -10,6 +11,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * Please explain the class!!!
@@ -28,7 +31,7 @@ public class DocumentController {
 
 
     @GetMapping("/my-written")
-    public ResponseEntity<ResponseDto> getMyWrittenDocuments(
+    public ResponseEntity<?> getMyWrittenDocuments(
             @RequestParam(required = false, defaultValue = "0") int offset,
             @RequestParam(required = false, defaultValue = "10") int size,
             DocumentListReqDto reqDto
@@ -41,17 +44,28 @@ public class DocumentController {
 
 
     @GetMapping("/approvals")
-    public ResponseEntity<ResponseDto> getDocumentsToApprove(
-            @RequestParam(required = false, defaultValue = "0") int offset,
+    public ResponseEntity<?> getDocumentsToApprove(
+            @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "10") int size,
             DocumentListReqDto reqDto
     ) {
-        Page<DocumentMyApprovalListResDto> documentsToApprove = documentService.getDocumentsToApprove(SecurityUtils.getCompanyId(), SecurityUtils.getEmployeeId(), offset, size, reqDto);
-        return ResponseEntity.ok(new ResponseDto(HttpStatus.OK, "내 결재 목록 조회 성공", documentsToApprove));
+        Page<DocumentMyApprovalListResDto> documentsToApprove =
+                documentService.getDocumentsToApprove(
+                        SecurityUtils.getCompanyId(),
+                        SecurityUtils.getEmployeeId(),
+                        page,
+                        size,
+                        reqDto
+                );
+
+        return ResponseEntity.ok(
+                new ResponseDto(HttpStatus.OK, "내 결재 목록 조회 성공", documentsToApprove)
+        );
     }
 
+
     @PostMapping("/draft/{formTemplateId}")
-    public ResponseEntity<ResponseDto> createDocument(
+    public ResponseEntity<?> createDocument(
             @PathVariable Long formTemplateId,
             @RequestParam(required = false) Long beforeDocumentId
     ) {
@@ -60,25 +74,25 @@ public class DocumentController {
     }
 
     @PostMapping("/{documentId}/revise")
-    public ResponseEntity<ResponseDto> reviseDocument(
+    public ResponseEntity<?> reviseDocument(
             @PathVariable Long documentId
     ) {
         DocumentCreateResDto result = documentApplicationService.reviseDocument(SecurityUtils.getEmployeeId(), documentId);
 
-        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.CREATED, "반려 결재 문서 복제 성공",  result));
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.CREATED, "반려 결재 문서 복제 성공", result));
     }
 
     @GetMapping("/{documentId}/revision")
-    public ResponseEntity<ResponseDto> getDocumentRevision(
+    public ResponseEntity<?> getDocumentRevision(
             @PathVariable Long documentId
     ) {
         DocumentRevisionInfoResDto result = documentService.getDocumentRevision(SecurityUtils.getEmployeeId(), documentId);
 
-        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "재기안 문서 조회 성공",  result));
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "재기안 문서 조회 성공", result));
     }
 
     @PatchMapping("/update/{DocumentId}")
-    public ResponseEntity<ResponseDto> updateDocument(
+    public ResponseEntity<?> updateDocument(
             @PathVariable Long DocumentId,
             @RequestBody DocumentUpdateReqDto reqDto
     ) {
@@ -89,7 +103,7 @@ public class DocumentController {
 
 
     @PostMapping("/{documentId}/submit")
-    public ResponseEntity<ResponseDto> submitDocument(
+    public ResponseEntity<?> submitDocument(
             @PathVariable Long documentId
     ) {
         documentApplicationService.submitDocument(SecurityUtils.getEmployeeId(), documentId);
@@ -98,7 +112,7 @@ public class DocumentController {
     }
 
     @GetMapping("/{documentId}/detail")
-    public ResponseEntity<ResponseDto> getDocumentDetail(
+    public ResponseEntity<?> getDocumentDetail(
             @PathVariable Long documentId
     ) {
         DocumentDetailResDto result = documentService.getDocumentDetail(SecurityUtils.getEmployeeId(), documentId);
@@ -107,7 +121,7 @@ public class DocumentController {
     }
 
     @PostMapping("/{documentId}/approve")
-    public ResponseEntity<ResponseDto> approveDocument(
+    public ResponseEntity<?> approveDocument(
             @PathVariable Long documentId,
             @RequestBody(required = false) DocumentCommentReqDto reqDto
     ) {
@@ -126,7 +140,7 @@ public class DocumentController {
 
 
     @PostMapping("/{documentId}/reject")
-    public ResponseEntity<ResponseDto> rejectDocument(
+    public ResponseEntity<?> rejectDocument(
             @PathVariable Long documentId,
             @RequestBody(required = false) DocumentCommentReqDto reqDto
     ) {
@@ -141,6 +155,47 @@ public class DocumentController {
         return ResponseEntity.ok(
                 new ResponseDto<>(HttpStatus.OK, "반려 처리 성공", null)
         );
+    }
+
+
+    @GetMapping("/reference/search")
+    public ResponseEntity<?> searchReference(
+            @RequestParam(defaultValue = "") String keyword
+    ) {
+
+        List<ReferenceSearchResDto> result = documentService.searchReference(
+                SecurityUtils.getEmployeeId(),
+                SecurityUtils.getCompanyId(),
+                keyword
+        );
+
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "참조 문서 검색 성공", result));
+    }
+
+    @PostMapping("/{documentId}/reference")
+    public ResponseEntity<?> addReferenceDocument(
+            @PathVariable Long documentId,
+            @RequestBody ReferenceCreateReqDto request
+    ) {
+        documentService.addReferenceDocument(
+                SecurityUtils.getEmployeeId(),
+                documentId,
+                request.getTargetDocumentFileId()
+        );
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/{documentId}/reference")
+    public ResponseEntity<?> updateReferenceDocument(
+            @PathVariable Long documentId,
+            @RequestParam Long documentFileId
+    ) {
+        documentService.removeReferenceDocument(
+                SecurityUtils.getEmployeeId(),
+                documentId,
+                documentFileId
+        );
+        return ResponseEntity.ok().build();
     }
 
 }

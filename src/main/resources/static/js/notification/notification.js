@@ -205,7 +205,7 @@ async function markAllAsRead() {
 
         if (!response.ok) {
             console.error('모든 알림 읽음 처리 실패');
-            alert('모든 알림을 읽음 처리하는데 실패했습니다.');
+            await sweetError('모든 알림을 읽음 처리하는데 실패했습니다.');
             return;
         }
 
@@ -221,7 +221,7 @@ async function markAllAsRead() {
         console.log('모든 알림이 읽음 처리되었습니다.');
     } catch (error) {
         console.error('모든 알림 읽음 처리 실패:', error);
-        alert('모든 알림을 읽음 처리하는데 실패했습니다.');
+        await sweetError('모든 알림을 읽음 처리하는데 실패했습니다.');
     }
 }
 

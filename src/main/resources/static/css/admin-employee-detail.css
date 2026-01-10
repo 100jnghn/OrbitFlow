@@ -4,6 +4,29 @@
    - list.html / 공통 스타일 영향 없음
 ================================================== */
 
+:root {
+    --primary-color: #3B82F6;
+    --primary-hover: #2563EB;
+
+    --success-color: #10B981;
+    --warning-color: #F59E0B;
+    --danger-color: #DC2626;
+
+    --neutral-50: #F9FAFB;
+    --neutral-100: #F3F4F6;
+    --neutral-200: #E5E7EB;
+    --neutral-300: #D1D5DB;
+    --neutral-400: #9CA3AF;
+    --neutral-500: #6B7280;
+    --neutral-700: #374151;
+    --neutral-800: #1F2937;
+    --neutral-900: #111827;
+
+    --card-radius: 12px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,.1);
+}
+
+
 /* =========================
    Page Head
 ========================= */
@@ -28,10 +51,10 @@
 .emp-hero {
     display: flex;
     gap: 20px;
-    padding: 18px;
+    padding: 12px;
     border: 1px solid #e5e7eb;
     border-radius: 18px;
-    background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+    background: #ffffff;
     margin-bottom: 16px;
 }
 
@@ -135,8 +158,8 @@
 }
 
 .btn-primary {
-    background: #2563eb;
-    color: #fff;
+    background: var(--primary-color);
+    box-shadow: none;
 }
 
 .btn-danger {
@@ -193,7 +216,7 @@
 .card {
     background: #fff;
     border: 1px solid #e5e7eb;
-    border-radius: 18px;
+    border-radius: 12px;
     padding: 18px;
 }
 
@@ -208,6 +231,9 @@
     font-size: 14px;
     font-weight: 900;
     color: #374151;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eef2f7;
+    margin-bottom: 12px;
 }
 
 .card-sub {
@@ -385,12 +411,19 @@
 }
 
 .modal-actions .btn-primary {
-    min-width: 100px;
+    background: var(--primary-color);
+    box-shadow: none;
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59,130,246,.3);
 }
 
 
 .modal-body {
-    padding: 16px 22px;
+    padding: 24px;
     overflow-y: auto;
     max-height: calc(90vh - 140px);
 }
@@ -474,4 +507,27 @@
 @media (max-width: 900px) {
     .grid-2 { grid-template-columns: 1fr; }
     .page-head { flex-direction: column; align-items: stretch; }
+}
+
+
+.orgcat-title {
+    font-size: 26px;
+    font-weight: 600;
+}
+
+
+.orgcat-table tbody {
+    min-height: calc(52px * 10); /* 페이지 사이즈 10 */
+    display: block;
+}
+
+.orgcat-table thead,
+.orgcat-table tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.empty-row {
+    height: 52px;
 }

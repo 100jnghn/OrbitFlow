@@ -474,7 +474,7 @@
             renderScheduleList(dateSchedules);
         } catch (error) {
             console.error('Error loading date schedules:', error);
-            alert('일정을 불러오는데 실패했습니다.');
+            await sweetError('일정을 불러오는데 실패했습니다.');
         }
     }
 
@@ -586,7 +586,7 @@
             filterAndRenderSchedules();
         } catch (error) {
             console.error('Error loading schedules:', error);
-            alert('일정을 불러오는데 실패했습니다.');
+            await sweetError('일정을 불러오는데 실패했습니다.');
         }
     }
 
@@ -1120,18 +1120,18 @@
         const status = 'RELEASE';
 
         if (!title) {
-            alert('제목을 입력해주세요.');
+            await sweetInfo('제목을 입력해주세요.');
             return;
         }
 
         if (title.length > 20) {
-            alert('제목은 최대 20자까지 입력 가능합니다.');
+            await sweetInfo('제목은 최대 20자까지 입력 가능합니다.');
             document.getElementById('scheduleTitle').focus();
             return;
         }
 
         if (description.length > 200) {
-            alert('설명은 최대 200자까지 입력 가능합니다.');
+            await sweetInfo('설명은 최대 200자까지 입력 가능합니다.');
             document.getElementById('scheduleDescription').focus();
             return;
         }
@@ -1143,7 +1143,7 @@
         const endDateTime = new Date(`${endDate}T${endTime}`);
 
         if (endDateTime < startDateTime) {
-            alert('종료 날짜/시간은 시작 날짜/시간보다 이후여야 합니다.');
+            await sweetInfo('종료 날짜/시간은 시작 날짜/시간보다 이후여야 합니다.');
             return;
         }
 
@@ -1193,14 +1193,15 @@
             console.log('status:', response.status);
             console.log('content-type:', response.headers.get('content-type'));
 
-
-            alert('일정이 등록되었습니다.');
+            // 모달 닫은 후 alert 호출
             closeScheduleModal();
+
+            await sweetSuccess('일정이 등록되었습니다.');
             loadSchedules();
         } catch (error) {
             console.error('Error saving schedule:', error);
             if (error.message !== 'SESSION_EXPIRED') {
-                alert(error.message || '일정 등록에 실패했습니다.');
+                await sweetError(error.message || '일정 등록에 실패했습니다.');
             }
         } finally {
             isSubmitting = false;
@@ -1209,10 +1210,13 @@
 
     // 일정 삭제
     async function deleteSchedule(scheduleId) {
-        if (!confirm('정말 이 일정을 삭제하시겠습니까?')) {
-            return;
-        }
+        
+        const result = await sweetConfirm(
+            '삭제 확인',
+            '일정을 삭제하시겠습니까?'
+        );
 
+        if (!result.isConfirmed) return;
         try {
             const response = await apiFetch(`/api/schedules/${scheduleId}`, {
                 method: 'DELETE'
@@ -1227,12 +1231,12 @@
                 throw new Error(error.message || '일정 삭제에 실패했습니다.');
             }
 
-            alert('일정이 삭제되었습니다.');
+            await sweetSuccess('일정이 삭제되었습니다.');
             loadSchedules();
         } catch (error) {
             console.error('Error deleting schedule:', error);
             if (error.message !== 'SESSION_EXPIRED') {
-                alert(error.message || '일정 삭제에 실패했습니다.');
+                await sweetError(error.message || '일정 삭제에 실패했습니다.');
             }
         }
     }

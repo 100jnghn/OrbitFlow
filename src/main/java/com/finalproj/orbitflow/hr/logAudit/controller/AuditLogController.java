@@ -1,7 +1,9 @@
 package com.finalproj.orbitflow.hr.logAudit.controller;
 
 import com.finalproj.orbitflow.global.common.ResponseDto;
+import com.finalproj.orbitflow.global.security.SecurityUtils;
 import com.finalproj.orbitflow.hr.logAudit.dto.AuditLogResDto;
+import com.finalproj.orbitflow.hr.logAudit.entity.AuditLog;
 import com.finalproj.orbitflow.hr.logAudit.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -34,7 +36,14 @@ public class AuditLogController {
             Pageable pageable
     ) {
         Page<AuditLogResDto> result =
-                auditLogService.search(null, null, null, pageable);
+                auditLogService.search(
+                        SecurityUtils.getCompanyId(),
+                        null,
+                        null,
+                        null,
+                        pageable
+                );
+
 
         return ResponseEntity.ok(
                 new ResponseDto<>(
@@ -49,8 +58,14 @@ public class AuditLogController {
     public ResponseEntity<ResponseDto<AuditLogResDto>> detail(
             @PathVariable Long id
     ) {
-        AuditLogResDto result =
-                AuditLogResDto.from(auditLogService.findById(id));
+
+        AuditLog log = auditLogService.findById(id);
+
+        if (!log.getCompany().getId().equals(SecurityUtils.getCompanyId())) {
+            throw new IllegalStateException("다른 회사의 감사 로그입니다.");
+        }
+
+        AuditLogResDto result = AuditLogResDto.from(log);
 
         return ResponseEntity.ok(
                 new ResponseDto<>(
