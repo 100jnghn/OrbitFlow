@@ -3,6 +3,7 @@ package com.finalproj.orbitflow.hr.employee.dto;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeRole;
 import com.finalproj.orbitflow.hr.employee.enums.EmploymentType;
+import com.finalproj.orbitflow.hr.employee.enums.Gender;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -23,7 +24,7 @@ public class EmployeeUpdateResDto {
     private String phone;
     private String internalPhone;
     private LocalDate birthDate;
-
+    private Gender gender;
     private LocalDate hireDate;
 
     private Long orgId;
@@ -43,6 +44,7 @@ public class EmployeeUpdateResDto {
                 e.getPhone(),
                 e.getInternalPhone(),
                 e.getBirthDate(),
+                e.getGender(),
                 e.getHireDate(),
                 e.getOrganization().getId(),
                 e.getRank() != null ? e.getRank().getId() : null,

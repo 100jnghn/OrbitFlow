@@ -217,6 +217,7 @@ public class Employee extends BaseEntity {
     public void changePassword(String encodedPassword) {
         this.password = encodedPassword;
     }
+
     public void updateWorkStatus(WorkStatus workStatus) {
         this.workStatus = workStatus;
     }
@@ -233,7 +234,9 @@ public class Employee extends BaseEntity {
         this.status = EmployeeStatus.ACTIVE;
     }
 
-    public void changeHireDate(LocalDate hireDate) { this.hireDate = hireDate; }
+    public void changeHireDate(LocalDate hireDate) {
+        this.hireDate = hireDate;
+    }
 
     public void clearContactInfo() {
         this.phone = null;
@@ -253,6 +256,12 @@ public class Employee extends BaseEntity {
         if (phone != null) this.phone = phone;
         if (internalPhone != null) this.internalPhone = internalPhone;
         if (birthDate != null) this.birthDate = birthDate;
+    }
+
+    public void changeGender(Gender gender) {
+        if (gender != null) {
+            this.gender = gender;
+        }
     }
 
 }

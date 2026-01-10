@@ -194,6 +194,9 @@ async function saveEmployee() {
     const orgId = document.getElementById('empOrgId').value;
     const employmentType = document.getElementById('empEmploymentType').value;
     const role = document.getElementById('empRole').value;
+    const phone = empPhone.value?.trim() || null;
+    const internalPhone = empInternalPhone.value?.trim() || null;
+    const birthDate = empBirthDate.value || null;
 
     if (!name || !email || !employeeNo || !hireDate || !gender || !orgId || !employmentType || !role) {
         alert('필수 항목(*)을 모두 입력해 주세요.');
@@ -206,6 +209,9 @@ async function saveEmployee() {
         employeeNo,
         hireDate,
         gender,
+        phone,
+        internalPhone,
+        birthDate,
         orgId: Number(orgId),
         rankId: empRankId.value || null,
         positionCategoryId: empPositionCategoryId.value || null,
