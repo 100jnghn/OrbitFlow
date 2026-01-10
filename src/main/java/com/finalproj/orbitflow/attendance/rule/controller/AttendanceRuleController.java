@@ -93,10 +93,7 @@ public class AttendanceRuleController {
      */
     @PostMapping("/initialize/{companyId}")
     public ResponseEntity<ResponseDto<Void>> initializeDefaultRule(@PathVariable Long companyId) {
-        // 1. 존재하는 회사인지 확인
         Company company = companyService.findById(companyId);
-
-        // 2. 기본 규칙 생성 로직 호출
         attendanceRuleService.createDefaultAttendanceRule(company);
 
         return ResponseEntity.ok(new ResponseDto<>(
