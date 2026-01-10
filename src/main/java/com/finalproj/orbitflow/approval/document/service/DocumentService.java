@@ -3,13 +3,17 @@ package com.finalproj.orbitflow.approval.document.service;
 import com.finalproj.orbitflow.approval.approvalLine.dto.ApprovalLineViewResDto;
 import com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus;
 import com.finalproj.orbitflow.approval.approvalLine.repository.ApprovalLineRepository;
-import com.finalproj.orbitflow.approval.document.schema.PdfContentSchema;
 import com.finalproj.orbitflow.approval.document.dto.*;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
 import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
+import com.finalproj.orbitflow.approval.document.schema.PdfContentSchema;
 import com.finalproj.orbitflow.approval.documentContent.entity.DocumentContent;
 import com.finalproj.orbitflow.approval.documentContent.repository.DocumentContentRepository;
+import com.finalproj.orbitflow.approval.documentFile.entity.DocumentFile;
+import com.finalproj.orbitflow.approval.documentFile.enums.DocumentFileStatus;
+import com.finalproj.orbitflow.approval.documentFile.enums.ReferenceType;
+import com.finalproj.orbitflow.approval.documentFile.repository.DocumentFileRepository;
 import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
@@ -43,8 +47,9 @@ public class DocumentService {
     private final ObjectMapper objectMapper;
     private final DocumentContentRepository documentContentRepository;
     private final ApprovalLineRepository approvalLineRepository;
-    private final PdfContentSchemaAssembler  pdfContentSchemaAssembler;
+    private final PdfContentSchemaAssembler pdfContentSchemaAssembler;
     private final DocumentContentRenderService documentContentRenderService;
+    private final DocumentFileRepository documentFileRepository;
 
 
     @Transactional(readOnly = true)
@@ -71,10 +76,16 @@ public class DocumentService {
         }
     }
 
-    public Page<DocumentMyApprovalListResDto> getDocumentsToApprove(Long companyId, Long employeeId, int offset, int size, DocumentListReqDto reqDto) {
+    public Page<DocumentMyApprovalListResDto> getDocumentsToApprove(
+            Long companyId,
+            Long employeeId,
+            int page,
+            int size,
+            DocumentListReqDto reqDto
+    ) {
         dateValidCheck(reqDto);
 
-        Pageable pageable = PageRequest.of(offset, size);
+        Pageable pageable = PageRequest.of(page, size);
 
         return documentRepository.findMyApprovalDocuments(
                 companyId,
@@ -117,30 +128,31 @@ public class DocumentService {
             throw new InvalidRequestException("Draft 문서만 수정할 수 있습니다.");
         }
 
-        if(reqDto.getTitle() != null) {
+        if (reqDto.getTitle() != null) {
             document.updateTitle(reqDto.getTitle());
         }
 
-        if(reqDto.getStatus() != null) {
+        if (reqDto.getStatus() != null) {
             document.updateStatus(reqDto.getStatus());
         }
     }
 
 
     public DocumentDetailResDto getDocumentDetail(Long employeeId, Long documentId) {
-        Document document = getDocumentForRead(documentId);
 
+        Document document = getDocumentForRead(documentId);
         validateViewPermission(employeeId, document);
 
-
-        DocumentContent byDocumentId = documentContentRepository.findByDocument_Id(documentId)
-                .orElseThrow(() -> new NotFoundException("Document with id: " + documentId + " not found"));
+        DocumentContent byDocumentId = documentContentRepository
+                .findByDocument_Id(documentId)
+                .orElseThrow(() ->
+                        new NotFoundException("Document with id: " + documentId + " not found")
+                );
 
         FormTemplateSchema schema = parseSchema(byDocumentId.getContentJson());
         if (schema.getFields() == null || schema.getFields().isEmpty()) {
             throw new IllegalStateException("양식에 필드가 없습니다.");
         }
-
 
         List<ApprovalLineViewResDto> lists = approvalLineRepository
                 .findByDocument_IdOrderByOrderNoAsc(documentId)
@@ -156,7 +168,26 @@ public class DocumentService {
                 .map(line -> line.getApprover().getId().equals(employeeId))
                 .orElse(false);
 
-        return DocumentDetailResDto.from(document, schema, lists, myApprovalOrder);
+        // ⭐ 여기 추가
+        Long pdfFileId = null;
+        if (document.getStatus() == DocumentStatus.APPROVED) {
+            pdfFileId = documentFileRepository
+                    .findDocumentFileByDocumentAndType(
+                            documentId,
+                            ReferenceType.DOCUMENT,
+                            DocumentFileStatus.FINAL
+                    )
+                    .map(df -> df.getFile().getId())
+                    .orElse(null);
+        }
+
+        return DocumentDetailResDto.from(
+                document,
+                schema,
+                lists,
+                myApprovalOrder,
+                pdfFileId
+        );
     }
 
 
@@ -261,7 +292,7 @@ public class DocumentService {
 
         // 🔥 5️⃣ PdfContentSchema → HTML (이미 만들어둔 렌더러 사용)
         String documentContentHtml =
-                documentContentRenderService.render(documentId ,pdfSchema);
+                documentContentRenderService.render(documentId, pdfSchema);
 
         // 6️⃣ PDF View DTO 생성
         return DocumentPdfViewDto.builder()
@@ -291,5 +322,95 @@ public class DocumentService {
                 .build();
     }
 
+
+    public List<ReferenceSearchResDto> searchReference(
+            Long employeeId,
+            Long companyId,
+            String keyword
+    ) {
+        return documentRepository.searchReference(
+                employeeId,
+                companyId,
+                keyword,
+                10
+        );
+    }
+
+
+    @Transactional
+    public void addReferenceDocument(
+            Long employeeId,
+            Long documentId,
+            Long targetDocumentFileId
+    ) {
+        // 1. 현재 문서 조회 + 작성자 검증
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new NotFoundException("문서를 찾을 수 없습니다."));
+
+        if (!document.getWriter().getId().equals(employeeId)) {
+            throw new InvalidRequestException("참조 문서는 작성자만 추가할 수 있습니다.");
+        }
+
+        // 2. 참조 대상 DocumentFile 조회
+        DocumentFile target = documentFileRepository.findById(targetDocumentFileId)
+                .orElseThrow(() -> new NotFoundException("참조 대상 파일을 찾을 수 없습니다."));
+
+        // 3. 참조 대상 검증
+        if (target.getReferenceType() != ReferenceType.DOCUMENT
+                || target.getReferenceUrl() != null) {
+            throw new InvalidRequestException("참조 가능한 문서가 아닙니다.");
+        }
+
+        Document targetDocument = target.getDocument();
+
+        // 4. 현재 문서에 참조 DocumentFile 생성
+        DocumentFile reference = DocumentFile.builder()
+                .document(document)
+                .file(target.getFile())
+                .referenceType(ReferenceType.DOCUMENT)
+                .referenceTargetId(targetDocument.getId())
+                .referenceUrl("/documents/files/" + target.getId())
+                .status(DocumentFileStatus.TEMP)
+                .build();
+
+        documentFileRepository.save(reference);
+    }
+
+    @Transactional
+    public void removeReferenceDocument(
+            Long employeeId,
+            Long documentId,
+            Long documentFileId
+    ) {
+        // 1. 문서 조회 + 작성자 검증
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new NotFoundException("문서를 찾을 수 없습니다."));
+
+        if (!document.getWriter().getId().equals(employeeId)) {
+            throw new InvalidRequestException("참조 문서는 작성자만 제거할 수 있습니다.");
+        }
+
+        // 2. 참조 DocumentFile 조회
+        DocumentFile reference = documentFileRepository.findById(documentFileId)
+                .orElseThrow(() -> new NotFoundException("참조 문서를 찾을 수 없습니다."));
+
+        // 3. 이 문서에 연결된 참조 문서인지 검증
+        if (!reference.getDocument().getId().equals(documentId)) {
+            throw new InvalidRequestException("해당 문서의 참조 문서가 아닙니다.");
+        }
+
+        // 4. 참조 문서인지 검증
+        if (reference.getReferenceType() != ReferenceType.DOCUMENT) {
+            throw new InvalidRequestException("참조 문서만 제거할 수 있습니다.");
+        }
+
+        // 5. 상태 검증 (작성 중 문서만)
+        if (document.getStatus() != DocumentStatus.DRAFT) {
+            throw new InvalidRequestException("작성 중인 문서에서만 참조 문서를 제거할 수 있습니다.");
+        }
+
+        // 6. 삭제
+        documentFileRepository.delete(reference);
+    }
 
 }

@@ -205,23 +205,22 @@
     text-align: left;
 }
 
-/* 기안자 */
+/* 문서 상태 */
 .approval-table th:nth-child(3),
 .approval-table td:nth-child(3) {
+    width: 120px;
+    text-align: center;
+}
+
+/* 기안자 */
+.approval-table th:nth-child(4),
+.approval-table td:nth-child(4) {
     width: 120px;
     text-align: center;
     color: var(--neutral-600);
 }
 
 /* 양식 */
-.approval-table th:nth-child(4),
-.approval-table td:nth-child(4) {
-    width: 140px;
-    text-align: center;
-    color: var(--neutral-600);
-}
-
-/* 현재 결재자 */
 .approval-table th:nth-child(5),
 .approval-table td:nth-child(5) {
     width: 140px;
@@ -229,21 +228,30 @@
     color: var(--neutral-600);
 }
 
-/* 결재 상태 */
+/* 현재 결재자 */
 .approval-table th:nth-child(6),
 .approval-table td:nth-child(6) {
-    width: 120px;
+    width: 140px;
+    text-align: center;
+    color: var(--neutral-600);
+}
+
+/* 내 결재 상태 */
+.approval-table th:nth-child(7),
+.approval-table td:nth-child(7) {
+    width: 130px;
     text-align: center;
     font-weight: 600;
 }
 
 /* 기안일 */
-.approval-table th:nth-child(7),
-.approval-table td:nth-child(7) {
+.approval-table th:nth-child(8),
+.approval-table td:nth-child(8) {
     width: 150px;
     text-align: center;
     color: var(--neutral-600);
 }
+
 
 .approval-table tbody tr {
     transition: background-color 0.15s ease;
@@ -342,4 +350,60 @@
     color: var(--neutral-400);
     border: none;
     background: transparent;
+}
+
+/* ===============================
+   상태 배지 (공통)
+=============================== */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 56px;
+    height: 22px;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    border: 1px solid transparent;
+    color: dimgray;
+    transition: all 0.15s ease;
+}
+
+/* 파란색 (진행 / 처리 필요) */
+.status-blue {
+    background: #F0F9FF;
+    border: 1.2px solid #38BDF8;
+}
+
+/* 노란색 (대기중) */
+.status-yellow {
+    background: #FFFBEB;
+    border: 1.2px solid #F5C417;
+}
+
+/* 빨간색 (반려) */
+.status-red {
+    background: #FEF2F2;
+    border: 1.2px solid #F87171;
+}
+
+/* 회색 (취소 등) */
+.status-gray {
+    background: #E0E0E0;
+    border: 1.2px solid #2B2B2B;
+}
+
+/* 연두색 (승인) */
+.status-green {
+    background: #ECFDF5;
+    border: 1.2px solid #10B981;
+}
+
+/* hover */
+.status-badge:hover {
+    background-blend-mode: multiply;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }

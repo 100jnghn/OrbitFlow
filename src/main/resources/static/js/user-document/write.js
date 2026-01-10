@@ -225,7 +225,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         await loadAttachments(DOCUMENT_ID);
         renderAttachmentList();
-        await hydrateImageFields(); // ⭐ 여기서만
+        renderReferenceDocList();
+        bindReferencePopup();
+        bindReferenceSearch();
+        await hydrateImageFields();
 
         bindEvents(DOCUMENT_ID);
 
@@ -3103,6 +3106,138 @@ function bindAttachmentEvents(documentId) {
     });
 }
 
+function bindReferencePopup() {
+
+    const box = document.getElementById('referenceBox');
+    const popup = document.getElementById('referencePopup');
+    const closeBtns = popup.querySelectorAll(
+        '.modal-close-btn, .modal-cancel-btn'
+    );
+
+    if (!box || !popup) return;
+
+    box.addEventListener('click', () => {
+        popup.classList.remove('hidden');
+        document.getElementById('referenceSearchInput')?.focus();
+    });
+
+    closeBtns.forEach(btn =>
+        btn.addEventListener('click', closeReferencePopup)
+    );
+
+    popup.addEventListener('click', e => {
+        if (e.target === popup) closeReferencePopup();
+    });
+}
+
+function closeReferencePopup() {
+    const popup = document.getElementById('referencePopup');
+    popup?.classList.add('hidden');
+
+    const result = document.getElementById('referenceSearchResult');
+    if (result) {
+        result.innerHTML =
+            `<li class="empty">검색어를 입력하세요.</li>`;
+    }
+}
+
+
+let referenceSearchTimer = null;
+
+function bindReferenceSearch() {
+
+    const input = document.getElementById('referenceSearchInput');
+    if (!input) return;
+
+    input.addEventListener('input', () => {
+        clearTimeout(referenceSearchTimer);
+
+        const keyword = input.value.trim();
+        referenceSearchTimer = setTimeout(() => {
+            searchReferenceDocuments(keyword);
+        }, 300);
+    });
+}
+
+async function searchReferenceDocuments(keyword) {
+
+    const list = document.getElementById('referenceSearchResult');
+    if (!list) return;
+
+    if (keyword.length < 2) {
+        list.innerHTML =
+            `<li class="empty">두 글자 이상 입력하세요.</li>`;
+        return;
+    }
+
+    const res = await apiFetch(
+        `/api/documents/reference/search?keyword=${encodeURIComponent(keyword)}`
+    );
+
+    if (!res.ok) {
+        list.innerHTML =
+            `<li class="empty">검색에 실패했습니다.</li>`;
+        return;
+    }
+
+    const result = await res.json();
+    const docs = result.data ?? [];
+
+    list.innerHTML = '';
+
+    if (docs.length === 0) {
+        list.innerHTML =
+            `<li class="empty">검색 결과가 없습니다.</li>`;
+        return;
+    }
+
+    docs.forEach(doc => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <strong>${doc.title}</strong><br/>
+            <small>
+                ${doc.writerName} ·
+                ${new Date(doc.approvedAt).toLocaleDateString()}
+            </small>
+        `;
+
+        li.addEventListener('click', async () => {
+            await attachReferenceDocument(
+                DOCUMENT_ID,
+                doc.documentFileId
+            );
+        });
+
+        list.appendChild(li);
+    });
+}
+
+async function attachReferenceDocument(documentId, documentFileId) {
+
+    const res = await apiFetch(
+        `/api/documents/${documentId}/reference`,
+        {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                targetDocumentFileId: documentFileId
+            })
+        }
+    );
+
+    if (!res.ok) {
+        showToast('참조 문서 연결에 실패했습니다.', 'error');
+        return;
+    }
+
+    showToast('참조 문서가 추가되었습니다.', 'success');
+
+    closeReferencePopup();
+    await loadAttachments(documentId);
+    renderReferenceDocList();
+}
+
+
 async function bindEvents(documentId) {
 
     // 임시 저장
@@ -3213,7 +3348,7 @@ function renderAttachmentList() {
         const name = document.createElement('span');
         name.className = 'item-name';
         name.textContent =
-            `${file.fileName} (${formatFileSize(file.fileSize)})`;
+            `${file.displayName} (${formatFileSize(file.fileSize)})`;
 
         /* 상태별 스타일 */
         if (file.status === 'DELETED') {
@@ -3275,6 +3410,70 @@ function renderAttachmentList() {
         listEl.appendChild(li);
     });
 }
+
+function renderReferenceDocList() {
+
+    const listEl = document.getElementById('referenceDocList');
+    if (!listEl) return;
+
+    listEl.innerHTML = '';
+
+    const referenceDocs = attachmentFiles.filter(
+        f => f.referenceTargetId != null
+    );
+
+    if (referenceDocs.length === 0) {
+        listEl.innerHTML =
+            `<li class="empty">참조 문서가 없습니다.</li>`;
+        return;
+    }
+
+    referenceDocs.forEach(doc => {
+        const li = document.createElement('li');
+
+        const name = document.createElement('span');
+        name.className = 'item-name';
+
+        // ✅ displayName 사용 (문서 제목)
+        name.textContent = doc.writerName + " | " + doc.displayName;
+
+        name.addEventListener('click', () => {
+            window.open(
+                `/api/document-file/${doc.documentFileId}/download`,
+                '_blank'
+            );
+        });
+
+        li.appendChild(name);
+
+        // DRAFT(TEMP) 상태에서만 제거 가능
+        if (doc.status === 'TEMP') {
+            const btn = document.createElement('button');
+            btn.textContent = '제거';
+            btn.className = 'delete-btn';
+
+            btn.addEventListener('click', async () => {
+                if (!confirm('참조 문서를 제거하시겠습니까?')) return;
+
+                const ok = await removeReferenceDocument(
+                    DOCUMENT_ID,
+                    doc.documentFileId
+                );
+
+                if (ok) {
+                    showToast('참조 문서가 제거되었습니다.', 'info');
+                    await loadAttachments(DOCUMENT_ID);
+                    renderReferenceDocList();
+                }
+            });
+
+            li.appendChild(btn);
+        }
+
+        listEl.appendChild(li);
+    });
+}
+
 
 async function hydrateImageFields() {
     const fieldIds = new Set(
@@ -3489,6 +3688,19 @@ async function updateAttachmentStatus(documentFileId, status) {
         return false;
     }
 
+    return true;
+}
+
+async function removeReferenceDocument(documentId, documentFileId) {
+    const res = await apiFetch(
+        `/api/documents/${documentId}/reference?documentFileId=${documentFileId}`,
+        {method: 'PATCH'}
+    );
+
+    if (!res.ok) {
+        showToast('참조 문서 제거에 실패했습니다.', 'error');
+        return false;
+    }
     return true;
 }
 

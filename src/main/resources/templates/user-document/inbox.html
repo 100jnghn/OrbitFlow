@@ -78,8 +78,7 @@
                 <select id="searchType" class="approval-filter-select">
                     <option value="ALL">전체</option>
                     <option value="TITLE">문서 제목</option>
-                    <option value="WRITER">기안자</option>
-                    <option value="TEMPLATE">양식명</option>
+                    <option value="GROUP_NAME">양식명</option>
                 </select>
 
                 <!-- 검색어 -->
@@ -106,22 +105,23 @@
                 <tr>
                     <th class="index-col">번호</th>
                     <th class="title-col">문서 제목</th>
+                    <th>문서 상태</th>
                     <th>기안자</th>
                     <th>양식</th>
                     <th>현재 결재자</th>
-                    <th>결재 상태</th>
+                    <th>내 결재 상태</th>
                     <th>기안일</th>
                 </tr>
                 </thead>
 
                 <tbody id="approvalTableBody">
                 <tr>
-                    <td colspan="7"
-                        class="approval-empty-row">
+                    <td colspan="8" class="approval-empty-row">
                         결재 문서가 없습니다.
                     </td>
                 </tr>
                 </tbody>
+
             </table>
         </div>
 

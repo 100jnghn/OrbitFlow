@@ -1,6 +1,13 @@
+/* ======================================================
+   기안함 전용 스타일 (my-submit.css)
+   - 테이블 / 페이지네이션 / 상태 배지는 inbox.css 사용
+   - 이 파일은 "기안함 전용 UI"만 담당
+====================================================== */
+
+
 /* ===============================
    문서 작성 버튼 (공통)
-   =============================== */
+=============================== */
 
 .btn-primary {
     display: inline-flex;
@@ -28,7 +35,7 @@
 
 /* ===============================
    문서 작성 팝업
-   =============================== */
+=============================== */
 
 .modal-backdrop {
     position: fixed;
@@ -76,7 +83,11 @@
     background: #fafbff;
 }
 
-/* hint */
+
+/* ===============================
+   팝업 힌트
+=============================== */
+
 .hint {
     position: absolute;
     top: 100%;
@@ -95,7 +106,11 @@
     color: var(--danger-color);
 }
 
-/* 설명 박스 */
+
+/* ===============================
+   선택 양식 설명 박스
+=============================== */
+
 .update-descbox {
     border: 1.4px solid #bfc4e0;
     border-radius: 7px;
@@ -112,7 +127,11 @@
     overflow-y: auto;
 }
 
-/* 드롭다운 */
+
+/* ===============================
+   팝업 드롭다운
+=============================== */
+
 .modal-dropdown-list {
     position: absolute;
     left: 0;
@@ -138,7 +157,11 @@
     background: #ecf2fd;
 }
 
-/* 팝업 버튼 */
+
+/* ===============================
+   팝업 버튼 영역
+=============================== */
+
 .modal-actions {
     margin-top: 15px;
     display: flex;
@@ -174,119 +197,41 @@
 
 
 /* ===============================
-   테이블 레이아웃
-   =============================== */
+   기안함 전용 테이블 보정
+   (inbox.css 기준 최소 오버라이드)
+=============================== */
 
-.approval-container .approval-table {
-    table-layout: fixed;
-    width: 100%;
-}
-
-/* 기본 셀 처리 */
-.approval-container .approval-table td {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* ===============================
-   테이블 정렬 규칙 (핵심)
-   =============================== */
-
-/* 기본: 전부 중앙 */
-.approval-container .approval-table th,
-.approval-container .approval-table td {
-    text-align: center;
-}
-
-/* 제목 계열 컬럼 (문서 제목, 양식명)
-   - 헤더 + 값 모두 좌측 */
-.approval-container .approval-table th:nth-child(1),
-.approval-container .approval-table th:nth-child(2),
-.approval-container .approval-table td.title-col {
+/* 제목 계열 컬럼만 좌측 정렬 */
+.my-documents-page .approval-table th:nth-child(1),
+.my-documents-page .approval-table th:nth-child(2),
+.my-documents-page .approval-table td.title-col {
     text-align: left;
-}
-
-/* 제목 컬럼 강조 */
-.approval-container .approval-table td.title-col {
-    font-weight: 500;
-    color: var(--neutral-800);
-    cursor: pointer;
-}
-
-
-
-
-/* ===============================
-   테이블 컬럼 폭 (colgroup 보조)
-   =============================== */
-
-.approval-container .approval-table th:nth-child(1),
-.approval-container .approval-table td:nth-child(1) {
-    width: 20%;
-}
-
-.approval-container .approval-table th:nth-child(2),
-.approval-container .approval-table td:nth-child(2) {
-    width: 20%;
-}
-
-.approval-container .approval-table th:nth-child(3),
-.approval-container .approval-table td:nth-child(3) {
-    width: 10%;
-}
-
-.approval-container .approval-table th:nth-child(4),
-.approval-container .approval-table td:nth-child(4) {
-    width: 16%;
-    white-space: nowrap;
-}
-
-.approval-container .approval-table th:nth-child(5),
-.approval-container .approval-table td:nth-child(5) {
-    width: 8%;
-}
-
-.approval-container .approval-table th:nth-child(6),
-.approval-container .approval-table td:nth-child(6) {
-    width: 10%;
-}
-
-.approval-container .approval-table th:nth-child(7),
-.approval-container .approval-table td:nth-child(7) {
-    width: 24%;
 }
 
 
 /* ===============================
    하단 액션 영역 (페이지네이션 + 작성 버튼)
-   =============================== */
+=============================== */
 
 .approval-bottom-actions {
-    position: relative; /* 기준점 */
+    position: relative;
     margin-top: 16px;
-    min-height: 36px; /* 버튼 / 페이지네이션 높이 */
+    min-height: 36px;
 }
 
-/* 페이지네이션: 컨테이너 기준 중앙 */
-.approval-bottom-actions .approval-pagination {
-    display: flex;
-    justify-content: center;
-}
-
-/* 문서 작성 버튼: 우측 끝 고정 */
+/* 문서 작성 버튼: 우측 고정 */
 .approval-write-action {
     position: absolute;
     right: 0;
     top: 0;
-
     display: flex;
     align-items: center;
 }
 
+
 /* ===============================
-   Primary 버튼 (문서 작성)
-   =============================== */
+   기안함 전용 배지
+=============================== */
 
 .approval-btn-primary {
     height: 40px;
@@ -348,7 +293,6 @@
     background: var(--neutral-200);
     color: var(--neutral-600);
     font-weight: 500;
-
     display: inline-flex;
     align-items: center;
     line-height: 1;

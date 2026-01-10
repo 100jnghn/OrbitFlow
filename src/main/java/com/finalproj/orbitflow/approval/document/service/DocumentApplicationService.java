@@ -17,6 +17,7 @@ import com.finalproj.orbitflow.approval.documentContent.repository.DocumentConte
 import com.finalproj.orbitflow.approval.documentFile.entity.DocumentFile;
 import com.finalproj.orbitflow.approval.documentFile.enums.DocumentFileStatus;
 import com.finalproj.orbitflow.approval.documentFile.repository.DocumentFileRepository;
+import com.finalproj.orbitflow.approval.documentFile.service.DocumentFileService;
 import com.finalproj.orbitflow.approval.documentSignature.service.DocumentSignatureService;
 import com.finalproj.orbitflow.approval.formTemplate.entity.FormTemplate;
 import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateRepository;
@@ -32,6 +33,8 @@ import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
+import com.finalproj.orbitflow.notification.enums.NotificationType;
+import com.finalproj.orbitflow.notification.service.NotificationCommandService;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -84,6 +87,8 @@ public class DocumentApplicationService {
     private final PdfApprovalLineAssembler pdfApprovalLineAssembler;
     private final PdfInternalImageService pdfInternalImageService;
     private final DocumentSignatureService documentSignatureService;
+    private final DocumentFileService documentFileService;
+    private final NotificationCommandService  notificationCommandService;
 
     @Value("${app.base-url}")
     private String baseUrl;
@@ -200,6 +205,8 @@ public class DocumentApplicationService {
         // 4. 내 결재선 승인
         myLine.markApproved(comment); // → APPROVED
 
+
+
         documentSignatureService.snapShotDocumentSignature(document, myLine);
 
         // 5. 다음 결재선 찾기
@@ -211,12 +218,30 @@ public class DocumentApplicationService {
                 .findFirst()
                 .orElse(null);
 
+
         if (nextLine != null) {
             // 6-1. 다음 결재자가 있다 → 결재 계속
             nextLine.markInProgress(); // WAITING → IN_PROGRESS
+
+            notificationCommandService.createNotification(
+                    nextLine.getCompany().getId(),
+                    nextLine.getApprover().getId(),
+                    NotificationType.APPROVAL,
+                    "결재 차례인 문서가 있습니다.",
+                    "/view/document/" + documentId
+            );
         } else {
             // 6-2. 다음 결재자가 없다 → 최종 승인
             document.approve();
+
+            notificationCommandService.createNotification(
+                    document.getCompany().getId(),
+                    document.getWriter().getId(),
+                    NotificationType.APPROVAL,
+                    "결재가 최종 승인 되었습니다.",
+                    "/view/document/" + documentId
+            );
+
             applicationEventPublisher.publishEvent(document.getId());
         }
     }
@@ -327,11 +352,13 @@ public class DocumentApplicationService {
             byte[] pdfBytes = os.toByteArray();
 
             // 8️⃣ PDF 저장
-            fileService.saveGeneratedPdf(
+            File pdfFile = fileService.saveGeneratedPdf(
                     document.getCompany().getId(),
                     documentId,
                     pdfBytes
             );
+
+            documentFileService.mappingPdf(document, pdfFile);
 
         } catch (Exception e) {
             throw new RuntimeException("PDF 생성 실패", e);
@@ -371,6 +398,15 @@ public class DocumentApplicationService {
 
         // 4. 내 결재선 반려
         myLine.reject(comment); // → REJECTED
+
+
+        notificationCommandService.createNotification(
+                document.getCompany().getId(),
+                document.getWriter().getId(),
+                NotificationType.APPROVAL,
+                "결재 문서가 반려되었습니다.",
+                "/view/document/" + documentId
+        );
 
         // 5. 내 이후 결재자 CANCELLED 처리
         lines.stream()
@@ -518,6 +554,14 @@ public class DocumentApplicationService {
                 fileService.deleteObjectAfterCommit(file.getObjectKey());
             }
         }
+
+        notificationCommandService.createNotification(
+                lines.get(0).getCompany().getId(),
+                lines.get(0).getApprover().getId(),
+                NotificationType.APPROVAL,
+                "결재 차례인 문서가 있습니다.",
+                "/view/document/" + documentId
+        );
     }
 
     private List<ApprovalLine> getApprovalLines(Long documentId) {

@@ -2,7 +2,6 @@ package com.finalproj.orbitflow.approval.document.dto;
 
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -18,21 +17,19 @@ import java.time.Instant;
 
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class DocumentListResDto {
     private Long documentId;
     private String title;
     private String templateGroupName;
-    private int templateVersion;
+    private Integer templateVersion;
     private Instant createdAt;
     private DocumentStatus status;
-
+    private Integer currentApprovalOrder;
+    private Long totalApprovalCount;
     private String currentApproverOrgName;
     private String currentApproverPositionName;
-    private String approvalName;
-
-    private Integer currentOrderNo;
-    private boolean hasRevision;
+    private String currentApproverName;
+    private Boolean hasRevision;
 }
