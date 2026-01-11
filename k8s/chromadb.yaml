@@ -24,6 +24,13 @@ spec:
     spec:
       containers:
         - name: chromadb
-          image: chromadb/chroma
+          image: chromadb/chroma:0.4.22
           ports:
             - containerPort: 8000
+          volumeMounts:
+            - name: chroma-data
+              mountPath: /chroma/data
+      volumes:
+        - name: chroma-data
+          persistentVolumeClaim:
+            claimName: chromadb-pvc

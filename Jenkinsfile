@@ -75,12 +75,14 @@ pipeline {
                         --region ${AWS_REGION} \
                         --name ${EKS_CLUSTER_NAME}
 
+                      kubectl apply -f k8s/chromadb-pvc.yaml
                       kubectl apply -f k8s/redis.yaml
                       kubectl apply -f k8s/chromadb.yaml
                     '''
                 }
             }
         }
+
 
         // ===============================
         // 5️⃣ App Deploy
