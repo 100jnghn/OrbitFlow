@@ -831,14 +831,14 @@ function bindEventHandlers() {
                         const errMsg =
                             (await res.json())?.message ||
                             '문서 양식 그룹 생성에 실패했습니다.';
-                        alert(errMsg);
+                        await sweetWarning(errMsg);
                         return;
                     }
 
                     const result = await res.json();
                     const groupId = result?.data?.createdFormTemplateGroupId;
                     if (!groupId) {
-                        alert('생성된 양식 그룹 ID를 가져오지 못했습니다.');
+                        await sweetWarning('생성된 양식 그룹 ID를 가져오지 못했습니다.');
                         return;
                     }
 
@@ -864,7 +864,7 @@ function bindEventHandlers() {
 
                 } catch (e) {
                     console.error(e);
-                    alert(e.message || '문서 양식 생성 중 오류가 발생했습니다.');
+                    await sweetWarning(e.message || '문서 양식 생성 중 오류가 발생했습니다.');
                 } finally {
                     updateCreateButtonState();
                 }
@@ -988,7 +988,7 @@ function bindUpdatePopupEvents() {
        ========================= */
     okBtn.addEventListener('click', async () => {
         if (!updatePopupState.groupId) {
-            alert('업데이트할 문서를 선택해주세요.');
+            await sweetWarning('업데이트할 문서를 선택해주세요.');
             return;
         }
 
@@ -1018,7 +1018,7 @@ function bindUpdatePopupEvents() {
 
         } catch (e) {
             console.error(e);
-            alert(e.message || '문서 업데이트 중 오류');
+            await sweetWarning(e.message || '문서 업데이트 중 오류');
         } finally {
             okBtn.disabled = false;
         }
@@ -1109,10 +1109,9 @@ function bindUpdateEditButton() {
             updateUpdateButtonState();
 
         } catch (e) {
-            alert('수정 중 오류가 발생했습니다.');
+            await sweetWarning('수정 중 오류가 발생했습니다.');
             console.error(e);
 
-            // ❗ 에러 시에도 UI는 반드시 복구
             updatePopupState.isEditMode = false;
 
             descEl.contentEditable = 'false';

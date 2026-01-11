@@ -83,3 +83,7 @@ holiday:
   api:
     url: https://api.example.com/holidays?year={year}&serviceKey={apiKey}
     api-key: YOUR_API_KEY
+
+notification:
+  expire-days: 50
+  cleanup-cron: "0 0 2 * * *"

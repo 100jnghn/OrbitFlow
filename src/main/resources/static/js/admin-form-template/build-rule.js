@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (!res.ok) {
             console.error("사원 조회 실패", res.status);
-            alert('사원 목록을 불러오지 못했습니다.');
+            await sweetWarning('사원 목록을 불러오지 못했습니다.');
             return [];
         }
 
@@ -518,7 +518,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             const formTemplateId = form.dataset.templateId;
             if (!formTemplateId) return;
 
-            if (!confirm('이 결재 양식을 활성화하시겠습니까?')) return;
+            const result = await sweetConfirm(
+                '결재 양식 활성화',
+                '이 결재 양식을 활성화하시겠습니까?'
+            );
+
+            if (!result.isConfirmed) return;
 
             const saved = await saveApprovalRule();
             if (!saved) return;
@@ -529,11 +534,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             );
 
             if (!res.ok) {
-                alert('결재 양식 활성화에 실패했습니다.');
+                await sweetWarning('결재 양식 활성화에 실패했습니다.');
                 return;
             }
 
-            alert('결재 양식이 활성화되었습니다.');
+            await sweetSuccess('결재 양식이 활성화되었습니다.');
             window.location.href = '/view/admin/approval';
         };
     }
@@ -567,7 +572,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         );
 
         if (!res.ok) {
-            alert('결재선 규칙 저장에 실패했습니다.');
+            await sweetError('결재선 규칙 저장에 실패했습니다.');
             return false;
         }
 
@@ -581,7 +586,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const saved = await saveApprovalRule();
         if (!saved) return;
 
-        alert('결재선 규칙이 저장되었습니다.');
+        await sweetSuccess('결재선 규칙이 저장되었습니다.');
     };
 
 
