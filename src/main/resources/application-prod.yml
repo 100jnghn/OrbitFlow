@@ -5,11 +5,6 @@ app:
   public-base-url: ${PUBLIC_BASE_URL:http://localhost:8090}
   render-base-url: ${RENDER_BASE_URL:http://spring-boot-service}
 
-
-spring:
-  profiles:
-    active: prod
-
   # ===============================
   # 🗄️ RDS (MySQL)
   # ===============================

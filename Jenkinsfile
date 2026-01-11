@@ -6,13 +6,14 @@ pipeline {
         // AWS / ECR
         // ===============================
         AWS_REGION   = "eu-west-3"
-        ECR_REPO_URI = "118320467932.dkr.ecr.eu-west-3.amazonaws.com/orbitflow"
+        ECR_REPO_URI = "118320467932.dkr.ecr.eu-west-3.amazonaws.com/terraform-ecr"
         IMAGE_TAG    = "${BUILD_NUMBER}"
+        EKS_CLUSTER_NAME = "terraform-eks-cluster"
 
         // ===============================
         // App URL (Ingress 생성 후 수정)
         // ===============================
-        PUBLIC_BASE_URL = ""   // 예: http://k8s-orbitflow-xxxx.eu-west-3.elb.amazonaws.com
+        PUBLIC_BASE_URL = ""
     }
 
     stages {
@@ -34,8 +35,8 @@ pipeline {
         stage('Build') {
             steps {
                 sh '''
-                chmod +x gradlew
-                ./gradlew clean build -x test
+                  chmod +x gradlew
+                  ./gradlew clean build -x test
                 '''
             }
         }
@@ -51,26 +52,33 @@ pipeline {
                 ]) {
                     sh '''
                       aws ecr get-login-password --region ${AWS_REGION} \
-                      | docker login --username AWS --password-stdin ${ECR_REPO_URI}
+                        | docker login --username AWS --password-stdin ${ECR_REPO_URI}
 
-                      docker build -t orbitflow:${IMAGE_TAG} .
-                      docker tag orbitflow:${IMAGE_TAG} ${ECR_REPO_URI}:${IMAGE_TAG}
+                      docker build -t ${ECR_REPO_URI}:${IMAGE_TAG} .
                       docker push ${ECR_REPO_URI}:${IMAGE_TAG}
                     '''
                 }
             }
         }
 
-
         // ===============================
         // 4️⃣ Infra Deploy (Redis / ChromaDB)
         // ===============================
         stage('Deploy Infra (Redis / Chroma)') {
             steps {
-                sh '''
-                kubectl apply -f k8s/redis.yaml
-                kubectl apply -f k8s/chromadb.yaml
-                '''
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'aws-credentials']
+                ]) {
+                    sh '''
+                      aws eks update-kubeconfig \
+                        --region ${AWS_REGION} \
+                        --name ${EKS_CLUSTER_NAME}
+
+                      kubectl apply -f k8s/redis.yaml
+                      kubectl apply -f k8s/chromadb.yaml
+                    '''
+                }
             }
         }
 
@@ -79,9 +87,18 @@ pipeline {
         // ===============================
         stage('Deploy App') {
             steps {
-                sh '''
-                envsubst < k8s/app-deploy.yaml | kubectl apply -f -
-                '''
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'aws-credentials']
+                ]) {
+                    sh '''
+                      aws eks update-kubeconfig \
+                        --region ${AWS_REGION} \
+                        --name ${EKS_CLUSTER_NAME}
+
+                      envsubst < k8s/app-deploy.yaml | kubectl apply -f -
+                    '''
+                }
             }
         }
 
@@ -90,9 +107,18 @@ pipeline {
         // ===============================
         stage('Deploy Ingress') {
             steps {
-                sh '''
-                kubectl apply -f k8s/ingress.yaml
-                '''
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'aws-credentials']
+                ]) {
+                    sh '''
+                      aws eks update-kubeconfig \
+                        --region ${AWS_REGION} \
+                        --name ${EKS_CLUSTER_NAME}
+
+                      kubectl apply -f k8s/ingress.yaml
+                    '''
+                }
             }
         }
     }
