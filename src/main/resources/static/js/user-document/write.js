@@ -18,8 +18,8 @@ const imageFieldState = new Map();
 
 const MAX_LENGTH = {
     /* 단일 필드 */
-    documentTitle: 50,
-    text: 100,
+    documentTitle: 25,
+    text: 40,
     textarea: 500,
     number: 10,
     currency: 15,
@@ -47,7 +47,7 @@ async function loadLeaveTypes() {
 
     const res = await apiFetch('/api/leave/types');
     if (!res.ok) {
-        showToast('휴가 유형을 불러오지 못했습니다.', 'error');
+        showFormToast('휴가 유형을 불러오지 못했습니다.', 'error');
         return [];
     }
 
@@ -64,7 +64,7 @@ async function searchEmployees(keyword) {
     );
 
     if (!res.ok) {
-        showToast('사원 검색에 실패했습니다.', 'error');
+        showFormToast('사원 검색에 실패했습니다.', 'error');
         return [];
     }
 
@@ -82,7 +82,7 @@ async function searchOrganizations(keyword) {
     );
 
     if (!res.ok) {
-        showToast('조직 검색에 실패했습니다.', 'error');
+        showFormToast('조직 검색에 실패했습니다.', 'error');
         return [];
     }
 
@@ -283,7 +283,8 @@ function confirmLeaveIfDirty() {
 }
 
 
-function showToast(message, type = 'info', duration = 3000) {
+function showFormToast(message, type = 'info', duration = 3000) {
+    console.trace('[showToast called]', message, type);
     const container = document.getElementById('toast-container');
     if (!container) return;
 
@@ -1458,6 +1459,15 @@ function createCheckboxGroup(field) {
 
         input.checked = values.includes(opt.id);
 
+        // ✅ UX 전용: 변경 시 에러 해제 + 변경사항 트래킹
+        input.addEventListener('change', () => {
+            if (!isInitializing) {
+                hasUnsavedChanges = true;
+            }
+
+            clearCheckboxGroupErrorByFieldId(field.fieldId);
+        });
+
         label.append(input, document.createTextNode(opt.label));
         wrapper.appendChild(label);
     });
@@ -1635,7 +1645,7 @@ function createImageField(field) {
         ).length;
 
         if (activeCount >= maxCount) {
-            showToast(`최대 ${maxCount}장까지 업로드할 수 있습니다.`, 'warning');
+            showFormToast(`최대 ${maxCount}장까지 업로드할 수 있습니다.`, 'warning');
             inputFile.value = '';
             return;
         }
@@ -1658,7 +1668,7 @@ function createImageField(field) {
 
         } catch (e) {
             console.error(e);
-            showToast('이미지 업로드에 실패했습니다.', 'error');
+            showFormToast('이미지 업로드에 실패했습니다.', 'error');
         } finally {
             setLoading(wrapper, false);
             uploadBtn.style.pointerEvents = '';
@@ -1756,6 +1766,15 @@ function getTableCellPlaceholderByType(type) {
 
 
 function addTableRow(tbody, field, rowData = {}) {
+    const {max} = getTableRowPolicy(field);
+
+    const currentRows = tbody.querySelectorAll('tr').length;
+    if (currentRows >= max) {
+        showFormToast(`최대 ${max}행까지만 추가할 수 있습니다.`, 'info');
+        return;
+    }
+
+
     const tr = document.createElement('tr');
 
     field.meta.columns.forEach(col => {
@@ -1989,7 +2008,7 @@ async function toggleApproverEditor(row, line) {
 
             clearApprovalLineError(row);
 
-            showToast(
+            showFormToast(
                 `STEP ${line.orderNo} · (${emp.employeeNo}) ${emp.name} 님이 자동 지정되었습니다.`,
                 'success'
             );
@@ -2004,7 +2023,7 @@ async function toggleApproverEditor(row, line) {
             editorEl.classList.add('hidden');
             displayEl.classList.remove('hidden');
 
-            showToast('변경 가능한 다른 사원이 없습니다.', 'warning');
+            showFormToast('변경 가능한 다른 사원이 없습니다.', 'warning');
             return;
         }
 
@@ -2084,7 +2103,7 @@ async function patchApprovalLineApprover(approvalLineId, approverId) {
     });
 
     if (!res.ok) {
-        showToast('결재자 변경에 실패했습니다.', 'error');
+        showFormToast('결재자 변경에 실패했습니다.', 'error');
     }
 }
 
@@ -2216,6 +2235,17 @@ async function createEventDateRange(field) {
     return inputWrapper;
 }
 
+function getTableRowPolicy(field) {
+    const rowPolicy = field.meta?.rowPolicy ?? {};
+
+    return {
+        min: rowPolicy.min ?? 0,
+        max: rowPolicy.max ?? 10,   // ⭐ 기본 10 여기서 통일
+        addable: rowPolicy.addable !== false,
+        removable: rowPolicy.removable !== false
+    };
+}
+
 
 function validateTableField(fieldDef, rows) {
     const {required, label, meta} = fieldDef;
@@ -2223,7 +2253,7 @@ function validateTableField(fieldDef, rows) {
     const rowPolicy = meta?.rowPolicy ?? {};
 
     const minRows = rowPolicy.min ?? 0;
-    const maxRows = rowPolicy.max ?? Infinity;
+    const maxRows = rowPolicy.max ?? 10;
 
     /* =========================
        1️⃣ 테이블 자체 required
@@ -2417,9 +2447,13 @@ function validateRequiredField(field, value) {
                 value !== undefined &&
                 value !== '';
 
-        case 'checkbox':
-            // checkbox는 기본적으로 0개 선택 허용
-            return true;
+        case 'checkbox': {
+            const min = field.meta?.minSelected ?? 0;
+            const count = Array.isArray(value) ? value.length : 0;
+
+            return count >= min;
+        }
+
 
         case 'address': {
             if (!value) return false;
@@ -2485,36 +2519,26 @@ function validateDocumentTitle() {
 
 
 function updateTableRowControls(tbody, field, addBtn) {
-    const rowPolicy = field.meta?.rowPolicy ?? {};
-    const min = rowPolicy.min ?? 0;
-    const max = rowPolicy.max ?? Infinity;
+    const {min, max, addable, removable} = getTableRowPolicy(field);
 
     const rows = tbody.querySelectorAll('tr');
     const rowCount = rows.length;
 
-    // ▶ add 버튼
     if (addBtn) {
-        const canAdd =
-            rowPolicy.addable !== false &&
-            rowCount < max;
-
+        const canAdd = addable && rowCount < max;
         addBtn.disabled = !canAdd;
-        addBtn.title = !canAdd && rowCount >= max
+        addBtn.title = !canAdd
             ? `최대 ${max}행까지 입력할 수 있습니다.`
             : '';
     }
 
-    // ▶ remove 버튼
     rows.forEach(row => {
         const removeBtn = row.querySelector('.remove-row-btn');
         if (!removeBtn) return;
 
-        const canRemove =
-            rowPolicy.removable !== false &&
-            rowCount > min;
-
+        const canRemove = removable && rowCount > min;
         removeBtn.disabled = !canRemove;
-        removeBtn.title = !canRemove && rowCount <= min
+        removeBtn.title = !canRemove
             ? `최소 ${min}행은 유지해야 합니다.`
             : '';
     });
@@ -2532,8 +2556,10 @@ async function validateFieldsByTypeWithSchema(fieldDefs, valuesById) {
             continue;
         }
 
-        // required=false → 타입 검증 스킵
-        if (!field.required) {
+        if (
+            !field.required &&
+            !(field.fieldType === 'checkbox' && (field.meta?.minSelected ?? 0) > 0)
+        ) {
             continue;
         }
 
@@ -2703,8 +2729,12 @@ async function validateRequiredFieldsWithSchema(fieldDefs, valuesById) {
         /* =========================
            2️⃣ required 아닌 필드는 스킵
         ========================= */
-        if (!field.required) continue;
-
+        if (
+            !field.required &&
+            !(field.fieldType === 'checkbox' && (field.meta?.minSelected ?? 0) > 0)
+        ) {
+            continue;
+        }
         const valid = validateRequiredField(field, value);
 
         if (!valid) {
@@ -3226,11 +3256,11 @@ async function attachReferenceDocument(documentId, documentFileId) {
     );
 
     if (!res.ok) {
-        showToast('참조 문서 연결에 실패했습니다.', 'error');
+        showFormToast('참조 문서 연결에 실패했습니다.', 'error');
         return;
     }
 
-    showToast('참조 문서가 추가되었습니다.', 'success');
+    showFormToast('참조 문서가 추가되었습니다.', 'success');
 
     closeReferencePopup();
     await loadAttachments(documentId);
@@ -3300,7 +3330,7 @@ async function bindEvents(documentId) {
                 });
 
                 // 7️⃣ 이동
-                await sweetSuccess('문서가 상신되었습니다.');
+                await sweetSuccess("문서가 상신되었습니다.");
                 location.href = '/view/document/my-documents';
 
             } catch (e) {
@@ -3374,7 +3404,7 @@ function renderAttachmentList() {
                 );
 
                 if (ok) {
-                    showToast('첨부파일이 복구되었습니다.', 'success');
+                    showFormToast('첨부파일이 복구되었습니다.', 'success');
                     await loadAttachments(DOCUMENT_ID);
                     renderAttachmentList();
                 }
@@ -3397,7 +3427,7 @@ function renderAttachmentList() {
                 );
 
                 if (ok) {
-                    showToast('첨부파일이 삭제되었습니다.', 'info');
+                    showFormToast('첨부파일이 삭제되었습니다.', 'info');
                     await loadAttachments(DOCUMENT_ID);
                     renderAttachmentList();
                 }
@@ -3461,7 +3491,7 @@ function renderReferenceDocList() {
                 );
 
                 if (ok) {
-                    showToast('참조 문서가 제거되었습니다.', 'info');
+                    showFormToast('참조 문서가 제거되었습니다.', 'info');
                     await loadAttachments(DOCUMENT_ID);
                     renderReferenceDocList();
                 }
@@ -3527,7 +3557,7 @@ function createImagePreviewItem(imageItem, fieldId) {
             );
 
             if (!ok) {
-                showToast('이미지 삭제에 실패했습니다.', 'error');
+                showFormToast('이미지 삭제에 실패했습니다.', 'error');
                 return;
             }
 
@@ -3560,7 +3590,7 @@ function createImagePreviewItem(imageItem, fieldId) {
 
         } catch (e) {
             console.error(e);
-            showToast('이미지 삭제 중 오류가 발생했습니다.', 'error');
+            showFormToast('이미지 삭제 중 오류가 발생했습니다.', 'error');
         } finally {
             // ✅ 스피너 OFF
             setLoading(wrapper, false);
@@ -3621,7 +3651,7 @@ async function uploadAttachment(documentId, file) {
     );
 
     if (!res.ok) {
-        showToast(`파일 업로드 실패: ${file.name}`, 'error');
+        showFormToast(`파일 업로드 실패: ${file.name}`, 'error');
         throw new Error('UPLOAD_FAILED');
     }
 
@@ -3629,7 +3659,7 @@ async function uploadAttachment(documentId, file) {
     const uploaded = result.data;
     // { documentFileId, fileId, fileName, fileSize, ... }
 
-    showToast(`업로드 완료: ${file.name}`, 'success');
+    showFormToast(`업로드 완료: ${file.name}`, 'success');
     return uploaded;
 }
 
@@ -3648,7 +3678,7 @@ async function uploadImage(fieldId, file) {
     );
 
     if (!res.ok) {
-        showToast('이미지 업로드에 실패했습니다.', 'error');
+        showFormToast('이미지 업로드에 실패했습니다.', 'error');
         throw new Error('IMAGE_UPLOAD_FAILED');
     }
 
@@ -3664,7 +3694,7 @@ async function loadAttachments(documentId) {
     );
 
     if (!res.ok) {
-        showToast('첨부파일 목록을 불러오지 못했습니다.', 'error');
+        showFormToast('첨부파일 목록을 불러오지 못했습니다.', 'error');
         return;
     }
 
@@ -3684,7 +3714,7 @@ async function updateAttachmentStatus(documentFileId, status) {
     );
 
     if (!res.ok) {
-        showToast('첨부파일 상태 변경에 실패했습니다.', 'error');
+        showFormToast('첨부파일 상태 변경에 실패했습니다.', 'error');
         return false;
     }
 
@@ -3698,7 +3728,7 @@ async function removeReferenceDocument(documentId, documentFileId) {
     );
 
     if (!res.ok) {
-        showToast('참조 문서 제거에 실패했습니다.', 'error');
+        showFormToast('참조 문서 제거에 실패했습니다.', 'error');
         return false;
     }
     return true;
@@ -3725,7 +3755,7 @@ async function tempSave(documentId) {
         return;
     }
     hasUnsavedChanges = false;
-    showToast('임시 저장되었습니다.', 'success');
+    showFormToast('임시 저장되었습니다.', 'success');
 }
 
 /**

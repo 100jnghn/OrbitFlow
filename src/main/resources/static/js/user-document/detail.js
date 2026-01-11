@@ -368,11 +368,12 @@ async function submitApprovalAction() {
             throw new Error("결재 처리 실패");
         }
 
+        closeApprovalModal();
+        await Promise.resolve();
+
         await sweetSuccess(currentActionType === "approve"
             ? "승인되었습니다."
             : "반려되었습니다.");
-
-        closeApprovalModal();
         location.reload(); // 상태 갱신
 
     } catch (e) {
