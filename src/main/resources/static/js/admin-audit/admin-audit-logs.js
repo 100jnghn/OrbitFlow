@@ -150,13 +150,18 @@ async function openAuditLogModal(id) {
         setText('modal-created-at', formatDateTime(log.createdAt));
         setText('modal-actor', `${log.actorName} (${log.actorEmail})`);
         setText('modal-entity', log.entityDisplay);
-        setText('modal-event', log.eventType);
+        setText(
+            'modal-event',
+            humanizeEvent(log.eventType)
+        );
+
 
         // BEFORE / AFTER
         document.getElementById('modal-before').textContent =
-            formatJson(log.beforeData);
-        document.getElementById('modal-after').textContent =
-            formatJson(log.afterData);
+            formatDiff(log.beforeData, log.afterData);
+
+        document.getElementById('modal-after').style.display = 'none';
+
 
         document.getElementById('audit-log-modal').style.display = 'flex';
 
@@ -178,12 +183,55 @@ function setText(id, value) {
     if (el) el.textContent = value ?? '-';
 }
 
-function formatJson(obj) {
-    if (!obj || Object.keys(obj).length === 0) return '';
-    return JSON.stringify(obj, null, 2);
+function formatDiff(before, after) {
+    if (!before && !after) return '-';
+
+    const keys = new Set([
+        ...Object.keys(before || {}),
+        ...Object.keys(after || {})
+    ]);
+
+    if (keys.size === 0) return '-';
+
+    const lines = [];
+
+    keys.forEach(key => {
+        const b = before?.[key];
+        const a = after?.[key];
+
+        if (b !== a) {
+            lines.push(`${humanizeKey(key)}: ${b ?? '-'} → ${a ?? '-'}`);
+        }
+    });
+
+    return lines.join('\n');
 }
+
+function humanizeKey(key) {
+    const map = {
+        status: '상태',
+        orgId: '조직',
+        rankId: '직급',
+        positionCategoryId: '직책'
+    };
+    return map[key] ?? key;
+}
+
 
 function formatDateTime(isoString) {
     if (!isoString) return '-';
     return isoString.replace('T', ' ').substring(0, 19);
+}
+
+function humanizeEvent(event) {
+    const map = {
+        ACTIVATE: '계정 활성화',
+        DEACTIVATE: '비활성화',
+        MOVE: '조직 이동',
+        ASSIGN: '직급/직책 부여',
+        UNASSIGN: '직급/직책 해제',
+        STATUS_CHANGE: '상태 변경',
+        CREATE: '생성'
+    };
+    return map[event] ?? event;
 }
