@@ -219,20 +219,24 @@ public class CompanyService {
             OrgCategory deptCat,
             OrgCategory teamCat
     ) {
-        positionCategoryRepository.save(
+        PositionCategory ceo = positionCategoryRepository.save(
                 PositionCategory.create(company, companyCat, null, "사장", 1, true)
         );
-        positionCategoryRepository.save(
-                PositionCategory.create(company, hqCat, null, "본부장", 2, true)
+
+        PositionCategory hqHead = positionCategoryRepository.save(
+                PositionCategory.create(company, hqCat, ceo, "본부장", 2, true)
         );
-        positionCategoryRepository.save(
-                PositionCategory.create(company, deptCat, null, "부장", 3, true)
+
+        PositionCategory deptHead = positionCategoryRepository.save(
+                PositionCategory.create(company, deptCat, hqHead, "부장", 3, true)
         );
-        positionCategoryRepository.save(
-                PositionCategory.create(company, teamCat, null, "팀장", 4, true)
+
+        PositionCategory teamLead = positionCategoryRepository.save(
+                PositionCategory.create(company, teamCat, deptHead, "팀장", 4, true)
         );
+
         positionCategoryRepository.save(
-                PositionCategory.create(company, teamCat, null, "팀원", 5, false)
+                PositionCategory.create(company, teamCat, teamLead, "팀원", 5, false)
         );
     }
 
@@ -245,13 +249,32 @@ public class CompanyService {
     }
 
     private void seedDefaultRanks(Company company) {
-        rankRepository.save(HrRank.create(company, null, "사장", 1));
-        rankRepository.save(HrRank.create(company, null, "부장", 2));
-        rankRepository.save(HrRank.create(company, null, "차장", 3));
-        rankRepository.save(HrRank.create(company, null, "과장", 4));
-        rankRepository.save(HrRank.create(company, null, "대리", 5));
-        rankRepository.save(HrRank.create(company, null, "사원", 6));
+
+        HrRank ceo = rankRepository.save(
+                HrRank.create(company, null, "사장", 1)
+        );
+
+        HrRank director = rankRepository.save(
+                HrRank.create(company, ceo, "부장", 2)
+        );
+
+        HrRank deputy = rankRepository.save(
+                HrRank.create(company, director, "차장", 3)
+        );
+
+        HrRank manager = rankRepository.save(
+                HrRank.create(company, deputy, "과장", 4)
+        );
+
+        HrRank assistant = rankRepository.save(
+                HrRank.create(company, manager, "대리", 5)
+        );
+
+        rankRepository.save(
+                HrRank.create(company, assistant, "사원", 6)
+        );
     }
+
 
 
 
