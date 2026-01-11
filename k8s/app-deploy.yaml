@@ -16,18 +16,19 @@ spec:
     spec:
       containers:
         - name: orbitflow
-          image: ${ECR_REPO_URI}:${IMAGE_TAG}
+          image: 118320467932.dkr.ecr.eu-west-3.amazonaws.com/orbitflow:${IMAGE_TAG}
           imagePullPolicy: Always
 
           ports:
             - containerPort: 8090
 
-          # 🔑 모든 민감 정보는 Secret에서 주입
+          # ===============================
+          # 🔑 환경 변수 (Secret 기반)
+          # ===============================
           envFrom:
             - secretRef:
                 name: orbitflow-secret
 
-          # 🔧 환경별/런타임 설정
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: "prod"
@@ -38,22 +39,30 @@ spec:
             - name: RENDER_BASE_URL
               value: "http://spring-boot-service"
 
-          # ❤️ Health Check (ALB + K8s 공용)
+          # ===============================
+          # ❤️ Health Check (Actuator)
+          # ===============================
           readinessProbe:
             httpGet:
               path: /actuator/health
               port: 8090
-            initialDelaySeconds: 20
+            initialDelaySeconds: 60
             periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
 
           livenessProbe:
             httpGet:
               path: /actuator/health
               port: 8090
-            initialDelaySeconds: 40
+            initialDelaySeconds: 120
             periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
 
-          # ⚙️ 리소스 제한 (HPA 대비)
+          # ===============================
+          # ⚙️ Resource
+          # ===============================
           resources:
             requests:
               cpu: "250m"
@@ -73,7 +82,8 @@ spec:
   selector:
     app: orbitflow
   ports:
-    - port: 80
+    - name: http
+      port: 80
       targetPort: 8090
       protocol: TCP
   type: ClusterIP

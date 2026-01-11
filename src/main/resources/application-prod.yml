@@ -20,7 +20,7 @@ spring:
   # ===============================
   jpa:
     hibernate:
-      ddl-auto: none                # 🔥 운영에서는 절대 update X
+      ddl-auto: none              # 🚫 운영 절대 update 금지
     show-sql: false
     properties:
       hibernate:
@@ -31,7 +31,7 @@ spring:
   # ===============================
   data:
     redis:
-      host: redis                   # ✅ redis Service 이름
+      host: redis                 # ✅ redis Service 이름
       port: 6379
       timeout: 5s
 
@@ -68,7 +68,7 @@ spring:
 # 🌐 Server
 # ===============================
 server:
-  port: 8090                        # 컨테이너 포트
+  port: 8090
 
 # ===============================
 # 📜 Logging
@@ -94,13 +94,13 @@ external:
 
 business:
   validation:
-    strict: false                   # 시연 / 운영 선택
+    strict: false                # 시연/운영 선택
 
 # ===============================
-# 🔥 ChromaDB
+# 🔥 ChromaDB (Vector DB)
 # ===============================
 chroma:
-  host: chromadb                   # ✅ chromadb Service 이름
+  host: chromadb                # ✅ chromadb Service 이름
   port: 8000
   scheme: http
 
@@ -143,7 +143,7 @@ notification:
   cleanup-cron: "0 0 2 * * *"
 
 # ===============================
-# ❤️ Actuator / Health (K8s / ALB 용)
+# ❤️ Actuator / Health (K8s / ALB)
 # ===============================
 management:
   endpoints:
@@ -154,7 +154,7 @@ management:
   endpoint:
     health:
       probes:
-        enabled: true               # ✅ Kubernetes probe 대응
+        enabled: true             # ✅ startup/readiness/liveness 대응
 
   health:
     livenessstate:
