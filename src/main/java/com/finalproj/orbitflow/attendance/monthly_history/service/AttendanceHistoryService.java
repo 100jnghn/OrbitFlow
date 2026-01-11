@@ -28,32 +28,19 @@ public class AttendanceHistoryService {
     private final CommuteRepository commuteRepository;
     private final EmployeeRepository employeeRepository;
 
-    /**
-     * [사원/관리자 공통] 월별 근태 데이터 조회 메인 로직
-     */
+
+    // 월별 근태 조회시 필요한 모든 데이터 조합
     public MonthlyHistoryResDto getMonthlyHistoryData(Long empId, Integer year, Integer month,
                                                       LocalDate startDate, LocalDate endDate,
                                                       String status, Pageable pageable) {
 
-        List<String> availableMonths = getAvailableMonths(empId);
+        // 1. 기간 유효성 검사
+        validateSearchDates(startDate, endDate);
 
-        LocalDate finalStart;
-        LocalDate finalEnd;
-
-        // 기간 우선순위 결정
-        if (startDate != null && endDate != null) {
-            // 시작일이 종료일보다 늦은 경우 검증
-            if (startDate.isAfter(endDate)) {
-                throw new InvalidRequestException("시작일이 종료일보다 늦을 수 없습니다.");
-            }
-            finalStart = startDate;
-            finalEnd = endDate;
-        } else {
-            int y = (year != null) ? year : LocalDate.now().getYear();
-            int m = (month != null) ? month : LocalDate.now().getMonthValue();
-            finalStart = LocalDate.of(y, m, 1);
-            finalEnd = finalStart.withDayOfMonth(finalStart.lengthOfMonth());
-        }
+        // 2. 조회 기간 설정 (자유 기간 > 특정 연/월 > 현재 월)
+        LocalDate[] period = resolvePeriod(year, month, startDate, endDate);
+        LocalDate finalStart = period[0];
+        LocalDate finalEnd = period[1];
 
         return MonthlyHistoryResDto.builder()
                 .searchPeriod(finalStart + " ~ " + finalEnd)
@@ -62,47 +49,8 @@ public class AttendanceHistoryService {
                 .build();
     }
 
-    /**
-     * 입사일부터 현재까지 "yyyy-MM" 형식의 리스트 생성
-     */
-    private List<String> getAvailableMonths(Long empId) {
-        // 사원의 입사일 조회 (없을 경우 현재 날짜 기준)
-        LocalDate hireDate = employeeRepository.findById(empId)
-                .map(Employee::getHireDate)
-                .orElse(LocalDate.now());
 
-        LocalDate now = LocalDate.now();
-        List<String> months = new ArrayList<>();
-
-        LocalDate temp = hireDate.withDayOfMonth(1); // 입사월의 1일부터 시작
-        LocalDate currentMonth = now.withDayOfMonth(1);
-
-        // 입사월부터 현재월까지 반복하며 리스트 추가
-        while (!temp.isAfter(currentMonth)) {
-            months.add(temp.format(DateTimeFormatter.ofPattern("yyyy-MM")));
-            temp = temp.plusMonths(1);
-        }
-
-        // 최신순으로 보여주기 위해 정렬 뒤집기
-        Collections.reverse(months);
-        return months;
-    }
-
-    private Page<DailyAttRecordResDto> getMonthlyHistoryPaged(Long empId, LocalDate start, LocalDate end, String status, Pageable pageable) {
-        AttendanceStatus attStatus = null;
-        try {
-            if (status != null && !"ALL".equals(status)) {
-                attStatus = AttendanceStatus.valueOf(status);
-            }
-        } catch (IllegalArgumentException e) {
-            attStatus = null;
-        }
-
-        // Repository에 추가한 findHistoryWithPaging 호출
-        return commuteRepository.findHistoryWithPaging(empId, start, end, attStatus, pageable)
-                .map(this::convertToDto);
-    }
-
+    // 지정  기간 내의 통계 데이터 계산
     private MonthlyAttHistoryResDto getMonthlySummary(Long empId, LocalDate start, LocalDate end) {
         List<Attendance> records = commuteRepository.findByEmployeeIdAndWorkDateBetweenOrderByWorkDateAsc(empId, start, end);
         long totalMin = 0, lateCount = 0, absentCount = 0;
@@ -124,6 +72,23 @@ public class AttendanceHistoryService {
                 .build();
     }
 
+
+    // 페이징 처리된 근태목록
+    private Page<DailyAttRecordResDto> getMonthlyHistoryPaged(Long empId, LocalDate start, LocalDate end, String status, Pageable pageable) {
+        AttendanceStatus attStatus = null;
+        try {
+            if (status != null && !"ALL".equals(status)) {
+                attStatus = AttendanceStatus.valueOf(status);
+            }
+        } catch (IllegalArgumentException e) {
+            attStatus = null;
+        }
+
+        return commuteRepository.findHistoryWithPaging(empId, start, end, attStatus, pageable)
+                .map(this::convertToDto);
+    }
+
+
     private DailyAttRecordResDto convertToDto(Attendance a) {
         long diff = (a.getCommuteAt() != null && a.getLeaveAt() != null)
                 ? Duration.between(a.getCommuteAt(), a.getLeaveAt()).toMinutes() : 0;
@@ -136,5 +101,30 @@ public class AttendanceHistoryService {
                 .statusName(a.getStatus().getDescription())
                 .statusCode(a.getStatus().name())
                 .build();
+    }
+
+    /**
+     * 기간 유효성 검사 분리
+     */
+    private void validateSearchDates(LocalDate start, LocalDate end) {
+        if (start != null && end != null && start.isAfter(end)) {
+            throw new InvalidRequestException("시작일이 종료일보다 늦을 수 없습니다.");
+        }
+    }
+
+    /**
+     * 기간 결정 로직 분리
+     */
+    private LocalDate[] resolvePeriod(Integer year, Integer month, LocalDate start, LocalDate end) {
+        if (start != null && end != null) {
+            return new LocalDate[]{start, end};
+        }
+
+        int y = (year != null) ? year : LocalDate.now().getYear();
+        int m = (month != null) ? month : LocalDate.now().getMonthValue();
+        LocalDate firstDay = LocalDate.of(y, m, 1);
+        LocalDate lastDay = firstDay.withDayOfMonth(firstDay.lengthOfMonth());
+
+        return new LocalDate[]{firstDay, lastDay};
     }
 }

@@ -1,231 +1,195 @@
-let currentParams = { page: 0, size: 31, status: 'ALL' };
+/**
+ * 월별 근태 현황 관리 모듈
+ * * 주요 기능:
+ * 1. 기간 및 상태별 근태 내역 조회
+ * 2. 통계 요약 정보(근무시간, 지각, 결근) 업데이트
+ * 3. 페이징 처리 및 UI 배지 바인딩
+ */
+const MonthlyAttendance = {
+    // 1. 상태 관리: 현재 조회 중인 파라미터 저장
+    state: {
+        page: 0,
+        size: 31,
+        status: 'ALL'
+    },
 
-document.addEventListener('DOMContentLoaded', function () {
-    // 초기 상태: 날짜 필드를 빈 값으로 설정 (연차 조회와 동일)
-    const startDateInput = document.getElementById('startDate');
-    const endDateInput = document.getElementById('endDate');
+    // 2. 엘리먼트 캐싱: DOM 접근 최소화로 성능 향상
+    elements: null,
 
-    // 날짜 필드는 초기 상태(빈 값)로 설정
-    startDateInput.value = '';
-    endDateInput.value = '';
+    init() {
+        this.cacheDOM();
+        this.bindEvents();
+        this.resetInputs(); // 초기 입력 필드 세팅
+        this.updateSidebar();
+        this.executeSearch(); // 초기 데이터 로드
+    },
 
-    // 초기 데이터 로드 (날짜가 없으므로 백엔드에서 현재 월로 처리하여 목록 표시)
-    executeSearch();
+    cacheDOM() {
+        this.elements = {
+            startDate: document.getElementById('startDate'),
+            endDate: document.getElementById('endDate'),
+            statusFilter: document.getElementById('statusFilter'),
+            searchBtn: document.getElementById('searchBtn'),
+            resetBtn: document.getElementById('resetBtn'),
+            tableBody: document.querySelector('#attendanceTable tbody'),
+            pagination: document.getElementById('boardPagination'),
+            summary: {
+                totalHours: document.getElementById('totalWorkHours'),
+                lateCount: document.getElementById('lateCount'),
+                absentCount: document.getElementById('absentCount')
+            }
+        };
+    },
 
-    // 검색 버튼 클릭 이벤트
-    document.getElementById('searchBtn').addEventListener('click', () => {
-        const statusFilter = document.getElementById('statusFilter');
-        if (statusFilter) {
-            currentParams.status = statusFilter.value;
-        }
-        currentParams.page = 0;
-        executeSearch();
-    });
-
-    // 초기화 버튼 클릭 이벤트
-    document.getElementById('resetBtn').addEventListener('click', () => {
-        resetFilters();
-    });
-
-    updateSidebarSelection();
-});
-
-function updateSidebarSelection() {
-    // 모든 no-sub 메뉴 선택 해제
-    document.querySelectorAll('.menu-item.no-sub').forEach(item => {
-        item.classList.remove('selected');
-    });
-
-    // 월별 근태 현황 선택
-    const monthlyLink = document.getElementById('monthlyLink');
-    if (monthlyLink) {
-        const menuItem = monthlyLink.closest('.menu-item.no-sub');
-        if (menuItem) {
-            menuItem.classList.add('selected');
-        }
-    }
-}
-
-function executeSearch() {
-    const startDateInput = document.getElementById('startDate');
-    const endDateInput = document.getElementById('endDate');
-    const start = startDateInput.value || null;
-    const end = endDateInput.value || null;
-
-    // 시작일이 종료일보다 늦은 경우 검증 (잘못된 기간설정 알림)
-    if (start && end && start > end) {
-        alert('잘못된 기간설정입니다.');
-        return;
-    }
-
-    loadAttendanceData(start, end);
-}
-
-function resetFilters() {
-    // 필터 초기화 (연차 조회와 동일 - 기간을 완전히 빈 값으로 초기화)
-    document.getElementById('statusFilter').value = 'ALL';
-    document.getElementById('startDate').value = '';
-    document.getElementById('endDate').value = '';
-
-    // 파라미터 초기화
-    currentParams.status = 'ALL';
-    currentParams.page = 0;
-
-    // 초기 상태로 되돌린 후 데이터 다시 로드 (연차 조회와 동일)
-    executeSearch();
-}
-
-async function loadAttendanceData(start, end) {
-    const { page, size, status } = currentParams;
-
-    let url = `/api/attendance/history/monthly?status=${status}&page=${page}&size=${size}`;
-
-    // 기간이 있으면 추가 (연차 조회와 동일한 방식)
-    if (start) url += `&startDate=${start}`;
-    if (end) url += `&endDate=${end}`;
-
-    try {
-        const response = await fetch(url, {
-            headers: { 'Authorization': `Bearer ${sessionStorage.getItem('accessToken')}` }
+    bindEvents() {
+        // 검색 버튼 클릭
+        this.elements.searchBtn.addEventListener('click', () => {
+            this.state.status = this.elements.statusFilter?.value || 'ALL';
+            this.state.page = 0;
+            this.executeSearch();
         });
 
-        const res = await response.json();
+        // 초기화 버튼 클릭
+        this.elements.resetBtn.addEventListener('click', () => this.handleReset());
+    },
 
-        // 에러 응답 처리
-        if (!response.ok) {
-            alert(res.message || '근태 내역을 조회하는 중 오류가 발생했습니다.');
+    resetInputs() {
+        this.elements.startDate.value = '';
+        this.elements.endDate.value = '';
+    },
+
+    handleReset() {
+        this.elements.statusFilter.value = 'ALL';
+        this.resetInputs();
+        this.state.status = 'ALL';
+        this.state.page = 0;
+        this.executeSearch(); // 초기 상태로 데이터 재로드
+    },
+
+    async executeSearch() {
+        const start = this.elements.startDate.value || null;
+        const end = this.elements.endDate.value || null;
+
+        // 시작일이 종료일보다 늦은 경우 검증
+        if (start && end && start > end) {
+            alert('시작일이 종료일보다 늦을 수 없습니다.');
             return;
         }
 
-        const data = res.data;
+        await this.loadData(start, end);
+    },
 
-        if (data) {
-            document.getElementById('totalWorkHours').innerText = data.summary.totalWorkTimeDisplay || '0h 00m';
-            document.getElementById('lateCount').innerText = data.summary.lateCount || 0;
-            document.getElementById('absentCount').innerText = data.summary.leaveAbsentCount || 0;
-            renderTable(data.pagedData.content);
-            renderPagination(data.pagedData);
+    async loadData(start, end) {
+        const { page, size, status } = this.state;
+        let url = `/api/attendance/history/monthly?status=${status}&page=${page}&size=${size}`;
+
+        if (start) url += `&startDate=${start}`;
+        if (end) url += `&endDate=${end}`;
+
+        try {
+            const response = await fetch(url, {
+                headers: { 'Authorization': `Bearer ${sessionStorage.getItem('accessToken')}` }
+            });
+            const res = await response.json();
+
+            if (!response.ok) {
+                alert(res.message || '근태 내역을 조회하는 중 오류가 발생했습니다.');
+                return;
+            }
+
+            this.updateUI(res.data);
+        } catch (error) {
+            console.error('API Error:', error);
+            alert('서버와의 통신 중 오류가 발생했습니다.');
         }
-    } catch (error) {
-        console.error('근태 내역 조회 오류:', error);
-        alert('근태 내역을 조회하는 중 오류가 발생했습니다.');
-    }
-}
+    },
 
-function renderTable(recs) {
-    const tb = document.querySelector('#attendanceTable tbody');
-    if (!recs || recs.length === 0) {
-        tb.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 100px; color:#999; font-size:15px;">조회된 기록이 없습니다.</td></tr>';
-        return;
-    }
+    // 3. UI 렌더링 로직
+    updateUI(data) {
+        if (!data) return;
 
-    tb.innerHTML = recs.map(r => `
-        <tr>
-            <td style="font-weight:600; white-space: nowrap;">${r.date}</td>
-            <td>${r.commuteAt || '-'}</td>
-            <td>${r.leaveAt || '-'}</td>
-            <td>${r.workingTime || '0h 00m'}</td>
-            <td><span class="status-badge ${getBadgeClass(r.statusCode)}">${r.statusName}</span></td>
-        </tr>`).join('');
-}
+        // 요약 정보 업데이트
+        const { summary, pagedData } = data;
+        this.elements.summary.totalHours.innerText = summary.totalWorkTimeDisplay || '0h 00m';
+        this.elements.summary.lateCount.innerText = summary.lateCount || 0;
+        this.elements.summary.absentCount.innerText = summary.leaveAbsentCount || 0;
 
-function getBadgeClass(c) {
-    if (c === 'LATE') return 'badge-late';
-    if (c === 'ABSENT') return 'badge-absent';
-    if (c === 'ON_TIME') return 'badge-normal';
-    if (c === 'VACATION') return 'badge-vacation';
-    return 'badge-normal';
-}
+        this.renderTable(pagedData.content);
+        this.renderPagination(pagedData);
+    },
 
-function renderPagination(pageInfo) {
-    const pagination = document.getElementById('boardPagination');
-    pagination.innerHTML = '';
-
-    const page = pageInfo.number;
-    const totalPages = pageInfo.totalPages;
-
-    // 이전 버튼
-    const prevBtn = document.createElement('button');
-    prevBtn.className = 'page-btn';
-    prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
-    prevBtn.disabled = page === 0;
-    prevBtn.onclick = () => {
-        if (page > 0) {
-            currentParams.page = page - 1;
-            executeSearch();
+    renderTable(records) {
+        if (!records || records.length === 0) {
+            this.elements.tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 100px; color:#999;">조회된 기록이 없습니다.</td></tr>';
+            return;
         }
-    };
-    pagination.appendChild(prevBtn);
 
-    // 페이지 번호
-    const maxVisible = 5;
-    let startPage = Math.max(0, page - Math.floor(maxVisible / 2));
-    let endPage = Math.min(totalPages - 1, startPage + maxVisible - 1);
+        this.elements.tableBody.innerHTML = records.map(r => `
+            <tr>
+                <td style="font-weight:600;">${r.date}</td>
+                <td>${r.commuteAt || '-'}</td>
+                <td>${r.leaveAt || '-'}</td>
+                <td>${r.workingTime || '0h 00m'}</td>
+                <td><span class="status-badge ${this.getBadgeClass(r.statusCode)}">${r.statusName}</span></td>
+            </tr>`).join('');
+    },
 
-    if (endPage - startPage < maxVisible - 1) {
-        startPage = Math.max(0, endPage - maxVisible + 1);
-    }
-
-    if (startPage > 0) {
-        const firstBtn = document.createElement('button');
-        firstBtn.className = 'page-number';
-        firstBtn.textContent = '1';
-        firstBtn.onclick = () => {
-            currentParams.page = 0;
-            executeSearch();
+    getBadgeClass(code) {
+        const badgeMap = {
+            'LATE': 'badge-late',
+            'ABSENT': 'badge-absent',
+            'ON_TIME': 'badge-normal',
+            'VACATION': 'badge-vacation'
         };
-        pagination.appendChild(firstBtn);
+        return badgeMap[code] || 'badge-normal';
+    },
 
-        if (startPage > 1) {
-            const ellipsis = document.createElement('span');
-            ellipsis.className = 'ellipsis';
-            ellipsis.textContent = '...';
-            pagination.appendChild(ellipsis);
-        }
-    }
+    renderPagination(pageInfo) {
+        this.elements.pagination.innerHTML = '';
+        const { number: page, totalPages } = pageInfo;
 
-    for (let i = startPage; i <= endPage; i++) {
-        const pageBtn = document.createElement('button');
-        pageBtn.className = 'page-number';
-        if (i === page) {
-            pageBtn.classList.add('active');
-        }
-        pageBtn.textContent = i + 1;
-        pageBtn.onclick = () => {
-            currentParams.page = i;
-            executeSearch();
+        const createButton = (content, isDisabled, onClick) => {
+            const btn = document.createElement('button');
+            btn.className = (typeof content === 'number') ? 'page-number' : 'page-btn';
+            if (content === page + 1) btn.classList.add('active');
+            btn.innerHTML = content;
+            btn.disabled = isDisabled;
+            btn.onclick = onClick;
+            return btn;
         };
-        pagination.appendChild(pageBtn);
-    }
 
-    if (endPage < totalPages - 1) {
-        if (endPage < totalPages - 2) {
-            const ellipsis = document.createElement('span');
-            ellipsis.className = 'ellipsis';
-            ellipsis.textContent = '...';
-            pagination.appendChild(ellipsis);
+        // 이전 버튼
+        this.elements.pagination.appendChild(createButton('<i class="fas fa-chevron-left"></i>', page === 0, () => {
+            this.state.page = page - 1;
+            this.executeSearch();
+        }));
+
+        // 페이지 번호 (최대 5개 노출 로직)
+        const maxVisible = 5;
+        let start = Math.max(0, page - Math.floor(maxVisible / 2));
+        let end = Math.min(totalPages - 1, start + maxVisible - 1);
+        if (end - start < maxVisible - 1) start = Math.max(0, end - maxVisible + 1);
+
+        for (let i = start; i <= end; i++) {
+            this.elements.pagination.appendChild(createButton(i + 1, false, () => {
+                this.state.page = i;
+                this.executeSearch();
+            }));
         }
 
-        const lastBtn = document.createElement('button');
-        lastBtn.className = 'page-number';
-        lastBtn.textContent = totalPages;
-        lastBtn.onclick = () => {
-            currentParams.page = totalPages - 1;
-            executeSearch();
-        };
-        pagination.appendChild(lastBtn);
-    }
+        // 다음 버튼
+        this.elements.pagination.appendChild(createButton('<i class="fas fa-chevron-right"></i>', page >= totalPages - 1, () => {
+            this.state.page = page + 1;
+            this.executeSearch();
+        }));
+    },
 
-    // 다음 버튼
-    const nextBtn = document.createElement('button');
-    nextBtn.className = 'page-btn';
-    nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
-    nextBtn.disabled = page >= totalPages - 1;
-    nextBtn.onclick = () => {
-        if (page < totalPages - 1) {
-            currentParams.page = page + 1;
-            executeSearch();
-        }
-    };
-    pagination.appendChild(nextBtn);
-}
+    updateSidebar() {
+        document.querySelectorAll('.menu-item.no-sub').forEach(item => item.classList.remove('selected'));
+        const menuItem = document.getElementById('monthlyLink')?.closest('.menu-item.no-sub');
+        if (menuItem) menuItem.classList.add('selected');
+    }
+};
+
+// 타임리프 DOM 로드 완료 후 실행
+document.addEventListener('DOMContentLoaded', () => MonthlyAttendance.init());

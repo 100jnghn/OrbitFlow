@@ -24,7 +24,7 @@ public class EmailVerificationService {
     private final EmailVerificationTokenRepository tokenRepository;
     private final MailSender mailSender;
 
-    @Value("${app.base-url}")
+    @Value("${app.public-base-url}")
     private String baseUrl;
 
     public void sendActivateMail(Employee employee) {
