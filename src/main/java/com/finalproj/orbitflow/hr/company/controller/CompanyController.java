@@ -33,9 +33,9 @@ public class CompanyController {
 
     @GetMapping("/check-business-number") /** 사업자번호 검증 **/
     public ResponseEntity<ResponseDto> checkBusinessNumber(@RequestParam String businessNumber) {
-        companyService.validateBusinessNumber(businessNumber);
+        companyService.checkBusinessNumberAvailable(businessNumber);
         return ResponseEntity.ok(new ResponseDto(
-                HttpStatus.OK,"사용 가능한 사업자번호입니다.", Map.of("available", true)));
+                HttpStatus.OK, "사용 가능한 사업자번호입니다.", Map.of("available", true)));
     }
 
     @GetMapping("/check-email") /** 이메일 검증 **/
