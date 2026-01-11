@@ -1,24 +1,24 @@
 package com.finalproj.orbitflow.attendance.rule.service;
 
-import com.finalproj.orbitflow.attendance.rule.dto.response.DefaultRuleResDto;
 import com.finalproj.orbitflow.attendance.rule.dto.request.DefaultRuleUpdateReqDto;
+import com.finalproj.orbitflow.attendance.rule.dto.request.EmpAttRuleCreateReqDto;
+import com.finalproj.orbitflow.attendance.rule.dto.request.EmpAttRuleUpdateReqDto;
+import com.finalproj.orbitflow.attendance.rule.dto.response.DefaultRuleResDto;
+import com.finalproj.orbitflow.attendance.rule.dto.response.EmployeeRuleResDto;
 import com.finalproj.orbitflow.attendance.rule.entity.AttendanceRule;
 import com.finalproj.orbitflow.attendance.rule.entity.EmployeeRule;
 import com.finalproj.orbitflow.attendance.rule.repository.AttendanceRuleRepository;
-import com.finalproj.orbitflow.attendance.rule.dto.request.EmpAttRuleCreateReqDto;
-import com.finalproj.orbitflow.attendance.rule.dto.response.EmployeeRuleResDto;
-import com.finalproj.orbitflow.attendance.rule.dto.request.EmpAttRuleUpdateReqDto;
 import com.finalproj.orbitflow.attendance.rule.repository.EmployeeRuleRepository;
 import com.finalproj.orbitflow.global.exception.BusinessException;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import com.finalproj.orbitflow.notification.enums.NotificationType;
-import com.finalproj.orbitflow.notification.repository.NotificationRepository;
 import com.finalproj.orbitflow.notification.service.NotificationCommandService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -188,7 +188,7 @@ public class AttendanceRuleService {
      * 새로운 회사를 위한 기본 근태 규칙(09:00 - 18:00)을 생성합니다.
      * @param company 신규 생성된 회사 엔티티
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createDefaultAttendanceRule(Company company) {
         // 중복 생성 방지 체크
         if (attendanceRuleRepository.existsByCompanyId(company.getId())) {
