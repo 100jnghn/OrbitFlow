@@ -46,6 +46,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.startsWith("/images/")
                 || path.equals("/")
                 || path.equals("/favicon.ico")
+                || path.startsWith("/api/companies/")
+                || path.startsWith("/companies/")
 
                 // ✅ PDF 미리보기 (임시)
                 || path.startsWith("/internal")
