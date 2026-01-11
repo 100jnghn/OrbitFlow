@@ -163,3 +163,6 @@ management:
       enabled: true
     redis:
       enabled: true
+    mail:
+      enabled: false
+
