@@ -45,16 +45,22 @@ pipeline {
         // ===============================
         stage('Docker Build & Push') {
             steps {
-                sh '''
-                aws ecr get-login-password --region $AWS_REGION \
-                  | docker login --username AWS --password-stdin $ECR_REPO_URI
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'aws-credentials']
+                ]) {
+                    sh '''
+                      aws ecr get-login-password --region ${AWS_REGION} \
+                      | docker login --username AWS --password-stdin ${ECR_REPO_URI}
 
-                docker build -t orbitflow:$IMAGE_TAG .
-                docker tag orbitflow:$IMAGE_TAG $ECR_REPO_URI:$IMAGE_TAG
-                docker push $ECR_REPO_URI:$IMAGE_TAG
-                '''
+                      docker build -t orbitflow:${IMAGE_TAG} .
+                      docker tag orbitflow:${IMAGE_TAG} ${ECR_REPO_URI}:${IMAGE_TAG}
+                      docker push ${ECR_REPO_URI}:${IMAGE_TAG}
+                    '''
+                }
             }
         }
+
 
         // ===============================
         // 4️⃣ Infra Deploy (Redis / ChromaDB)
