@@ -2,10 +2,11 @@ app:
   base-url: http://localhost:8090
 
 spring:
-  redis:
-    data:
+  data:
+    redis:
       host: localhost
       port: 6379
+
 
   mail:
     host: smtp.gmail.com
@@ -19,9 +20,9 @@ spring:
           starttls.enable: true
 
   datasource:
-    url: jdbc:mysql://localhost:3306/orbitflow
-    username: scott
-    password: tiger
+    url: jdbc:mysql://localhost:3307/orbitflow
+    username: root
+    password: mysql1234
     driver-class-name: com.mysql.cj.jdbc.Driver
   config:
     import: optional:file:.env[.properties]
@@ -79,10 +80,11 @@ cloud:
     region: ${REGION}
     s3:
       bucket: ${BUCKET}
+
 holiday:
   api:
-    url: https://api.example.com/holidays?year={year}&serviceKey={apiKey}
-    api-key: YOUR_API_KEY
+    url: http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo
+    api-key: ${HOLIDAY_API_KEY}
 
 notification:
   expire-days: 50
