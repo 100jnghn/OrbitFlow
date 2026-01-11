@@ -42,5 +42,4 @@ spec:
               mountPath: /chroma/data
       volumes:
         - name: chroma-data
-          persistentVolumeClaim:
-            claimName: chromadb-pvc
+          emptyDir: { }
