@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: orbitflow
-          image: 118320467932.dkr.ecr.eu-west-3.amazonaws.com/orbitflow:${IMAGE_TAG}
+          image: ${ECR_REPO_URI}:${IMAGE_TAG}
           imagePullPolicy: Always
 
           ports:
