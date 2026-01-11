@@ -56,7 +56,8 @@ public class SecurityConfig {
                                 "/activate/**",
                                 "/reset-password/**",
                                 "/find-password/**",
-                                "/api/email/**"
+                                "/api/email/**",
+                                "/actuator/health" //배포용 링크 permitAll 필수
                         ).permitAll()
 
                         .requestMatchers("/api/chatbot/**").authenticated()

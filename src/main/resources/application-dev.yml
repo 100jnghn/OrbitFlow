@@ -2,10 +2,11 @@ app:
   base-url: http://localhost:8090
 
 spring:
-  redis:
-    data:
+  data:
+    redis:
       host: localhost
       port: 6379
+
 
   mail:
     host: smtp.gmail.com
@@ -79,11 +80,20 @@ cloud:
     region: ${REGION}
     s3:
       bucket: ${BUCKET}
+
 holiday:
   api:
-    url: https://api.example.com/holidays?year={year}&serviceKey={apiKey}
-    api-key: YOUR_API_KEY
+    url: http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo
+    api-key: ${HOLIDAY_API_KEY}
 
 notification:
   expire-days: 50
   cleanup-cron: "0 0 2 * * *"
+
+# ===============================
+# 🤖 ChromaDB (Local)
+# ===============================
+chroma:
+  scheme: http
+  host: localhost
+  port: 8000

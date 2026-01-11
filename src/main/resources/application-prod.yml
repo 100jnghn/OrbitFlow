@@ -5,14 +5,10 @@ app:
   public-base-url: ${PUBLIC_BASE_URL:http://localhost:8090}
   render-base-url: ${RENDER_BASE_URL:http://spring-boot-service}
 
-
+# ===============================
+# 🗄️ RDS (MySQL)
+# ===============================
 spring:
-  profiles:
-    active: prod
-
-  # ===============================
-  # 🗄️ RDS (MySQL)
-  # ===============================
   datasource:
     url: jdbc:mysql://sample-rds.cdtoh9nnhedm.eu-west-3.rds.amazonaws.com:3306/orbitflow?serverTimezone=UTC&useSSL=false
     username: ${DB_USERNAME}
@@ -24,23 +20,23 @@ spring:
   # ===============================
   jpa:
     hibernate:
-      ddl-auto: none              # 🔥 운영에서는 절대 update X
+      ddl-auto: none              # 🚫 운영 절대 update 금지
     show-sql: false
     properties:
       hibernate:
         format_sql: false
 
   # ===============================
-  # 🚀 Redis (Spring Boot 3.x)
+  # 🚀 Redis (Kubernetes Service)
   # ===============================
   data:
     redis:
-      host: redis                 # ✅ Kubernetes Service 이름
+      host: redis                 # ✅ redis Service 이름
       port: 6379
       timeout: 5s
 
   # ===============================
-  # 📧 Mail (운영에서도 그대로 사용 가능)
+  # 📧 Mail
   # ===============================
   mail:
     host: smtp.gmail.com
@@ -72,7 +68,7 @@ spring:
 # 🌐 Server
 # ===============================
 server:
-  port: 8090                     # 컨테이너 포트 (Service가 80 → 8090)
+  port: 8090
 
 # ===============================
 # 📜 Logging
@@ -104,7 +100,7 @@ business:
 # 🔥 ChromaDB (Vector DB)
 # ===============================
 chroma:
-  host: chromadb                 # ✅ Kubernetes Service 이름
+  host: chromadb                # ✅ chromadb Service 이름
   port: 8000
   scheme: http
 
@@ -147,18 +143,26 @@ notification:
   cleanup-cron: "0 0 2 * * *"
 
 # ===============================
-# ❤️ Actuator / Health (ALB용)
+# ❤️ Actuator / Health (K8s / ALB)
 # ===============================
 management:
   endpoints:
     web:
       exposure:
         include: health,info
+
   endpoint:
     health:
       probes:
-        enabled: true
-      show-details: never
+        enabled: true             # ✅ startup/readiness/liveness 대응
+
   health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
     redis:
       enabled: true
+    mail:
+      enabled: false
+
