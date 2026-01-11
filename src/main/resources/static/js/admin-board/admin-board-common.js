@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (boardForm) {
             boardForm.addEventListener('submit', handleBoardSubmit);
         } else {
-            console.warn('boardForm element not found');
+
         }
     } catch (error) {
         console.error('Error initializing board admin page:', error);
@@ -48,8 +48,7 @@ async function loadBoardList(page = 0) {
         }
 
         const result = await response.json();
-        console.log('Board list response:', result); // 디버깅용
-        console.log('Response structure:', JSON.stringify(result, null, 2));
+
 
         // ResponseDto 구조 확인
         if (!result) {
@@ -79,9 +78,7 @@ async function loadBoardList(page = 0) {
             return;
         }
 
-        console.log('Extracted data:', data);
-        console.log('Data type:', typeof data);
-        console.log('Data keys:', Object.keys(data));
+
 
         // Page 객체 구조 확인 (content, number, totalPages 등)
         const content = data.content || data.elements || (Array.isArray(data) ? data : []);
@@ -89,20 +86,12 @@ async function loadBoardList(page = 0) {
         const totalPages = data.totalPages !== undefined ? data.totalPages : (data.totalPageCount !== undefined ? data.totalPageCount : 1);
         const totalElements = data.totalElements !== undefined ? data.totalElements : (data.total !== undefined ? data.total : content.length);
 
-        console.log('Page info:', {
-            content: content.length,
-            number,
-            totalPages,
-            totalElements: totalElements,
-            size: data.size || 10,
-            first: data.first !== undefined ? data.first : (number === 0),
-            last: data.last !== undefined ? data.last : (number === totalPages - 1)
-        });
+
 
         currentBoardPage = number;
         totalBoardPages = totalPages;
 
-        console.log(`현재 페이지: ${currentBoardPage + 1}/${totalBoardPages}, 게시판 수: ${content.length}개, 전체: ${totalElements}개`);
+
 
         renderBoardTable(content);
         renderBoardPagination();
@@ -284,7 +273,7 @@ async function openEditBoardModal(boardId) {
             try {
                 const permissionResult = await permissionResponse.json();
                 const permissions = permissionResult.data || [];
-                console.log('Loaded permissions:', permissions);
+
                 selectedEmployees = permissions.map(p => ({
                     id: p.employeeInfo.employeeId,
                     name: p.employeeInfo.name,
@@ -294,7 +283,7 @@ async function openEditBoardModal(boardId) {
                     departmentName: p.employeeInfo.departmentName,
                     permissionId: p.permissionId // 권한 제거를 위한 ID 저장
                 }));
-                console.log('Mapped selectedEmployees:', selectedEmployees);
+
             } catch (error) {
                 console.error('Error parsing permission response:', error);
                 selectedEmployees = [];
@@ -572,7 +561,7 @@ async function selectEmployee(employee) {
                     departmentName: employee.organizationName || '',
                     permissionId: permission.permissionId // 권한 ID 저장
                 });
-                console.log('Permission granted successfully:', permission);
+
             } else {
                 // 권한이 이미 있는 경우 (중복 방지로 인해 반환되지 않음)
                 selectedEmployees.push({
@@ -610,7 +599,7 @@ async function selectEmployee(employee) {
 
 // 선택된 사원 제거 (전역 함수로 선언)
 window.removeEmployee = async function (employeeId, permissionId) {
-    console.log('removeEmployee called:', { employeeId, permissionId, isEditMode });
+
 
     // permissionId가 문자열 'null'이거나 null/undefined인 경우 처리
     if (permissionId === 'null' || permissionId === null || permissionId === undefined) {
@@ -629,7 +618,7 @@ window.removeEmployee = async function (employeeId, permissionId) {
         }
 
         try {
-            console.log('Deleting permission:', permissionId);
+
             const response = await apiFetch(`/api/admin/board-permissions/${permissionId}`, {
                 method: 'DELETE',
                 headers: {
@@ -650,7 +639,7 @@ window.removeEmployee = async function (employeeId, permissionId) {
             // 목록에서 제거
             selectedEmployees = selectedEmployees.filter(se => se.id !== employeeId);
             renderSelectedEmployees();
-            console.log('Permission removed successfully');
+
         } catch (error) {
             console.error('Error removing permission:', error);
             if (error.message !== 'SESSION_EXPIRED') {
@@ -659,7 +648,7 @@ window.removeEmployee = async function (employeeId, permissionId) {
         }
     } else {
         // 추가 모드이거나 아직 권한이 부여되지 않은 사원인 경우
-        console.log('Removing employee from list (not a permission):', employeeId);
+
         selectedEmployees = selectedEmployees.filter(se => se.id !== employeeId);
         renderSelectedEmployees();
     }
@@ -679,7 +668,7 @@ function renderSelectedEmployees() {
         const div = document.createElement('div');
         div.className = 'selected-employee';
         const permissionIdValue = emp.permissionId ? emp.permissionId : 'null';
-        console.log('Rendering employee:', emp.name, 'permissionId:', permissionIdValue, 'isEditMode:', isEditMode);
+
 
         // 사원 정보를 한 줄로 표시: 이름 | 사번 | 이메일 | 부서 | 직급
         const employeeInfoText = [
@@ -710,7 +699,7 @@ async function saveBoardPermissions(boardCategoryId) {
         const employeesToGrant = selectedEmployees.filter(se => !se.permissionId);
 
         if (employeesToGrant.length === 0) {
-            console.log('No new permissions to grant');
+
             return;
         }
 
@@ -733,11 +722,11 @@ async function saveBoardPermissions(boardCategoryId) {
                 return;
             }
             const errorText = await response.text();
-            console.warn('권한 저장에 실패했습니다:', response.status, errorText);
+
             throw new Error('권한 저장에 실패했습니다.');
         }
 
-        console.log('Permissions saved successfully');
+
     } catch (error) {
         console.error('Error saving permissions:', error);
         throw error; // 상위로 에러 전달
