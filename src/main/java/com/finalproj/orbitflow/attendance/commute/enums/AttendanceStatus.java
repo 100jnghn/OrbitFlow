@@ -14,11 +14,13 @@ import lombok.Getter;
 @Getter
 public enum AttendanceStatus {
 
-    ON_TIME("정상출근"), // 정시 또는 정시 이전에 출근
-    LATE("지각"),      // 정시보다 늦게 출근
-    ABSENT("결근"),    // 출근 기록이 없는 경우 (별도의 배치 처리 필요)
-    VACATION("휴가"),
-    BEFORE_WORK("근무예정");
+    ON_TIME("정상출근"),    // 정시 또는 정시 이전에 출근
+    LATE("지각"),         // 정시보다 늦게 출근
+    ABSENT("결근"),       // 출근 시간이 지났음에도 기록이 없는 상태
+    BEFORE_WORK("근무예정"), // 오늘 근무 대상자이나 아직 출근 전인 상태
+    VACATION("휴가중"),    // 승인된 휴가 상태
+    OUTSIDE("외근중"),     // 외부 근무 상태
+    BUSINESS_TRIP("출장중"); // 출장 상태
 
     private final String description;
 

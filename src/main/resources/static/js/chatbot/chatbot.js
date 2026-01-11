@@ -1,70 +1,37 @@
 /**
- * Orbitflow Chatbot JS (RAG & 대화 저장 지원 및 드래그 이동 기능 추가 버전)
+ * Orbitflow Chatbot JS - 새로고침 복구 및 카테고리 부재 시 안내 기능 통합본
  */
 document.addEventListener('DOMContentLoaded', function () {
     // === DOM 요소 ===
     const floatIcon = document.getElementById('chatbotFloatIcon');
     const chatbotWindow = document.getElementById('chatbotWindow');
     const closeBtn = document.getElementById('chatbotCloseBtn');
-    const closeBottomBtn = document.getElementById('chatbotCloseBottomBtn');
-    const categoryView = document.getElementById('chatbotCategoryView');
-    const chatView = document.getElementById('chatbotChatView');
-    const categoryButtons = document.getElementById('chatbotCategoryButtons');
-    const backBtn = document.getElementById('chatbotBackBtn');
-    const currentCategorySpan = document.getElementById('chatbotCurrentCategory');
     const messagesContainer = document.getElementById('chatbotMessages');
     const inputField = document.getElementById('chatbotInput');
     const sendBtn = document.getElementById('chatbotSendBtn');
 
     // === 상태 관리 ===
-    let currentConversationId = sessionStorage.getItem('activeChatId');
+    let currentConversationId = sessionStorage.getItem('activeChatId'); // 새로고침 시 세션에서 복구
     let selectedCategoryName = sessionStorage.getItem('activeCategoryName');
     let categories = [];
 
-    // 🚀 드래그 관련 변수
+    // 드래그 관련 변수
     let isDragging = false;
     let dragStartX, dragStartY;
-    let initialIconX, initialIconY;
-    const DRAG_THRESHOLD = 5; // 드래그로 판단할 최소 이동 거리(px)
+    const DRAG_THRESHOLD = 5;
 
     init();
 
     function init() {
         setupEventListeners();
-        loadCategories();
-        if (currentConversationId) {
-            restoreConversation(currentConversationId);
-        }
     }
 
-    // === 이벤트 리스너 ===
     function setupEventListeners() {
-
-        // 🚀 아이콘 드래그 및 클릭 핸들러
         floatIcon.addEventListener('mousedown', startDragging);
-
-        // 모바일 터치 대응
-        floatIcon.addEventListener('touchstart', (e) => {
-            const touch = e.touches[0];
-            startDragging({
-                clientX: touch.clientX,
-                clientY: touch.clientY,
-                preventDefault: () => {}
-            });
-        }, { passive: false });
-
-        closeBtn.addEventListener('click', () => chatbotWindow.style.display = 'none');
-        closeBottomBtn.addEventListener('click', () => chatbotWindow.style.display = 'none');
-
-        backBtn.addEventListener('click', () => {
-            if (confirm('현재 대화를 종료하고 카테고리 목록으로 돌아가시겠습니까?')) {
-                clearChatSession();
-                showCategoryView(true);
-            }
+        closeBtn.addEventListener('click', () => {
+            chatbotWindow.style.display = 'none';
         });
-
         sendBtn.addEventListener('click', sendMessage);
-
         inputField.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -73,41 +40,21 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 🚀 드래그 시작 함수
+    // 아이콘 클릭/드래그 핸들러
     function startDragging(e) {
         isDragging = false;
         dragStartX = e.clientX;
         dragStartY = e.clientY;
-
         const rect = floatIcon.getBoundingClientRect();
-        initialIconX = rect.left;
-        initialIconY = rect.top;
-
-        floatIcon.style.transition = 'none'; // 드래그 중 애니메이션 끄기
-        floatIcon.style.cursor = 'grabbing';
 
         const moveHandler = (moveEvent) => {
-            const clientX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
-            const clientY = moveEvent.touches ? moveEvent.touches[0].clientY : moveEvent.clientY;
-
-            const dx = clientX - dragStartX;
-            const dy = clientY - dragStartY;
-
-            // 이동 거리가 임계값보다 크면 드래그로 판정
-            if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
-                isDragging = true;
-            }
+            const dx = moveEvent.clientX - dragStartX;
+            const dy = moveEvent.clientY - dragStartY;
+            if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) isDragging = true;
 
             if (isDragging) {
-                // 화면 경계 제한
-                let nextX = initialIconX + dx;
-                let nextY = initialIconY + dy;
-
-                nextX = Math.max(0, Math.min(window.innerWidth - rect.width, nextX));
-                nextY = Math.max(0, Math.min(window.innerHeight - rect.height, nextY));
-
-                floatIcon.style.left = nextX + 'px';
-                floatIcon.style.top = nextY + 'px';
+                floatIcon.style.left = (rect.left + dx) + 'px';
+                floatIcon.style.top = (rect.top + dy) + 'px';
                 floatIcon.style.right = 'auto';
                 floatIcon.style.bottom = 'auto';
             }
@@ -116,74 +63,121 @@ document.addEventListener('DOMContentLoaded', function () {
         const stopHandler = () => {
             document.removeEventListener('mousemove', moveHandler);
             document.removeEventListener('mouseup', stopHandler);
-            document.removeEventListener('touchmove', moveHandler);
-            document.removeEventListener('touchend', stopHandler);
-
-            floatIcon.style.transition = 'all 0.3s ease'; // 애니메이션 복구
-            floatIcon.style.cursor = 'pointer';
-
-            // 🚀 드래그가 아니었을 때만 챗봇 창 열기
-            if (!isDragging) {
-                openChatbot();
-            }
+            if (!isDragging) openChatbot();
         };
 
         document.addEventListener('mousemove', moveHandler);
         document.addEventListener('mouseup', stopHandler);
-        document.addEventListener('touchmove', moveHandler, { passive: false });
-        document.addEventListener('touchend', stopHandler);
     }
 
-    // 🚀 챗봇 창 열기 함수 분리
+    /**
+     * 🚀 챗봇 열기 - 상태에 따른 분기 처리
+     */
     function openChatbot() {
         chatbotWindow.style.display = 'flex';
-        loadCategories();
-        if (!currentConversationId) showCategoryView(false);
-        else showChatView();
+
+        if (currentConversationId) {
+            // 1. 진행 중인 세션이 있으면 복원
+            restoreConversation(currentConversationId);
+        } else {
+            // 2. 새로운 시작
+            startWelcomeFlow();
+        }
     }
 
-    // === 이하 기존 API 및 UI 로직 (동일) ===
-    async function loadCategories() {
-        try {
-            categoryButtons.innerHTML = `<div style="padding:10px;font-size:13px;">카테고리를 불러오는 중...</div>`;
-            const response = await apiFetch('/api/manual/categories', { method: 'GET' });
+    /**
+     * 🚀 대화 복원 로직
+     */
+    async function restoreConversation(conversationId) {
+        messagesContainer.innerHTML = '';
+        addBotMessage(`${selectedCategoryName}에 대해 대화 중이었습니다. 이전 기록을 불러옵니다...`);
 
-            if (!response.ok) {
-                categoryButtons.innerHTML = `<div style="padding:10px;font-size:13px;">카테고리 로드 실패</div>`;
+        try {
+            const response = await apiFetch(`/api/auth/chatbot/conversations/${conversationId}/messages`);
+            if (response.ok) {
+                const result = await response.json();
+                const messages = result.data || [];
+
+                messages.forEach(msg => {
+                    if (msg.role === 'USER') addUserMessage(msg.content);
+                    else if (msg.role === 'ASSISTANT') {
+                        const msgEl = createMessageElement('bot', msg.content);
+                        messagesContainer.appendChild(msgEl);
+                    }
+                });
+                showRechoicePrompt();
+            } else {
+                clearChatSession();
+                startWelcomeFlow();
+            }
+        } catch (error) {
+            startWelcomeFlow();
+        }
+        scrollToBottom();
+    }
+
+    function startWelcomeFlow() {
+        messagesContainer.innerHTML = '';
+        addBotMessage("안녕하세요! Orbitflow AI 도우미입니다. ✨\n궁금하신 분야를 선택하시면 상세히 안내해 드리겠습니다.");
+        loadAndShowCategories();
+    }
+
+    /**
+     * 🚀 카테고리 로드 및 공백 상태(Empty State) 처리
+     */
+    async function loadAndShowCategories() {
+        try {
+            const response = await apiFetch(`/api/manual/categories?t=${Date.now()}`);
+            if (!response.ok) return addBotMessage("카테고리를 불러올 수 없습니다.");
+
+            const result = await response.json();
+            const list = result?.data ?? [];
+
+            // ✅ 관리자가 등록한 카테고리가 없는 경우 안내 문구 표시
+            if (list.length === 0) {
+                renderEmptyCategoryState();
                 return;
             }
 
-            const result = await response.json();
-            const data = result?.data ?? [];
-            categories = Array.isArray(data) ? data : [];
-            renderCategoryButtons();
+            renderCategoryChoices(list);
         } catch (error) {
-            console.error('[loadCategories] Error:', error);
+            addBotMessage("데이터 로드 중 오류가 발생했습니다.");
         }
     }
 
-    function renderCategoryButtons() {
-        categoryButtons.innerHTML = '';
-        if (!categories || categories.length === 0) {
-            categoryButtons.innerHTML = `<div style="padding:10px;font-size:13px;">표시할 카테고리가 없습니다.</div>`;
-            return;
-        }
+    /**
+     * 🚀 카테고리 부재 시 안내 UI 생성
+     */
+    function renderEmptyCategoryState() {
+        const emptyMsg = document.createElement('div');
+        emptyMsg.style.cssText = "background:#fff; border:1px dashed #ddd; border-radius:12px; padding:20px; text-align:center; color:#666; margin:10px 0;";
+        emptyMsg.innerHTML = `
+            <div style="font-size:24px; margin-bottom:10px;">🚧</div>
+            <strong>현재 등록된 매뉴얼 카테고리가 없습니다.</strong><br>
+            <small>보다 정확한 정보를 제공해드리기 위해<br>관리자가 매뉴얼을 준비하고 있습니다. 😊</small>
+        `;
+        messagesContainer.appendChild(emptyMsg);
+        scrollToBottom();
+    }
 
-        categories.forEach(category => {
-            const id = category.id ?? category.categoryId ?? category.category_id;
-            const name = category.categoryName ?? category.category_name ?? category.name;
-            const desc = category.description ?? category.desc ?? category.categoryDescription;
-
-            const button = document.createElement('button');
-            button.className = 'chatbot-category-btn';
-            button.innerHTML = `
-                <span class="category-name">${escapeHtml(String(name))}</span>
-                ${desc ? `<span class="category-examples">${escapeHtml(String(desc))}</span>` : ''}
-            `;
-
-            button.addEventListener('click', () => createNewConversation(Number(id), String(name)));
-            categoryButtons.appendChild(button);
+    function renderCategoryChoices(list) {
+        const group = document.createElement('div');
+        group.className = 'chatbot-choice-group';
+        list.forEach(cat => {
+            const btn = document.createElement('button');
+            btn.className = 'chatbot-choice-btn';
+            btn.textContent = cat.categoryName || cat.name;
+            btn.onclick = () => handleCategorySelect(cat.id || cat.categoryId, btn.textContent, group);
+            group.appendChild(btn);
         });
+        messagesContainer.appendChild(group);
+        scrollToBottom();
+    }
+
+    function handleCategorySelect(id, name, group) {
+        if (group) group.remove();
+        addUserMessage(name);
+        createNewConversation(id, name);
     }
 
     async function createNewConversation(categoryId, categoryName) {
@@ -194,69 +188,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: JSON.stringify({ manualCategoryId: categoryId })
             });
 
-            if (!response.ok) throw new Error('대화방 생성 실패');
+            if (response.ok) {
+                const result = await response.json();
+                currentConversationId = String(result.data.conversationId);
+                selectedCategoryName = categoryName;
 
-            const result = await response.json();
-            const convId = result?.data?.conversationId;
+                sessionStorage.setItem('activeChatId', currentConversationId);
+                sessionStorage.setItem('activeCategoryName', selectedCategoryName);
 
-            currentConversationId = String(convId);
-            selectedCategoryName = categoryName;
-
-            sessionStorage.setItem('activeChatId', currentConversationId);
-            sessionStorage.setItem('activeCategoryName', selectedCategoryName);
-
-            currentCategorySpan.textContent = selectedCategoryName;
-            showChatView();
-            messagesContainer.innerHTML = '';
-            addBotMessage(`${selectedCategoryName} 관련 질문을 입력해주세요.`);
-        } catch (error) {
-            console.error('[createNewConversation] Error:', error);
-        }
-    }
-
-    async function restoreConversation(convId) {
-        try {
-            const response = await apiFetch(`/api/auth/chatbot/conversations/${convId}/messages`, { method: 'GET' });
-            if (!response.ok) throw new Error('대화 복원 실패');
-
-            const result = await response.json();
-            const msgs = result?.data ?? [];
-
-            showChatView();
-            currentCategorySpan.textContent = selectedCategoryName || '이전 대화';
-            messagesContainer.innerHTML = '';
-
-            msgs.forEach(msg => {
-                if (msg.role === 'USER') addUserMessage(msg.content);
-                else addBotMessage(msg.content);
-            });
-            scrollToBottom();
-        } catch (error) {
-            console.error('[restoreConversation] Error:', error);
-            clearChatSession();
-        }
-    }
-    /**
-     * 🚀 실시간 글자 출력(타이핑) 효과 함수
-     * @param {HTMLElement} element - 글자가 표시될 요소
-     * @param {string} text - 전체 답변 텍스트
-     * @param {number} speed - 출력 속도 (ms)
-     */
-    function typeWriter(element, text, speed = 25) {
-        let i = 0;
-        element.textContent = ""; // 초기화
-
-        function type() {
-            if (i < text.length) {
-                element.textContent += text.charAt(i);
-                i++;
-                scrollToBottom(); // 글자가 추가될 때마다 스크롤 아래로
-                setTimeout(type, speed);
+                addBotMessage(`${categoryName} 주제로 대화를 시작합니다. 질문을 입력해주세요.`);
             }
+        } catch (error) {
+            addBotMessage("대화방 생성 실패");
         }
-        type();
     }
-
 
     async function sendMessage() {
         const content = inputField.value.trim();
@@ -264,10 +209,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         addUserMessage(content);
         inputField.value = '';
-        sendBtn.disabled = true;
-
-        // "답변 생성 중" 로딩 표시
-        const loadingId = addBotMessage('답변을 생성하고 있습니다...', true);
+        const loadingId = addBotMessage('답변을 작성 중입니다...', true);
 
         try {
             const response = await apiFetch(`/api/auth/chatbot/conversations/${currentConversationId}/messages`, {
@@ -277,41 +219,51 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             removeMessage(loadingId);
-            if (!response.ok) throw new Error('전송 실패');
-
-            const result = await response.json();
-            const answer = result?.data?.assistant?.content;
-
-            if (answer) {
-                // 🚀 실시간 타이핑 효과를 위한 메시지 생성
-                const botMsgId = 'bot-' + Date.now();
-                const msgEl = createMessageElement('bot', '', botMsgId); // 빈 텍스트로 생성
+            if (response.ok) {
+                const result = await response.json();
+                const answer = result.data.assistant.content;
+                const msgEl = createMessageElement('bot', '');
                 messagesContainer.appendChild(msgEl);
-
-                const bubbleEl = msgEl.querySelector('.chatbot-message-bubble');
-                typeWriter(bubbleEl, answer); // 타이핑 효과 시작
-            } else {
-                addBotMessage('답변을 생성할 수 없습니다.');
+                typeWriter(msgEl.querySelector('.chatbot-message-bubble'), answer);
             }
-
         } catch (error) {
             removeMessage(loadingId);
-            addBotMessage('오류가 발생했습니다.');
-        } finally {
-            sendBtn.disabled = false;
+            addBotMessage('전송 오류가 발생했습니다.');
         }
     }
 
-    function showCategoryView(reload) {
-        categoryView.style.display = 'block';
-        chatView.style.display = 'none';
-        if (reload) loadCategories();
+    function typeWriter(element, text) {
+        let i = 0;
+        function type() {
+            if (i < text.length) {
+                element.textContent += text.charAt(i++);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                setTimeout(type, 20);
+            } else {
+                setTimeout(showRechoicePrompt, 500);
+            }
+        }
+        type();
     }
 
-    function showChatView() {
-        categoryView.style.display = 'none';
-        chatView.style.display = 'flex';
-        inputField.focus();
+    function showRechoicePrompt() {
+        const oldGroup = document.querySelector('.rechoice-group');
+        if (oldGroup) oldGroup.remove();
+
+        const group = document.createElement('div');
+        group.className = 'chatbot-choice-group rechoice-group';
+        const rechoiceBtn = document.createElement('button');
+        rechoiceBtn.className = 'chatbot-choice-btn highlight';
+        rechoiceBtn.innerHTML = '<i class=\"fas fa-redo-alt\"></i> 다른 카테고리 선택하기';
+
+        rechoiceBtn.onclick = () => {
+            clearChatSession();
+            startWelcomeFlow();
+        };
+
+        group.appendChild(rechoiceBtn);
+        messagesContainer.appendChild(group);
+        scrollToBottom();
     }
 
     function clearChatSession() {
@@ -319,20 +271,16 @@ document.addEventListener('DOMContentLoaded', function () {
         sessionStorage.removeItem('activeCategoryName');
         currentConversationId = null;
         selectedCategoryName = null;
-        currentCategorySpan.textContent = '카테고리';
-        messagesContainer.innerHTML = '';
     }
 
     function addUserMessage(text) {
-        const msgEl = createMessageElement('user', text);
-        messagesContainer.appendChild(msgEl);
+        messagesContainer.appendChild(createMessageElement('user', text));
         scrollToBottom();
     }
 
     function addBotMessage(text, isLoading = false) {
         const id = 'bot-' + Date.now();
-        const msgEl = createMessageElement('bot', text, id, isLoading);
-        messagesContainer.appendChild(msgEl);
+        messagesContainer.appendChild(createMessageElement('bot', text, id, isLoading));
         scrollToBottom();
         return id;
     }
@@ -341,19 +289,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const div = document.createElement('div');
         div.className = `chatbot-message ${type}`;
         if (id) div.id = id;
-
         const bubble = document.createElement('div');
         bubble.className = 'chatbot-message-bubble';
         bubble.textContent = text;
         if (isLoading) bubble.style.fontStyle = 'italic';
-
-        const time = document.createElement('div');
-        time.className = 'chatbot-message-time';
-        const now = new Date();
-        time.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
         div.appendChild(bubble);
-        div.appendChild(time);
         return div;
     }
 
@@ -369,20 +309,7 @@ document.addEventListener('DOMContentLoaded', function () {
     async function apiFetch(url, options = {}) {
         const token = sessionStorage.getItem('accessToken');
         const headers = { ...(options.headers || {}) };
-        if (token && !headers['Authorization']) headers['Authorization'] = `Bearer ${token}`;
-
-        return fetch(url, {
-            ...options,
-            headers,
-            credentials: 'include'
-        });
-    }
-
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>"']/g, m => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-        }[m]));
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        return fetch(url, { ...options, headers });
     }
 });
-

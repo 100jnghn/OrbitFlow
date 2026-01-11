@@ -19,7 +19,7 @@ public class MessageReqDto {
         private String messageTitle;
 
         @NotBlank(message = "내용은 필수입니다.")
-        @Size(max = 3000, message = "내용은 3,000자 이하여야 합니다.")
+        @Size(max = 10000, message = "내용은 10,000자 이하여야 합니다.")
         private String messageContent;
 
         /** 수신자 employeeId 리스트 */

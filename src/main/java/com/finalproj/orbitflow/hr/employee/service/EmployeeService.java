@@ -8,6 +8,7 @@ import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeRole;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.enums.WorkStatus;
+import com.finalproj.orbitflow.hr.employee.event.EmployeeCreatedEvent;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import com.finalproj.orbitflow.hr.logAudit.dto.AuditLogResDto;
 import com.finalproj.orbitflow.hr.logAudit.enums.AuditEntityType;
@@ -20,6 +21,8 @@ import com.finalproj.orbitflow.hr.positionCategory.repository.PositionCategoryRe
 import com.finalproj.orbitflow.hr.rank.entity.HrRank;
 import com.finalproj.orbitflow.hr.rank.repository.RankRepository;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,6 +39,7 @@ import java.util.*;
  * @since : 2025-12-23 화요일
  */
 
+@Slf4j
 @Service
 @Transactional
 @AllArgsConstructor
@@ -48,6 +52,8 @@ public class EmployeeService {
     private final PositionCategoryRepository positionCategoryRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
+    private final ApplicationEventPublisher applicationEventPublisher;
+
 
     /* =============================
        조회
@@ -146,6 +152,14 @@ public class EmployeeService {
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
         }
 
+        if (dto.getInternalPhone() != null &&
+                employeeRepository.existsByCompany_IdAndInternalPhone(
+                        companyId, dto.getInternalPhone()
+                )) {
+            throw new IllegalArgumentException("이미 사용 중인 사내 번호입니다.");
+        }
+
+
         Employee actor = getActorEmployee();
 
         if (dto.getRole() != EmployeeRole.EMPLOYEE &&
@@ -184,6 +198,10 @@ public class EmployeeService {
         );
 
         Employee saved = employeeRepository.save(employee);
+
+        applicationEventPublisher.publishEvent(
+                new EmployeeCreatedEvent(saved.getId())
+        );
 
         Map<String, Object> after = new LinkedHashMap<>();
         after.put("name", saved.getName());
@@ -235,11 +253,26 @@ public class EmployeeService {
             putDiff(before, after, "name", employee.getName(), name);
             employee.updateBasicInfo(name, null, null, null);
         }
+        if (dto.getGender() != null && dto.getGender() != employee.getGender()) {
+            putDiff(before, after, "gender", employee.getGender().name(), dto.getGender().name());
+            employee.changeGender(dto.getGender());
+        }
+
         if (!Objects.equals(phone, employee.getPhone())) {
             // phone은 null 허용이라 Objects.equals로 비교
             putDiff(before, after, "phone", employee.getPhone(), phone);
             employee.updateBasicInfo(null, phone, null, null);
         }
+
+        // ===== 사내 번호 중복 체크 (본인 제외) =====
+        if (internalPhone != null &&
+                !Objects.equals(internalPhone, employee.getInternalPhone()) &&
+                employeeRepository.existsByCompany_IdAndInternalPhone(
+                        companyId, internalPhone
+                )) {
+            throw new IllegalArgumentException("이미 사용 중인 사내 번호입니다.");
+        }
+
         if (!Objects.equals(internalPhone, employee.getInternalPhone())) {
             putDiff(before, after, "internalPhone", employee.getInternalPhone(), internalPhone);
             employee.updateBasicInfo(null, null, internalPhone, null);
@@ -336,7 +369,6 @@ public class EmployeeService {
             );
         }
     }
-
 
 
     /* =============================
@@ -482,7 +514,6 @@ public class EmployeeService {
         }
         return String.join(" > ", names);
     }
-
 
 
     /* =============================

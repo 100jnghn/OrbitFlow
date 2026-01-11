@@ -49,6 +49,13 @@
                         <span>내선 <b id="empInternalPhone">-</b></span>
                     </div>
                 </div>
+
+                <div class="emp-actions">
+                    <button id="myActionBtn" class="btn-primary hidden">
+                        결재 서명 등록
+                    </button>
+                </div>
+
             </div>
 
             <!-- Info -->
@@ -80,6 +87,51 @@
 
         </section>
     </div>
+
+
+    <!-- ===============================
+     결재 서명 등록 / 갱신 팝업
+=============================== -->
+    <div id="signatureModal" class="modal-backdrop hidden">
+        <div class="approval-modal signature-modal">
+
+            <div class="modal-title">결재 서명 등록</div>
+
+            <div class="modal-form-group">
+                <div class="signature-guide">
+                    결재 승인 시 사용될 서명 이미지를 등록해주세요.
+                </div>
+
+                <div class="signature-upload-container">
+                    <div class="signature-preview-box" id="signaturePreviewBox">
+                        <img id="signaturePreviewImage" style="display:none;" />
+                        <div class="signature-placeholder" id="signaturePlaceholder">
+                            <i class="fa-solid fa-signature"></i>
+                            <p>서명 이미지 업로드</p>
+                            <span class="signature-hint">클릭하여 이미지 선택</span>
+                        </div>
+                    </div>
+
+                    <button
+                            type="button"
+                            class="signature-remove-btn"
+                            id="signatureRemoveBtn"
+                            style="display:none;"
+                    >
+                        제거
+                    </button>
+                </div>
+
+                <input type="file" id="signatureInput" hidden />
+            </div>
+
+            <div class="modal-actions">
+                <button id="signatureCancelBtn">취소</button>
+                <button id="signatureSaveBtn">서명 등록</button>
+            </div>
+        </div>
+    </div>
+
 </th:block>
 
 <!-- =========================

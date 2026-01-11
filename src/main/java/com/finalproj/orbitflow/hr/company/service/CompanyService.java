@@ -3,6 +3,7 @@ package com.finalproj.orbitflow.hr.company.service;
 import com.finalproj.orbitflow.global.exception.BusinessException;
 import com.finalproj.orbitflow.hr.company.dto.CompanySignupReqDto;
 import com.finalproj.orbitflow.hr.company.entity.Company;
+import com.finalproj.orbitflow.hr.company.event.CompanyCreatedEvent;
 import com.finalproj.orbitflow.hr.company.external.BsnClient;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
@@ -15,6 +16,7 @@ import com.finalproj.orbitflow.hr.positionCategory.entity.PositionCategory;
 import com.finalproj.orbitflow.hr.positionCategory.repository.PositionCategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +40,7 @@ public class CompanyService {
     private final OrgCategoryRepository orgCategoryRepository;
     private final BsnClient bsnClient;
     private final PositionCategoryRepository positionCategoryRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${business.validation.strict}")
     private boolean strictValidation;
@@ -130,6 +133,13 @@ public class CompanyService {
                 passwordEncoder.encode(request.getAdminPassword())
         );
         employeeRepository.save(admin);
+
+
+        // 모든 기본 데이터 생성 완료 후
+        eventPublisher.publishEvent(
+                new CompanyCreatedEvent(company.getId())
+        );
+
 
         return company.getId();
     }

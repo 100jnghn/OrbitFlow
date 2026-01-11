@@ -1,76 +1,50 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <body>
 
-<div th:fragment="body">
-<!-- 챗봇 플로팅 아이콘 -->
-<div class="chatbot-float-icon" id="chatbotFloatIcon">
-    <i class="fas fa-comments"></i>
-</div>
-
-<!-- 챗봇 윈도우 -->
-<div class="chatbot-window" id="chatbotWindow" style="display: none;">
-    <!-- 챗봇 헤더 -->
-    <div class="chatbot-header">
-        <div class="chatbot-title">무엇을 도와드릴까요?</div>
-        <button class="chatbot-close-btn" id="chatbotCloseBtn">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-
-    <!-- 챗봇 본문 -->
-    <div class="chatbot-body" id="chatbotBody">
-        <!-- 초기 화면: 카테고리 선택 -->
-        <div class="chatbot-category-view" id="chatbotCategoryView">
-            <div class="chatbot-welcome">
-                안녕하세요! **Orbitflow AI 도우미**입니다. ✨<br>
-                궁금하신 분야를 선택하시면 해당 매뉴얼을 바탕으로 <br>
-                정확하고 신속하게 안내해 드리겠습니다.
-            </div>
-
-            <div class="chatbot-category-title">질문 카테고리를 선택해 주세요</div>
-            <div class="chatbot-category-buttons" id="chatbotCategoryButtons">
-            </div>
-
-            <div class="chatbot-info">
-                <i class="fas fa-info-circle"></i> 본 챗봇은 사내 운영 매뉴얼을 학습하여 답변합니다.
-            </div>
+    <div th:fragment="body">
+        <!-- 챗봇 플로팅 아이콘 -->
+        <div class="chatbot-float-icon" id="chatbotFloatIcon">
+            <i class="fas fa-comments"></i>
         </div>
 
-        <!-- 채팅 화면 -->
-        <div class="chatbot-chat-view" id="chatbotChatView" style="display: none;">
-            <!-- 네비게이션 바 (카테고리로 돌아가기) -->
-            <div class="chatbot-nav-bar">
-                <button class="chatbot-back-btn" id="chatbotBackBtn">
-                    <i class="fas fa-arrow-left"></i>
-                    <span id="chatbotCurrentCategory">카테고리</span>
+        <!-- 챗봇 윈도우 -->
+        <div class="chatbot-window" id="chatbotWindow" style="display: none;">
+            <!-- 챗봇 헤더 -->
+            <div class="chatbot-header">
+                <div class="chatbot-title">무엇을 도와드릴까요?</div>
+                <button class="chatbot-close-btn" id="chatbotCloseBtn">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
 
-            <!-- 대화 내역 -->
-            <div class="chatbot-messages" id="chatbotMessages">
-                <!-- 동적으로 메시지가 추가됩니다 -->
+            <!-- 챗봇 본문 -->
+            <div class="chatbot-body" id="chatbotBody">
+                <!-- 채팅 화면 (단일 뷰로 통합) -->
+                <div class="chatbot-chat-view" id="chatbotChatView">
+
+                    <!-- 대화 내역 -->
+                    <div class="chatbot-messages" id="chatbotMessages">
+                        <!-- 동적으로 메시지가 추가됩니다 -->
+                    </div>
+
+                    <!-- 입력 영역 -->
+                    <div class="chatbot-input-area">
+                        <input type="text" class="chatbot-input" id="chatbotInput" placeholder="질문을 입력하세요...">
+                        <button class="chatbot-send-btn" id="chatbotSendBtn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="chatbot-disclaimer">
+                        *챗봇은 회사 매뉴얼 기반 정보를 제공합니다.
+                    </div>
+                </div>
             </div>
 
-            <!-- 입력 영역 -->
-            <div class="chatbot-input-area">
-                <input type="text" 
-                       class="chatbot-input" 
-                       id="chatbotInput" 
-                       placeholder="질문을 입력하세요...">
-                <button class="chatbot-send-btn" id="chatbotSendBtn">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
-            <div class="chatbot-disclaimer">
-                *챗봇은 일반적인 매뉴얼 정보를 제공합니다.
-            </div>
         </div>
     </div>
-
-</div>
-</div>
 
 </body>
-</html>
 
+</html>

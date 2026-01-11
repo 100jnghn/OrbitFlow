@@ -6,9 +6,6 @@ import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
 import com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole;
 import com.finalproj.orbitflow.attendance.leave.dto.*;
-import com.finalproj.orbitflow.attendance.leave.dto.LeaveBalanceResDto;
-import com.finalproj.orbitflow.attendance.leave.dto.LeaveHistoryResDto;
-import com.finalproj.orbitflow.attendance.leave.dto.LeaveRemainingResDto;
 import com.finalproj.orbitflow.attendance.leave.entity.LeaveBalance;
 import com.finalproj.orbitflow.attendance.leave.entity.LeaveGrant;
 import com.finalproj.orbitflow.attendance.leave.entity.LeaveType;
@@ -25,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -474,7 +472,7 @@ public class LeaveService {
      * 신규 사원 가입(입사) 직후 비례 연차 즉시 부여
      * EmployeeService 또는 AdminController에서 사원 객체를 전달받아 호출합니다.
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void grantInitialLeave(Employee emp) {
         // 1. 입사일 존재 여부 확인
         if (emp == null || emp.getHireDate() == null) {

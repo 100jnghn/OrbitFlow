@@ -1,3 +1,7 @@
+/**
+ * 직원 근태 종합 현황 대시보드 스크립트
+ */
+
 let currentSearchParams = {
     page: 0,
     size: 10,
@@ -7,132 +11,86 @@ let currentSearchParams = {
     keyword: ''
 };
 
-// 툴팁 전역 상태
+// 툴팁(정정 사유) 전역 상태
 let reasonPopoverEl = null;
 let reasonPopoverAnchorEl = null;
 let hoverCloseTimer = null;
 
 document.addEventListener('DOMContentLoaded', function () {
-    // 오늘 날짜 표시
+    // [기능: 금일 요약 현황 날짜 표시]
     const today = new Date();
-    const formattedToday = today.getFullYear() + '.' +
-        String(today.getMonth() + 1).padStart(2, '0') + '.' +
-        String(today.getDate()).padStart(2, '0');
-
+    const formattedToday = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
     const todayLabel = document.getElementById('todayLabel');
     if (todayLabel) todayLabel.innerText = `금일 요약 현황 (${formattedToday})`;
 
-    // 모달 글자수 카운터
+    // [기능: 정정 사유 글자수 제한 및 카운터]
     const modalReasonInput = document.getElementById('modalReason');
     const charCountElement = document.getElementById('charCount');
 
     if (modalReasonInput) {
         modalReasonInput.addEventListener('input', function () {
             clearFieldError('modalReasonError');
-
-            const reason = this.value;
-            const currentLength = reason.length;
+            const currentLength = this.value.length;
             const maxLength = 40;
 
             if (charCountElement) {
                 charCountElement.textContent = `${currentLength} / ${maxLength}`;
-                if (currentLength >= maxLength) charCountElement.style.color = 'var(--danger-color)';
-                else if (currentLength >= maxLength * 0.8) charCountElement.style.color = '#f59e0b';
-                else charCountElement.style.color = 'var(--neutral-500)';
-            }
-
-            if (reason.trim() && reason.length > maxLength) {
-                showError('modalReasonError', `정정 사유는 ${maxLength}자 이하여야 합니다.`);
+                charCountElement.style.color = currentLength >= maxLength ? 'var(--danger-color)' : 'var(--text-muted)';
             }
         });
     }
 
-    // ✅ 테이블에 호버 이벤트 위임(정정됨 요소가 동적으로 생성되기 때문)
+    // [기능: 근태 규칙 반영 - 정정됨 호버 이벤트 위임]
     const table = document.getElementById('attendanceTable');
     if (table) {
         table.addEventListener('mouseover', handleCorrectedMouseOver);
         table.addEventListener('mouseout', handleCorrectedMouseOut);
     }
 
-    // ESC로 닫기(안전장치)
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeReasonPopover();
-    });
+    // [기능: 직원 검색 엔터키 지원]
+    const searchInput = document.getElementById('searchKeyword');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') handleSearch();
+        });
+    }
 
-    // 스크롤/리사이즈 시 위치 재계산
-    window.addEventListener('scroll', () => {
-        if (reasonPopoverEl && reasonPopoverAnchorEl) positionReasonPopover(reasonPopoverAnchorEl, reasonPopoverEl);
-    }, true);
-
-    window.addEventListener('resize', () => {
-        if (reasonPopoverEl && reasonPopoverAnchorEl) positionReasonPopover(reasonPopoverAnchorEl, reasonPopoverEl);
-    });
-
+    // 초기 데이터 로드
     loadSummaryData();
     loadAttendanceList();
 });
 
 /**
- * ✅ 정정됨 호버 처리
- */
-function handleCorrectedMouseOver(e) {
-    const target = e.target.closest('.badge-corrected');
-    if (!target) return;
-
-    // 같은 요소에 대해 중복 오픈 방지
-    if (reasonPopoverEl && reasonPopoverAnchorEl === target) return;
-
-    clearTimeout(hoverCloseTimer);
-
-    const reason = target.getAttribute('data-reason') || '';
-    openReasonPopover(target, reason);
-
-    // 툴팁 위로 마우스가 가도 유지되게
-    if (reasonPopoverEl) {
-        reasonPopoverEl.addEventListener('mouseenter', () => clearTimeout(hoverCloseTimer));
-        reasonPopoverEl.addEventListener('mouseleave', () => scheduleClosePopover());
-    }
-}
-
-function handleCorrectedMouseOut(e) {
-    const target = e.target.closest('.badge-corrected');
-    if (!target) return;
-
-    // badge에서 빠져나갔지만, 툴팁으로 이동한 경우는 닫지 않기
-    const toEl = e.relatedTarget;
-    const movedToPopover = reasonPopoverEl && toEl && reasonPopoverEl.contains(toEl);
-    if (movedToPopover) return;
-
-    scheduleClosePopover();
-}
-
-function scheduleClosePopover() {
-    clearTimeout(hoverCloseTimer);
-    hoverCloseTimer = setTimeout(() => closeReasonPopover(), 120);
-}
-
-/**
- * 상단 통계
+ * [기능: 출근 완료/지각/결근/기타 현황 집계]
  */
 async function loadSummaryData() {
     try {
         const response = await fetch('/api/admin/attendance/summary', {
             headers: { 'Authorization': `Bearer ${sessionStorage.getItem('accessToken')}` }
         });
-        if (response.ok) {
-            const data = await response.json();
-            document.getElementById('totalEmployees').innerText = data.totalEmployees || 0;
-            document.getElementById('onTimeCount').innerText = data.onTimeCount || 0;
-            document.getElementById('lateCount').innerText = data.lateCount || 0;
-            document.getElementById('notLeavingCount').innerText = data.notLeavingCount || 0;
+        const result = await response.json();
+
+        if (response.ok && result.data) {
+            const d = result.data;
+            // 상단 메인 카드
+            document.getElementById('totalEmployees').innerText = d.totalEmployees || 0;
+            document.getElementById('onTimeCount').innerText = d.onTimeCount || 0;
+            document.getElementById('lateCount').innerText = d.lateCount || 0;
+            document.getElementById('absentCount').innerText = d.absentCount || 0;
+
+            // 기타 현황 바 (휴가/외근/출장/예정)
+            if (document.getElementById('vacationCount')) document.getElementById('vacationCount').innerText = d.vacationCount || 0;
+            if (document.getElementById('outsideCount')) document.getElementById('outsideCount').innerText = d.outsideCount || 0;
+            if (document.getElementById('businessTripCount')) document.getElementById('businessTripCount').innerText = d.businessTripCount || 0;
+            if (document.getElementById('beforeWorkCount')) document.getElementById('beforeWorkCount').innerText = d.beforeWorkCount || 0;
         }
-    } catch (error) {
-        console.error("통계 데이터 로드 실패:", error);
+    } catch (e) {
+        console.error("요약 데이터 로드 실패:", e);
     }
 }
 
 /**
- * 목록
+ * [기능: 기간별/상태별/사원 검색 근태 내역 조회]
  */
 async function loadAttendanceList() {
     const { page, size, startDate, endDate, status, keyword } = currentSearchParams;
@@ -142,198 +100,74 @@ async function loadAttendanceList() {
         const response = await fetch(`/api/admin/attendance/list?${params.toString()}`, {
             headers: { 'Authorization': `Bearer ${sessionStorage.getItem('accessToken')}` }
         });
+        const result = await response.json();
 
-        if (response.ok) {
-            const data = await response.json();
-            const list = data.content || (Array.isArray(data) ? data : []);
-            renderAttendanceTable(list);
-            renderPagination(data);
+        if (response.ok && result.data) {
+            renderAttendanceTable(result.data.content || []);
+            renderPagination(result.data); // [기능: 페이징 처리]
         }
-    } catch (error) {
-        console.error("목록 로드 실패:", error);
+    } catch (e) {
+        console.error("근태 목록 로드 실패:", e);
     }
 }
 
-/**
- * ✅ 테이블 렌더링
- * - 정정 전: 정정 버튼
- * - 정정 후: 정정됨 버튼(호버 시 사유 툴팁)
- */
 function renderAttendanceTable(list) {
     const tbody = document.querySelector('#attendanceTable tbody');
     if (!tbody) return;
 
-    if (!list || list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center">조회된 데이터가 없습니다.</td></tr>';
+    if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="loading-state">조회된 데이터가 없습니다.</td></tr>';
         return;
     }
 
     tbody.innerHTML = list.map(item => {
-        const commuteStyle = item.statusCode === 'LATE' ? 'color:#ff9800; font-weight:bold;' : '';
+        const statusCode = item.statusCode || 'BEFORE_WORK';
+        let statusName = item.statusName;
 
-        let leaveTimeDisplay = item.leaveAt || '-';
-        if (item.commuteAt && item.commuteAt !== '-' && (!item.leaveAt || item.leaveAt === '-')) {
-            leaveTimeDisplay = '<span style="color:#2196F3; font-weight:bold;">근무 중</span>';
+        if (statusCode === 'BEFORE_WORK') statusName = '근무 예정';
+
+        const commuteStyle = statusCode === 'LATE' ? 'color: var(--warning-color); font-weight:600;' : '';
+
+        let leaveDisplay = item.leaveAt || '-';
+        if (item.commuteAt && item.commuteAt !== '-' && !item.leaveAt) {
+            leaveDisplay = '<span style="color: var(--primary-color); font-weight:600;">근무 중</span>';
         }
 
-        // 서버 필드명이 다를 가능성까지 커버
-        const corrected =
-            item.isCorrected === true ||
-            item.corrected === true ||
-            item.correctionYn === 'Y' ||
-            item.correctionStatus === 'CORRECTED';
+        const corrected = item.correctionYn === 'Y' || item.isCorrected;
 
-        const reason =
-            item.correctionReason ??
-            item.reason ??
-            item.correctionMsg ??
-            '';
-
-        let actionButtons = '';
-        if (corrected) {
-            // ✅ 사유 버튼 없음 + ✅ 체크 아이콘 제거
-            actionButtons = `
-                <div class="action-group">
-                    <span class="badge-corrected"
-                          data-reason="${escapeHtml(String(reason))}">
-                        정정됨
-                    </span>
-                </div>
-            `;
-        } else {
-            actionButtons = `
-                <button type="button"
-                        class="btn-table-action"
-                        onclick="openCorrectionModal(${item.attendanceId}, '${item.statusCode}')">
-                    정정
-                </button>
-            `;
-        }
+        // ✅ 정정 버튼 디자인 수정: 일정 관리의 버튼 스타일 적용
+        let actionBtn = corrected
+            ? `<span class="badge-corrected" data-reason="${escapeHtml(item.correctionReason)}">정정됨</span>`
+            : `<button class="btn-table-action" onclick="openCorrectionModal(${item.attendanceId}, '${statusCode}')">
+                <i class="fa-solid fa-pen-to-square" style="margin-right:4px;"></i>정정
+               </button>`;
 
         return `
             <tr>
-                <td><strong>${item.employeeName}</strong><br><small>${item.employeeNum}</small></td>
+                <td>
+                    <div style="text-align:left; padding-left:15px;">
+                        <div style="font-weight:600; color:var(--text-main);">${item.employeeName}</div>
+                        <div style="font-size:12px; color:var(--text-muted);">${item.employeeNum}</div>
+                    </div>
+                </td>
                 <td style="${commuteStyle}">${item.commuteAt || '-'}</td>
-                <td>${leaveTimeDisplay}</td>
+                <td>${leaveDisplay}</td>
                 <td>${item.workingTime || '-'}</td>
-                <td><span class="status-badge ${item.statusCode}">${item.statusName}</span></td>
-                <td>${item.workDate || '-'}</td>
-                <td>${actionButtons}</td>
-            </tr>
-        `;
+                <td><span class="status-badge ${statusCode}">${statusName}</span></td>
+                <td>${item.workDate}</td>
+                <td>${actionBtn}</td>
+            </tr>`;
     }).join('');
 }
 
 /**
- * ✅ 호버 툴팁 열기
- */
-function openReasonPopover(anchorEl, reason) {
-    const msg = (reason || '').trim() || '등록된 정정 사유가 없습니다.';
-
-    closeReasonPopover();
-    reasonPopoverAnchorEl = anchorEl;
-
-    const pop = document.createElement('div');
-    pop.className = 'reason-popover';
-    pop.setAttribute('role', 'tooltip');
-
-    pop.innerHTML = `
-        <div class="reason-popover-arrow"></div>
-        <div class="reason-popover-title">
-            <i class="fa-solid fa-circle-info"></i>
-            정정 사유
-        </div>
-        <div class="reason-popover-body">${escapeHtml(msg)}</div>
-    `;
-
-    document.body.appendChild(pop);
-    reasonPopoverEl = pop;
-
-    applyReasonPopoverSizing(pop, msg);
-    positionReasonPopover(anchorEl, pop);
-}
-
-/**
- * ✅ 메시지 길이에 따른 폭 보정
- */
-function applyReasonPopoverSizing(popEl, msg) {
-    const viewportMax = Math.min(520, window.innerWidth - 24);
-    const minW = 200;
-
-    const len = (msg || '').length;
-    const target = Math.min(viewportMax, Math.max(minW, 220 + len * 6.2));
-
-    popEl.style.width = `${target}px`;
-    popEl.style.maxWidth = `${viewportMax}px`;
-}
-
-/**
- * ✅ 위치 계산(아래 우선, 공간 부족하면 위로)
- */
-function positionReasonPopover(anchorEl, popEl) {
-    const rect = anchorEl.getBoundingClientRect();
-    const gap = 8;
-
-    const popW = popEl.offsetWidth;
-    const popH = popEl.offsetHeight;
-
-    let top = rect.bottom + gap;
-    let left = rect.left + rect.width / 2 - popW / 2;
-
-    const minLeft = 12;
-    const maxLeft = window.innerWidth - popW - 12;
-    left = Math.max(minLeft, Math.min(left, maxLeft));
-
-    if (top + popH > window.innerHeight - 12) {
-        top = rect.top - popH - gap;
-    }
-
-    popEl.style.top = `${Math.max(12, top)}px`;
-    popEl.style.left = `${left}px`;
-
-    const arrow = popEl.querySelector('.reason-popover-arrow');
-    if (arrow) {
-        const anchorCenterX = rect.left + rect.width / 2;
-        const arrowLeft = Math.max(18, Math.min(popW - 18, anchorCenterX - left));
-        arrow.style.left = `${arrowLeft}px`;
-
-        const isAbove = top < rect.top;
-        if (isAbove) {
-            arrow.style.top = 'auto';
-            arrow.style.bottom = '-6px';
-            arrow.style.transform = 'rotate(225deg)';
-        } else {
-            arrow.style.bottom = 'auto';
-            arrow.style.top = '-6px';
-            arrow.style.transform = 'rotate(45deg)';
-        }
-    }
-}
-
-function closeReasonPopover() {
-    if (reasonPopoverEl && reasonPopoverEl.parentNode) {
-        reasonPopoverEl.parentNode.removeChild(reasonPopoverEl);
-    }
-    reasonPopoverEl = null;
-    reasonPopoverAnchorEl = null;
-}
-
-/**
- * 모달
+ * [기능: 정정버튼 작동 및 모달 제어]
  */
 function openCorrectionModal(id, status) {
     document.getElementById('targetAttendanceId').value = id;
     document.getElementById('modalStatus').value = status;
-
-    const modalReason = document.getElementById('modalReason');
-    modalReason.value = '';
-    clearFieldError('modalReasonError');
-
-    const charCountElement = document.getElementById('charCount');
-    if (charCountElement) {
-        charCountElement.textContent = `0 / 40`;
-        charCountElement.style.color = 'var(--neutral-500)';
-    }
+    document.getElementById('modalReason').value = '';
+    document.getElementById('charCount').textContent = '0 / 40';
 
     document.getElementById('correctionModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
@@ -344,17 +178,10 @@ function closeModal() {
     document.body.style.overflow = '';
 }
 
-function handleModalBackdropClick(e) {
-    if (e.target && e.target.id === 'correctionModal') closeModal();
-}
-
-/**
- * 저장
- */
 async function submitCorrection() {
     const reason = document.getElementById('modalReason').value.trim();
     if (!reason) {
-        showError('modalReasonError', '정정 사유를 입력해주세요.');
+        showError('modalReasonError', '정정 사유는 필수 입력값입니다.');
         return;
     }
 
@@ -371,102 +198,163 @@ async function submitCorrection() {
             body: JSON.stringify({ status: status, correctionReason: reason })
         });
 
+        const result = await response.json();
+
         if (response.ok) {
+            alert(result.message || "성공적으로 정정되었습니다.");
             closeModal();
-            closeReasonPopover();
-            await loadAttendanceList();
-            await loadSummaryData();
-            return;
+            loadAttendanceList(); // [기능: 실시간 상태 업데이트]
+            loadSummaryData();    // 통계 동기화
+        } else {
+            alert(result.message || "정정 처리에 실패했습니다.");
         }
-
-        let errorMessage = '정정 처리에 실패했습니다.';
-        try {
-            const err = await response.json();
-            if (err && err.message) errorMessage = err.message;
-        } catch (_) {}
-        alert(errorMessage);
-
-    } catch (error) {
-        console.error(error);
-        alert("네트워크 오류로 정정 처리에 실패했습니다.");
+    } catch (e) {
+        alert("네트워크 오류가 발생했습니다.");
     }
 }
 
 /**
- * 검색
+ * [기능: 초기화 버튼 - 필터링 항목 전체 초기화]
  */
-function handleSearch() {
-    currentSearchParams.keyword = document.getElementById('searchKeyword').value.trim();
-    currentSearchParams.startDate = document.getElementById('startDate').value;
-    currentSearchParams.endDate = document.getElementById('endDate').value;
-    currentSearchParams.status = document.getElementById('statusFilter').value;
-    currentSearchParams.page = 0;
-
-    closeReasonPopover();
-    loadAttendanceList();
-}
-
 function resetFilters() {
     document.getElementById('startDate').value = '';
     document.getElementById('endDate').value = '';
     document.getElementById('statusFilter').value = 'ALL';
     document.getElementById('searchKeyword').value = '';
-    currentSearchParams = { page: 0, size: 10, startDate: '', endDate: '', status: 'ALL', keyword: '' };
 
-    closeReasonPopover();
+    currentSearchParams = { page: 0, size: 10, startDate: '', endDate: '', status: 'ALL', keyword: '' };
+    loadAttendanceList();
+}
+
+function handleSearch() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    // [유효성 검사] 시작일이 종료일보다 늦을 경우 경고
+    if (startDate && endDate && startDate > endDate) {
+        alert("종료일은 시작일보다 빠를 수 없습니다.");
+        return;
+    }
+
+    currentSearchParams.startDate = startDate;
+    currentSearchParams.endDate = endDate;
+    currentSearchParams.status = document.getElementById('statusFilter').value;
+    currentSearchParams.keyword = document.getElementById('searchKeyword').value.trim();
+    currentSearchParams.page = 0;
     loadAttendanceList();
 }
 
 /**
- * XSS 방지
+ * [기능: 근태 규칙 반영 - 정정 사유 팝오버]
  */
-function escapeHtml(text) {
-    if (text === null || text === undefined) return '';
-    const div = document.createElement('div');
-    div.textContent = String(text);
-    return div.innerHTML;
+function handleCorrectedMouseOver(e) {
+    const target = e.target.closest('.badge-corrected');
+    if (!target) return;
+
+    clearTimeout(hoverCloseTimer);
+    const reason = target.getAttribute('data-reason') || '사유 없음';
+
+    closeReasonPopover();
+    const pop = document.createElement('div');
+    pop.className = 'reason-popover';
+    pop.innerHTML = `<strong>정정 사유</strong><p style="margin:5px 0 0 0;">${escapeHtml(reason)}</p>`;
+    document.body.appendChild(pop);
+
+    const rect = target.getBoundingClientRect();
+    pop.style.left = `${rect.left}px`;
+    pop.style.top = `${rect.bottom + window.scrollY + 5}px`;
+    reasonPopoverEl = pop;
+}
+
+function handleCorrectedMouseOut() {
+    hoverCloseTimer = setTimeout(closeReasonPopover, 100);
+}
+
+function closeReasonPopover() {
+    if (reasonPopoverEl) {
+        reasonPopoverEl.remove();
+        reasonPopoverEl = null;
+    }
 }
 
 /**
- * 에러
+ * 유틸리티 함수
  */
-function showError(id, msg) {
-    const err = document.getElementById(id);
-    if (err) {
-        err.textContent = msg;
-        err.style.display = 'block';
-    }
-}
-function clearFieldError(errId) {
-    const err = document.getElementById(errId);
-    if (err) {
-        err.textContent = '';
-        err.style.display = 'none';
-    }
-}
-
 /**
- * 페이지네이션
+ * [기능: 심플 페이지네이션 렌더링]
  */
 function renderPagination(pageData) {
     const pagination = document.getElementById('boardPagination');
-    if (!pagination || pageData.totalPages === undefined || pageData.totalPages === null) return;
+    if (!pagination || !pageData) return;
 
     pagination.innerHTML = '';
 
-    const currentPage = pageData.number ?? 0;
-    const totalPages = pageData.totalPages ?? 0;
+    const page = pageData.number || 0;
+    const totalPages = pageData.totalPages || 0;
 
-    for (let i = 0; i < totalPages; i++) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'pagination';
+
+    // 1. [이전] 화살표
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'page-btn';
+    prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prevBtn.disabled = page === 0;
+    prevBtn.onclick = () => {
+        currentSearchParams.page = page - 1;
+        loadAttendanceList();
+    };
+    wrapper.appendChild(prevBtn);
+
+    // 2. 숫자 버튼 (간결하게 현재 페이지 주변 노출)
+    const maxVisible = 5;
+    let start = Math.max(0, page - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages - 1, start + maxVisible - 1);
+
+    if (end - start < maxVisible - 1) start = Math.max(0, end - maxVisible + 1);
+
+    for (let i = start; i <= end; i++) {
         const btn = document.createElement('button');
-        btn.className = i === currentPage ? 'page-number active' : 'page-number';
-        btn.textContent = i + 1;
-        btn.type = 'button';
+        btn.className = `page-number ${i === page ? 'active' : ''}`;
+        btn.innerText = i + 1;
         btn.onclick = () => {
             currentSearchParams.page = i;
-            closeReasonPopover();
             loadAttendanceList();
         };
-        pagination.appendChild(btn);
+        wrapper.appendChild(btn);
     }
+
+    // 3. [다음] 화살표
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'page-btn';
+    nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    nextBtn.disabled = page >= totalPages - 1;
+    nextBtn.onclick = () => {
+        currentSearchParams.page = page + 1;
+        loadAttendanceList();
+    };
+    wrapper.appendChild(nextBtn);
+
+    pagination.appendChild(wrapper);
+}
+
+
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+}
+
+function showError(id, msg) {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = msg; el.style.display = 'block'; }
+}
+
+function clearFieldError(id) {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = ''; el.style.display = 'none'; }
+}
+
+function handleModalBackdropClick(e) {
+    if (e.target.id === 'correctionModal') closeModal();
 }

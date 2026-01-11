@@ -50,11 +50,12 @@ public class AttendanceRule {
     private LocalDateTime updatedAt;
 
 
-    public void updateRule(LocalTime startTime, LocalTime endTime, Integer breakMinutes) {
+    public void updateRule(LocalTime startTime, LocalTime endTime, Integer lateThresholdMin,Integer breakMinutes) {
         validateWorkTimes(startTime, endTime);
 
         this.defaultStartTime = startTime != null ? startTime : this.defaultStartTime;
         this.defaultEndTime = endTime != null ? endTime : this.defaultEndTime;
+        this.lateThresholdMin = lateThresholdMin != null ? lateThresholdMin : this.lateThresholdMin;
         this.defaultBreakMinutes = breakMinutes != null ? breakMinutes : this.defaultBreakMinutes;
 
         this.updatedAt = LocalDateTime.now();

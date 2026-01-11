@@ -32,23 +32,20 @@ public class AuditLogController {
     private final AuditLogService auditLogService;
 
     @GetMapping
-    public ResponseEntity<ResponseDto<Page<AuditLogResDto>>> search(
+    public ResponseEntity<ResponseDto<Page<AuditLogResDto>>> searchAdminAuditLogs(
             Pageable pageable
     ) {
         Page<AuditLogResDto> result =
-                auditLogService.search(
+                auditLogService.searchAdminAuditLogs(
                         SecurityUtils.getCompanyId(),
-                        null,
-                        null,
                         null,
                         pageable
                 );
 
-
         return ResponseEntity.ok(
                 new ResponseDto<>(
                         HttpStatus.OK,
-                        "감사 로그 목록 조회 성공",
+                        "관리자 감사 로그 조회 성공",
                         result
                 )
         );
