@@ -56,11 +56,14 @@ public class Reservation extends BaseEntity {
     @Column(name = "reservation_date", nullable = false)
     private LocalDate reservationDate;
 
-    // 시간은 정수형(예: 1400)으로 관리
-    @Column(name = "start_time", nullable = false)
+    @Column(name = "end_date")
+    private LocalDate endDate;
+
+    // 시간은 정수형(예: 14)으로 관리
+    @Column(name = "start_time")
     private Integer startTime;
 
-    @Column(name = "end_time", nullable = false)
+    @Column(name = "end_time")
     private Integer endTime;
 
     @Column(name = "reservation_reason", nullable = false, length = 255)
@@ -72,4 +75,10 @@ public class Reservation extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reservation_status_id")
     private ReservationStatus reservationStatus;
+
+    // 예약 취소
+    public void changeStatus(ReservationStatus reservationStatus, String rejectReason) {
+        this.reservationStatus = reservationStatus;
+        this.rejectReason = rejectReason;
+    }
 }

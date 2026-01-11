@@ -1,0 +1,488 @@
+/* ==================================================
+   admin-employee-list.css
+   - 사원 관리 목록 페이지
+   - admin-org-category.css 디자인 기준 확장
+================================================== */
+
+/* 이름 */
+th:nth-child(1), td:nth-child(1) { width: 10%; }
+
+/* 이메일 */
+th:nth-child(2), td:nth-child(2) { width: 20%; }
+
+/* 조직 (핵심) */
+th:nth-child(3), td:nth-child(3) { width: 35%; }
+
+/* 직급 */
+th:nth-child(4), td:nth-child(4) { width: 10%; }
+
+/* 직책 */
+th:nth-child(5), td:nth-child(5) { width: 10%; }
+
+/* 상태 */
+th:nth-child(6), td:nth-child(6) { width: 15%; text-align: center; }
+
+
+/* Phase 1: 1200px - 이메일 숨김 → 조직 확장 */
+@media (max-width: 1200px) {
+    th:nth-child(2),
+    td:nth-child(2) {
+        display: none;
+    }
+
+    th:nth-child(3),
+    td:nth-child(3) {
+        width: auto;
+    }
+}
+
+/* Phase 2: 900px - 직책 숨김 */
+@media (max-width: 900px) {
+    th:nth-child(5),
+    td:nth-child(5) {
+        display: none;
+    }
+}
+
+/* Phase 3: 700px - 직급 숨김 */
+@media (max-width: 700px) {
+    th:nth-child(4),
+    td:nth-child(4) {
+        display: none;
+    }
+}
+
+
+/* 반응형: 모바일에서는 1열 */
+@media (max-width: 640px) {
+    th:nth-child(1),
+    td:nth-child(1) {
+        width: 25%;
+    }
+
+    th:nth-child(6),
+    td:nth-child(6) {
+        width: auto;
+    }
+}
+
+/* =========================
+   조직 경로 표시
+========================= */
+
+.employee-org-path {
+    font-size: 13.5px;
+    color: var(--neutral-700);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    display: block;
+}
+
+.orgcat-table td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* =========================
+   상태 배지 (사원용)
+========================= */
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 60px;
+    height: 22px;
+    padding: 3px 14px;
+
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+
+    border: 1.2px solid transparent;
+}
+
+/* 재직 */
+.status-badge.ACTIVE {
+    background: #ecfdf5;
+    border-color: #10b981;
+    color: dimgray;
+}
+
+/* 정지 */
+.status-badge.SUSPENDED {
+    background: #fff7ed;
+    border-color: #fb923c;
+    color: dimgray;
+}
+
+/* 퇴사 */
+.status-badge.RESIGNED {
+    background: #fef2f2;
+    border-color: #f87171;
+    color: dimgray;
+}
+
+/* 임시 */
+.status-badge.TEMP {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    color: dimgray;
+}
+
+/* =========================
+   테이블 UX
+========================= */
+
+.orgcat-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+
+
+.orgcat-toolbar {
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+}
+
+.toolbar-left > * {
+    height: 40px;
+}
+
+.toolbar-right .btn-primary {
+    height: 40px;
+}
+
+
+/* =========================
+   Table Fixed Height (10 rows)
+========================= */
+
+.orgcat-table-wrap {
+    min-height: calc(52px * 10 + 56px); /* 헤더 고려 */
+}
+
+/* 각 행 높이 고정 */
+.orgcat-table tbody tr {
+    height: 52px;
+    cursor: pointer;
+}
+
+.orgcat-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+
+/* ==================================================
+   Employee Modal (FINAL)
+================================================== */
+
+/* 배경 */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+/* 패널 */
+.modal-panel {
+    width: 560px;
+    max-width: 92vw;
+
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+
+    background: #fff;
+    border-radius: 16px;
+    box-shadow:
+            0 20px 40px rgba(0, 0, 0, 0.12),
+            0 8px 16px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    overflow-x: hidden;
+}
+
+
+/* 등장 애니메이션 */
+@keyframes modalFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* =========================
+   Header
+========================= */
+
+.modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--line);
+}
+
+.modal-head h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--neutral-800);
+    margin: 0;
+}
+
+/* 닫기 버튼 */
+.icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.icon-btn:hover {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+/* =========================
+   Body
+========================= */
+
+.modal-body {
+    padding: 24px 28px;
+    overflow-y: auto;          /* 스크롤 주체 */
+    flex: 1;                   /* 헤더/푸터 제외한 영역 차지 */
+    overflow-x: hidden;
+}
+
+
+/* 폼 그룹 */
+.form-group {
+    margin-bottom: 20px;
+    max-width: 420px;
+}
+
+/* 라벨 */
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--neutral-700);
+    margin-bottom: 8px;
+}
+
+/* 인풋 / 셀렉트 통일 */
+.form-group input,
+.form-group select {
+    width: 100%;
+    height: 44px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    font-size: 14px;
+    transition: all .2s ease;
+}
+
+.form-group input::placeholder {
+    color: #9ca3af;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(59,130,246,.12);
+}
+
+/* 안내 문구 */
+.modal-body p {
+    font-size: 12.5px;
+    color: #9ca3af;
+    margin-top: 12px;
+}
+
+/* =========================
+   Footer
+========================= */
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 28px 24px;
+    border-top: 1px solid var(--line);
+}
+
+/* 취소 */
+.btn-ghost {
+    background: #fff;
+    border: 1px solid var(--line);
+    color: var(--neutral-700);
+}
+
+.btn-ghost:hover {
+    background: #f9fafb;
+}
+
+/* =========================
+   Modal Form Grid
+========================= */
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px 24px;
+    margin-bottom: 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 1열 전체 차지 */
+.form-group.full {
+    max-width: 100%;
+}
+
+/* grid 안에서는 width 제한 해제 */
+.form-grid .form-group {
+    max-width: none;
+}
+
+/* 하단 안내 */
+.form-help {
+    margin-top: 12px;
+    font-size: 12.5px;
+    color: #9ca3af;
+}
+
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.form-group,
+.form-group input,
+.form-group select {
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+select#status {
+    padding: 12px;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    margin-top: 24px;
+}
+
+.page-btn,
+.page-number,
+.pagination button {
+    min-width: 32px;
+    height: 36px;
+    padding: 0 8px;
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #555;
+    text-align: center;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page-btn:hover:not(:disabled),
+.page-number:hover:not(.active),
+.pagination button:hover:not(:disabled) {
+    background: #f8f9fa;
+    border-color: #4a69bd;
+    color: #4a69bd;
+}
+
+.page-btn:disabled,
+.pagination button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.page-number.active,
+.pagination button.active {
+    background: #4a69bd;
+    color: #fff;
+    border-color: #4a69bd;
+    font-weight: 500;
+}
+
+.ellipsis {
+    min-width: 32px;
+    height: 36px;
+    padding: 0 4px;
+    color: #9ca3af;
+    border: none;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination-info {
+    font-size: 13px;
+    color: #666;
+    margin: 0 16px;
+}
+
+/* 조직 텍스트 UX만 유지 */
+.col-org {
+    white-space: nowrap;
+}
+
+#tr-status {
+    text-align: center;
+}

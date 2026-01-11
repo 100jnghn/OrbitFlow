@@ -1,0 +1,540 @@
+/* ==================================================
+   admin-organization.css (FINAL – SAFE)
+================================================== */
+
+/* ================= 조직 트리 ================= */
+
+#orgTree {
+    display: flex;
+    flex-direction: column;
+}
+
+.org-tree {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    padding: 6px 0;
+}
+
+.org-node {
+    position: relative;
+    user-select: none;
+}
+
+/* row */
+.org-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    min-height: 52px;
+    padding: 6px 16px;
+
+    transition: background .12s ease;
+}
+
+.org-row:hover {
+    background: #f9fafb;
+}
+
+/* drag */
+.org-row .drag-handle {
+    flex-shrink: 0;
+    margin-right: 2px;
+}
+
+/* toggle */
+.org-toggle {
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 900;
+    color: #667085;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.org-toggle:hover {
+    background: #eef2ff;
+    color: var(--primary);
+}
+
+.org-toggle-placeholder {
+    width: 18px;
+    height: 18px;
+}
+
+/* label */
+.org-label {
+    flex: 1;
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* status / action */
+.org-row .status-badge {
+    margin-left: auto;
+}
+
+.org-row .table-btn {
+    margin-left: 6px;
+}
+
+/* depth line */
+.org-node::before {
+    content: "";
+    position: absolute;
+    left: -10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e5e7eb;
+}
+
+.org-node[data-parent-id="root"]::before {
+    display: none;
+}
+
+/* drag state */
+.sortable-chosen .org-row {
+    background: #f2f6ff;
+}
+
+.sortable-ghost {
+    opacity: .45;
+}
+
+.dragging-subtree .org-row {
+    background: #f8fafc;
+    opacity: .9;
+}
+
+/* inactive */
+.org-node[data-active="false"] .org-row {
+    opacity: .55;
+}
+
+.org-node[data-active="false"] .org-row:hover {
+    background: transparent;
+}
+
+.org-node[data-active="false"] .drag-handle {
+    display: none;
+}
+
+/* focus / highlight */
+.org-focus .org-row {
+    background: #fff7ed;
+    outline: 2px solid #fdba74;
+}
+
+.org-highlight {
+    background: #ffe066;
+    border-radius: 3px;
+    padding: 0 2px;
+}
+
+/* ================= 모달 내부 레이아웃 ================= */
+
+.org-modal-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 24px;
+}
+
+/* ===============================
+   조직 모달 - 직책 사용 정책 UI
+=============================== */
+
+.org-policy-panel {
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fafbff;
+}
+
+.org-policy-panel h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.org-policy-panel p {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 12px;
+}
+
+/* 검색 / 필터 */
+.policy-toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.policy-toolbar input,
+.policy-toolbar select {
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    font-size: 13px;
+}
+
+/* 테이블 */
+.policy-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.policy-table thead th {
+    text-align: left;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--line);
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.policy-table tbody td {
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+}
+
+.policy-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+/* 비활성 직책 안내 */
+.policy-empty,
+.org-policy-panel .form-help {
+    font-size: 12px;
+    color: #9ca3af;
+    margin-top: 8px;
+}
+
+/* ===============================
+   조직 모달 전용 사이즈 확장
+=============================== */
+
+.modal-panel-wide {
+    width: 760px;
+    max-width: 92vw;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-scroll-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;                 /* 좌우 여백 확보 */
+
+    display: flex;                 /* 핵심 */
+    justify-content: center;       /* 가로 중앙 */
+}
+
+
+/* 작은 화면에서만 내부 스크롤 허용 */
+@media (max-height: 700px) {
+    .modal-panel-wide {
+        max-height: 85vh;
+    }
+}
+
+/* ===============================
+   정책 토글 (사용 / 미사용)
+=============================== */
+
+.policy-table .switch {
+    position: relative;
+    display: inline-block;
+    width: 42px;
+    height: 22px;
+}
+
+.policy-table .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.policy-table .slider {
+    position: absolute;
+    inset: 0;
+    background: #e5e7eb;
+    border-radius: 999px;
+    transition: .2s;
+}
+
+.policy-table .slider::before {
+    content: "";
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 2px;
+    top: 2px;
+    background: #fff;
+    border-radius: 50%;
+    transition: .2s;
+    box-shadow: 0 1px 2px rgba(0,0,0,.15);
+}
+
+.policy-table .switch input:checked + .slider {
+    background: var(--primary);
+}
+
+.policy-table .switch input:checked + .slider::before {
+    transform: translateX(20px);
+}
+
+/* disabled */
+.policy-table .switch input:disabled + .slider {
+    background: #f3f4f6;
+    cursor: not-allowed;
+}
+
+/* ===============================
+   조직 모달 - 입력 필드 너비 통일
+=============================== */
+
+.org-form-panel .form-input,
+.org-form-panel select,
+.org-form-panel input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 높이 / 패딩 통일 */
+.org-form-panel .form-input {
+    height: 40px;
+    padding: 0 12px;
+    font-size: 13.5px;
+    border-radius: 8px;
+}
+
+
+/* ==================================================
+   조직 트리 - 사원 수 / 하위 조직 수 UI (ADD-ON)
+   ※ 기존 admin-organization.css 아래에 그대로 추가
+================================================== */
+
+/* 조직명 + (하위 조직 수) */
+.org-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* (하위 조직 수) */
+.org-label .org-meta-item {
+    font-size: 12px;
+    font-weight: 700;
+    color: #9ca3af;
+}
+
+/* 우측 메타 영역 (사원 수) */
+.org-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 6px;
+    font-size: 12px;
+    color: #6b7280;
+    white-space: nowrap;
+}
+
+/* 메타 pill */
+.org-meta-item {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #f3f4f6;
+    font-weight: 600;
+}
+
+/* 비활성 조직 메타 흐리게 */
+.org-node[data-active="false"] .org-meta-item {
+    background: #f9fafb;
+    color: #9ca3af;
+}
+
+
+.icon-btn i {
+    font-size: 14px;
+}
+
+html {
+    overflow-y: scroll;
+}
+
+@media (max-width: 1024px) {
+
+    /* 사원 수 숨김 */
+    .org-meta {
+        display: none;
+    }
+
+    /* 하위 조직 수는 작게 */
+    .org-label .org-meta-item {
+        font-size: 11px;
+        padding: 1px 6px;
+    }
+
+    /* 버튼 간격 축소 */
+    .org-row {
+        padding: 6px 12px;
+    }
+}
+
+
+@media (max-width: 768px) {
+
+    /* Drag 핸들 제거 (터치 UX 불리) */
+    .drag-handle {
+        display: none !important;
+    }
+
+    /* 상태 배지는 텍스트만 */
+    .status-badge {
+        font-size: 11px;
+        padding: 2px 6px;
+    }
+
+    /* 수정 버튼 아이콘화 */
+    .org-row .table-btn {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 640px) {
+
+    /* 하위 조직 수도 숨김 */
+    .org-label .org-meta-item {
+        display: none;
+    }
+
+    /* 상태 배지 숨김 */
+    .status-badge {
+        display: none;
+    }
+
+    /* 수정 버튼만 남기고 최소화 */
+    .org-row .table-btn {
+        margin-left: auto;
+        padding: 6px;
+    }
+
+    /* depth indent 축소 */
+    .org-node {
+        margin-left: 0 !important;
+    }
+
+    .org-node::before {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+
+    .orgcat-toolbar {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .toolbar-left {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    /* 검색 버튼 텍스트 제거 */
+    #btnSearch {
+        padding: 0 10px;
+    }
+
+    #btnSearch::after {
+        content: "";
+    }
+
+    /* 체크박스 라벨 축약 */
+    .inactive-toggle .label-text {
+        display: none;
+    }
+}
+
+.custom-select {
+    position: relative;
+}
+
+.custom-select-selected {
+    height: 40px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+
+    font-size: 13.5px;
+    cursor: pointer;
+}
+
+.custom-select-options {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+    max-height: 200px;
+    overflow-y: auto;
+
+    z-index: 1000;
+    display: none;
+}
+
+.custom-select.active .custom-select-options {
+    display: block;
+}
+
+.custom-select-option {
+    padding: 10px 12px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.custom-select-option:hover {
+    background: #f9fafb;
+}
+
+.custom-select-option.selected {
+    background: #eef2ff;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+
+.custom-select.disabled {
+    pointer-events: none;   /* 클릭 자체 차단 */
+    opacity: 0.6;           /* 비활성화 시각 표현 */
+}
+
+.custom-select.disabled .custom-select-selected {
+    background: #f9fafb;
+    cursor: not-allowed;
+}

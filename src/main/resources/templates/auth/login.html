@@ -103,7 +103,7 @@
 </head>
 <body>
 
-<div class="login-card">
+<form class="login-card" onsubmit="login(event)">
   <div class="login-title">
     <h1>OrbitFlow</h1>
     <p>로그인 정보를 입력하세요.</p>
@@ -111,20 +111,30 @@
 
   <div class="form-group">
     <label for="email">이메일</label>
-    <input id="email" type="email" placeholder="example@company.com">
+    <input id="email" type="email" placeholder="example@company.com" required>
   </div>
 
   <div class="form-group">
     <label for="password">비밀번호</label>
-    <input id="password" type="password" placeholder="비밀번호를 입력하세요">
+    <input id="password" type="password" placeholder="비밀번호를 입력하세요" required>
     <div id="loginError" class="error-msg"></div>
   </div>
 
-  <button class="login-btn" onclick="login()">로그인</button>
-</div>
+  <button class="login-btn" type="submit">로그인</button>
+
+  <div style="margin-top:16px; text-align:center;">
+    <a href="/find-password"
+       style="font-size:13px; color:#4f7cff; text-decoration:none;">
+      비밀번호를 잊으셨나요?
+    </a>
+  </div>
+
+</form>
+
 
 <script>
-  async function login() {
+  async function login(event) {
+    event.preventDefault();
     const errorEl = document.getElementById('loginError');
     errorEl.style.display = 'none';
 
@@ -167,11 +177,14 @@
 
       const me = (await meRes.json()).data;
 
-      /* 역할별 이동 */
-      location.href =
-              (me.role === 'ADMIN' || me.role === 'COMPANY_ADMIN')
-                      ? '/view/admin'
-                      : '/';
+      /* refresh 만료 시각 저장 */
+      sessionStorage.setItem(
+              'refreshExpiresAt',
+              new Date(result.data.refreshExpiresAt).getTime()
+      );
+
+      /* 홈 대시보드로 이동 */
+      location.href = '/';
 
     } catch (e) {
       console.error(e);

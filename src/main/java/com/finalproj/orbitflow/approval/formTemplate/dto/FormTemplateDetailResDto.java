@@ -28,7 +28,6 @@ public class FormTemplateDetailResDto {
     private Long formTemplateId;
     private Long templateGroupId;
     private String formTemplateName;
-    private TemplateCategoryCode templateCategoryCode;
     private int version;
     private List<AffectTag> affectTags;
     private Object templateJson;
@@ -40,7 +39,6 @@ public class FormTemplateDetailResDto {
                     .formTemplateId(entity.getId())
                     .templateGroupId(entity.getTemplateGroup().getId())
                     .formTemplateName(entity.getTemplateGroup().getName())
-                    .templateCategoryCode(entity.getTemplateCategory().getCode())
                     .version(entity.getVersion())
                     .affectTags(entity.getAffectTags())
                     .templateJson(mapper.readValue(entity.getTemplateJson(), Object.class))

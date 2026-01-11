@@ -1,0 +1,235 @@
+/* 월별 근태조회 페이지 - 게시판 디자인과 통일 */
+
+/* 컬러 팔레트 (게시판과 동일) */
+:root {
+    --primary-color: #3B82F6;
+    --primary-hover: #2563EB;
+    --neutral-50: #F9FAFB;
+    --neutral-100: #F3F4F6;
+    --neutral-200: #E5E7EB;
+    --neutral-300: #D1D5DB;
+    --neutral-400: #9CA3AF;
+    --neutral-500: #6B7280;
+    --neutral-600: #4B5563;
+    --neutral-700: #374151;
+    --neutral-800: #1F2937;
+}
+
+/* 컨테이너 - 게시판과 동일한 크기 */
+.board-container {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(103vh - 180px);
+}
+
+/* 테이블 스타일 통일 (게시판과 동일) */
+#attendanceTable th,
+#attendanceTable td {
+    padding: 14px 16px;
+    font-size: 14px;
+}
+
+#attendanceTable th {
+    font-weight: 600;
+    color: var(--neutral-700);
+    border-bottom: 2px solid var(--neutral-200);
+}
+
+#attendanceTable td {
+    border-bottom: 1px solid var(--neutral-200);
+    color: var(--neutral-600);
+}
+
+#attendanceTable tbody tr:hover {
+    background: var(--neutral-50);
+}
+
+#attendanceTable tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* 테이블 컬럼 정렬 및 너비 (근태조회 페이지용) */
+#attendanceTable th:nth-child(1),
+#attendanceTable td:nth-child(1) {
+    text-align: center !important;
+    white-space: nowrap;
+    width: 140px;
+    min-width: 140px;
+}
+
+#attendanceTable th:nth-child(2),
+#attendanceTable td:nth-child(2) {
+    text-align: center !important;
+    width: 120px;
+    min-width: 120px;
+}
+
+#attendanceTable th:nth-child(3),
+#attendanceTable td:nth-child(3) {
+    text-align: center !important;
+    width: 120px;
+    min-width: 120px;
+}
+
+#attendanceTable th:nth-child(4),
+#attendanceTable td:nth-child(4) {
+    text-align: center !important;
+    width: 120px;
+    min-width: 120px;
+}
+
+#attendanceTable th:nth-child(5),
+#attendanceTable td:nth-child(5) {
+    text-align: center !important;
+    width: 120px;
+    min-width: 120px;
+}
+
+/* .card.summary-card, .summary-grid, .summary-item 등의 스타일은 leave.css에 정의된 것을 사용하므로 제거함 */
+
+/* 요약 카드 값 색상 유틸리티 */
+.val-blue {
+    color: var(--primary-color);
+}
+
+.val-orange {
+    color: #F59E0B;
+}
+
+.val-red {
+    color: #DC2626;
+}
+
+
+/* 상태 배지 - 크기 통일 */
+.status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    min-width: 60px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.badge-late {
+    background-color: #FEF3C7;
+    color: dimgray;
+}
+
+.badge-absent {
+    background-color: #FEE2E2;
+    color: dimgray;
+}
+
+.badge-normal {
+    background-color: #D1FAE5;
+    color: dimgray;
+}
+
+.badge-vacation {
+    background-color: #DBEAFE;
+    color: dimgray;
+}
+
+/* 기간 설정 영역 내의 시작일/종료일 박스 사이 간격 조정 */
+.range-inputs {
+    display: flex;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+/* 월별 선택 드롭다운 (게시판 필터와 통일) */
+.custom-dropdown {
+    min-width: 200px;
+    background-color: white;
+    border: 1px solid var(--neutral-300);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    box-sizing: border-box;
+    line-height: 1.5;
+}
+
+.custom-dropdown:hover {
+    border-color: var(--primary-color);
+}
+
+.custom-dropdown:focus-within {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.dropdown-selected {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    font-size: 14px;
+    color: var(--neutral-700);
+}
+
+.dropdown-selected span {
+    letter-spacing: 0.5px;
+}
+
+.dropdown-selected i {
+    font-size: 14px;
+    color: var(--neutral-500);
+}
+
+/* 드롭다운 리스트(36개월 목록) 디자인 */
+.dropdown-list {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 100%;
+    background: #fff;
+    border: 1px solid var(--neutral-200);
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    max-height: 300px;
+    overflow-y: auto;
+    display: none;
+    padding: 8px 0;
+    list-style: none;
+    margin: 0;
+}
+
+.custom-dropdown.show .dropdown-list {
+    display: block;
+}
+
+.dropdown-list li {
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--neutral-700);
+    transition: background 0.2s;
+    cursor: pointer;
+}
+
+.dropdown-list li:hover {
+    background-color: var(--neutral-50);
+    color: var(--primary-color);
+}
+
+.dropdown-list li.active {
+    background-color: #EFF6FF;
+    color: var(--primary-color);
+    font-weight: 600;
+}

@@ -9,6 +9,10 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.util.Map;
 
 /**
  * Please explain the class!!!
@@ -46,11 +50,33 @@ public class AuditLog extends BaseEntity {
     @Column(name = "event_type", nullable = false, length = 30)
     private AuditEventType eventType;
 
-    @Lob
-    @Column(name = "before_data")
-    private String beforeData; // JSON
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "before_data", columnDefinition = "json")
+    private Map<String, Object> beforeData;
 
-    @Lob
-    @Column(name = "after_data")
-    private String afterData; // JSON
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "after_data", columnDefinition = "json")
+    private Map<String, Object> afterData;
+
+
+    public static AuditLog create(
+            Company company,
+            Employee actor,
+            AuditEntityType entityType,
+            Long entityId,
+            AuditEventType eventType,
+            Map<String, Object> beforeData,
+            Map<String, Object> afterData
+    ) {
+        AuditLog log = new AuditLog();
+        log.company = company;
+        log.actor = actor;
+        log.entityType = entityType;
+        log.entityId = entityId;
+        log.eventType = eventType;
+        log.beforeData = beforeData;
+        log.afterData = afterData;
+        return log;
+    }
+
 }

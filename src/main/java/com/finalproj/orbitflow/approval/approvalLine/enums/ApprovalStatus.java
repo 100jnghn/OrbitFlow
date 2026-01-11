@@ -11,8 +11,9 @@ package com.finalproj.orbitflow.approval.approvalLine.enums;
 
 public enum ApprovalStatus {
     DRAFT,
-    SUBMITTED,
+    WAITING,
     IN_PROGRESS,
     APPROVED,
-    REJECTED
+    REJECTED,
+    CANCELLED
 }

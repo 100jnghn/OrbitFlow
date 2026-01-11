@@ -1,0 +1,1018 @@
+/* 컬러 팔레트 */
+:root {
+    --primary-color: #3B82F6;
+    --primary-hover: #2563EB;
+    --secondary-color: #6366F1;
+    --success-color: #10B981;
+    --danger-color: #DC2626;
+    --danger-hover: #DC2626;
+    --warning-color: #F59E0B;
+    --neutral-50: #F9FAFB;
+    --neutral-100: #F3F4F6;
+    --neutral-200: #E5E7EB;
+    --neutral-300: #D1D5DB;
+    --neutral-400: #9CA3AF;
+    --neutral-500: #6B7280;
+    --neutral-600: #4B5563;
+    --neutral-700: #374151;
+    --neutral-800: #1F2937;
+    --neutral-900: #111827;
+}
+
+
+/* ===============================
+   공통
+=============================== */
+.document-detail-page {
+    font-family: 'Noto Sans KR', sans-serif;
+    background-color: #f7f8fa;
+    box-sizing: border-box;
+
+    /* ⭐ 페이지 프레임 */
+    max-width: 1450px; /* ← 핵심 */
+    margin: 0 auto; /* 가운데 정렬 */
+
+    padding: 20px 0 0; /* 내부 패딩 최소화 */
+    min-height: calc(100vh - 100px);
+
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* ===============================
+   문서 헤더
+=============================== */
+.document-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.document-header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.status-badge {
+    padding: 4px 10px;
+    font-size: 12px;
+    border-radius: 12px;
+    background-color: #e5e7eb;
+    color: #374151;
+}
+
+/* ===============================
+   본문 레이아웃
+=============================== */
+
+/* 문서 본문 제목 */
+.doc-content-title {
+    margin: 0 0 16px;
+    padding: 12px 0;
+
+    text-align: center;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+
+    border-bottom: 2px solid #000;
+}
+
+.document-body {
+    display: flex;
+    gap: 16px;
+
+    flex: 1;
+    min-height: 0;
+}
+
+/* ===============================
+   좌측 문서 내용 패널
+=============================== */
+.document-content-panel {
+    flex: 3;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 0;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.05);
+    overflow-y: auto;
+    min-width: 0;
+}
+
+/* 문서 실제 렌더 영역 */
+.document-content-panel #documentContentContainer {
+    margin: 25px;
+    background-color: #ffffff;
+    display: block;
+}
+
+/* ===============================
+   우측 사이드 패널
+=============================== */
+.document-side-panel {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+    min-width: 0;
+}
+
+.side-panel-box {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.05);
+}
+
+.side-panel-box h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+/* ===============================
+   결재선 / 코멘트
+=============================== */
+#approvalLineList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.approval-line-item {
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 8px;
+}
+
+.approver-name {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.approver-status {
+    font-size: 12px;
+    margin-top: 2px;
+    color: #6b7280;
+}
+
+.approval-line-item.approved .approver-status {
+    color: #16a34a;
+}
+
+.approval-line-item.rejected .approver-status {
+    color: #dc2626;
+}
+
+.approval-line-item.waiting .approver-status {
+    color: #2563eb;
+}
+
+.approver-comment {
+    font-size: 12px;
+    margin-top: 4px;
+    color: #374151;
+}
+
+/* ===============================
+   첨부 / 참조 문서
+=============================== */
+#attachmentList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#attachmentList li {
+    margin-bottom: 6px;
+}
+
+/* ===============================
+   확장된 첨부 아이템 구조
+=============================== */
+#attachmentList .attachment-item {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* 전체 간격 조정 */
+    font-size: 13px;
+    line-height: 1.4;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+}
+
+/* hover 시 row 강조 */
+#attachmentList .attachment-item:hover {
+    background: #f9fafb;
+}
+
+/* ===== 타입 라벨 ===== */
+#attachmentList .attachment-type {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+#attachmentList .attachment-type.attachment {
+    background: #eef4ff;
+    color: #2563eb;
+}
+
+#attachmentList .attachment-type.reference {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+/* ===== 파일명 ===== */
+#attachmentList .attachment-name {
+    color: #2563eb;
+    word-break: break-all;
+}
+
+/* hover 시 파일명 강조 */
+#attachmentList .attachment-item:hover .attachment-name {
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+/* ===== 파일 사이즈 ===== */
+#attachmentList .attachment-size {
+    font-size: 12px;
+    color: #9ca3af;
+    white-space: nowrap;
+}
+
+/* ===============================
+   비어있음 / 오류 상태
+=============================== */
+#attachmentList .attachment-empty,
+#attachmentList .attachment-error {
+    font-size: 13px;
+    color: #9ca3af;
+    padding: 4px 6px;
+}
+
+/* ===============================
+   (기존 링크 스타일 유지 – 혹시 a 태그 사용 시)
+=============================== */
+#attachmentList a {
+    font-size: 13px;
+    color: #2563eb;
+    text-decoration: none;
+}
+
+#attachmentList a:hover {
+    text-decoration: underline;
+}
+
+/* ===============================
+   다운로드 로딩 Spinner
+=============================== */
+.attachment-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid #c7d2fe;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+}
+
+/* ===============================
+   다운로드 완료 체크 아이콘
+=============================== */
+.attachment-check {
+    font-size: 14px;
+    color: #16a34a; /* green-600 */
+    flex-shrink: 0;
+}
+
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ===============================
+   하단 액션 버튼
+=============================== */
+.document-action-bar {
+    margin-top: 16px;
+    padding: 12px 0 16px;
+
+    flex-shrink: 0;
+    background: #f7f8fa;
+}
+
+.action-btn {
+    min-width: 80px;
+    padding: 8px 14px;
+    font-size: 13px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+}
+
+.action-btn.secondary {
+    background-color: #e5e7eb;
+    color: #111827;
+}
+
+.action-btn.primary {
+    background-color: #2563eb;
+    color: #ffffff;
+}
+
+.action-btn.danger {
+    background-color: #dc2626;
+    color: #ffffff;
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.action-right {
+    display: flex;
+    justify-content: space-between; /* ⭐ 핵심 */
+    align-items: center;
+}
+
+.action-left,
+.action-right-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+
+/* =========================================================
+   문서 필드 (표 레이아웃)
+   - doc-field / doc-field-row 호환
+========================================================= */
+.document-content-panel .doc-field,
+.document-content-panel .doc-field-row {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    border-left: 2px solid #000;
+    border-right: 2px solid #000;
+    border-bottom: 2px solid #000;
+    margin: 0;
+}
+
+/* 첫 필드 + 구분선 다음 필드만 상단선 */
+.document-content-panel .doc-field:first-of-type,
+.document-content-panel .doc-field-row:first-of-type,
+.document-content-panel hr.doc-divider + .doc-field,
+.document-content-panel hr.doc-divider + .doc-field-row {
+    border-top: 2px solid #000;
+}
+
+
+/* 좌측 라벨 */
+.document-content-panel .doc-field-label {
+    padding: 8px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #000;
+    background-color: #d1d5db;
+    border-right: 2px solid #000;
+
+    display: flex; /* ✅ 다시 flex */
+    align-items: center; /* ✅ 세로 중앙 */
+    justify-content: center; /* ✅ 가로 중앙 */
+    text-align: center; /* ✅ 여러 줄일 때 중앙 */
+
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+}
+
+
+/* 우측 값 */
+.document-content-panel .doc-field-value {
+    min-width: 0;
+    padding: 8px 10px;
+    font-size: 13px;
+    color: #000;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    text-align: left;
+}
+
+.document-content-panel .doc-field-value.empty {
+    color: #666;
+}
+
+/* ===============================
+   문서 구분선 (hr)
+=============================== */
+.document-content-panel hr.doc-divider {
+    border: none;
+    border-top: 2px solid #000;
+    margin: 24px 0;
+    height: 0;
+}
+
+/* =========================================================
+   일정 / 복합 필드 (event-date-range 공용)
+========================================================= */
+.document-content-panel .sub-field-table {
+    display: grid;
+    grid-template-rows: auto;
+    box-sizing: border-box;
+    border: none;
+}
+
+/* 내부 행 */
+.sub-field-row {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    align-items: start;
+    box-sizing: border-box;
+    border-bottom: 1px solid #000;
+}
+
+/* 마지막 행은 하단선 제거 */
+.sub-field-row:last-child {
+    border-bottom: none;
+}
+
+/* 내부 라벨 */
+.sub-field-label {
+    padding: 8px 10px;
+    font-weight: 600;
+    background-color: #e5e7eb;
+    border-right: 1px solid #000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+}
+
+
+/* 내부 값 */
+.sub-field-value {
+    padding: 8px 10px;
+    white-space: pre-wrap;
+    box-sizing: border-box;
+}
+
+/* =========================================================
+   문서 테이블 (read-only)
+========================================================= */
+.doc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    border: none;
+}
+
+.doc-table th,
+.doc-table td {
+    border: 1px solid #000;
+    padding: 6px 8px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.doc-table th {
+    font-weight: 600;
+    background-color: #ffffff;
+}
+
+/* 상단 외곽 제거 */
+.doc-table thead tr:first-child th {
+    border-top: none;
+}
+
+/* 하단 외곽 제거 */
+.doc-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* 좌측 외곽 제거 */
+.doc-table tr > :first-child {
+    border-left: none;
+}
+
+/* 우측 외곽 제거 */
+.doc-table tr > :last-child {
+    border-right: none;
+}
+
+.doc-field-value:has(.doc-table) {
+    padding: 0;
+}
+
+/* No 컬럼 */
+.doc-table .col-no {
+    width: 32px;
+    min-width: 32px;
+    max-width: 32px;
+
+    text-align: center;
+    white-space: nowrap;
+    padding: 6px 4px; /* 좌우 여백 최소화 */
+}
+
+/* 테이블 헤더 행 */
+.doc-table thead th {
+    background-color: #e5e7eb;
+}
+
+/* No 컬럼 배경 */
+.doc-table .col-no {
+    background-color: #e5e7eb;
+}
+
+
+/* =========================================================
+   안내 문구 (notice)
+========================================================= */
+.notice-box {
+    padding: 8px 10px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.notice-box.info {
+    color: #1f2937;
+}
+
+/* =========================================================
+   일정 / 복합 필드 내부 여백 제거
+========================================================= */
+.document-content-panel .doc-field-value:has(.sub-field-table) {
+    padding: 0;
+}
+
+/* =========================================================
+   버튼 상태
+========================================================= */
+
+button.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+button.active {
+    opacity: 1;
+}
+
+/* ===============================
+   (추가) inbox 작성 팝업 스타일을 승인/반려 모달에 적용
+=============================== */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(27, 32, 54, 0.36);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* 기존 modal보다 높게 */
+}
+
+.modal-backdrop.hidden {
+    display: none;
+}
+
+.approval-modal {
+    width: 380px;
+    max-height: 70vh;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 6px 30px rgba(31, 36, 73, 0.17);
+    padding: 36px 32px 32px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    overflow: hidden;
+}
+
+.modal-title {
+    font-size: 1.22rem;
+    font-weight: 700;
+    color: #18246e;
+    margin-bottom: 10px;
+}
+
+.modal-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.modal-input {
+    padding: 8px 13px;
+    border-radius: 7px;
+    border: 1.3px solid #bfc4e0;
+    font-size: 1.01rem;
+    background: #fafbff;
+
+    width: 100%;
+    box-sizing: border-box;
+    resize: none;
+}
+
+.modal-actions {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.modal-cancel-btn,
+.modal-create-btn {
+    padding: 8px 28px;
+    font-size: 1.05rem;
+    border-radius: 8px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.modal-cancel-btn {
+    background: #f4f6fa;
+    color: #4b515c;
+    border: 1.4px solid #c2c7d1;
+}
+
+.modal-create-btn {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.modal-create-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* hint (선택) */
+.hint {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.hint.success {
+    color: var(--success-color);
+}
+
+.hint.error {
+    color: var(--danger-color);
+}
+
+.modal-create-btn.approve {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.modal-create-btn.reject {
+    background: var(--danger-color);
+    color: #fff;
+}
+
+.modal-create-btn.approve:hover {
+    background: var(--primary-hover);
+}
+
+.modal-create-btn.reject:hover {
+    background: #b91c1c; /* danger hover */
+}
+
+/* 이미지 필드 (readonly) */
+.document-content-panel .image-field.readonly {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    width: 100%;
+    padding: 12px;
+    box-sizing: border-box;
+}
+
+/* 이미지 행 (A4 영역) */
+.document-content-panel .image-row.readonly {
+    width: 100%;
+    max-height: 1000px; /* A4 세로 기준 */
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 10px;
+    box-sizing: border-box;
+
+    border: 1px solid #000;
+    border-radius: 4px;
+    background: #fff;
+
+    overflow: hidden; /* ⭐ 넘치면 자름 */
+}
+
+/* ⭐⭐⭐ 핵심 */
+.document-content-panel .image-row.readonly img {
+    max-width: 100%;
+    max-height: 100%;
+
+    width: auto;
+    height: auto;
+
+    object-fit: contain;
+    display: block;
+}
+
+/* 이미지 로딩 스피너 */
+.image-row.readonly {
+    position: relative;
+}
+
+/* 스피너 컨테이너 */
+.image-spinner {
+    width: 32px;
+    height: 32px;
+
+    border: 3px solid #e5e7eb;
+    border-top: 3px solid #3b82f6;
+    border-radius: 50%;
+
+    animation: spin 0.8s linear infinite;
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* 회전 애니메이션 */
+@keyframes spin {
+    from {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ===============================
+   AI 패널 공통
+=============================== */
+#aiSummaryPanel,
+#aiComparePanel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* ===============================
+   생성 전 / 빈 상태
+=============================== */
+.ai-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    min-height: 120px; /* ⭐ 텍스트 박스와 높이 통일 */
+    padding: 12px;
+
+    background: var(--neutral-50);
+    border: 1px dashed var(--neutral-200);
+    border-radius: 6px;
+}
+
+.ai-empty-text {
+    font-size: 13px;
+    color: var(--neutral-500);
+    text-align: center;
+    line-height: 1.4;
+}
+
+/* ===============================
+   AI 생성 버튼
+=============================== */
+.ai-create-btn {
+    min-width: 120px;
+    height: 34px;
+
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 500;
+
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+
+    background-color: var(--primary-color);
+    color: #ffffff;
+}
+
+.ai-create-btn:hover {
+    background-color: var(--primary-hover);
+}
+
+.ai-create-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ===============================
+   AI 결과 영역
+=============================== */
+.ai-result {
+    position: relative;
+    min-height: 120px;
+
+    padding: 12px;
+    border-radius: 6px;
+
+    background: #f9fafb;
+    border: 1px solid var(--neutral-200);
+
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--neutral-800);
+
+    white-space: pre-wrap;
+    word-break: break-word;
+
+    overflow-y: auto;
+}
+
+/* ===============================
+   로딩 상태
+=============================== */
+.ai-result.loading {
+    color: transparent; /* 텍스트 숨김 */
+}
+
+/* 반투명 오버레이 */
+.ai-result.loading::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+
+    background: rgba(249, 250, 251, 0.6);
+    border-radius: 6px;
+    z-index: 1;
+}
+
+/* ✅ 스피너 (ai-result 기준 중앙) */
+.ai-result.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+
+    width: 22px;
+    height: 22px;
+
+    border: 3px solid #e5e7eb;
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+
+    transform: translate(-50%, -50%);
+    animation: spin 0.8s linear infinite;
+
+    z-index: 2;
+}
+
+/* 로딩 텍스트 (spinner 아래) */
+.ai-result.loading .ai-loading-text {
+    position: absolute;
+    top: calc(50% + 22px);
+    left: 50%;
+    transform: translateX(-50%);
+
+    font-size: 13px;
+    color: var(--neutral-600);
+    white-space: nowrap;
+
+    z-index: 2;
+}
+
+/* ===============================
+   스크롤바 (선택)
+=============================== */
+.ai-result::-webkit-scrollbar {
+    width: 6px;
+}
+
+.ai-result::-webkit-scrollbar-thumb {
+    background: var(--neutral-300);
+    border-radius: 4px;
+}
+
+.ai-result::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* =========================================================
+   결재 서명 업로드
+========================================================= */
+
+.signature-upload-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.signature-preview-box {
+    width: 100%;
+    height: 160px; /* ⭐ 팝업용 축소 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #f8f9fa;
+    border: 2px dashed #ddd;
+    border-radius: 12px;
+
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.signature-preview-box:hover {
+    border-color: var(--primary-color);
+    background: #f0f4ff;
+}
+
+.signature-preview-box img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.signature-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    text-align: center;
+    color: #777;
+}
+
+.signature-placeholder i {
+    font-size: 42px; /* ⭐ 축소 */
+    opacity: 0.35;
+}
+
+.signature-placeholder p {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.signature-hint {
+    font-size: 12px;
+    color: #999;
+}
+
+/* 제거 버튼 */
+.signature-remove-btn {
+    align-self: flex-end;
+
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: none;
+
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+
+    background: #e74c3c;
+    color: #fff;
+}
+
+.signature-remove-btn:hover {
+    background: #c0392b;
+}

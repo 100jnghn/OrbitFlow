@@ -10,10 +10,13 @@ package com.finalproj.orbitflow.approval.documentAISummary.entity;
 
 
 import com.finalproj.orbitflow.approval.document.entity.Document;
+import com.finalproj.orbitflow.approval.documentAISummary.enums.AiStatus;
 import com.finalproj.orbitflow.approval.documentAISummary.enums.SummaryType;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -30,6 +33,8 @@ import lombok.NoArgsConstructor;
 )
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class DocumentAISummary extends BaseEntity {
 
     @Id
@@ -48,7 +53,15 @@ public class DocumentAISummary extends BaseEntity {
     @Column(name = "summary_type", nullable = false, length = 20)
     private SummaryType summaryType;
 
-    @Column(nullable = false, columnDefinition = "text")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private AiStatus status;
+
+    @Column(name = "prompt", columnDefinition = "text")
+    private String prompt;
+
+
+    @Column(columnDefinition = "text")
     private String content;
 
     @Column(length = 50)
@@ -57,4 +70,16 @@ public class DocumentAISummary extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "before_document_id")
     private Document beforeDocument;
+
+
+    /* 상태 변경용 메서드 */
+    public void markCompleted(String content) {
+        this.content = content;
+        this.status = AiStatus.COMPLETED;
+    }
+
+
+    public void markFailed() {
+        this.status = AiStatus.FAILED;
+    }
 }

@@ -1,17 +1,16 @@
 package com.finalproj.orbitflow.attendance.commute.controller;
 
 import com.finalproj.orbitflow.attendance.commute.dto.ActiveRuleResDto;
+import com.finalproj.orbitflow.attendance.commute.dto.EmployeeWorkStatusResDto;
 import com.finalproj.orbitflow.attendance.commute.dto.TodayAttResDto;
 import com.finalproj.orbitflow.attendance.commute.service.CommuteService;
+import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
-import java.time.LocalTime;
 
 @RestController
 @RequestMapping("/api/attendance")
@@ -20,76 +19,92 @@ public class CommuteController {
 
     private final CommuteService commuteService;
 
-
     @GetMapping("/active-rule")
     public ResponseEntity<?> getActiveRule(@AuthenticationPrincipal SecurityUser user) {
-        if (user == null) return ResponseEntity.status(401).build();
-
-        // 서비스 호출 시 반드시 user.getEmployeeId()를 넘겨야 사원별 예외를 찾을 수 있습니다.
         ActiveRuleResDto rule = commuteService.getActiveRule(user.getCompanyId(), user.getEmployeeId());
-        return ResponseEntity.ok(rule);
+
+        return ResponseEntity.ok(new ResponseDto<>(
+                HttpStatus.OK,
+                "적용된 근태 규칙 정보를 성공적으로 가져왔습니다.",
+                rule
+        ));
     }
 
-    /**
-     * 오늘 출근 현황 조회
-     * (출근 전이면 "근무예정", 출근 후면 "정상출근/지각" 및 "자리비움 여부" 반환)
-     */
+
     @GetMapping("/today")
-    public ResponseEntity<TodayAttResDto> getTodayAttendance(
-            @AuthenticationPrincipal SecurityUser user) {
-        TodayAttResDto response= commuteService.getTodayAttendance(user.getCompanyId(), user.getEmployeeId());
-        return ResponseEntity.ok(response);
-    }
+    public ResponseEntity<?> getTodayAttendance(@AuthenticationPrincipal SecurityUser user) {
+        TodayAttResDto response = commuteService.getTodayAttendance(user.getCompanyId(), user.getEmployeeId());
 
-    /**
-     * 출근 처리
-     * 결과: 정상출근(ON_TIME) 또는 지각(LATE) 판정
-     */
+        return ResponseEntity.ok(new ResponseDto<>(
+                HttpStatus.OK,
+                "오늘의 근태 기록 조회 성공",
+                response
+        ));
+    }
 
     @PostMapping("/checkin")
     public ResponseEntity<?> checkIn(@AuthenticationPrincipal SecurityUser user) {
-        // 1. user가 null인지 먼저 확인 (NPE 방지)
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 정보가 없습니다.");
-        }
+        TodayAttResDto result = commuteService.checkIn(user.getCompanyId(), user.getEmployeeId());
 
-        // 2. 이후 로직 진행
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(commuteService.checkIn(user.getCompanyId(), user.getEmployeeId()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDto<>(
+                HttpStatus.CREATED,
+                "출근 처리가 완료되었습니다.",
+                result
+        ));
     }
 
-
-    /**
-     * 퇴근 처리
-     * 결과: 조퇴(EARLY_LEAVE) 여부 판정 및 퇴근 기록
-     */
     @PostMapping("/checkout")
-    public ResponseEntity<TodayAttResDto> checkOut(
-            @AuthenticationPrincipal SecurityUser user) {
-        return ResponseEntity.ok(commuteService.checkOut(user.getCompanyId(), user.getEmployeeId()));
+    public ResponseEntity<?> checkOut(@AuthenticationPrincipal SecurityUser user) {
+        TodayAttResDto result = commuteService.checkOut(user.getCompanyId(), user.getEmployeeId());
+
+        return ResponseEntity.ok(new ResponseDto<>(
+                HttpStatus.OK,
+                "퇴근 처리가 완료되었습니다.",
+                result
+        ));
     }
 
-    /**
-     * 자리비움 시작
-     * 응답: 변경된 실시간 상태(isAway: true)를 포함한 오늘 현황 반환
-     */
     @PostMapping("/away/start")
-    public ResponseEntity<TodayAttResDto> startAway(
-            @AuthenticationPrincipal SecurityUser user) {
+    public ResponseEntity<?> startAway(@AuthenticationPrincipal SecurityUser user) {
         commuteService.startAway(user.getCompanyId(), user.getEmployeeId());
-        // 상태 변경 후 최신 상태를 다시 조회하여 반환
-        return ResponseEntity.ok(commuteService.getTodayAttendance(user.getCompanyId(), user.getEmployeeId()));
+        TodayAttResDto result = commuteService.getTodayAttendance(user.getCompanyId(), user.getEmployeeId());
+
+        return ResponseEntity.ok(new ResponseDto<>(
+                HttpStatus.OK,
+                "자리비움 상태로 전환되었습니다.",
+                result
+        ));
     }
 
-    /**
-     * 자리비움 종료
-     * 응답: 변경된 실시간 상태(isAway: false)를 포함한 오늘 현황 반환
-     */
     @PostMapping("/away/end")
-    public ResponseEntity<TodayAttResDto> endAway(
-            @AuthenticationPrincipal SecurityUser user) {
+    public ResponseEntity<?> endAway(@AuthenticationPrincipal SecurityUser user) {
         commuteService.endAway(user.getCompanyId(), user.getEmployeeId());
-        // 상태 변경 후 최신 상태를 다시 조회하여 반환
-        return ResponseEntity.ok(commuteService.getTodayAttendance(user.getCompanyId(), user.getEmployeeId()));
+        TodayAttResDto result = commuteService.getTodayAttendance(user.getCompanyId(), user.getEmployeeId());
+
+        return ResponseEntity.ok(new ResponseDto<>(
+                HttpStatus.OK,
+                "업무로 복귀하셨습니다. 자리비움이 해제되었습니다.",
+                result
+        ));
     }
+
+    @GetMapping("/work-status/{employeeId}")
+    public ResponseEntity<?> getEmployeeWorkStatus(
+            @PathVariable Long employeeId,
+            @AuthenticationPrincipal SecurityUser user
+    ) {
+        return ResponseEntity.ok(
+                new ResponseDto<>(
+                        HttpStatus.OK,
+                        "사원 근무 상태 조회 성공",
+                        new EmployeeWorkStatusResDto(
+                                commuteService.getEmployeeWorkStatus(
+                                        user.getCompanyId(),
+                                        employeeId
+                                )
+                        )
+                )
+        );
+    }
+
 }

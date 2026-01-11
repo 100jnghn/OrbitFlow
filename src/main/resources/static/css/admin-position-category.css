@@ -1,0 +1,69 @@
+/* =========================
+   직책 전용 스타일
+========================= */
+
+/* 상위 직책 컬럼 */
+.col-parent {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/*!* HEAD 배지 컬럼 *!*/
+/*.col-head {*/
+/*    text-align: center;*/
+/*}*/
+
+/* 결재처리자 HEAD 배지 */
+.badge-head {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    font-size: 11.5px;
+    font-weight: 700;
+    border-radius: 999px;
+
+    background: #eef2ff;
+    color: #3730a3;
+    border: 1px solid #c7d2fe;
+}
+
+.orgcat-table th.col-status,
+.orgcat-table td.col-status,
+.orgcat-table th.col-action,
+.orgcat-table td.col-action {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.td-center {
+    text-align: center;
+}
+
+.hidden {
+    display: none;
+}
+
+.form-input {
+    width: 100%;
+    height: 44px;
+    padding: 0 14px;
+    box-sizing: border-box;
+
+    font-size: 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+}
+
+select.form-input {
+    padding-right: 36px; /* 화살표 공간 */
+}
+
+.form-label {
+    margin-bottom: 8px;
+}
+
+.toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}

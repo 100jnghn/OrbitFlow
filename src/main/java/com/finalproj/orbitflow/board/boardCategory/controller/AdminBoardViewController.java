@@ -13,13 +13,24 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class AdminBoardViewController {
 
     /**
-     * 게시판 관리 페이지
+     * 공용 게시판 관리 페이지
      */
-    @GetMapping("/board")
-    public String boardAdminPage(Model model) {
-        model.addAttribute("pageTitle", "게시판 관리자");
+    @GetMapping("/board/common")
+    public String commonBoardAdminPage(Model model) {
+        model.addAttribute("pageTitle", "공용 게시판 관리");
         model.addAttribute("currentGNB", "admin");
-        model.addAttribute("currentMenu", "board");
-        return "admin/admin-board";
+        model.addAttribute("currentMenu", "common-board");
+        return "admin/admin-board/admin-board-common";
+    }
+
+    /**
+     * 부서 게시판 활성화 페이지
+     */
+    @GetMapping("/board/dept-activation")
+    public String deptBoardActivationPage(Model model) {
+        model.addAttribute("pageTitle", "부서 게시판 활성화");
+        model.addAttribute("currentGNB", "admin");
+        model.addAttribute("currentMenu", "dept-board");
+        return "admin/admin-board/admin-board-dept";
     }
 }

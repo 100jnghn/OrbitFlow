@@ -5,12 +5,30 @@
 // 현재 회의실 ID
 let currentRoomId = null;
 
+// DOM 요소
+let roomName, roomPosition, roomStatus, roomDescription;
+let roomNameMsg, roomPositionMsg, roomStatusMsg, roomDescriptionMsg;
+let editBtn;
+
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', () => {
+    // DOM 요소 초기화
+    roomName = document.getElementById('room-name');
+    roomPosition = document.getElementById('room-position');
+    roomStatus = document.getElementById('room-status');
+    roomDescription = document.getElementById('room-description');
+
+    roomNameMsg = document.getElementById('room-name-msg');
+    roomPositionMsg = document.getElementById('room-position-msg');
+    roomStatusMsg = document.getElementById('room-status-msg');
+    roomDescriptionMsg = document.getElementById('room-description-msg');
+
+    editBtn = document.getElementById('btn-edit');
+
     currentRoomId = getMeetingroomId();
 
     if (!currentRoomId) {
-        alert('회의실 정보를 찾을 수 없습니다.');
+        sweetError('회의실 정보를 찾을 수 없습니다.');
         history.back();
         return;
     }
@@ -27,11 +45,81 @@ function getMeetingroomId() {
     return new URLSearchParams(window.location.search).get('id');
 }
 
+/* ======================
+   공통 메시지
+====================== */
+function showMsg(el, message, type) {
+    el.textContent = message;
+    el.className = 'hint ' + type;
+}
+
+/* ======================
+   버튼 상태
+====================== */
+function updateEditButtonState() {
+    editBtn.disabled = !(
+        validateRoomName() &&
+        validateRoomPosition() &&
+        validateRoomStatus()
+    );
+}
+
+/* ======================
+   회의실명 검증 (최대 30자, not null)
+====================== */
+function validateRoomName() {
+    const v = roomName.value.trim();
+    if (!v) {
+        showMsg(roomNameMsg, '회의실명을 입력해주세요. (0/30)', 'error');
+        return false;
+    }
+    showMsg(roomNameMsg, `입력됨 (${v.length}/30)`, 'success');
+    return true;
+}
+
+/* ======================
+   위치 검증 (최대 50자, not null)
+====================== */
+function validateRoomPosition() {
+    const v = roomPosition.value.trim();
+    if (!v) {
+        showMsg(roomPositionMsg, '위치를 입력해주세요. (0/50)', 'error');
+        return false;
+    }
+    showMsg(roomPositionMsg, `입력됨 (${v.length}/50)`, 'success');
+    return true;
+}
+
+/* ======================
+   상태 검증 (not null)
+====================== */
+function validateRoomStatus() {
+    const v = roomStatus.value;
+    if (!v) {
+        showMsg(roomStatusMsg, '상태를 선택해주세요.', 'error');
+        return false;
+    }
+    showMsg(roomStatusMsg, '선택됨', 'success');
+    return true;
+}
+
+/* ======================
+   비고 검증 (최대 250자, nullable)
+====================== */
+function validateRoomDescription() {
+    const v = roomDescription.value.trim();
+    if (v) {
+        showMsg(roomDescriptionMsg, `입력됨 (${v.length}/250)`, 'success');
+    } else {
+        roomDescriptionMsg.textContent = '';
+    }
+    return true; // nullable이므로 항상 true
+}
+
 /**
  * 이벤트 리스너 초기화
  */
 function initEventListeners() {
-    const editBtn = document.getElementById('btn-edit');
     if (editBtn) {
         editBtn.addEventListener('click', handleEdit);
     }
@@ -40,30 +128,47 @@ function initEventListeners() {
     if (deleteBtn) {
         deleteBtn.addEventListener('click', handleDelete);
     }
+
+    // 실시간 검증
+    roomName.addEventListener('input', () => {
+        validateRoomName();
+        updateEditButtonState();
+    });
+
+    roomPosition.addEventListener('input', () => {
+        validateRoomPosition();
+        updateEditButtonState();
+    });
+
+    roomStatus.addEventListener('change', () => {
+        validateRoomStatus();
+        updateEditButtonState();
+    });
+
+    roomDescription.addEventListener('input', () => {
+        validateRoomDescription();
+    });
 }
 
 /**
  * 수정 버튼
- * (아직 edit 화면이 없으므로 id 유지)
  */
 async function handleEdit() {
-
-    const statusValue = document.getElementById('room-status').value;
-
-    if (!statusValue) {
-        alert('회의실 상태를 선택해주세요.');
+    // validation 검증
+    if (!validateRoomName() || !validateRoomPosition() || !validateRoomStatus()) {
+        await sweetInfo('입력 항목을 확인해주세요.');
         return;
     }
 
     const payload = {
-        name: document.getElementById('room-name').value,
-        position: document.getElementById('room-position').value,
-        description: document.getElementById('room-description').value,
-        statusId: Number(statusValue)   // 🔥 Long 매핑
+        name: roomName.value.trim(),
+        position: roomPosition.value.trim(),
+        description: roomDescription.value.trim(),
+        statusId: Number(roomStatus.value)   // 🔥 Long 매핑
     };
 
     try {
-        const response = await fetch(
+        const response = await apiFetch(
             `/api/admin/meetingrooms/${currentRoomId}`,
             {
                 method: 'PUT',
@@ -83,7 +188,7 @@ async function handleEdit() {
 
     } catch (error) {
         console.error(error);
-        alert('회의실 수정에 실패했습니다.');
+        await sweetError('회의실 수정에 실패했습니다.');
     }
 }
 
@@ -93,12 +198,17 @@ async function handleEdit() {
  * ※ Controller 기준: PATCH /admin/meetingrooms/{id}/delete
  */
 async function handleDelete() {
-    if (!confirm('정말로 이 회의실을 삭제하시겠습니까?')) {
-        return;
-    }
+
+    const result = await sweetConfirm(
+        '삭제 확인',
+        '회의실을 삭제하시겠습니까?'
+    );
+
+    if (!result.isConfirmed) return;
+
 
     try {
-        const response = await fetch(
+        const response = await apiFetch(
             `/api/admin/meetingrooms/${currentRoomId}/delete`,
             { method: 'PATCH' }
         );
@@ -111,13 +221,13 @@ async function handleDelete() {
 
     } catch (error) {
         console.error(error);
-        alert('회의실 삭제에 실패했습니다.');
+        await sweetError('회의실 삭제에 실패했습니다.');
     }
 }
 
 async function loadStatusOptions(selectedStatusId) {
     try {
-        const response = await fetch('/api/admin/resource-status');
+        const response = await apiFetch('/api/admin/resource-status');
 
         if (!response.ok) throw new Error();
 
@@ -141,29 +251,50 @@ async function loadStatusOptions(selectedStatusId) {
 
     } catch (e) {
         console.error(e);
-        alert('상태 목록을 불러오지 못했습니다.');
+        await sweetError('상태 목록을 불러오지 못했습니다.');
     }
 }
 
 async function loadRoomDetail() {
     try {
-        const response = await fetch(`/api/meetingrooms/${currentRoomId}`);
+        const response = await apiFetch(`/api/meetingrooms/${currentRoomId}`);
         if (!response.ok) throw new Error();
 
         const result = await response.json();
         const data = result.data;
 
-        document.getElementById('room-name').value = data.name ?? '';
-        document.getElementById('room-position').value = data.position ?? '';
-        document.getElementById('room-description').value = data.description ?? '';
+        roomName.value = data.name ?? '';
+        roomPosition.value = data.position ?? '';
+        roomDescription.value = data.description ?? '';
+
+        // 등록자 정보 표시
+        document.getElementById('uploader-name').textContent = data.uploaderName ?? '-';
+        document.getElementById('created-at').textContent = formatDate(data.createdAt);
 
         // 🔥 resourceStatusId 기준
         await loadStatusOptions(data.statusId);
+
+        // 초기 validation
+        validateRoomName();
+        validateRoomPosition();
+        validateRoomStatus();
+        validateRoomDescription();
+        updateEditButtonState();
 
     } catch (error) {
         console.error(error);
         showError();
     }
+}
+
+/**
+ * 날짜 포맷팅
+ */
+function formatDate(localDateString) {
+    if (!localDateString) return '-';
+
+    // LocalDate는 이미 YYYY-MM-DD 형식
+    return localDateString;
 }
 
 /**
@@ -175,4 +306,6 @@ function showError() {
     document.getElementById('room-status').textContent = '정보 없음';
     document.getElementById('room-description').textContent =
         '회의실 정보를 불러올 수 없습니다.';
+    document.getElementById('uploader-name').textContent = '-';
+    document.getElementById('created-at').textContent = '-';
 }

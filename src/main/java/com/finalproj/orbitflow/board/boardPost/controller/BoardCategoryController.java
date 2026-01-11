@@ -37,7 +37,7 @@ public class BoardCategoryController {
         }
 
         List<BoardCategoryResDto.Category> boards = 
-                boardCategoryService.getAccessibleBoards(user.getEmployeeId());
+                boardCategoryService.getAccessibleBoards(user.getCompanyId(), user.getEmployeeId(), user.getRole());
 
         return ResponseEntity.ok(
                 new ResponseDto<>(HttpStatus.OK, "권한이 있는 게시판 목록 조회 성공", boards)

@@ -1,16 +1,12 @@
 package com.finalproj.orbitflow.schedule.entity;
 
 import com.finalproj.orbitflow.global.common.BaseEntity;
-import com.finalproj.orbitflow.hr.company.entity.Company;
-import com.finalproj.orbitflow.hr.employee.entity.Employee;
-import com.finalproj.orbitflow.hr.orgCategory.entity.OrgCategory;
-import com.finalproj.orbitflow.hr.organization.entity.Organization;
+import com.finalproj.orbitflow.schedule.dto.ScheduleReqDto;
 import com.finalproj.orbitflow.schedule.enums.ScheduleStatus;
-import com.finalproj.orbitflow.schedule.enums.ScheduleType;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * Please explain the class!!!
@@ -29,31 +25,25 @@ public class Schedule extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", nullable = false)
-    private Company company;
+    @Column(name = "company_id", nullable = false)
+    private Long companyId;
 
-    // 조직 카테고리 (부서 일정일 경우 사용, Nullable)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    private OrgCategory orgCategory;
+    @Column(name = "is_company", nullable = false)
+    private boolean isCompany;
 
-    // 특정 부서 (부서 일정일 경우 사용, Nullable)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "org_id")
-    private Organization organization;
+    @Column(name = "is_personal", nullable = false)
+    private boolean isPersonal;
 
-    // 일정 유형 (COMPANY: 전사, PERSONAL: 개인 등)
-    @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false, length = 20)
-    private ScheduleType type;
+    @Column(name = "org_category_id")
+    private Long orgCategoryId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "employee_id", nullable = false)
-    private Employee employee;
+    @Column(name = "org_id")
+    private Long orgId;
+
+    @Column(name = "employee_id", nullable = false)
+    private Long employeeId;
 
     @Column(name = "schedule_title", nullable = false, length = 100)
     private String title;
@@ -61,33 +51,33 @@ public class Schedule extends BaseEntity {
     @Column(name = "schedule_description", length = 255)
     private String description;
 
-    @Column(name = "start_date", nullable = false)
-    private LocalDate startDate;
+    @Column(name = "start_at", nullable = false)
+    private LocalDateTime startAt;
 
-    @Column(name = "end_date", nullable = false)
-    private LocalDate endDate;
+    @Column(name = "end_at", nullable = false)
+    private LocalDateTime endAt;
 
-    // 시간은 정수형(예: 900 -> 09:00, 1430 -> 14:30)으로 관리
-    @Column(name = "start_time", nullable = false)
-    private Integer startTime;
-
-    @Column(name = "end_time", nullable = false)
-    private Integer endTime;
-
-    // 일정 상태 (RELEASE: 공개, DELETED: 삭제됨, PRIVATE: 비공개 등)
     @Enumerated(EnumType.STRING)
     @Column(name = "schedule_status", nullable = false, length = 20)
     private ScheduleStatus status;
 
 
-    public void update(String title, String description, LocalDate startDate, LocalDate endDate,
-                       Integer startTime, Integer endTime, ScheduleStatus status) {
-        this.title = title;
-        this.description = description;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.status = status;
+    // 일정 수정
+    public void update(ScheduleReqDto scheduleReqDto) {
+
+        ScheduleStatus scheduleStatus = this.status;
+
+        // status null 처리
+        if (scheduleReqDto.getStatus() != null) {
+            scheduleStatus = ScheduleStatus.valueOf(scheduleReqDto.getStatus().toUpperCase());
+        }
+
+        this.orgCategoryId = scheduleReqDto.getOrgCategoryId() == null ? this.orgCategoryId : scheduleReqDto.getOrgCategoryId();
+        this.orgId = scheduleReqDto.getOrgId() == null ? this.orgId : scheduleReqDto.getOrgId();
+        this.title = scheduleReqDto.getTitle() == null ? this.title : scheduleReqDto.getTitle();
+        this.description = scheduleReqDto.getDescription() ==  null ? this.description : scheduleReqDto.getDescription();
+        this.startAt = scheduleReqDto.getStartAt() == null ? this.startAt : scheduleReqDto.getStartAt();
+        this.endAt = scheduleReqDto.getEndAt() ==  null ? this.endAt : scheduleReqDto.getEndAt();
+        this.status = scheduleStatus;
     }
 }

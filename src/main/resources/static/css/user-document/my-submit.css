@@ -1,0 +1,299 @@
+/* ======================================================
+   기안함 전용 스타일 (my-submit.css)
+   - 테이블 / 페이지네이션 / 상태 배지는 inbox.css 사용
+   - 이 파일은 "기안함 전용 UI"만 담당
+====================================================== */
+
+
+/* ===============================
+   문서 작성 버튼 (공통)
+=============================== */
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 18px;
+    height: 36px; /* 페이지네이션 버튼과 동일 */
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+
+/* ===============================
+   문서 작성 팝업
+=============================== */
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(27, 32, 54, 0.36);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+}
+
+.modal-content {
+    width: 380px;
+    max-height: 70vh;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 6px 30px rgba(31, 36, 73, 0.17);
+    padding: 36px 32px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: hidden;
+}
+
+.modal-title {
+    font-size: 1.22rem;
+    font-weight: 700;
+    color: #18246e;
+    margin-bottom: 10px;
+}
+
+.modal-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.modal-input {
+    padding: 8px 13px;
+    border-radius: 7px;
+    border: 1.3px solid #bfc4e0;
+    font-size: 1.01rem;
+    background: #fafbff;
+}
+
+
+/* ===============================
+   팝업 힌트
+=============================== */
+
+.hint {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.hint.success {
+    color: var(--primary-color);
+}
+
+.hint.error {
+    color: var(--danger-color);
+}
+
+
+/* ===============================
+   선택 양식 설명 박스
+=============================== */
+
+.update-descbox {
+    border: 1.4px solid #bfc4e0;
+    border-radius: 7px;
+    background: #fff;
+    min-height: 120px;
+    box-shadow: 0 3px 18px rgba(80, 87, 149, 0.11);
+}
+
+.update-desc-text {
+    padding: 8px 18px 16px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-y: auto;
+}
+
+
+/* ===============================
+   팝업 드롭다운
+=============================== */
+
+.modal-dropdown-list {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    background: #fff;
+    border: 1.4px solid #bfc4e0;
+    box-shadow: 0 3px 18px rgba(80, 87, 149, 0.11);
+    z-index: 30;
+    border-radius: 8px;
+    max-height: 210px;
+    overflow-y: auto;
+}
+
+.modal-dropdown-item {
+    padding: 9px 15px;
+    cursor: pointer;
+    font-size: 1.04rem;
+    color: #294d91;
+}
+
+.modal-dropdown-item:hover {
+    background: #ecf2fd;
+}
+
+
+/* ===============================
+   팝업 버튼 영역
+=============================== */
+
+.modal-actions {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.modal-cancel-btn,
+.modal-create-btn {
+    padding: 8px 28px;
+    font-size: 1.05rem;
+    border-radius: 8px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.modal-cancel-btn {
+    background: #f4f6fa;
+    color: #4b515c;
+    border: 1.4px solid #c2c7d1;
+}
+
+.modal-create-btn {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.modal-create-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+
+/* ===============================
+   기안함 전용 테이블 보정
+   (inbox.css 기준 최소 오버라이드)
+=============================== */
+
+/* 제목 계열 컬럼만 좌측 정렬 */
+.my-documents-page .approval-table th:nth-child(1),
+.my-documents-page .approval-table th:nth-child(2),
+.my-documents-page .approval-table td.title-col {
+    text-align: left;
+}
+
+
+/* ===============================
+   하단 액션 영역 (페이지네이션 + 작성 버튼)
+=============================== */
+
+.approval-bottom-actions {
+    position: relative;
+    margin-top: 16px;
+    min-height: 36px;
+}
+
+/* 문서 작성 버튼: 우측 고정 */
+.approval-write-action {
+    position: absolute;
+    right: 0;
+    top: 0;
+    display: flex;
+    align-items: center;
+}
+
+
+/* ===============================
+   기안함 전용 배지
+=============================== */
+
+.approval-btn-primary {
+    height: 40px;
+    padding: 0 20px;
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    transition: all 0.2s ease;
+}
+
+.approval-btn-primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* ===============================
+   Secondary 버튼 (초기화)
+   =============================== */
+
+.approval-btn-secondary {
+    height: 40px;
+    padding: 0 16px;
+    background: #fff;
+    color: var(--neutral-700);
+    border: 1px solid var(--neutral-300);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    transition: all 0.2s ease;
+}
+
+.approval-btn-secondary:hover {
+    background: var(--neutral-50);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.revision-badge {
+    margin-left: 6px;
+    padding: 2px 6px;
+    font-size: 11px;
+    border-radius: 6px;
+    background: var(--neutral-200);
+    color: var(--neutral-600);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+}

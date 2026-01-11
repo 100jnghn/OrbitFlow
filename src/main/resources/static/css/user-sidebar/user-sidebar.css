@@ -1,0 +1,186 @@
+/* 게시판 사이드바 전용 스타일 */
+/* sidebar.css의 기본 스타일을 오버라이드하여 게시판 전용 아코디언 메뉴 디자인 적용 */
+
+/* 기본 사이드바 컨테이너 오버라이드 */
+.sidebar {
+    width: 250px;
+    background: #0b1220 !important;
+    color: #fff;
+
+    display: flex;
+    flex-direction: column;
+}
+
+
+.sidebar-inner {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+
+/* 메뉴 영역만 스크롤 */
+.sidebar-menu-wrapper {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* 내선번호는 항상 하단 고정 */
+.sidebar-footer {
+    margin-top: auto;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    background: #0b1220;
+}
+
+
+/* 사이드바 메뉴 오버라이드 */
+.sidebar-menu {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 16px 30px !important;
+}
+
+/* ============================================
+   아코디언 메뉴 스타일
+   ============================================ */
+
+/* 대분류 메뉴 아이템 */
+.menu-item {
+    position: relative;
+    list-style: none;
+    margin-bottom: 2px;
+}
+
+.menu-title {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0 !important;
+    cursor: pointer !important;
+    color: #c9ccdd !important; /* 기본 색상: 연한 회색 */
+    font-size: 15px;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+/* 대분류 호버 시 및 활성화(active) 시 효과 */
+.menu-title:hover,
+.menu-item.active .menu-title {
+    color: #ffffff !important; /* 화이트로 강조 */
+}
+
+/* 현재 페이지가 포함된 대분류 텍스트 굵게 */
+.menu-item.active .menu-title span {
+    font-weight: 600;
+}
+
+/* 화살표 애니메이션 */
+.arrow {
+    font-size: 11px;
+    transition: transform 0.3s ease;
+    margin-right: 15px;
+    pointer-events: none;
+}
+
+.menu-item.active .arrow {
+    transform: rotate(180deg);
+    color: #5dade2; /* 펼쳐졌을 때 화살표 색상 포인트 */
+}
+
+/* 소분류 제어 (아코디언) */
+.sub-menu {
+    display: none !important;
+    list-style: none !important;
+    padding: 5px 0 10px 15px !important;
+    margin: 0 !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.1); /* 소분류 구분선 추가 */
+    margin-left: 5px !important;
+}
+
+.menu-item.active .sub-menu {
+    display: block !important;
+}
+
+/* 소분류 링크 스타일 */
+.sub-menu li {
+    list-style: none;
+}
+
+.sub-menu li a {
+    text-decoration: none;
+    color: #8a8d9e !important; /* 소분류 기본 색상: 차분한 블루그레이 */
+    font-size: 14px;
+    display: block;
+    padding: 7px 0;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+/* 소분류 호버 시 */
+.sub-menu li a:hover {
+    color: #ffffff !important;
+    padding-left: 5px; /* 호버 시 살짝 움직이는 효과 */
+}
+
+/* 선택된 소분류 메뉴 효과 */
+.sub-menu li.selected a {
+    color: #5dade2 !important; /* 포인트 컬러 (하늘색) */
+    font-weight: 700 !important;
+    padding-left: 8px;
+}
+
+/* 선택된 메뉴 옆에 작은 인디케이터(점) 추가 */
+.sub-menu li.selected a::before {
+    content: '';
+    position: absolute;
+    left: -2px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 4px;
+    background-color: #5dade2;
+    border-radius: 50%;
+}
+
+/* 단일 메뉴 (하위 메뉴가 없는 경우) */
+.menu-item.no-sub {
+    position: relative;
+    list-style: none;
+    margin-bottom: 2px;
+}
+
+.menu-item.no-sub a {
+    text-decoration: none;
+    color: #c9ccdd !important;
+    font-size: 15px;
+    display: block;
+    padding: 12px 0;
+    transition: all 0.2s ease;
+}
+
+.menu-item.no-sub a:hover {
+    color: #ffffff !important;
+}
+
+.menu-item.no-sub.selected a {
+    color: #5dade2 !important;
+    font-weight: 700 !important;
+    padding-left: 8px;
+}
+
+.menu-item.no-sub.selected a::before {
+    content: '';
+    position: absolute;
+    left: -2px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 4px;
+    background-color: #5dade2;
+    border-radius: 50%;
+}
+
+/* 기존 스타일 제거를 위한 오버라이드 */
+.sidebar-menu-item {
+    display: none; /* 더 이상 사용하지 않음 */
+}

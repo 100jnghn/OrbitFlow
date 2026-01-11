@@ -8,14 +8,15 @@ package com.finalproj.orbitflow.approval.attendanceRecord.entity;
  * @since       : 25. 12. 15. 월요일
  */
 
-
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
-import com.finalproj.orbitflow.leave.leaveType.entity.LeaveType;
+import com.finalproj.orbitflow.attendance.leave.entity.LeaveType;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -27,6 +28,8 @@ import java.time.LocalDateTime;
 @Table(name = "attendance_record")
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class AttendanceRecord extends BaseEntity {
 
     @Id
@@ -67,4 +70,9 @@ public class AttendanceRecord extends BaseEntity {
 
     @Column(name = "approved_at")
     private LocalDateTime approvedAt;
+
+    public void updateDuration(LocalDate newEndDate, BigDecimal newDays) {
+        this.endDate = newEndDate;
+        this.days = newDays;
+    }
 }

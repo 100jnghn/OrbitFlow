@@ -2,13 +2,15 @@ package com.finalproj.orbitflow.hr.positionCategory.controller;
 
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUtils;
+import com.finalproj.orbitflow.hr.positionCategory.dto.PositionCategoryCreateReqDto;
 import com.finalproj.orbitflow.hr.positionCategory.dto.PositionCategoryOrderUpdateReqDto;
-import com.finalproj.orbitflow.hr.positionCategory.dto.PositionCategoryReqDto;
+import com.finalproj.orbitflow.hr.positionCategory.dto.PositionCategoryUpdateReqDto;
 import com.finalproj.orbitflow.hr.positionCategory.service.PositionCategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
  * @filename : PositionCategoryController
  * @since : 2025-12-22 월요일
  */
+@PreAuthorize("hasAnyRole('ADMIN','COMPANY_ADMIN')")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/position-categories")
@@ -27,7 +30,7 @@ public class PositionCategoryController {
 
     @PostMapping
     public ResponseEntity<ResponseDto> create(
-            @RequestBody @Valid PositionCategoryReqDto request
+            @RequestBody @Valid PositionCategoryCreateReqDto request
     ) {
         return ResponseEntity.ok(
                 new ResponseDto(
@@ -46,7 +49,10 @@ public class PositionCategoryController {
                 new ResponseDto<>(
                         HttpStatus.OK,
                         "직책 카테고리 전체 조회 완료",
-                        positionCategoryService.findAll(SecurityUtils.getCompanyId(), includeInactive)
+                        positionCategoryService.findAllWithAssignedCount(
+                                SecurityUtils.getCompanyId(),
+                                includeInactive
+                        )
                 )
         );
     }
@@ -54,7 +60,7 @@ public class PositionCategoryController {
     @PutMapping("/{id}")
     public ResponseEntity<ResponseDto> update(
             @PathVariable Long id,
-            @RequestBody @Valid PositionCategoryReqDto request
+            @RequestBody @Valid PositionCategoryUpdateReqDto request
     ) {
         positionCategoryService.update(SecurityUtils.getCompanyId(), id, request);
 
@@ -67,11 +73,14 @@ public class PositionCategoryController {
         );
     }
 
-    @PostMapping("/order")
+    @PutMapping("/order")
     public ResponseEntity<ResponseDto> updateOrder(
             @RequestBody @Valid PositionCategoryOrderUpdateReqDto request
     ) {
-        positionCategoryService.updateOrder(SecurityUtils.getCompanyId(), request.getOrders());
+        positionCategoryService.updateOrder(
+                SecurityUtils.getCompanyId(),
+                request.getOrders()
+        );
         return ResponseEntity.ok(
                 new ResponseDto<>(
                         HttpStatus.OK,

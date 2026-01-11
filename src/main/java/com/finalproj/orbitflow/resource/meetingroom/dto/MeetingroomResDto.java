@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 /**
  * Please explain the class!!!
  *
@@ -26,4 +28,7 @@ public class MeetingroomResDto {
     private Long statusId;
     private String statusCode;
     private String statusName;
+
+    private String uploaderName;
+    private LocalDate createdAt;
 }

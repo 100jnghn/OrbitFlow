@@ -1,7 +1,15 @@
 package com.finalproj.orbitflow.hr.logAudit.repository;
 
 import com.finalproj.orbitflow.hr.logAudit.entity.AuditLog;
+import com.finalproj.orbitflow.hr.logAudit.enums.AuditEntityType;
+import com.finalproj.orbitflow.hr.logAudit.enums.AuditEventType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
 
 /**
  * Please explain the class!!!
@@ -12,4 +20,25 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
+    List<AuditLog> findByEntityTypeAndEntityIdOrderByCreatedAtDesc(
+            AuditEntityType entityType,
+            Long entityId
+    );
+
+    @Query("""
+                SELECT a FROM AuditLog a
+                JOIN a.actor act
+                WHERE a.company.id = :companyId
+                  AND a.entityType IN :entityTypes
+                  AND a.eventType IN :eventTypes
+                  AND (:actorName IS NULL OR act.name LIKE %:actorName%)
+            """)
+    Page<AuditLog> searchAdminAuditLogs(
+            @Param("companyId") Long companyId,
+            @Param("entityTypes") List<AuditEntityType> entityTypes,
+            @Param("eventTypes") List<AuditEventType> eventTypes,
+            @Param("actorName") String actorName,
+            Pageable pageable
+    );
+
 }

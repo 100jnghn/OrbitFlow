@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 /**
  * Please explain the class!!!
  *
@@ -22,11 +24,15 @@ public class ItemResDto {
     private Long itemCategoryId;
     private String itemCategoryName;
     private String name;
+    private String description;
 
     private Long statusId;
     private String statusCode;
     private String statusName;
 
     // 이미지 파일 정보 (없으면 null)
-    private String objectKey;
+    private Long fileId;
+
+    private String uploaderName;
+    private LocalDate createdAt;
 }

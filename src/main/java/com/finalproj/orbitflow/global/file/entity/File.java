@@ -9,15 +9,15 @@ package com.finalproj.orbitflow.global.file.entity;
  */
 
 
+import com.finalproj.orbitflow.board.boardPost.entity.Board;
+import com.finalproj.orbitflow.global.common.BaseEntity;
+import com.finalproj.orbitflow.global.file.enums.FileDomain;
 import com.finalproj.orbitflow.hr.company.entity.Company;
-import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @Entity
@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @Builder
-public class File {
+public class File extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,16 +44,17 @@ public class File {
     @Column(name = "sys_file", length = 255)
     private String sysFile;
 
-    @Column(name = "content_type", length = 50)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "domain", length = 30, nullable = false)
+    private FileDomain domain;
+
+    @Column(name = "content_type", length = 255)
     private String contentType;
 
     @Column(name = "file_size")
     private Long fileSize;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by")
-    private Employee createdBy;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @JoinColumn(name = "board_id")
+    private Board board;
 }

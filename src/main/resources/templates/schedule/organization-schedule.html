@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-user :: layout(
+        ~{::content},
+        ~{fragments/header :: header},
+        ~{sidebar/schedule/user-schedule-sidebar :: sidebar},
+        ~{::pageCss},
+        ~{::pageScript}
+      )}">
+<head>
+    <meta charset="UTF-8">
+    <title>조직 일정</title>
+
+    <!-- 페이지별 CSS -->
+    <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/schedule/organization-schedule.css}">
+        <link rel="stylesheet" th:href="@{/css/user-sidebar/user-sidebar.css}">
+    </th:block>
+
+    <!-- 페이지별 JS -->
+    <th:block th:fragment="pageScript">
+        <script th:src="@{/js/schedule/organization-schedule.js}"></script>
+    </th:block>
+
+
+</head>
+<body>
+<div th:fragment="content">
+    <div class="board-container">
+        <!-- 게시판 제목 -->
+        <div class="board-header">
+            <h1>조직 일정</h1>
+        </div>
+
+        <!-- 필터 및 컨트롤 -->
+        <div class="schedule-controls">
+            <div class="filter-section">
+                <div class="filter-group">
+                    <div class="filter-label-wrapper">
+                        <label for="orgCategorySelect" class="filter-label">조직 카테고리</label>
+                    </div>
+                    <select id="orgCategorySelect" class="form-input filter-select">
+                        <option value="">전체</option>
+                        <!-- 조직 카테고리 목록은 JavaScript에서 동적으로 로드 -->
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <div class="filter-label-wrapper">
+                        <label class="filter-label">조직</label>
+                        <div class="checkbox-control-buttons">
+                            <button type="button" class="btn-checkbox-control" id="toggleAllBtn">전체</button>
+                        </div>
+                    </div>
+                    <div id="orgFilter" class="org-filter-checkbox-list">
+                        <!-- 조직 목록은 JavaScript에서 동적으로 로드 -->
+                    </div>
+                </div>
+            </div>
+            <div class="control-buttons">
+                <button type="button" class="btn-today" id="todayBtn">오늘</button>
+            </div>
+        </div>
+
+        <!-- 캘린더 및 일정 목록 -->
+        <div class="schedule-main-content">
+            <!-- 캘린더 -->
+            <div class="calendar-section">
+                <div class="calendar-header">
+                    <button type="button" class="btn-nav" id="prevMonthBtn">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <h2 class="calendar-month-year" id="calendarMonthYear">2024년 1월</h2>
+                    <button type="button" class="btn-nav" id="nextMonthBtn">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <div class="calendar-wrapper">
+                    <div class="day-header">
+                        <div class="day-name">일</div>
+                        <div class="day-name">월</div>
+                        <div class="day-name">화</div>
+                        <div class="day-name">수</div>
+                        <div class="day-name">목</div>
+                        <div class="day-name">금</div>
+                        <div class="day-name">토</div>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- 캘린더 날짜는 JavaScript에서 동적으로 생성 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 일정 목록 -->
+            <div class="schedule-list-section">
+                <h3 class="list-title" id="scheduleListTitle">일정 목록</h3>
+                <div class="schedule-list" id="scheduleList">
+                    <!-- 일정 목록은 JavaScript에서 동적으로 생성 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 일정 세부 정보 모달 -->
+    <div id="scheduleDetailModal" class="modal">
+        <div class="modal-content schedule-modal-content">
+            <div class="modal-header">
+                <h3>일정 세부 정보</h3>
+                <span class="close" onclick="closeScheduleDetailModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="schedule-detail-content">
+                    <div class="detail-group">
+                        <label class="detail-label">제목</label>
+                        <div class="detail-value" id="detailTitle"></div>
+                    </div>
+                    <div class="detail-group">
+                        <label class="detail-label">설명</label>
+                        <div class="detail-value" id="detailDescription">-</div>
+                    </div>
+                    <div class="detail-group">
+                        <label class="detail-label">시작 일시</label>
+                        <div class="detail-value" id="detailStartAt"></div>
+                    </div>
+                    <div class="detail-group">
+                        <label class="detail-label">종료 일시</label>
+                        <div class="detail-value" id="detailEndAt"></div>
+                    </div>
+                    <div class="detail-group">
+                        <label class="detail-label">상태</label>
+                        <div class="detail-value" id="detailStatus"></div>
+                    </div>
+                    <div class="detail-group">
+                        <label class="detail-label">일정 유형</label>
+                        <div class="detail-value" id="detailType"></div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeScheduleDetailModal()">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

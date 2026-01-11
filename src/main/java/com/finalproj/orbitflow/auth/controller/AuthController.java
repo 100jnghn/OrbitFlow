@@ -7,18 +7,26 @@ import com.finalproj.orbitflow.auth.entity.RefreshToken;
 import com.finalproj.orbitflow.auth.service.AuthService;
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
+import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.global.exception.UnauthorizedException;
 import com.finalproj.orbitflow.global.security.CustomUserDetailsService;
 import com.finalproj.orbitflow.global.security.SecurityUser;
+import com.finalproj.orbitflow.global.security.SecurityUtils;
 import com.finalproj.orbitflow.global.security.jwt.JwtProvider;
+import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
+import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.Duration;
+import java.time.Instant;
 
 /**
  * Please explain the class!!!
@@ -38,12 +46,17 @@ public class AuthController {
 
     private final JwtProvider jwtProvider;
     private final AuthService authService;
+    private final EmployeeRepository employeeRepository;
 
     /**
      * 로그인
      */
     @PostMapping("/login")
-    public ResponseEntity<ResponseDto> login(@RequestBody LoginReqDto request) {
+    public ResponseEntity<ResponseDto> login(
+            @RequestBody LoginReqDto request,
+            @CookieValue(value = "refreshToken", required = false) String oldRefreshToken,
+            HttpServletResponse response
+    ) {
 
         SecurityUser user;
         try {
@@ -57,29 +70,34 @@ public class AuthController {
         }
 
         if (user.getStatus() != EmployeeStatus.ACTIVE) {
-            throw new ForbiddenException("로그인할 수 없는 계정 상태입니다.");
+            throw new ForbiddenException("계정이 활성 상태가 아닙니다.");
         }
 
-        // 동시 로그인 차단하려면 주석 풀기
-//        authService.invalidateAll(user.getEmployeeId());
-
+        // 추가) 기존 refresh token 정리
+        if (oldRefreshToken != null) {
+            authService.invalidateRefreshToken(oldRefreshToken);
+        }
 
         String accessToken = jwtProvider.createToken(user);
         RefreshToken refreshToken = authService.issueRefreshToken(user);
 
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken.getToken())
+                .httpOnly(true)
+                .secure(false) // HTTPS면 true
+                .path("/")
+                .maxAge(Duration.between(Instant.now(), refreshToken.getExpiresAt()))
+                .sameSite("Lax")
+                .build();
+
+        response.addHeader("Set-Cookie", cookie.toString());
+
         LoginResDto res = new LoginResDto(
                 accessToken,
-                refreshToken.getToken(),
+                null,
                 refreshToken.getExpiresAt()
         );
 
-        return ResponseEntity.ok(
-                new ResponseDto(
-                        HttpStatus.OK,
-                        "로그인 성공",
-                        res
-                )
-        );
+        return ResponseEntity.ok(new ResponseDto(HttpStatus.OK, "로그인 성공", res));
     }
 
     /**
@@ -87,8 +105,14 @@ public class AuthController {
      */
     @PostMapping("/refresh")
     public ResponseEntity<ResponseDto> refresh(
-            @RequestHeader("Refresh-Token") String token
+            @CookieValue(value = "refreshToken", required = false) String token,
+            HttpServletResponse response
     ) {
+
+        if (token == null) {
+            throw new UnauthorizedException("리프레시 토큰이 없습니다.");
+        }
+
         RefreshToken refreshToken = authService.validateRefreshToken(token);
 
         SecurityUser user =
@@ -98,8 +122,13 @@ public class AuthController {
             throw new ForbiddenException("로그인할 수 없는 계정 상태입니다.");
         }
 
+        // 새 토큰 발급
+        // Cookie에 sse_token 새로 저장
+
+        String newAccessToken = jwtProvider.createToken(user);
+
         LoginResDto res = new LoginResDto(
-                jwtProvider.createToken(user),
+                newAccessToken,
                 null,
                 refreshToken.getExpiresAt()
         );
@@ -116,8 +145,14 @@ public class AuthController {
      */
     @PostMapping("/extend-session")
     public ResponseEntity<ResponseDto> extendSession(
-            @RequestHeader("Refresh-Token") String token
+            @CookieValue(value = "refreshToken", required = false) String token,
+            HttpServletResponse response
     ) {
+        if (token == null) {
+            throw new UnauthorizedException("리프레시 토큰이 없습니다.");
+        }
+
+        // 기존 Refresh Token 검증
         RefreshToken oldToken = authService.validateRefreshToken(token);
 
         SecurityUser user =
@@ -127,24 +162,33 @@ public class AuthController {
             throw new ForbiddenException("로그인할 수 없는 계정 상태입니다.");
         }
 
-        // 기존 Refresh Token 폐기
+        // 기존 Refresh Token 폐기 (Rotation)
         authService.invalidateRefreshToken(token);
 
         // 새 Refresh Token 발급 (20시간)
         RefreshToken newRefreshToken = authService.issueRefreshToken(user);
 
+        // 새 Refresh Token을 HttpOnly Cookie로 재설정
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", newRefreshToken.getToken())
+                .httpOnly(true)
+                .secure(false) // HTTPS 환경이면 true
+                .path("/")
+                .maxAge(Duration.between(Instant.now(), newRefreshToken.getExpiresAt()))
+                .sameSite("Lax")
+                .build();
+
+        response.addHeader("Set-Cookie", cookie.toString());
+
+        // 새 Access Token 발급
+        String newAccessToken = jwtProvider.createToken(user);
+
         LoginResDto res = new LoginResDto(
-                jwtProvider.createToken(user),
-                newRefreshToken.getToken(),
+                newAccessToken,
+                null,
                 newRefreshToken.getExpiresAt()
         );
-
         return ResponseEntity.ok(
-                new ResponseDto(
-                        HttpStatus.OK,
-                        "세션 연장 완료",
-                        res
-                )
+                new ResponseDto(HttpStatus.OK, "세션 연장 완료", res)
         );
     }
 
@@ -153,33 +197,41 @@ public class AuthController {
      */
     @PostMapping("/logout")
     public ResponseEntity<ResponseDto> logout(
-            @RequestHeader(value = "Refresh-Token", required = false) String token
+            @CookieValue(value = "refreshToken", required = false) String token,
+            HttpServletResponse response
     ) {
         if (token != null) {
             authService.invalidateRefreshToken(token);
         }
 
-        return ResponseEntity.ok(
-                new ResponseDto(HttpStatus.OK, "로그아웃 완료", null)
-        );
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
+                .path("/")
+                .maxAge(0)
+                .httpOnly(true)
+                .build();
+
+        response.addHeader("Set-Cookie", cookie.toString());
+
+        return ResponseEntity.ok(new ResponseDto(HttpStatus.OK, "로그아웃 완료", null));
     }
 
     /**
      * 내 정보 조회
      */
     @GetMapping("/me")
-    public ResponseEntity<ResponseDto> me(
-            @AuthenticationPrincipal SecurityUser user
-    ) {
-        if (user == null) {
-            throw new UnauthorizedException("인증 정보가 없습니다.");
-        }
+    public ResponseEntity<ResponseDto> me() {
+        SecurityUser user = SecurityUtils.getCurrentUser();
+        
+        // 🔥 최신 workStatus를 가져오기 위해 Employee를 다시 조회
+        Employee employee = employeeRepository.findById(user.getEmployeeId())
+                .orElseThrow(() -> new NotFoundException("사원을 찾을 수 없습니다."));
 
         MeResDto res = new MeResDto(
                 user.getEmployeeId(),
                 user.getName(),
                 user.getEmail(),
-                user.getRole().name()
+                user.getRole().name(),
+                employee.getWorkStatus() // 🔥 최신 workStatus 반환
         );
 
         return ResponseEntity.ok(

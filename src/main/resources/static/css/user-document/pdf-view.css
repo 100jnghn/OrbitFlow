@@ -1,0 +1,637 @@
+@page {
+    size: A4;
+    margin: 20mm 15mm;
+}
+
+/* =========================================================
+   기본 폰트
+========================================================= */
+.pdf-document,
+.pdf-document * {
+    font-family: 'Nanum Gothic';
+}
+
+/* =========================================================
+   PDF 공통
+========================================================= */
+.pdf-document {
+    font-size: 13px;
+    color: #000;
+}
+
+/* =========================================================
+   문서 전체 프레임
+   (TOP border는 여기서만)
+========================================================= */
+.pdf-document .document-content-panel {
+    width: 100%;
+    border-top: 1.5px solid #000;
+    box-sizing: border-box;
+}
+
+/* =========================================================
+   결재선 (TABLE 기반 – PDF 안정판)
+========================================================= */
+
+/* 결재선 전체 테이블 */
+.approval-table {
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    font-size: 11px;
+}
+
+/* 모든 셀 공통 */
+.approval-table th,
+.approval-table td {
+    border: 1.5px solid #333;
+    padding: 0;
+    vertical-align: top;
+}
+
+/* =========================
+   좌측 세로 "결재" 라벨
+========================= */
+.approval-table th.approval-label {
+    width: 36px;
+    background: #d1d5db;
+
+    writing-mode: vertical-rl;
+    text-orientation: upright; /* 한 글자씩 */
+
+    text-align: center;
+    vertical-align: middle;
+
+    font-weight: 700;
+}
+
+/* =========================
+   결재자 개별 칸 (고정 크기)
+========================= */
+.approval-table td.approval-cell {
+    width: 90px;
+    height: 120px;
+    position: relative;
+}
+
+/* =========================
+   빈 결재 칸 (사선 – PDF 안전)
+========================= */
+.approval-table td.approval-cell.empty {
+    background: #fff;
+}
+
+/* 사선 */
+.approval-table td.approval-cell.empty::after {
+    content: "";
+    position: absolute;
+
+    left: -15%;
+    top: 50%;
+
+    width: 130%;
+    height: 1px;
+
+    background: #999;
+    transform: rotate(45deg);
+}
+
+/* =========================
+   결재자 내부 3단 구조
+========================= */
+
+/* 직책 */
+.approval-table .stamp-position {
+    background: #e5e7eb;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    font-weight: 600;
+    border-bottom: 1px solid #333;
+}
+
+/* 서명 영역 */
+.approval-table .stamp-signature {
+    height: 68px;
+    border-bottom: 1px solid #333;
+
+    display: table;
+    width: 100%;
+}
+
+/* 서명 이미지 중앙 정렬 */
+.approval-table .stamp-signature img {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+
+    max-width: 100%;
+    max-height: 100%;
+
+    margin: auto;
+}
+
+/* 이름 */
+.approval-table .stamp-name {
+    background: #e5e7eb;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    font-weight: 500;
+}
+
+
+/* =========================================================
+   문서 제목
+   (BOTTOM border만)
+========================================================= */
+.pdf-document .doc-content-title {
+    margin: 0;
+    padding: 12px 0;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 700;
+
+    border-bottom: 1.5px solid #000;
+
+    page-break-after: avoid;
+}
+
+/* =========================================================
+   기본 문서 필드 (일반 필드)
+   규칙:
+   - label : left + right
+   - value : right
+   - TOP border ❌
+   - BOTTOM border ⭕
+========================================================= */
+.pdf-document .doc-field {
+    display: table;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+
+    border-bottom: 1.5px solid #000;
+
+    page-break-inside: avoid;
+}
+
+/* ===== 라벨 ===== */
+.pdf-document .doc-field-label {
+    display: table-cell;
+    width: 100px;
+    padding: 8px 10px;
+    font-weight: 600;
+    background: #d1d5db;
+
+    border-left: 1.5px solid #000;
+    border-right: 1.5px solid #000;
+
+    text-align: center;
+    vertical-align: middle;
+    box-sizing: border-box;
+}
+
+/* ===== 값 ===== */
+.pdf-document .doc-field-value {
+    display: table-cell;
+    padding: 8px 10px;
+    vertical-align: top;
+
+    border-right: 1.5px solid #000;
+
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
+
+    box-sizing: border-box;
+}
+
+/* padding 제거용 */
+.pdf-document .doc-field-value.no-padding {
+    padding: 0;
+}
+
+
+/* =========================================================
+   테이블 컴포넌트 (block 레이아웃)
+   규칙:
+   - label : left + right
+   - value : left + right
+========================================================= */
+.pdf-document .doc-field.field-table {
+    display: block;
+    width: 100%;
+
+    border-bottom: 1.5px solid #000;
+
+    page-break-inside: avoid;
+}
+
+.pdf-document .field-table .doc-field-label {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    font-weight: 600;
+    background: #d1d5db;
+
+    border-left: 1.5px solid #000;
+    border-right: 1.5px solid #000;
+    border-bottom: 1.5px solid #000;
+
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.pdf-document .field-table .doc-field-value {
+    display: block;
+    padding: 10px;
+
+    border-left: 1.5px solid #000;
+    border-right: 1.5px solid #000;
+
+    box-sizing: border-box;
+}
+
+/* 실제 표 */
+.pdf-document .doc-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.pdf-document .doc-table th,
+.pdf-document .doc-table td {
+    border: 1.5px solid #000;
+    padding: 6px 8px;
+}
+
+.pdf-document .doc-table th {
+    background: #e5e7eb;
+    font-weight: 600;
+}
+
+/* =========================================================
+   이미지 필드 (block 레이아웃)
+   규칙:
+   - label : left + right
+   - value : left + right
+========================================================= */
+.pdf-document .doc-field.field-image {
+    display: block;
+    width: 100%;
+
+    border-bottom: 1.5px solid #000;
+
+    page-break-inside: avoid;
+    box-sizing: border-box;
+}
+
+/* 이미지 필드 라벨 */
+.pdf-document .field-image .doc-field-label {
+    display: block;
+    width: 100%;
+    padding: 6px 10px;
+    font-weight: 600;
+    background: #d1d5db;
+
+    border-left: 1.5px solid #000;
+    border-right: 1.5px solid #000;
+    border-bottom: 1.5px solid #000;
+
+    text-align: center;
+    box-sizing: border-box;
+}
+
+/* 이미지 값 영역 */
+.pdf-document .field-image .doc-field-value {
+    display: block;
+    width: 100%;
+    padding: 4px 6px;
+
+    border-left: 1.5px solid #000;
+    border-right: 1.5px solid #000;
+
+    box-sizing: border-box;
+}
+
+/* 이미지 래퍼 */
+.pdf-document .image-field.readonly {
+    width: 100%;
+    overflow: hidden;
+}
+
+/* 이미지 행 */
+.pdf-document .image-row.readonly {
+    width: 100%;
+    margin-bottom: 6px;
+
+    page-break-inside: avoid;
+}
+
+.pdf-document .image-row.readonly:last-child {
+    margin-bottom: 0;
+}
+
+/* 이미지 */
+.pdf-document .image-row.readonly img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+
+    page-break-inside: avoid;
+}
+
+/* =========================================================
+   문서 구분선
+   (BOTTOM border만, 단독 책임)
+========================================================= */
+.pdf-document .doc-divider {
+    display: block;
+    width: 100%;
+    height: 0;
+
+    border-left: none;
+    border-right: none;
+    border-bottom: 1.5px solid #000;
+
+    margin: 10px 0;
+    box-sizing: border-box;
+}
+
+
+/* ===============================
+   페이지 상단 보호선
+   =============================== */
+
+.pdf-document .doc-divider + .doc-field,
+.pdf-document .doc-divider + .doc-field.field-table,
+.pdf-document .doc-divider + .doc-field.field-image,
+.pdf-document .doc-divider + .doc-field.field-event-date-range,
+.pdf-document .doc-divider + .doc-field.field-address {
+    border-top: 1.5px solid #000;
+}
+
+
+/* 일반 필드 */
+.pdf-document .doc-field {
+    border-top: 1.5px solid transparent;
+}
+
+/* 테이블 / 이미지 / 복합 필드 */
+.pdf-document .doc-field.field-table,
+.pdf-document .doc-field.field-image,
+.pdf-document .doc-field.field-event-date-range,
+.pdf-document .doc-field.field-address {
+    border-top: 1.5px solid transparent;
+}
+
+/* ⭐ 페이지 분할로 인해 상단에 오면 border-top 활성화 */
+@page {
+    @top-left {
+        content: "";
+    }
+}
+
+
+/* =========================================================
+   일정(event-date-range) – 최종 안정판
+   구조:
+   <div class="doc-field field-event-date-range">
+       <table class="event-table">...</table>
+   </div>
+========================================================= */
+
+/* 🔥 외곽 프레임은 doc-field가 담당 */
+.pdf-document .doc-field.field-event-date-range {
+    display: block; /* table 구조 탈출 */
+    width: 100%;
+    border-left: 1.6px solid #000;
+    border-right: 1.6px solid #000;
+    border-bottom: 1.5px solid #000;
+    box-sizing: border-box;
+}
+
+/* ===============================
+   내부 일정 테이블
+=============================== */
+.pdf-document table.event-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+/* 모든 셀 공통 */
+.pdf-document table.event-table th,
+.pdf-document table.event-table td {
+    display: table-cell; /* PDF 엔진 안정 */
+    padding: 6px 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    box-sizing: border-box;
+    border-bottom: 1.5px solid #000;
+}
+
+/* 좌측 메인 라벨 (일정) */
+.pdf-document table.event-table th.event-main-label {
+    width: 100px;
+    background: #d1d5db;
+    font-weight: 600;
+    text-align: center;
+    vertical-align: middle;
+    border-right: 1.5px solid #000;
+    border-bottom: none;
+}
+
+/* 내부 라벨 (기간 / 유형 / 사유) */
+.pdf-document table.event-table th.event-sub-label {
+    width: 100px;
+    background: #e5e7eb;
+    font-weight: 600;
+    text-align: center;
+    vertical-align: middle;
+    border-right: 1.5px solid #000;
+}
+
+/* 값 영역 */
+.pdf-document table.event-table td.event-value {
+    vertical-align: top;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* 마지막 행 하단선 제거 (외곽은 doc-field가 담당) */
+.pdf-document table.event-table tr:last-child th,
+.pdf-document table.event-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* =========================================================
+   안내 문구 (notice) – LABEL || VALUE 유지형
+========================================================= */
+
+/* notice value만 table-cell 탈출 */
+.pdf-document .field-notice .notice-value {
+    display: block; /* ⭐ 핵심 */
+    padding: 0; /* value 여백 제거 */
+    line-height: normal; /* baseline 영향 제거 */
+}
+
+/* notice 박스가 실제 높이 책임 */
+.pdf-document .notice-box {
+    display: block;
+    padding: 4px 8px;
+    margin: 0;
+    line-height: 1.4;
+    box-sizing: border-box;
+}
+
+/* 라벨 높이 최소화 */
+.pdf-document .field-notice .doc-field-label {
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+/* =========================================================
+   테이블 필드 (event-date-range 패턴)
+========================================================= */
+
+.pdf-document .doc-field.field-table {
+    display: block; /* table 구조 탈출 */
+    width: 100%;
+    border-left: 1.5px solid #000;
+    border-right: 1.5px solid #000;
+    border-bottom: 1.5px solid #000;
+    box-sizing: border-box;
+    page-break-inside: avoid;
+}
+
+/* 테이블 필드 라벨 */
+.pdf-document .field-table .doc-field-label {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    font-weight: 600;
+    background: #d1d5db;
+
+    border-bottom: 1.5px solid #000;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+/* 실제 테이블 */
+.pdf-document .doc-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+/* 셀 공통 */
+.pdf-document .doc-table th,
+.pdf-document .doc-table td {
+    border: 1.5px solid #000;
+    padding: 6px 8px;
+    font-size: 13px;
+    vertical-align: top;
+}
+
+/* 헤더 */
+.pdf-document .doc-table th {
+    background: #e5e7eb;
+    font-weight: 600;
+}
+
+/* No 컬럼 */
+.pdf-document .doc-table .col-no {
+    width: 36px;
+    text-align: center;
+    white-space: nowrap;
+    background: #e5e7eb;
+}
+
+
+/* =========================================================
+   주소(address) – event-date-range 패턴
+========================================================= */
+
+/* 외곽 프레임 */
+.pdf-document .doc-field.field-address {
+    display: block;
+    width: 100%;
+    border-left: 1.6px solid #000;
+    border-right: 1.6px solid #000;
+    border-bottom: 1.5px solid #000;
+    box-sizing: border-box;
+}
+
+/* 내부 테이블 */
+.pdf-document table.address-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+/* 공통 셀 */
+.pdf-document table.address-table th,
+.pdf-document table.address-table td {
+    display: table-cell;
+    padding: 6px 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    box-sizing: border-box;
+    border-bottom: 1.5px solid #000;
+}
+
+/* 좌측 메인 라벨 */
+.pdf-document table.address-table th.address-main-label {
+    width: 100px;
+    background: #d1d5db;
+    font-weight: 600;
+    text-align: center;
+    vertical-align: middle;
+    border-right: 1.5px solid #000;
+    border-bottom: none;
+}
+
+/* 내부 라벨 */
+.pdf-document table.address-table th.address-sub-label {
+    width: 100px;
+    background: #e5e7eb;
+    font-weight: 600;
+    text-align: center;
+    vertical-align: middle;
+    border-right: 1.5px solid #000;
+}
+
+/* 값 영역 */
+.pdf-document table.address-table td.address-value {
+    vertical-align: top;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* 마지막 행 하단선 제거 */
+.pdf-document table.address-table tr:last-child th,
+.pdf-document table.address-table tr:last-child td {
+    border-bottom: none;
+}
+
+
+/* ===============================
+   문서 하단 메타 정보
+=============================== */
+.document-footer {
+    width: 100%;
+    margin-top: 24px;
+    font-size: 12px;
+    position: relative;
+}
+
+.footer-date {
+    text-align: center;
+}
+
+.footer-writer {
+    position: absolute;
+    right: 0;
+    top: 0;
+}

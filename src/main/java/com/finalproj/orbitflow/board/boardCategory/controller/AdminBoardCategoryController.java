@@ -32,7 +32,7 @@ public class AdminBoardCategoryController {
     public ResponseEntity<ResponseDto> getBoardCategoryList(
             @AuthenticationPrincipal SecurityUser user,
             @RequestParam(defaultValue = "false") boolean organizationOnly,
-            @PageableDefault(size = 5, sort = "createdAt") Pageable pageable
+            @PageableDefault(size = 8, sort = "createdAt") Pageable pageable
     ) {
         if (user == null) {
             throw new UnauthorizedException("인증 정보가 없습니다.");

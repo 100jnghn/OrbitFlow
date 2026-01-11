@@ -1,0 +1,32 @@
+package com.finalproj.orbitflow.schedule.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+/**
+ * Please explain the class!!!
+ *
+ * @author : 종훈
+ * @filename : ScheduleViewController
+ * @since : 2025-12-28 오후 6:00 일요일
+ */
+@RequestMapping("/view")
+@Controller
+public class ScheduleViewController {
+
+    @GetMapping("/admin/schedule")
+    public String getCompanySchedulePage() {
+        return "admin-schedule/admin-company-schedule";
+    }
+
+    @GetMapping("/schedule")
+    public String getSchedulePage() {
+        return "schedule/schedule";
+    }
+
+    @GetMapping("/schedule/organization")
+    public String getOrganizationSchedulePage() {
+        return "schedule/organization-schedule";
+    }
+}

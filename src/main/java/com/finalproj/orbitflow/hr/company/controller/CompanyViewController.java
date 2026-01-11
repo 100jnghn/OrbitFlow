@@ -17,7 +17,6 @@ public class CompanyViewController {
 
     @GetMapping("/signup")
     public String signupPage() {
-        return "company/signup";
-        // templates/company/signup.html
+        return "company/signup"; // templates/company/signup.html
     }
 }

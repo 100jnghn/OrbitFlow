@@ -20,5 +20,6 @@ public interface BoardRepository extends JpaRepository<Board, Long>, JpaSpecific
 //    // 카테고리별 게시글 조회 (소프트 삭제 제외)
 //    Page<Board> findAllByCategory_IdAndDeletedAtIsNull(Long categoryId, Pageable pageable);
 
+    boolean existsByCategory_Id(Long boardCategoryId);
 }
 

@@ -2,9 +2,10 @@ package com.finalproj.orbitflow.hr.employee.entity;
 
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
+import com.finalproj.orbitflow.hr.employee.dto.EmployeeCreateReqDto;
 import com.finalproj.orbitflow.hr.employee.enums.*;
 import com.finalproj.orbitflow.hr.organization.entity.Organization;
-import com.finalproj.orbitflow.hr.position.entity.Position;
+import com.finalproj.orbitflow.hr.positionCategory.entity.PositionCategory;
 import com.finalproj.orbitflow.hr.rank.entity.HrRank;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -36,8 +37,6 @@ import java.time.LocalDate;
 )
 public class Employee extends BaseEntity {
 
-    // TODO: nullable 넣을지 고민 필요
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -60,8 +59,8 @@ public class Employee extends BaseEntity {
     private HrRank rank;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "position_id")
-    private Position position;
+    @JoinColumn(name = "position_category_id")
+    private PositionCategory positionCategory;
 
 
     /* ==============================
@@ -113,6 +112,9 @@ public class Employee extends BaseEntity {
     @Column(name = "work_status", nullable = false, length = 20)
     private WorkStatus workStatus;
 
+    @Column(name = "hire_date", nullable = false)
+    private LocalDate hireDate; // 입사일
+
     /* ==============================
        역할
        ============================== */
@@ -143,15 +145,123 @@ public class Employee extends BaseEntity {
         employee.employmentType = EmploymentType.REGULAR;
         employee.status = EmployeeStatus.ACTIVE;
         employee.workStatus = WorkStatus.OFF_WORK;
-
+        employee.hireDate = LocalDate.now();
         employee.role = EmployeeRole.COMPANY_ADMIN;
 
         return employee;
     }
 
+    /**
+     * 사원 생성
+     **/
+    public static Employee create(
+            Company company,
+            Organization organization,
+            HrRank rank,
+            PositionCategory positionCategory,
+            EmployeeCreateReqDto dto,
+            String encodedPassword
+    ) {
+        Employee e = new Employee();
+        e.company = company;
+        e.organization = organization;
+        e.rank = rank;
+        e.positionCategory = positionCategory;
+
+        e.employeeNo = dto.getEmployeeNo();
+        e.name = dto.getName();
+        e.email = dto.getEmail();
+        e.password = encodedPassword;
+
+        e.gender = dto.getGender();
+        e.birthDate = dto.getBirthDate();
+        e.phone = dto.getPhone();
+        e.internalPhone = dto.getInternalPhone();
+
+        e.employmentType = dto.getEmploymentType();
+        e.status = EmployeeStatus.TEMP;
+        e.workStatus = WorkStatus.OFF_WORK;
+        e.hireDate = dto.getHireDate();
+        e.role = dto.getRole();
+
+        return e;
+    }
+
+
+    /* === 변경 메서드 === */
+
+    public void changeOrganization(Organization organization) {
+        this.organization = organization;
+    }
+
+    public void changeRank(HrRank rank) {
+        this.rank = rank;
+    }
+
+    public void changePosition(PositionCategory positionCategory) {
+        this.positionCategory = positionCategory;
+    }
+
+    public void changeEmploymentType(EmploymentType employmentType) {
+        this.employmentType = employmentType;
+    }
+
+    public void changeRole(EmployeeRole role) {
+        this.role = role;
+    }
+
+    public void changeEmail(String email) {
+        this.email = email;
+    }
+
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
 
     public void updateWorkStatus(WorkStatus workStatus) {
         this.workStatus = workStatus;
+    }
+
+    public void resign() {
+        this.status = EmployeeStatus.RESIGNED;
+    }
+
+    public void suspend() {
+        this.status = EmployeeStatus.SUSPENDED;
+    }
+
+    public void activate() {
+        this.status = EmployeeStatus.ACTIVE;
+    }
+
+    public void changeHireDate(LocalDate hireDate) {
+        this.hireDate = hireDate;
+    }
+
+    public void clearContactInfo() {
+        this.phone = null;
+        this.internalPhone = null;
+    }
+
+    /* ==============================
+       관리자 수정용 기본 정보 변경
+       ============================== */
+    public void updateBasicInfo(
+            String name,
+            String phone,
+            String internalPhone,
+            LocalDate birthDate
+    ) {
+        if (name != null) this.name = name;
+        if (phone != null) this.phone = phone;
+        if (internalPhone != null) this.internalPhone = internalPhone;
+        if (birthDate != null) this.birthDate = birthDate;
+    }
+
+    public void changeGender(Gender gender) {
+        if (gender != null) {
+            this.gender = gender;
+        }
     }
 
 }

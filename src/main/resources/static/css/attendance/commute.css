@@ -1,0 +1,242 @@
+/* [1] 전역 스타일 및 레이아웃 */
+/* 컨테이너 좌우 여백 - 화면 크기에 맞춤 (월별 근태조회와 동일) */
+.board-container {
+    padding: 24px;
+    max-width: 100%;
+    width: 100%;
+}
+
+/* [2] 카드 컴포넌트 - 게시판 디자인과 통일 */
+.card {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid var(--neutral-200);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 24px;
+}
+
+.main-action-card {
+    padding: 40px;
+}
+
+/* [3] 시간 정보 디자인 (High-End 스타일) */
+.time-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 40px;
+    padding-bottom: 40px;
+    border-bottom: 1.5px solid var(--neutral-200);
+}
+
+.time-label {
+    font-size: 14px;
+    color: var(--neutral-600);
+    font-weight: 600;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.current-time {
+    font-size: 80px; /* 시각적 압도감 */
+    font-weight: 800;
+    color: var(--primary-color); /* 브랜드 대표 블루 */
+    font-family: 'Roboto Mono', monospace;
+    line-height: 1;
+    letter-spacing: -3px;
+}
+
+.work-hours {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--neutral-900);
+}
+
+/* [4] 스마트 버튼 디자인 */
+.button-group {
+    display: flex;
+    gap: 16px;
+}
+
+.button-group button {
+    flex: 1;
+    padding: 22px;
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 출근 버튼 (Soft Blue) */
+.btn-checkin {
+    background: #EDF2FF;
+    color: var(--primary-color);
+    border: 1px solid #DBE4FF;
+}
+
+.btn-checkin:hover:not(:disabled) {
+    background: var(--primary-color);
+    color: #fff;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+}
+
+/* 자리비움 버튼 (Soft Amber) */
+.btn-away {
+    background: #FFF9DB;
+    color: #F08C00;
+    border: 1px solid #FFF3BF;
+}
+
+.btn-away:hover:not(:disabled), .btn-away.active {
+    background: #FAB005;
+    color: #fff;
+    transform: translateY(-3px);
+}
+
+/* 퇴근 버튼 (Soft Crimson) */
+.btn-checkout {
+    background: #FFF5F5;
+    color: var(--danger-color);
+    border: 1px solid #FFE3E3;
+}
+
+.btn-checkout:hover:not(:disabled) {
+    background: var(--danger-color);
+    color: #fff;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(220, 38, 38, 0.25);
+}
+
+button:disabled {
+    background: var(--neutral-100) !important;
+    color: var(--neutral-400) !important;
+    border-color: var(--neutral-200) !important;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* [5] 섹션별 기록 리스트 */
+.record-section {
+    margin-bottom: 24px;
+    padding: 32px 40px;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: var(--neutral-900);
+}
+
+.record-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--neutral-200);
+}
+
+.record-item:last-child {
+    border-bottom: none;
+}
+
+.record-label {
+    font-size: 15px;
+    color: var(--neutral-600);
+    font-weight: 600;
+}
+
+.record-value {
+    font-size: 16px;
+    color: var(--neutral-900);
+    font-weight: 600;
+}
+
+/* [6] 상태 배지 디자인 고도화 */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    background: #EBFBEE;
+    color: #40C057;
+    box-shadow: 0 2px 5px rgba(64, 192, 87, 0.1);
+}
+
+.away-badge {
+    background: #FFF9DB !important;
+    color: #F08C00 !important;
+}
+
+.status-late { color: var(--danger-color); }
+.status-ontime { color: #40C057; }
+
+/* 규칙 오류 알림 배너 */
+.rule-error-banner {
+    background: #FEF2F2;
+    border: 1px solid #FEE2E2;
+    border-left: 4px solid #EF4444;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.rule-error-banner .banner-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rule-error-banner i {
+    color: #EF4444;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.rule-error-banner .banner-message {
+    flex: 1;
+    color: #991B1B;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.rule-error-banner .banner-close {
+    background: none;
+    border: none;
+    color: #991B1B;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+.rule-error-banner .banner-close:hover {
+    background: rgba(239, 68, 68, 0.1);
+}

@@ -14,7 +14,11 @@ import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
+import com.finalproj.orbitflow.hr.organization.entity.Organization;
+import com.finalproj.orbitflow.hr.positionCategory.entity.PositionCategory;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -32,6 +36,8 @@ import java.time.LocalDateTime;
 )
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ApprovalLine extends BaseEntity {
 
     @Id
@@ -45,6 +51,14 @@ public class ApprovalLine extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approval_org_id")
+    private Organization organization;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approval_position_category_id")
+    private PositionCategory positionCategory;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approver_id")
@@ -62,4 +76,35 @@ public class ApprovalLine extends BaseEntity {
 
     @Column(name = "decided_at")
     private LocalDateTime decidedAt;
+
+    public void setApprover(Employee head) {
+        this.approver = head;
+    }
+
+    public void markWaiting() {
+        this.status = ApprovalStatus.WAITING;
+    }
+
+    public void markInProgress() {
+        this.status = ApprovalStatus.IN_PROGRESS;
+    }
+
+    public void markCancelled() {
+        this.status = ApprovalStatus.CANCELLED;
+    }
+
+    public void markApproved(String comment) {
+        this.status = ApprovalStatus.APPROVED;
+        this.comment = comment;
+    }
+
+    public void changeOrderNo(int orderNo) {
+        this.orderNo = orderNo;
+    }
+
+
+    public void reject(String comment) {
+        this.comment = comment;
+        this.status = ApprovalStatus.REJECTED;
+    }
 }

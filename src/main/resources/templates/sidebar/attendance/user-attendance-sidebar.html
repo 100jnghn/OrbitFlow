@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- 사이드바 메뉴 -->
+<th:block th:fragment="sidebar">
+    <ul class="sidebar-menu">
+        <li class="menu-item no-sub">
+            <a th:href="@{/view/attendance/monthly}" class="sidebar-link" id="monthlyLink">
+                월별 근태 현황
+            </a>
+        </li>
+
+        <li class="menu-item active">
+            <div class="menu-title" role="button" onclick="toggleAttendanceMenu(this)" aria-expanded="true">
+                <span>휴가</span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </div>
+            <ul class="sub-menu">
+                <li>
+                    <a th:href="@{/view/attendance/annual-leave}" class="sidebar-link" id="annualLeaveLink">
+                        내 연차 현황
+                    </a>
+                </li>
+                <li>
+                    <a th:href="@{/view/attendance/leave-history}" class="sidebar-link" id="leaveHistoryLink">
+                        휴가 신청 현황
+                    </a>
+                </li>
+            </ul>
+        </li>
+    </ul>
+    <script>
+        // 근태 메뉴 아코디언 토글 함수
+        function toggleAttendanceMenu(element) {
+            const menuItem = element.closest('.menu-item');
+            if (!menuItem) return;
+
+            const isOpen = menuItem.classList.contains('active');
+
+            // 다른 메뉴 닫기
+            document.querySelectorAll('.sidebar-menu .menu-item').forEach(item => {
+                if (item !== menuItem) {
+                    item.classList.remove('active');
+                    const title = item.querySelector('.menu-title');
+                    if (title) title.setAttribute('aria-expanded', 'false');
+                }
+            });
+
+            // 현재 메뉴 토글
+            if (isOpen) {
+                menuItem.classList.remove('active');
+                element.setAttribute('aria-expanded', 'false');
+            } else {
+                menuItem.classList.add('active');
+                element.setAttribute('aria-expanded', 'true');
+            }
+        }
+    </script>
+</th:block>
+</body>
+</html>

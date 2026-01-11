@@ -1,0 +1,737 @@
+/* ==================================================
+   Admin Employee Detail – Dashboard Unified Tone
+================================================== */
+
+/* ---------- Layout ---------- */
+
+.page-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 18px;
+}
+
+.orgcat-title {
+    font-weight: 800;
+    color: #222;
+}
+
+.page-sub {
+    margin-top: 4px;
+    font-size: 13px;
+    color: #777;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-bottom: 18px;
+}
+
+/* ---------- Card Base ---------- */
+
+.card,
+.emp-hero,
+.audit-item {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #f0f0f0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.card {
+    padding: 18px;
+}
+
+.card-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #333;
+}
+
+.card-sub {
+    font-size: 12.5px;
+    color: #999;
+}
+
+/* ---------- Hero (Profile) ---------- */
+
+.emp-hero {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    margin-bottom: 18px;
+    align-items: flex-start;
+}
+
+.emp-avatar-profile {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid #eee;
+    padding: 3px;
+}
+
+.emp-avatar.grayscale {
+    filter: grayscale(100%);
+}
+
+.emp-hero-main {
+    flex: 1;
+}
+
+.emp-hero-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.emp-name {
+    font-size: 18px;
+    font-weight: 800;
+    color: #222;
+}
+
+.emp-summary {
+    margin-top: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #666;
+}
+
+.emp-summary .emp-badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 12px;
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #dbeafe;
+}
+
+.emp-meta {
+    margin-top: 6px;
+    font-size: 13px;
+    color: #888;
+}
+
+.emp-meta .dot {
+    margin: 0 6px;
+}
+
+/* ---------- Status Pill ---------- */
+
+.status-pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+}
+
+.status-active {
+    background: #ecfdf5;
+    color: #10b981;
+    border-color: #a7f3d0;
+}
+
+.status-suspended {
+    background: #fffbeb;
+    color: #f59e0b;
+    border-color: #fef3c7;
+}
+
+.status-resigned {
+    background: #fef2f2;
+    color: #ef4444;
+    border-color: #fee2e2;
+}
+
+.status-temp {
+    background: #f1f5f9;
+    color: #64748b;
+    border-color: #e2e8f0;
+}
+
+/* ---------- Hero Actions ---------- */
+
+.emp-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.emp-actions .btn.is-selected {
+    border-color: #3b82f6;
+    color: #1d4ed8;
+    background: #eff6ff;
+}
+
+/* ---------- KV (Info) ---------- */
+
+.kv {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px 14px;
+    padding: 14px;
+    background: #fafafa;
+    border-radius: 10px;
+}
+
+.kv .k {
+    font-size: 12px;
+    font-weight: 600;
+    color: #888;
+}
+
+.kv .v {
+    font-size: 14px;
+    font-weight: 700;
+    color: #333;
+}
+
+/* ---------- Audit Log ---------- */
+
+.audit-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.audit-item {
+    position: relative;
+    padding: 16px 16px 16px 52px;
+    margin-bottom: 12px;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: 20px;
+    top: 22px;
+    width: 8px;
+    height: 8px;
+    background: #3b82f6;
+    border-radius: 50%;
+}
+
+.audit-top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.audit-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.audit-time,
+.audit-actor {
+    font-size: 12px;
+    color: #999;
+}
+
+.badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 999px;
+}
+
+.badge-create {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.badge-update {
+    background: #ecfdf5;
+    color: #10b981;
+}
+
+.badge-status {
+    background: #fffbeb;
+    color: #f59e0b;
+}
+
+/* ---------- Diff Table ---------- */
+
+.diff-table {
+    margin-top: 10px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.diff-head,
+.diff-row {
+    display: grid;
+    grid-template-columns: 120px 1fr 1fr;
+}
+
+.diff-head {
+    background: #f9fafb;
+    font-size: 12px;
+    font-weight: 700;
+    color: #555;
+}
+
+.diff-head div,
+.diff-row div {
+    padding: 8px 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.diff-row.changed {
+    background: #fff7ed;
+}
+
+.diff-key {
+    font-weight: 600;
+}
+
+
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1200px) {
+    .grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* ==================================================
+   Buttons – Admin Dashboard Tone
+================================================== */
+
+.btn {
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: 1px solid transparent;
+}
+
+.btn-outline {
+    background: #ffffff;
+    border-color: #e5e7eb;
+    color: #374151;
+    text-decoration: none;
+}
+
+.btn-outline:hover {
+    background: #f9fafb;
+    border-color: #cbd5e1;
+}
+
+.btn-outline.is-selected {
+    background: #eff6ff;
+    border-color: #3b82f6;
+    color: #1d4ed8;
+}
+
+.btn-danger {
+    background: #fef2f2;
+    border-color: #fee2e2;
+    color: #dc2626;
+}
+
+.btn-danger:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+}
+
+.btn-primary {
+    background: #3b82f6;
+    color: #ffffff;
+    border-color: #3b82f6;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+    border-color: #2563eb;
+}
+
+.btn-ghost {
+    background: transparent;
+    color: #6b7280;
+}
+
+.btn-ghost:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+/* ==================================================
+   Hero Action Buttons Group
+================================================== */
+
+.emp-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.emp-actions .btn {
+    min-width: 72px;
+}
+
+
+/* ==================================================
+   Audit Log – Refined Timeline Tone
+================================================== */
+
+/* 리스트 기본 밀도 */
+.audit-list {
+    margin-top: 4px;
+}
+
+/* 카드 자체 */
+.audit-item {
+    padding: 14px 16px 14px 48px;
+    margin-bottom: 10px;
+    font-size: 13px;
+}
+
+/* 타임라인 점 */
+.timeline-dot {
+    left: 22px;
+    top: 20px;
+    width: 6px;
+    height: 6px;
+    background: #c7d2fe;
+}
+
+/* 상단 메타 영역 */
+.audit-top {
+    margin-bottom: 6px;
+}
+
+.audit-left {
+    gap: 6px;
+}
+
+/* 배지 */
+.audit-item .badge {
+    font-size: 10.5px;
+    padding: 3px 7px;
+    font-weight: 700;
+}
+
+/* 시간 / 작성자 */
+.audit-time,
+.audit-actor {
+    font-size: 11.5px;
+    color: #9ca3af;
+}
+
+/* summary (접힌 제목) */
+.audit-detail summary {
+    cursor: pointer;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #374151;
+    margin-top: 6px;
+}
+
+.audit-detail summary:hover {
+    text-decoration: underline;
+}
+
+/* ==================================================
+   Diff Table – Compact & Calm
+================================================== */
+
+.diff-table {
+    margin-top: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+}
+
+/* 헤더 */
+.diff-head {
+    background: #f9fafb;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #6b7280;
+}
+
+.diff-head div {
+    padding: 7px 10px;
+}
+
+/* 행 */
+.diff-row {
+    font-size: 12.5px;
+    color: #374151;
+}
+
+.diff-row div {
+    padding: 7px 10px;
+    border-top: 1px solid #f1f5f9;
+}
+
+/* 변경된 행 강조 (과하지 않게) */
+.diff-row.changed {
+    background: #fffbeb;
+}
+
+/* 키 컬럼 */
+.diff-key {
+    font-weight: 600;
+    color: #475569;
+}
+
+/* 이전 / 이후 */
+.diff-before {
+    color: #9ca3af;
+}
+
+.diff-after {
+    color: #111827;
+}
+
+/* ==================================================
+   Status Change (→) Compact
+================================================== */
+
+.status-diff {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+}
+
+.status-arrow {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+
+/* ==================================================
+   Modal – Unified with Employee List Create Modal
+================================================== */
+
+/* 배경 */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+/* 패널 */
+.modal-panel {
+    width: 560px;
+    max-width: 92vw;
+    max-height: 90vh;
+
+    display: flex;
+    flex-direction: column;
+
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow:
+            0 20px 40px rgba(0, 0, 0, 0.12),
+            0 8px 16px rgba(0, 0, 0, 0.08);
+
+    overflow: hidden; /* 🔥 둥근 모서리 유지 핵심 */
+    animation: modalFadeUp .18s ease-out;
+}
+
+/* 등장 애니메이션 */
+@keyframes modalFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* =========================
+   Header
+========================= */
+
+.modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--line);
+}
+
+.modal-head h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--neutral-800);
+}
+
+/* 닫기 버튼 */
+.icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.icon-btn:hover {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+/* =========================
+   Body (Scroll Owner)
+========================= */
+
+.modal-body {
+    flex: 1;
+    padding: 24px 28px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* 스크롤바 (Chrome) */
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* =========================
+   Form Sections
+========================= */
+
+.form-section {
+    margin-bottom: 28px;
+}
+
+.form-section:last-child {
+    margin-bottom: 0;
+}
+
+.form-section-title {
+    margin-bottom: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--neutral-800);
+}
+
+/* =========================
+   Form Grid
+========================= */
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px 24px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* =========================
+   Form Group
+========================= */
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-sizing: border-box;
+}
+
+.form-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--neutral-700);
+}
+
+/* =========================
+   Input / Select
+========================= */
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    height: 44px;
+    padding: 0 14px;
+    font-size: 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: #ffffff;
+    transition: all .2s ease;
+}
+
+.form-group input::placeholder {
+    color: #9ca3af;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(59,130,246,.12);
+}
+
+/* =========================
+   Footer
+========================= */
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 28px 24px;
+    border-top: 1px solid var(--line);
+    background: #ffffff;
+}

@@ -6,6 +6,7 @@ import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryCreateReqDto;
 import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryOrderUpdateReqDto;
 import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryResDto;
 import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryUpdateReqDto;
+import com.finalproj.orbitflow.hr.orgCategory.repository.OrgCategoryRepository;
 import com.finalproj.orbitflow.hr.orgCategory.service.OrgCategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,16 +31,29 @@ import java.util.List;
 public class OrgCategoryController {
 
     private final OrgCategoryService service;
+    private final OrgCategoryRepository repository;
 
     @GetMapping
     public ResponseEntity<ResponseDto<List<OrgCategoryResDto>>> list(
-            @RequestParam(required = false) String keyword
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "false") boolean includeInactive
     ) {
         return ResponseEntity.ok(
                 new ResponseDto<>(
                         HttpStatus.OK,
                         "조직 카테고리 목록 조회 성공",
-                        service.findAll(SecurityUtils.getCompanyId(), keyword)
+                        service.findAll(SecurityUtils.getCompanyId(), keyword, includeInactive)
+                )
+        );
+    }
+
+    @GetMapping("/selectable")
+    public ResponseEntity<ResponseDto<List<OrgCategoryResDto>>> listSelectableForOrg() {
+        return ResponseEntity.ok(
+                new ResponseDto<>(
+                        HttpStatus.OK,
+                        "조직 생성용 카테고리 조회",
+                        service.findSelectableForOrg(SecurityUtils.getCompanyId())
                 )
         );
     }
@@ -58,7 +72,7 @@ public class OrgCategoryController {
             @PathVariable Long id,
             @RequestBody @Valid OrgCategoryUpdateReqDto request
     ) {
-        service.update(SecurityUtils.getCompanyId(), id, request.getName());
+        service.update(SecurityUtils.getCompanyId(), id, request);
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "조직 카테고리 수정 성공", null));
     }
 
@@ -70,9 +84,4 @@ public class OrgCategoryController {
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "순서 변경 저장 완료", null));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseDto<Void>> deactivate(@PathVariable Long id) {
-        service.deactivate(SecurityUtils.getCompanyId(), id);
-        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "조직 카테고리 비활성화 완료", null));
-    }
 }

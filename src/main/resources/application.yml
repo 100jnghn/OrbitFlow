@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: dev   # ?? ??? dev
+    active: local   # ?? ??? dev
 
 server:
   port: 8090
@@ -9,11 +9,3 @@ jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:3600000}
 
-external:
-  business:
-    api-key: ${BSN_KEY}
-    url: https://api.odcloud.kr/api/nts-businessman/v1/status
-
-business:
-  validation:
-    strict: false   # 시연용 (true = 운영)

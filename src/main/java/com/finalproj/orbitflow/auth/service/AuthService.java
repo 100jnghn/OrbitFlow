@@ -26,7 +26,10 @@ public class AuthService {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtProvider jwtProvider;
+
+//    private static final long REFRESH_TOKEN_TTL_SECONDS = 30; // 테스트용
     private static final long REFRESH_TOKEN_TTL_SECONDS = 60 * 60 * 20;
+
 
     // Refresh Token 생성 + 저장
     public RefreshToken issueRefreshToken(SecurityUser user) {
@@ -61,8 +64,8 @@ public class AuthService {
         refreshTokenRepository.deleteByToken(token);
     }
 
-    // 동시 로그인 차단 // TODO: 사용할지는 나중에 결정하기
-//    public void invalidateAll(Long employeeId) { // 특정 사원의 모든 Refresh Token을 DB에서 삭제
-//        refreshTokenRepository.deleteAllByEmployeeId(employeeId);
-//    }
+    // 비밀번호 변경 시 Refresh Token 전체 무효화
+    public void invalidateAll(Long employeeId) { // 특정 사원의 모든 Refresh Token을 DB에서 삭제
+        refreshTokenRepository.deleteAllByEmployeeId(employeeId);
+    }
 }

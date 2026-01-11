@@ -52,6 +52,24 @@ function createCell(value = '', tooltip = false) {
     return td;
 }
 
+function createStatusBadge(statusName) {
+    const td = document.createElement('td');
+    const badge = document.createElement('span');
+    badge.className = 'status-badge';
+    badge.textContent = statusName;
+
+    if (statusName === '사용가능' || statusName === '사용 가능') {
+        badge.classList.add('status-available');
+    } else if (statusName === '점검중') {
+        badge.classList.add('status-maintenance');
+    } else if (statusName === '사용불가' || statusName === '사용 불가') {
+        badge.classList.add('status-unavailable');
+    }
+
+    td.appendChild(badge);
+    return td;
+}
+
 function createActionCell(id) {
     const td = document.createElement('td');
     const box = document.createElement('div');
@@ -73,21 +91,34 @@ function createActionCell(id) {
 }
 
 /* ==========================
+   Pagination State
+========================== */
+let currentPage = 0;
+let totalPages = 0;
+let pageSize = 8;
+
+/* ==========================
    Data Load
 ========================== */
-async function loadMeetingRooms() {
+async function loadMeetingRooms(page = 0) {
     try {
         const res = await apiFetch(
-            `/api/admin/meetingrooms`,
-            {method: 'GET'}
+            `/api/admin/meetingrooms?page=${page}&size=${pageSize}&sort=id,asc`,
+            { method: 'GET' }
         );
         if (!res.ok) throw new Error();
 
-        const {data} = await res.json();
+        const { data } = await res.json();
         const tbody = document.querySelector('.resource-table tbody');
         tbody.innerHTML = '';
 
-        if (!data?.length) {
+        // Pagination 정보 업데이트
+        currentPage = data.number;
+        totalPages = data.totalPages;
+
+        const content = data.content;
+
+        if (!content?.length) {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="6">
@@ -97,32 +128,74 @@ async function loadMeetingRooms() {
                         </div>
                     </td>
                 </tr>`;
+            // 페이지네이션 숨김
+            document.getElementById('pagination-container').style.display = 'none';
             return;
         }
 
-        data.forEach((room, i) => {
+        // 페이지네이션 표시
+        document.getElementById('pagination-container').style.display = 'flex';
+
+        // 번호는 전체 목록 기준으로 계산
+        const startNumber = currentPage * pageSize;
+
+        content.forEach((room, i) => {
             const tr = document.createElement('tr');
-            tr.append(createCell(i + 1),
-                createCell(room.name),
+            tr.append(
+                createCell(startNumber + i + 1),
+                createCell(room.name, true),
                 createCell(room.position, true),
                 createCell(room.description, true),
-                createCell(room.statusName),
-                createActionCell(room.meetingroomId));
+                createStatusBadge(room.statusName),
+                createActionCell(room.meetingroomId)
+            );
             tbody.appendChild(tr);
         });
 
+        // 페이지네이션 렌더링
+        renderPagination(data);
+
     } catch (e) {
         console.error(e);
-        alert('회의실 목록을 불러오지 못했습니다.');
+        await sweetError('회의실 목록을 불러오지 못했습니다.');
     }
 }
 
 /* ==========================
-   Actions
+   Pagination Render
 ========================== */
-// function editMeetingRoom(id) {
-//     alert(`회의실 ID ${id} 수정 기능을 구현하세요.`);
-// }
+function renderPagination(pageData) {
+    const container = document.querySelector('.pagination');
+    container.innerHTML = '';
+
+    const { number, totalPages, first, last } = pageData;
+
+    // 이전 버튼
+    const prevBtn = document.createElement('button');
+    prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prevBtn.disabled = first;
+    prevBtn.onclick = () => loadMeetingRooms(number - 1);
+    container.appendChild(prevBtn);
+
+    // 페이지 번호 버튼
+    const startPage = Math.floor(number / 5) * 5;
+    const endPage = Math.min(startPage + 5, totalPages);
+
+    for (let i = startPage; i < endPage; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.textContent = i + 1;
+        pageBtn.className = i === number ? 'active' : '';
+        pageBtn.onclick = () => loadMeetingRooms(i);
+        container.appendChild(pageBtn);
+    }
+
+    // 다음 버튼
+    const nextBtn = document.createElement('button');
+    nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    nextBtn.disabled = last;
+    nextBtn.onclick = () => loadMeetingRooms(number + 1);
+    container.appendChild(nextBtn);
+}
 
 function editMeetingRoom(id) {
     // 상세 페이지로 이동 (id 전달)
@@ -130,26 +203,31 @@ function editMeetingRoom(id) {
 }
 
 async function deleteMeetingRoom(id) {
-    if (!confirm('정말로 이 회의실을 삭제하시겠습니까?')) {
-        return;
-    }
+    const result = await sweetConfirm(
+        '삭제 확인',
+        '회의실을 삭제하시겠습니까?'
+    );
+
+    if (!result.isConfirmed) return;
 
     try {
         const response = await apiFetch(
             `/api/admin/meetingrooms/${id}/delete`,
-            {method: 'PATCH'}
+            { method: 'PATCH' }
         );
 
         if (!response.ok) {
             throw new Error();
         }
 
+        await sweetSuccess('회의실이 삭제되었습니다.');
+        // 현재 페이지 유지하며 다시 로드
+        loadMeetingRooms(currentPage);
+
     } catch (error) {
         console.error(error);
-        alert('회의실 삭제에 실패했습니다.');
+        await sweetError('회의실 삭제에 실패했습니다.');
     }
-
-    loadMeetingRooms();
 }
 
 /* ==========================

@@ -21,4 +21,5 @@ public enum ReservationStatusCode {
     ETC("기타");
 
     private final String description;
+
 }

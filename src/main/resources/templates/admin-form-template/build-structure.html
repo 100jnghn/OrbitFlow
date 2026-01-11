@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-admin :: layout(
+        ~{::content},
+        ~{fragments/header :: header},
+        ~{sidebar/approval/user-approval-sidebar :: sidebar},
+        ~{::pageCss},
+        ~{::pageScript}
+      )}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>결재 양식 관리</title>
+
+    <!-- 공통 폰트 / 아이콘 -->
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- 페이지별 CSS -->
+    <th:block th:fragment="pageCss">
+        <link rel="stylesheet" href="/css/admin-form-template/build-structure.css">
+    </th:block>
+
+    <!-- 페이지별 JS -->
+    <th:block th:fragment="pageScript">
+        <script src="/js/admin-form-template/build-structure.js"></script>
+        <script th:inline="javascript">
+            const templateId = /*[[${templateId}]]*/ null
+        </script>
+    </th:block>
+</head>
+
+<body>
+
+<!-- Main Content -->
+<div th:fragment="content">
+
+    <!-- ⚠️ 기존 기능 유지: 내부 구조 변경 없음 -->
+    <div class="form-editor-container">
+
+        <!-- 좌측 패널: 컴포넌트 목록 -->
+        <nav id="component-list-panel" class="panel">
+            <h3>컴포넌트 목록</h3>
+            <div class="component-btn-list" id="component-btn-list"></div>
+        </nav>
+
+        <!-- 중앙 패널: 문서 편집 영역 -->
+        <main id="form-edit-area-wrapper">
+            <div id="form-edit-title">
+                <span id="form-title-preview">새 문서 양식</span>
+            </div>
+            <div id="form-edit-area" class="empty">
+                <!-- 문서 레벨 validation hint -->
+                <div class="hint-msg form-hint" id="component-hint">
+                    컴포넌트를 추가하여 문서를 구성하세요.
+                </div>
+            </div>
+        </main>
+
+
+        <!-- 우측 패널: 설정 -->
+        <aside id="right-panel">
+
+            <!-- 🔘 상단 액션 버튼 영역 -->
+            <div class="right-panel-action-buttons">
+                <button
+                        type="button"
+                        class="action-btn preview-btn">
+                    미리보기
+                </button>
+
+                <button
+                        type="button"
+                        class="action-btn ai-btn">
+                    AI생성
+                </button>
+            </div>
+
+            <!-- 우측 상단: 선택된 컴포넌트 개별 설정 -->
+            <section id="component-setting-panel">
+
+                <div class="setting-card" id="component-setting-card">
+                    <h4>컴포넌트 설정</h4>
+
+                    <div id="component-setting-body">
+                        <span class="hint-msg" id="component-setting-hint">
+                            컴포넌트를 선택하세요.
+                        </span>
+                    </div>
+                </div>
+
+            </section>
+
+
+            <!-- 우측 하단: 문서 전체 설정 -->
+            <section id="form-setting-panel">
+
+                <div class="setting-card" id="form-setting-card">
+                    <h4>문서 설정</h4>
+
+                    <div class="setting-row">
+                        <label for="form-title-input">제목</label>
+                        <input id="form-title-input"
+                               name="title"
+                               type="text"
+                               placeholder="문서의 제목"
+                               autocomplete="off">
+                        <div class="hint" id="title-hint"></div>
+                    </div>
+
+                    <div class="setting-row">
+                        <label for="form-category-input">카테고리</label>
+                        <select id="form-category-input"
+                                name="category"
+                                class="category-select">
+                            <option value="">카테고리 선택</option>
+                            <option value="GENERAL">일반</option>
+                            <option value="SCHEDULE">일정</option>
+                            <option value="ATTENDANCE">근태</option>
+                        </select>
+                        <div class="hint" id="category-hint"></div>
+                    </div>
+
+                    <div class="form-action-buttons">
+                        <button id="before-form-btn" type="button">이전</button>
+                        <button id="next-form-btn" type="button">다음</button>
+                        <button id="save-form-btn" type="button">양식 저장</button>
+                    </div>
+                </div>
+
+            </section>
+
+
+        </aside>
+    </div>
+
+    <!-- AI 문서 양식 생성 팝업 -->
+    <div id="createPopup"
+         class="modal-backdrop"
+         style="display:none;">
+        <div class="modal-content">
+            <div class="modal-title">AI 문서 양식 생성</div>
+
+            <div class="modal-form-group">
+                <label for="popupTemplateName">문서 양식 이름</label>
+                <input type="text"
+                       id="popupTemplateName"
+                       class="modal-input"
+                       placeholder="예: 근무 형태 변경 신청서"/>
+                <div class="hint" id="popup-name-hint"></div>
+            </div>
+
+            <div class="modal-form-group">
+                <label for="popupTemplateDesc">문서 양식 목적</label>
+                <textarea
+                        id="popupTemplateDesc"
+                        class="modal-textarea"
+                        rows="3"
+                        placeholder="이 문서가 언제, 왜 사용되는지 설명하세요."></textarea>
+                <div class="hint" id="popup-desc-hint"></div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button"
+                        class="modal-cancel-btn"
+                        id="popupCancelBtn">취소
+                </button>
+                <button type="button"
+                        class="modal-create-btn"
+                        id="popupCreateBtn">AI 생성
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI 생성 중 UI 차단 오버레이 -->
+    <div id="ai-block-overlay" style="display:none;">
+        <div class="ai-block-content">
+            <div class="spinner"></div>
+            <div class="ai-block-text">
+                AI가 문서 양식을 생성 중입니다…
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

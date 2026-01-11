@@ -10,7 +10,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Entity
@@ -37,8 +37,8 @@ public class Board extends BaseEntity {
     @Column(name = "board_title", length = 255, nullable = false)
     private String boardTitle; // 게시글 제목
 
-    @Lob // TEXT 길이 제한 없음
-    @Column(name = "board_content", nullable = false)
+    @Lob
+    @Column(name = "board_content", nullable = false, columnDefinition = "LONGTEXT")
     private String boardContent; // 게시글 내용
 
     @Column(name = "view_count", nullable = false)
@@ -49,17 +49,21 @@ public class Board extends BaseEntity {
     private List<File> files; // 첨부파일 (FK) (Nullable)
 
     @Column(name = "deleted_at")
-    private LocalDateTime deletedAt; // 삭제 일시 (소프트 삭제)
+    private Instant deletedAt; // 삭제 일시 (소프트 삭제)
 
     // 게시글 수정 메서드
     public void update(String boardTitle, String boardContent, List<File> newFiles) {
         this.boardTitle = boardTitle;
         this.boardContent = boardContent;
 
-        // 파일 교체 (기존 제거 후 새로 설정)
-        if (this.files != null) this.files.clear();
+        // 파일 교체 (기존 컬렉션을 유지하면서 clear 후 addAll 사용)
+        // orphanRemoval = true인 경우 새 리스트로 교체하면 Hibernate 오류 발생
+        if (this.files == null) {
+            this.files = new java.util.ArrayList<>();
+        }
+        this.files.clear();
         if (newFiles != null && !newFiles.isEmpty()) {
-            this.files = newFiles;
+            this.files.addAll(newFiles);
         }
     }
 
@@ -70,15 +74,14 @@ public class Board extends BaseEntity {
 
     // 소프트 삭제 처리
     public void softDelete() {
-        this.deletedAt = LocalDateTime.now();
+        this.deletedAt = Instant.now();
     }
 
     public static Board create(
             BoardCategory category,
             Employee writer,
             String title,
-            String content
-    ) {
+            String content) {
         Board board = new Board();
         board.category = category;
         board.writer = writer;

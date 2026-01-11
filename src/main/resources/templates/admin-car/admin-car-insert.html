@@ -74,20 +74,24 @@
                     <div class="info-grid">
                         <!-- 차량 번호 -->
                         <div class="info-item">
-                            <label class="info-label">차량 번호</label>
+                            <label class="info-label">차량 번호 <span class="required">*</span></label>
                             <input type="text"
                                    class="info-input"
                                    id="car-number"
-                                   placeholder="차량 번호를 입력하세요"/>
+                                   placeholder="차량 번호를 입력하세요"
+                                   maxlength="15"/>
+                            <span class="hint" id="car-number-msg"></span>
                         </div>
 
                         <!-- 차종 -->
                         <div class="info-item">
-                            <label class="info-label">차종</label>
+                            <label class="info-label">차종 <span class="required">*</span></label>
                             <input type="text"
                                    class="info-input"
                                    id="car-model"
-                                   placeholder="차종을 입력하세요"/>
+                                   placeholder="차종을 입력하세요"
+                                   maxlength="50"/>
+                            <span class="hint" id="car-model-msg"></span>
                         </div>
 
                         <!-- 차량 이미지 업로드 -->
@@ -106,7 +110,7 @@
                                     <div class="upload-placeholder" id="upload-placeholder">
                                         <i class="fas fa-cloud-upload-alt"></i>
                                         <p>클릭하여 이미지 업로드</p>
-                                        <span class="upload-hint">JPG, PNG, GIF (최대 5MB)</span>
+                                        <span class="upload-hint">JPG, PNG (최대 50MB)</span>
                                     </div>
                                 </div>
                             </div>
@@ -114,12 +118,13 @@
 
                         <!-- 운전 가능 나이 -->
                         <div class="info-item">
-                            <label class="info-label">운전 가능 나이</label>
+                            <label class="info-label">운전 가능 나이 <span class="required">*</span></label>
                             <input type="number"
                                    class="info-input"
                                    id="car-age"
                                    placeholder="운전 가능한 나이를 입력하세요"
-                                   min="18"/>
+                                   min="0"/>
+                            <span class="hint" id="car-age-msg"></span>
                         </div>
 
                         <div class="upload-actions">
@@ -135,10 +140,11 @@
 
                         <!-- 상태 -->
                         <div class="info-item">
-                            <label class="info-label">상태</label>
+                            <label class="info-label">상태 <span class="required">*</span></label>
                             <select class="info-select" id="car-status">
                                 <option value="">상태 선택</option>
                             </select>
+                            <span class="hint" id="car-status-msg"></span>
                         </div>
                     </div>
 
@@ -148,7 +154,9 @@
                         <input type="text"
                                class="info-textarea"
                                id="car-description"
-                               placeholder="비고 내용을 입력하세요"/>
+                               placeholder="비고 내용을 입력하세요 (선택)"
+                               maxlength="255"/>
+                        <span class="hint" id="car-description-msg"></span>
                     </div>
                 </div>
             </section>

@@ -3,7 +3,7 @@
       th:replace="~{layout/layout-user :: layout(
           ~{::content},
           ~{fragments/header :: header},
-          ~{sidebar/attendance-sidebar :: menu},
+          ~{sidebar/attendance/user-attendance-sidebar :: sidebar},
           ~{::pageCss},
           ~{::pageScript}
       )}">
@@ -12,15 +12,30 @@
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 
     <th:block th:fragment="pageCss">
-        <link rel="stylesheet" th:href="@{/css/commute.css}">
+        <link rel="stylesheet" th:href="@{/css/board/board.css}">
+        <link rel="stylesheet" th:href="@{/css/attendance/commute.css}">
+        <link rel="stylesheet" th:href="@{/css/user-sidebar/user-sidebar.css}">
     </th:block>
 </head>
 <body>
 <div th:fragment="content">
-    <div style="padding: 24px 40px;">
-        <h1 class="page-title">출퇴근 기록</h1>
+    <div class="board-container">
+        <!-- 게시판 제목 -->
+        <div class="board-header">
+            <h1>출퇴근 기록</h1>
+        </div>
 
-        <div class="main-action-card">
+        <!-- 규칙 오류 알림 배너 -->
+        <div id="ruleErrorBanner" class="rule-error-banner" style="display: none;">
+            <div class="banner-content">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span class="banner-message">기본 근무 시간 설정에 오류가 있습니다. 출근 시간이 퇴근 시간보다 늦게 설정되어 있습니다. 관리자에게 문의해주세요.</span>
+                <button class="banner-close" onclick="document.getElementById('ruleErrorBanner').style.display='none';">&times;</button>
+            </div>
+        </div>
+
+        <!-- 출퇴근 액션 카드 -->
+        <div class="card main-action-card">
             <div class="time-info">
                 <div class="time-section">
                     <div class="time-label">현재 시각</div>
@@ -38,7 +53,8 @@
             </div>
         </div>
 
-        <div class="record-section">
+        <!-- 오늘의 기록 -->
+        <div class="card record-section">
             <h2 class="section-title">오늘의 기록</h2>
             <div class="record-item">
                 <span class="record-label">출근 시각:</span>
@@ -60,7 +76,7 @@
     </div>
 
     <th:block th:fragment="pageScript">
-        <script th:src="@{/js/commute.js}"></script>
+        <script th:src="@{/js/attendance/commute.js}"></script>
     </th:block>
 </div>
 </body>

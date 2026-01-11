@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/layout-admin :: layout(
+        ~{::content},
+        ~{fragments/header :: header},
+        ~{sidebar/admin-sidebar :: menu},
+        ~{::pageCss},
+        ~{::pageScript}
+      )}">
+
+<head>
+    <meta charset="UTF-8">
+    <title>전사 일정 관리</title>
+
+
+    <!--    이 문장 link는 layout으로 옮겨야 함-->
+    <!--    <link rel="stylesheet"-->
+    <!--          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">-->
+    <!--    <link rel="stylesheet"-->
+    <!--          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">-->
+
+
+    <!-- 페이지별 CSS -->
+    <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/admin-schedule/admin-company-schedule.css}">
+    </th:block>
+
+    <!-- 페이지별 JS -->
+    <th:block th:fragment="pageScript">
+        <script th:src="@{/js/admin-schedule/admin-company-schedule.js}"></script>
+    </th:block>
+</head>
+
+<body>
+
+    <!-- Main Content -->
+    <div th:fragment="content">
+        <div class="schedule-container">
+            <!-- 헤더 섹션 -->
+            <div class="schedule-header">
+                <h1 class="page-title">전사 일정 관리</h1>
+
+                <!-- 필터 및 네비게이션 -->
+                <div class="header-controls">
+                    <!-- 상태 필터 -->
+                    <div class="filter-group">
+                        <label for="statusFilter" class="filter-label">상태</label>
+                        <select id="statusFilter" class="filter-select">
+                            <option value="ALL">전체</option>
+                            <option value="RELEASE">공개</option>
+                            <option value="HOLD">보류</option>
+                        </select>
+                    </div>
+
+                    <!-- 월 네비게이션 -->
+                    <div class="month-navigation">
+                        <button type="button" class="nav-btn" id="prevMonth">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <div class="current-month" id="currentMonthDisplay">
+                            2024년 12월
+                        </div>
+                        <button type="button" class="nav-btn" id="nextMonth">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- 오늘로 이동 -->
+                    <button type="button" class="btn-today" id="btnToday">
+                        오늘
+                    </button>
+
+                    <!-- 일정 등록 -->
+                    <button type="button" class="btn-add-schedule" id="btnAddSchedule">
+                        <i class="fas fa-plus"></i>
+                        일정 등록
+                    </button>
+                </div>
+            </div>
+
+            <!-- 캘린더 섹션 -->
+            <div class="calendar-wrapper">
+                <!-- 요일 헤더 -->
+                <div class="calendar-header">
+                    <div class="day-header">일</div>
+                    <div class="day-header">월</div>
+                    <div class="day-header">화</div>
+                    <div class="day-header">수</div>
+                    <div class="day-header">목</div>
+                    <div class="day-header">금</div>
+                    <div class="day-header">토</div>
+                </div>
+
+                <!-- 캘린더 그리드 -->
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- 일정이 동적으로 렌더링됩니다 -->
+                </div>
+            </div>
+
+            <!-- 일정 목록 섹션 (선택적) -->
+            <div class="schedule-list-section">
+                <h2 class="section-title">일정 목록</h2>
+                <div class="schedule-list" id="scheduleList">
+                    <!-- 일정 목록이 동적으로 렌더링됩니다 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 일정 등록 모달 -->
+        <div id="scheduleModal" class="modal">
+            <div class="modal-content schedule-modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle">일정 등록</h3>
+                    <span class="close" onclick="closeScheduleModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="scheduleForm">
+                        <!-- 제목 -->
+                        <div class="form-group">
+                            <label for="scheduleTitle" class="form-label">
+                                제목 <span class="required">*</span>
+                                <span class="char-count" id="titleCharCount">(0/20)</span>
+                            </label>
+                            <input type="text" id="scheduleTitle" name="title" class="form-input"
+                                placeholder="일정 제목을 입력하세요" maxlength="20" required>
+                            <span class="error-message" id="titleError"></span>
+                        </div>
+
+                        <!-- 설명 -->
+                        <div class="form-group">
+                            <label for="scheduleDescription" class="form-label">
+                                설명 <span class="char-count" id="descriptionCharCount">(0/200)</span>
+                            </label>
+                            <textarea id="scheduleDescription" name="description" class="form-input"
+                                placeholder="일정 설명을 입력하세요 (선택)" maxlength="200" rows="3"></textarea>
+                            <span class="error-message" id="descriptionError"></span>
+                        </div>
+
+                        <!-- 날짜/시간 -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="scheduleStartDate" class="form-label">
+                                    시작 날짜 <span class="required">*</span>
+                                </label>
+                                <input type="date" id="scheduleStartDate" name="startDate" class="form-input" required>
+                            </div>
+                            <div class="form-group time-group">
+                                <label class="form-label">
+                                    시작 시간 <span class="required">*</span>
+                                </label>
+                                <div class="time-select-wrapper">
+                                    <select id="scheduleStartHour" name="startHour" class="form-input time-select">
+                                        <!-- JavaScript로 동적 생성 -->
+                                    </select>
+                                    <span class="time-separator">:</span>
+                                    <select id="scheduleStartMinute" name="startMinute" class="form-input time-select">
+                                        <!-- JavaScript로 동적 생성 -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="scheduleEndDate" class="form-label">
+                                    종료 날짜 <span class="required">*</span>
+                                </label>
+                                <input type="date" id="scheduleEndDate" name="endDate" class="form-input" required>
+                            </div>
+                            <div class="form-group time-group">
+                                <label class="form-label">
+                                    종료 시간 <span class="required">*</span>
+                                </label>
+                                <div class="time-select-wrapper">
+                                    <select id="scheduleEndHour" name="endHour" class="form-input time-select">
+                                        <!-- JavaScript로 동적 생성 -->
+                                    </select>
+                                    <span class="time-separator">:</span>
+                                    <select id="scheduleEndMinute" name="endMinute" class="form-input time-select">
+                                        <!-- JavaScript로 동적 생성 -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 상태 -->
+                        <div class="form-group">
+                            <label for="scheduleStatus" class="form-label">
+                                상태 <span class="required">*</span>
+                            </label>
+                            <select id="scheduleStatus" name="status" class="form-input" required>
+                                <option value="RELEASE">공개</option>
+                                <option value="HOLD">보류</option>
+                            </select>
+                        </div>
+
+                        <!-- 조직 카테고리 (고정: 회사) -->
+                        <div class="form-group">
+                            <label for="scheduleOrgCategory" class="form-label">조직 카테고리</label>
+                            <select id="scheduleOrgCategory" name="orgCategoryId" class="form-input" disabled>
+                                <option value="" id="companyCategoryOption">회사</option>
+                            </select>
+                        </div>
+
+                        <div class="modal-actions">
+                            <button type="button" class="btn-cancel" onclick="closeScheduleModal()">취소</button>
+                            <button type="submit" class="btn-submit" id="submitBtn">등록</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

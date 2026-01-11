@@ -2,6 +2,8 @@ package com.finalproj.orbitflow.resource.meetingroom.repository;
 
 import com.finalproj.orbitflow.resource.enums.ResourceStatusCode;
 import com.finalproj.orbitflow.resource.meetingroom.entity.Meetingroom;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,9 +23,13 @@ public interface MeetingroomRepository extends JpaRepository<Meetingroom, Long> 
                 select m
                 from Meetingroom m
                 where m.company.id = :companyId
-                and m.resourceStatus.resourceStatusCode != 'DELETED'
+                  and m.resourceStatus.resourceStatusCode != 'DELETED'
             """)
-    List<Meetingroom> findAllByCompany_Id(@Param("companyId") Long companyId);
+    Page<Meetingroom> findAllByCompany_Id(
+            @Param("companyId") Long companyId,
+            Pageable pageable
+    );
+
 
     @Query("""
                 SELECT m

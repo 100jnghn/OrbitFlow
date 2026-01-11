@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-admin :: layout(
+        ~{::content},
+        ~{fragments/header :: header},
+        ~{sidebar/admin-sidebar :: menu},
+        ~{::pageCss},
+        ~{::pageScript}
+      )}">
+
+<!-- ================= 페이지별 CSS ================= -->
+<th:block th:fragment="pageCss">
+    <link rel="stylesheet" href="/css/board/board.css">
+    <link rel="stylesheet" href="/css/admin-org-category.css">
+    <link rel="stylesheet" href="/css/admin-employee-list.css">
+</th:block>
+
+<!-- ================= 메인 컨텐츠 ================= -->
+<th:block th:fragment="content">
+
+    <div class="orgcat-title-row">
+        <h1 class="orgcat-title">사원 관리</h1>
+    </div>
+
+    <section class="orgcat-card">
+
+        <!-- 툴바 -->
+        <div class="orgcat-toolbar">
+            <div class="toolbar-left">
+                <div class="orgcat-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input id="keyword" type="text" placeholder="이름 / 이메일 검색">
+                </div>
+
+                <select id="status">
+                    <option value="">전체</option>
+                    <option value="TEMP">임시</option>
+                    <option value="ACTIVE">재직</option>
+                    <option value="SUSPENDED">정지</option>
+                    <option value="RESIGNED">퇴사</option>
+                </select>
+
+                <button class="btn btn-outline" onclick="loadEmployees(0)">검색</button>
+            </div>
+
+            <div class="toolbar-right">
+                <button class="btn btn-primary" onclick="openCreate()">사원 추가</button>
+            </div>
+        </div>
+
+        <!-- 테이블 -->
+        <div class="orgcat-table-wrap">
+            <table class="orgcat-table">
+                <thead>
+                <tr>
+                    <th>이름</th>
+                    <th>이메일</th>
+                    <th>조직</th>
+                    <th>직급</th>
+                    <th>직책</th>
+                    <th id="tr-status">상태</th>
+                </tr>
+                </thead>
+                <tbody id="employeeTbody"></tbody>
+            </table>
+        </div>
+        <div class="pagination-container">
+            <div class="pagination" id="pagination"></div>
+        </div>
+
+    </section>
+
+    <!-- 사원 생성 모달 -->
+    <div id="employeeModal" class="modal hidden">
+        <div class="modal-panel">
+            <div class="modal-head">
+                <h2 id="employeeModalTitle">사원 추가</h2>
+                <button class="icon-btn" onclick="closeEmployeeModal()">✕</button>
+            </div>
+
+            <div class="modal-body">
+
+                <!-- 2열 영역 -->
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label>이름 *</label>
+                        <input id="empName">
+                    </div>
+
+                    <div class="form-group">
+                        <label>사번 *</label>
+                        <input id="empNo">
+                    </div>
+
+                    <div class="form-group">
+                        <label>입사일 *</label>
+                        <input type="date" id="empHireDate">
+                    </div>
+
+                    <div class="form-group">
+                        <label>성별 *</label>
+                        <select id="empGender">
+                            <option value="">선택</option>
+                            <option value="MALE">남성</option>
+                            <option value="FEMALE">여성</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>연락처</label>
+                        <input id="empPhone">
+                    </div>
+
+                    <div class="form-group">
+                        <label>사내 번호</label>
+                        <input id="empInternalPhone">
+                    </div>
+
+                    <div class="form-group">
+                        <label>생년월일</label>
+                        <input type="date" id="empBirthDate">
+                    </div>
+
+
+                    <div class="form-group">
+                        <label>직급 *</label>
+                        <select id="empRankId">
+                            <option value="">선택</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>고용 형태 *</label>
+                        <select id="empEmploymentType">
+                            <option value="">선택</option>
+                            <option value="REGULAR">정규직</option>
+                            <option value="NON_REGULAR">비정규직</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>권한(역할) *</label>
+                        <select id="empRole">
+                            <option value="">선택</option>
+                            <option value="EMPLOYEE">일반 사원</option>
+                            <option value="ADMIN">관리자</option>
+                            <option value="COMPANY_ADMIN">회사 대표 관리자</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <!-- 1열 영역 -->
+                <div class="form-group full">
+                    <label>이메일(로그인 ID) *</label>
+                    <input id="empEmail" type="email">
+                </div>
+
+                <div class="form-group full">
+                    <label>조직 *</label>
+                    <select id="empOrgId">
+                        <option value="">선택</option>
+                    </select>
+                </div>
+
+                <div class="form-group full">
+                    <label>직책</label>
+                    <select id="empPositionCategoryId"></select>
+                    <p id="createPositionResetNotice" style="display:none;">
+                        조직 변경 시 직책은 초기화됩니다.
+                    </p>
+                </div>
+
+                <p class="form-help">
+                    ※ 생성된 사원은 임시 계정(TEMP)으로 생성되며, 최초 로그인 후 활성화됩니다.
+                </p>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-ghost" onclick="closeEmployeeModal()">취소</button>
+                <button class="btn btn-primary" onclick="saveEmployee()">저장</button>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+<!-- ================= 페이지별 JS ================= -->
+<th:block th:fragment="pageScript">
+    <script th:src="@{/js/admin-employee.js}"></script>
+</th:block>
+
+</html>

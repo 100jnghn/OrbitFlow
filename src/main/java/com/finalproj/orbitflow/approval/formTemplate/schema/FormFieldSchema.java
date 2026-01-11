@@ -1,8 +1,7 @@
 package com.finalproj.orbitflow.approval.formTemplate.schema;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.util.Map;
 
@@ -15,8 +14,7 @@ import java.util.Map;
  **/
 
 
-@Getter
-@Setter
+@Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FormFieldSchema {
 
@@ -25,6 +23,7 @@ public class FormFieldSchema {
     private String label;
     private boolean required;
     private Integer order;
+    private Object value;
 
     private Map<String, Object> meta;
 }

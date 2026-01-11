@@ -1,43 +1,160 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <body>
-<!-- 관리자 영역 전용 사이드바 메뉴 -->
-<ul th:fragment="menu">
-    <li th:classappend="${currentMenu} == 'employee' ? ' selected' : ''">
-        <a th:href="@{/admin/employee}" class="sidebar-link">사원 관리</a>
-    </li>
-    <li th:classappend="${currentMenu} == 'approval' ? ' selected' : ''">
-        <a th:href="@{/view/admin/approval}" class="sidebar-link">결재 관리</a>
-    </li>
-    <li th:classappend="${currentMenu} == 'attendance-rules' ? ' selected' : ''">
-        <a th:href="@{/view/admin/attendance-rules}" class="sidebar-link">근태 관리</a>
-    </li>
-    <li th:classappend="${currentMenu} == 'schedule' ? ' selected' : ''">
-        <a th:href="@{/admin/schedule}" class="sidebar-link">일정 관리</a>
-    </li>
-    <li th:classappend="${currentMenu} == 'reservation' ? ' selected' : ''">
-        <a th:href="@{/admin/reservation}" class="sidebar-link">예약 관리</a>
-    </li>
-    <li th:classappend="${currentMenu} == 'meetingroom' ? ' selected' : ''">
-        <a th:href="@{/view/resource/admin/meetingrooms}" class="sidebar-link">회의실 관리</a>
-    </li>
-    <li th:classappend="${currentMenu} == 'car' ? ' selected' : ''">
-        <a th:href="@{/view/resource/admin/cars}" class="sidebar-link">차량 관리</a>
-    </li>
-    <li th:classappend="${currentMenu} == 'item' ? ' selected' : ''">
-        <a th:href="@{/view/resource/admin/items}" class="sidebar-link">기타 자원 관리</a>
-    </li>
-    <li th:classappend="${currentMenu} == 'board' ? ' selected' : ''">
-        <a th:href="@{/admin/board}" class="sidebar-link">게시판 관리</a>
-    </li>
-    <li th:classappend="${currentMenu} == 'organization' ? ' selected' : ''">
-        <a th:href="@{/admin/organization}" class="sidebar-link">인사 관리</a>
-    </li>
-    <li th:classappend="${currentMenu} == 'chatbot' ? ' selected' : ''">
-        <a th:href="@{/view/admin/chatbot}" class="sidebar-link">챗봇 매뉴얼 관리</a>
-    </li>
-</ul>
+    <ul th:fragment="menu" class="sidebar-menu">
+
+        <!-- 사원 관리 (단일 메뉴) -->
+        <li class="menu-item no-sub" th:classappend="${currentMenu == 'employee'} ? 'selected' : ''">
+            <a th:href="@{/view/admin/employees}">
+                <span>사원 관리</span>
+            </a>
+        </li>
+
+        <!-- 감사 로그 (단일 메뉴) -->
+        <li class="menu-item no-sub" th:classappend="${currentMenu == 'audit-log'} ? 'selected' : ''">
+            <a th:href="@{/view/admin/audit-logs}">
+                <span>감사 로그</span>
+            </a>
+        </li>
+
+        <!-- 결재 관리 (단일 메뉴) -->
+        <li class="menu-item no-sub" th:classappend="${currentMenu == 'approval'} ? 'selected' : ''">
+            <a th:href="@{/view/admin/approval}">
+                <span>결재 관리</span>
+            </a>
+        </li>
+
+        <!-- 근태 관리 (아코디언) -->
+        <li class="menu-item"
+            th:classappend="${currentMenu == 'attendance-dashboard' || currentMenu == 'attendance-history' || currentMenu == 'attendance-rules'} ? 'active' : ''">
+            <div class="menu-title" role="button" onclick="toggleAdminMenu(this)">
+                <span>근태 관리</span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </div>
+            <ul class="sub-menu">
+                <li th:classappend="${currentMenu == 'attendance-dashboard'} ? 'selected' : ''">
+                    <a th:href="@{/view/admin/attendance/dashboard}">근태 대시보드</a>
+                </li>
+                <li th:classappend="${currentMenu == 'attendance-rules'} ? 'selected' : ''">
+                    <a th:href="@{/view/admin/attendance/rules}">전사 근태 이력</a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- 일정 관리 (아코디언) -->
+        <li class="menu-item" th:classappend="${currentMenu == 'schedule'} ? 'active' : ''">
+            <div class="menu-title" role="button" onclick="toggleAdminMenu(this)">
+                <span>일정 관리</span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </div>
+            <ul class="sub-menu">
+                <li th:classappend="${currentMenu == 'schedule'} ? 'selected' : ''">
+                    <a th:href="@{/view/admin/schedule}">전사 일정 관리</a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- 자원 관리 (아코디언) -->
+        <li class="menu-item" th:classappend="${#strings.contains(currentMenu ?: '', 'resource')} ? 'active' : ''">
+            <div class="menu-title" role="button" onclick="toggleAdminMenu(this)">
+                <span>자원 관리</span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </div>
+            <ul class="sub-menu">
+                <li th:classappend="${currentMenu == 'resource-meetingroom'} ? 'selected' : ''">
+                    <a th:href="@{/view/resource/admin/meetingrooms}">회의실 관리</a>
+                </li>
+                <li th:classappend="${currentMenu == 'resource-car'} ? 'selected' : ''">
+                    <a th:href="@{/view/resource/admin/cars}">차량 관리</a>
+                </li>
+                <li th:classappend="${currentMenu == 'resource-item'} ? 'selected' : ''">
+                    <a th:href="@{/view/resource/admin/items}">기타 자원 관리</a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- 예약 관리 (아코디언) -->
+        <li class="menu-item" th:classappend="${currentMenu == 'reservation'} ? 'active' : ''">
+            <div class="menu-title" role="button" onclick="toggleAdminMenu(this)">
+                <span>예약 관리</span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </div>
+            <ul class="sub-menu">
+                <li th:classappend="${currentMenu == 'reservation'} ? 'selected' : ''">
+                    <a th:href="@{/view/admin/reservations}">예약 현황 관리</a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- 게시판 관리 (아코디언) -->
+        <li class="menu-item"
+            th:classappend="${currentMenu == 'common-board' || currentMenu == 'dept-board'} ? 'active' : ''">
+            <div class="menu-title" role="button" onclick="toggleAdminMenu(this)">
+                <span>게시판 관리</span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </div>
+            <ul class="sub-menu">
+                <li th:classappend="${currentMenu == 'common-board'} ? 'selected' : ''">
+                    <a th:href="@{/view/admin/board/common}">공용 게시판 관리</a>
+                </li>
+                <li th:classappend="${currentMenu == 'dept-board'} ? 'selected' : ''">
+                    <a th:href="@{/view/admin/board/dept-activation}">부서 게시판 활성화</a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- 조직도 관리 (아코디언) -->
+        <li class="menu-item"
+            th:classappend="${currentMenu == 'org-category' || currentMenu == 'organization' || currentMenu == 'rank' || currentMenu == 'position-category'} ? 'active' : ''">
+            <div class="menu-title" role="button" onclick="toggleAdminMenu(this)">
+                <span>조직도 관리</span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </div>
+            <ul class="sub-menu">
+                <li th:classappend="${currentMenu == 'org-category'} ? 'selected' : ''">
+                    <a th:href="@{/view/admin/org-categories}">조직 카테고리 관리</a>
+                </li>
+                <li th:classappend="${currentMenu == 'organization'} ? 'selected' : ''">
+                    <a th:href="@{/view/admin/organizations}">조직 관리</a>
+                </li>
+                <li th:classappend="${currentMenu == 'rank'} ? 'selected' : ''">
+                    <a th:href="@{/view/admin/ranks}">직급 관리</a>
+                </li>
+                <li th:classappend="${currentMenu == 'position-category'} ? 'selected' : ''">
+                    <a th:href="@{/view/admin/position-categories}">직책 관리</a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- 챗봇 매뉴얼 관리 (아코디언) -->
+        <li class="menu-item" th:classappend="${currentMenu == 'chatbot'} ? 'active' : ''">
+            <div class="menu-title" role="button" onclick="toggleAdminMenu(this)">
+                <span>챗봇 매뉴얼 관리</span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </div>
+            <ul class="sub-menu">
+                <li th:classappend="${currentMenu == 'chatbot'} ? 'selected' : ''">
+                    <a th:href="@{/view/admin/chatbot}">매뉴얼 업로드</a>
+                </li>
+            </ul>
+        </li>
+
+    </ul>
+
+    <script>
+        function toggleAdminMenu(element) {
+            const menuItem = element.closest('.menu-item');
+            if (!menuItem) return;
+
+            // 다른 대분류는 닫기
+            document.querySelectorAll('.sidebar-menu .menu-item').forEach(item => {
+                if (item !== menuItem) item.classList.remove('active');
+            });
+
+            menuItem.classList.toggle('active');
+        }
+    </script>
 </body>
+
 </html>
-
-

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/layout-admin :: layout(
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/layout-admin :: layout(
         ~{::content},
         ~{fragments/header :: header},
         ~{sidebar/admin-sidebar :: menu},
@@ -12,10 +11,8 @@
     <meta charset="UTF-8">
     <title>회의실 관리</title>
 
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <!-- 페이지별 CSS -->
     <th:block th:fragment="pageCss">
         <link rel="stylesheet" th:href="@{/css/admin-meetingroom/admin-meetingrooms.css}">
@@ -25,42 +22,45 @@
         <script th:src="@{/js/admin-meetingroom/admin-meetingrooms.js}"></script>
     </th:block>
 </head>
+
 <body>
 
-<!-- Main Content -->
-<div th:fragment="content">
-    <div class="page-header">
-        <h1 class="page-title">회의실 관리</h1>
-        <button type="button" class="btn-add">
-            <i class="fas fa-plus"></i>
-            회의실 추가
-        </button>
-    </div>
+    <!-- Main Content -->
+    <div th:fragment="content">
+        <div class="board-container">
+            <div class="page-header">
+                <h1 class="page-title">회의실 관리</h1>
+                <button type="button" class="btn-add">
+                    <i class="fas fa-plus"></i>
+                    회의실 추가
+                </button>
+            </div>
 
-    <div class="table-container">
-        <table class="resource-table">
-            <colgroup>
-                <col style="width:5%">
-                <col style="width:20%">
-                <col style="width:20%">
-                <col style="width:35%">
-                <col style="width:10%">
-                <col style="width:10%">
-            </colgroup>
-            <thead>
-            <tr>
-                <th>번호</th>
-                <th>회의실명</th>
-                <th>위치</th>
-                <th>비고</th>
-                <th>상태</th>
-                <th>관리</th>
-            </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+            <div class="board-table-container">
+                <div class="table-scroll-wrapper">
+                    <table class="resource-table">
+                        <thead>
+                            <tr>
+                                <th>번호</th>
+                                <th>회의실명</th>
+                                <th>위치</th>
+                                <th>비고</th>
+                                <th>상태</th>
+                                <th>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-container" id="pagination-container">
+                <div class="pagination"></div>
+            </div>
+        </div>
     </div>
-</div>
 
 </body>
+
 </html>

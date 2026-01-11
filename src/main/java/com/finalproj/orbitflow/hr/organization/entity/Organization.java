@@ -38,7 +38,7 @@ public class Organization extends BaseEntity {
     @Column(nullable = false, length = 100)
     private String name;       // 조직명
 
-    @Column(name = "order_index", nullable = false)
+    @Column(name = "order_index")
     private Integer orderIndex; // 정렬 순서
 
     @Column(name = "is_active", nullable = false)
@@ -53,7 +53,7 @@ public class Organization extends BaseEntity {
         org.categoryId = companyCategoryId;
         org.parentOrgId = null;     // 루트
         org.name = company.getName(); // 또는 "회사"
-        org.orderIndex = 0;
+        org.orderIndex = 1;
         org.isActive = true;
         return org;
     }
@@ -75,8 +75,7 @@ public class Organization extends BaseEntity {
         return org;
     }
 
-    public void update(Long categoryId, Long parentOrgId, String name) {
-        this.categoryId = categoryId;
+    public void update(Long parentOrgId, String name) {
         this.parentOrgId = parentOrgId;
         this.name = name;
     }
@@ -87,5 +86,11 @@ public class Organization extends BaseEntity {
 
     public void deactivate() {
         this.isActive = false;
+        this.orderIndex = null;
+    }
+
+    public void activate(Integer newOrderIndex) {
+        this.isActive = true;
+        this.orderIndex = newOrderIndex;
     }
 }

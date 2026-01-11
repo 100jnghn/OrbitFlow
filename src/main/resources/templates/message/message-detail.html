@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout-user :: layout(
+        ~{::content},
+        ~{fragments/header :: header},
+        ~{sidebar/message/message-sidebar :: sidebar},
+        ~{::pageCss},
+        ~{::pageScript}
+      )}">
+<head>
+    <meta charset="UTF-8">
+    <title>메시지 상세</title>
+
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/layout.css}">
+        <link rel="stylesheet" th:href="@{/css/user-sidebar/user-sidebar.css}">
+        <link rel="stylesheet" th:href="@{/css/message/message.css}">
+    </th:block>
+
+    <th:block th:fragment="pageScript">
+        <script th:src="@{/js/message/message-detail.js}"></script>
+    </th:block>
+</head>
+<body>
+
+<div th:fragment="content">
+    <div class="board-container">
+        <!-- 메시지함 제목 -->
+        <div class="board-header">
+            <h1 id="messageFolderName">메시지</h1>
+        </div>
+        <!-- 메시지 상세 내용 -->
+        <div class="board-detail-content" id="messageDetailContent">
+            <div class="loading-message">메시지를 불러오는 중...</div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+
+
+

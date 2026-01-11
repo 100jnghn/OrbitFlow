@@ -1,30 +1,31 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
+
 <div th:fragment="header" class="header-bar">
 
     <nav class="gnb">
         <a id="homeLink"
-           href="/view/home"
+           href="/"
            th:classappend="${currentGNB}=='home' ? ' selected' : ''">홈</a>
 
-        <a th:href="@{/view/approval}"
+        <a th:href="@{/view/document/my-documents}"
            th:classappend="${currentGNB}=='approval' ? ' selected' : ''">결재</a>
 
-        <a th:href="@{/view/attendance/commute}"
+        <a th:href="@{/view/attendance/monthly}"
            th:classappend="${currentGNB}=='work' ? ' selected' : ''">근태</a>
 
         <a th:href="@{/view/schedule}"
            th:classappend="${currentGNB}=='schedule' ? ' selected' : ''">일정</a>
 
-        <a th:href="@{/view/reservation}"
+        <a th:href="@{/view/reservation/me}"
            th:classappend="${currentGNB}=='reservation' ? ' selected' : ''">예약</a>
 
         <a th:href="@{/view/board}"
            th:classappend="${currentGNB}=='board' ? ' selected' : ''">게시판</a>
 
         <a id="adminMenuLink"
-           href="/view/admin/menu"
+           href="/view/admin"
            style="display: none;"
            th:classappend="${currentGNB}=='admin' ? ' selected' : ''">
             관리자
@@ -33,8 +34,20 @@
 
     <div class="profile">
         <div class="icon-group">
-            <i class="fas fa-envelope"></i>
-            <i class="fas fa-bell"></i>
+            <a th:href="@{/view/message/inbox}" style="color: inherit; text-decoration: none; position: relative;">
+                <i class="fas fa-envelope"></i>
+                <span id="messageBadge" class="message-badge" style="display: none;">0</span>
+            </a>
+            <div style="position: relative;">
+                <a href="#" onclick="toggleNotificationDropdown(); return false;" style="color: inherit; text-decoration: none; position: relative; display: inline-flex; align-items: center;">
+                    <i class="fas fa-bell"></i>
+                    <span id="notificationBadge" class="message-badge" style="display: none;">0</span>
+                </a>
+                <!-- 알림 토스트 영역 -->
+                <div id="notification-toast-container"></div>
+                <!-- 알림 드롭다운 -->
+                <div th:replace="~{fragments/notification :: body}"></div>
+            </div>
         </div>
 
         <div class="user-info">

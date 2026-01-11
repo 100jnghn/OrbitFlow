@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/layout-user :: layout(
+          ~{::content},
+          ~{fragments/header :: header},
+          ~{sidebar/attendance/user-attendance-sidebar :: sidebar},
+          ~{::pageCss},
+          ~{::pageScript}
+      )}">
+
+<head>
+    <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/board/board.css}">
+        <link rel="stylesheet" th:href="@{/css/leave/leave.css}">
+        <link rel="stylesheet" th:href="@{/css/attendance/monthly-attendance.css}">
+        <link rel="stylesheet" th:href="@{/css/user-sidebar/user-sidebar.css}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    </th:block>
+</head>
+
+<body>
+    <div th:fragment="content">
+        <div class="board-container">
+            <!-- 게시판 제목 -->
+            <div class="board-header">
+                <h1>월별 근태 현황 조회</h1>
+            </div>
+
+            <!-- 요약 카드 (내 연차 현황과 디자인 통일) -->
+            <div class="leave-summary">
+                <div class="summary-card">
+                    <p class="summary-label">총 근무 시간 (누적)</p>
+                    <p class="summary-count"><span id="totalWorkHours" class="val-blue">0h 00m</span></p>
+                </div>
+                <div class="summary-card">
+                    <p class="summary-label">지각 횟수</p>
+                    <p class="summary-count"><span id="lateCount" class="val-orange">0</span> <span
+                            class="unit">회</span></p>
+                </div>
+                <div class="summary-card">
+                    <p class="summary-label">휴가/결근 일수</p>
+                    <p class="summary-count"><span id="absentCount" class="val-red">0</span> <span class="unit">일</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- 검색 및 필터 -->
+            <div class="board-search-section">
+                <div class="search-filters">
+                    <div class="filter-select-wrapper">
+                        <label for="statusFilter" class="filter-label">상태</label>
+                        <select id="statusFilter" class="filter-select">
+                            <option value="ALL">전체</option>
+                            <option value="ON_TIME">정상출근</option>
+                            <option value="LATE">지각</option>
+                            <option value="ABSENT">결근</option>
+                            <option value="VACATION">휴가</option>
+                        </select>
+                    </div>
+                    <div class="date-field-wrapper">
+                        <label for="startDate" class="filter-label">시작일</label>
+                        <input type="date" id="startDate" class="date-input">
+                    </div>
+                    <div class="date-field-wrapper">
+                        <label for="endDate" class="filter-label">종료일</label>
+                        <input type="date" id="endDate" class="date-input">
+                    </div>
+                    <div class="button-wrapper">
+                        <label class="filter-label" style="opacity: 0;">버튼</label>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" class="btn-search" id="searchBtn">
+                                <i class="fas fa-search" style="margin-right: 6px;"></i>
+                                검색
+                            </button>
+                            <button type="button" class="btn-reset" id="resetBtn">
+                                초기화
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+
+            <div class="board-table-container">
+                <table class="board-table" id="attendanceTable">
+                    <thead>
+                        <tr>
+                            <th>날짜</th>
+                            <th>출근 시각</th>
+                            <th>퇴근 시각</th>
+                            <th>근무 시간</th>
+                            <th>상태</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- 페이지네이션 -->
+            <div class="board-bottom-actions">
+                <div class="pagination" id="boardPagination">
+                    <!-- 동적으로 생성됨 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="pageScript">
+        <script th:src="@{/js/attendance/monthly-attendance.js}"></script>
+    </th:block>
+</body>
+
+</html>

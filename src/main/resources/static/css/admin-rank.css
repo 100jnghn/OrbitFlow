@@ -1,0 +1,541 @@
+/* ==================================================
+   admin-rank.css (FINAL)
+   - 조직 카테고리 디자인 기준 100% 통일
+================================================== */
+
+:root {
+    --bg: #f5f7fb;
+    --card: #ffffff;
+    --line: #f9fafb;
+    --text: #111827;
+    --muted: #6b7280;
+
+    --primary: #3B82F6;
+    --primary-hover: #2563EB;
+    --primary-weak: rgba(59, 130, 246, .12);
+
+    --success-bg: #ecfdf5;
+    --success-border: #10b981;
+
+    --danger-bg: #fef2f2;
+    --danger-border: #f87171;
+
+    --neutral-700: #374151;
+    --neutral-800: #1F2937;
+}
+
+/* =========================
+   Card
+========================= */
+
+.rank-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+/* =========================
+   Title
+========================= */
+
+.rank-title {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--neutral-800);
+    letter-spacing: -0.02em;
+    margin: 0 0 16px;
+}
+
+/* =========================
+   Toolbar
+========================= */
+
+.rank-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 12px;
+}
+
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* =========================
+   Search
+========================= */
+
+.rank-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+}
+
+.rank-search i {
+    font-size: 14px;
+    color: #9ca3af;
+}
+
+.rank-search input {
+    border: none;
+    outline: none;
+    font-size: 14px;
+    background: transparent;
+}
+
+/* =========================
+   Buttons (공통)
+========================= */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    background: #fff;
+    transition: all .2s ease;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+}
+
+.btn-outline {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btn-outline:hover {
+    background: var(--primary-weak);
+}
+
+/* =========================
+   Table
+========================= */
+
+.rank-table-wrap {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.rank-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.rank-table thead th {
+    background: #f9fafb;
+    color: var(--neutral-700);
+    padding: 14px 16px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+}
+
+.rank-table tbody td {
+    height: 52px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+    box-sizing: border-box;
+}
+
+.rank-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.rank-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+
+/* column width */
+.col-order { width: 90px; }
+.col-status { width: 140px; }
+.col-action { width: 140px; }
+
+/* =========================
+   Status Badge
+========================= */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 56px;
+    height: 22px;
+    padding: 3px 14px;
+
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+
+    border: 1.2px solid transparent;
+    color: dimgray;
+    background: #f5f5f5;
+}
+
+.status-active {
+    background: #ecfdf5;          /* 연한 민트 */
+    border-color: var(--success-border);
+    color: dimgray;
+}
+
+.status-inactive {
+    background: #fef2f2;          /* 연한 레드 */
+    border-color: var(--danger-border);
+    color: dimgray;
+}
+
+/* =========================
+   Table Button
+========================= */
+
+.table-btn {
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    background: #e3f2fd;
+    border: 1.2px solid #6d8cdc;
+    color: #1976d2;
+    cursor: pointer;
+}
+
+/* =========================
+   Drag Handle
+========================= */
+
+.drag-handle {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+}
+
+.drag-dots {
+    width: 14px;
+    height: 18px;
+    display: grid;
+    grid-template-columns: repeat(2, 4px);
+    grid-template-rows: repeat(3, 4px);
+    gap: 3px;
+}
+
+.drag-dots span {
+    width: 4px;
+    height: 4px;
+    background: #9ca3af;
+    border-radius: 50%;
+}
+
+/* =========================
+   Footer
+========================= */
+
+.rank-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+}
+
+.rank-hint {
+    font-size: 13px;
+    color: #9ca3af;
+}
+
+/* =========================
+   Inactive Toggle (Checkbox)
+========================= */
+
+.inactive-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 14px;
+    color: var(--neutral-700);
+}
+
+/* 기본 checkbox 숨김 */
+.inactive-toggle input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* 커스텀 박스 */
+.inactive-toggle .checkmark {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1.6px solid #cbd5f5;
+    background: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .2s ease;
+}
+
+/* 체크 아이콘 */
+.inactive-toggle .checkmark::after {
+    content: '';
+    width: 5px;
+    height: 9px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    opacity: 0;
+}
+
+/* 체크 상태 */
+.inactive-toggle input:checked + .checkmark {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.inactive-toggle input:checked + .checkmark::after {
+    opacity: 1;
+}
+
+/* hover */
+.inactive-toggle:hover .checkmark {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-weak);
+}
+
+.inactive-toggle .label-text {
+    font-weight: 500;
+}
+
+.inactive-toggle small {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+}
+
+.switch input {
+    display: none;
+}
+
+.slider {
+    position: absolute;
+    inset: 0;
+    background: #e5e7eb;
+    border-radius: 999px;
+    transition: .2s;
+}
+
+.slider::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    transition: .2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+
+.switch input:checked + .slider {
+    background: var(--primary);
+}
+
+.switch input:checked + .slider::before {
+    transform: translateX(20px);
+}
+
+/* =========================
+   상태 / 관리 컬럼 중앙 정렬
+========================= */
+
+.rank-table th.col-status,
+.rank-table td.col-status,
+.rank-table th.col-action,
+.rank-table td.col-action {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.td-center {
+    text-align: center;
+}
+
+
+/* =========================
+   Modal UI (ORG CATEGORY STYLE) - FINAL
+========================= */
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-panel {
+    width: 560px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow:
+            0 20px 40px rgba(0, 0, 0, 0.12),
+            0 8px 16px rgba(0, 0, 0, 0.08);
+    animation: modalFadeUp .18s ease-out;
+}
+
+@keyframes modalFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ===== Header ===== */
+
+.modal-head {
+    padding: 24px 28px 16px;
+    border-bottom: 1px solid var(--line);
+}
+
+.modal-head h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--neutral-800);
+    margin: 0;
+}
+
+.modal-sub {
+    margin-top: 6px;
+    font-size: 14px;
+    color: var(--muted);
+}
+
+/* ===== Body ===== */
+
+.modal-body {
+    padding: 24px 28px;
+}
+
+.form-group {
+    margin-bottom: 24px;
+    max-width: 480px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--neutral-700);
+}
+
+.form-input {
+    width: 100%;
+    height: 44px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    font-size: 14px;
+    transition: all .2s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(59,130,246,.12);
+}
+
+.input-meta {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #2563eb;
+    text-align: right;
+}
+
+.form-help {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--danger-border);
+}
+
+/* ===== Toggle ===== */
+
+.toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.toggle-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--neutral-700);
+}
+
+/* ===== Actions ===== */
+
+.modal-actions {
+    padding: 16px 28px 24px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+
+
+
+
+
+.inactive-sep {
+    background: #f9fafb;
+    font-weight: 700;
+    color: #667085;
+}

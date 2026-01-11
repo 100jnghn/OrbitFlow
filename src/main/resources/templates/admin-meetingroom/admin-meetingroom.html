@@ -44,11 +44,11 @@
             <h1 class="page-title">회의실 정보</h1>
         </div>
         <div class="header-actions">
-            <button type="button" class="btn-primary" id="btn-edit">
+            <button type="button" class="btn-edit" id="btn-edit">
                 <i class="fas fa-edit"></i>
                 수정
             </button>
-            <button type="button" class="btn-danger" id="btn-delete">
+            <button type="button" class="btn-delete" id="btn-delete">
                 <i class="fas fa-trash-alt"></i>
                 삭제
             </button>
@@ -74,28 +74,33 @@
                     <div class="info-grid">
                         <!-- 회의실명 -->
                         <div class="info-item">
-                            <label class="info-label">회의실명</label>
+                            <label class="info-label">회의실명 <span class="required">*</span></label>
                             <input type="text"
                                    class="info-input"
                                    id="room-name"
-                                   placeholder="회의실명을 입력하세요"/>
+                                   placeholder="회의실명을 입력하세요"
+                                   maxlength="30"/>
+                            <span class="hint" id="room-name-msg"></span>
                         </div>
 
                         <!-- 위치 -->
                         <div class="info-item">
-                            <label class="info-label">위치</label>
+                            <label class="info-label">위치 <span class="required">*</span></label>
                             <input type="text"
                                    class="info-input"
                                    id="room-position"
-                                   placeholder="위치를 입력하세요"/>
+                                   placeholder="위치를 입력하세요"
+                                   maxlength="50"/>
+                            <span class="hint" id="room-position-msg"></span>
                         </div>
 
                         <!-- 상태 -->
                         <div class="info-item">
-                            <label class="info-label">상태</label>
+                            <label class="info-label">상태 <span class="required">*</span></label>
                             <select class="info-select" id="room-status">
                                 <option value="">상태 선택</option>
                             </select>
+                            <span class="hint" id="room-status-msg"></span>
                         </div>
                     </div>
 
@@ -105,7 +110,23 @@
                         <input type="text"
                                class="info-textarea"
                                id="room-description"
-                               placeholder="비고 내용을 입력하세요"/>
+                               placeholder="비고 내용을 입력하세요 (선택)"
+                               maxlength="250"/>
+                        <span class="hint" id="room-description-msg"></span>
+                    </div>
+
+                    <!-- 등록 정보 -->
+                    <div class="creator-info">
+                        <div class="creator-item">
+                            <i class="fas fa-user"></i>
+                            <span class="creator-label">등록자:</span>
+                            <span class="creator-value" id="uploader-name">-</span>
+                        </div>
+                        <div class="creator-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span class="creator-label">등록일:</span>
+                            <span class="creator-value" id="created-at">-</span>
+                        </div>
                     </div>
                 </div>
             </section>

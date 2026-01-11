@@ -2,13 +2,11 @@ package com.finalproj.orbitflow.hr.organization.controller;
 
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUtils;
-import com.finalproj.orbitflow.hr.organization.dto.OrgCreateReqDto;
-import com.finalproj.orbitflow.hr.organization.dto.OrgOrderUpdateReqDto;
-import com.finalproj.orbitflow.hr.organization.dto.OrgResDto;
-import com.finalproj.orbitflow.hr.organization.dto.OrgUpdateReqDto;
+import com.finalproj.orbitflow.hr.organization.dto.*;
 import com.finalproj.orbitflow.hr.organization.service.OrgService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,6 +21,8 @@ import java.util.List;
  * @filename : OrgController
  * @since : 2025-12-19 금요일
  */
+
+@Slf4j
 @PreAuthorize("hasAnyRole('COMPANY_ADMIN', 'ADMIN')")
 @RestController
 @RequiredArgsConstructor
@@ -48,14 +48,59 @@ public class OrgController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponseDto<List<OrgResDto>>> list() {
+    public ResponseEntity<ResponseDto<List<OrgResDto>>> listOrSearch(
+            @RequestParam(defaultValue = "false") boolean includeInactive,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "false") boolean includeDescendants
+    ) {
         Long companyId = SecurityUtils.getCompanyId();
 
+        // 검색어 없으면 기존 목록
+        if (keyword == null || keyword.isBlank()) {
+            return ResponseEntity.ok(
+                    new ResponseDto<>(
+                            HttpStatus.OK,
+                            "조직 목록 조회",
+                            orgService.findAll(companyId, includeInactive)
+                    )
+            );
+        }
+
+        // 검색어 있으면 검색
         return ResponseEntity.ok(
-                new ResponseDto(
+                new ResponseDto<>(
                         HttpStatus.OK,
-                        "조직 목록 조회",
-                        orgService.findAll(companyId)
+                        "조직 검색 결과 조회",
+                        orgService.search(companyId, keyword, includeInactive, includeDescendants)
+                )
+        );
+    }
+
+    @GetMapping("/trees")
+    public ResponseEntity<ResponseDto<List<OrgAdminResDto>>> listOrSearchForAdmin(
+            @RequestParam(defaultValue = "false") boolean includeInactive,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "false") boolean includeDescendants
+    ) {
+        Long companyId = SecurityUtils.getCompanyId();
+
+        // 검색어 없으면 기존 목록
+        if (keyword == null || keyword.isBlank()) {
+            return ResponseEntity.ok(
+                    new ResponseDto<>(
+                            HttpStatus.OK,
+                            "조직 목록 조회",
+                            orgService.findAllForAdmin(companyId, includeInactive)
+                    )
+            );
+        }
+
+        // 검색어 있으면 검색
+        return ResponseEntity.ok(
+                new ResponseDto<>(
+                        HttpStatus.OK,
+                        "조직 검색 결과 조회",
+                        orgService.searchForAdmin(companyId, keyword, includeInactive, includeDescendants)
                 )
         );
     }
@@ -67,7 +112,7 @@ public class OrgController {
     ) {
         orgService.update(SecurityUtils.getCompanyId(), id, request);
         return ResponseEntity.ok(
-                new ResponseDto(HttpStatus.OK, "조직 수정 완료", null)
+                new ResponseDto(HttpStatus.OK, "조직 정보 변경 완료", null)
         );
     }
 
@@ -82,11 +127,61 @@ public class OrgController {
         );
     }
 
+    // 프론트에서 사용하지 않는 api -> 추후 목록에서 바로 비활성화 같은 기능용으로 일단 보류
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseDto<Void>> deactivate(@PathVariable Long id) {
         Long companyId = SecurityUtils.getCompanyId();
         orgService.deactivate(companyId, id);
         return ResponseEntity.ok(
-        new ResponseDto<>(HttpStatus.OK, "조직 비활성화 완료", null));
+                new ResponseDto<>(HttpStatus.OK, "조직 비활성화 완료", null));
     }
+
+    // 특정 조직 카테고리에 해당하는 조직들 조회
+    @GetMapping("/by-category/{categoryId}")
+    public ResponseEntity<ResponseDto<List<OrgResDto>>> listByCategory(
+            @PathVariable Long categoryId
+    ) {
+        return ResponseEntity.ok(
+                new ResponseDto<>(
+                        HttpStatus.OK,
+                        "조직 카테고리별 조직 조회 성공",
+                        orgService.findByCategory(SecurityUtils.getCompanyId(), categoryId)
+                )
+        );
+    }
+
+    /**
+     * 사용자가 소속한 조직 Hierarchy를 불러오는 api -> 별도의 컨트롤러로 분리
+     */
+    @GetMapping("/include-orgs")
+    public ResponseEntity<ResponseDto> listByIncludeOrgs() {
+        log.info("[include-orgs] API called");
+
+
+        log.info("[include-orgs] currentUser = {}", SecurityUtils.getCurrentUser());
+
+
+        List<OrgResDto> orgsByEmployeeId = orgService.findOrgsByEmployeeId(SecurityUtils.getCurrentUser().getOrganizationId());
+        return ResponseEntity.ok(
+                new ResponseDto<>(HttpStatus.OK, "소속 조직도 조회 성공", orgsByEmployeeId)
+        );
+    }
+
+
+    @GetMapping("/{id}/deactivate-check")
+    public ResponseEntity<ResponseDto<OrgDeactivateCheckResDto>> checkDeactivate(
+            @PathVariable Long id
+    ) {
+        Long companyId = SecurityUtils.getCompanyId();
+
+        return ResponseEntity.ok(
+                new ResponseDto<>(
+                        HttpStatus.OK,
+                        "비활성화 가능 여부 조회",
+                        orgService.checkDeactivatable(companyId, id)
+                )
+        );
+    }
+
 }
+

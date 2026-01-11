@@ -10,6 +10,8 @@ package com.finalproj.orbitflow.hr.employee.enums;
 public enum WorkStatus {
     WORKING,      // 근무중
     AWAY,         // 자리비움
-    ON_LEAVE,     // 휴가중
-    OFF_WORK      // 퇴근
+    VACATION,     // 휴가중
+    OFF_WORK,      // 퇴근
+    BUSINESS_TRIP, // 출장
+    OUTWORK //외근
 }

@@ -9,7 +9,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "comment")
@@ -37,7 +37,7 @@ public class Comment extends BaseEntity {
 
 
     @Column(name = "deleted_at")
-    private LocalDateTime deletedAt; // 삭제 일시 (소프트 삭제)
+    private Instant deletedAt; // 삭제 일시 (소프트 삭제)
 
     // 댓글 수정 메서드
     public void updateContent(String commentContent) {
@@ -46,7 +46,7 @@ public class Comment extends BaseEntity {
 
     // 댓글 소프트 삭제 처리
     public void softDelete() {
-        this.deletedAt = LocalDateTime.now();
+        this.deletedAt = Instant.now();
     }
 
 }

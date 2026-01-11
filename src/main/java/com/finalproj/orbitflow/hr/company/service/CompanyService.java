@@ -3,6 +3,7 @@ package com.finalproj.orbitflow.hr.company.service;
 import com.finalproj.orbitflow.global.exception.BusinessException;
 import com.finalproj.orbitflow.hr.company.dto.CompanySignupReqDto;
 import com.finalproj.orbitflow.hr.company.entity.Company;
+import com.finalproj.orbitflow.hr.company.event.CompanyCreatedEvent;
 import com.finalproj.orbitflow.hr.company.external.BsnClient;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
@@ -11,8 +12,11 @@ import com.finalproj.orbitflow.hr.orgCategory.entity.OrgCategory;
 import com.finalproj.orbitflow.hr.orgCategory.repository.OrgCategoryRepository;
 import com.finalproj.orbitflow.hr.organization.entity.Organization;
 import com.finalproj.orbitflow.hr.organization.repository.OrgRepository;
+import com.finalproj.orbitflow.hr.positionCategory.entity.PositionCategory;
+import com.finalproj.orbitflow.hr.positionCategory.repository.PositionCategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +39,8 @@ public class CompanyService {
     private final OrgRepository orgRepository;
     private final OrgCategoryRepository orgCategoryRepository;
     private final BsnClient bsnClient;
+    private final PositionCategoryRepository positionCategoryRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${business.validation.strict}")
     private boolean strictValidation;
@@ -42,7 +48,9 @@ public class CompanyService {
 
     public Long signup(CompanySignupReqDto request) {
 
+        // 사업자번호 검증
         validateBusinessNumber(request.getBusinessNumber());
+
         // 대표 관리자 이메일 중복 체크
         if (employeeRepository.existsByEmail(request.getAdminEmail())) {
             throw new BusinessException("이미 사용 중인 이메일입니다.");
@@ -58,25 +66,21 @@ public class CompanyService {
         );
         companyRepository.save(company);
 
-        // 3. 기본 조직 카테고리 생성
-        OrgCategory companyCat =
-                orgCategoryRepository.save(
-                        OrgCategory.create(company.getId(), "회사", 0)
-                );
-        OrgCategory hqCat =
-                orgCategoryRepository.save(
-                        OrgCategory.create(company.getId(), "본부", 1)
-                );
-        OrgCategory deptCat =
-                orgCategoryRepository.save(
-                        OrgCategory.create(company.getId(), "부서", 2)
-                );
-        OrgCategory teamCat =
-                orgCategoryRepository.save(
-                        OrgCategory.create(company.getId(), "팀", 3)
-                );
+        // 기본 조직 카테고리 생성
+        OrgCategory companyCat = orgCategoryRepository.save(
+                OrgCategory.create(company.getId(), "회사", 1, true)
+        );
+        OrgCategory hqCat = orgCategoryRepository.save(
+                OrgCategory.create(company.getId(), "본부", 2, false)
+        );
+        OrgCategory deptCat = orgCategoryRepository.save(
+                OrgCategory.create(company.getId(), "부서", 3, false)
+        );
+        OrgCategory teamCat = orgCategoryRepository.save(
+                OrgCategory.create(company.getId(), "팀", 4, false)
+        );
 
-        // 4. 기본 조직 트리 생성
+        // 기본 조직 트리 생성
         Organization rootOrg = orgRepository.save(
                 Organization.createRoot(company, companyCat.getId())
         );
@@ -111,6 +115,16 @@ public class CompanyService {
                 )
         );
 
+        // 기본 직책 카테고리 생성 (회사 전역 기준)
+        seedDefaultPositionCategories(
+                company,
+                companyCat,
+                hqCat,
+                deptCat,
+                teamCat
+        );
+
+
         // 대표 관리자 생성
         Employee admin = Employee.createAdmin(
                 company,
@@ -120,13 +134,26 @@ public class CompanyService {
         );
         employeeRepository.save(admin);
 
+
+        // 모든 기본 데이터 생성 완료 후
+        eventPublisher.publishEvent(
+                new CompanyCreatedEvent(company.getId())
+        );
+
+
         return company.getId();
     }
 
+    /**
+     * 이메일 중복 여부 확인
+     */
     public boolean isEmailAvailable(String email) {
         return !employeeRepository.existsByEmail(email);
     }
 
+    /**
+     * 사업자 번호 검증
+     */
     public void validateBusinessNumber(String businessNumber) {
 
         // DB 중복 체크 (무조건)
@@ -157,6 +184,35 @@ public class CompanyService {
         }
     }
 
+    // 기본 직책 카테고리 생성 (회사 전역 기준)
+    private void seedDefaultPositionCategories(
+            Company company,
+            OrgCategory companyCat,
+            OrgCategory hqCat,
+            OrgCategory deptCat,
+            OrgCategory teamCat
+    ) {
+        positionCategoryRepository.save(
+                PositionCategory.create(company, companyCat, null, "사장", 1, true)
+        );
+        positionCategoryRepository.save(
+                PositionCategory.create(company, hqCat, null, "본부장", 2, true)
+        );
+        positionCategoryRepository.save(
+                PositionCategory.create(company, deptCat, null, "부장", 3, true)
+        );
+        positionCategoryRepository.save(
+                PositionCategory.create(company, teamCat, null, "팀장", 4, true)
+        );
+        positionCategoryRepository.save(
+                PositionCategory.create(company, teamCat, null, "팀원", 5, false)
+        );
+    }
 
+    @Transactional(readOnly = true)
+    public Company findById(Long companyId) {
+        return companyRepository.findById(companyId)
+                .orElseThrow(() -> new BusinessException("존재하지 않는 회사입니다."));
+    }
 }
 

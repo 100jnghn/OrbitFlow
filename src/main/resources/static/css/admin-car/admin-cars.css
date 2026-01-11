@@ -1,4 +1,19 @@
 /* =========================
+   Board Container
+========================= */
+.board-container {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 200px);
+}
+
+/* =========================
    Page Header
 ========================= */
 .page-header {
@@ -19,29 +34,48 @@
    Buttons
 ========================= */
 .btn-add {
+    height: 42px;
+    padding: 0 16px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 
-    background: #4a69bd;
+    background: #2563eb;
     color: #fff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
+    box-shadow: 0 8px 22px rgba(37, 99, 235, .25);
 }
 
 .btn-add:hover {
-    background: #3a5aa0;
+    filter: brightness(0.97);
 }
 
 /* =========================
    Table Container
 ========================= */
+.board-table-container {
+    margin-bottom: 24px;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    min-height: 600px;
+    max-height: 600px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.table-scroll-wrapper {
+    width: 100%;
+    overflow: hidden;
+}
+
 .table-container {
     background: #fff;
     border-radius: 12px;
@@ -50,11 +84,18 @@
 }
 
 /* =========================
-   Resource Table (Base)
+   Resource Table (Board Style)
 ========================= */
+.board-table-container .resource-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    height: 100%;
+    background: #fff;
+}
+
 .resource-table {
     width: 100%;
-    margin-top: 16px;
     border-collapse: collapse;
     table-layout: fixed;
 }
@@ -70,12 +111,8 @@
     font-size: 14px;
     text-align: left;
     border-bottom: 1px solid #f0f0f0;
-
-    /* 한 줄 유지 */
     white-space: nowrap;
-    overflow: hidden;
     text-overflow: ellipsis;
-
     position: relative;
 }
 
@@ -86,6 +123,53 @@
 
 .resource-table td {
     color: #555;
+}
+
+/* Column Width Definitions */
+.resource-table th:nth-child(1),
+.resource-table td:nth-child(1) {
+    width: 60px;
+    text-align: center;
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.resource-table th:nth-child(2),
+.resource-table td:nth-child(2) {
+    width: auto;
+    min-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.resource-table th:nth-child(3),
+.resource-table td:nth-child(3) {
+    width: auto;
+    min-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.resource-table th:nth-child(4),
+.resource-table td:nth-child(4) {
+    width: auto;
+    min-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.resource-table th:nth-child(5),
+.resource-table td:nth-child(5) {
+    width: 100px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.resource-table th:nth-child(6),
+.resource-table td:nth-child(6) {
+    width: 100px;
+    text-align: center;
+    vertical-align: middle;
 }
 
 .resource-table td:first-child {
@@ -104,6 +188,37 @@
 
 .resource-table tbody tr:last-child td {
     border-bottom: none;
+}
+
+/* =========================
+   Status Badges
+========================= */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 56px;
+    height: 22px;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.status-available {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.status-maintenance {
+    background: #f5f5f5;
+    color: #616161;
+}
+
+.status-unavailable {
+    background: #fde2e2;
+    color: #b42318;
 }
 
 /* =========================
@@ -133,6 +248,7 @@
     position: fixed;
     z-index: 9999;
     pointer-events: none;
+    display: none;
 }
 
 /* =========================
@@ -142,35 +258,30 @@
     cursor: help;
 }
 
-.resource-table td:nth-child(4):hover::after {
-    content: attr(data-fulltext);
-
-    position: absolute;
-    left: 0;
-    top: 100%;
-    z-index: 1000;
-}
+/* Note: 'content: attr(data-fulltext)' REMOVED to prevent CSS tooltip from showing up in addition to JS tooltip */
 
 /* =========================
    Action Buttons
 ========================= */
 .action-btns {
     display: flex;
+    justify-content: center;
+    align-items: center;
     gap: 8px;
 }
 
 .btn-edit,
 .btn-delete {
     padding: 6px 12px;
-    border-radius: 4px;
+    border-radius: 12px;
     font-size: 13px;
-    border: none;
     cursor: pointer;
     transition: background 0.2s;
 }
 
 .btn-edit {
     background: #e3f2fd;
+    border: 1.2px solid #6d8cdc;
     color: #1976d2;
 }
 
@@ -180,6 +291,7 @@
 
 .btn-delete {
     background: #ffebee;
+    border: 1.2px solid #e79898;
     color: #c62828;
 }
 
@@ -202,3 +314,100 @@
     opacity: 0.3;
 }
 
+.app-content {
+    flex: 1;
+    padding: 24px 40px 16px;
+    overflow-y: auto;
+}
+
+/* =========================
+   Pagination
+========================= */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    margin-top: 24px;
+}
+
+.page-btn,
+.page-number,
+.pagination button {
+    min-width: 32px;
+    height: 36px;
+    padding: 0 8px;
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #555;
+    text-align: center;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page-btn:hover:not(:disabled),
+.page-number:hover:not(.active),
+.pagination button:hover:not(:disabled) {
+    background: #f8f9fa;
+    border-color: #4a69bd;
+    color: #4a69bd;
+}
+
+.page-btn:disabled,
+.pagination button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.page-number.active,
+.pagination button.active {
+    background: #4a69bd;
+    color: #fff;
+    border-color: #4a69bd;
+    font-weight: 500;
+}
+
+.ellipsis {
+    min-width: 32px;
+    height: 36px;
+    padding: 0 4px;
+    color: #9ca3af;
+    border: none;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination-info {
+    font-size: 13px;
+    color: #666;
+    margin: 0 16px;
+}
+
+/* =========================
+   Responsive Column Hiding
+========================= */
+/* 1000px 이하: 번호, 비고 열 숨김 */
+@media (max-width: 1000px) {
+
+    .resource-table th:nth-child(1),
+    .resource-table td:nth-child(1),
+    .resource-table th:nth-child(4),
+    .resource-table td:nth-child(4) {
+        display: none;
+    }
+}
