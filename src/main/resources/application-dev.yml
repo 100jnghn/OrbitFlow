@@ -20,9 +20,9 @@ spring:
           starttls.enable: true
 
   datasource:
-    url: jdbc:mysql://localhost:3307/orbitflow
-    username: root
-    password: mysql1234
+    url: jdbc:mysql://localhost:3306/orbitflow
+    username: scott
+    password: tiger
     driver-class-name: com.mysql.cj.jdbc.Driver
   config:
     import: optional:file:.env[.properties]
