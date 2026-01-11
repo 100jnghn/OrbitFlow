@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.auth.dto;
 
+import com.finalproj.orbitflow.hr.employee.enums.Gender;
 import com.finalproj.orbitflow.hr.employee.enums.WorkStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,4 +20,5 @@ public class MeResDto {
     private String email;
     private String role;
     private WorkStatus workStatus;
+    private Gender gender;
 }

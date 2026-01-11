@@ -164,7 +164,6 @@ async function loadUserProfile() {
 
         // 2. 부서 및 직급 표시
         // 직급이 있을 경우에만 괄호를 붙이거나 스타일을 맞춤
-        safeSetText('profileDept', user.organizationName || '소속 없음');
         safeSetText('profileRank', user.positionName || '');
 
         // 3. 근무 상태 배지 업데이트
@@ -187,12 +186,15 @@ async function loadUserProfile() {
             }
             if (profileIconEl) profileIconEl.style.display = 'none';
         } else {
-            // 이미지가 없을 때 기본 아이콘 표시 및 엑박 방지
+            // 이미지가 없을 때 성별에 따른 기본 이미지 표시
             if (profileImgEl) {
-                profileImgEl.style.display = 'none';
-                profileImgEl.src = ''; // 이전 경로 제거
+                const gender = user.gender || 'MALE'; // 기본값 남성
+                const defaultImg = gender === 'FEMALE' ? '/images/female.png' : '/images/male.png';
+
+                profileImgEl.src = defaultImg;
+                profileImgEl.style.display = 'block';
             }
-            if (profileIconEl) profileIconEl.style.display = 'block';
+            if (profileIconEl) profileIconEl.style.display = 'none';
         }
 
         // 5. 버튼 상태 동기화 (Commute.js 등 연동)
@@ -529,4 +531,12 @@ function escapeHTML(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+}
+
+/**
+ * 요소 안전 텍스트 설정 유틸리티
+ */
+function safeSetText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
 }
