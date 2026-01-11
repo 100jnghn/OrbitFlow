@@ -530,3 +530,11 @@ function escapeHTML(str) {
     div.textContent = str;
     return div.innerHTML;
 }
+
+/**
+ * 요소 안전 텍스트 설정 유틸리티
+ */
+function safeSetText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+}
