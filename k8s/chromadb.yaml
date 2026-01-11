@@ -33,8 +33,9 @@ spec:
           env:
             - name: CHROMA_PERSIST_DIRECTORY
               value: /chroma/data
-          command: [ "python", "-m", "chromadb.app" ]   # 🔥 핵심
+          command: [ "uvicorn" ]                 # 🔥 핵심
           args:
+            - "chromadb.app:app"
             - "--host"
             - "0.0.0.0"
             - "--port"
