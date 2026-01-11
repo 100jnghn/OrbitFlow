@@ -291,7 +291,14 @@ async function loadMe() {
         const me = result.data;
 
         const userNameEl = document.getElementById('userName');
-        if (userNameEl) userNameEl.innerText = `${me.name} (${me.role})`;
+        if (userNameEl) {
+            userNameEl.innerText = `${me.name} (${me.role})`;
+
+            // 사원 상세 페이지로 이동
+            userNameEl.href = `/view/organizations?employeeId=${me.employeeId}`;
+
+            // http://localhost:8090/view/organizations?employeeId=?
+        }
 
 
         const adminMenuLink = document.getElementById('adminMenuLink');
