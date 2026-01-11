@@ -14,10 +14,11 @@ import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable; // ✅ 정확한 임포트 확인
+import com.finalproj.orbitflow.notification.service.NotificationCommandService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration; // ✅ 근무 시간 계산을 위해 추가
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -31,7 +32,7 @@ public class AttendanceDashboardService {
     private final CommuteRepository commuteRepository;
     private final EmployeeRepository employeeRepository;
     private final AttendanceRuleRepository attendanceRuleRepository;
-
+    private final NotificationCommandService notificationCommandService;
 
     // 요약 통계
     public AdminSummaryResDto getTodaySummary(Long companyId) {
@@ -45,9 +46,12 @@ public class AttendanceDashboardService {
         int late = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today, AttendanceStatus.LATE);
 
         // 3. 기타 승인된 상태 카운트
-        int vacation = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today, AttendanceStatus.VACATION);
-        int outside = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today, AttendanceStatus.OUTSIDE);
-        int businessTrip = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today, AttendanceStatus.BUSINESS_TRIP);
+        int vacation = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today,
+                AttendanceStatus.VACATION);
+        int outside = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today,
+                AttendanceStatus.OUTSIDE);
+        int businessTrip = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today,
+                AttendanceStatus.BUSINESS_TRIP);
 
         // 4. 결근 인원 계산: 전체 - (출근자 + 휴가 + 외근 + 출장)
         int totalAccountedFor = (onTime + late + vacation + outside + businessTrip);
@@ -64,8 +68,6 @@ public class AttendanceDashboardService {
                 .build();
     }
 
-
-
     public Page<AdminAttendanceResDto> getCompanyAttendanceList(
             Long companyId, String start, String end, String status, String keyword, Pageable pageable) {
 
@@ -73,7 +75,8 @@ public class AttendanceDashboardService {
         LocalDate startDate = (start == null || start.isEmpty()) ? LocalDate.now() : LocalDate.parse(start);
         LocalDate endDate = (end == null || end.isEmpty()) ? startDate : LocalDate.parse(end);
 
-        AttendanceStatus statusEnum = (status == null || status.equals("ALL")) ? null : AttendanceStatus.valueOf(status);
+        AttendanceStatus statusEnum = (status == null || status.equals("ALL")) ? null
+                : AttendanceStatus.valueOf(status);
 
         // 2. 기본 근태 규칙 조회 (출근/퇴근 시간 확인용)
         AttendanceRule defaultRule = attendanceRuleRepository
@@ -82,7 +85,7 @@ public class AttendanceDashboardService {
 
         // 3. 수정된 리포지토리 메서드 호출 (인자 5개 + pageable)
         return commuteRepository.findAllEmployeesWithAttendance(
-                        companyId, startDate, endDate, statusEnum, keyword, pageable)
+                companyId, startDate, endDate, statusEnum, keyword, pageable)
                 .map(result -> {
                     Employee emp = (Employee) result[0];
                     Attendance att = (Attendance) result[1];
@@ -92,13 +95,11 @@ public class AttendanceDashboardService {
                 });
     }
 
-
-
-
     /**
      * 엔티티 결합 및 DTO 변환 (근무 시간 계산 로직 추가)
      */
-    private AdminAttendanceResDto convertToCombinedDto(Employee emp, Attendance att, LocalDate date, AttendanceRule defaultRule) {
+    private AdminAttendanceResDto convertToCombinedDto(Employee emp, Attendance att, LocalDate date,
+            AttendanceRule defaultRule) {
         // 출근 기록이 없는 경우: 시간에 따라 "근무예정" 또는 "결근" 판단
         String statusName;
         String statusCode;
@@ -112,17 +113,17 @@ public class AttendanceDashboardService {
                 LocalTime now = LocalTime.now();
                 LocalTime startTime = defaultRule.getDefaultStartTime();
                 LocalTime endTime = defaultRule.getDefaultEndTime();
-                
+
                 // 현재 시간이 출근 시간 이전이면 "근무예정"
                 if (now.isBefore(startTime)) {
                     statusName = AttendanceStatus.BEFORE_WORK.getDescription();
                     statusCode = AttendanceStatus.BEFORE_WORK.name();
-                } 
+                }
                 // 현재 시간이 퇴근 시간 이후이면 "결근"
                 else if (now.isAfter(endTime)) {
                     statusName = AttendanceStatus.ABSENT.getDescription();
                     statusCode = AttendanceStatus.ABSENT.name();
-                } 
+                }
                 // 출근 시간 이후, 퇴근 시간 이전이면 "근무예정" (아직 출근할 수 있는 시간)
                 else {
                     statusName = AttendanceStatus.BEFORE_WORK.getDescription();
@@ -151,10 +152,12 @@ public class AttendanceDashboardService {
                 .employeeName(emp.getName()) //
                 .employeeNum(emp.getEmployeeNo()) //
                 .workDate(date.toString())
-                .commuteAt(att != null && att.getCommuteAt() != null ?
-                        att.getCommuteAt().format(DateTimeFormatter.ofPattern("HH:mm:ss")) : "-")
-                .leaveAt(att != null && att.getLeaveAt() != null ?
-                        att.getLeaveAt().format(DateTimeFormatter.ofPattern("HH:mm:ss")) : "-")
+                .commuteAt(att != null && att.getCommuteAt() != null
+                        ? att.getCommuteAt().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+                        : "-")
+                .leaveAt(att != null && att.getLeaveAt() != null
+                        ? att.getLeaveAt().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+                        : "-")
                 .workingTime(workingTime)
                 .statusName(statusName)
                 .statusCode(statusCode)
@@ -162,6 +165,8 @@ public class AttendanceDashboardService {
                 .correctionReason(att != null ? att.getCorrectionReason() : null)
                 .build();
     }
+
+    // ... (rest of the file until updateAttendanceRecord)
 
     /**
      * [관리자] 기록 수동 정정 (안정성 강화)
@@ -176,14 +181,13 @@ public class AttendanceDashboardService {
         } else {
             // "기록 누락" 사원의 경우 중복 생성 방지를 위해 재조회 후 생성
             attendance = commuteRepository.findByCompanyIdAndEmployeeIdAndWorkDate(
-                    companyId, dto.getEmployeeId(), LocalDate.now()).orElseGet(() ->
-                    Attendance.builder()
-                            .employeeId(dto.getEmployeeId())
-                            .companyId(companyId)
-                            .workDate(LocalDate.now())
-                            .isCorrected(true)
-                            .build()
-            );
+                    companyId, dto.getEmployeeId(), LocalDate.now()).orElseGet(
+                            () -> Attendance.builder()
+                                    .employeeId(dto.getEmployeeId())
+                                    .companyId(companyId)
+                                    .workDate(LocalDate.now())
+                                    .isCorrected(true)
+                                    .build());
         }
 
         // 상태 및 사유 업데이트
@@ -198,13 +202,33 @@ public class AttendanceDashboardService {
         }
 
         commuteRepository.save(attendance);
+
+        // 🚀 [알림 전송] 근태 정정 알림
+        try {
+            String message = String.format("[%s] 근태 상태가 '%s'(으)로 정정되었습니다. (사유: %s)",
+                    attendance.getWorkDate(),
+                    attendance.getStatus().getDescription(),
+                    dto.getCorrectionReason());
+
+            notificationCommandService.createNotification(
+                    companyId,
+                    attendance.getEmployeeId(),
+                    com.finalproj.orbitflow.notification.enums.NotificationType.ATTENDANCE,
+                    message,
+                    "/view/attendance/monthly");
+        } catch (Exception e) {
+            // 알림 전송 실패가 트랜잭션 전체를 롤백시키지 않도록 로깅만 함
+            // log.error("알림 전송 실패", e);
+        }
     }
 
     private LocalDateTime parseDateTime(LocalDate date, String timeStr) {
-        if (timeStr == null || timeStr.trim().isEmpty() || "-".equals(timeStr)) return null;
+        if (timeStr == null || timeStr.trim().isEmpty() || "-".equals(timeStr))
+            return null;
         try {
             String fullTimeStr = timeStr.trim();
-            if (fullTimeStr.length() == 5) fullTimeStr += ":00";
+            if (fullTimeStr.length() == 5)
+                fullTimeStr += ":00";
             return LocalDateTime.parse(date.toString() + " " + fullTimeStr,
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         } catch (Exception e) {

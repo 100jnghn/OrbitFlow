@@ -60,7 +60,6 @@ public class LeaveService {
         }
     }
 
-
     private void processEmployeeAnnualLeave(Employee emp, LocalDate grantDate, Integer year) {
         if (emp.getHireDate() == null)
             return;
@@ -371,7 +370,8 @@ public class LeaveService {
 
         for (AttendanceRecord record : activeRecords) {
             Employee employee = record.getEmployee();
-            if (record.getSourceDocument() == null || record.getSourceDocument().getTemplateGroup() == null) continue;
+            if (record.getSourceDocument() == null || record.getSourceDocument().getTemplateGroup() == null)
+                continue;
 
             BaseRole role = record.getSourceDocument().getTemplateGroup().getBaseRole();
 
@@ -453,10 +453,20 @@ public class LeaveService {
         record.updateDuration(newEndDate, newUsedDays);
 
         // 6. 미래 이벤트 및 일정 삭제
-        attendanceEventRepository.deleteByEmployeeIdAndStartDateAfter(employeeId, today);
+        // 🔥 [수정] 오늘 날짜를 포함하여 이후의 자동 생성된 이벤트/일정 삭제
+        // 이유: 오늘 조기 복귀했으므로, 시스템 상 '오늘'은 더 이상 휴가/출장 상태가 아니어야 함 (또는 근무 상태로 전환됨)
 
-        // 오늘 이후(내일 0시부터)의 일정 삭제
-        scheduleRepository.deleteByEmployeeIdAndStartAtAfter(employeeId, today.atTime(23, 59, 59));
+        // 날짜 기준: 어제
+        LocalDate yesterday = today.minusDays(1);
+
+        // AttendanceEvent: 어제 이후(즉, 오늘부터) 삭제
+        attendanceEventRepository.deleteByEmployeeIdAndStartDateAfter(employeeId, yesterday);
+
+        // Schedule: 어제 23:59:59 이후(즉, 오늘 00:00:00부터) 삭제
+        // 🚀 일반 일정(개인 약속 등)은 유지하고, 시스템이 생성한(isCompany=true && isPersonal=true) 일정만 삭제
+        scheduleRepository.deleteByEmployeeIdAndIsCompanyTrueAndIsPersonalTrueAndStartAtAfter(
+                employeeId,
+                yesterday.atTime(23, 59, 59));
 
         // 7. 상태 변경
         employee.updateWorkStatus(WorkStatus.WORKING);
@@ -464,9 +474,7 @@ public class LeaveService {
         log.info("조기 복귀 처리 완료 - 사원: {}, 환불일수: {}", employee.getName(), refundDays);
     }
 
-
     // -----------------
-
 
     /**
      * 신규 사원 가입(입사) 직후 비례 연차 즉시 부여
@@ -508,17 +516,16 @@ public class LeaveService {
         // 시작월부터 종료월까지 포함하기 위해 날짜 조정 후 계산
         long remainingMonths = ChronoUnit.MONTHS.between(
                 hireDate.withDayOfMonth(1),
-                yearEnd.plusMonths(1).withDayOfMonth(1)
-        );
+                yearEnd.plusMonths(1).withDayOfMonth(1));
 
-        if (remainingMonths <= 0) return BigDecimal.ZERO;
+        if (remainingMonths <= 0)
+            return BigDecimal.ZERO;
 
         return new BigDecimal(remainingMonths)
                 .divide(new BigDecimal("12"), 10, RoundingMode.HALF_UP)
                 .multiply(new BigDecimal("15"))
                 .setScale(2, RoundingMode.HALF_UP);
     }
-
 
     public Employee getEmployeeById(Long employeeId) {
         return employeeRepository.findById(employeeId)
