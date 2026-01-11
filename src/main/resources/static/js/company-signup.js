@@ -78,15 +78,13 @@ function validateContact() {
    이메일
 ====================== */
 adminEmail.addEventListener('input', () => {
-    // 한글 제거 (입력/붙여넣기 모두 차단)
     adminEmail.value = adminEmail.value.replace(/[ㄱ-ㅎㅏ-ㅣ가-힣]/g, '');
-
     validateEmail();
     updateSignupButtonState();
-
-    adminEmail.addEventListener('blur', checkEmailDuplicate);
-
 });
+
+adminEmail.addEventListener('blur', checkEmailDuplicate);
+
 
 
 function validateEmail() {
@@ -190,26 +188,22 @@ async function checkBusinessNumber() {
     }
 
     try {
-        const res = await apiFetch(
+        const json = await publicFetch(
             `/api/companies/check-business-number?businessNumber=${encodeURIComponent(v)}`
         );
 
-        const json = await res.json();
-
-        if (!res.ok) {
-            showMsg(businessMsg, json.message, 'error');
-            businessChecked = false;
-            return;
-        }
-
-        // 성공 (시연 모드 포함)
         showMsg(businessMsg, json.message, 'success');
         businessChecked = true;
 
     } catch (e) {
-        showMsg(businessMsg, '사업자번호 검증 중 오류가 발생했습니다.', 'error');
+        showMsg(
+            businessMsg,
+            e?.message || '사업자번호 검증 중 오류가 발생했습니다.',
+            'error'
+        );
         businessChecked = false;
     }
+
     updateSignupButtonState();
 }
 
@@ -238,18 +232,10 @@ async function submitSignup() {
     };
 
     try {
-        const res = await apiFetch('/api/companies', {
+        const result = await publicFetch('/api/companies', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
         });
-
-        const result = await res.json();
-
-        if (!res.ok) {
-            alert(result.message);
-            return;
-        }
 
         alert(result.message);
         location.href = '/login';
@@ -273,11 +259,9 @@ async function checkEmailDuplicate() {
     }
 
     try {
-        const res = await apiFetch(
+        const json = await publicFetch(
             `/api/companies/check-email?email=${encodeURIComponent(v)}`
         );
-
-        const json = await res.json();
 
         if (json.data.available) {
             showMsg(emailMsg, '사용 가능한 이메일입니다.', 'success');
@@ -292,4 +276,24 @@ async function checkEmailDuplicate() {
     }
 
     updateSignupButtonState();
+}
+
+async function publicFetch(url, options = {}) {
+    const res = await fetch(url, {
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...(options.headers || {})
+        }
+    });
+
+    // body가 있는 경우에만 JSON 파싱
+    const text = await res.text();
+    const json = text ? JSON.parse(text) : null;
+
+    if (!res.ok) {
+        throw json || { message: '요청 처리 중 오류가 발생했습니다.' };
+    }
+
+    return json;
 }
