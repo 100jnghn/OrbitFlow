@@ -10,7 +10,6 @@ import dev.langchain4j.store.embedding.chroma.ChromaEmbeddingStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
 import java.time.Duration;
 
@@ -25,7 +24,18 @@ public class ChatbotConfig {
     @Value("${OPENAI_API_KEY}")
     private String apiKey;
 
-    // 1. 임베딩 모델 빈 등록 (텍스트를 벡터로 변환)
+    @Value("${chroma.scheme}")
+    private String scheme;
+
+    @Value("${chroma.host}")
+    private String host;
+
+    @Value("${chroma.port}")
+    private int port;
+
+    /**
+     * 1️⃣ 임베딩 모델 (텍스트 → 벡터)
+     */
     @Bean
     public EmbeddingModel embeddingModel() {
         return OpenAiEmbeddingModel.builder()
@@ -34,23 +44,31 @@ public class ChatbotConfig {
                 .build();
     }
 
-    // 2. 벡터 저장소 빈 등록 (ChromaDB 연동)
+    /**
+     * 2️⃣ 벡터 저장소 (ChromaDB)
+     * - 로컬: http://localhost:8000
+     * - K8s : http://chromadb:8000
+     */
     @Bean
     public EmbeddingStore<TextSegment> embeddingStore() {
+        String baseUrl = scheme + "://" + host + ":" + port;
+
         return ChromaEmbeddingStore.builder()
-                .baseUrl("http://localhost:8000")
+                .baseUrl(baseUrl)
                 .collectionName("orbitflow_manuals")
-                .timeout(Duration.ofSeconds(30)) // 연결 시간 초과 방지 추가
+                .timeout(Duration.ofSeconds(30))
                 .build();
     }
 
-    // 3. 채팅 언어 모델 빈 등록
+    /**
+     * 3️⃣ 채팅 모델
+     */
     @Bean
     public ChatLanguageModel chatLanguageModel() {
         return OpenAiChatModel.builder()
                 .apiKey(apiKey)
-                .modelName("gpt-4o-mini") // 가성비 좋은 모델로 설정
-                .temperature(0.0)         // 매뉴얼 기반 답변이므로 창의성보다는 정확도 위주
+                .modelName("gpt-4o-mini")
+                .temperature(0.0)
                 .build();
     }
 }
