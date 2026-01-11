@@ -21,10 +21,10 @@ import tools.jackson.databind.ObjectMapper;
 @Configuration
 public class RedisConfig {
 
-    @Value("${spring.redis.data.host}")
+    @Value("${spring.data.redis.host}")
     private String host;
 
-    @Value("${spring.redis.data.port}")
+    @Value("${spring.data.redis.port}")
     private int port;
 
     @Bean
