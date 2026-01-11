@@ -1,7 +1,6 @@
 package com.finalproj.orbitflow.email.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Profile;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Component;
  * @filename : SmtpMailSender
  * @since : 2026-01-03 토요일
  */
-@Profile("local")
 @Component
 @RequiredArgsConstructor
 public class SmtpMailSender implements MailSender {

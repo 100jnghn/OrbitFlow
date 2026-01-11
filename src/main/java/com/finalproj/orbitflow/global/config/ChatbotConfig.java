@@ -24,14 +24,15 @@ public class ChatbotConfig {
     @Value("${OPENAI_API_KEY}")
     private String apiKey;
 
-    @Value("${chroma.scheme}")
+    @Value("${chroma.scheme:http}")
     private String scheme;
 
-    @Value("${chroma.host}")
+    @Value("${chroma.host:localhost}")
     private String host;
 
-    @Value("${chroma.port}")
+    @Value("${chroma.port:8000}")
     private int port;
+
 
     /**
      * 1️⃣ 임베딩 모델 (텍스트 → 벡터)

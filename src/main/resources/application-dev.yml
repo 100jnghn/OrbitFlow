@@ -89,3 +89,11 @@ holiday:
 notification:
   expire-days: 50
   cleanup-cron: "0 0 2 * * *"
+
+# ===============================
+# 🤖 ChromaDB (Local)
+# ===============================
+chroma:
+  scheme: http
+  host: localhost
+  port: 8000
