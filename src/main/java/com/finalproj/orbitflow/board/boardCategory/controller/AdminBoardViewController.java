@@ -24,11 +24,11 @@ public class AdminBoardViewController {
     }
 
     /**
-     * 부서 게시판 활성화 페이지
+     * 부서 게시판 관리 페이지
      */
     @GetMapping("/board/dept-activation")
     public String deptBoardActivationPage(Model model) {
-        model.addAttribute("pageTitle", "부서 게시판 활성화");
+        model.addAttribute("pageTitle", "부서 게시판 관리");
         model.addAttribute("currentGNB", "admin");
         model.addAttribute("currentMenu", "dept-board");
         return "admin/admin-board/admin-board-dept";
