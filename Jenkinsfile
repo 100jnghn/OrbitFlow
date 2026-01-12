@@ -114,7 +114,7 @@ pipeline {
                      credentialsId: 'aws-credentials']
                 ]) {
                     sh '''
-                      kubectl apply -f k8s/app/hpa.yaml
+                      kubectl apply -f k8s/app/orbitflow-hpa.yaml
                     '''
                 }
             }
