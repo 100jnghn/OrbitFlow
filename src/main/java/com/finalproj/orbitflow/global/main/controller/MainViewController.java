@@ -21,10 +21,10 @@ public class MainViewController {
     @GetMapping("/")
     public String main(Model model, @AuthenticationPrincipal SecurityUser user) {
         // 레이아웃에 필요한 기본 정보 설정
-        model.addAttribute("companyName", "엠터캠피스");
+
         model.addAttribute("pageTitle", "홈 대시보드");
         model.addAttribute("currentGNB", "home");
-        
+
         return "main/index"; // templates/main/index.html
     }
 }

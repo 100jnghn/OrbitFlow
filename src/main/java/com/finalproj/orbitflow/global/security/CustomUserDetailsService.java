@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Spring Security에서 사용하는 사용자 인증 로직 구현체.
@@ -18,7 +19,8 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class CustomUserDetailsService  {
+@Transactional(readOnly = true)
+public class CustomUserDetailsService {
 
     private final EmployeeRepository employeeRepository;
 
@@ -39,9 +41,5 @@ public class CustomUserDetailsService  {
                 .orElseThrow(() -> new UsernameNotFoundException("사원 정보 없음"));
         return new SecurityUser(employee);
     }
-
-
-
-
 
 }
