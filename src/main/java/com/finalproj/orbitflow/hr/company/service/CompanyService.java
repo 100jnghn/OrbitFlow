@@ -10,16 +10,22 @@ import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import com.finalproj.orbitflow.hr.orgCategory.entity.OrgCategory;
 import com.finalproj.orbitflow.hr.orgCategory.repository.OrgCategoryRepository;
+import com.finalproj.orbitflow.hr.orgPositionUsage.entity.OrgPositionUsage;
+import com.finalproj.orbitflow.hr.orgPositionUsage.repository.OrgPositionUsageRepository;
 import com.finalproj.orbitflow.hr.organization.entity.Organization;
 import com.finalproj.orbitflow.hr.organization.repository.OrgRepository;
 import com.finalproj.orbitflow.hr.positionCategory.entity.PositionCategory;
 import com.finalproj.orbitflow.hr.positionCategory.repository.PositionCategoryRepository;
+import com.finalproj.orbitflow.hr.rank.entity.HrRank;
+import com.finalproj.orbitflow.hr.rank.repository.RankRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * Please explain the class!!!
@@ -41,6 +47,8 @@ public class CompanyService {
     private final BsnClient bsnClient;
     private final PositionCategoryRepository positionCategoryRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final OrgPositionUsageRepository orgPositionUsageRepository;
+    private final RankRepository rankRepository;
 
     @Value("${business.validation.strict}")
     private boolean strictValidation;
@@ -49,7 +57,7 @@ public class CompanyService {
     public Long signup(CompanySignupReqDto request) {
 
         // 사업자번호 검증
-        validateBusinessNumber(request.getBusinessNumber());
+        validateBusinessNumberForSignup(request.getBusinessNumber());
 
         // 대표 관리자 이메일 중복 체크
         if (employeeRepository.existsByEmail(request.getAdminEmail())) {
@@ -115,14 +123,20 @@ public class CompanyService {
                 )
         );
 
-        // 기본 직책 카테고리 생성 (회사 전역 기준)
-        seedDefaultPositionCategories(
-                company,
-                companyCat,
-                hqCat,
-                deptCat,
-                teamCat
+
+        // 직급
+        seedDefaultRanks(company);
+
+        // 직책 카테고리
+        seedDefaultPositionCategories(company, companyCat, hqCat, deptCat, teamCat);
+
+        // 조직-직책 정책
+        seedDefaultOrgPositionUsage(
+                company, rootOrg, hqOrg, deptOrg, teamOrg,
+                companyCat, hqCat, deptCat, teamCat
         );
+
+
 
 
         // 대표 관리자 생성
@@ -151,12 +165,22 @@ public class CompanyService {
         return !employeeRepository.existsByEmail(email);
     }
 
-    /**
-     * 사업자 번호 검증
-     */
-    public void validateBusinessNumber(String businessNumber) {
 
-        // DB 중복 체크 (무조건)
+    /**
+     * 사업자번호 중복 여부만 확인 (프론트용)
+     */
+    @Transactional(readOnly = true)
+    public void checkBusinessNumberAvailable(String businessNumber) {
+        if (companyRepository.existsByBusinessNumber(businessNumber)) {
+            throw new BusinessException("이미 등록된 사업자번호입니다.");
+        }
+    }
+
+    /**
+     * 회사 가입 시 최종 사업자번호 검증 (서버 전용)
+     */
+    public void validateBusinessNumberForSignup(String businessNumber) {
+
         if (companyRepository.existsByBusinessNumber(businessNumber)) {
             throw new BusinessException("이미 등록된 사업자번호입니다.");
         }
@@ -184,6 +208,9 @@ public class CompanyService {
         }
     }
 
+
+
+
     // 기본 직책 카테고리 생성 (회사 전역 기준)
     private void seedDefaultPositionCategories(
             Company company,
@@ -192,27 +219,106 @@ public class CompanyService {
             OrgCategory deptCat,
             OrgCategory teamCat
     ) {
-        positionCategoryRepository.save(
+        PositionCategory ceo = positionCategoryRepository.save(
                 PositionCategory.create(company, companyCat, null, "사장", 1, true)
         );
-        positionCategoryRepository.save(
-                PositionCategory.create(company, hqCat, null, "본부장", 2, true)
+
+        PositionCategory hqHead = positionCategoryRepository.save(
+                PositionCategory.create(company, hqCat, ceo, "본부장", 2, true)
         );
-        positionCategoryRepository.save(
-                PositionCategory.create(company, deptCat, null, "부장", 3, true)
+
+        PositionCategory deptHead = positionCategoryRepository.save(
+                PositionCategory.create(company, deptCat, hqHead, "부장", 3, true)
         );
-        positionCategoryRepository.save(
-                PositionCategory.create(company, teamCat, null, "팀장", 4, true)
+
+        PositionCategory teamLead = positionCategoryRepository.save(
+                PositionCategory.create(company, teamCat, deptHead, "팀장", 4, true)
         );
+
         positionCategoryRepository.save(
-                PositionCategory.create(company, teamCat, null, "팀원", 5, false)
+                PositionCategory.create(company, teamCat, teamLead, "팀원", 5, false)
         );
     }
+
+
 
     @Transactional(readOnly = true)
     public Company findById(Long companyId) {
         return companyRepository.findById(companyId)
                 .orElseThrow(() -> new BusinessException("존재하지 않는 회사입니다."));
     }
+
+    private void seedDefaultRanks(Company company) {
+
+        HrRank ceo = rankRepository.save(
+                HrRank.create(company, null, "사장", 1)
+        );
+
+        HrRank director = rankRepository.save(
+                HrRank.create(company, ceo, "부장", 2)
+        );
+
+        HrRank deputy = rankRepository.save(
+                HrRank.create(company, director, "차장", 3)
+        );
+
+        HrRank manager = rankRepository.save(
+                HrRank.create(company, deputy, "과장", 4)
+        );
+
+        HrRank assistant = rankRepository.save(
+                HrRank.create(company, manager, "대리", 5)
+        );
+
+        rankRepository.save(
+                HrRank.create(company, assistant, "사원", 6)
+        );
+    }
+
+
+
+
+    private void seedDefaultOrgPositionUsage(
+            Company company,
+            Organization rootOrg,
+            Organization hqOrg,
+            Organization deptOrg,
+            Organization teamOrg,
+            OrgCategory companyCat,
+            OrgCategory hqCat,
+            OrgCategory deptCat,
+            OrgCategory teamCat
+    ) {
+        // 회사
+        linkAll(company, rootOrg, companyCat);
+
+        // 본부
+        linkAll(company, hqOrg, hqCat);
+
+        // 부서
+        linkAll(company, deptOrg, deptCat);
+
+        // 팀
+        linkAll(company, teamOrg, teamCat);
+    }
+
+    private void linkAll(
+            Company company,
+            Organization org,
+            OrgCategory category
+    ) {
+        List<PositionCategory> positions =
+                positionCategoryRepository.findByCompany_IdAndOrgCategory_IdAndIsActiveTrue(
+                        company.getId(),
+                        category.getId()
+                );
+
+        positions.forEach(pc ->
+                orgPositionUsageRepository.save(
+                        OrgPositionUsage.create(company, org, pc)
+                )
+        );
+    }
+
 }
 

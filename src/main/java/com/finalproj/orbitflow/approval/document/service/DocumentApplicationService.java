@@ -90,7 +90,7 @@ public class DocumentApplicationService {
     private final DocumentFileService documentFileService;
     private final NotificationCommandService  notificationCommandService;
 
-    @Value("${app.base-url}")
+    @Value("${app.render-base-url}")
     private String baseUrl;
 
 

@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orbitflow
+  labels:
+    app: orbitflow
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: orbitflow
+  template:
+    metadata:
+      labels:
+        app: orbitflow
+    spec:
+      containers:
+        - name: orbitflow
+          image: ${ECR_REPO_URI}:${IMAGE_TAG}
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 8090
+
+          # ===============================
+          # 🔑 환경 변수 (Secret 기반)
+          # ===============================
+          envFrom:
+            - secretRef:
+                name: orbitflow-secret
+
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod"
+
+            - name: PUBLIC_BASE_URL
+              value: "${PUBLIC_BASE_URL}"
+
+            - name: RENDER_BASE_URL
+              value: "http://spring-boot-service"
+
+          # ===============================
+          # ❤️ Health Check (Actuator)
+          # ===============================
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8090
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8090
+            initialDelaySeconds: 120
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          # ===============================
+          # ⚙️ Resource
+          # ===============================
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-boot-service
+  labels:
+    app: orbitflow
+spec:
+  selector:
+    app: orbitflow
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8090
+      protocol: TCP
+  type: ClusterIP
