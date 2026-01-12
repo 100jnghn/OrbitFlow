@@ -561,7 +561,7 @@ function showToast(dto) {
 }
 
 
-// 토스트 슬라이드 아웃 애니메이션 추가
+// 토스트 슬라이드 아웃 애니메이션 및 SweetAlert2 z-index 수정
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideOutToast {
@@ -573,6 +573,9 @@ style.textContent = `
             opacity: 0;
             transform: translateY(-10px);
         }
+    }
+    .swal2-container {
+        z-index: 100000 !important;
     }
 `;
 document.head.appendChild(style);

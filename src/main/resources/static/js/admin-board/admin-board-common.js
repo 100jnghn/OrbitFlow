@@ -53,14 +53,14 @@ async function loadBoardList(page = 0) {
         // ResponseDto 구조 확인
         if (!result) {
             console.error('No response received');
-            alert('게시판 목록을 불러오는데 실패했습니다.');
+            sweetError('게시판 목록을 불러오는데 실패했습니다.');
             return;
         }
 
         // status가 200인지 확인 (ResponseDto 구조)
         if (result.status && result.status !== 200) {
             console.error('Invalid status:', result.status, result.message);
-            alert(result.message || '게시판 목록을 불러오는데 실패했습니다.');
+            sweetError(result.message || '게시판 목록을 불러오는데 실패했습니다.');
             return;
         }
 
@@ -74,7 +74,7 @@ async function loadBoardList(page = 0) {
 
         if (!data) {
             console.error('No data in response:', result);
-            alert('게시판 목록 데이터가 없습니다.');
+            sweetError('게시판 목록 데이터가 없습니다.');
             return;
         }
 
@@ -98,7 +98,7 @@ async function loadBoardList(page = 0) {
     } catch (error) {
         console.error('Error loading board list:', error);
         if (error.message !== 'SESSION_EXPIRED') {
-            alert('게시판 목록을 불러오는데 실패했습니다.');
+            sweetError('게시판 목록을 불러오는데 실패했습니다.');
         }
     }
 }
@@ -313,7 +313,7 @@ async function openEditBoardModal(boardId) {
     } catch (error) {
         console.error('Error loading board detail:', error);
         if (error.message !== 'SESSION_EXPIRED') {
-            alert('게시판 정보를 불러오는데 실패했습니다.');
+            sweetError('게시판 정보를 불러오는데 실패했습니다.');
         }
     }
 }
@@ -408,13 +408,13 @@ async function handleBoardSubmit(e) {
             await saveBoardPermissions(savedBoardId);
         }
 
-        alert(isEditMode ? '게시판이 수정되었습니다.' : '게시판이 추가되었습니다.');
         closeBoardModal();
+        await sweetSuccess(isEditMode ? '게시판이 수정되었습니다.' : '게시판이 추가되었습니다.');
         loadBoardList(currentBoardPage);
     } catch (error) {
         console.error('Error saving board:', error);
         if (error.message !== 'SESSION_EXPIRED') {
-            alert(error.message || '게시판 저장에 실패했습니다.');
+            sweetError(error.message || '게시판 저장에 실패했습니다.');
         }
     }
 }
@@ -542,7 +542,7 @@ async function selectEmployee(employee) {
                 }
                 const errorText = await response.text();
                 console.error('Permission grant failed:', response.status, errorText);
-                alert('권한 부여에 실패했습니다.');
+                sweetError('권한 부여에 실패했습니다.');
                 return;
             }
 
@@ -576,7 +576,7 @@ async function selectEmployee(employee) {
             }
         } catch (error) {
             console.error('Error granting permission:', error);
-            alert('권한 부여에 실패했습니다: ' + (error.message || '알 수 없는 오류'));
+            sweetError('권한 부여에 실패했습니다: ' + (error.message || '알 수 없는 오류'));
             return;
         }
     } else {
@@ -613,7 +613,8 @@ window.removeEmployee = async function (employeeId, permissionId) {
 
     // 수정 모드이고 권한이 이미 부여된 사원인 경우 (permissionId가 있음)
     if (isEditMode && permissionId) {
-        if (!confirm('이 사원의 게시판 권한을 제거하시겠습니까?')) {
+        const result = await sweetConfirm('권한 제거 확인', '이 사원의 게시판 권한을 제거하시겠습니까?');
+        if (!result.isConfirmed) {
             return;
         }
 
@@ -643,7 +644,7 @@ window.removeEmployee = async function (employeeId, permissionId) {
         } catch (error) {
             console.error('Error removing permission:', error);
             if (error.message !== 'SESSION_EXPIRED') {
-                alert('권한 제거에 실패했습니다: ' + (error.message || '알 수 없는 오류'));
+                sweetError('권한 제거에 실패했습니다: ' + (error.message || '알 수 없는 오류'));
             }
         }
     } else {
@@ -734,27 +735,14 @@ async function saveBoardPermissions(boardCategoryId) {
 }
 
 // 게시판 삭제
-function deleteBoard(boardId) {
-    deletingBoardId = boardId;
-    document.getElementById('deleteModal').style.display = 'block';
-    document.body.classList.add('modal-open');
-    document.documentElement.classList.add('modal-open');
-}
-
-// 삭제 확인 모달 닫기
-function closeDeleteModal() {
-    document.getElementById('deleteModal').style.display = 'none';
-    document.body.classList.remove('modal-open');
-    document.documentElement.classList.remove('modal-open');
-    deletingBoardId = null;
-}
-
-// 삭제 확인
-async function confirmDelete() {
-    if (!deletingBoardId) return;
+async function deleteBoard(boardId) {
+    const result = await sweetConfirm('삭제 확인', '정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.');
+    if (!result.isConfirmed) {
+        return;
+    }
 
     try {
-        const response = await apiFetch(`${API_BASE_URL}/${deletingBoardId}`, {
+        const response = await apiFetch(`${API_BASE_URL}/${boardId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'
@@ -769,15 +757,31 @@ async function confirmDelete() {
             throw new Error('게시판 삭제에 실패했습니다.');
         }
 
-        alert('게시판이 삭제되었습니다.');
-        closeDeleteModal();
+        await sweetSuccess('게시판이 삭제되었습니다.');
         loadBoardList(currentBoardPage);
     } catch (error) {
         console.error('Error deleting board:', error);
         if (error.message !== 'SESSION_EXPIRED') {
-            alert('게시판 삭제에 실패했습니다.');
+            sweetError('게시판 삭제에 실패했습니다.');
         }
     }
+}
+
+// 삭제 확인 모달 닫기 (더 이상 사용되지 않지만 하위 호환성을 위해 유지)
+function closeDeleteModal() {
+    const deleteModal = document.getElementById('deleteModal');
+    if (deleteModal) {
+        deleteModal.style.display = 'none';
+    }
+    document.body.classList.remove('modal-open');
+    document.documentElement.classList.remove('modal-open');
+    deletingBoardId = null;
+}
+
+// 삭제 확인 (더 이상 사용되지 않음)
+async function confirmDelete() {
+    if (!deletingBoardId) return;
+    await deleteBoard(deletingBoardId);
 }
 
 // HTML 이스케이프
