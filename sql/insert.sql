@@ -2244,15 +2244,15 @@ VALUES (1, 10, '2025-11-03', '2025-11-03 08:52:00', '2025-11-03 18:05:00', 'ON_T
 -- 공통 게시판(organization_id NULL)은 그대로 insert
 INSERT INTO board_category (company_id, organization_id, board_name, board_type, is_activated, comment_activated)
 VALUES
-    (1, NULL, '전사 공지사항', 'NOTICE', 1, 1),
+    (1, NULL, '공지사항', 'NOTICE', 1, 1),
     (1, NULL, '자유 게시판', 'FREE', 1, 1),
     (1, NULL, '사내 건의함', 'FREE', 1, 1),
     (1, NULL, '칭찬 게시판', 'FREE', 1, 1),
     (1, NULL, '자기계발/스터디', 'FREE', 1, 1),
-    (2, NULL, 'TS 공지사항', 'NOTICE', 1, 1),
+    (2, NULL, '공지사항', 'NOTICE', 1, 1),
     (2, NULL, '기술 공유 라운지', 'FREE', 1, 1),
     (2, NULL, '사내 중고 장터', 'FREE', 1, 1),
-    (3, NULL, 'Global Notice', 'NOTICE', 1, 1),
+    (3, NULL, 'Notice', 'NOTICE', 1, 1),
     (3, NULL, 'General Forum', 'FREE', 1, 1);
 
 -- 부서 게시판은 organization 테이블에서 조직명 끌어와 생성
