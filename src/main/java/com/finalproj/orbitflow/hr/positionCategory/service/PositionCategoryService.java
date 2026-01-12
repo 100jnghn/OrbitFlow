@@ -4,8 +4,14 @@ import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.InvalidStateException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
+import com.finalproj.orbitflow.global.security.SecurityUtils;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
+import com.finalproj.orbitflow.hr.employee.entity.Employee;
+import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
+import com.finalproj.orbitflow.hr.logAudit.enums.AuditEntityType;
+import com.finalproj.orbitflow.hr.logAudit.enums.AuditEventType;
+import com.finalproj.orbitflow.hr.logAudit.service.AuditLogService;
 import com.finalproj.orbitflow.hr.orgCategory.entity.OrgCategory;
 import com.finalproj.orbitflow.hr.orgCategory.repository.OrgCategoryRepository;
 import com.finalproj.orbitflow.hr.orgPositionUsage.repository.OrgPositionUsageRepository;
@@ -17,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Please explain the class!!!
@@ -35,9 +42,15 @@ public class PositionCategoryService {
     private final CompanyRepository companyRepository;
     private final OrgCategoryRepository orgCategoryRepository;
     private final OrgPositionUsageRepository orgPositionUsageRepository;
+    private final AuditLogService auditLogService;
+    private final EmployeeRepository employeeRepository;
 
     /* ================= 생성 ================= */
     public Long create(Long companyId, PositionCategoryCreateReqDto request) {
+
+        Employee actor = employeeRepository.findById(
+                SecurityUtils.getEmployeeId()
+        ).orElseThrow(() -> new IllegalStateException("행위자 사원 정보 없음"));
 
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new NotFoundException("회사를 찾을 수 없습니다."));
@@ -114,7 +127,24 @@ public class PositionCategoryService {
                 request.getIsHead()
         );
 
-        return positionCategoryRepository.save(category).getId();
+        PositionCategory saved = positionCategoryRepository.save(category);
+
+        auditLogService.log(
+                company,
+                actor,
+                AuditEntityType.POSITION,
+                saved.getId(),
+                AuditEventType.CREATE,
+                null,
+                Map.of(
+                        "name", saved.getName(),
+                        "orgCategoryId", saved.getOrgCategory().getId(),
+                        "parentPositionId", saved.getParent() != null ? saved.getParent().getId() : null,
+                        "isHead", saved.getIsHead()
+                )
+        );
+
+        return saved.getId();
     }
 
     /* ================= 조회 ================= */
@@ -148,6 +178,13 @@ public class PositionCategoryService {
     /* ================= 수정 ================= */
     public void update(Long companyId, Long id, PositionCategoryUpdateReqDto request) {
 
+        Employee actor = employeeRepository.findById(
+                SecurityUtils.getEmployeeId()
+        ).orElseThrow(() -> new IllegalStateException("행위자 사원 정보 없음"));
+
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new NotFoundException("회사를 찾을 수 없습니다."));
+
         PositionCategory category = get(companyId, id);
 
         String name = normalizeName(request.getName());
@@ -164,6 +201,17 @@ public class PositionCategoryService {
         if (!wasActive && willActivate) {
             Integer max = positionCategoryRepository.findMaxActiveOrderIndexByCompanyId(companyId);
             category.activate(max == null ? 1 : max + 1);
+
+            auditLogService.log(
+                    company,
+                    actor,
+                    AuditEntityType.POSITION,
+                    category.getId(),
+                    AuditEventType.ACTIVATE,
+                    Map.of("isActive", false),
+                    Map.of("isActive", true)
+            );
+
         }
 
         if (wasActive && willDeactivate) {
@@ -174,9 +222,36 @@ public class PositionCategoryService {
                 );
             }
             category.deactivate();
+
+            auditLogService.log(
+                    company,
+                    actor,
+                    AuditEntityType.POSITION,
+                    category.getId(),
+                    AuditEventType.DEACTIVATE,
+                    Map.of("isActive", true),
+                    Map.of("isActive", false)
+            );
+
         }
 
-        category.updateName(name);
+        String oldName = category.getName();
+        String newName = name;
+
+        if (!oldName.equals(newName)) {
+            category.updateName(newName);
+
+            auditLogService.log(
+                    company,
+                    actor,
+                    AuditEntityType.POSITION,
+                    category.getId(),
+                    AuditEventType.UPDATE,
+                    Map.of("name", oldName),
+                    Map.of("name", newName)
+            );
+        }
+
     }
 
     /* ================= 정렬 ================= */

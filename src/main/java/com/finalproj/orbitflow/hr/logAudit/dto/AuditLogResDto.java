@@ -40,7 +40,7 @@ public class AuditLogResDto {
                 log.getEntityType().name(),
                 log.getEntityId(),
                 log.getEntityType().getDisplayName(),
-                log.getEventType().name(),
+                log.getEventType().getDisplayName(),
                 log.getActor().getName(),
                 log.getActor().getEmail(),
                 log.getBeforeData(),

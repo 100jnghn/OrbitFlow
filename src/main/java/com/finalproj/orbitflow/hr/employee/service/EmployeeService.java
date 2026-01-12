@@ -218,7 +218,7 @@ public class EmployeeService {
 
         auditLogService.log(
                 company,
-                getActorEmployee(),
+                actor,
                 AuditEntityType.EMPLOYEE,
                 saved.getId(),
                 AuditEventType.CREATE,
@@ -235,6 +235,8 @@ public class EmployeeService {
        ============================= */
 
     public void update(Long companyId, Long employeeId, EmployeeUpdateReqDto dto) {
+
+        Employee actor = getActorEmployee();
 
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new IllegalArgumentException("사원을 찾을 수 없습니다."));
@@ -338,7 +340,7 @@ public class EmployeeService {
         // 권한 (대표 관리자만)
         if (dto.getRole() != null && dto.getRole() != employee.getRole()) {
 
-            if (getActorEmployee().getRole() != EmployeeRole.COMPANY_ADMIN) {
+            if (actor.getRole() != EmployeeRole.COMPANY_ADMIN) {
                 throw new IllegalStateException(
                         "대표 관리자만 사원 권한을 변경할 수 있습니다."
                 );
@@ -360,7 +362,7 @@ public class EmployeeService {
         if (!after.isEmpty()) {
             auditLogService.log(
                     employee.getCompany(),
-                    getActorEmployee(),
+                    actor,
                     AuditEntityType.EMPLOYEE,
                     employee.getId(),
                     AuditEventType.UPDATE,
@@ -431,6 +433,7 @@ public class EmployeeService {
     private void handleStatusChange(Employee employee, EmployeeStatus newStatus) {
 
         EmployeeStatus current = employee.getStatus();
+        Employee actor = getActorEmployee();
 
         // RESIGNED는 어떤 경우에도 변경 불가
         if (current == EmployeeStatus.RESIGNED) {
@@ -455,7 +458,7 @@ public class EmployeeService {
 
         auditLogService.log(
                 employee.getCompany(),
-                getActorEmployee(),
+                actor,
                 AuditEntityType.EMPLOYEE,
                 employee.getId(),
                 AuditEventType.STATUS_CHANGE,

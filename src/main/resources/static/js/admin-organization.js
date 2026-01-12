@@ -339,6 +339,7 @@ async function openEdit(id) {
 
     buildCategorySelect(org.categoryId);
     buildParentSelect(org.parentOrgId ?? null);
+    document.getElementById('parentOrgSelectValue').value = org.parentOrgId;
 
     // 회사 루트 조직 전용 제어
     if (isRootOrg) {
@@ -424,11 +425,19 @@ async function saveOrg() {
         return;
     }
 
-    const payload = {
-        name,
-        categoryId: Number(categoryValue),
-        parentOrgId: parentOrgValue ? Number(parentOrgValue) : null
-    };
+    const payload = {name};
+
+    // 생성일 때만 category / parent 전달
+    if (!isEditMode) {
+        payload.categoryId = Number(categoryValue);
+        payload.parentOrgId = Number(parentOrgValue);
+    }
+
+    // 수정일 때는 활성 여부만 (가능한 경우에만)
+    if (isEditMode && !activeToggle.disabled) {
+        payload.isActive = activeToggle.checked;
+    }
+
 
     // 활성 토글이 사용 가능한 경우만 전달
     if (isEditMode && !activeToggle.disabled) {

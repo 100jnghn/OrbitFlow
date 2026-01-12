@@ -5,7 +5,14 @@ import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.InvalidStateException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
+import com.finalproj.orbitflow.global.security.SecurityUtils;
+import com.finalproj.orbitflow.hr.company.entity.Company;
+import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
+import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
+import com.finalproj.orbitflow.hr.logAudit.enums.AuditEntityType;
+import com.finalproj.orbitflow.hr.logAudit.enums.AuditEventType;
+import com.finalproj.orbitflow.hr.logAudit.service.AuditLogService;
 import com.finalproj.orbitflow.hr.orgCategory.repository.OrgCategoryRepository;
 import com.finalproj.orbitflow.hr.orgPositionUsage.repository.OrgPositionUsageRepository;
 import com.finalproj.orbitflow.hr.organization.dto.*;
@@ -19,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -39,11 +47,15 @@ public class OrgService {
     private final OrgCategoryRepository orgCategoryRepository;
     private final OrgPositionUsageRepository orgPositionUsageRepository;
     private final OrganizationBoardCategorySyncService organizationBoardCategorySyncService;
+    private final AuditLogService auditLogService;
+    private final CompanyRepository companyRepository;
 
     /* ================= 생성 ================= */
     public Long create(Long companyId, OrgCreateReqDto request) {
 
         Long parentOrgId = request.getParentOrgId();
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new IllegalStateException("회사 정보 없음"));
 
         // 최상위 조직 생성 차단
         if (parentOrgId == null) {
@@ -75,6 +87,26 @@ public class OrgService {
                 Organization.create(companyId, categoryId, parentOrgId, name, nextOrderIndex);
 
         Organization saved = orgRepository.save(org);
+
+        Employee actor = employeeRepository.findById(
+                SecurityUtils.getEmployeeId()
+        ).orElseThrow(() -> new IllegalStateException("행위자 사원 정보 없음"));
+
+        Map<String, Object> after = new java.util.HashMap<>();
+        after.put("name", saved.getName());
+        after.put("parentOrgId", saved.getParentOrgId());
+        after.put("categoryId", saved.getCategoryId());
+
+        auditLogService.log(
+                company,
+                actor,
+                AuditEntityType.ORGANIZATION,
+                saved.getId(),
+                AuditEventType.CREATE,
+                null,
+                after
+        );
+
 
         // 조직 게시판 카테고리 자동 생성
         organizationBoardCategorySyncService.createIfAbsent(
@@ -248,87 +280,95 @@ public class OrgService {
     /* ================= 수정 ================= */
     public void update(Long companyId, Long organizationId, OrgUpdateReqDto request) {
 
-        log.info(
-                "[ORG UPDATE] orgId={}, req.isActive={}, req.parentOrgId={}, req.name={}",
-                organizationId,
-                request.getIsActive(),
-                request.getParentOrgId(),
-                request.getName()
-        );
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new IllegalStateException("회사 정보 없음"));
 
         Organization org = getOrgInCompanyOrThrow(companyId, organizationId);
+
         String oldName = org.getName();
+        String newName = normalizeNameOrThrow(request.getName());
+        Boolean reqActive = request.getIsActive();
 
-
-        // ===== 회사 루트 조직 처리 =====
+        // ===== 회사 루트 조직 =====
         if (org.getParentOrgId() == null) {
 
-            String newName = normalizeNameOrThrow(request.getName());
-
-            // 비활성화 금지
-            if (Boolean.FALSE.equals(request.getIsActive())) {
+            if (Boolean.FALSE.equals(reqActive)) {
                 throw new InvalidStateException("회사 루트 조직은 비활성화할 수 없습니다.");
             }
 
             // 회사 루트 조직은 parentOrgId를 절대 변경하지 않는다
-            org.update(null, newName);
+            org.update(org.getParentOrgId(), newName);
 
-            // 게시판 이름 동기화
-            if (!oldName.equals(newName)) {
+            if (!Objects.equals(oldName, newName)) {
+                Employee actor = employeeRepository.findById(
+                        SecurityUtils.getEmployeeId()
+                ).orElseThrow(() -> new IllegalStateException("행위자 사원 정보 없음"));
+
+                Map<String, Object> before = new java.util.HashMap<>();
+                before.put("name", oldName);
+
+                Map<String, Object> after = new java.util.HashMap<>();
+                after.put("name", newName);
+
+                auditLogService.log(
+                        company,
+                        actor,
+                        AuditEntityType.ORGANIZATION,
+                        org.getId(),
+                        AuditEventType.UPDATE,
+                        before,
+                        after
+                );
+
+
                 organizationBoardCategorySyncService
                         .syncBoardName(companyId, organizationId, newName);
             }
-
-            return; // 여기서 종료
+            return;
         }
 
+        // ===== 일반 조직 =====
 
-        Long newParentId = request.getParentOrgId();
-        String newName = normalizeNameOrThrow(request.getName());
-        Boolean reqActive = request.getIsActive();
-
-        // 비활성화 요청 처리
-        if (Boolean.FALSE.equals(request.getIsActive())) {
+        // 비활성화
+        if (Boolean.FALSE.equals(reqActive)) {
             deactivateInternal(companyId, org);
             return;
         }
 
-        // 자기 자신을 상위로 금지
-        if (newParentId != null && Objects.equals(newParentId, organizationId)) {
-            throw new InvalidRequestException("자기 자신을 상위 조직으로 지정할 수 없습니다.");
-        }
-
-        // 순환 참조 방지: newParent의 조상 중에 organizationId가 있으면 금지
-        if (newParentId != null && isCycle(companyId, organizationId, newParentId)) {
-            throw new InvalidStateException("조직 트리에 순환 구조가 발생할 수 있습니다.");
-        }
-
-        // 형제 단위 이름 중복 (수정: 자기 자신 제외)
+        // 형제 단위 이름 중복
         if (orgRepository.existsByCompanyIdAndParentOrgIdAndNameAndIsActiveTrueAndIdNot(
-                companyId, newParentId, newName, organizationId)) {
+                companyId, org.getParentOrgId(), newName, organizationId)) {
             throw new InvalidStateException("이미 존재하는 조직명입니다.");
         }
 
-        // ===== 재활성 여부 판단 =====
-        boolean reactivated =
-                Boolean.TRUE.equals(reqActive)
-                        && Boolean.FALSE.equals(org.getIsActive());
-
-        if (reactivated) {
-
-            Long parentId = org.getParentOrgId();
+        // 재활성
+        if (Boolean.TRUE.equals(reqActive) && Boolean.FALSE.equals(org.getIsActive())) {
 
             int nextOrderIndex =
-                    orgRepository.findMaxOrderIndex(companyId, parentId) + 1;
+                    orgRepository.findMaxOrderIndex(companyId, org.getParentOrgId()) + 1;
 
             org.activate(nextOrderIndex);
+
+            Employee actor = employeeRepository.findById(
+                    SecurityUtils.getEmployeeId()
+            ).orElseThrow(() -> new IllegalStateException("행위자 사원 정보 없음"));
+
+            auditLogService.log(
+                    company,
+                    actor,
+                    AuditEntityType.ORGANIZATION,
+                    org.getId(),
+                    AuditEventType.ACTIVATE,
+                    Map.of("isActive", false),
+                    Map.of("isActive", true)
+            );
         }
 
         // 실제 값 반영
         org.update(org.getParentOrgId(), newName);
+        orgRepository.flush();
 
-        // 이름이 바뀐 경우에만 게시판 카테고리명 동기화 (정책 선택)
-        if (!oldName.equals(newName)) {
+        if (!Objects.equals(oldName, newName)) {
             organizationBoardCategorySyncService
                     .syncBoardName(companyId, organizationId, newName);
         }
@@ -477,6 +517,10 @@ public class OrgService {
 
     private void deactivateInternal(Long companyId, Organization org) {
 
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new IllegalStateException("회사 정보 없음"));
+
+
         // 루트 조직 비활성화 금지
         if (org.getParentOrgId() == null) {
             throw new InvalidStateException("회사 루트 조직은 비활성화할 수 없습니다.");
@@ -495,6 +539,21 @@ public class OrgService {
         log.info("[ORG DEACTIVATE] before org.deactivate() id={}", organizationId);
         org.deactivate();
         log.info("[ORG DEACTIVATE] after org.deactivate() id={}", organizationId);
+
+        Employee actor = employeeRepository.findById(
+                SecurityUtils.getEmployeeId()
+        ).orElseThrow(() -> new IllegalStateException("행위자 사원 정보 없음"));
+
+        auditLogService.log(
+                company,
+                actor,
+                AuditEntityType.ORGANIZATION,
+                org.getId(),
+                AuditEventType.DEACTIVATE,
+                Map.of("isActive", true),
+                Map.of("isActive", false)
+        );
+
 
         orgRepository.save(org);
         orgRepository.flush();
