@@ -339,6 +339,7 @@ async function openEdit(id) {
 
     buildCategorySelect(org.categoryId);
     buildParentSelect(org.parentOrgId ?? null);
+    document.getElementById('parentOrgSelectValue').value = org.parentOrgId;
 
     // 회사 루트 조직 전용 제어
     if (isRootOrg) {

@@ -342,6 +342,12 @@ public class OrgService {
 
         Long newParentId = request.getParentOrgId();
         String newName = normalizeNameOrThrow(request.getName());
+
+        // 수정 시 parentOrgId가 안 오면 기존 값 유지
+        if (newParentId == null) {
+            newParentId = org.getParentOrgId();
+        }
+
         Boolean reqActive = request.getIsActive();
 
         // 비활성화 요청 처리
