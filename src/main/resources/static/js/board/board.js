@@ -392,13 +392,18 @@ function renderBoardTable(boards) {
         const createdAt = formatDateTime(board.createdAt || board.created_at);
         const viewCount = board.viewCount || board.view_count || 0;
 
+        const commentCount = board.commentCount || 0;
+        const commentHtml = commentCount > 0 ? ` <span class="comment-count">(${commentCount})</span>` : '';
+
         row.innerHTML = `
             <td>${rowNumber}</td>
-            <td>
-                <a href="#" class="board-title-link" onclick="viewBoard(${board.id}); return false;">
-                    ${escapeHTML(title)}
+            <td class="board-title-cell">
+                <div class="title-container">
+                    <a href="#" class="board-title-link" onclick="viewBoard(${board.id}); return false;">
+                        <span class="title-text">${escapeHTML(title)}</span>${commentHtml}
+                    </a>
                     ${(board.hasFile === true || board.has_file === true) ? '<i class="fas fa-paperclip attachment-icon" title="첨부파일 있음"></i>' : ''}
-                </a>
+                </div>
             </td>
             <td>${escapeHTML(authorName)}</td>
             <td>${createdAt}</td>

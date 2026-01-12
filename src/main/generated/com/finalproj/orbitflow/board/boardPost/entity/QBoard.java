@@ -30,6 +30,8 @@ public class QBoard extends EntityPathBase<Board> {
 
     public final com.finalproj.orbitflow.board.boardCategory.entity.QBoardCategory category;
 
+    public final NumberPath<Integer> commentCount = createNumber("commentCount", Integer.class);
+
     //inherited
     public final DateTimePath<java.time.Instant> createdAt = _super.createdAt;
 

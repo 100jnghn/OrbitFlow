@@ -79,6 +79,7 @@ public class BoardResDto {
         private Instant createdAt;
         @com.fasterxml.jackson.annotation.JsonProperty("hasFile")
         private boolean fileAttached;
+        private int commentCount;
 
         public static ListInfo from(Board board) {
             boolean attached = board.getFiles() != null && !board.getFiles().isEmpty();
@@ -91,6 +92,7 @@ public class BoardResDto {
                     .viewCount(board.getViewCount())
                     .createdAt(board.getCreatedAt())
                     .fileAttached(attached)
+                    .commentCount(board.getCommentCount())
                     .build();
         }
 
