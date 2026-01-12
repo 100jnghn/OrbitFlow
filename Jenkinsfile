@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    options {
+            disableConcurrentBuilds()
+        }
+
     environment {
         // ===============================
         // AWS / ECR
@@ -10,6 +14,7 @@ pipeline {
         IMAGE_TAG    = "${BUILD_NUMBER}"
         EKS_CLUSTER_NAME = "terraform-eks-cluster"
 
+
         // ===============================
         // App URL (Ingress 생성 후 수정)
         // ===============================
@@ -17,18 +22,6 @@ pipeline {
     }
 
     stages {
-
-        // ===============================
-        // 1️⃣ Git Checkout
-        // ===============================
-        stage('Checkout') {
-            steps {
-                git branch: 'main',
-                    credentialsId: 'git-credentials',
-                    url: 'https://github.com/100jnghn/OrbitFlow.git'
-            }
-        }
-
         // ===============================
         // 2️⃣ Gradle Build
         // ===============================
