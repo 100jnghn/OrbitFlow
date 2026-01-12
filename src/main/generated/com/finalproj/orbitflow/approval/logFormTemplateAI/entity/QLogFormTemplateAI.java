@@ -16,7 +16,7 @@ import com.querydsl.core.types.dsl.PathInits;
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
 public class QLogFormTemplateAi extends EntityPathBase<LogFormTemplateAi> {
 
-    private static final long serialVersionUID = -1271489584L;
+    private static final long serialVersionUID = 2030843888L;
 
     private static final PathInits INITS = PathInits.DIRECT2;
 
