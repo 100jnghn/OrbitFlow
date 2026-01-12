@@ -2,18 +2,17 @@ pipeline {
     agent any
 
     options {
-            disableConcurrentBuilds()
-        }
+        disableConcurrentBuilds()
+    }
 
     environment {
         // ===============================
         // AWS / ECR
         // ===============================
-        AWS_REGION   = "eu-west-3"
-        ECR_REPO_URI = "118320467932.dkr.ecr.eu-west-3.amazonaws.com/terraform-ecr"
-        IMAGE_TAG    = "${BUILD_NUMBER}"
-        EKS_CLUSTER_NAME = "terraform-eks-cluster"
-
+        AWS_REGION        = "eu-west-3"
+        ECR_REPO_URI      = "118320467932.dkr.ecr.eu-west-3.amazonaws.com/terraform-ecr"
+        IMAGE_TAG         = "${BUILD_NUMBER}"
+        EKS_CLUSTER_NAME  = "terraform-eks-cluster"
 
         // ===============================
         // App URL (Ingress 생성 후 수정)
@@ -22,8 +21,9 @@ pipeline {
     }
 
     stages {
+
         // ===============================
-        // 2️⃣ Gradle Build
+        // 1️⃣ Gradle Build
         // ===============================
         stage('Build') {
             steps {
@@ -35,7 +35,7 @@ pipeline {
         }
 
         // ===============================
-        // 3️⃣ Docker Build & Push (ECR)
+        // 2️⃣ Docker Build & Push (ECR)
         // ===============================
         stage('Docker Build & Push') {
             steps {
@@ -55,9 +55,9 @@ pipeline {
         }
 
         // ===============================
-        // 4️⃣ Infra Deploy (Redis / ChromaDB)
+        // 3️⃣ Update kubeconfig (공통)
         // ===============================
-        stage('Deploy Infra (Redis / Chroma)') {
+        stage('Configure kubectl') {
             steps {
                 withCredentials([
                     [$class: 'AmazonWebServicesCredentialsBinding',
@@ -67,52 +67,52 @@ pipeline {
                       aws eks update-kubeconfig \
                         --region ${AWS_REGION} \
                         --name ${EKS_CLUSTER_NAME}
-
-                      kubectl apply -f k8s/redis.yaml
-                      kubectl apply -f k8s/chromadb.yaml
                     '''
                 }
             }
         }
 
+        // ===============================
+        // 4️⃣ Infra Deploy (Redis / ChromaDB)
+        // ===============================
+        stage('Deploy Infra') {
+            steps {
+                sh '''
+                  kubectl apply -f k8s/infra/
+                '''
+            }
+        }
 
         // ===============================
         // 5️⃣ App Deploy
         // ===============================
         stage('Deploy App') {
             steps {
-                withCredentials([
-                    [$class: 'AmazonWebServicesCredentialsBinding',
-                     credentialsId: 'aws-credentials']
-                ]) {
-                    sh '''
-                      aws eks update-kubeconfig \
-                        --region ${AWS_REGION} \
-                        --name ${EKS_CLUSTER_NAME}
-
-                      envsubst < k8s/app-deploy.yaml | kubectl apply -f -
-                    '''
-                }
+                sh '''
+                  envsubst < k8s/app/app-deploy.yaml | kubectl apply -f -
+                '''
             }
         }
 
         // ===============================
-        // 6️⃣ Ingress Deploy (ALB 생성)
+        // 6️⃣ Ingress Deploy
         // ===============================
         stage('Deploy Ingress') {
             steps {
-                withCredentials([
-                    [$class: 'AmazonWebServicesCredentialsBinding',
-                     credentialsId: 'aws-credentials']
-                ]) {
-                    sh '''
-                      aws eks update-kubeconfig \
-                        --region ${AWS_REGION} \
-                        --name ${EKS_CLUSTER_NAME}
+                sh '''
+                  kubectl apply -f k8s/app/ingress.yaml
+                '''
+            }
+        }
 
-                      kubectl apply -f k8s/ingress.yaml
-                    '''
-                }
+        // ===============================
+        // 7️⃣ Monitoring Deploy (ServiceMonitor)
+        // ===============================
+        stage('Deploy Monitoring') {
+            steps {
+                sh '''
+                  kubectl apply -f k8s/monitoring/
+                '''
             }
         }
     }
