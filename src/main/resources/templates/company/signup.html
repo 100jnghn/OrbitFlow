@@ -99,6 +99,92 @@
             background: #d1d5db;
             cursor: not-allowed;
         }
+
+
+        .pw-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #6b7280;
+        }
+
+        .pw-toggle.active {
+            color: #5687ef;
+        }
+
+        /* ======================
+           비밀번호 보기 토글 (최종)
+        ====================== */
+        .password-field {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .password-field input {
+            width: 100%;
+            height: 43.2px;           /* 다른 input과 동일 */
+            padding-right: 42px;     /* 아이콘 공간 */
+            box-sizing: border-box;
+        }
+
+        .pw-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #6b7280;
+            pointer-events: auto;
+        }
+
+        .pw-toggle.active {
+            color: #5687ef;
+        }
+
+
+        .pw-toggle {
+            pointer-events: auto;
+        }
+
+        @media (max-width: 768px) {
+            .row {
+                flex-direction: column;
+            }
+        }
+
+        /* 모든 필드 기준 통일 */
+        .field,
+        .field * {
+            box-sizing: border-box;
+        }
+
+        .business-row {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .business-row input {
+            flex: 1;              /* 남은 공간 전부 차지 */
+            height: 43.2px;       /* 다른 input과 동일 */
+        }
+
+        .business-row .btn-check {
+            flex-shrink: 0;       /* 줄어들지 않게 */
+            width: 120px;
+            height: 43.2px;
+        }
+
     </style>
 </head>
 <body>
@@ -145,17 +231,32 @@
     <div class="row">
         <div class="field">
             <label>대표 관리자 이메일</label>
-            <input id="adminEmail" maxlength="100" inputmode="email" autocomplete="email" placeholder="example@company.com">
+            <input
+                    id="adminEmail"
+                    maxlength="100"
+                    inputmode="email"
+                    autocomplete="email"
+                    placeholder="example@company.com"
+            />
             <div id="emailMsg" class="hint"></div>
         </div>
+
         <div class="field">
             <label>비밀번호</label>
-            <input
-                    id="adminPassword"
-                    type="password"
-                    maxlength="15"
-                    placeholder="8~15자"
-            />
+            <div class="password-field">
+                <input
+                        id="adminPassword"
+                        type="password"
+                        maxlength="15"
+                        placeholder="8~15자"
+                />
+                <button type="button"
+                        class="pw-toggle"
+                        data-target="adminPassword"
+                        aria-label="비밀번호 보기">
+                    👁
+                </button>
+            </div>
             <div id="passwordLengthMsg" class="hint"></div>
         </div>
     </div>
@@ -163,12 +264,20 @@
     <div class="row">
         <div class="field">
             <label>비밀번호 확인</label>
-            <input
-                    id="adminPasswordConfirm"
-                    type="password"
-                    maxlength="15"
-                    placeholder="비밀번호 재입력"
-            />
+            <div class="password-field">
+                <input
+                        id="adminPasswordConfirm"
+                        type="password"
+                        maxlength="15"
+                        placeholder="비밀번호 재입력"
+                />
+                <button type="button"
+                        class="pw-toggle"
+                        data-target="adminPasswordConfirm"
+                        aria-label="비밀번호 보기">
+                    👁
+                </button>
+            </div>
             <div id="passwordMatchMsg" class="hint"></div>
         </div>
 
@@ -198,6 +307,10 @@
     </button>
 </div>
 
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- 회사 가입 로직 -->
 <script src="/js/company-signup.js"></script>
 </body>
 </html>
