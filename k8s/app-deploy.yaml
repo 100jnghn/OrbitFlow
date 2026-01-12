@@ -39,6 +39,22 @@ spec:
             - name: RENDER_BASE_URL
               value: "http://spring-boot-service"
 
+            # 🔥 여기 추가
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-credentials
+                  key: AWS_ACCESS_KEY_ID
+
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-credentials
+                  key: AWS_SECRET_ACCESS_KEY
+
+            - name: AWS_REGION
+              value: eu-west-3
+
           # ===============================
           # ❤️ Health Check (Actuator)
           # ===============================
@@ -87,3 +103,4 @@ spec:
       targetPort: 8090
       protocol: TCP
   type: ClusterIP
+
