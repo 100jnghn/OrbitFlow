@@ -96,6 +96,7 @@ dependencies {
     implementation 'com.openhtmltopdf:openhtmltopdf-slf4j:1.0.10'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
 
 }
 
