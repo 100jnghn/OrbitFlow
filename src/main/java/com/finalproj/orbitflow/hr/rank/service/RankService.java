@@ -99,6 +99,15 @@ public class RankService {
                 SecurityUtils.getEmployeeId()
         ).orElseThrow(() -> new IllegalStateException("행위자 사원 정보 없음"));
 
+        Map<String, Object> after = new java.util.HashMap<>();
+        after.put("name", saved.getName());
+        after.put("parentRankId",
+                saved.getParentHrRank() != null
+                        ? saved.getParentHrRank().getId()
+                        : null
+        );
+        after.put("orderIndex", saved.getOrderIndex());
+
         auditLogService.log(
                 company,
                 actor,
@@ -106,13 +115,7 @@ public class RankService {
                 saved.getId(),
                 AuditEventType.CREATE,
                 null,
-                Map.of(
-                        "name", saved.getName(),
-                        "parentRankId", saved.getParentHrRank() != null
-                                ? saved.getParentHrRank().getId()
-                                : null,
-                        "orderIndex", saved.getOrderIndex()
-                )
+                after
         );
 
         return saved.getId();
@@ -202,20 +205,22 @@ public class RankService {
             // 이름/상위 직급만 변경
             rank.update(name, parent);
 
+            Map<String, Object> before = new java.util.HashMap<>();
+            before.put("name", oldName);
+            before.put("parentRankId", oldParentId);
+
+            Map<String, Object> after = new java.util.HashMap<>();
+            after.put("name", name);
+            after.put("parentRankId", newParentId);
+
             auditLogService.log(
                     company,
                     actor,
                     AuditEntityType.HR_RANK,
                     rank.getId(),
                     AuditEventType.UPDATE,
-                    Map.of(
-                            "name", oldName,
-                            "parentRankId", oldParentId
-                    ),
-                    Map.of(
-                            "name", name,
-                            "parentRankId", newParentId
-                    )
+                    before,
+                    after
             );
         }
 

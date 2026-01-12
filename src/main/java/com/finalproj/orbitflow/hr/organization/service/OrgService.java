@@ -92,18 +92,19 @@ public class OrgService {
                 SecurityUtils.getEmployeeId()
         ).orElseThrow(() -> new IllegalStateException("행위자 사원 정보 없음"));
 
+        Map<String, Object> after = new java.util.HashMap<>();
+        after.put("name", saved.getName());
+        after.put("parentOrgId", saved.getParentOrgId());
+        after.put("categoryId", saved.getCategoryId());
+
         auditLogService.log(
-                company,    // company
-                actor,      // actor
+                company,
+                actor,
                 AuditEntityType.ORGANIZATION,
                 saved.getId(),
                 AuditEventType.CREATE,
                 null,
-                Map.of(
-                        "name", saved.getName(),
-                        "parentOrgId", saved.getParentOrgId(),
-                        "categoryId", saved.getCategoryId()
-                )
+                after
         );
 
 
@@ -278,111 +279,73 @@ public class OrgService {
 
     /* ================= 수정 ================= */
     public void update(Long companyId, Long organizationId, OrgUpdateReqDto request) {
+
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new IllegalStateException("회사 정보 없음"));
 
-
         Organization org = getOrgInCompanyOrThrow(companyId, organizationId);
-        String oldName = org.getName();
-        Long oldParentId = org.getParentOrgId();
 
-        // ===== 회사 루트 조직 처리 =====
+        String oldName = org.getName();
+        String newName = normalizeNameOrThrow(request.getName());
+        Boolean reqActive = request.getIsActive();
+
+        // ===== 회사 루트 조직 =====
         if (org.getParentOrgId() == null) {
 
-            String newName = normalizeNameOrThrow(request.getName());
-
-            // 비활성화 금지
-            if (Boolean.FALSE.equals(request.getIsActive())) {
+            if (Boolean.FALSE.equals(reqActive)) {
                 throw new InvalidStateException("회사 루트 조직은 비활성화할 수 없습니다.");
             }
 
             // 회사 루트 조직은 parentOrgId를 절대 변경하지 않는다
-            org.update(null, newName);
+            org.update(org.getParentOrgId(), newName);
 
-            boolean moved = !Objects.equals(oldParentId, org.getParentOrgId());
+            if (!Objects.equals(oldName, newName)) {
+                Employee actor = employeeRepository.findById(
+                        SecurityUtils.getEmployeeId()
+                ).orElseThrow(() -> new IllegalStateException("행위자 사원 정보 없음"));
 
-            Employee actor = employeeRepository.findById(
-                    SecurityUtils.getEmployeeId()
-            ).orElseThrow(() -> new IllegalStateException("행위자 사원 정보 없음"));
+                Map<String, Object> before = new java.util.HashMap<>();
+                before.put("name", oldName);
 
-            if (moved) {
-                auditLogService.log(
-                        company,
-                        actor,
-                        AuditEntityType.ORGANIZATION,
-                        org.getId(),
-                        AuditEventType.MOVE,
-                        Map.of("parentOrgId", oldParentId),
-                        Map.of("parentOrgId", org.getParentOrgId())
-                );
-            }
+                Map<String, Object> after = new java.util.HashMap<>();
+                after.put("name", newName);
 
-            if (!Objects.equals(oldName, org.getName())) {
                 auditLogService.log(
                         company,
                         actor,
                         AuditEntityType.ORGANIZATION,
                         org.getId(),
                         AuditEventType.UPDATE,
-                        Map.of("name", oldName),
-                        Map.of("name", org.getName())
+                        before,
+                        after
                 );
-            }
 
 
-            // 게시판 이름 동기화
-            if (!oldName.equals(newName)) {
                 organizationBoardCategorySyncService
                         .syncBoardName(companyId, organizationId, newName);
             }
-
-            return; // 여기서 종료
+            return;
         }
 
+        // ===== 일반 조직 =====
 
-        Long newParentId = request.getParentOrgId();
-        String newName = normalizeNameOrThrow(request.getName());
-
-        // 수정 시 parentOrgId가 안 오면 기존 값 유지
-        if (newParentId == null) {
-            newParentId = org.getParentOrgId();
-        }
-
-        Boolean reqActive = request.getIsActive();
-
-        // 비활성화 요청 처리
-        if (Boolean.FALSE.equals(request.getIsActive())) {
+        // 비활성화
+        if (Boolean.FALSE.equals(reqActive)) {
             deactivateInternal(companyId, org);
             return;
         }
 
-        // 자기 자신을 상위로 금지
-        if (newParentId != null && Objects.equals(newParentId, organizationId)) {
-            throw new InvalidRequestException("자기 자신을 상위 조직으로 지정할 수 없습니다.");
-        }
-
-        // 순환 참조 방지: newParent의 조상 중에 organizationId가 있으면 금지
-        if (newParentId != null && isCycle(companyId, organizationId, newParentId)) {
-            throw new InvalidStateException("조직 트리에 순환 구조가 발생할 수 있습니다.");
-        }
-
-        // 형제 단위 이름 중복 (수정: 자기 자신 제외)
+        // 형제 단위 이름 중복
         if (orgRepository.existsByCompanyIdAndParentOrgIdAndNameAndIsActiveTrueAndIdNot(
-                companyId, newParentId, newName, organizationId)) {
+                companyId, org.getParentOrgId(), newName, organizationId)) {
             throw new InvalidStateException("이미 존재하는 조직명입니다.");
         }
 
-        // ===== 재활성 여부 판단 =====
-        boolean reactivated =
-                Boolean.TRUE.equals(reqActive)
-                        && Boolean.FALSE.equals(org.getIsActive());
-
-        if (reactivated) {
-
-            Long parentId = org.getParentOrgId();
+        // 재활성
+        if (Boolean.TRUE.equals(reqActive) && Boolean.FALSE.equals(org.getIsActive())) {
 
             int nextOrderIndex =
-                    orgRepository.findMaxOrderIndex(companyId, parentId) + 1;
+                    orgRepository.findMaxOrderIndex(companyId, org.getParentOrgId()) + 1;
 
             org.activate(nextOrderIndex);
 
@@ -399,14 +362,13 @@ public class OrgService {
                     Map.of("isActive", false),
                     Map.of("isActive", true)
             );
-
         }
 
         // 실제 값 반영
         org.update(org.getParentOrgId(), newName);
+        orgRepository.flush();
 
-        // 이름이 바뀐 경우에만 게시판 카테고리명 동기화 (정책 선택)
-        if (!oldName.equals(newName)) {
+        if (!Objects.equals(oldName, newName)) {
             organizationBoardCategorySyncService
                     .syncBoardName(companyId, organizationId, newName);
         }

@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.hr.company.service;
 
+import com.finalproj.orbitflow.board.boardCategory.service.OrganizationBoardCategorySyncService;
 import com.finalproj.orbitflow.global.exception.BusinessException;
 import com.finalproj.orbitflow.hr.company.dto.CompanySignupReqDto;
 import com.finalproj.orbitflow.hr.company.entity.Company;
@@ -49,6 +50,8 @@ public class CompanyService {
     private final ApplicationEventPublisher eventPublisher;
     private final OrgPositionUsageRepository orgPositionUsageRepository;
     private final RankRepository rankRepository;
+    private final OrganizationBoardCategorySyncService organizationBoardCategorySyncService;
+
 
     @Value("${business.validation.strict}")
     private boolean strictValidation;
@@ -121,6 +124,23 @@ public class CompanyService {
                         "기본생성팀",
                         1
                 )
+        );
+
+        // ================= 조직 게시판 자동 생성 =================
+        organizationBoardCategorySyncService.createIfAbsent(
+                company.getId(), rootOrg.getId(), rootOrg.getName()
+        );
+
+        organizationBoardCategorySyncService.createIfAbsent(
+                company.getId(), hqOrg.getId(), hqOrg.getName()
+        );
+
+        organizationBoardCategorySyncService.createIfAbsent(
+                company.getId(), deptOrg.getId(), deptOrg.getName()
+        );
+
+        organizationBoardCategorySyncService.createIfAbsent(
+                company.getId(), teamOrg.getId(), teamOrg.getName()
         );
 
 
