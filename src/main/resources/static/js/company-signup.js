@@ -384,6 +384,11 @@ document.querySelectorAll('.pw-toggle').forEach(btn => {
         input.type = isHidden ? 'text' : 'password';
 
         btn.classList.toggle('active', isHidden);
-        btn.textContent = isHidden ? '🙈' : '👁';
+
+        const icon = btn.querySelector('i');
+        if (icon) {
+            icon.classList.toggle('fa-eye', !isHidden);
+            icon.classList.toggle('fa-eye-slash', isHidden);
+        }
     });
 });
