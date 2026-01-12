@@ -22,7 +22,7 @@ SET @pw := '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK';
 ========================= */
 INSERT INTO company (name, business_number, address, representative_name, representative_contact, created_at,
                      updated_at)
-VALUES ('OrbitFlow 본사', '123-45-67890', '서울특별시 강남구 테헤란로 123', '김도윤', '010-1111-0001', NOW(), NOW())
+VALUES ('OrbitFlow 본사', '1234567890', '서울특별시 강남구 테헤란로 123', '김도윤', '01011110001', NOW(), NOW())
 ON DUPLICATE KEY UPDATE address                = VALUES(address),
                         representative_name    = VALUES(representative_name),
                         representative_contact = VALUES(representative_contact),
@@ -674,7 +674,7 @@ WHERE company_id = @c1
 ========================= */
 INSERT INTO company (name, business_number, address, representative_name, representative_contact, created_at,
                      updated_at)
-VALUES ('TechSolution 테크솔루션', '234-56-78901', '경기도 판교역로 456', '강태양', '010-2222-0001', NOW(), NOW())
+VALUES ('TechSolution 테크솔루션', '2345678901', '경기도 판교역로 456', '강태양', '01022220001', NOW(), NOW())
 ON DUPLICATE KEY UPDATE address                = VALUES(address),
                         representative_name    = VALUES(representative_name),
                         representative_contact = VALUES(representative_contact),
@@ -1275,7 +1275,7 @@ ON DUPLICATE KEY UPDATE internal_phone=VALUES(internal_phone),
 ========================= */
 INSERT INTO company (name, business_number, address, representative_name, representative_contact, created_at,
                      updated_at)
-VALUES ('GlobalService 글로벌서비스', '345-67-89012', '부산광역시 해운대구 센텀로 789', '신유진', '010-3333-0001', NOW(), NOW())
+VALUES ('GlobalService 글로벌서비스', '3456789012', '부산광역시 해운대구 센텀로 789', '신유진', '01033330001', NOW(), NOW())
 ON DUPLICATE KEY UPDATE address                = VALUES(address),
                         representative_name    = VALUES(representative_name),
                         representative_contact = VALUES(representative_contact),

@@ -256,4 +256,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     List<Employee> findByStatusAndWorkStatusIn(EmployeeStatus employeeStatus, java.util.List<com.finalproj.orbitflow.hr.employee.enums.WorkStatus> specialStatuses);
 
     boolean existsByCompany_IdAndInternalPhone(Long companyId, String internalPhone);
+
+    boolean existsByCompanyIdAndEmail(Long companyId, String email);
 }
