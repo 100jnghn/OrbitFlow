@@ -126,7 +126,7 @@ async function loadCategories() {
         const result = await res.json();
 
         if (!res.ok) {
-            alert(result.message || '목록 조회 실패');
+            await sweetError(result.message || '조직 카테고리 목록 조회에 실패했습니다.');
             return;
         }
 
@@ -137,7 +137,7 @@ async function loadCategories() {
 
     } catch (e) {
         console.error(e);
-        alert('조직 카테고리 조회 중 오류 발생');
+        await sweetError('조직 카테고리 조회 중 오류가 발생했습니다.');
     }
 }
 
@@ -285,7 +285,7 @@ async function saveOrder() {
     const result = await res.json();
 
     if (!res.ok) {
-        alert(result.message || '순서 저장 실패');
+        await sweetError(result.message || '순서 저장에 실패했습니다.');
         return;
     }
 
@@ -361,7 +361,7 @@ async function saveCategory() {
     const result = await res.json();
 
     if (!res.ok) {
-        alert(result.message || '저장 실패');
+        await sweetError(result.message || '카테고리 저장에 실패했습니다.');
         return;
     }
 
