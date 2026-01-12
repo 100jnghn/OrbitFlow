@@ -257,117 +257,114 @@
    3. Phase 2 (1250px): Dates/Times Hidden -> Reason Fills
    4. Phase 3 (900px): Reason Hidden -> Resource Name Fills
 ========================= */
-
 /* 1. 번호 (5%) */
 .resource-table th:nth-child(1),
 .resource-table td:nth-child(1) {
     width: 5%;
     text-align: center;
     font-weight: 600;
-    color: #6c757d;
+    /*color: #6c757d;*/
 }
 
-/* 2. 카테고리 (8%) */
+/* 2. 신청자명 (10%) */
 .resource-table th:nth-child(2),
 .resource-table td:nth-child(2) {
     width: 8%;
+    min-width: 120px;
     text-align: center;
 }
 
-/* 3. 신청자 (8% - min 80px) */
+/* 3. 카테고리 (10%) */
 .resource-table th:nth-child(3),
 .resource-table td:nth-child(3) {
-    width: max(8%, 80px);
+    width: 10%;
     text-align: center;
 }
 
-/* 4. 자원 이름 (15%) */
+/* 4. 자원이름 (15%) */
 .resource-table th:nth-child(4),
 .resource-table td:nth-child(4) {
-    width: 15%;
-    min-width: 120px;
+    width: 17%;
+    text-align: center;
 }
 
-/* 5. 예약 사유 (18%) */
+/* 5. 시작일 (10%) */
 .resource-table th:nth-child(5),
 .resource-table td:nth-child(5) {
-    width: 18%;
+    width: 10%;
+    text-align: center;
 }
 
-/* 6, 7. 시작일, 종료일 (각 8%) */
+/* 6. 종료일 (10%) */
 .resource-table th:nth-child(6),
-.resource-table td:nth-child(6),
+.resource-table td:nth-child(6) {
+    width: 10%;
+    text-align: center;
+}
+
+/* 7. 시작시간 (8%) */
 .resource-table th:nth-child(7),
 .resource-table td:nth-child(7) {
     width: 8%;
     text-align: center;
 }
 
-/* 8, 9. 시작시간, 종료시간 (각 7%) */
+/* 8. 종료시간 (8%) */
 .resource-table th:nth-child(8),
-.resource-table td:nth-child(8),
-.resource-table th:nth-child(9),
-.resource-table td:nth-child(9) {
-    width: 7%;
+.resource-table td:nth-child(8) {
+    width: 8%;
     text-align: center;
 }
 
-/* 10. 상태 (9%) */
-.resource-table th:nth-child(10),
-.resource-table td:nth-child(10) {
+/* 9. 상태 (9%) */
+.resource-table th:nth-child(9),
+.resource-table td:nth-child(9) {
     width: 9%;
     text-align: center;
 }
 
-/* 11. 승인 (7%) */
-.resource-table th:last-child,
-.resource-table td:last-child {
-    width: 7%;
+/* 10. 승인 (5%) */
+.resource-table th:nth-child(10),
+.resource-table td:nth-child(10) {
+    width: 5%;
     text-align: center;
 }
+
 
 /* =========================
    Responsive Breakpoints
 ========================= */
 
-/* Phase 1: 1400px - 번호 & 카테고리 숨김, 신청자 채움 */
-@media (max-width: 1400px) {
+/* Phase 1: 1400px - 번호 & 카테고리(Col 4) 숨김, 신청자 채움 */
+@media (max-width: 1700px) {
 
-    /* 1. 번호 & 2. 카테고리 숨김 */
+    /* 1. 번호 & 4. 카테고리 숨김 */
     .resource-table th:nth-child(1),
     .resource-table td:nth-child(1),
-    .resource-table th:nth-child(2),
-    .resource-table td:nth-child(2) {
+    .resource-table th:nth-child(3),
+    .resource-table td:nth-child(3) {
         display: none !important;
     }
 
-    /* 3. 신청자 채움 */
-    .resource-table th:nth-child(3),
-    .resource-table td:nth-child(3) {
+    /* 3. 자원이름 채움 */
+    .resource-table th:nth-child(4),
+    .resource-table td:nth-child(4) {
         width: auto !important;
     }
 }
 
 /* Phase 2: 1250px - 날짜/시간/승인 숨김 & 상태 채움 */
-@media (max-width: 1250px) {
+@media (max-width: 1500px) {
 
     /* 날짜/시간(4개 열) + 승인(마지막 열) 숨김 */
+    .resource-table th:nth-child(5),
+    .resource-table td:nth-child(5),
     .resource-table th:nth-child(6),
     .resource-table td:nth-child(6),
     .resource-table th:nth-child(7),
     .resource-table td:nth-child(7),
     .resource-table th:nth-child(8),
-    .resource-table td:nth-child(8),
-    .resource-table th:nth-child(9),
-    .resource-table td:nth-child(9),
-    .resource-table th:last-child,
-    .resource-table td:last-child {
-        display: none !important;
-    }
-
-    /* 2. 카테고리 확실히 숨김 (혹시 모를 상속 방지) */
-    .resource-table th:nth-child(2),
-    .resource-table td:nth-child(2) {
+    .resource-table td:nth-child(8) {
         display: none !important;
     }
 
@@ -377,10 +374,10 @@
         width: max(8%, 80px) !important;
     }
 
-    /* 5. 예약 사유 고정 (상태에게 양보) */
-    .resource-table th:nth-child(5),
-    .resource-table td:nth-child(5) {
-        width: 18% !important;
+    /* 2. 신청자명 고정 (상태에게 양보) */
+    .resource-table th:nth-child(2),
+    .resource-table td:nth-child(2) {
+        width: 15% !important;
     }
 
     /* 10. 상태 채움 */
@@ -390,18 +387,34 @@
     }
 }
 
-/* Phase 3: 900px - 예약 사유 숨김 & 자원 이름 채움 */
-@media (max-width: 900px) {
+/* Phase 3: 900px - 신청자명(Col 2) 숨김 & 자원 이름 채움 */
+@media (max-width: 1350px) {
 
-    /* 5. 예약 사유 숨김 */
-    .resource-table th:nth-child(5),
-    .resource-table td:nth-child(5) {
+    /* 2. 신청자명 숨김 */
+    .resource-table th:nth-child(10),
+    .resource-table td:nth-child(10) {
         display: none !important;
     }
 
-    /* 4. 자원 이름 채움 */
-    .resource-table th:nth-child(4),
-    .resource-table td:nth-child(4) {
+    /* 5. 자원 이름 채움 (Was Col 4) */
+    .resource-table th:nth-child(9),
+    .resource-table td:nth-child(9) {
+        width: auto !important;
+    }
+}
+
+/* Phase 3: 900px - 신청자명(Col 2) 숨김 & 자원 이름 채움 */
+@media (max-width: 900px) {
+
+    /* 2. 신청자명 숨김 */
+    .resource-table th:nth-child(2),
+    .resource-table td:nth-child(2) {
+        display: none !important;
+    }
+
+    /* 5. 자원 이름 채움 (Was Col 4) */
+    .resource-table th:nth-child(5),
+    .resource-table td:nth-child(5) {
         width: auto !important;
     }
 }
