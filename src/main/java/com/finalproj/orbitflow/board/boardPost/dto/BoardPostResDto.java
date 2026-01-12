@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow.board.boardPost.dto;
 
-import com.finalproj.orbitflow.board.boardPost.entity.Board;
+import com.finalproj.orbitflow.board.boardPost.entity.BoardPost;
 import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import lombok.AllArgsConstructor;
@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 import java.util.List;
 
-public class BoardResDto {
+public class BoardPostResDto {
 
     /** 작성자 정보 DTO */
     @Data
@@ -81,18 +81,18 @@ public class BoardResDto {
         private boolean fileAttached;
         private int commentCount;
 
-        public static ListInfo from(Board board) {
-            boolean attached = board.getFiles() != null && !board.getFiles().isEmpty();
+        public static ListInfo from(BoardPost boardPost) {
+            boolean attached = boardPost.getFiles() != null && !boardPost.getFiles().isEmpty();
             return ListInfo.builder()
-                    .id(board.getId())
-                    .categoryId(board.getCategory() != null ? board.getCategory().getId() : null)
-                    .boardTitle(board.getBoardTitle())
-                    .categoryName(board.getCategory() != null ? board.getCategory().getBoardName() : "N/A")
-                    .writer(WriterInfo.from(board.getWriter()))
-                    .viewCount(board.getViewCount())
-                    .createdAt(board.getCreatedAt())
+                    .id(boardPost.getId())
+                    .categoryId(boardPost.getCategory() != null ? boardPost.getCategory().getId() : null)
+                    .boardTitle(boardPost.getBoardTitle())
+                    .categoryName(boardPost.getCategory() != null ? boardPost.getCategory().getBoardName() : "N/A")
+                    .writer(WriterInfo.from(boardPost.getWriter()))
+                    .viewCount(boardPost.getViewCount())
+                    .createdAt(boardPost.getCreatedAt())
                     .fileAttached(attached)
-                    .commentCount(board.getCommentCount())
+                    .commentCount(boardPost.getCommentCount())
                     .build();
         }
 
@@ -117,19 +117,20 @@ public class BoardResDto {
         private List<FileInfo> files;
         private boolean commentActivated; // 댓글 기능 활성화 여부
 
-        public static DetailInfo from(Board board) {
+        public static DetailInfo from(BoardPost boardPost) {
             return DetailInfo.builder()
-                    .id(board.getId())
-                    .boardTitle(board.getBoardTitle())
-                    .boardContent(board.getBoardContent())
-                    .categoryId(board.getCategory() != null ? board.getCategory().getId() : null)
-                    .categoryName(board.getCategory() != null ? board.getCategory().getBoardName() : "N/A")
-                    .writer(WriterInfo.from(board.getWriter()))
-                    .viewCount(board.getViewCount())
-                    .createdAt(board.getCreatedAt())
-                    .updatedAt(board.getUpdatedAt())
-                    .files(FileInfo.fromFiles(board.getFiles()))
-                    .commentActivated(board.getCategory() != null ? board.getCategory().isCommentActivated() : true)
+                    .id(boardPost.getId())
+                    .boardTitle(boardPost.getBoardTitle())
+                    .boardContent(boardPost.getBoardContent())
+                    .categoryId(boardPost.getCategory() != null ? boardPost.getCategory().getId() : null)
+                    .categoryName(boardPost.getCategory() != null ? boardPost.getCategory().getBoardName() : "N/A")
+                    .writer(WriterInfo.from(boardPost.getWriter()))
+                    .viewCount(boardPost.getViewCount())
+                    .createdAt(boardPost.getCreatedAt())
+                    .updatedAt(boardPost.getUpdatedAt())
+                    .files(FileInfo.fromFiles(boardPost.getFiles()))
+                    .commentActivated(
+                            boardPost.getCategory() != null ? boardPost.getCategory().isCommentActivated() : true)
                     .build();
         }
     }

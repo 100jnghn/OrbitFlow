@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
-    Page<Comment> findByBoardIdAndDeletedAtIsNull(Long boardId, Pageable pageable);
+    Page<Comment> findByBoardPostIdAndDeletedAtIsNull(Long boardPostId, Pageable pageable);
 
     Optional<Comment> findByIdAndDeletedAtIsNull(Long id);
 }

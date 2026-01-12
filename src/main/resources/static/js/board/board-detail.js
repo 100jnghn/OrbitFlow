@@ -1,8 +1,8 @@
 // 게시글 상세 페이지 JavaScript
 
-const BOARD_API = '/api/boards';
+const BOARD_API = '/api/board-posts';
 const BOARD_CATEGORY_API = '/api/board-categories';
-const COMMENT_API = '/api';
+const COMMENT_API = '/api/board-posts';
 
 let boardId = null;
 let categoryId = null;
@@ -601,7 +601,7 @@ async function loadComments(page = 0) {
     if (!boardId) return;
 
     try {
-        const response = await apiFetch(`${COMMENT_API}/boards/${boardId}/comments?page=${page}&size=5&sort=createdAt,asc`, {
+        const response = await apiFetch(`${COMMENT_API}/${boardId}/comments?page=${page}&size=5&sort=createdAt,asc`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -780,7 +780,7 @@ async function submitComment() {
     }
 
     try {
-        const response = await apiFetch(`${COMMENT_API}/boards/${boardId}/comments`, {
+        const response = await apiFetch(`${COMMENT_API}/${boardId}/comments`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

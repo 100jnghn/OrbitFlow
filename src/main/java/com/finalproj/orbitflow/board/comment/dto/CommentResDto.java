@@ -46,7 +46,7 @@ public class CommentResDto {
         public static DetailInfo from(Comment comment) {
             return DetailInfo.builder()
                     .commentId(comment.getId())
-                    .boardId(comment.getBoard().getId())
+                    .boardId(comment.getBoardPost().getId())
                     .writerId(comment.getWriter().getId())
                     .writerName(comment.getWriter().getName())
                     .content(comment.getCommentContent())

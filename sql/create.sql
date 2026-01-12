@@ -993,7 +993,7 @@ CREATE TABLE board_category
     FOREIGN KEY (organization_id) REFERENCES organization (id)
 );
 
-CREATE TABLE board
+CREATE TABLE board_post
 (
     id                BIGINT       NOT NULL AUTO_INCREMENT,
     board_category_id BIGINT       NOT NULL,
@@ -1026,14 +1026,14 @@ CREATE TABLE board_permission
 CREATE TABLE comment
 (
     id              BIGINT       NOT NULL AUTO_INCREMENT,
-    board_id        BIGINT       NOT NULL,
+    board_post_id   BIGINT       NOT NULL,
     employee_id     BIGINT       NOT NULL,
     comment_content VARCHAR(500) NOT NULL,
     created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at      TIMESTAMP    NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (board_id) REFERENCES board (id),
+    FOREIGN KEY (board_post_id) REFERENCES board_post (id),
     FOREIGN KEY (employee_id) REFERENCES employee (id)
 );
 

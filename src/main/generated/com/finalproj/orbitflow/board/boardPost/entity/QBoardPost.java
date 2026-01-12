@@ -11,16 +11,16 @@ import com.querydsl.core.types.dsl.PathInits;
 
 
 /**
- * QBoard is a Querydsl query type for Board
+ * QBoardPost is a Querydsl query type for BoardPost
  */
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
-public class QBoard extends EntityPathBase<Board> {
+public class QBoardPost extends EntityPathBase<BoardPost> {
 
-    private static final long serialVersionUID = 43512905L;
+    private static final long serialVersionUID = 1370010761L;
 
     private static final PathInits INITS = PathInits.DIRECT2;
 
-    public static final QBoard board = new QBoard("board");
+    public static final QBoardPost boardPost = new QBoardPost("boardPost");
 
     public final com.finalproj.orbitflow.global.common.QBaseEntity _super = new com.finalproj.orbitflow.global.common.QBaseEntity(this);
 
@@ -54,23 +54,23 @@ public class QBoard extends EntityPathBase<Board> {
 
     public final com.finalproj.orbitflow.hr.employee.entity.QEmployee writer;
 
-    public QBoard(String variable) {
-        this(Board.class, forVariable(variable), INITS);
+    public QBoardPost(String variable) {
+        this(BoardPost.class, forVariable(variable), INITS);
     }
 
-    public QBoard(Path<? extends Board> path) {
+    public QBoardPost(Path<? extends BoardPost> path) {
         this(path.getType(), path.getMetadata(), PathInits.getFor(path.getMetadata(), INITS));
     }
 
-    public QBoard(PathMetadata metadata) {
+    public QBoardPost(PathMetadata metadata) {
         this(metadata, PathInits.getFor(metadata, INITS));
     }
 
-    public QBoard(PathMetadata metadata, PathInits inits) {
-        this(Board.class, metadata, inits);
+    public QBoardPost(PathMetadata metadata, PathInits inits) {
+        this(BoardPost.class, metadata, inits);
     }
 
-    public QBoard(Class<? extends Board> type, PathMetadata metadata, PathInits inits) {
+    public QBoardPost(Class<? extends BoardPost> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.category = inits.isInitialized("category") ? new com.finalproj.orbitflow.board.boardCategory.entity.QBoardCategory(forProperty("category"), inits.get("category")) : null;
         this.writer = inits.isInitialized("writer") ? new com.finalproj.orbitflow.hr.employee.entity.QEmployee(forProperty("writer"), inits.get("writer")) : null;

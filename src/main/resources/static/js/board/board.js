@@ -1,7 +1,7 @@
 // 사용자 게시판 페이지 JavaScript
 
 const BOARD_CATEGORY_API = '/api/board-categories';
-const BOARD_API = '/api/boards';
+const BOARD_API = '/api/board-posts';
 
 let currentCategoryId = null;
 let currentPage = 0;
