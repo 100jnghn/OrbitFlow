@@ -105,6 +105,23 @@ pipeline {
         }
 
         // ===============================
+        // 6️⃣ HPA Deploy
+        // ===============================
+        stage('Deploy HPA') {
+            steps {
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'aws-credentials']
+                ]) {
+                    sh '''
+                      kubectl apply -f k8s/app/hpa.yaml
+                    '''
+                }
+            }
+        }
+
+
+        // ===============================
         // 6️⃣ Ingress Deploy
         // ===============================
         stage('Deploy Ingress') {
