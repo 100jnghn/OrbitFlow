@@ -341,7 +341,7 @@ public class ScheduleService {
         scheduleRepository.save(schedule);
 
         // 알림 전송 - 전사
-        if (schedule.isCompany() && !schedule.isPersonal()) {
+        if (schedule.isCompany() && !schedule.isPersonal() && dto.getStatus().equals(ScheduleStatus.RELEASE)) {
             createCompanyNotification(schedule);
         }
         // 알림 전송 - 조직

@@ -241,7 +241,7 @@
     background: #cfe2ff;
     color: #084298;
     /*font-weight: 600;*/
-    border: 1px solid #0d6efd;
+    /*border: 1px solid #0d6efd;*/
 }
 
 .time-cell.selected::after {
