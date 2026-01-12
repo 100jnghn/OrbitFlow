@@ -209,27 +209,47 @@
     background: var(--neutral-50);
 }
 
+/* 테이블 컨테이너 (Resource Management와 동일한 모서리/효과) */
+.board-table-container {
+    margin-bottom: 24px;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    /* 필요한 경우 높이 제한 */
+    /* min-height: 600px; */
+    display: flex;
+    flex-direction: column;
+}
+
 /* 테이블 디자인 */
 .board-table {
     width: 100%;
     border-collapse: collapse;
     text-align: center;
+    background: #fff;
 }
 
 .board-table th {
-    background: #f8fafc;
-    padding: 16px;
-    font-size: 13px;
-    color: var(--text-muted);
-    border-bottom: 1px solid var(--border-color);
+    background: #f8f9fa;
+    /* Resource table color */
+    padding: 14px 16px;
+    font-size: 14px;
+    color: #495057;
+    font-weight: 600;
+    border-bottom: 2px solid #e9ecef;
+    /* Resource table border */
 }
 
 .board-table td {
-    padding: 16px;
-    border-bottom: 1px solid #f1f5f9;
+    padding: 14px 16px;
+    border-bottom: 1px solid #f0f0f0;
     font-size: 14px;
+    color: #555;
     vertical-align: middle;
 }
+
 
 /* 근태 상태 배지 */
 .status-badge {
