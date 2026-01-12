@@ -5,7 +5,7 @@ let currentOrgPage = 0;
 let totalOrgPages = 1;
 
 // 페이지 로드 시 초기화
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     try {
         loadOrganizationList();
     } catch (error) {
@@ -43,29 +43,28 @@ async function loadOrganizationList(page = 0) {
         const orgResult = await orgResponse.json();
         // /api/admin/organizations는 List를 직접 반환하므로 data가 아닐 수 있음
         const organizations = Array.isArray(orgResult) ? orgResult : (orgResult.data || []);
-        
+
         // 조직 게시판 목록에서 각 부서별 활성화 상태 및 게시판 ID 확인
         let orgBoardsMap = {};
         if (boardResponse.ok) {
             const boardResult = await boardResponse.json();
-            console.log('Organization board response:', boardResult);
-            
+
+
             // ResponseDto 구조에서 data 추출
             let boardData = boardResult.data;
             if (!boardData && boardResult.content) {
                 boardData = boardResult;
             }
-            
+
             // Page 객체에서 content 추출
             const orgBoards = boardData?.content || boardData?.elements || (Array.isArray(boardData) ? boardData : []);
-            console.log('=== Loaded organization boards ===');
-            console.log('Raw board data:', JSON.stringify(orgBoards, null, 2));
+
             orgBoards.forEach(board => {
                 if (board.organizationId) {
                     // Jackson이 boolean 필드를 직렬화할 때 필드명이 다를 수 있음
                     // isActivated, activated, is_activated 등 여러 가능성 확인
                     let isActivated = board.isActivated;
-                    
+
                     if (isActivated === undefined) {
                         // 다른 가능한 필드명들 확인
                         isActivated = board.activated;
@@ -75,64 +74,50 @@ async function loadOrganizationList(page = 0) {
                     }
                     if (isActivated === undefined) {
                         // 모든 필드 확인
-                        console.warn(`Board ${board.id}: isActivated field not found. Available fields:`, Object.keys(board));
+
                         // 기본값으로 true 설정 (게시판이 존재하면 기본적으로 활성화)
                         isActivated = true;
                     }
-                    
-                    console.log(`Board ${board.id} for org ${board.organizationId}:`, {
-                        id: board.id,
-                        organizationId: board.organizationId,
-                        'board.isActivated': board.isActivated,
-                        'board.activated': board.activated,
-                        'board.is_activated': board.is_activated,
-                        allFields: Object.keys(board),
-                        finalIsActivated: isActivated
-                    });
-                    
+
+
+
                     orgBoardsMap[board.organizationId] = {
                         id: board.id,
                         isActivated: isActivated
                     };
                 }
             });
-            console.log('Organization boards map:', orgBoardsMap);
+
         } else {
-            console.warn('Failed to load organization boards:', boardResponse.status, boardResponse.statusText);
+
         }
-        
+
         // 부서 목록에 활성화 상태 및 게시판 ID 추가
         const orgsWithActivation = organizations.map(org => {
             const boardInfo = orgBoardsMap[org.id];
             const activated = boardInfo !== undefined ? boardInfo.isActivated : true;
             const boardCategoryId = boardInfo?.id || null;
-            
-            console.log(`Processing org ${org.id} (${org.name}):`, {
-                hasBoardInfo: boardInfo !== undefined,
-                boardInfo: boardInfo,
-                activated: activated,
-                boardCategoryId: boardCategoryId
-            });
-            
+
+
+
             return {
                 ...org,
                 activated: activated,
                 boardCategoryId: boardCategoryId
             };
         });
-        
-        console.log('=== Final organizations with activation status ===');
-        console.log(orgsWithActivation);
-        
+
+
+
         // 페이지네이션을 위한 처리
         const pageSize = 10;
         const startIndex = page * pageSize;
         const endIndex = startIndex + pageSize;
         const paginatedOrgs = orgsWithActivation.slice(startIndex, endIndex);
-        
+
         currentOrgPage = page;
         totalOrgPages = Math.ceil(orgsWithActivation.length / pageSize);
-        
+
         renderOrganizationTable(paginatedOrgs);
         renderOrganizationPagination();
     } catch (error) {
@@ -145,9 +130,8 @@ async function loadOrganizationList(page = 0) {
 
 // 부서 테이블 렌더링
 function renderOrganizationTable(organizations) {
-    console.log('=== renderOrganizationTable called ===');
-    console.log('Organizations to render:', organizations);
-    
+
+
     const tbody = document.getElementById('organizationTableBody');
     tbody.innerHTML = '';
 
@@ -157,7 +141,7 @@ function renderOrganizationTable(organizations) {
     }
 
     organizations.forEach((org, index) => {
-        console.log(`Rendering org ${index}:`, org);
+
         const row = document.createElement('tr');
         const rowNumber = currentOrgPage * 10 + index + 1;
 
@@ -165,14 +149,9 @@ function renderOrganizationTable(organizations) {
         const hasBoard = boardCategoryId && boardCategoryId !== null && boardCategoryId !== 0;
         // org.activated가 명시적으로 false일 수 있으므로, boolean 값으로 직접 사용
         const isActivated = hasBoard ? (org.activated === true) : false; // 게시판이 없으면 비활성화 상태
-        
-        console.log(`Org ${org.id} (${org.name}):`, {
-            boardCategoryId,
-            hasBoard,
-            activated: org.activated,
-            isActivated
-        });
-        
+
+
+
         row.innerHTML = `
             <td>${rowNumber}</td>
             <td>${escapeHTML(org.name)}</td>
@@ -200,18 +179,14 @@ function renderOrganizationTable(organizations) {
             </td>
         `;
         tbody.appendChild(row);
-        
+
         // 이벤트 리스너 직접 추가 (게시판이 있는 경우만)
         if (hasBoard) {
             const checkbox = row.querySelector('input[type="checkbox"]');
             if (checkbox) {
-                checkbox.addEventListener('change', function(e) {
+                checkbox.addEventListener('change', function (e) {
                     e.stopPropagation();
-                    console.log('Checkbox change event fired:', {
-                        checked: this.checked,
-                        orgId: this.getAttribute('data-org-id'),
-                        boardId: this.getAttribute('data-board-id')
-                    });
+
                     handleToggleChange(this);
                 });
             }
@@ -292,44 +267,34 @@ function renderOrganizationPagination() {
 }
 
 // 토글 변경 핸들러 (전역 함수로 선언)
-window.handleToggleChange = function(checkbox) {
+window.handleToggleChange = function (checkbox) {
     try {
-        console.log('=== handleToggleChange called ===');
-        console.log('Checkbox element:', checkbox);
-        console.log('Checkbox checked:', checkbox.checked);
-        
+
+
         const organizationId = parseInt(checkbox.getAttribute('data-org-id'));
         const boardCategoryIdStr = checkbox.getAttribute('data-board-id');
         let boardCategoryId = null;
-        
-        console.log('Raw attributes:', {
-            'data-org-id': checkbox.getAttribute('data-org-id'),
-            'data-board-id': checkbox.getAttribute('data-board-id')
-        });
-        
+
+
+
         if (boardCategoryIdStr && boardCategoryIdStr !== '' && boardCategoryIdStr !== 'null') {
             boardCategoryId = parseInt(boardCategoryIdStr);
             if (isNaN(boardCategoryId)) {
                 boardCategoryId = null;
             }
         }
-        
+
         const isActivated = checkbox.checked;
-        
-        console.log('Parsed values:', { 
-            organizationId, 
-            boardCategoryId, 
-            isActivated, 
-            boardCategoryIdStr
-        });
-        
+
+
+
         if (!organizationId || isNaN(organizationId)) {
             console.error('Invalid organizationId:', organizationId);
             alert('부서 정보를 찾을 수 없습니다.');
             checkbox.checked = !checkbox.checked;
             return;
         }
-        
+
         toggleActivation(organizationId, boardCategoryId, isActivated, checkbox);
     } catch (error) {
         console.error('Error in handleToggleChange:', error);
@@ -342,13 +307,11 @@ window.handleToggleChange = function(checkbox) {
 // 부서 게시판 활성화 토글
 async function toggleActivation(organizationId, boardCategoryId, isActivated, checkboxElement) {
     try {
-        console.log('=== toggleActivation called ===');
-        console.log('Parameters:', { organizationId, boardCategoryId, isActivated });
-        console.log('API_BASE_URL:', API_BASE_URL);
-        
+
+
         // 게시판이 없는 경우
         if (!boardCategoryId || boardCategoryId === 0 || isNaN(boardCategoryId)) {
-            console.warn('Board category ID is invalid:', boardCategoryId);
+
             alert('해당 부서의 게시판이 없습니다. 먼저 게시판을 생성해주세요.');
             // 토글 상태 원복
             if (checkboxElement) {
@@ -356,28 +319,24 @@ async function toggleActivation(organizationId, boardCategoryId, isActivated, ch
             }
             return;
         }
-        
+
         const apiUrl = `${API_BASE_URL}/organization/${boardCategoryId}/activation`;
         const requestBody = { isActivated: isActivated };
-        
-        console.log('=== API Call Details ===');
-        console.log('URL:', apiUrl);
-        console.log('Method: PATCH');
-        console.log('Body:', requestBody);
-        console.log('Full URL will be:', window.location.origin + apiUrl);
-        
+
+
+
         // 인증 토큰 확인
         const accessToken = sessionStorage.getItem('accessToken');
-        console.log('Access Token exists:', !!accessToken);
+
         if (!accessToken) {
             console.error('No access token found in sessionStorage');
             alert('인증 정보가 없습니다. 다시 로그인해주세요.');
             location.href = '/login';
             return;
         }
-        
+
         // 게시판 활성화 상태 변경
-        console.log('Calling apiFetch...');
+
         const response = await apiFetch(apiUrl, {
             method: 'PATCH',
             headers: {
@@ -385,18 +344,16 @@ async function toggleActivation(organizationId, boardCategoryId, isActivated, ch
             },
             body: JSON.stringify(requestBody)
         });
-        
-        console.log('=== API Response ===');
-        console.log('Status:', response.status, response.statusText);
-        console.log('Headers:', Object.fromEntries(response.headers.entries()));
-        
+
+
+
         if (!response.ok) {
             if (response.status === 401) {
                 console.error('401 Unauthorized - redirecting to login');
                 location.href = '/login';
                 return;
             }
-            
+
             let errorData;
             try {
                 const text = await response.text();
@@ -405,44 +362,42 @@ async function toggleActivation(organizationId, boardCategoryId, isActivated, ch
             } catch (e) {
                 errorData = { message: `HTTP ${response.status}: ${response.statusText}` };
             }
-            
+
             console.error('API Error Details:', errorData);
             throw new Error(errorData.message || `활성화 상태 변경에 실패했습니다. (${response.status})`);
         }
-        
+
         let result;
         try {
             const text = await response.text();
-            console.log('Response text:', text);
+
             result = text ? JSON.parse(text) : null;
         } catch (e) {
-            console.warn('Failed to parse response as JSON:', e);
+
             result = null;
         }
-        
-        console.log('API Success:', result);
-        console.log('=== End API Call ===');
-        
+
+
+
         // 성공 메시지는 표시하지 않고 바로 목록 새로고침
-        console.log('Reloading organization list...');
-        console.log('Current page:', currentOrgPage);
-        
+
+
         // 약간의 지연을 두어 서버에서 데이터가 완전히 업데이트되도록 함
         await new Promise(resolve => setTimeout(resolve, 100));
-        
+
         await loadOrganizationList(currentOrgPage);
-        console.log('Organization list reloaded successfully');
+
     } catch (error) {
         console.error('=== Error in toggleActivation ===');
         console.error('Error:', error);
         console.error('Error message:', error.message);
         console.error('Error stack:', error.stack);
-        
+
         // 토글 상태 원복
         if (checkboxElement) {
             checkboxElement.checked = !isActivated;
         }
-        
+
         if (error.message !== 'SESSION_EXPIRED') {
             alert(error.message || '활성화 상태 변경에 실패했습니다.');
         }

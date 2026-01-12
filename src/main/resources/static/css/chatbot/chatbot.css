@@ -48,8 +48,15 @@
 }
 
 @keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .chatbot-header {
@@ -116,18 +123,48 @@
 
 .chatbot-message {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    /* Default row for alignment */
+    align-items: flex-end;
+    /* Bottom align timestamp */
     max-width: 85%;
     animation: fadeIn 0.3s ease-out;
+    gap: 6px;
+    /* Gap between bubble and time */
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.chatbot-message.bot { align-self: flex-start; }
-.chatbot-message.user { align-self: flex-end; }
+.chatbot-message.bot {
+    align-self: flex-start;
+    flex-direction: row;
+    /* Bubble Left, Time Right */
+}
+
+.chatbot-message.user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+    /* Bubble Right, Time Left */
+}
+
+.chatbot-message-time {
+    font-size: 10px;
+    color: #94A3B8;
+    margin-bottom: 2px;
+    /* Slight lift from absolute bottom */
+    white-space: nowrap;
+    flex-shrink: 0;
+}
 
 .chatbot-message-bubble {
     padding: 12px 16px;

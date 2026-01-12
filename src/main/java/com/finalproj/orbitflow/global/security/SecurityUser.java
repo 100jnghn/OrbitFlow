@@ -30,7 +30,8 @@ public class SecurityUser implements UserDetails {
     private final String password;
     private final EmployeeStatus status;
     private final EmployeeRole role;
-    private final Long organizationId;  // 조직 정보
+    private final Long organizationId; // 조직 정보
+    private final String companyName;
 
     public SecurityUser(Employee employee) {
         this.employeeId = employee.getId();
@@ -40,10 +41,10 @@ public class SecurityUser implements UserDetails {
         this.password = employee.getPassword();
         this.status = employee.getStatus();
         this.role = employee.getRole();
-        this.organizationId =
-                employee.getOrganization() != null
-                        ? employee.getOrganization().getId()
-                        : null;          // 안전 처리
+        this.organizationId = employee.getOrganization() != null
+                ? employee.getOrganization().getId()
+                : null; // 안전 처리
+        this.companyName = employee.getCompany().getName();
     }
 
     // 로그인 ID
