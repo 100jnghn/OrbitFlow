@@ -55,7 +55,7 @@ pipeline {
         }
 
         // ===============================
-        // 3️⃣ Update kubeconfig (공통)
+        // 3️⃣ Configure kubectl (EKS)
         // ===============================
         stage('Configure kubectl') {
             steps {
@@ -77,9 +77,14 @@ pipeline {
         // ===============================
         stage('Deploy Infra') {
             steps {
-                sh '''
-                  kubectl apply -f k8s/infra/
-                '''
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'aws-credentials']
+                ]) {
+                    sh '''
+                      kubectl apply -f k8s/infra/
+                    '''
+                }
             }
         }
 
@@ -88,9 +93,14 @@ pipeline {
         // ===============================
         stage('Deploy App') {
             steps {
-                sh '''
-                  envsubst < k8s/app/app-deploy.yaml | kubectl apply -f -
-                '''
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'aws-credentials']
+                ]) {
+                    sh '''
+                      envsubst < k8s/app/app-deploy.yaml | kubectl apply -f -
+                    '''
+                }
             }
         }
 
@@ -99,9 +109,14 @@ pipeline {
         // ===============================
         stage('Deploy Ingress') {
             steps {
-                sh '''
-                  kubectl apply -f k8s/app/ingress.yaml
-                '''
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'aws-credentials']
+                ]) {
+                    sh '''
+                      kubectl apply -f k8s/app/ingress.yaml
+                    '''
+                }
             }
         }
 
@@ -110,9 +125,14 @@ pipeline {
         // ===============================
         stage('Deploy Monitoring') {
             steps {
-                sh '''
-                  kubectl apply -f k8s/monitoring/
-                '''
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'aws-credentials']
+                ]) {
+                    sh '''
+                      kubectl apply -f k8s/monitoring/
+                    '''
+                }
             }
         }
     }
