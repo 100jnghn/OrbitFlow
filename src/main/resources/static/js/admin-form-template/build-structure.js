@@ -274,7 +274,7 @@ let templateGroupCategoryCode = null;
 
 // -- 입력 제한/정책 상수
 const DOCUMENT_TITLE_MAX = 25;
-const COMPONENT_LABEL_MAX = 20;
+const COMPONENT_LABEL_MAX = 10;
 const NOTICE_MESSAGE_MAX = 200;
 const POPUP_TEMPLATE_DESC_MAX = 200;
 const TABLE_ROW_MIN = 1;
