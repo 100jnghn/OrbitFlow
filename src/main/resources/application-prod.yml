@@ -143,18 +143,18 @@ notification:
   cleanup-cron: "0 0 2 * * *"
 
 # ===============================
-# ❤️ Actuator / Health (K8s / ALB)
+# ❤️ Actuator / Health / Prometheus(K8s / ALB)
 # ===============================
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus
 
   endpoint:
     health:
       probes:
-        enabled: true             # ✅ startup/readiness/liveness 대응
+        enabled: true
 
   health:
     livenessstate:
@@ -165,4 +165,3 @@ management:
       enabled: true
     mail:
       enabled: false
-
