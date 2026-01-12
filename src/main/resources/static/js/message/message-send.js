@@ -22,6 +22,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 글자수 카운터 설정
     setupCharCounters();
+
+    // 엔터키 폼 제출 방지
+    preventEnterSubmit();
 });
 
 // 사이드바 선택 효과
@@ -76,6 +79,30 @@ function setupRecipientSearch() {
             resultsDiv.style.display = 'none';
         }
     });
+}
+
+// 엔터키 폼 제출 방지
+function preventEnterSubmit() {
+    const titleInput = document.getElementById('messageTitle');
+    const recipientSearch = document.getElementById('recipientSearch');
+
+    // 제목 입력 필드에서 엔터키 방지
+    if (titleInput) {
+        titleInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+            }
+        });
+    }
+
+    // 수신자 검색 필드에서 엔터키 방지
+    if (recipientSearch) {
+        recipientSearch.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+            }
+        });
+    }
 }
 
 // 사원 검색
