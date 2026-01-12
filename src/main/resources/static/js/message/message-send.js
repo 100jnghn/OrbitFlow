@@ -237,7 +237,7 @@ function handleFileSelect(event) {
             // 파일 크기 체크 (50MB 제한)
             const maxSize = 50 * 1024 * 1024; // 50MB
             if (file.size > maxSize) {
-                alert(`파일 "${file.name}"의 크기가 50MB를 초과하여 제외되었습니다.`);
+                sweetWarning(`파일 "${file.name}"의 크기가 50MB를 초과하여 제외되었습니다.`);
                 return;
             }
             selectedFiles.push(file);
@@ -368,40 +368,35 @@ async function handleSubmit(event) {
     const content = document.getElementById('messageContent').value.trim();
 
     if (!title) {
-        alert('제목을 입력하세요');
+        await sweetWarning('제목을 입력하세요');
         document.getElementById('messageTitle').focus();
         return;
     }
-
     // 제목 글자수 검증 (100자 초과)
     if (title.length > 100) {
-        alert('제목은 100자 이하여야 합니다.');
+        await sweetWarning('제목은 100자 이하여야 합니다.');
         document.getElementById('messageTitle').focus();
         return;
     }
-
     if (!content) {
-        alert('내용을 입력하세요');
+        await sweetWarning('내용을 입력하세요');
         document.getElementById('messageContent').focus();
         return;
     }
-
     // 공백만 입력된 내용 검증
     if (!content.replace(/\s/g, '').length) {
-        alert('공백만 입력된 내용은 전송할 수 없습니다.');
+        await sweetWarning('공백만 입력된 내용은 전송할 수 없습니다.');
         document.getElementById('messageContent').focus();
         return;
     }
-
     // 내용 글자수 검증 (3,000자 초과)
     if (content.length > 3000) {
-        alert('내용은 3,000자 이하여야 합니다.');
+        await sweetWarning('내용은 3,000자 이하여야 합니다.');
         document.getElementById('messageContent').focus();
         return;
     }
-
     if (selectedRecipients.length === 0) {
-        alert('수신자를 최소 1명 이상 선택해주세요.');
+        await sweetWarning('수신자를 최소 1명 이상 선택해주세요.');
         document.getElementById('recipientSearch').focus();
         return;
     }
@@ -444,12 +439,11 @@ async function handleSubmit(event) {
         }
 
         const result = await response.json();
-        alert('메시지가 전송되었습니다.');
-
+        await sweetSuccess('메시지가 전송되었습니다.');
         // 보낸 메시지함으로 이동
         window.location.href = '/view/message/sent';
     } catch (error) {
-        alert(error.message || '메시지 전송에 실패했습니다.');
+        sweetError(error.message || '메시지 전송에 실패했습니다.');
     }
 }
 
@@ -555,8 +549,12 @@ function formatDateTime(dateString) {
 }
 
 // 뒤로가기
-function goBack() {
-    if (confirm('작성 중인 내용이 저장되지 않습니다. 정말 취소하시겠습니까?')) {
+async function goBack() {
+    const result = await sweetConfirm(
+        '작성 취소',
+        '작성 중인 내용이 저장되지 않습니다. 정말 취소하시겠습니까?'
+    );
+    if (result.isConfirmed) {
         window.location.href = '/view/message/inbox';
     }
 }

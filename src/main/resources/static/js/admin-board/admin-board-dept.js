@@ -123,7 +123,7 @@ async function loadOrganizationList(page = 0) {
     } catch (error) {
         console.error('Error loading organization list:', error);
         if (error.message !== 'SESSION_EXPIRED') {
-            alert('부서 목록을 불러오는데 실패했습니다.');
+            sweetError('부서 목록을 불러오는데 실패했습니다.');
         }
     }
 }
@@ -290,7 +290,7 @@ window.handleToggleChange = function (checkbox) {
 
         if (!organizationId || isNaN(organizationId)) {
             console.error('Invalid organizationId:', organizationId);
-            alert('부서 정보를 찾을 수 없습니다.');
+            sweetError('부서 정보를 찾을 수 없습니다.');
             checkbox.checked = !checkbox.checked;
             return;
         }
@@ -299,7 +299,7 @@ window.handleToggleChange = function (checkbox) {
     } catch (error) {
         console.error('Error in handleToggleChange:', error);
         console.error('Error stack:', error.stack);
-        alert('토글 변경 중 오류가 발생했습니다: ' + error.message);
+        sweetError('토글 변경 중 오류가 발생했습니다: ' + error.message);
         checkbox.checked = !checkbox.checked; // 원복
     }
 };
@@ -312,7 +312,7 @@ async function toggleActivation(organizationId, boardCategoryId, isActivated, ch
         // 게시판이 없는 경우
         if (!boardCategoryId || boardCategoryId === 0 || isNaN(boardCategoryId)) {
 
-            alert('해당 부서의 게시판이 없습니다. 먼저 게시판을 생성해주세요.');
+            await sweetWarning('해당 부서의 게시판이 없습니다. 먼저 게시판을 생성해주세요.');
             // 토글 상태 원복
             if (checkboxElement) {
                 checkboxElement.checked = !isActivated;
@@ -330,7 +330,7 @@ async function toggleActivation(organizationId, boardCategoryId, isActivated, ch
 
         if (!accessToken) {
             console.error('No access token found in sessionStorage');
-            alert('인증 정보가 없습니다. 다시 로그인해주세요.');
+            await sweetWarning('인증 정보가 없습니다. 다시 로그인해주세요.');
             location.href = '/login';
             return;
         }
@@ -399,7 +399,7 @@ async function toggleActivation(organizationId, boardCategoryId, isActivated, ch
         }
 
         if (error.message !== 'SESSION_EXPIRED') {
-            alert(error.message || '활성화 상태 변경에 실패했습니다.');
+            sweetError(error.message || '활성화 상태 변경에 실패했습니다.');
         }
     }
 }

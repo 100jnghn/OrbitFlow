@@ -133,7 +133,7 @@ async function loadMessageList(page = 0) {
         renderPagination(currentPage);
     } catch (error) {
         if (error.message !== 'SESSION_EXPIRED') {
-            alert('메시지 목록을 불러오는데 실패했습니다.');
+            sweetError('메시지 목록을 불러오는데 실패했습니다.');
         }
     }
 }
@@ -392,11 +392,11 @@ function setupDateFilter() {
     });
 
     // 종료일 변경 시 시작일보다 이전인지 확인
-    endDateInput.addEventListener('change', function () {
+    endDateInput.addEventListener('change', async function () {
         const endDate = this.value;
         const startDate = startDateInput.value;
         if (startDate && endDate && endDate < startDate) {
-            alert('종료일은 시작일보다 이전일 수 없습니다.');
+            await sweetWarning('종료일은 시작일보다 이전일 수 없습니다.');
             this.value = startDate;
         }
     });
@@ -416,7 +416,7 @@ function setupDateFilter() {
 // 메시지 상세 보기
 function viewMessage(messageId, folder, recipientId) {
     if (!messageId) {
-        alert('메시지 ID가 없습니다.');
+        sweetWarning('메시지 ID가 없습니다.');
         return;
     }
     let url = `/view/message/detail?messageId=${messageId}&folder=${folder}`;
