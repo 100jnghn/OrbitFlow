@@ -2,16 +2,16 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: orbitflow
-  namespace: monitoring
+  namespace: default
   labels:
-    release: monitoring   # 🔥 이 줄이 핵심
+    release: monitoring
 spec:
-  namespaceSelector:
-    matchNames:
-      - default
   selector:
     matchLabels:
       app: orbitflow
+  namespaceSelector:
+    matchNames:
+      - default
   endpoints:
     - port: http
       path: /actuator/prometheus
