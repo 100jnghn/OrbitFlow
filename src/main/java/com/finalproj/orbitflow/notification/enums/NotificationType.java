@@ -21,7 +21,8 @@ public enum NotificationType {
     MESSAGE("메시지"),
     APPROVAL("결재"),
     ATTENDANCE("근태"),
-    ORGANIZATION("인사"),
+    EMPLOYEE_ORG_CHANGED("조직 변경"),
+    EMPLOYEE_POSITION_CHANGED("직책 변경"),
     BOARD("게시판");
 
     private final String description;
