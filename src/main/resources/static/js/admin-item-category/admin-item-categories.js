@@ -237,7 +237,7 @@ async function addNewCategory() {
 
         if (!res.ok) throw new Error();
 
-        alert('카테고리가 추가되었습니다.');
+        await sweetSuccess('카테고리가 추가되었습니다.');
         loadCategories();
 
     } catch (e) {
@@ -271,7 +271,7 @@ async function updateCategory(id) {
 
         if (!res.ok) throw new Error();
 
-        alert('카테고리가 수정되었습니다.');
+        await sweetSuccess('카테고리가 수정되었습니다.');
         loadCategories();
 
     } catch (e) {
@@ -281,9 +281,13 @@ async function updateCategory(id) {
 }
 
 async function deleteCategory(id) {
-    if (!confirm('카테고리를 삭제하시겠습니까?\n카테고리에 속한 비품이 같이 삭제됩니다.')) {
-        return;
-    }
+
+    const result = await sweetConfirm(
+        '삭제 확인',
+        '카테고리를 삭제하시겠습니까?\n카테고리에 속한 비품이 같이 삭제됩니다.'
+    );
+
+    if (!result.isConfirmed) return;
 
     try {
         const res = await apiFetch(
@@ -296,7 +300,7 @@ async function deleteCategory(id) {
             throw new Error(error.message || '삭제 실패');
         }
 
-        alert('카테고리가 삭제되었습니다.');
+        await sweetSuccess('카테고리가 삭제되었습니다.');
         loadCategories();
 
     } catch (e) {
