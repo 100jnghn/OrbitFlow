@@ -269,3 +269,29 @@
         transform: translateY(0);
     }
 }
+
+.user-link {
+    color: #111827;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.user-link:hover {
+    text-decoration: underline;
+}
+
+/* 헤더 사용자 이름 링크 스타일 */
+.user-link {
+    color: #111827;
+    text-decoration: none;      /* 기본 밑줄 제거 */
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.user-link:hover,
+.user-link:focus,
+.user-link:active {
+    text-decoration: none;      /* hover 시 밑줄 제거 */
+    color: #111827;             /* 색상도 고정 */
+}

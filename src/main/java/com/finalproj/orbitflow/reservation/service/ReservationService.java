@@ -280,7 +280,7 @@ public class ReservationService {
         ReservationStatusCode targetCode = newStatus.getStatusCode();
 
         String rejectReason = null;
-        String status = null;
+        String status = "변경";
 
         if (targetCode.equals(ReservationStatusCode.REJECT)) {
             if (dto.getRejectReason() == null || dto.getRejectReason().isBlank()) {

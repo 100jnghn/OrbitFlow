@@ -92,4 +92,5 @@ public interface PositionCategoryRepository extends JpaRepository<PositionCatego
             String name
     );
 
+    List<PositionCategory> findByCompany_IdAndOrgCategory_IdAndIsActiveTrue(Long id, Long id1);
 }
