@@ -5,6 +5,14 @@ import com.finalproj.orbitflow.global.exception.BusinessException;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.InvalidStateException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
+import com.finalproj.orbitflow.global.security.SecurityUtils;
+import com.finalproj.orbitflow.hr.company.entity.Company;
+import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
+import com.finalproj.orbitflow.hr.employee.entity.Employee;
+import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
+import com.finalproj.orbitflow.hr.logAudit.enums.AuditEntityType;
+import com.finalproj.orbitflow.hr.logAudit.enums.AuditEventType;
+import com.finalproj.orbitflow.hr.logAudit.service.AuditLogService;
 import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryOrderUpdateReqDto;
 import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryResDto;
 import com.finalproj.orbitflow.hr.orgCategory.dto.OrgCategoryUpdateReqDto;
@@ -16,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Please explain the class!!!
@@ -31,6 +40,9 @@ public class OrgCategoryService {
 
     private final OrgCategoryRepository repository;
     private final OrgRepository orgRepository;
+    private final AuditLogService auditLogService;
+    private final CompanyRepository companyRepository;
+    private final EmployeeRepository employeeRepository;
 
     /* ================= 목록 (검색 포함) ================= */
     @Transactional(readOnly = true)
@@ -71,9 +83,32 @@ public class OrgCategoryService {
         Integer max = repository.findMaxActiveOrderIndexByCompanyId(companyId);
         int nextOrder = (max == null) ? 1 : max + 1;
 
-        return repository.save(
+        OrgCategory saved = repository.save(
                 OrgCategory.create(companyId, name, nextOrder, false)
-        ).getId();
+        );
+
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new IllegalStateException("회사 정보 없음"));
+
+        Employee actor = employeeRepository.findById(
+                SecurityUtils.getEmployeeId()
+        ).orElseThrow(() -> new IllegalStateException("행위자 사원 정보 없음"));
+
+        auditLogService.log(
+                company,
+                actor,
+                AuditEntityType.ORG_CATEGORY,
+                saved.getId(),
+                AuditEventType.CREATE,
+                null,
+                Map.of(
+                        "name", saved.getName(),
+                        "orderIndex", saved.getOrderIndex()
+                )
+        );
+
+        return saved.getId();
+
     }
 
     /* ================= 수정 (이름 + 활성/비활성/재활성화) ================= */
@@ -84,8 +119,17 @@ public class OrgCategoryService {
             throw new InvalidStateException("회사 카테고리는 수정할 수 없습니다.");
         }
 
-        String name = request.getName().trim();
-        if (repository.existsByCompanyIdAndNameAndIdNot(companyId, name, id)) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new IllegalStateException("회사 정보 없음"));
+
+        Employee actor = employeeRepository.findById(
+                SecurityUtils.getEmployeeId()
+        ).orElseThrow(() -> new IllegalStateException("행위자 사원 정보 없음"));
+
+        String newName = request.getName().trim();
+        String oldName = category.getName();
+
+        if (repository.existsByCompanyIdAndNameAndIdNot(companyId, newName, id)) {
             throw new BusinessException("이미 존재하는 조직 카테고리입니다.");
         }
 
@@ -93,29 +137,60 @@ public class OrgCategoryService {
         boolean willActivate = Boolean.TRUE.equals(request.getIsActive());
         boolean willDeactivate = Boolean.FALSE.equals(request.getIsActive());
 
-        // 재활성화
+        /* ===== 재활성화 ===== */
         if (wasInactive && willActivate) {
             Integer max = repository.findMaxActiveOrderIndexByCompanyId(companyId);
             category.activate(max == null ? 1 : max + 1);
+
+            auditLogService.log(
+                    company,
+                    actor,
+                    AuditEntityType.ORG_CATEGORY,
+                    category.getId(),
+                    AuditEventType.ACTIVATE,
+                    Map.of("isActive", false),
+                    Map.of("isActive", true)
+            );
         }
 
-        // 비활성화
+        /* ===== 비활성화 ===== */
         if (willDeactivate) {
-
-            if (category.getIsRoot()) {
-                throw new InvalidStateException("회사 카테고리는 비활성화할 수 없습니다.");
-            }
 
             if (orgRepository.existsByCompanyIdAndCategoryIdAndIsActiveTrue(companyId, id)) {
                 throw new InvalidStateException(
                         "해당 카테고리를 사용하는 조직이 존재하여 비활성화할 수 없습니다."
                 );
             }
-            category.deactivate(); // 내부에서 orderIndex = null 처리
+
+            category.deactivate();
+
+            auditLogService.log(
+                    company,
+                    actor,
+                    AuditEntityType.ORG_CATEGORY,
+                    category.getId(),
+                    AuditEventType.DEACTIVATE,
+                    Map.of("isActive", true),
+                    Map.of("isActive", false)
+            );
         }
 
-        category.updateName(name);
+        /* ===== 이름 변경 ===== */
+        if (!oldName.equals(newName)) {
+            category.updateName(newName);
+
+            auditLogService.log(
+                    company,
+                    actor,
+                    AuditEntityType.ORG_CATEGORY,
+                    category.getId(),
+                    AuditEventType.UPDATE,
+                    Map.of("name", oldName),
+                    Map.of("name", newName)
+            );
+        }
     }
+
 
     /* ================= 순서 변경 ================= */
     public void updateOrder(Long companyId, List<OrgCategoryOrderUpdateReqDto.OrderItem> orders) {

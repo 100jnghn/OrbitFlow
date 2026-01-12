@@ -1,9 +1,14 @@
 package com.finalproj.orbitflow.hr.rank.service;
 
 import com.finalproj.orbitflow.global.exception.BusinessException;
+import com.finalproj.orbitflow.global.security.SecurityUtils;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
+import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
+import com.finalproj.orbitflow.hr.logAudit.enums.AuditEntityType;
+import com.finalproj.orbitflow.hr.logAudit.enums.AuditEventType;
+import com.finalproj.orbitflow.hr.logAudit.service.AuditLogService;
 import com.finalproj.orbitflow.hr.rank.dto.RankCreateReqDto;
 import com.finalproj.orbitflow.hr.rank.dto.RankOrderUpdateReqDto;
 import com.finalproj.orbitflow.hr.rank.dto.RankResDto;
@@ -15,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Please explain the class!!!
@@ -31,6 +37,7 @@ public class RankService {
     private final RankRepository rankRepository;
     private final CompanyRepository companyRepository;
     private final EmployeeRepository employeeRepository;
+    private final AuditLogService auditLogService;
 
     /* ================= 목록 ================= */
     @Transactional(readOnly = true)
@@ -86,13 +93,50 @@ public class RankService {
         int nextOrder = (max == null) ? 1 : max + 1;
 
         HrRank rank = HrRank.create(company, parent, name, nextOrder);
-        return rankRepository.save(rank).getId();
+        HrRank saved = rankRepository.save(rank);
+
+        Employee actor = employeeRepository.findById(
+                SecurityUtils.getEmployeeId()
+        ).orElseThrow(() -> new IllegalStateException("행위자 사원 정보 없음"));
+
+        auditLogService.log(
+                company,
+                actor,
+                AuditEntityType.HR_RANK,
+                saved.getId(),
+                AuditEventType.CREATE,
+                null,
+                Map.of(
+                        "name", saved.getName(),
+                        "parentRankId", saved.getParentHrRank() != null
+                                ? saved.getParentHrRank().getId()
+                                : null,
+                        "orderIndex", saved.getOrderIndex()
+                )
+        );
+
+        return saved.getId();
+
     }
 
     /* ================= 수정 ================= */
     public void updateRank(Long companyId, Long rankId, RankUpdateReqDto req) {
 
+        Employee actor = employeeRepository.findById(
+                SecurityUtils.getEmployeeId()
+        ).orElseThrow(() -> new IllegalStateException("행위자 사원 정보 없음"));
+
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new BusinessException("회사를 찾을 수 없습니다."));
+
         HrRank rank = getRank(companyId, rankId);
+
+
+        String oldName = rank.getName();
+        Long oldParentId = rank.getParentHrRank() != null
+                ? rank.getParentHrRank().getId()
+                : null;
+
 
         String name = req.getName().trim();
         if (rankRepository.existsByCompanyIdAndNameAndIdNot(companyId, name, rankId)) {
@@ -117,17 +161,65 @@ public class RankService {
                     throw new BusinessException("부여 인원이 있는 직급은 비활성화할 수 없습니다.");
                 }
                 rank.deactivate();
+
+                auditLogService.log(
+                        company,
+                        actor,
+                        AuditEntityType.HR_RANK,
+                        rank.getId(),
+                        AuditEventType.DEACTIVATE,
+                        Map.of("isActive", true),
+                        Map.of("isActive", false)
+                );
+
             }
 
             // 재활성화
             if (req.getIsActive() && !rank.getIsActive()) {
                 Integer max = rankRepository.findMaxActiveOrderIndex(companyId);
                 rank.activate(max == null ? 1 : max + 1);
+
+                auditLogService.log(
+                        company,
+                        actor,
+                        AuditEntityType.HR_RANK,
+                        rank.getId(),
+                        AuditEventType.ACTIVATE,
+                        Map.of("isActive", false),
+                        Map.of("isActive", true)
+                );
+
             }
         }
 
-        // 이름/상위 직급만 변경
-        rank.update(name, parent);
+
+        Long newParentId = parent != null ? parent.getId() : null;
+
+        boolean nameChanged = !oldName.equals(name);
+        boolean parentChanged = !java.util.Objects.equals(oldParentId, newParentId);
+
+        if (nameChanged || parentChanged) {
+            // 이름/상위 직급만 변경
+            rank.update(name, parent);
+
+            auditLogService.log(
+                    company,
+                    actor,
+                    AuditEntityType.HR_RANK,
+                    rank.getId(),
+                    AuditEventType.UPDATE,
+                    Map.of(
+                            "name", oldName,
+                            "parentRankId", oldParentId
+                    ),
+                    Map.of(
+                            "name", name,
+                            "parentRankId", newParentId
+                    )
+            );
+        }
+
+
     }
 
 
