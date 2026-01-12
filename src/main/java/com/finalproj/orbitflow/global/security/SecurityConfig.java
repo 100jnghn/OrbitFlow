@@ -57,6 +57,8 @@ public class SecurityConfig {
                                 "/reset-password/**",
                                 "/find-password/**",
                                 "/api/email/**",
+                                "/actuator/health", //프로메테우스 health check permitAll 필수
+                                "/actuator/prometheus",
                                 "/actuator/health" //배포용 링크 permitAll 필수
                         ).permitAll()
 
