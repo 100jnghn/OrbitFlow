@@ -6,6 +6,7 @@ import com.finalproj.orbitflow.hr.employee.enums.Gender;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 
 import java.time.LocalDate;
@@ -44,8 +45,18 @@ public class EmployeeCreateReqDto {
 
     private LocalDate birthDate;
 
+    @Pattern(
+            regexp = "^[0-9]*$",
+            message = "연락처는 숫자만 입력 가능합니다."
+    )
     private String phone;
+
+    @Pattern(
+            regexp = "^[0-9]*$",
+            message = "내선 번호는 숫자만 입력 가능합니다."
+    )
     private String internalPhone;
+
 
 
     /* ==============================

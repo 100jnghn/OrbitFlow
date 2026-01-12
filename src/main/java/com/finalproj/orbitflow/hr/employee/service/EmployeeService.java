@@ -151,7 +151,7 @@ public class EmployeeService {
     public void create(Long companyId, EmployeeCreateReqDto dto) {
 
         // 이메일 중복
-        if (employeeRepository.existsByEmail(dto.getEmail())) {
+        if (employeeRepository.existsByCompanyIdAndEmail(companyId, dto.getEmail())) {
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
         }
 
@@ -159,7 +159,7 @@ public class EmployeeService {
                 employeeRepository.existsByCompany_IdAndInternalPhone(
                         companyId, dto.getInternalPhone()
                 )) {
-            throw new IllegalArgumentException("이미 사용 중인 사내 번호입니다.");
+            throw new IllegalArgumentException("이미 사용 중인 내선 번호입니다.");
         }
 
 
@@ -250,8 +250,8 @@ public class EmployeeService {
 
         // 문자열: "" 들어오면 null로 간주(프론트에서 trim/empty 처리해도 좋지만 방어)
         String name = normalizeStr(dto.getName());
-        String phone = normalizeStr(dto.getPhone());
-        String internalPhone = normalizeStr(dto.getInternalPhone());
+        String phone = normalizeDigits(dto.getPhone());
+        String internalPhone = normalizeDigits(dto.getInternalPhone());
 
         // ===== 기본 정보 =====
         if (name != null && !name.equals(employee.getName())) {
@@ -269,13 +269,13 @@ public class EmployeeService {
             employee.updateBasicInfo(null, phone, null, null);
         }
 
-        // ===== 사내 번호 중복 체크 (본인 제외) =====
+        // ===== 내선 번호 중복 체크 (본인 제외) =====
         if (internalPhone != null &&
                 !Objects.equals(internalPhone, employee.getInternalPhone()) &&
                 employeeRepository.existsByCompany_IdAndInternalPhone(
                         companyId, internalPhone
                 )) {
-            throw new IllegalArgumentException("이미 사용 중인 사내 번호입니다.");
+            throw new IllegalArgumentException("이미 사용 중인 내선 번호입니다.");
         }
 
         if (!Objects.equals(internalPhone, employee.getInternalPhone())) {
@@ -303,7 +303,7 @@ public class EmployeeService {
 
 
         // ===== 조직/직급/직책 =====
-// ===== 조직 =====
+        // ===== 조직 =====
         if (dto.getOrgId() != null && !dto.getOrgId().equals(employee.getOrganization().getId())) {
 
             Organization beforeOrg = employee.getOrganization();
@@ -341,7 +341,7 @@ public class EmployeeService {
             }
         }
 
-// ===== 직책 =====
+        // ===== 직책 =====
         if (dto.getPositionCategoryId() != null) {
 
             Long currentPosId = employee.getPositionCategory() != null
@@ -610,6 +610,12 @@ public class EmployeeService {
         return t.isEmpty() ? null : t;
     }
 
+    private String normalizeDigits(String s) {
+        if (s == null) return null;
+        String t = s.replaceAll("[^0-9]", "");
+        return t.isEmpty() ? null : t;
+    }
+
     @Transactional(readOnly = true)
     public Employee findByEmail(String email) {
         return employeeRepository.findByEmail(email)
@@ -643,6 +649,10 @@ public class EmployeeService {
     public Employee findById(Long employeeId) {
         return employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new IllegalArgumentException("사원을 찾을 수 없습니다."));
+    }
+
+    public boolean isEmailAvailable(Long companyId, String email) {
+        return !employeeRepository.existsByCompanyIdAndEmail(companyId, email);
     }
 
 }

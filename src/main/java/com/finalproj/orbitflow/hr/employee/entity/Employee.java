@@ -71,7 +71,7 @@ public class Employee extends BaseEntity {
     private String employeeNo; // 사번 (예: 20250001)
 
     @Column(length = 20)
-    private String internalPhone; // 사내 번호 --> 사원 퇴사 시 null
+    private String internalPhone; // 내선 번호 --> 사원 퇴사 시 null
 
     @Column(length = 20)
     private String phone; // 연락처 --> 사원 퇴사 시 null
