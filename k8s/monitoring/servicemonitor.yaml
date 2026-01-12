@@ -3,6 +3,8 @@ kind: ServiceMonitor
 metadata:
   name: orbitflow
   namespace: monitoring
+  labels:
+    release: monitoring   # 🔥 이 줄이 핵심
 spec:
   namespaceSelector:
     matchNames:
