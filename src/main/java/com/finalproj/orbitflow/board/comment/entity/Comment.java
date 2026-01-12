@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow.board.comment.entity;
 
-import com.finalproj.orbitflow.board.boardPost.entity.Board;
+import com.finalproj.orbitflow.board.boardPost.entity.BoardPost;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import jakarta.persistence.*;
@@ -25,8 +25,8 @@ public class Comment extends BaseEntity {
     private Long id; // 댓글 ID (PK)
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "board_id", nullable = false)
-    private Board board; // 게시글 (FK)
+    @JoinColumn(name = "board_post_id", nullable = false)
+    private BoardPost boardPost; // 게시글 (FK)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id", nullable = false)
@@ -34,7 +34,6 @@ public class Comment extends BaseEntity {
 
     @Column(name = "comment_content", length = 500, nullable = false)
     private String commentContent; // 댓글 내용
-
 
     @Column(name = "deleted_at")
     private Instant deletedAt; // 삭제 일시 (소프트 삭제)

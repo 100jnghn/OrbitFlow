@@ -8,8 +8,7 @@ package com.finalproj.orbitflow.global.file.entity;
  * @since       : 25. 12. 15. 월요일
  */
 
-
-import com.finalproj.orbitflow.board.boardPost.entity.Board;
+import com.finalproj.orbitflow.board.boardPost.entity.BoardPost;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.global.file.enums.FileDomain;
 import com.finalproj.orbitflow.hr.company.entity.Company;
@@ -55,6 +54,6 @@ public class File extends BaseEntity {
     private Long fileSize;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "board_id")
-    private Board board;
+    @JoinColumn(name = "board_post_id")
+    private BoardPost boardPost;
 }

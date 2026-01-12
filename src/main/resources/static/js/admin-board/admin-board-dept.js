@@ -1,4 +1,4 @@
-// 부서 게시판 활성화 페이지 JavaScript
+// 부서 게시판 관리 페이지 JavaScript
 
 const API_BASE_URL = '/api/admin/board-categories';
 let currentOrgPage = 0;

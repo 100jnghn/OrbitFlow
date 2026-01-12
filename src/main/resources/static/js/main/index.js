@@ -284,12 +284,12 @@ async function loadNotices() {
         );
 
         if (!noticeCategory) {
-            noticeList.innerHTML = '<li class="notice-item empty">전사 공지사항 게시판이 없습니다.</li>';
+            noticeList.innerHTML = '<li class="notice-item empty">공지사항 게시글이 없습니다.</li>';
             return;
         }
 
         const boardResponse = await apiFetch(
-            `/api/boards/categories/${noticeCategory.id}?page=0&size=5&sort=createdAt,desc`
+            `/api/board-posts/categories/${noticeCategory.id}?page=0&size=5&sort=createdAt,desc`
         );
 
         if (!boardResponse.ok) throw new Error('공지사항 조회 실패');
@@ -298,7 +298,7 @@ async function loadNotices() {
         const boards = boardResult.data?.content || [];
 
         if (boards.length === 0) {
-            noticeList.innerHTML = '<li class="notice-item empty">전사 공지사항이 없습니다.</li>';
+            noticeList.innerHTML = '<li class="notice-item empty">공지사항 게시글이 없습니다.</li>';
             return;
         }
 
