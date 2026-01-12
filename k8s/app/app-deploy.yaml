@@ -39,7 +39,6 @@ spec:
             - name: RENDER_BASE_URL
               value: "http://spring-boot-service"
 
-            # 🔥 여기 추가
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
@@ -56,17 +55,31 @@ spec:
               value: eu-west-3
 
           # ===============================
-          # ❤️ Health Check (Actuator)
+          # 🚀 Startup Probe (🔥 핵심 추가)
+          # ===============================
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8090
+            failureThreshold: 30   # 최대 5분 대기 (30 * 10s)
+            periodSeconds: 10
+            timeoutSeconds: 3
+
+          # ===============================
+          # ❤️ Readiness Probe
           # ===============================
           readinessProbe:
             httpGet:
               path: /actuator/health
               port: 8090
-            initialDelaySeconds: 60
+            initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 3
-            failureThreshold: 3
+            failureThreshold: 5
 
+          # ===============================
+          # 💀 Liveness Probe
+          # ===============================
           livenessProbe:
             httpGet:
               path: /actuator/health
@@ -103,4 +116,3 @@ spec:
       targetPort: 8090
       protocol: TCP
   type: ClusterIP
-

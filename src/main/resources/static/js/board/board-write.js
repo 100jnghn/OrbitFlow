@@ -1,6 +1,6 @@
 // 게시글 작성/수정 페이지 JavaScript
 
-const BOARD_API = '/api/boards';
+const BOARD_API = '/api/board-posts';
 const BOARD_CATEGORY_API = '/api/board-categories';
 
 let categoryId = null;
@@ -38,6 +38,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     // 글자수 카운터 초기화
     updateTitleCharCount();
     updateContentCharCount();
+
+    // 엔터키 폼 제출 방지
+    preventEnterSubmit();
 });
 
 // 게시판 카테고리 목록 로드 (사이드바용)
@@ -155,6 +158,20 @@ function toggleBoardMenu(element) {
     } else {
         menuItem.classList.add('active');
         element.setAttribute('aria-expanded', 'true');
+    }
+}
+
+// 엔터키 폼 제출 방지
+function preventEnterSubmit() {
+    const titleInput = document.getElementById('boardTitleInput');
+
+    // 제목 입력 필드에서 엔터키 방지
+    if (titleInput) {
+        titleInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+            }
+        });
     }
 }
 

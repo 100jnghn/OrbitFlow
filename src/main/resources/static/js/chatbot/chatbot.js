@@ -99,9 +99,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 const messages = result.data || [];
 
                 messages.forEach(msg => {
-                    if (msg.role === 'USER') addUserMessage(msg.content);
+                    if (msg.role === 'USER') addUserMessage(msg.content, msg.createdAt);
                     else if (msg.role === 'ASSISTANT') {
-                        const msgEl = createMessageElement('bot', msg.content);
+                        const msgEl = createMessageElement('bot', msg.content, null, false, msg.createdAt);
                         messagesContainer.appendChild(msgEl);
                     }
                 });
@@ -222,7 +222,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (response.ok) {
                 const result = await response.json();
                 const answer = result.data.assistant.content;
-                const msgEl = createMessageElement('bot', '');
+                const createdAt = result.data.assistant.createdAt;
+                const msgEl = createMessageElement('bot', '', null, false, createdAt);
                 messagesContainer.appendChild(msgEl);
                 typeWriter(msgEl.querySelector('.chatbot-message-bubble'), answer);
             }
@@ -273,8 +274,9 @@ document.addEventListener('DOMContentLoaded', function () {
         selectedCategoryName = null;
     }
 
-    function addUserMessage(text) {
-        messagesContainer.appendChild(createMessageElement('user', text));
+    function addUserMessage(text, timestamp = null) {
+        const ts = timestamp || new Date().toISOString();
+        messagesContainer.appendChild(createMessageElement('user', text, null, false, ts));
         scrollToBottom();
     }
 
@@ -285,7 +287,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return id;
     }
 
-    function createMessageElement(type, text, id, isLoading = false) {
+    function createMessageElement(type, text, id, isLoading = false, timestamp = null) {
         const div = document.createElement('div');
         div.className = `chatbot-message ${type}`;
         if (id) div.id = id;
@@ -294,7 +296,27 @@ document.addEventListener('DOMContentLoaded', function () {
         bubble.textContent = text;
         if (isLoading) bubble.style.fontStyle = 'italic';
         div.appendChild(bubble);
+
+        if (timestamp && !isLoading) {
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'chatbot-message-time';
+            timeSpan.textContent = formatDate(timestamp);
+            div.appendChild(timeSpan);
+        }
+
         return div;
+    }
+
+    function formatDate(isoString) {
+        if (!isoString) return '';
+        try {
+            const date = new Date(isoString);
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
+        } catch (e) {
+            return '';
+        }
     }
 
     function removeMessage(id) {

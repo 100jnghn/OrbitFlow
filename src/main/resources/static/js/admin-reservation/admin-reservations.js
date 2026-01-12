@@ -53,26 +53,29 @@ function formatHour(hour) {
 /* ==========================
    Table Cell Helpers
 ========================== */
-function createCell(value = '-', tooltip = false) {
+function createCell(value = '-', tooltip = false, customTooltipText = null) {
     const td = document.createElement('td');
     const text = (value ?? '').toString();
-    
+
     td.textContent = text;
-    
-    if (tooltip && text.length > 0 && text !== '-') {
-        td.dataset.fulltext = text;
-        td.addEventListener('mouseenter', showTooltip);
-        td.addEventListener('mousemove', moveTooltip);
-        td.addEventListener('mouseleave', hideTooltip);
+
+    if (tooltip) {
+        const tooltipContent = customTooltipText !== null ? customTooltipText : text;
+        if (tooltipContent.length > 0 && tooltipContent !== '-') {
+            td.dataset.fulltext = tooltipContent;
+            td.addEventListener('mouseenter', showTooltip);
+            td.addEventListener('mousemove', moveTooltip);
+            td.addEventListener('mouseleave', hideTooltip);
+        }
     }
-    
+
     return td;
 }
 
 function createCategoryCell(typeCode, typeName) {
     const td = document.createElement('td');
     td.textContent = typeName || '-';
-    
+
     // hover 시 전체 텍스트 보기 기능
     if (typeName && typeName !== '-') {
         td.dataset.fulltext = typeName;
@@ -80,20 +83,20 @@ function createCategoryCell(typeCode, typeName) {
         td.addEventListener('mousemove', moveTooltip);
         td.addEventListener('mouseleave', hideTooltip);
     }
-    
+
     return td;
 }
 
 function createStatusCell(reservation) {
     const td = document.createElement('td');
     td.className = 'status-cell';
-    
+
     const badge = document.createElement('span');
     badge.className = 'status-badge status-badge-clickable';
     badge.textContent = reservation.reservationStatusName;
     badge.dataset.reservationId = reservation.reservationId;
     badge.dataset.currentStatusId = reservation.reservationStatusId;
-    
+
     // 상태별 클래스 추가
     const statusName = reservation.reservationStatusName;
     if (statusName === '예약 확정') {
@@ -105,19 +108,19 @@ function createStatusCell(reservation) {
     } else if (statusName === '예약 취소') {
         badge.classList.add('status-cancelled');
     }
-    
+
     badge.addEventListener('click', (e) => {
         e.stopPropagation();
         // tooltip 숨기기
         hideTooltip();
         showStatusDropdown(badge, reservation);
     });
-    
+
     // '예약 반려' 또는 '예약 취소'일 때 rejectReason tooltip 추가
-    if ((reservation.reservationStatusName === '예약 반려' || reservation.reservationStatusName === '예약 취소') 
+    if ((reservation.reservationStatusName === '예약 반려' || reservation.reservationStatusName === '예약 취소')
         && reservation.rejectReason) {
         td.dataset.fulltext = reservation.rejectReason;
-        
+
         // td에 tooltip 이벤트 추가 (badge를 제외한 영역)
         td.addEventListener('mouseenter', (e) => {
             // badge 위가 아닐 때만 tooltip 표시
@@ -131,7 +134,7 @@ function createStatusCell(reservation) {
             }
         });
         td.addEventListener('mouseleave', hideTooltip);
-        
+
         // badge 위에서도 tooltip 표시 (클릭 전에)
         badge.addEventListener('mouseenter', (e) => {
             e.stopPropagation();
@@ -146,7 +149,7 @@ function createStatusCell(reservation) {
             hideTooltip();
         });
     }
-    
+
     td.appendChild(badge);
     return td;
 }
@@ -189,16 +192,16 @@ async function loadStatuses() {
     try {
         const res = await apiFetch(
             '/api/reservation/status',
-            {method: 'GET'}
+            { method: 'GET' }
         );
 
-        if(!res.ok) throw new Error();
+        if (!res.ok) throw new Error();
 
-        const {data} = await res.json();
+        const { data } = await res.json();
 
         // 테스트용 status는 불러오지 않기
         statusList = data.filter(status => status.id < 5);
-        
+
         const select = document.getElementById("status-filter")
 
         select.innerHTML = '<option value="">전체</option>';
@@ -209,7 +212,7 @@ async function loadStatuses() {
             option.textContent = status.statusName;
             select.appendChild(option);
         });
-    } catch(e) {
+    } catch (e) {
         console.error(e);
         await sweetError("상태 목록 조회 실패");
     }
@@ -239,7 +242,7 @@ async function loadReservations(page = 0) {
 
         if (!res.ok) throw new Error();
 
-        const {data} = await res.json();
+        const { data } = await res.json();
         const tbody = document.querySelector('.resource-table tbody');
         tbody.innerHTML = '';
 
@@ -261,22 +264,21 @@ async function loadReservations(page = 0) {
 
         data.content.forEach((r, i) => {
             const tr = document.createElement('tr');
-            
+
             // 신청자 이름 (employeeName 또는 applicantName 등 API 응답에 맞게 수정 필요)
             const applicantName = r.employeeName || r.applicantName || r.name || '-';
-            
+
             // 자원 이름
             const resourceName = r.resourceName || '-';
-            
+
             // 예약 사유
             const reservationReason = r.reservationReason || '-';
-            
+
             tr.append(
                 createCell(startNumber + i + 1),
+                createCell(applicantName, true, reservationReason), // 신청자명 (예약 사유 tooltip)
                 createCategoryCell(r.typeCode, r.typeName), // 카테고리 (tooltip 적용)
-                createCell(applicantName, true), // 신청자 이름 (tooltip 적용)
                 createCell(resourceName, true), // 자원 이름 (tooltip 적용)
-                createCell(reservationReason, true), // 예약 사유 (tooltip 적용)
                 createCell(formatDate(r.reservationDate)),
                 createCell(formatDate(r.endDate)),
                 createCell(r.typeCode === 'CAR' ? '-' : formatHour(r.startTime)),
@@ -303,7 +305,7 @@ function renderPagination(pageData) {
     const container = document.querySelector('.pagination');
     container.innerHTML = '';
 
-    const {number, totalPages, first, last} = pageData;
+    const { number, totalPages, first, last } = pageData;
 
     const prev = document.createElement('button');
     prev.textContent = '<';
@@ -340,16 +342,16 @@ function showStatusDropdown(badge, reservation) {
     const dropdown = document.createElement('div');
     dropdown.className = 'status-dropdown';
     dropdown.dataset.reservationId = reservation.reservationId;
-    
+
     // 회의실인 경우 필터링된 상태 목록 사용
     let filteredStatusList = statusList;
     if (reservation.typeCode === 'MEETING') {
         // 회의실은 '예약 확정', '예약 취소'만 표시
-        filteredStatusList = statusList.filter(status => 
+        filteredStatusList = statusList.filter(status =>
             status.statusName === '예약 확정' || status.statusName === '예약 취소'
         );
     }
-    
+
     // 상태 목록 추가
     filteredStatusList.forEach(status => {
         const item = document.createElement('div');
@@ -522,7 +524,7 @@ async function updateReservationStatusWithReason(reservationId, statusId, status
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 statusId,
                 rejectReason: reason
             })
@@ -597,7 +599,7 @@ async function approveReservation(id) {
 async function batchApproveReservations() {
     const typeSelect = document.getElementById('resource-category-filter');
     const statusSelect = document.getElementById('status-filter');
-    
+
     const typeCode = typeSelect?.value || null;
     const statusId = statusSelect?.value ? Number(statusSelect.value) : null;
 

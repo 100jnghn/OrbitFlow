@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -61,6 +62,19 @@ public class AuditLogService {
     }
 
     @Transactional(readOnly = true)
+    public AuditLogResDto findAdminAuditLog(Long id, Long companyId) {
+        AuditLog log = auditLogRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("AuditLog not found"));
+
+        if (!log.getCompany().getId().equals(companyId)) {
+            throw new IllegalStateException("다른 회사의 감사 로그입니다.");
+        }
+
+        return toAdminDto(log);
+    }
+
+
+    @Transactional(readOnly = true)
     public Page<AuditLogResDto> searchAdminAuditLogs(
             Long companyId,
             String actorName,
@@ -82,7 +96,8 @@ public class AuditLogService {
                 AuditEventType.STATUS_CHANGE,
                 AuditEventType.ACTIVATE,
                 AuditEventType.DEACTIVATE,
-                AuditEventType.CREATE
+                AuditEventType.CREATE,
+                AuditEventType.UPDATE
         );
 
         return auditLogRepository
@@ -111,18 +126,75 @@ public class AuditLogService {
         String entityDisplay =
                 log.getEntityType().getDisplayName() + " · " + entityName;
 
+        Map<String, Object> before = convertReadable(log.getBeforeData());
+        Map<String, Object> after  = convertReadable(log.getAfterData());
+
         return new AuditLogResDto(
                 log.getId(),
                 log.getEntityType().name(),
                 log.getEntityId(),
                 entityDisplay,
-                log.getEventType().name(),
+                log.getEventType().getDisplayName(),
                 log.getActor().getName(),
                 log.getActor().getEmail(),
-                log.getBeforeData(),
-                log.getAfterData(),
+                before,
+                after,
                 log.getCreatedAt()
         );
     }
 
+    private Map<String, Object> convertReadable(Map<String, Object> data) {
+        if (data == null) return null;
+
+        Map<String, Object> result = new LinkedHashMap<>();
+
+        for (var entry : data.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+
+            Object readableValue = switch (key) {
+
+                case "isHead" ->
+                        entityNameResolver.booleanDisplay(key, value);
+
+                case "orgId" ->
+                        entityNameResolver.organizationName(toLong(value));
+
+                case "orgCategoryId" ->
+                        entityNameResolver.orgCategoryName(toLong(value));
+
+                case "parentPositionId", "positionCategoryId" ->
+                        entityNameResolver.positionName(toLong(value));
+
+                case "parentRankId","rankId" ->
+                        entityNameResolver.rankName(toLong(value));
+
+                // enum 한글화
+                case "status", "employmentType", "gender", "role" ->
+                        entityNameResolver.enumDisplay(key, value);
+
+                // 일반 필드
+                default -> value;
+            };
+
+            result.put(key, readableValue);
+        }
+
+        return result;
+    }
+
+
+    private Long toLong(Object value) {
+        if (value == null) return null;
+
+        if (value instanceof Number n) {
+            return n.longValue();
+        }
+
+        try {
+            return Long.parseLong(value.toString());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
 }

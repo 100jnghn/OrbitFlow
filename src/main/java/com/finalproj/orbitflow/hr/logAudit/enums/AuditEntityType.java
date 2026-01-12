@@ -10,6 +10,7 @@ package com.finalproj.orbitflow.hr.logAudit.enums;
 public enum AuditEntityType {
 
     COMPANY("회사"),
+    ORG_CATEGORY("조직 카테고리"),
     ORGANIZATION("조직"),
     EMPLOYEE("사원"),
     HR_RANK("직급"),

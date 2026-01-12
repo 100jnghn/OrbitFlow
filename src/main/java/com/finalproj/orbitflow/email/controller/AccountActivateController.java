@@ -6,10 +6,15 @@ import com.finalproj.orbitflow.email.service.EmailVerificationService;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.service.EmployeeService;
+import com.finalproj.orbitflow.hr.logAudit.enums.AuditEntityType;
+import com.finalproj.orbitflow.hr.logAudit.enums.AuditEventType;
+import com.finalproj.orbitflow.hr.logAudit.service.AuditLogService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 import static com.finalproj.orbitflow.email.enums.EmailTokenType.ACTIVATE_ACCOUNT;
 
@@ -27,6 +32,7 @@ public class AccountActivateController {
 
     private final EmailVerificationService emailService;
     private final EmployeeService employeeService;
+    private final AuditLogService auditLogService;
 
     @PostMapping("/activate")
     public ResponseEntity<?> activate(
@@ -47,6 +53,16 @@ public class AccountActivateController {
 
         // 계정 활성화
         employeeService.activate(employee);
+
+        auditLogService.log(
+                employee.getCompany(),
+                employee,
+                AuditEntityType.EMPLOYEE,
+                employee.getId(),
+                AuditEventType.ACTIVATE,
+                Map.of("status", "TEMP"),
+                Map.of("status", "ACTIVE")
+        );
 
         // 토큰 사용 처리
         emailService.markTokenUsed(vt);

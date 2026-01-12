@@ -2,11 +2,11 @@ package com.finalproj.orbitflow.board.boardPost.service;
 
 import com.finalproj.orbitflow.board.boardCategory.entity.BoardCategory;
 import com.finalproj.orbitflow.board.boardCategory.repository.BoardCategoryRepository;
-import com.finalproj.orbitflow.board.boardPost.dto.BoardReqDto;
-import com.finalproj.orbitflow.board.boardPost.dto.BoardResDto;
-import com.finalproj.orbitflow.board.boardPost.entity.Board;
-import com.finalproj.orbitflow.board.boardPost.repository.BoardRepository;
-import com.finalproj.orbitflow.board.boardPost.repository.BoardSpecifications;
+import com.finalproj.orbitflow.board.boardPost.dto.BoardPostReqDto;
+import com.finalproj.orbitflow.board.boardPost.dto.BoardPostResDto;
+import com.finalproj.orbitflow.board.boardPost.entity.BoardPost;
+import com.finalproj.orbitflow.board.boardPost.repository.BoardPostRepository;
+import com.finalproj.orbitflow.board.boardPost.repository.BoardPostSpecifications;
 import com.finalproj.orbitflow.board.enums.BoardSearchType;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
@@ -42,9 +42,9 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Slf4j
-public class BoardService {
+public class BoardPostService {
 
-    private final BoardRepository boardRepository;
+    private final BoardPostRepository boardPostRepository;
     private final BoardCategoryRepository boardCategoryRepository;
     private final EmployeeRepository employeeRepository;
     private final FileService fileService;
@@ -56,7 +56,7 @@ public class BoardService {
     private String bucket;
 
     /** [사용자용] 게시글 목록 조회 (공용/조직 게시판 공용, 검색 포함) */
-    public Page<BoardResDto.ListInfo> getBoardList(
+    public Page<BoardPostResDto.ListInfo> getBoardList(
             Long companyId,
             Long organizationId,
             Long employeeId,
@@ -86,7 +86,7 @@ public class BoardService {
         Instant endExclusiveInstant = (endDate != null) ? endDate.plusDays(1).atStartOfDay(zoneId).toInstant() : null;
 
         // 4) Spec 생성
-        Specification<Board> spec = BoardSpecifications.listSpec(
+        Specification<BoardPost> spec = BoardPostSpecifications.listSpec(
                 category.getId(),
                 startInstant,
                 endExclusiveInstant,
@@ -94,31 +94,31 @@ public class BoardService {
                 keyword);
 
         // 5) 조회
-        return boardRepository.findAll(spec, pageable)
-                .map(BoardResDto.ListInfo::from);
+        return boardPostRepository.findAll(spec, pageable)
+                .map(BoardPostResDto.ListInfo::from);
     }
 
     @Transactional
-    public BoardResDto.DetailInfo getBoardDetail(Long companyId, Long organizationId, Long employeeId, Long boardId,
+    public BoardPostResDto.DetailInfo getBoardDetail(Long companyId, Long organizationId, Long employeeId, Long boardId,
             EmployeeRole role) {
-        Board board = boardRepository.findByIdAndDeletedAtIsNull(boardId)
+        BoardPost boardPost = boardPostRepository.findByIdAndDeletedAtIsNull(boardId)
                 .orElseThrow(() -> new NotFoundException("게시글이 존재하지 않습니다."));
 
-        BoardCategory category = board.getCategory();
+        BoardCategory category = boardPost.getCategory();
 
         validateCategoryAccess(companyId, organizationId, employeeId, category, role);
 
-        board.increaseViewCount();
-        return BoardResDto.DetailInfo.from(board);
+        boardPost.increaseViewCount();
+        return BoardPostResDto.DetailInfo.from(boardPost);
     }
 
     /** [사용자용] 게시글 생성(공용/조직 게시판, 첨부파일 포함) */
     @Transactional
-    public BoardResDto.DetailInfo createBoard(
+    public BoardPostResDto.DetailInfo createBoard(
             Long companyId,
             Long organizationId,
             Long employeeId,
-            BoardReqDto.Create request,
+            BoardPostReqDto.Create request,
             List<MultipartFile> files,
             EmployeeRole role) {
         BoardCategory category = getVerifiedAccessibleCategory(
@@ -148,7 +148,7 @@ public class BoardService {
                     .toList();
         }
 
-        Board board = Board.builder()
+        BoardPost boardPost = BoardPost.builder()
                 .category(category)
                 .writer(employee)
                 .boardTitle(request.getBoardTitle())
@@ -156,7 +156,7 @@ public class BoardService {
                 .files(attachedFiles)
                 .build();
 
-        com.finalproj.orbitflow.board.boardPost.entity.Board saved = boardRepository.save(board);
+        BoardPost saved = boardPostRepository.save(boardPost);
 
         // 공지사항(NOTICE) 타입 게시글 작성 시 전 사원에게 알림 생성
         if (com.finalproj.orbitflow.board.boardCategory.enums.Board.NOTICE.name().equals(category.getBoardType())) {
@@ -179,7 +179,7 @@ public class BoardService {
             }
         }
 
-        return BoardResDto.DetailInfo.from(saved);
+        return BoardPostResDto.DetailInfo.from(saved);
     }
 
     /** 게시판 카테고리 접근 검증 + 조회 */
@@ -200,10 +200,10 @@ public class BoardService {
             throw new ForbiddenException("접근 권한이 없습니다.");
         }
         if (category.getDeletedAt() != null) {
-            throw new ForbiddenException("게시글 작성 권한이 없습니다.");
+            throw new ForbiddenException("게시판이 삭제되었습니다.");
         }
         if (!category.isActivated()) {
-            throw new ForbiddenException("게시글 작성 권한이 없습니다.");
+            throw new ForbiddenException("비활성화된 게시판입니다.");
         }
 
         // 1. ADMIN 권한이 있으면 모든 게시판 접근 허용
@@ -246,21 +246,21 @@ public class BoardService {
     }
 
     @Transactional
-    public BoardResDto.DetailInfo updateBoard(
+    public BoardPostResDto.DetailInfo updateBoard(
             Long companyId,
             Long organizationId,
             Long employeeId,
             Long boardId,
-            BoardReqDto.Update request,
+            BoardPostReqDto.Update request,
             List<MultipartFile> files) {
-        Board board = boardRepository.findByIdAndDeletedAtIsNull(boardId)
+        BoardPost boardPost = boardPostRepository.findByIdAndDeletedAtIsNull(boardId)
                 .orElseThrow(() -> new NotFoundException("게시글이 존재하지 않습니다."));
 
-        BoardCategory category = board.getCategory();
+        BoardCategory category = boardPost.getCategory();
         validateCategoryAccess(companyId, organizationId, employeeId, category, null); // 수정 시에는 role 체크 대신 기본 로직 수행
 
         // 작성자 본인 또는 관리자만 허용(관리자 정책은 네 role에 맞게 조정)
-        boolean isWriter = board.getWriter().getId().equals(employeeId);
+        boolean isWriter = boardPost.getWriter().getId().equals(employeeId);
         if (!isWriter) {
             throw new ForbiddenException("게시글 수정 권한이 없습니다.");
         }
@@ -269,7 +269,8 @@ public class BoardService {
         validateFileSize(files);
 
         // 기존 파일 정보 저장 (S3 삭제용)
-        List<File> existingFiles = board.getFiles() != null ? new java.util.ArrayList<>(board.getFiles()) : null;
+        List<File> existingFiles = boardPost.getFiles() != null ? new java.util.ArrayList<>(boardPost.getFiles())
+                : null;
 
         // 새 파일 업로드
         List<File> attachedFiles = null;
@@ -282,7 +283,7 @@ public class BoardService {
         }
 
         // 게시글 업데이트 (파일 교체)
-        board.update(request.getBoardTitle(), request.getBoardContent(), attachedFiles);
+        boardPost.update(request.getBoardTitle(), request.getBoardContent(), attachedFiles);
 
         // 기존 파일 삭제 (S3에서도 삭제) - 업데이트 후에 삭제
         if (existingFiles != null && !existingFiles.isEmpty()) {
@@ -294,7 +295,7 @@ public class BoardService {
         }
 
         // Dirty checking으로 반영되므로 save() 없어도 됨.
-        return BoardResDto.DetailInfo.from(board);
+        return BoardPostResDto.DetailInfo.from(boardPost);
     }
 
     @Transactional
@@ -303,27 +304,27 @@ public class BoardService {
             Long organizationId,
             Long employeeId,
             Long boardId) {
-        Board board = boardRepository.findByIdAndDeletedAtIsNull(boardId)
+        BoardPost boardPost = boardPostRepository.findByIdAndDeletedAtIsNull(boardId)
                 .orElseThrow(() -> new NotFoundException("게시글이 존재하지 않습니다."));
 
-        BoardCategory category = board.getCategory();
+        BoardCategory category = boardPost.getCategory();
         validateCategoryAccess(companyId, organizationId, employeeId, category, null); // 삭제 시에는 role 체크 대신 기본 로직 수행
 
-        boolean isWriter = board.getWriter().getId().equals(employeeId);
+        boolean isWriter = boardPost.getWriter().getId().equals(employeeId);
         if (!isWriter) {
             throw new ForbiddenException("게시글 삭제 권한이 없습니다.");
         }
 
         // 첨부된 파일 삭제 (S3에서도 삭제)
-        if (board.getFiles() != null && !board.getFiles().isEmpty()) {
-            board.getFiles().forEach(file -> {
+        if (boardPost.getFiles() != null && !boardPost.getFiles().isEmpty()) {
+            boardPost.getFiles().forEach(file -> {
                 if (file.getObjectKey() != null) {
                     deleteObject(file.getObjectKey());
                 }
             });
         }
 
-        board.softDelete(); // soft delete
+        boardPost.softDelete(); // soft delete
     }
 
     /** 파일 크기 검증 (50MB 제한) */

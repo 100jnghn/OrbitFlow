@@ -8,15 +8,11 @@ import com.finalproj.orbitflow.email.service.EmailVerificationService;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.service.EmployeeService;
-import com.finalproj.orbitflow.hr.logAudit.enums.AuditEntityType;
-import com.finalproj.orbitflow.hr.logAudit.enums.AuditEventType;
 import com.finalproj.orbitflow.hr.logAudit.service.AuditLogService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 /**
  * Please explain the class!!!
@@ -68,16 +64,6 @@ public class PasswordResetController {
 
         // 여기서 토큰 사용 처리
         emailService.markTokenUsed(verificationToken);
-
-        auditLogService.log(
-                employee.getCompany(),
-                employee,
-                AuditEntityType.EMPLOYEE,
-                employee.getId(),
-                AuditEventType.UPDATE,
-                Map.of("password", "***"),
-                Map.of("password", "***")
-        );
 
         return ResponseEntity.ok().build();
     }

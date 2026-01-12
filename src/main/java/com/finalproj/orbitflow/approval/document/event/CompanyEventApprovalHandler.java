@@ -15,6 +15,7 @@ import com.finalproj.orbitflow.hr.organization.repository.OrgRepository;
 import com.finalproj.orbitflow.schedule.dto.ScheduleReqDto;
 import com.finalproj.orbitflow.schedule.service.ScheduleService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -40,6 +41,7 @@ public class CompanyEventApprovalHandler {
     private final OrgRepository orgRepository;
     private final AttendanceRuleRepository attendanceRuleRepository;
 
+    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(Long documentId) {
 

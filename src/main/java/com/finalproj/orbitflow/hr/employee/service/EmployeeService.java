@@ -20,6 +20,8 @@ import com.finalproj.orbitflow.hr.positionCategory.entity.PositionCategory;
 import com.finalproj.orbitflow.hr.positionCategory.repository.PositionCategoryRepository;
 import com.finalproj.orbitflow.hr.rank.entity.HrRank;
 import com.finalproj.orbitflow.hr.rank.repository.RankRepository;
+import com.finalproj.orbitflow.notification.enums.NotificationType;
+import com.finalproj.orbitflow.notification.service.NotificationCommandService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -53,6 +55,7 @@ public class EmployeeService {
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final NotificationCommandService notificationCommandService;
 
 
     /* =============================
@@ -218,7 +221,7 @@ public class EmployeeService {
 
         auditLogService.log(
                 company,
-                getActorEmployee(),
+                actor,
                 AuditEntityType.EMPLOYEE,
                 saved.getId(),
                 AuditEventType.CREATE,
@@ -235,6 +238,8 @@ public class EmployeeService {
        ============================= */
 
     public void update(Long companyId, Long employeeId, EmployeeUpdateReqDto dto) {
+
+        Employee actor = getActorEmployee();
 
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new IllegalArgumentException("사원을 찾을 수 없습니다."));
@@ -298,11 +303,34 @@ public class EmployeeService {
 
 
         // ===== 조직/직급/직책 =====
+// ===== 조직 =====
         if (dto.getOrgId() != null && !dto.getOrgId().equals(employee.getOrganization().getId())) {
-            putDiff(before, after, "orgId", employee.getOrganization().getId(), dto.getOrgId());
-            Organization org = orgRepository.findById(dto.getOrgId())
+
+            Organization beforeOrg = employee.getOrganization();
+
+            putDiff(before, after, "orgId",
+                    beforeOrg.getId(),
+                    dto.getOrgId());
+
+            Organization afterOrg = orgRepository.findById(dto.getOrgId())
                     .orElseThrow(() -> new IllegalArgumentException("조직 정보가 없습니다."));
-            employee.changeOrganization(org);
+
+            employee.changeOrganization(afterOrg);
+
+            // 조직 변경 알림
+            String message = String.format(
+                    "소속 조직이 변경되었습니다.\n%s → %s",
+                    beforeOrg.getName(),
+                    afterOrg.getName()
+            );
+
+            notificationCommandService.createNotification(
+                    employee.getCompany().getId(),
+                    employee.getId(),
+                    NotificationType.EMPLOYEE_ORG_CHANGED,
+                    message,
+                    "/view/organizations?employeeId=" + employee.getId()
+            );
         }
 
         if (dto.getRankId() != null) {
@@ -313,11 +341,41 @@ public class EmployeeService {
             }
         }
 
+// ===== 직책 =====
         if (dto.getPositionCategoryId() != null) {
-            Long currentPosId = employee.getPositionCategory() != null ? employee.getPositionCategory().getId() : null;
+
+            Long currentPosId = employee.getPositionCategory() != null
+                    ? employee.getPositionCategory().getId()
+                    : null;
+
             if (!dto.getPositionCategoryId().equals(currentPosId)) {
-                putDiff(before, after, "positionCategoryId", currentPosId, dto.getPositionCategoryId());
-                employee.changePosition(positionCategoryRepository.findById(dto.getPositionCategoryId()).orElse(null));
+
+                PositionCategory beforePos = employee.getPositionCategory();
+
+                putDiff(before, after, "positionCategoryId",
+                        currentPosId,
+                        dto.getPositionCategoryId());
+
+                PositionCategory afterPos =
+                        positionCategoryRepository.findById(dto.getPositionCategoryId())
+                                .orElse(null);
+
+                employee.changePosition(afterPos);
+
+                // 직책 변경 알림
+                String message = String.format(
+                        "직책이 변경되었습니다.\n%s → %s",
+                        beforePos != null ? beforePos.getName() : "미지정",
+                        afterPos != null ? afterPos.getName() : "미지정"
+                );
+
+                notificationCommandService.createNotification(
+                        employee.getCompany().getId(),
+                        employee.getId(),
+                        NotificationType.EMPLOYEE_POSITION_CHANGED,
+                        message,
+                        "/view/organizations?employeeId=" + employee.getId()
+                );
             }
         }
 
@@ -338,7 +396,7 @@ public class EmployeeService {
         // 권한 (대표 관리자만)
         if (dto.getRole() != null && dto.getRole() != employee.getRole()) {
 
-            if (getActorEmployee().getRole() != EmployeeRole.COMPANY_ADMIN) {
+            if (actor.getRole() != EmployeeRole.COMPANY_ADMIN) {
                 throw new IllegalStateException(
                         "대표 관리자만 사원 권한을 변경할 수 있습니다."
                 );
@@ -360,7 +418,7 @@ public class EmployeeService {
         if (!after.isEmpty()) {
             auditLogService.log(
                     employee.getCompany(),
-                    getActorEmployee(),
+                    actor,
                     AuditEntityType.EMPLOYEE,
                     employee.getId(),
                     AuditEventType.UPDATE,
@@ -431,6 +489,7 @@ public class EmployeeService {
     private void handleStatusChange(Employee employee, EmployeeStatus newStatus) {
 
         EmployeeStatus current = employee.getStatus();
+        Employee actor = getActorEmployee();
 
         // RESIGNED는 어떤 경우에도 변경 불가
         if (current == EmployeeStatus.RESIGNED) {
@@ -455,7 +514,7 @@ public class EmployeeService {
 
         auditLogService.log(
                 employee.getCompany(),
-                getActorEmployee(),
+                actor,
                 AuditEntityType.EMPLOYEE,
                 employee.getId(),
                 AuditEventType.STATUS_CHANGE,

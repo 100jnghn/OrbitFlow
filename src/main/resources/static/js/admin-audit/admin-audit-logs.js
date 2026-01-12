@@ -150,10 +150,7 @@ async function openAuditLogModal(id) {
         setText('modal-created-at', formatDateTime(log.createdAt));
         setText('modal-actor', `${log.actorName} (${log.actorEmail})`);
         setText('modal-entity', log.entityDisplay);
-        setText(
-            'modal-event',
-            humanizeEvent(log.eventType)
-        );
+        setText('modal-event', humanizeEvent(log.eventType));
 
 
         // BEFORE / AFTER
@@ -200,7 +197,7 @@ function formatDiff(before, after) {
         const a = after?.[key];
 
         if (b !== a) {
-            lines.push(`${humanizeKey(key)}: ${b ?? '-'} → ${a ?? '-'}`);
+            lines.push(`${humanizeKey(key)}: ${humanizeData(b) ?? '-'} → ${humanizeData(a) ?? '-'}`);
         }
     });
 
@@ -209,10 +206,22 @@ function formatDiff(before, after) {
 
 function humanizeKey(key) {
     const map = {
-        status: '상태',
+        name: '이름',
+        isHead: '결재처리여부',
+        employeeNo: '사번',
+        email: '이메일',
+        role: '권한',
         orgId: '조직',
+        orgCategoryId: '조직카테고리',
+        parentPositionId: '상위직책',
         rankId: '직급',
-        positionCategoryId: '직책'
+        positionCategoryId: '직책',
+        parentRankId: '상위직급',
+        orderIndex: '정렬순서',
+        status: '상태',
+        gender: '성별',
+        hireDate: '입사일',
+        employmentType: '고용형태'
     };
     return map[key] ?? key;
 }
@@ -231,7 +240,29 @@ function humanizeEvent(event) {
         ASSIGN: '직급/직책 부여',
         UNASSIGN: '직급/직책 해제',
         STATUS_CHANGE: '상태 변경',
-        CREATE: '생성'
+        CREATE: '생성',
+        UPDATE: '정보 수정'
     };
     return map[event] ?? event;
+}
+
+function humanizeData(data) {
+    const map = {
+        ACTIVE: '재직',
+        SUSPENDED: '휴직',
+        RESIGNED: '퇴사',
+        TEMP: '임시계정',
+
+        REGULAR: '정규직',
+        NON_REGULAR: '비정규직',
+
+        MALE: '남성',
+        FEMALE: '여성',
+
+
+        ADMIN: '관리자',
+        EMPLOYEE: '사원',
+        COMPANY_ADMIN: '대표 관리자'
+    };
+    return map[data] ?? data;
 }

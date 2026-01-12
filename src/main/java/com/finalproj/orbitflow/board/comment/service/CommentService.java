@@ -1,8 +1,8 @@
 package com.finalproj.orbitflow.board.comment.service;
 
 import com.finalproj.orbitflow.board.boardCategory.entity.BoardCategory;
-import com.finalproj.orbitflow.board.boardPost.entity.Board;
-import com.finalproj.orbitflow.board.boardPost.repository.BoardRepository;
+import com.finalproj.orbitflow.board.boardPost.entity.BoardPost;
+import com.finalproj.orbitflow.board.boardPost.repository.BoardPostRepository;
 import com.finalproj.orbitflow.board.comment.dto.CommentReqDto;
 import com.finalproj.orbitflow.board.comment.dto.CommentResDto;
 import com.finalproj.orbitflow.board.comment.entity.Comment;
@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CommentService {
-    private final BoardRepository boardRepository;
+    private final BoardPostRepository boardPostRepository;
     private final CommentRepository commentRepository;
     private final EmployeeRepository employeeRepository;
     private final NotificationCommandService notificationCommandService;
@@ -35,20 +35,20 @@ public class CommentService {
             Long boardId,
             Pageable pageable) {
         // 1) 게시글 존재 + soft delete 검증
-        Board board = boardRepository.findByIdAndDeletedAtIsNull(boardId)
+        BoardPost boardPost = boardPostRepository.findByIdAndDeletedAtIsNull(boardId)
                 .orElseThrow(() -> new NotFoundException("게시글이 존재하지 않습니다."));
 
         // 2) 게시판 접근 검증 (회사/활성화/조직)
-        validateBoardAccess(companyId, organizationId, board);
+        validateBoardAccess(companyId, organizationId, boardPost);
 
         // 3) 댓글 조회 (deletedAt null만)
-        return commentRepository.findByBoardIdAndDeletedAtIsNull(boardId, pageable)
+        return commentRepository.findByBoardPostIdAndDeletedAtIsNull(boardId, pageable)
                 .map(CommentResDto.ListInfo::from);
     }
 
     /** 게시판 접근 검증 */
-    private void validateBoardAccess(Long companyId, Long organizationId, Board board) {
-        BoardCategory category = board.getCategory();
+    private void validateBoardAccess(Long companyId, Long organizationId, BoardPost boardPost) {
+        BoardCategory category = boardPost.getCategory();
 
         if (!category.getCompany().getId().equals(companyId)) {
             throw new ForbiddenException("접근 권한이 없는 게시글입니다.");
@@ -71,17 +71,17 @@ public class CommentService {
             Long employeeId,
             Long boardId,
             CommentReqDto.Create request) {
-        Board board = boardRepository.findByIdAndDeletedAtIsNull(boardId)
+        BoardPost boardPost = boardPostRepository.findByIdAndDeletedAtIsNull(boardId)
                 .orElseThrow(() -> new NotFoundException("게시글이 존재하지 않습니다."));
 
         // 게시판 접근 검증 (기존 BoardService 로직과 동일 개념)
-        validateBoardAccess(companyId, organizationId, board);
+        validateBoardAccess(companyId, organizationId, boardPost);
 
         Employee writer = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new NotFoundException("작성자 정보가 없습니다."));
 
         Comment comment = Comment.builder()
-                .board(board)
+                .boardPost(boardPost)
                 .writer(writer)
                 .commentContent(request.getCommentContent())
                 .build();
@@ -89,7 +89,7 @@ public class CommentService {
         Comment savedComment = commentRepository.save(comment);
 
         // 게시글 작성자에게 알림 전송 (본인이 작성한 댓글 제외)
-        Employee boardWriter = board.getWriter();
+        Employee boardWriter = boardPost.getWriter();
         if (!boardWriter.getId().equals(employeeId)) {
             String contentSample = savedComment.getCommentContent();
             if (contentSample.length() > 100) {
@@ -121,7 +121,7 @@ public class CommentService {
                 .orElseThrow(() -> new NotFoundException("댓글이 존재하지 않습니다."));
 
         // 회사 검증
-        if (!comment.getBoard().getCategory().getCompany().getId().equals(companyId)) {
+        if (!comment.getBoardPost().getCategory().getCompany().getId().equals(companyId)) {
             throw new ForbiddenException("수정 권한이 없습니다.");
         }
 
@@ -144,7 +144,7 @@ public class CommentService {
         Comment comment = commentRepository.findByIdAndDeletedAtIsNull(commentId)
                 .orElseThrow(() -> new NotFoundException("댓글이 존재하지 않습니다."));
 
-        if (!comment.getBoard().getCategory().getCompany().getId().equals(companyId)) {
+        if (!comment.getBoardPost().getCategory().getCompany().getId().equals(companyId)) {
             throw new ForbiddenException("삭제 권한이 없습니다.");
         }
 

@@ -2244,15 +2244,15 @@ VALUES (1, 10, '2025-11-03', '2025-11-03 08:52:00', '2025-11-03 18:05:00', 'ON_T
 -- 공통 게시판(organization_id NULL)은 그대로 insert
 INSERT INTO board_category (company_id, organization_id, board_name, board_type, is_activated, comment_activated)
 VALUES
-    (1, NULL, '전사 공지사항', 'NOTICE', 1, 1),
+    (1, NULL, '공지사항', 'NOTICE', 1, 1),
     (1, NULL, '자유 게시판', 'FREE', 1, 1),
     (1, NULL, '사내 건의함', 'FREE', 1, 1),
     (1, NULL, '칭찬 게시판', 'FREE', 1, 1),
     (1, NULL, '자기계발/스터디', 'FREE', 1, 1),
-    (2, NULL, 'TS 공지사항', 'NOTICE', 1, 1),
+    (2, NULL, '공지사항', 'NOTICE', 1, 1),
     (2, NULL, '기술 공유 라운지', 'FREE', 1, 1),
     (2, NULL, '사내 중고 장터', 'FREE', 1, 1),
-    (3, NULL, 'Global Notice', 'NOTICE', 1, 1),
+    (3, NULL, 'Notice', 'NOTICE', 1, 1),
     (3, NULL, 'General Forum', 'FREE', 1, 1);
 
 -- 부서 게시판은 organization 테이블에서 조직명 끌어와 생성
@@ -2270,7 +2270,7 @@ WHERE o.id IN (1,2,3,4,5,6,7,8,9,10);
 -- ==========================================
 -- 2. 게시글 데이터 (120개)
 -- ==========================================
-INSERT INTO board (id, board_category_id, employee_id, board_title, board_content, view_count)
+INSERT INTO board_post (id, board_category_id, employee_id, board_title, board_content, view_count)
 VALUES
 -- =========================
 -- 회사 1 (board_id 1~40) / employee_id 1~20 / category 1~10
@@ -2435,7 +2435,7 @@ VALUES
 -- ==========================================
 -- 3. 댓글 데이터 (120개) - 하드코딩 버전
 -- ==========================================
-INSERT INTO comment (board_id, employee_id, comment_content)
+INSERT INTO comment (board_post_id, employee_id, comment_content)
 VALUES
 -- 회사 1 (1~40)
 (1, 4, 'KPI 세부 정의(산식)도 공유 가능할까요?'),
