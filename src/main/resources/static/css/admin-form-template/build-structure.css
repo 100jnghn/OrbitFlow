@@ -1076,11 +1076,16 @@ html, body {
 }
 
 /* 이전/다음 */
-#before-form-btn,
-#next-form-btn {
+#before-form-btn{
     background: #f0f2f7;
     border: 1px solid #cfd8e7;
     color: #314066;
+}
+
+#next-form-btn {
+    background: #4b75e1;
+    border: 1px solid #cfd8e7;
+    color: #ffffff;
 }
 
 #before-form-btn:hover,
@@ -1091,7 +1096,7 @@ html, body {
 
 /* 저장 */
 #save-form-btn {
-    background: #5687ef;
+    background: #343d56;
     color: #fff;
     border: none;
 }
@@ -1412,3 +1417,107 @@ html, body {
     }
 }
 
+/* ======================================================
+   ✅ 문서 설정 패널 - 제목 input / 카테고리 select 스타일 통일
+   ====================================================== */
+#component-setting-panel #input-comp-label,
+#form-setting-panel #form-title-input,
+#form-setting-panel #form-category-input {
+    height: 30px;
+    padding: 0 8px;
+
+    border: 1px solid #ccd5ff;
+    border-radius: 4px;
+    background: #fff;
+
+    font-size: 0.95em;
+    color: #1f2949;
+
+    outline: none;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+/* ======================================================
+   ✅ 컴포넌트 설정 패널 - 옵션/컬럼 추가 버튼 (공통)
+   ====================================================== */
+
+#component-setting-panel #add-option-btn,
+#component-setting-panel #add-table-column-btn {
+    height: 32px;
+    padding: 0 12px;
+
+    border: 1px dashed #9aa7e0;
+    border-radius: 6px;
+
+    background: #f6f8ff;
+    color: #3345a0;
+
+    font-size: 0.85em;
+    font-weight: 500;
+
+    cursor: pointer;
+    user-select: none;
+
+    transition: background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+/* =================================
+   공통 X 삭제 버튼 (옵션/컬럼/스텝)
+================================= */
+.icon-delete-btn {
+    width: 28px;
+    height: 28px;
+
+    background: none;
+    border: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 0; /* 내부 텍스트 제거 */
+    color: #9aa3b2;
+    cursor: pointer;
+
+    border-radius: 50%;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.icon-delete-btn::before {
+    content: "✕";
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.icon-delete-btn:hover {
+    color: #e22719;
+    background-color: #fdecec;
+}
+
+/* 최소/최대 선택 수: label : input 가로 정렬 (우선순위 강제) */
+#right-panel .setting-row.option-limit-row {
+    display: flex;
+    flex-direction: row !important;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+}
+
+/* label 폭 고정 + 가운데정렬 방지 */
+#right-panel .setting-row.option-limit-row label {
+    flex: 0 0 90px;
+    margin: 0;
+    white-space: nowrap;
+    text-align: left;
+}
+
+/* number input 컴팩트 */
+#right-panel .setting-row.option-limit-row input[type="number"] {
+    width: 90px;
+    height: 30px;
+    padding: 0 8px;
+    box-sizing: border-box;
+}
