@@ -11,7 +11,7 @@ pipeline {
         // ===============================
         AWS_REGION        = "eu-west-3"
         ECR_REPO_URI      = "118320467932.dkr.ecr.eu-west-3.amazonaws.com/terraform-ecr"
-        IMAGE_TAG         = "${BUILD_NUMBER}"
+        IMAGE_TAG = "${BUILD_NUMBER}-${GIT_COMMIT.take(7)}"
         EKS_CLUSTER_NAME  = "terraform-eks-cluster"
 
         // ===============================
