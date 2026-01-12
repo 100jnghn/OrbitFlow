@@ -1,8 +1,8 @@
 // 게시글 상세 페이지 JavaScript
 
-const BOARD_API = '/api/boards';
+const BOARD_API = '/api/board-posts';
 const BOARD_CATEGORY_API = '/api/board-categories';
-const COMMENT_API = '/api';
+const COMMENT_API = '/api/board-posts';
 
 let boardId = null;
 let categoryId = null;
@@ -421,7 +421,7 @@ function renderBoardDetail(board) {
             
             <!-- 댓글 작성 영역 -->
             <div class="comment-write-area">
-                <textarea id="commentInput" class="comment-input" placeholder="댓글을 입력하세요..." rows="3" onkeydown="handleCommentKeydown(event)" oninput="updateCommentCharCount()" maxlength="500"></textarea>
+                <textarea id="commentInput" class="comment-input" placeholder="댓글을 입력하세요." rows="3" onkeydown="handleCommentKeydown(event)" oninput="updateCommentCharCount()" maxlength="500"></textarea>
                 <div id="commentCharCount" class="char-count">0/500</div>
                 <div id="commentError" class="error-message" style="display: none;"></div>
                 <div class="comment-write-actions">
@@ -601,7 +601,7 @@ async function loadComments(page = 0) {
     if (!boardId) return;
 
     try {
-        const response = await apiFetch(`${COMMENT_API}/boards/${boardId}/comments?page=${page}&size=5&sort=createdAt,asc`, {
+        const response = await apiFetch(`${COMMENT_API}/${boardId}/comments?page=${page}&size=5&sort=createdAt,asc`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -780,7 +780,7 @@ async function submitComment() {
     }
 
     try {
-        const response = await apiFetch(`${COMMENT_API}/boards/${boardId}/comments`, {
+        const response = await apiFetch(`${COMMENT_API}/${boardId}/comments`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

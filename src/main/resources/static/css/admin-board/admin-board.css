@@ -48,7 +48,7 @@
     margin-bottom: 0;
 }
 
-/* 부서 게시판 활성화 페이지 - section 높이 고정 */
+/* 부서 게시판 관리 페이지 - section 높이 고정 */
 .admin-section:has(#organizationTableBody) {
     height: calc(100vh - 280px);
     min-height: calc(100vh - 280px);
@@ -389,7 +389,7 @@
     justify-content: center;
 }
 
-/* 부서 게시판 활성화 테이블 전용 - 페이지네이션 중앙과 부서명 열 정렬 맞추기 */
+/* 부서 게시판 관리 테이블 전용 - 페이지네이션 중앙과 부서명 열 정렬 맞추기 */
 .admin-section:has(#organizationTableBody) .admin-table th:first-child {
     width: 60px;
 }
@@ -400,7 +400,7 @@
     margin-bottom: 4px;
 }
 
-/* 부서 게시판 활성화 페이지 - 페이징 버튼 상하 여백 줄이기 */
+/* 부서 게시판 관리 페이지 - 페이징 버튼 상하 여백 줄이기 */
 .admin-section:has(#organizationTableBody) .pagination {
     margin-top: 4px;
     margin-bottom: 4px;

@@ -1,7 +1,5 @@
 package com.finalproj.orbitflow.board.boardPost.controller;
 
-import com.finalproj.orbitflow.board.boardPost.service.BoardService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,10 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  */
 @Controller
 @RequestMapping("/view")
-@RequiredArgsConstructor
-public class BoardViewController {
-
-    private final BoardService boardService;
+public class BoardPostViewController {
 
     /**
      * 사용자 게시판 페이지
@@ -66,7 +61,7 @@ public class BoardViewController {
             @RequestParam Long boardId,
             Model model) {
         // [NPE 해결] 서버 사이드에서는 @AuthenticationPrincipal을 사용하지 않습니다.
-        // 게시글 정보 및 수정 권한 체크는 프론트엔드가 API(/api/boards/{id})를 호출할 때 수행됩니다.
+        // 게시글 정보 및 수정 권한 체크는 프론트엔드가 API(/api/board-posts/{id})를 호출할 때 수행됩니다.
 
         model.addAttribute("pageTitle", "글수정");
         model.addAttribute("currentGNB", "board");

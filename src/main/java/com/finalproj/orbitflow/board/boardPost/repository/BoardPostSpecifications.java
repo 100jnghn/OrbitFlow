@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow.board.boardPost.repository;
 
-import com.finalproj.orbitflow.board.boardPost.entity.Board;
+import com.finalproj.orbitflow.board.boardPost.entity.BoardPost;
 import com.finalproj.orbitflow.board.enums.BoardSearchType;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
@@ -9,17 +9,17 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BoardSpecifications {
+public class BoardPostSpecifications {
 
-    private BoardSpecifications() {}
+    private BoardPostSpecifications() {
+    }
 
-    public static Specification<Board> listSpec(
+    public static Specification<BoardPost> listSpec(
             Long categoryId,
             Instant startInstant,
             Instant endExclusiveInstant,
             BoardSearchType searchType,
-            String keyword
-    ) {
+            String keyword) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 

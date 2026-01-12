@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-public class BoardReqDto {
+public class BoardPostReqDto {
 
     @Getter
     @Setter

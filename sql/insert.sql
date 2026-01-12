@@ -2270,7 +2270,7 @@ WHERE o.id IN (1,2,3,4,5,6,7,8,9,10);
 -- ==========================================
 -- 2. 게시글 데이터 (120개)
 -- ==========================================
-INSERT INTO board (id, board_category_id, employee_id, board_title, board_content, view_count)
+INSERT INTO board_post (id, board_category_id, employee_id, board_title, board_content, view_count)
 VALUES
 -- =========================
 -- 회사 1 (board_id 1~40) / employee_id 1~20 / category 1~10
@@ -2435,7 +2435,7 @@ VALUES
 -- ==========================================
 -- 3. 댓글 데이터 (120개) - 하드코딩 버전
 -- ==========================================
-INSERT INTO comment (board_id, employee_id, comment_content)
+INSERT INTO comment (board_post_id, employee_id, comment_content)
 VALUES
 -- 회사 1 (1~40)
 (1, 4, 'KPI 세부 정의(산식)도 공유 가능할까요?'),
