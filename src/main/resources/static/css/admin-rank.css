@@ -119,15 +119,22 @@
 
 .btn-primary:hover {
     background: var(--primary-hover);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .btn-outline {
-    border-color: var(--primary);
+    background: #fff;
     color: var(--primary);
+    border-color: var(--primary);
 }
 
 .btn-outline:hover {
     background: var(--primary-weak);
+}
+
+.btn-outline:disabled {
+    opacity: .5;
+    cursor: not-allowed;
 }
 
 /* =========================

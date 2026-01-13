@@ -66,7 +66,6 @@ async function loadRanks() {
     const json = await res.json();
     rankList = json.data || [];
     filterRanks();
-    resetOrder();
 }
 
 function filterRanks() {
@@ -80,7 +79,8 @@ function filterRanks() {
 
     renderTable(filtered);
 
-    saveInitialOrder();
+    saveInitialOrder();   // 기준 스냅샷 저장
+    resetOrder();         // 버튼 비활성화
 
     if (!isSearchMode()) initSortable();
     else destroySortable();
