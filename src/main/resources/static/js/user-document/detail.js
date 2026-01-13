@@ -854,14 +854,14 @@ function renderEventDateRange(field) {
         ));
     }
 
-    // 3️⃣ 휴가 사유 OR 일정 설명
+    // 3️⃣ 휴가 사유 OR 일정 설명 (긴 텍스트 대응)
     if (v.reason) {
-        wrapper.appendChild(createSubRow(
+        wrapper.appendChild(createMultilineSubRow(
             "휴가 사유",
             v.reason
         ));
     } else if (v.description) {
-        wrapper.appendChild(createSubRow(
+        wrapper.appendChild(createMultilineSubRow(
             "일정 설명",
             v.description
         ));
@@ -871,6 +871,7 @@ function renderEventDateRange(field) {
             "-"
         ));
     }
+
 
     return createFieldWrapper(field, wrapper);
 }
@@ -886,6 +887,25 @@ function createSubRow(label, value) {
     const v = document.createElement("div");
     v.className = "sub-field-value";
     v.textContent = value;
+
+    row.append(l, v);
+    return row;
+}
+
+
+function createMultilineSubRow(label, value) {
+    const row = document.createElement("div");
+    row.className = "sub-field-row multiline";
+
+    const l = document.createElement("div");
+    l.className = "sub-field-label";
+    l.textContent = label;
+
+    const v = document.createElement("div");
+    v.className = "sub-field-value multiline";
+    v.textContent = value;
+    v.style.whiteSpace = "pre-wrap";   // ⭐ 핵심
+    v.style.wordBreak = "break-word";  // ⭐ 긴 단어 대응
 
     row.append(l, v);
     return row;

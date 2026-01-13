@@ -10,6 +10,7 @@
  */
 
 let hasUnsavedChanges = false;
+let allowUnload = false;
 let isInitializing = true;
 let documentFieldDefinitions = [];
 let attachmentFiles = [];
@@ -204,10 +205,13 @@ document.addEventListener('input', (e) => {
 
 // 페이지 이탈 경고
 window.addEventListener('beforeunload', (e) => {
+    if (allowUnload) return;
     if (!hasUnsavedChanges) return;
+
     e.preventDefault();
     e.returnValue = '';
 });
+
 
 document.addEventListener('DOMContentLoaded', async () => {
 
@@ -1244,6 +1248,17 @@ function createEmployeeSearchField(field) {
     // 🔥 검색 렌더링 권한 토큰
     let renderToken = 0;
 
+    // 🔥 IME 조합 상태
+    let isComposing = false;
+
+    input.addEventListener('compositionstart', () => {
+        isComposing = true;
+    });
+
+    input.addEventListener('compositionend', () => {
+        isComposing = false;
+    });
+
     /* =========================
        초기 값 복원
     ========================= */
@@ -1258,7 +1273,7 @@ function createEmployeeSearchField(field) {
        검색
     ========================= */
     input.addEventListener('input', async () => {
-        // 🔒 선택된 상태에서 값이 동일하면 검색 자체 종료
+        // 🔒 선택된 상태에서 값이 동일하면 검색 종료
         if (
             selectedEmployee &&
             input.value === selectedEmployee.displayText
@@ -1291,10 +1306,9 @@ function createEmployeeSearchField(field) {
             return;
         }
 
-        // 🔥 이 검색은 더 이상 유효하지 않음
+        // 🔥 오래된 검색 결과 무효화
         if (myToken !== renderToken) return;
 
-        // ===== 여기부터 렌더링 =====
         list.innerHTML = '';
         items = [];
         activeIndex = -1;
@@ -1316,6 +1330,7 @@ function createEmployeeSearchField(field) {
                 setActiveIndex(index);
             });
 
+            // 🔥 mousedown에서 즉시 선택 (blur/닫힘보다 먼저)
             li.addEventListener('mousedown', e => {
                 e.preventDefault();
                 selectEmployee(emp);
@@ -1372,9 +1387,12 @@ function createEmployeeSearchField(field) {
     });
 
     /* =========================
-       외부 클릭 닫기
+       외부 클릭 닫기 (IME 안전)
     ========================= */
     document.addEventListener('mousedown', e => {
+        // 🔥 한글 조합 중이면 닫지 않음
+        if (isComposing) return;
+
         if (!container.contains(e.target)) {
             dropdown.classList.add('hidden');
         }
@@ -1395,7 +1413,7 @@ function createEmployeeSearchField(field) {
             displayText: `(${emp.employeeNo}) ${emp.name}`
         };
 
-        // 🔥 모든 진행 중 검색 결과 무효화
+        // 🔥 모든 진행 중 검색 무효화
         renderToken++;
 
         input.value = selectedEmployee.displayText;
@@ -1451,8 +1469,19 @@ function createOrganizationSearchField(field) {
     let activeIndex = -1;
     let items = [];
 
-    // 🔥 렌더링 권한 토큰 (직원 검색과 동일)
+    // 🔥 렌더링 권한 토큰
     let renderToken = 0;
+
+    // 🔥 IME 조합 상태
+    let isComposing = false;
+
+    input.addEventListener('compositionstart', () => {
+        isComposing = true;
+    });
+
+    input.addEventListener('compositionend', () => {
+        isComposing = false;
+    });
 
     /* =========================
        🔹 초기 값 복원
@@ -1494,10 +1523,9 @@ function createOrganizationSearchField(field) {
             return;
         }
 
-        // 🔥 토큰 불일치 → 렌더링 금지
+        // 🔥 오래된 검색 결과 무효화
         if (myToken !== renderToken) return;
 
-        // ===== 여기부터 렌더링 =====
         list.innerHTML = '';
         items = [];
         activeIndex = -1;
@@ -1515,12 +1543,11 @@ function createOrganizationSearchField(field) {
             li.textContent = org.name;
             li._org = org;
 
-            // hover → 키보드 인덱스 동기화
             li.addEventListener('mouseenter', () => {
                 setActiveIndex(index);
             });
 
-            // blur 방지 + 즉시 선택
+            // 🔥 blur / 외부닫힘보다 먼저 선택
             li.addEventListener('mousedown', e => {
                 e.preventDefault();
                 selectOrg(org);
@@ -1577,9 +1604,12 @@ function createOrganizationSearchField(field) {
     });
 
     /* =========================
-       🔹 외부 클릭 시 닫기
+       🔹 외부 클릭 닫기 (IME 안전)
     ========================= */
     document.addEventListener('mousedown', e => {
+        // 🔥 한글 조합 중이면 닫지 않음
+        if (isComposing) return;
+
         if (!container.contains(e.target)) {
             dropdown.classList.add('hidden');
         }
@@ -1596,7 +1626,7 @@ function createOrganizationSearchField(field) {
             parentOrgId: org.parentOrgId
         };
 
-        // 🔥 모든 진행 중 검색 결과 무효화
+        // 🔥 모든 진행 중 검색 무효화
         renderToken++;
 
         input.value = org.name;
@@ -3383,14 +3413,15 @@ function clearRangeFieldErrorByFieldId(fieldId) {
 async function goToPreviousPage() {
     if (!(await confirmLeaveIfDirty())) return;
 
-    // history가 없을 경우 대비
+    allowUnload = true;   // 🔥 핵심
+
     if (window.history.length > 1) {
         history.back();
     } else {
-        // fallback (목록 페이지 등)
         location.href = '/view/document/my-documents';
     }
 }
+
 
 function bindAttachmentEvents(documentId) {
 
