@@ -26,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.Normalizer;
 import java.util.List;
 
 /**
@@ -59,21 +60,33 @@ public class CompanyService {
 
     public Long signup(CompanySignupReqDto request) {
 
-        // 사업자번호 검증
-        validateBusinessNumberForSignup(request.getBusinessNumber());
+        // 회사명 정규화
+        String normalizedCompanyName = normalizeCompanyName(
+                request.getCompanyName()
+        );
 
-        // 대표 관리자 이메일 중복 체크
-        if (employeeRepository.existsByEmail(request.getAdminEmail())) {
+        // 회사명 중복 체크 (정규화된 값 기준)
+        if (companyRepository.existsByName(normalizedCompanyName)) {
+            throw new BusinessException("이미 사용 중인 회사명입니다.");
+        }
+
+        // 사업자번호 검증 (trim 권장)
+        String businessNumber = request.getBusinessNumber().trim();
+        validateBusinessNumber(businessNumber);
+
+        // 이메일 중복 체크 (trim 권장)
+        String adminEmail = request.getAdminEmail().trim();
+        if (employeeRepository.existsByEmail(adminEmail)) {
             throw new BusinessException("이미 사용 중인 이메일입니다.");
         }
 
-        // 회사 생성
+        // 회사 생성 (정규화된 회사명 저장)
         Company company = Company.create(
-                request.getCompanyName(),
-                request.getBusinessNumber(),
-                request.getAddress(),
-                request.getRepresentativeName(),
-                request.getRepresentativeContact()
+                normalizedCompanyName,
+                businessNumber,
+                request.getAddress().trim(),
+                request.getRepresentativeName().trim(),
+                request.getRepresentativeContact().trim()
         );
         companyRepository.save(company);
 
@@ -191,21 +204,20 @@ public class CompanyService {
      */
     @Transactional(readOnly = true)
     public void checkBusinessNumberAvailable(String businessNumber) {
-        if (companyRepository.existsByBusinessNumber(businessNumber)) {
-            throw new BusinessException("이미 등록된 사업자번호입니다.");
-        }
+        validateBusinessNumber(businessNumber);
     }
 
     /**
-     * 회사 가입 시 최종 사업자번호 검증 (서버 전용)
+     * 사업자번호 유효성 검증 (공통)
+     * - 중복
+     * - 외부 API 상태
      */
-    public void validateBusinessNumberForSignup(String businessNumber) {
+    private void validateBusinessNumber(String businessNumber) {
 
         if (companyRepository.existsByBusinessNumber(businessNumber)) {
             throw new BusinessException("이미 등록된 사업자번호입니다.");
         }
 
-        // 외부 API 상태 조회
         String status;
         try {
             status = bsnClient.getBusinessStatus(businessNumber);
@@ -213,20 +225,19 @@ public class CompanyService {
             throw new BusinessException("사업자번호 외부 검증에 실패했습니다.");
         }
 
-        // strict 정책 분기
-        if (strictValidation) { // 운영
+        if (strictValidation) {
             if (!"계속사업자".equals(status)) {
                 throw new BusinessException("계속사업자만 가입할 수 있습니다.");
             }
-        } else { // 개발/시연
+        } else {
             if (!"계속사업자".equals(status)
                     && !"휴업자".equals(status)
-                    && !"폐업자".equals(status)
-            ) {
+                    && !"폐업자".equals(status)) {
                 throw new BusinessException("유효하지 않은 사업자번호입니다.");
             }
         }
     }
+
 
 
 
@@ -338,6 +349,27 @@ public class CompanyService {
                         OrgPositionUsage.create(company, org, pc)
                 )
         );
+    }
+
+    @Transactional(readOnly = true)
+    public void checkCompanyNameAvailable(String name) {
+        String normalizedName = normalizeCompanyName(name);
+
+        if (companyRepository.existsByName(normalizedName)) {
+            throw new BusinessException("이미 사용 중인 회사명입니다.");
+        }
+    }
+
+
+
+    private String normalizeCompanyName(String name) {
+        if (name == null) {
+            return null;
+        }
+
+        return Normalizer.normalize(name, Normalizer.Form.NFKC)
+                .trim()
+                .replaceAll("\\s+", " ");
     }
 
 }
