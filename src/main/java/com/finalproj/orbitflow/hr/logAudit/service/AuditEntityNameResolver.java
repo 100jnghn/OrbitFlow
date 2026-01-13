@@ -89,6 +89,7 @@ public class AuditEntityNameResolver {
             case "employmentType" -> switch (value.toString()) {
                 case "REGULAR" -> "정규직";
                 case "NON_REGULAR" -> "비정규직";
+                case "CONTRACT" -> "계약직";
                 default -> value.toString();
             };
 
