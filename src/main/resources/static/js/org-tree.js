@@ -12,8 +12,11 @@ const EMPLOYMENT_LABEL = {
 
 const WORK_STATUS_LABEL = {
     WORKING: '근무중',
-    OFF_WORK: '퇴근',
-    AWAY: '자리비움'
+    AWAY: '자리비움',
+    VACATION: '휴가중',
+    BUSINESS_TRIP: '출장',
+    OUTWORK: '외근',
+    OFF_WORK: '퇴근'
 };
 
 /* =========================
@@ -93,7 +96,7 @@ async function loadEmployeeDetail(id) {
     if (myBtn) myBtn.classList.add('hidden');
 
     const res = await apiFetch(`/api/employees/${id}`);
-    const { data: e } = await res.json();
+    const {data: e} = await res.json();
 
     // 기본 정보
     document.getElementById('empAvatar').src =
@@ -115,7 +118,7 @@ async function loadEmployeeDetail(id) {
     document.getElementById('empRank').textContent = e.rankName ?? '-';
     document.getElementById('empPosition').textContent = e.positionName ?? '-';
 
-    // ⭐ 본인 여부 판단
+    // 본인 여부 판단
     if (myBtn && loginEmployeeId === currentEmployeeId) {
         myBtn.classList.remove('hidden');
 
@@ -133,7 +136,7 @@ async function loadEmployeeDetail(id) {
 ========================= */
 async function loadEmployeeWorkStatus(employeeId) {
     const res = await apiFetch(`/api/attendance/work-status/${employeeId}`);
-    const { data } = await res.json();
+    const {data} = await res.json();
 
     if (Number(employeeId) !== currentEmployeeId) return;
 
@@ -141,11 +144,8 @@ async function loadEmployeeWorkStatus(employeeId) {
         WORK_STATUS_LABEL[data.workStatus] ?? '-';
 
     const dot = document.getElementById('empWorkDot');
-    dot.className = 'hero-work-dot';
+    applyWorkStatus(dot, data.workStatus, 'hero-work-dot');
 
-    if (data.workStatus === 'WORKING') dot.classList.add('working');
-    else if (data.workStatus === 'OFF_WORK') dot.classList.add('off');
-    else if (data.workStatus === 'AWAY') dot.classList.add('away');
 }
 
 /* =========================
@@ -183,14 +183,15 @@ async function openSignatureModal() {
         const res = await apiFetch('/api/approval/signature/me');
         if (!res.ok) return;
 
-        const { data } = await res.json();
+        const {data} = await res.json();
         if (!data.exists) return;
 
         document.getElementById('signaturePreviewImage').src = data.imageUrl;
         document.getElementById('signaturePreviewImage').style.display = 'block';
         document.getElementById('signaturePlaceholder').style.display = 'none';
         document.getElementById('signatureRemoveBtn').style.display = 'inline-block';
-    } catch {}
+    } catch {
+    }
 }
 
 function closeSignatureModal() {
@@ -223,7 +224,7 @@ signatureInput?.addEventListener('change', () => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-        alert('이미지 파일만 업로드 가능합니다.');
+        sweetWarning('이미지 파일만 업로드 가능합니다.');
         signatureInput.value = '';
         return;
     }
@@ -252,7 +253,7 @@ saveBtn?.addEventListener('click', async () => {
     const file = signatureInput.files[0];
 
     if (!file) {
-        alert('서명 이미지를 선택해주세요.');
+        sweetWarning('서명 이미지를 선택해주세요.');
         return;
     }
 
@@ -269,11 +270,11 @@ saveBtn?.addEventListener('click', async () => {
         });
 
         if (!res.ok) {
-            alert('서명 저장에 실패했습니다.');
+            sweetError('서명 저장에 실패했습니다.');
             return;
         }
 
-        alert('서명이 저장되었습니다.');
+        await sweetSuccess('서명이 저장되었습니다.');
 
         // 모달 닫기
         closeSignatureModal();
@@ -293,9 +294,28 @@ saveBtn?.addEventListener('click', async () => {
 
     } catch (e) {
         console.error(e);
-        alert('서명 저장 중 오류가 발생했습니다.');
+        sweetError('서명 저장 중 오류가 발생했습니다.');
     } finally {
         saveBtn.disabled = false;
         saveBtn.textContent = '서명 등록';
     }
 });
+
+const WORK_STATUS_CLASS = {
+    WORKING: 'working',
+    AWAY: 'away',
+    VACATION: 'vacation',
+    BUSINESS_TRIP: 'business',
+    OUTWORK: 'outwork',
+    OFF_WORK: 'off'
+};
+
+function applyWorkStatus(dotEl, workStatus, baseClass) {
+    if (!dotEl) return;
+
+    dotEl.className = baseClass;
+    const cls = WORK_STATUS_CLASS[workStatus];
+    if (cls) {
+        dotEl.classList.add(cls);
+    }
+}

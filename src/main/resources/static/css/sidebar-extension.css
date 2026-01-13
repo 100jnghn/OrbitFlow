@@ -105,7 +105,6 @@
     flex-shrink: 0;      /* 줄어들지 않게 */
 }
 
-/* 상태별 색상 */
 .extension-emp .work-dot.working {
     background: #22c55e; /* 근무중 */
 }
@@ -116,6 +115,15 @@
 
 .extension-emp .work-dot.off {
     background: #9ca3af; /* 퇴근 */
+}
+
+.extension-emp .work-dot.vacation {
+    background: #ff0ae9; /* 휴가 */
+}
+
+.extension-emp .work-dot.business,
+.extension-emp .work-dot.outwork {
+    background: #5559fd; /* 출장 */ /* 외근 */
 }
 
 
