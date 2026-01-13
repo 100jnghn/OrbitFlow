@@ -27,9 +27,10 @@ import java.util.List;
  * @since : 26. 1. 9. 금요일
  **/
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class AttendanceValidService {
+
     private final LeaveBalanceRepository leaveBalanceRepository;
     private final LeaveTypeRepository leaveTypeRepository;
     private final AttendanceEventRepository attendanceEventRepository;
@@ -49,21 +50,30 @@ public class AttendanceValidService {
                         reqDto.getEndDate()
                 );
 
+        // ❌ 캘린더 데이터 자체 없음
+        if (workingDates == null) {
+            return LeaveValidationResDto.builder()
+                    .valid(false)
+                    .message("해당 연도의 근무일 정보가 아직 등록되지 않았습니다.")
+                    .build();
+        }
+
         boolean isVacation = reqDto.getLeaveTypeId() != null;
 
+        // ❌ 근무일은 있으나 전부 휴일
         if (isVacation && workingDates.isEmpty()) {
             return LeaveValidationResDto.builder()
                     .valid(false)
-                    .message("해당 기간에는 휴가 차감 대상 날짜가 없습니다.")
+                    .message("선택한 기간에는 휴가 차감 대상 근무일이 없습니다.")
                     .build();
         }
 
         /* =========================
-           2️⃣ 일정 충돌 검증 (🔥 핵심)
+           2️⃣ 일정 충돌 검증
         ========================= */
         for (LocalDate date : workingDates) {
 
-            // 2-1. 출장 / 외근
+            // 2-1. 출장 / 외근 충돌
             boolean hasEvent =
                     attendanceEventRepository
                             .existsByEmployee_IdAndBaseRoleInAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
@@ -85,7 +95,7 @@ public class AttendanceValidService {
                         .build();
             }
 
-            // 2-2. 휴가
+            // 2-2. 기존 휴가 충돌
             boolean hasLeave =
                     attendanceRecordRepository
                             .existsByEmployee_IdAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
@@ -109,8 +119,8 @@ public class AttendanceValidService {
         }
 
         /* =========================
-           3️⃣ 휴가 유형이 없으면 여기서 종료
-           (출장 / 외근 공통 검증 대응)
+           3️⃣ 휴가 유형이 없으면 종료
+           (출장 / 외근 공통 검증)
         ========================= */
         if (reqDto.getLeaveTypeId() == null) {
             return LeaveValidationResDto.builder()
@@ -133,6 +143,7 @@ public class AttendanceValidService {
 
         BigDecimal remainingDays = leaveBalance.getRemainingDays();
 
+        // 연차 차감 대상 아님
         if (!leaveType.getIsCountable()) {
             return LeaveValidationResDto.builder()
                     .valid(true)

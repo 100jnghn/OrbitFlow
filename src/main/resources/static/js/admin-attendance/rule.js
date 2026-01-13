@@ -13,12 +13,11 @@ document.addEventListener('DOMContentLoaded', () => {
     loadExceptionRules();
 
     // ============================================
-    // [해결 포인트 1] 이벤트 위임: 목록의 버튼 클릭 감지
+    // 이벤트 위임: 목록의 버튼 클릭 감지
     // ============================================
     const exceptionTableBody = document.getElementById('exceptionRulesTableBody');
     if (exceptionTableBody) {
         exceptionTableBody.addEventListener('click', (e) => {
-            // 클릭된 요소가 수정 버튼(.btn-edit)인지 확인
             const editBtn = e.target.closest('.btn-edit');
             const deleteBtn = e.target.closest('.btn-delete');
 
@@ -54,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const setupNumericLimit = (id, max) => {
         const input = document.getElementById(id);
         if (input) {
-            input.addEventListener('input', function() {
+            input.addEventListener('input', function () {
                 this.value = this.value.replace(/[^0-9]/g, '');
                 if (max && this.value && parseInt(this.value) > max) {
                     this.value = max.toString();
@@ -62,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     };
-    setupNumericLimit('tardinessMinutes', 10);
+
     setupNumericLimit('exceptionBreakMinutes', 480);
     setupNumericLimit('editExceptionBreakMinutes', 480);
     setupNumericLimit('defaultBreakMinutes', 480);
@@ -79,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (rule) {
                     if (rule.defaultStartTime) document.getElementById('defaultStartTime').value = rule.defaultStartTime.substring(0, 5);
                     if (rule.defaultEndTime) document.getElementById('defaultEndTime').value = rule.defaultEndTime.substring(0, 5);
-                    document.getElementById('tardinessMinutes').value = rule.lateThresholdMin ?? 10;
+
                     document.getElementById('defaultBreakMinutes').value = rule.defaultBreakMinutes ?? 60;
                 }
             }
@@ -89,12 +88,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('saveDefaultRuleBtn')?.addEventListener('click', async () => {
         const startTime = document.getElementById('defaultStartTime').value;
         const endTime = document.getElementById('defaultEndTime').value;
-        if (!startTime || !endTime) { alert('시간을 입력해주세요.'); return; }
+        if (!startTime || !endTime) {
+            sweetWarning('시간을 입력해주세요.');
+            return;
+        }
 
         const data = {
             defaultStartTime: startTime + ':00',
             defaultEndTime: endTime + ':00',
-            lateThresholdMin: parseInt(document.getElementById('tardinessMinutes').value) || 0,
+
             defaultBreakMinutes: parseInt(document.getElementById('defaultBreakMinutes').value) || 60
         };
 
@@ -105,10 +107,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(data)
             });
             if (res.ok) {
-                alert('기본 규칙이 저장되었습니다.');
+                sweetSuccess('기본 규칙이 저장되었습니다.');
                 await loadDefaultRule();
+            } else {
+                sweetError('기본 규칙 저장에 실패했습니다.');
             }
-        } catch (error) { alert('저장 실패'); }
+        } catch (error) { sweetError('통신 중 오류가 발생했습니다.'); }
     });
 
     // ============================================
@@ -152,9 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ============================================
-    // [해결 포인트 2] 수정 모달 열기 함수 보완
-    // ============================================
     async function openEditModal(ruleId) {
         if (!ruleId) return;
         try {
@@ -164,7 +165,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const rule = response.data;
                 if (!rule) return;
 
-                // 데이터 채우기
                 document.getElementById('editRuleId').value = rule.overrideId;
                 document.getElementById('editEmployeeInfo').textContent = `${rule.employeeName} (${rule.employeeNo || ''})`;
                 document.getElementById('editOriginalValidTo').textContent = rule.validTo || '무기한';
@@ -180,11 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 clearAllErrors();
-
-                // 모달 표시 (ID가 정확한지 다시 확인)
-                if (editModal) {
-                    openModal(editModal);
-                }
+                if (editModal) openModal(editModal);
             }
         } catch (error) { console.error('수정 모달 로드 실패:', error); }
     }
@@ -212,9 +208,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const reason = document.getElementById('reason').value.trim();
 
         if (!employeeId || !validFrom || !startTime || !endTime || !reason) {
-            alert('필수 항목을 모두 입력해주세요.');
+            sweetWarning('필수 항목을 모두 입력해주세요.');
             return;
         }
+
+        const isDuplicate = exceptionRulesList.some(rule =>
+            String(rule.employeeId) === String(employeeId)
+        );
+
+        if (isDuplicate) {
+            const empInfo = document.getElementById('selectedEmployeeInfo').innerText;
+            sweetWarning(`${empInfo} 사원은 이미 예외 규칙이 등록되어 있습니다.`);
+            return;
+        }
+
 
         const data = {
             employeeId: parseInt(employeeId),
@@ -233,11 +240,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(data)
             });
             if (res.ok) {
-                alert('예외 규칙이 추가되었습니다.');
+                sweetSuccess('예외 규칙이 추가되었습니다.');
                 closeModal(modal);
                 await loadExceptionRules();
+            } else {
+                const result = await res.json();
+                sweetError(result.message || '규칙 추가에 실패했습니다.');
             }
-        } catch (error) { alert('통신 오류'); }
+        } catch (error) { sweetError('통신 오류가 발생했습니다.'); }
     });
 
     editForm.addEventListener('submit', async (e) => {
@@ -248,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const reason = document.getElementById('editReason').value.trim();
 
         if (!startTime || !endTime || !reason) {
-            alert('필수 항목을 모두 입력해주세요.');
+            sweetWarning('필수 항목을 모두 입력해주세요.');
             return;
         }
 
@@ -269,22 +279,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(data)
             });
             if (res.ok) {
-                alert('수정되었습니다.');
+                sweetSuccess('수정되었습니다.');
                 closeModal(editModal);
                 await loadExceptionRules();
+            } else {
+                sweetError('수정에 실패했습니다.');
             }
-        } catch (error) { console.error('수정 실패:', error); }
+        } catch (error) { sweetError('통신 오류가 발생했습니다.'); }
     });
 
     async function deleteExceptionRule(ruleId) {
-        if (!confirm('정말 삭제하시겠습니까?')) return;
+        // sweetConfirm 적용
+        const resultConfirm = await sweetConfirm('삭제 확인', '정말 삭제하시겠습니까?');
+        if (!resultConfirm.isConfirmed) return;
+
         try {
             const res = await apiFetch(`/api/admin/rules/exception/${ruleId}`, { method: 'DELETE' });
-            if (res.ok) { alert('삭제되었습니다.'); await loadExceptionRules(); }
-        } catch (error) { console.error('삭제 실패:', error); }
+            if (res.ok) {
+                sweetSuccess('삭제되었습니다.');
+                await loadExceptionRules();
+            } else {
+                sweetError('삭제에 실패했습니다.');
+            }
+        } catch (error) { sweetError('통신 중 오류가 발생했습니다.'); }
     }
 
-    // 사원 검색 등 기타 유틸리티 (기존과 동일)
     document.getElementById('employeeSearchBtn')?.addEventListener('click', async () => {
         const keyword = document.getElementById('employeeSearchInput').value.trim();
         if (!keyword) return;
@@ -315,15 +334,11 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsDiv.appendChild(ul);
     }
 
-    // ============================================
-    // 공통 모달 제어 함수
-    // ============================================
     function openModal(m) { if (m) { m.style.display = 'flex'; document.body.style.overflow = 'hidden'; } }
     function closeModal(m) { if (m) { m.style.display = 'none'; document.body.style.overflow = ''; } }
     function clearAllErrors() { document.querySelectorAll('.error-message').forEach(el => { el.style.display = 'none'; }); }
 
     document.querySelectorAll('.close').forEach(btn => btn.onclick = () => { closeModal(modal); closeModal(editModal); });
-    document.getElementById('cancelBtn')?.addEventListener('click', () => closeModal(modal));
-    document.getElementById('editCancelBtn')?.addEventListener('click', () => closeModal(editModal));
+    document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', () => { closeModal(modal); closeModal(editModal); }));
     window.onclick = (event) => { if (event.target == modal) closeModal(modal); if (event.target == editModal) closeModal(editModal); };
 });

@@ -193,12 +193,12 @@ async function loadBoardDetail() {
                 return;
             }
             if (response.status === 403) {
-                alert('수정 권한이 없습니다.');
+                await sweetError('수정 권한이 없습니다.');
                 location.href = `/view/board/detail?boardId=${boardId}`;
                 return;
             }
             if (response.status === 404) {
-                alert('게시글이 존재하지 않거나 삭제되었습니다.');
+                await sweetError('게시글이 존재하지 않거나 삭제되었습니다.');
                 location.href = '/view/board';
                 return;
             }
@@ -260,7 +260,7 @@ async function loadBoardDetail() {
             }
         }
     } catch (error) {
-        alert('게시글을 불러오는데 실패했습니다.');
+        sweetError('게시글을 불러오는데 실패했습니다.');
     }
 }
 
@@ -272,7 +272,7 @@ function handleFileSelect(event) {
             // 파일 크기 체크 (50MB 제한)
             const maxSize = 50 * 1024 * 1024; // 50MB
             if (file.size > maxSize) {
-                alert(`파일 "${file.name}"의 크기가 50MB를 초과하여 제외되었습니다.`);
+                sweetWarning(`파일 "${file.name}"의 크기가 50MB를 초과하여 제외되었습니다.`);
                 return;
             }
             selectedFiles.push(file);
@@ -384,7 +384,7 @@ async function handleSubmit(e) {
 
     // 작성 모드일 때만 categoryId 체크
     if (!boardId && !categoryId) {
-        alert('게시판을 선택해주세요.');
+        await sweetWarning('게시판을 선택해주세요.');
         return;
     }
 
@@ -418,6 +418,15 @@ async function handleSubmit(e) {
             // 수정 모드: @ModelAttribute를 사용하므로 직접 필드 추가
             formData.append('boardTitle', title);
             formData.append('boardContent', content);
+
+            // 유지할 기존 파일 ID 목록 추가
+            const existingFileItems = document.querySelectorAll('#fileList .file-item[data-is-existing="true"]');
+            existingFileItems.forEach(item => {
+                const fid = item.dataset.fileId;
+                if (fid) {
+                    formData.append('keptFileIds', fid);
+                }
+            });
         } else {
             // 작성 모드: 직접 필드 추가
             formData.append('categoryId', categoryId);
@@ -461,14 +470,14 @@ async function handleSubmit(e) {
         const savedBoard = result.data;
         const savedBoardId = savedBoard?.id || savedBoard?.boardId || boardId;
 
+        const successMessage = boardId ? '게시글이 수정되었습니다.' : '게시글이 등록되었습니다.';
+        await sweetSuccess(successMessage);
+
         if (!savedBoardId) {
-            alert(boardId ? '게시글이 수정되었습니다.' : '게시글이 등록되었습니다.');
             // boardId가 없으면 목록으로 이동
             window.location.href = `/view/board?categoryId=${categoryId}`;
             return;
         }
-
-        alert(boardId ? '게시글이 수정되었습니다.' : '게시글이 등록되었습니다.');
 
         // 게시글 상세 페이지로 이동 (categoryId 포함)
         if (categoryId) {
@@ -477,13 +486,17 @@ async function handleSubmit(e) {
             window.location.href = `/view/board/detail?boardId=${savedBoardId}`;
         }
     } catch (error) {
-        alert(error.message || '게시글 저장에 실패했습니다.');
+        sweetError(error.message || '게시글 저장에 실패했습니다.');
     }
 }
 
 // 취소
-function cancelWrite() {
-    if (confirm('작성 중인 내용이 사라집니다. 정말 취소하시겠습니까?')) {
+async function cancelWrite() {
+    const result = await sweetConfirm(
+        '작성 취소',
+        '작성 중인 내용이 사라집니다. 정말 취소하시겠습니까?'
+    );
+    if (result.isConfirmed) {
         // 수정 모드일 때는 게시글 상세 페이지로 이동
         if (boardId) {
             if (categoryId) {

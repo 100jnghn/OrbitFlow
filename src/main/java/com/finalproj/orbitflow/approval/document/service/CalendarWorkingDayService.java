@@ -33,14 +33,11 @@ public class CalendarWorkingDayService implements WorkingDayService {
 
         for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
 
-            final LocalDate currentDate = date;
+            CalendarDay day = calendarDayRepository.findById(date).orElse(null);
 
-            CalendarDay day = calendarDayRepository
-                    .findById(currentDate)
-                    .orElseThrow(() ->
-                            new IllegalStateException(
-                                    "CalendarDay not initialized: " + currentDate
-                            ));
+            if (day == null) {
+                return null;
+            }
 
             if (day.isChargeableForLeave()) {
                 result.add(date);

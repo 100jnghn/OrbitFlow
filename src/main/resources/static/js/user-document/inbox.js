@@ -133,16 +133,41 @@ function renderApprovalTable(list) {
         const myStatusBadge =
             renderMyApprovalStatusBadge(item);
 
+        const safeTitle = escapeHTML(item.documentTitle || '');
+
         row.innerHTML = `
             <td class="index-col">${number}</td>
-            <td class="approval-title title-col">${escapeHTML(item.documentTitle)}</td>
+        
+            <!-- 제목 -->
+            <td class="approval-title title-col cell-ellipsis"
+                title="${safeTitle}">
+                ${safeTitle}
+            </td>
+        
             <td>${documentStatusBadge}</td>
-            <td>${escapeHTML(item.writerName)}</td>
-            <td>${escapeHTML(item.templateName)}</td>
-            <td>${escapeHTML(item.displayApproverName)}</td>
+        
+            <!-- 기안자 -->
+            <td class="cell-ellipsis"
+                title="${escapeHTML(item.writerName)}">
+                ${escapeHTML(item.writerName)}
+            </td>
+        
+            <!-- 양식 -->
+            <td class="cell-ellipsis"
+                title="${escapeHTML(item.templateName)}">
+                ${escapeHTML(item.templateName)}
+            </td>
+        
+            <!-- 현재 결재자 -->
+            <td class="cell-ellipsis"
+                title="${escapeHTML(item.displayApproverName)}">
+                ${escapeHTML(item.displayApproverName)}
+            </td>
+        
             <td>${myStatusBadge}</td>
             <td>${createdAt}</td>
         `;
+
 
         row.addEventListener('click', () => {
             location.href = `/view/document/${item.documentId}`;
@@ -151,6 +176,7 @@ function renderApprovalTable(list) {
         tbody.appendChild(row);
     });
 }
+
 
 function renderMyApprovalStatusBadge(item) {
     const status = item.myApprovalStatus;
@@ -303,17 +329,51 @@ function bindDateFilterEvents() {
     const start = document.getElementById('startDate');
     const end = document.getElementById('endDate');
 
-    if (!dateFilter) return;
+    if (!dateFilter || !start || !end) return;
+
+    /* =========================
+       ✅ 시작일 → 종료일 제약 (공통)
+    ========================= */
+
+    // 초기 상태 반영 (뒤로가기 / 새로고침 대비)
+    if (start.value) {
+        end.min = start.value;
+    }
+
+    start.addEventListener('change', () => {
+        if (start.value) {
+            end.min = start.value;
+
+            // 이미 선택된 종료일이 시작일보다 이전이면 초기화
+            if (end.value && end.value < start.value) {
+                end.value = '';
+            }
+        } else {
+            end.removeAttribute('min');
+        }
+    });
+
+    /* =========================
+       날짜 프리셋 필터
+    ========================= */
 
     dateFilter.addEventListener('change', () => {
         const today = new Date();
 
+        // 사용자 지정
         if (dateFilter.value === 'custom') {
             start.style.display = 'inline-block';
             end.style.display = 'inline-block';
+
+            // 현재 start 기준으로 min 재적용
+            if (start.value) {
+                end.min = start.value;
+            }
+
             return;
         }
 
+        // preset 선택 시
         start.style.display = 'none';
         end.style.display = 'none';
 
@@ -326,14 +386,21 @@ function bindDateFilterEvents() {
         } else if (dateFilter.value === 'month') {
             from.setMonth(today.getMonth() - 1);
         } else {
-            // 빈 값이면 초기화
+            // 초기화
             start.value = '';
             end.value = '';
+            end.removeAttribute('min');
             return;
         }
 
-        start.value = toDateString(from);
-        end.value = toDateString(today);
+        const fromStr = toDateString(from);
+        const todayStr = toDateString(today);
+
+        start.value = fromStr;
+        end.value = todayStr;
+
+        // ✅ preset도 동일하게 min 적용
+        end.min = fromStr;
     });
 }
 

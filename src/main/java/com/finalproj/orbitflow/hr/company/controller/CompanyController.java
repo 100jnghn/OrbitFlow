@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.hr.company.controller;
 
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.hr.company.dto.CompanySignupReqDto;
+import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.company.service.CompanyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,15 +24,17 @@ import java.util.Map;
 public class CompanyController {
 
     private final CompanyService companyService;
+    private final CompanyRepository companyRepository;
 
     @PostMapping /** 회사 가입 **/
     public ResponseEntity<ResponseDto> signup(@RequestBody CompanySignupReqDto request) {
         Long companyId = companyService.signup(request);
-        return ResponseEntity.ok(new ResponseDto(
-                HttpStatus.CREATED, "회사 가입 완료", Map.of("companyId", companyId)));
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new ResponseDto(HttpStatus.CREATED, "회사 가입 완료", Map.of("companyId", companyId)));
     }
 
-    @GetMapping("/check-business-number") /** 사업자번호 검증 **/
+    @GetMapping("/check-business-number") /** 사업자번호 유효성 검증 (중복 + 상태) **/
     public ResponseEntity<ResponseDto> checkBusinessNumber(@RequestParam String businessNumber) {
         companyService.checkBusinessNumberAvailable(businessNumber);
         return ResponseEntity.ok(new ResponseDto(
@@ -44,4 +47,13 @@ public class CompanyController {
         return ResponseEntity.ok(new ResponseDto(
                         HttpStatus.OK, "이메일 중복 확인 완료", Map.of("available", true)));
     }
+
+    @GetMapping("/check-company-name")
+    public ResponseEntity<ResponseDto> checkCompanyName(@RequestParam String name) {
+        companyService.checkCompanyNameAvailable(name);
+        return ResponseEntity.ok(
+                new ResponseDto(HttpStatus.OK, "사용 가능한 회사명입니다.", Map.of("available", true))
+        );
+    }
+
 }

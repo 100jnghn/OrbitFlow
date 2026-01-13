@@ -30,6 +30,20 @@
     min-height: calc(103vh - 180px);
 }
 
+@media (max-width: 768px) {
+    .board-admin-container {
+        padding: 10px;
+    }
+
+    .mobile-hide {
+        display: none !important;
+    }
+
+    .admin-section {
+        padding: 15px;
+    }
+}
+
 .admin-section {
     background: #fff;
     border-radius: 12px;
@@ -117,7 +131,7 @@
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--neutral-200);
-    min-height: 550px;
+    min-height: 630px;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -420,6 +434,11 @@
     text-align: center;
     padding-left: 80px;
     /* 부서명 열을 오른쪽으로 이동 */
+}
+
+/* SweetAlert2 모달이 기존 관리자 모달보다 위에 표시되도록 수정 */
+.swal2-container {
+    z-index: 100000 !important;
 }
 
 /* 모달 스타일 */

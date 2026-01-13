@@ -181,4 +181,9 @@ public class FormTemplateGroupService {
         }
     }
 
+    public boolean checkFormTemplateGroupName(Long companyId, String name) {
+        return formTemplateGroupRepository
+                .findByCompany_IdAndName(companyId, name)
+                .isEmpty();
+    }
 }

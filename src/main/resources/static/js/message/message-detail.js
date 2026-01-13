@@ -277,11 +277,12 @@ function goBack() {
 // 보관함 이동
 async function archiveMessage() {
     if (!messageId) {
-        alert('메시지 ID가 없습니다.');
+        sweetWarning('메시지 ID가 없습니다.');
         return;
     }
 
-    if (!confirm('메시지를 보관함으로 이동하시겠습니까?')) {
+    const result = await sweetConfirm('보관 확인', '메시지를 보관함으로 이동하시겠습니까?');
+    if (!result.isConfirmed) {
         return;
     }
 
@@ -301,23 +302,24 @@ async function archiveMessage() {
             throw new Error('보관함 이동에 실패했습니다.');
         }
 
-        alert('보관함으로 이동되었습니다.');
+        await sweetSuccess('보관함으로 이동되었습니다.');
 
         // 보관함으로 이동
         window.location.href = '/view/message/archive';
     } catch (error) {
-        alert('보관함 이동에 실패했습니다.');
+        sweetError('보관함 이동에 실패했습니다.');
     }
 }
 
 // 보관 해제
 async function unarchiveMessage() {
     if (!messageId) {
-        alert('메시지 ID가 없습니다.');
+        sweetWarning('메시지 ID가 없습니다.');
         return;
     }
 
-    if (!confirm('메시지를 보관함에서 해제하시겠습니까?')) {
+    const result = await sweetConfirm('보관 해제 확인', '메시지를 보관함에서 해제하시겠습니까?');
+    if (!result.isConfirmed) {
         return;
     }
 
@@ -337,7 +339,7 @@ async function unarchiveMessage() {
             throw new Error('보관 해제에 실패했습니다.');
         }
 
-        alert('보관함에서 해제되었습니다.');
+        await sweetSuccess('보관함에서 해제되었습니다.');
 
         // 원래 폴더로 이동 (folderType에 따라)
         const folderType = messageDetailData?.folderType || 'INBOX';
@@ -347,18 +349,19 @@ async function unarchiveMessage() {
             window.location.href = '/view/message/sent';
         }
     } catch (error) {
-        alert('보관 해제에 실패했습니다.');
+        sweetError('보관 해제에 실패했습니다.');
     }
 }
 
 // 메시지 삭제
 async function deleteMessage() {
     if (!messageId) {
-        alert('메시지 ID가 없습니다.');
+        sweetWarning('메시지 ID가 없습니다.');
         return;
     }
 
-    if (!confirm('메시지를 삭제하시겠습니까?\n삭제된 메시지는 복구할 수 없습니다.')) {
+    const result = await sweetConfirm('삭제 확인', '메시지를 삭제하시겠습니까?\n삭제된 메시지는 복구할 수 없습니다.');
+    if (!result.isConfirmed) {
         return;
     }
 
@@ -384,7 +387,7 @@ async function deleteMessage() {
             throw new Error('메시지 삭제에 실패했습니다.');
         }
 
-        alert('메시지가 삭제되었습니다.');
+        await sweetSuccess('메시지가 삭제되었습니다.');
 
         // 현재 폴더에 따라 목록으로 이동
         const folderType = messageDetailData?.folderType || currentFolder;
@@ -396,7 +399,7 @@ async function deleteMessage() {
             window.location.href = '/view/message/sent';
         }
     } catch (error) {
-        alert('메시지 삭제에 실패했습니다.');
+        sweetError('메시지 삭제에 실패했습니다.');
     }
 }
 
@@ -428,10 +431,11 @@ function formatDateTime(dateString) {
     const seconds = String(date.getSeconds()).padStart(2, '0');
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
+
 // 답장하기
 function replyMessage() {
     if (!messageDetailData) {
-        alert('메시지 정보를 불러올 수 없습니다.');
+        sweetError('메시지 정보를 불러올 수 없습니다.');
         return;
     }
 
@@ -442,7 +446,7 @@ function replyMessage() {
     const originalCreatedAt = messageDetailData.createdAt || '';
 
     if (!senderId) {
-        alert('발신자 정보가 없습니다.');
+        sweetError('발신자 정보가 없습니다.');
         return;
     }
 
@@ -471,7 +475,7 @@ function formatFileSize(bytes) {
 // 메시지 파일 다운로드
 async function downloadMessageFile(fileId) {
     if (!fileId) {
-        alert('파일을 찾을 수 없습니다.');
+        sweetError('파일을 찾을 수 없습니다.');
         return;
     }
 
@@ -487,11 +491,11 @@ async function downloadMessageFile(fileId) {
                 return;
             }
             if (response.status === 403) {
-                alert('파일 다운로드 권한이 없습니다.');
+                sweetError('파일 다운로드 권한이 없습니다.');
                 return;
             }
             if (response.status === 404) {
-                alert('파일을 찾을 수 없습니다.');
+                sweetError('파일을 찾을 수 없습니다.');
                 return;
             }
             throw new Error('파일 다운로드에 실패했습니다.');
@@ -526,7 +530,7 @@ async function downloadMessageFile(fileId) {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
     } catch (error) {
-        alert('파일 다운로드에 실패했습니다.');
+        sweetError('파일 다운로드에 실패했습니다.');
     }
 }
 

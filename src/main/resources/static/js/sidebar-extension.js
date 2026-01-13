@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const workDot = document.createElement('span');
                 workDot.className = 'work-dot';
 
-                applyWorkStatusClass(workDot, emp.workStatus);
+                applyWorkStatus(workDot, emp.workStatus, 'work-dot');
 
                 empDiv.appendChild(leftWrap);
                 empDiv.appendChild(workDot);
@@ -135,15 +135,23 @@ document.addEventListener('DOMContentLoaded', () => {
     /* =========================
        근무 상태 class 적용 (중복 방지 핵심)
     ========================= */
-    function applyWorkStatusClass(dotEl, workStatus) {
-        dotEl.className = 'work-dot'; // 항상 초기화
+    const WORK_STATUS_CLASS = {
+        WORKING: 'working',
+        AWAY: 'away',
+        VACATION: 'vacation',
+        BUSINESS_TRIP: 'business',
+        OUTWORK: 'outwork',
+        OFF_WORK: 'off'
+    };
 
-        if (workStatus === 'WORKING') {
-            dotEl.classList.add('working');
-        } else if (workStatus === 'AWAY') {
-            dotEl.classList.add('away');
-        } else {
-            dotEl.classList.add('off');
+    function applyWorkStatus(dotEl, workStatus, baseClass) {
+        if (!dotEl) return;
+
+        dotEl.className = baseClass;
+
+        const cls = WORK_STATUS_CLASS[workStatus];
+        if (cls) {
+            dotEl.classList.add(cls);
         }
     }
 });

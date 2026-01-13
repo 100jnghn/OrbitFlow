@@ -11,9 +11,10 @@ import java.time.LocalTime;
  */
 
 public record DefaultRuleUpdateReqDto(
-        LocalTime defaultStartTime, //기본 출근시간
-        LocalTime defaultEndTime,   //기본 퇴근시간
-        Integer lateThresholdMin,   //지각허용기준시간
-        Integer defaultBreakMinutes //기본 휴게시간
+                LocalTime defaultStartTime, // 기본 출근시간
+                LocalTime defaultEndTime, // 기본 퇴근시간
 
-) {}
+                Integer defaultBreakMinutes // 기본 휴게시간
+
+) {
+}

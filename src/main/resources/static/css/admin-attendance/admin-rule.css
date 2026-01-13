@@ -30,7 +30,7 @@
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    min-height: calc(103vh - 180px);
+    height: calc(100vh - 120px);
     box-sizing: border-box;
 }
 
@@ -50,11 +50,20 @@
 
 /* 규칙 섹션 */
 .rule-section {
-    margin-bottom: 28px;
+    margin-bottom: 16px;
+}
+
+.rule-section {
+    margin-bottom: 16px;
 }
 
 .rule-section:last-child {
     margin-bottom: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    /* Crucial for nested flex scrolling */
 }
 
 .rule-section .section-header {
@@ -95,8 +104,8 @@
     border-radius: 12px;
     border: 1px solid var(--neutral-200);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    padding: 24px 28px;
-    margin-bottom: 24px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
 }
 
 .rule-form {
@@ -206,62 +215,32 @@
 }
 
 /* 버튼 스타일 (자원관리와 통일) */
+/* 버튼 스타일 (자원관리와 통일) - 통합된 디자인 */
 .btn-primary {
-    background: #4a69bd;
+    background: #2563eb;
     color: #fff;
     border: none;
-    padding: 12px 22px;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 600;
+    padding: 0 22px;
+    height: 42px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     transition: all 0.2s ease;
-}
-
-.btn-primary:hover {
-    background: #3a5aa0;
-}
-
-.btn-primary:active {
-    transform: translateY(0);
-}
-
-/* 예외규칙 추가 버튼 (자원관리 추가 버튼 스타일 참고) */
-#addExceptionRuleBtn {
-    height: 42px;
-    padding: 0 20px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 700;
-    background: #2563eb;
-    color: #fff;
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
-#addExceptionRuleBtn:hover {
+.btn-primary:hover {
     background: #1d4ed8;
     box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
 }
 
-/* 저장 버튼 (기본 규칙 저장) */
-#saveDefaultRuleBtn {
-    height: 42px;
-    padding: 0 20px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 700;
-    background: #4a69bd;
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(74, 105, 189, 0.25);
-}
-
-#saveDefaultRuleBtn:hover {
-    background: #3a5aa0;
-    box-shadow: 0 6px 16px rgba(74, 105, 189, 0.35);
+.btn-primary:active {
+    transform: translateY(0);
 }
 
 
@@ -273,10 +252,12 @@
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     border: 1px solid var(--neutral-200);
-    min-height: 400px;
+    /* min-height removed to allow proper shrinking/scrolling */
     flex: 1;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
+    /* Enable internal scrolling */
 }
 
 /* 테이블 스타일 (대시보드와 통일) */
@@ -301,6 +282,9 @@
     background: var(--neutral-50);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .board-table td {
@@ -330,7 +314,14 @@
 /* 테이블 컬럼 정렬 */
 #exceptionTable th:nth-child(1),
 #exceptionTable td:nth-child(1) {
-    text-align: left;
+    text-align: center;
+}
+
+#exceptionTable td small {
+    display: block;
+    color: var(--neutral-500);
+    margin-top: 2px;
+    font-size: 12px;
 }
 
 #exceptionTable th:nth-child(2),
@@ -352,6 +343,12 @@
 #exceptionTable td:nth-child(8) {
     text-align: center;
     width: 150px;
+}
+
+/* 적용기간 컬럼 줄바꿈 방지 */
+#exceptionTable th:nth-child(2),
+#exceptionTable td:nth-child(2) {
+    white-space: nowrap;
 }
 
 /* 테이블 액션 버튼 (자원관리와 통일) */
@@ -486,7 +483,8 @@
 
 .close {
     color: var(--neutral-400);
-    font-size: 28px;/* 근태 규칙 관리 페이지 - 깔끔한 디자인 */
+    font-size: 28px;
+    /* 근태 규칙 관리 페이지 - 깔끔한 디자인 */
 
     /* 컬러 변수 */
     :root {
@@ -1440,7 +1438,7 @@
     display: flex;
     align-items: flex-end;
     gap: 16px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
 .date-input {
@@ -1803,4 +1801,20 @@
 .reason-textarea.error:focus {
     border-color: var(--danger-color);
     box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+/* =========================
+   Responsive Column Hiding
+========================= */
+/* 1000px 이하: 휴게시간, 사유, 등록일 열 숨김 */
+@media (max-width: 1000px) {
+
+    #exceptionTable th:nth-child(5),
+    #exceptionTable td:nth-child(5),
+    #exceptionTable th:nth-child(6),
+    #exceptionTable td:nth-child(6),
+    #exceptionTable th:nth-child(7),
+    #exceptionTable td:nth-child(7) {
+        display: none;
+    }
 }

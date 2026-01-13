@@ -65,7 +65,7 @@
                 <button id="btnResendActivate"
                         class="btn btn-outline"
                         style="display:none;">
-                    활성화 메일 재전송
+                    활성화 메일 전송
                 </button>
 
             </div>
@@ -100,7 +100,7 @@
                 <div class="k">연락처</div>
                 <div class="v" id="empPhone">-</div>
 
-                <div class="k">사내 번호</div>
+                <div class="k">내선번호</div>
                 <div class="v" id="empInternalPhone">-</div>
 
                 <div class="k">생년월일</div>
@@ -208,6 +208,7 @@
                                 <option value="">선택</option>
                                 <option value="REGULAR">정규직</option>
                                 <option value="NON_REGULAR">비정규직</option>
+                                <option value="CONTRACT">계약직</option>
                             </select>
                         </div>
 
@@ -217,7 +218,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label>사내 번호</label>
+                            <label>내선번호</label>
                             <input id="editInternalPhone">
                         </div>
 
@@ -240,6 +241,7 @@
 </th:block>
 
 <th:block th:fragment="pageScript">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script th:src="@{/js/admin-employee-detail.js}"></script>
 </th:block>
 

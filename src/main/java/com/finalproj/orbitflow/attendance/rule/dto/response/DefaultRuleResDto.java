@@ -14,15 +14,15 @@ import java.time.LocalTime;
 public record DefaultRuleResDto(
         LocalTime defaultStartTime,
         LocalTime defaultEndTime,
-        Integer defaultBreakMinutes,
-        Integer lateThresholdMin
+        Integer defaultBreakMinutes
+
 ) {
     public DefaultRuleResDto(AttendanceRule rule) {
         this(
                 rule.getDefaultStartTime(),
                 rule.getDefaultEndTime(),
-                rule.getDefaultBreakMinutes(),
-                rule.getLateThresholdMin()
+                rule.getDefaultBreakMinutes()
+
         );
     }
 }

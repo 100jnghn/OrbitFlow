@@ -39,7 +39,7 @@ const SCHEDULE_REASON_LABEL_MAP = {
     COMPANY_EVENT: '일정 사유'
 };
 
-
+const SEARCH_INPUT_MAX_LENGTH = 30;
 let leaveTypeCache = null;
 
 async function loadLeaveTypes() {
@@ -78,7 +78,7 @@ async function searchOrganizations(keyword) {
     if (!keyword || keyword.length < 2) return [];
 
     const res = await apiFetch(
-        `/api/admin/organizations?keyword=${encodeURIComponent(keyword)}`
+        `/api/organizations?keyword=${encodeURIComponent(keyword)}`
     );
 
     if (!res.ok) {
@@ -273,13 +273,15 @@ function labeled(labelText, inputEl) {
     return wrapper;
 }
 
-function confirmLeaveIfDirty() {
+async function confirmLeaveIfDirty() {
     if (!hasUnsavedChanges) return true;
 
-    return confirm(
-        '저장되지 않은 변경 사항이 있습니다.\n' +
-        '정말로 이동하시겠습니까?'
+    const result = await sweetConfirm(
+        '페이지 이동',
+        '저장되지 않은 변경 사항이 있습니다.\n정말로 이동하시겠습니까?'
     );
+
+    return result.isConfirmed === true;
 }
 
 
@@ -1209,6 +1211,7 @@ function createAddressField(field) {
     return group;
 }
 
+
 function createEmployeeSearchField(field) {
     const container = document.createElement('div');
     container.className = 'employee-search';
@@ -1219,6 +1222,13 @@ function createEmployeeSearchField(field) {
     input.autocomplete = 'off';
     input.dataset.fieldId = field.fieldId;
 
+    input.maxLength = SEARCH_INPUT_MAX_LENGTH;
+    input.addEventListener('input', () => {
+        if (input.value.length > SEARCH_INPUT_MAX_LENGTH) {
+            input.value = input.value.slice(0, SEARCH_INPUT_MAX_LENGTH);
+        }
+    });
+
     const dropdown = document.createElement('div');
     dropdown.className = 'employee-search-dropdown hidden';
 
@@ -1228,65 +1238,184 @@ function createEmployeeSearchField(field) {
 
     let selectedEmployee = null;
 
+    let activeIndex = -1;
+    let items = [];
+
+    // 🔥 검색 렌더링 권한 토큰
+    let renderToken = 0;
+
     /* =========================
-       🔹 초기 값 복원 (중요)
+       초기 값 복원
     ========================= */
     if (field.value?.id) {
         selectedEmployee = field.value;
-        input.value = field.value.displayText
-            ?? `(${field.value.employeeNo}) ${field.value.name}`;
+        input.value =
+            field.value.displayText ??
+            `(${field.value.employeeNo}) ${field.value.name}`;
     }
 
     /* =========================
        검색
     ========================= */
     input.addEventListener('input', async () => {
+        // 🔒 선택된 상태에서 값이 동일하면 검색 자체 종료
+        if (
+            selectedEmployee &&
+            input.value === selectedEmployee.displayText
+        ) {
+            return;
+        }
+
+        // 사용자가 수정 시작 → 선택 해제
+        if (
+            selectedEmployee &&
+            input.value !== selectedEmployee.displayText
+        ) {
+            selectedEmployee = null;
+        }
+
         const keyword = input.value.trim();
+        if (keyword.length < 2) {
+            dropdown.classList.add('hidden');
+            return;
+        }
 
-        dropdown.classList.add('hidden');
+        // 🔥 렌더 토큰 발급
+        const myToken = ++renderToken;
+
+        let employees;
+        try {
+            employees = await searchEmployees(keyword);
+        } catch (e) {
+            console.error('[EMP SEARCH] failed', e);
+            return;
+        }
+
+        // 🔥 이 검색은 더 이상 유효하지 않음
+        if (myToken !== renderToken) return;
+
+        // ===== 여기부터 렌더링 =====
         list.innerHTML = '';
-        selectedEmployee = null;
+        items = [];
+        activeIndex = -1;
 
-        if (keyword.length < 2) return;
-
-        const employees = await searchEmployees(keyword);
-
-        if (employees.length === 0) {
+        if (!employees || employees.length === 0) {
             list.innerHTML =
                 `<li class="no-results">검색 결과가 없습니다.</li>`;
             dropdown.classList.remove('hidden');
             return;
         }
 
-        employees.forEach(emp => {
+        employees.forEach((emp, index) => {
             const li = document.createElement('li');
             li.className = 'employee-item';
             li.textContent = `(${emp.employeeNo}) ${emp.name}`;
+            li._emp = emp;
 
-            li.addEventListener('click', () => {
-                selectedEmployee = {
-                    id: emp.id,
-                    employeeNo: emp.employeeNo,
-                    name: emp.name,
-                    departmentName: emp.organizationName ?? '',
-                    positionName: emp.positionName ?? '',
-                    displayText: `(${emp.employeeNo}) ${emp.name}`
-                };
+            li.addEventListener('mouseenter', () => {
+                setActiveIndex(index);
+            });
 
-                input.value = selectedEmployee.displayText;
-                dropdown.classList.add('hidden');
-                clearFieldError(input);
+            li.addEventListener('mousedown', e => {
+                e.preventDefault();
+                selectEmployee(emp);
             });
 
             list.appendChild(li);
+            items.push(li);
         });
 
         dropdown.classList.remove('hidden');
+        setActiveIndex(0);
     });
 
     /* =========================
-       값 접근 (⭐ 핵심)
+       키보드 네비게이션
     ========================= */
+    input.addEventListener('keydown', e => {
+        if (dropdown.classList.contains('hidden')) return;
+
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                if (items.length) {
+                    setActiveIndex(
+                        activeIndex < items.length - 1
+                            ? activeIndex + 1
+                            : 0
+                    );
+                }
+                break;
+
+            case 'ArrowUp':
+                e.preventDefault();
+                if (items.length) {
+                    setActiveIndex(
+                        activeIndex > 0
+                            ? activeIndex - 1
+                            : items.length - 1
+                    );
+                }
+                break;
+
+            case 'Enter':
+                e.preventDefault();
+                if (activeIndex >= 0 && items[activeIndex]) {
+                    selectEmployee(items[activeIndex]._emp);
+                }
+                break;
+
+            case 'Escape':
+                dropdown.classList.add('hidden');
+                break;
+        }
+    });
+
+    /* =========================
+       외부 클릭 닫기
+    ========================= */
+    document.addEventListener('mousedown', e => {
+        if (!container.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    /* =========================
+       선택 처리
+    ========================= */
+    function selectEmployee(emp) {
+        if (!emp) return;
+
+        selectedEmployee = {
+            id: emp.id,
+            employeeNo: emp.employeeNo,
+            name: emp.name,
+            departmentName: emp.organizationName ?? '',
+            positionName: emp.positionName ?? '',
+            displayText: `(${emp.employeeNo}) ${emp.name}`
+        };
+
+        // 🔥 모든 진행 중 검색 결과 무효화
+        renderToken++;
+
+        input.value = selectedEmployee.displayText;
+        dropdown.classList.add('hidden');
+        clearFieldError(input);
+    }
+
+    function setActiveIndex(index) {
+        if (items[activeIndex]) {
+            items[activeIndex].classList.remove('active');
+        }
+
+        activeIndex = index;
+
+        if (items[activeIndex]) {
+            items[activeIndex].classList.add('active');
+            items[activeIndex].scrollIntoView({block: 'nearest'});
+        }
+    }
+
     container.getValue = () => selectedEmployee;
 
     container.append(input, dropdown);
@@ -1303,6 +1432,13 @@ function createOrganizationSearchField(field) {
     input.autocomplete = 'off';
     input.dataset.fieldId = field.fieldId;
 
+    input.maxLength = SEARCH_INPUT_MAX_LENGTH;
+    input.addEventListener('input', () => {
+        if (input.value.length > SEARCH_INPUT_MAX_LENGTH) {
+            input.value = input.value.slice(0, SEARCH_INPUT_MAX_LENGTH);
+        }
+    });
+
     const dropdown = document.createElement('div');
     dropdown.className = 'organization-search-dropdown hidden';
 
@@ -1312,61 +1448,180 @@ function createOrganizationSearchField(field) {
 
     let selectedOrg = null;
 
+    let activeIndex = -1;
+    let items = [];
+
+    // 🔥 렌더링 권한 토큰 (직원 검색과 동일)
+    let renderToken = 0;
+
     /* =========================
        🔹 초기 값 복원
     ========================= */
     if (field.value?.id) {
         selectedOrg = field.value;
-        input.value = field.value.name;
+        input.value = field.value.name ?? '';
     }
 
     /* =========================
-       검색
+       🔹 검색
     ========================= */
     input.addEventListener('input', async () => {
+
+        // 🔒 선택된 상태 + 값 동일 → 검색 종료
+        if (selectedOrg && input.value === selectedOrg.name) {
+            return;
+        }
+
+        // 사용자가 직접 수정 → 선택 해제
+        if (selectedOrg && input.value !== selectedOrg.name) {
+            selectedOrg = null;
+        }
+
         const keyword = input.value.trim();
+        if (keyword.length < 2) {
+            dropdown.classList.add('hidden');
+            return;
+        }
 
-        dropdown.classList.add('hidden');
+        // 🔥 검색 렌더 토큰 발급
+        const myToken = ++renderToken;
+
+        let orgs;
+        try {
+            orgs = await searchOrganizations(keyword);
+        } catch (e) {
+            console.error('[ORG SEARCH] failed', e);
+            return;
+        }
+
+        // 🔥 토큰 불일치 → 렌더링 금지
+        if (myToken !== renderToken) return;
+
+        // ===== 여기부터 렌더링 =====
         list.innerHTML = '';
-        selectedOrg = null;
+        items = [];
+        activeIndex = -1;
 
-        if (keyword.length < 2) return;
-
-        const orgs = await searchOrganizations(keyword);
-
-        if (orgs.length === 0) {
+        if (!Array.isArray(orgs) || orgs.length === 0) {
             list.innerHTML =
                 `<li class="no-results">검색 결과가 없습니다.</li>`;
             dropdown.classList.remove('hidden');
             return;
         }
 
-        orgs.forEach(org => {
+        orgs.forEach((org, index) => {
             const li = document.createElement('li');
             li.className = 'organization-item';
             li.textContent = org.name;
+            li._org = org;
 
-            li.addEventListener('click', () => {
-                selectedOrg = {
-                    id: org.id,
-                    name: org.name,
-                    categoryId: org.categoryId,
-                    parentOrgId: org.parentOrgId
-                };
+            // hover → 키보드 인덱스 동기화
+            li.addEventListener('mouseenter', () => {
+                setActiveIndex(index);
+            });
 
-                input.value = org.name;
-                dropdown.classList.add('hidden');
-                clearFieldError(input);
+            // blur 방지 + 즉시 선택
+            li.addEventListener('mousedown', e => {
+                e.preventDefault();
+                selectOrg(org);
             });
 
             list.appendChild(li);
+            items.push(li);
         });
 
         dropdown.classList.remove('hidden');
+        setActiveIndex(0);
     });
 
     /* =========================
-       값 접근 (⭐ 핵심)
+       🔹 키보드 네비게이션
+    ========================= */
+    input.addEventListener('keydown', e => {
+        if (dropdown.classList.contains('hidden')) return;
+
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                if (items.length) {
+                    setActiveIndex(
+                        activeIndex < items.length - 1
+                            ? activeIndex + 1
+                            : 0
+                    );
+                }
+                break;
+
+            case 'ArrowUp':
+                e.preventDefault();
+                if (items.length) {
+                    setActiveIndex(
+                        activeIndex > 0
+                            ? activeIndex - 1
+                            : items.length - 1
+                    );
+                }
+                break;
+
+            case 'Enter':
+                e.preventDefault();
+                if (activeIndex >= 0 && items[activeIndex]) {
+                    selectOrg(items[activeIndex]._org);
+                }
+                break;
+
+            case 'Escape':
+                dropdown.classList.add('hidden');
+                break;
+        }
+    });
+
+    /* =========================
+       🔹 외부 클릭 시 닫기
+    ========================= */
+    document.addEventListener('mousedown', e => {
+        if (!container.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    /* =========================
+       🔹 선택 처리
+    ========================= */
+    function selectOrg(org) {
+        selectedOrg = {
+            id: org.id,
+            name: org.name,
+            categoryId: org.categoryId,
+            parentOrgId: org.parentOrgId
+        };
+
+        // 🔥 모든 진행 중 검색 결과 무효화
+        renderToken++;
+
+        input.value = org.name;
+        dropdown.classList.add('hidden');
+        clearFieldError(input);
+    }
+
+    /* =========================
+       🔹 active 상태 관리
+    ========================= */
+    function setActiveIndex(index) {
+        if (items[activeIndex]) {
+            items[activeIndex].classList.remove('active');
+        }
+
+        activeIndex = index;
+
+        if (items[activeIndex]) {
+            items[activeIndex].classList.add('active');
+            items[activeIndex].scrollIntoView({block: 'nearest'});
+        }
+    }
+
+    /* =========================
+       🔹 값 접근
     ========================= */
     container.getValue = () => selectedOrg;
 
@@ -1904,10 +2159,25 @@ function createDateRange(field) {
     end.dataset.fieldId = field.fieldId;
     end.dataset.rangeType = 'end';
 
-    container.appendChild(start);
-    container.appendChild(document.createTextNode(' ~ '));
-    container.appendChild(end);
+    /* ✅ 핵심 추가 */
+    if (start.value) {
+        end.min = start.value;
+    }
 
+    start.addEventListener('change', () => {
+        if (start.value) {
+            end.min = start.value;
+
+            // 이미 선택된 종료일이 시작일보다 이전이면 초기화
+            if (end.value && end.value < start.value) {
+                end.value = '';
+            }
+        } else {
+            end.removeAttribute('min');
+        }
+    });
+
+    container.append(start, document.createTextNode(' ~ '), end);
     return container;
 }
 
@@ -2145,6 +2415,28 @@ async function createEventDateRange(field) {
     end.dataset.rangeType = 'end';
     end.value = field.value?.end || '';
 
+    /* ✅ [추가] 초기 min 설정 */
+    if (start.value) {
+        end.min = start.value;
+    }
+
+    /* ✅ [추가] 시작일 변경 시 종료일 제어 */
+    start.addEventListener('change', () => {
+        if (start.value) {
+            end.min = start.value;
+
+            // 이미 선택된 종료일이 시작일보다 이전이면 초기화
+            if (end.value && end.value < start.value) {
+                end.value = '';
+            }
+
+            // 기존 에러 힌트 제거 (UX)
+            clearScheduleDateRangeError(start);
+        } else {
+            end.removeAttribute('min');
+        }
+    });
+
     dateRange.append(start, document.createTextNode(' ~ '), end);
     rangeGroup.append(rangeLabel, dateRange);
     inputWrapper.appendChild(rangeGroup);
@@ -2204,7 +2496,7 @@ async function createEventDateRange(field) {
         inputWrapper.appendChild(titleGroup);
     }
 
-    /* 4️⃣ 사유 / 설명 (하나의 textarea, 정책 분기) */
+    /* 4️⃣ 사유 / 설명 */
     if (ui.requireReason || ui.requireDescription) {
         const textGroup = document.createElement('div');
         textGroup.className = 'schedule-group';
@@ -3088,8 +3380,8 @@ function clearRangeFieldErrorByFieldId(fieldId) {
    이벤트 바인딩
    ===================================================== */
 
-function goToPreviousPage() {
-    if (!confirmLeaveIfDirty()) return;
+async function goToPreviousPage() {
+    if (!(await confirmLeaveIfDirty())) return;
 
     // history가 없을 경우 대비
     if (window.history.length > 1) {
@@ -3278,9 +3570,10 @@ async function bindEvents(documentId) {
 
     // 이전
     document.getElementById('prevBtn')
-        ?.addEventListener('click', () => {
-            goToPreviousPage();
+        ?.addEventListener('click', async () => {
+            await goToPreviousPage();
         });
+
 
     // 다음
     document.getElementById('nextBtn')
@@ -3417,7 +3710,8 @@ function renderAttachmentList() {
             btn.className = 'delete-btn';
 
             btn.addEventListener('click', async () => {
-                if (!confirm('첨부파일을 삭제하시겠습니까?')) return;
+                const result = await sweetConfirm('첨부파일 삭제', '첨부파일을 삭제하시겠습니까?');
+                if (!result.isConfirmed) return;
 
                 btn.disabled = true;
 
@@ -3483,7 +3777,8 @@ function renderReferenceDocList() {
             btn.className = 'delete-btn';
 
             btn.addEventListener('click', async () => {
-                if (!confirm('참조 문서를 제거하시겠습니까?')) return;
+                const resutl = await sweetConfirm('참조 문서 제거', '참조 문서를 제거하시겠습니까?');
+                if (!result.isConfirmed) return;
 
                 const ok = await removeReferenceDocument(
                     DOCUMENT_ID,

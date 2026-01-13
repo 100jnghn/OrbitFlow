@@ -27,12 +27,12 @@ public class FormTemplateGroupController {
     private final FormTemplateGroupService formTemplateGroupService;
 
     @GetMapping("/form-template-groups")
-    public ResponseEntity<ResponseDto> formTemplateGroups(
+    public ResponseEntity<?> formTemplateGroups(
             @RequestParam(required = false) String keyword
     ) {
 
         return ResponseEntity.ok(
-                new ResponseDto(
+                new ResponseDto<>(
                         HttpStatus.OK,
                         "양식 그룹 목록 조회",
                         formTemplateGroupService.getFormTemplateGroups(SecurityUtils.getCompanyId(), keyword)));
@@ -40,11 +40,11 @@ public class FormTemplateGroupController {
 
 
     @PostMapping("/admin/form-template-groups")
-    public ResponseEntity<ResponseDto> saveFormTemplateGroup(
+    public ResponseEntity<?> saveFormTemplateGroup(
             @RequestBody FormTemplateGroupCreateReqDto dto
     ) {
         return ResponseEntity.ok(
-                new ResponseDto(
+                new ResponseDto<>(
                         HttpStatus.CREATED,
                         "양식 그룹 생성 성공",
                         formTemplateGroupService.saveFormTemplateGroup(dto, SecurityUtils.getCompanyId()
@@ -54,24 +54,32 @@ public class FormTemplateGroupController {
     }
 
     @GetMapping("/form-template-groups/{id}")
-    public ResponseEntity<ResponseDto> getDetailFormTemplateGroup(
+    public ResponseEntity<?> getDetailFormTemplateGroup(
             @PathVariable Long id
     ) {
 
         return ResponseEntity.ok(
-                new ResponseDto(
+                new ResponseDto<>(
                         HttpStatus.OK,
                         "양식 그룹 상세 조회 성공",
                         formTemplateGroupService.getDetailTemplateGroup(id)));
     }
 
-    @PatchMapping("admin/form-template-groups/{id}")
-    public ResponseEntity<ResponseDto> updateFormTemplateGroup(
+    @PatchMapping("/admin/form-template-groups/{id}")
+    public ResponseEntity<?> updateFormTemplateGroup(
             @PathVariable Long id,
             @RequestBody FormTemplateGroupUpdateReqDto dto
     ) {
         formTemplateGroupService.updateFormTemplateGroup(dto, id);
-        return ResponseEntity.ok(new ResponseDto(HttpStatus.OK, "양식 그룹 수정 완료", null));
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "양식 그룹 수정 완료", null));
     }
 
+
+    @GetMapping("/admin/form-template-groups/check-name")
+    public ResponseEntity<?> checkFormTemplateGroupName(
+            @RequestParam String name
+    ) {
+        Boolean result = formTemplateGroupService.checkFormTemplateGroupName(SecurityUtils.getCompanyId(), name);
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "중복 체크 결과 반환", result));
+    }
 }

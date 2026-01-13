@@ -2,7 +2,7 @@
 
 const BOARD_API = '/api/board-posts';
 const BOARD_CATEGORY_API = '/api/board-categories';
-const COMMENT_API = '/api/board-posts';
+const COMMENT_API = '/api';
 
 let boardId = null;
 let categoryId = null;
@@ -464,7 +464,8 @@ function editBoard() {
 async function deleteBoard() {
     if (!boardId) return;
 
-    if (!confirm('정말 삭제하시겠습니까?')) {
+    const result = await sweetConfirm('삭제 확인', '정말 삭제하시겠습니까?');
+    if (!result.isConfirmed) {
         return;
     }
 
@@ -491,7 +492,7 @@ async function deleteBoard() {
             throw new Error(errorData.message || '게시글 삭제에 실패했습니다.');
         }
 
-        alert('게시글이 삭제되었습니다.');
+        await sweetSuccess('게시글이 삭제되었습니다.');
         // categoryId를 사용하여 해당 게시판 목록으로 이동
         if (categoryId) {
             window.location.href = `/view/board?categoryId=${categoryId}`;
@@ -499,14 +500,14 @@ async function deleteBoard() {
             window.location.href = '/view/board';
         }
     } catch (error) {
-        alert(error.message || '게시글 삭제에 실패했습니다.');
+        sweetError(error.message || '게시글 삭제에 실패했습니다.');
     }
 }
 
 // 파일 다운로드
 async function downloadFile(fileId, fileName) {
     if (!fileId) {
-        alert('파일을 찾을 수 없습니다.');
+        sweetError('파일을 찾을 수 없습니다.');
         return;
     }
 
@@ -523,11 +524,11 @@ async function downloadFile(fileId, fileName) {
                 return;
             }
             if (response.status === 403) {
-                alert('파일 다운로드 권한이 없습니다.');
+                sweetError('파일 다운로드 권한이 없습니다.');
                 return;
             }
             if (response.status === 404) {
-                alert('파일을 찾을 수 없습니다.');
+                sweetError('파일을 찾을 수 없습니다.');
                 return;
             }
             throw new Error('파일 다운로드에 실패했습니다.');
@@ -546,7 +547,7 @@ async function downloadFile(fileId, fileName) {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
     } catch (error) {
-        alert('파일 다운로드에 실패했습니다.');
+        sweetError('파일 다운로드에 실패했습니다.');
     }
 }
 
@@ -601,7 +602,7 @@ async function loadComments(page = 0) {
     if (!boardId) return;
 
     try {
-        const response = await apiFetch(`${COMMENT_API}/${boardId}/comments?page=${page}&size=5&sort=createdAt,asc`, {
+        const response = await apiFetch(`${COMMENT_API}/board-posts/${boardId}/comments?page=${page}&size=5&sort=createdAt,asc`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -780,7 +781,7 @@ async function submitComment() {
     }
 
     try {
-        const response = await apiFetch(`${COMMENT_API}/${boardId}/comments`, {
+        const response = await apiFetch(`${COMMENT_API}/board-posts/${boardId}/comments`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -851,23 +852,23 @@ async function saveComment(commentId) {
     const content = textarea?.value.trim();
 
     if (!content || content.length === 0) {
-        alert('댓글 내용을 입력해주세요.');
+        await sweetWarning('댓글 내용을 입력해주세요.');
         return;
     }
 
     // 공백만 입력된 경우 체크
     if (!content.replace(/\s/g, '').length) {
-        alert('공백만 입력된 댓글은 등록할 수 없습니다.');
+        await sweetWarning('공백만 입력된 댓글은 등록할 수 없습니다.');
         return;
     }
 
     if (content.length > 500) {
-        alert('댓글은 500자 이하여야 합니다.');
+        await sweetWarning('댓글은 500자 이하여야 합니다.');
         return;
     }
 
     if (content.length > 1000) {
-        alert('댓글은 1000자 이하여야 합니다.');
+        await sweetWarning('댓글은 1000자 이하여야 합니다.');
         return;
     }
 
@@ -894,13 +895,14 @@ async function saveComment(commentId) {
         editingCommentId = null;
         loadComments(currentCommentPage);
     } catch (error) {
-        alert(error.message || '댓글 수정에 실패했습니다.');
+        sweetError(error.message || '댓글 수정에 실패했습니다.');
     }
 }
 
 // 댓글 삭제
 async function deleteComment(commentId) {
-    if (!confirm('정말 삭제하시겠습니까?')) {
+    const result = await sweetConfirm('삭제 확인', '정말 삭제하시겠습니까?');
+    if (!result.isConfirmed) {
         return;
     }
 
@@ -923,7 +925,7 @@ async function deleteComment(commentId) {
 
         loadComments(currentCommentPage);
     } catch (error) {
-        alert(error.message || '댓글 삭제에 실패했습니다.');
+        sweetError(error.message || '댓글 삭제에 실패했습니다.');
     }
 }
 

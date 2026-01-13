@@ -226,8 +226,7 @@ async function validateImageFile(file) {
             if (ratio <= 1) {
                 resolve({
                     valid: false,
-                    message: '가로가 세로보다 긴 이미지만 업로드 가능합니다.' + '\n' + '(현재 비율: ' +
-                        width + 'x' + height + ')'
+                    message: '가로가 세로보다 긴 이미지만 업로드 가능합니다.'
                 });
                 return;
             }
@@ -237,8 +236,7 @@ async function validateImageFile(file) {
             if (width * 9 > height * 16) {
                 resolve({
                     valid: false,
-                    message: '이미지 비율은 최대 16:9까지 가능합니다. (현재 비율: ' +
-                        width + 'x' + height + ')'
+                    message: '이미지 비율은 최대 16:9까지 가능합니다.'
                 });
                 return;
             }

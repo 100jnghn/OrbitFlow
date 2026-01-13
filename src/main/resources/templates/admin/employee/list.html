@@ -85,12 +85,14 @@
 
                     <div class="form-group">
                         <label>이름 *</label>
-                        <input id="empName">
+                        <input id="empName" maxlength="50">
+                        <div id="empNameMsg" class="hint"></div>
                     </div>
 
                     <div class="form-group">
                         <label>사번 *</label>
-                        <input id="empNo">
+                        <input id="empNo" maxlength="20">
+                        <div id="empNoMsg" class="hint"></div>
                     </div>
 
                     <div class="form-group">
@@ -109,12 +111,24 @@
 
                     <div class="form-group">
                         <label>연락처</label>
-                        <input id="empPhone">
+                        <input
+                                id="empPhone"
+                                inputmode="numeric"
+                                pattern="[0-9]*"
+                                placeholder="숫자만 입력"
+                        />
+                        <div id="empPhoneMsg" class="hint"></div>
                     </div>
 
                     <div class="form-group">
-                        <label>사내 번호</label>
-                        <input id="empInternalPhone">
+                        <label>내선번호</label>
+                        <input
+                                id="empInternalPhone"
+                                inputmode="numeric"
+                                pattern="[0-9]*"
+                                placeholder="숫자만 입력"
+                        />
+                        <div id="empInternalPhoneMsg" class="hint"></div>
                     </div>
 
                     <div class="form-group">
@@ -136,6 +150,7 @@
                             <option value="">선택</option>
                             <option value="REGULAR">정규직</option>
                             <option value="NON_REGULAR">비정규직</option>
+                            <option value="CONTRACT">계약직</option>
                         </select>
                     </div>
 
@@ -154,7 +169,8 @@
                 <!-- 1열 영역 -->
                 <div class="form-group full">
                     <label>이메일(로그인 ID) *</label>
-                    <input id="empEmail" type="email">
+                    <input id="empEmail" type="email" maxlength="100">
+                    <div id="empEmailMsg" class="hint"></div>
                 </div>
 
                 <div class="form-group full">
@@ -187,6 +203,7 @@
 
 <!-- ================= 페이지별 JS ================= -->
 <th:block th:fragment="pageScript">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script th:src="@{/js/admin-employee.js}"></script>
 </th:block>
 

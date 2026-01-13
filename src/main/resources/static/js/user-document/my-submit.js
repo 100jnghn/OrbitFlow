@@ -88,6 +88,34 @@ function bindFilterEvents() {
     const startDateEl = document.getElementById("startDate");
     const endDateEl = document.getElementById("endDate");
 
+    /* =========================
+       ✅ 기간 필터 제약 (추가)
+    ========================= */
+    if (startDateEl && endDateEl) {
+
+        // 초기 상태 반영 (뒤로가기 / 새로고침 대비)
+        if (startDateEl.value) {
+            endDateEl.min = startDateEl.value;
+        }
+
+        startDateEl.addEventListener("change", () => {
+            if (startDateEl.value) {
+                endDateEl.min = startDateEl.value;
+
+                // 이미 선택된 종료일이 시작일보다 이전이면 초기화
+                if (endDateEl.value && endDateEl.value < startDateEl.value) {
+                    endDateEl.value = "";
+                }
+            } else {
+                endDateEl.removeAttribute("min");
+            }
+        });
+    }
+
+    /* =========================
+       기존 로직
+    ========================= */
+
     if (statusEl) {
         statusEl.addEventListener("change", function () {
             mydocState.status = this.value;
@@ -122,7 +150,6 @@ function bindFilterEvents() {
         searchBtnEl.addEventListener("click", executeSearch);
     }
 
-    // ⭐ Enter 키 검색
     if (keywordEl) {
         keywordEl.addEventListener("keydown", (e) => {
             if (e.key === "Enter") {
@@ -132,6 +159,7 @@ function bindFilterEvents() {
         });
     }
 }
+
 
 // ===============================
 // 문서 작성 버튼

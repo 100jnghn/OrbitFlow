@@ -285,33 +285,41 @@
 /* 테이블 스타일 */
 .table-container {
     overflow-x: auto;
-    margin-bottom: 16px;
+    margin-bottom: 24px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
 }
 
 .exception-table {
     width: 100%;
     border-collapse: collapse;
     background: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    overflow: hidden;
+    /* border: 1px solid #e0e0e0; -> Removed */
+    /* border-radius: 4px; -> Removed */
+    /* overflow: hidden; */
 }
 
 .exception-table thead {
-    background: #f5f5f5;
+    background: #f8f9fa;
+    /* Resource table color */
+    border-bottom: 2px solid #e9ecef;
+    /* Resource table border */
 }
 
 .exception-table th {
-    padding: 12px 16px;
+    padding: 14px 16px;
     text-align: left;
     font-weight: 600;
     font-size: 14px;
-    color: #333;
-    border-bottom: 2px solid #e0e0e0;
+    color: #495057;
+    /* border-bottom: 2px solid #e0e0e0; -> Reset to none or inherited from thead */
+    border-bottom: none;
 }
 
 .exception-table td {
-    padding: 12px 16px;
+    padding: 14px 16px;
     font-size: 14px;
     color: #555;
     border-bottom: 1px solid #f0f0f0;
@@ -467,4 +475,3 @@
     resize: vertical;
     min-height: 80px;
 }
-

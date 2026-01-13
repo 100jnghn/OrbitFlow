@@ -271,7 +271,12 @@
     font-weight: 500;
     color: var(--neutral-800);
     padding-left: 4px;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
+
 
 .approval-container .approval-table tr:hover td.title-col {
     color: var(--primary-color);
@@ -406,4 +411,157 @@
     background-blend-mode: multiply;
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+
+/* =========================
+   반응형 + Ellipsis
+========================= */
+
+@media (max-width: 1024px) {
+
+    .approval-container {
+        padding: 20px;
+    }
+
+    .approval-search-filters {
+        gap: 10px;
+    }
+
+    .approval-filter-select,
+    .approval-date-input,
+    .approval-search-input {
+        font-size: 13px;
+        padding: 9px 12px;
+    }
+
+    .approval-btn-search {
+        padding: 9px 16px;
+        font-size: 13px;
+    }
+
+    /* 테이블 텍스트 살짝 축소 */
+    .approval-table th,
+    .approval-table td {
+        font-size: 13px;
+        padding: 0 12px;
+    }
+}
+
+@media (max-width: 1200px) {
+
+    /* 컨테이너 */
+    .approval-container {
+        padding: 16px;
+        min-height: auto;
+    }
+
+    /* 헤더 */
+    .approval-header h1 {
+        font-size: 22px;
+    }
+
+    /* 🔍 검색 영역 */
+    .approval-search-section {
+        padding: 16px;
+    }
+
+    .approval-search-filters {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .approval-filter-select,
+    .approval-date-input,
+    .approval-search-input,
+    .approval-btn-search {
+        width: 100%;
+    }
+
+    /* ✂️ input ellipsis (조회용) */
+    .ellipsis-input {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* ✏️ 입력 중에는 전체 표시 */
+    .ellipsis-input:focus {
+        overflow: visible;
+        text-overflow: clip;
+        white-space: normal;
+    }
+
+    /* 📊 테이블: 가로 스크롤 */
+    .approval-table-container {
+        overflow-x: auto;
+    }
+
+    .approval-table {
+        min-width: 900px;
+    }
+
+    /* 폰트 축소 */
+    .approval-table th,
+    .approval-table td {
+        font-size: 12px;
+        height: 44px;
+    }
+
+    /* 페이지네이션 */
+    .pagination {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .page-btn,
+    .page-number {
+        min-width: 28px;
+        height: 32px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+
+    /* 테이블 최소화 */
+    .approval-table th:nth-child(5),
+    .approval-table td:nth-child(5),
+    .approval-table th:nth-child(6),
+    .approval-table td:nth-child(6) {
+        display: none;
+    }
+
+    /* 제목 컬럼 강조 */
+    .approval-title {
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+    /* 상태 배지 */
+    .status-badge {
+        min-width: 48px;
+        height: 20px;
+        font-size: 11px;
+        padding: 2px 10px;
+    }
+}
+
+/* =========================
+   테이블 컬럼 Ellipsis
+========================= */
+.cell-ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* =========================
+   테이블 헤더 줄바꿈 방지
+========================= */
+.approval-table th {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
