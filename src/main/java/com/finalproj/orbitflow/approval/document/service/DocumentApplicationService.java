@@ -566,7 +566,7 @@ public class DocumentApplicationService {
 
         BaseRole baseRole = document.getTemplateGroup().getBaseRole();
 
-        if (baseRole == BaseRole.BUSINESS_TRIP || baseRole == BaseRole.OUTWORK) {
+        if (baseRole.equals(BaseRole.VACATION)) {
             LeaveCalculationResult result = leaveCalculationService.calculate(document);
 
             LocalDate actualStart = result.effectiveDates().get(0);
