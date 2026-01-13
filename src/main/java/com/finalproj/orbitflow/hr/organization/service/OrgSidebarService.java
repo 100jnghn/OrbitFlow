@@ -36,9 +36,9 @@ public class OrgSidebarService {
         List<Organization> orgs =
                 orgRepository.findByCompanyIdAndIsActiveTrueOrderByParentOrgIdAscOrderIndexAsc(companyId);
 
-        // 내선 있는 사원 조회
+        // 재직중 사원 전체 조회 (내선 없어도 포함)
         List<Employee> employees =
-                employeeRepository.findActiveWithExtension(companyId);
+                employeeRepository.findActiveForSidebar(companyId);
 
         // orgId 기준 사원 그룹핑
         Map<Long, List<OrgSidebarEmployeeDto>> employeeMap =
