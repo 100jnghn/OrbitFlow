@@ -256,15 +256,46 @@ async function validateImageFile(file) {
 /**
  * 이미지 선택 핸들러
  */
+/**
+ * 이미지 선택 핸들러
+ */
 async function handleImageSelect(event) {
     const file = event.target.files[0];
 
     if (!file) return;
 
+    // 업로드/전송 관련 버튼 비활성화, 스피너 표시
+    const carImage = document.getElementById('car-image');
+    const placeholder = document.getElementById('upload-placeholder');
+    const removeBtn = document.getElementById('btn-remove');
+    const removeImgBtn = document.getElementById('btn-remove-img');
+    const carImagePreview = document.getElementById('car-image-preview');
+
+    if (editBtn) editBtn.disabled = true;
+    if (removeBtn) removeBtn.style.display = 'none';
+    if (removeImgBtn) removeImgBtn.style.display = 'none';
+
+    // 기존 미리보기 숨김 & Placeholder 숨김
+    if (carImage) carImage.style.display = 'none';
+    if (placeholder) placeholder.style.display = 'none';
+
+    // 스피너 추가
+    let spinner = carImagePreview.querySelector('.image-spinner');
+    if (!spinner) {
+        spinner = document.createElement('div');
+        spinner.className = 'image-spinner';
+        carImagePreview.appendChild(spinner);
+    }
+
     // 이미지 파일 검증
     const validation = await validateImageFile(file);
 
     if (!validation.valid) {
+        spinner.remove();
+        if (placeholder) placeholder.style.display = 'flex';
+        // 버튼 상태 복구
+        updateEditButtonState();
+
         await sweetWarning(validation.message);
         // 파일 입력 초기화
         event.target.value = '';
@@ -276,11 +307,15 @@ async function handleImageSelect(event) {
     // 미리보기 표시
     const reader = new FileReader();
     reader.onload = (e) => {
-        displayImagePreview(e.target.result);
+        const imageUrl = e.target.result;
+        displayImagePreview(imageUrl); // 내부에서 스피너 제거 처리
     };
     reader.readAsDataURL(file);
 }
 
+/**
+ * 이미지 미리보기 표시
+ */
 /**
  * 이미지 미리보기 표시
  */
@@ -289,11 +324,29 @@ function displayImagePreview(imageUrl) {
     const placeholder = document.getElementById('upload-placeholder');
     const removeBtn = document.getElementById('btn-remove');
     const removeImgBtn = document.getElementById('btn-remove-img');
+    const carImagePreview = document.getElementById('car-image-preview');
 
-    if (carImage && placeholder) {
+    // 스피너 제거
+    const spinner = carImagePreview.querySelector('.image-spinner');
+    if (spinner) spinner.remove();
+
+    if (carImage) {
         carImage.src = imageUrl;
-        carImage.style.display = 'block';
-        placeholder.style.display = 'none';
+
+        // 이미지 로드 완료 시 표시 (데이터 URL이라 거의 즉시겠지만)
+        carImage.onload = () => {
+            carImage.style.display = 'block';
+            if (placeholder) placeholder.style.display = 'none';
+
+            // 버튼 복구
+            updateEditButtonState();
+        };
+        // 만약 onload가 안 탈 경우를 대비해 바로 표시 (DataURL 특성상 바로 가능)
+        if (imageUrl.startsWith('data:')) {
+            carImage.style.display = 'block';
+            if (placeholder) placeholder.style.display = 'none';
+            updateEditButtonState();
+        }
 
         // 새로 선택한 이미지는 btn-remove만 표시
         if (removeBtn) {
@@ -547,6 +600,7 @@ async function displayCarImage(fileId) {
     const placeholder = document.getElementById('upload-placeholder');
     const removeBtn = document.getElementById('btn-remove');
     const removeImgBtn = document.getElementById('btn-remove-img');
+    const carImagePreview = document.getElementById('car-image-preview');
 
     if (!fileId) {
         // 이미지 없는 경우
@@ -557,8 +611,23 @@ async function displayCarImage(fileId) {
         if (removeBtn) removeBtn.style.display = 'none';
         if (removeImgBtn) removeImgBtn.style.display = 'none';
 
+        // 스피너 제거 (혹시 있다면)
+        const spinner = carImagePreview.querySelector('.image-spinner');
+        if (spinner) spinner.remove();
+
         return;
     }
+
+    // 스피너 추가 & 버튼 비활성화
+    let spinner = carImagePreview.querySelector('.image-spinner');
+    if (!spinner) {
+        spinner = document.createElement('div');
+        spinner.className = 'image-spinner';
+        carImagePreview.appendChild(spinner);
+    }
+    if (placeholder) placeholder.style.display = 'none';
+    if (carImage) carImage.style.display = 'none';
+    if (editBtn) editBtn.disabled = true;
 
     try {
         // presigned URL 요청
@@ -569,9 +638,21 @@ async function displayCarImage(fileId) {
         const imageUrl = result.data.url;
 
         carImage.src = imageUrl;
-        carImage.style.display = 'block';
 
-        if (placeholder) placeholder.style.display = 'none';
+        carImage.onload = () => {
+            // 로드 완료 시 스피너 제거 및 이미지 노출
+            if (spinner) spinner.remove();
+            carImage.style.display = 'block';
+            updateEditButtonState();
+        };
+
+        carImage.onerror = () => {
+            if (spinner) spinner.remove();
+            carImage.style.display = 'none';
+            if (placeholder) placeholder.style.display = 'flex';
+            updateEditButtonState();
+        };
+
         // 기존 서버 이미지는 btn-remove-img만 표시
         if (removeBtn) removeBtn.style.display = 'none';
         if (removeImgBtn) removeImgBtn.style.display = 'inline-flex';
@@ -580,12 +661,14 @@ async function displayCarImage(fileId) {
         console.error('이미지 로드 실패', e);
 
         // 실패 시 placeholder 표시
+        if (spinner) spinner.remove();
         carImage.src = '';
         carImage.style.display = 'none';
 
         if (placeholder) placeholder.style.display = 'flex';
         if (removeBtn) removeBtn.style.display = 'none';
         if (removeImgBtn) removeImgBtn.style.display = 'none';
+        updateEditButtonState();
     }
 }
 
