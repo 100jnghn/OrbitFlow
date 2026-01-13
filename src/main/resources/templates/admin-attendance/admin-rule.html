@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/layout-admin :: layout(
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/layout-admin :: layout(
         ~{::content},
         ~{fragments/header :: header},
         ~{sidebar/admin-sidebar :: menu},
         ~{::pageCss},
         ~{::pageScript}
       )}">
+
 <head>
     <meta charset="UTF-8">
     <title th:text="${pageTitle} ?: '관리자 - 근태 규칙 관리'">관리자 - 근태 규칙 관리</title>
@@ -17,215 +17,218 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     </th:block>
 </head>
+
 <body>
 
-<div th:fragment="content">
-    <div class="board-admin-container">
-        <div class="board-header">
-            <h1>근태 규칙 및 근무 시간 관리</h1>
-        </div>
+    <div th:fragment="content">
+        <div class="board-admin-container">
+            <div class="board-header">
+                <h1>근태 규칙 및 근무 시간 관리</h1>
+            </div>
 
-        <section class="rule-section">
-            <div class="card rule-form-card">
-                <h2 class="section-title">회사 전체 기본 규칙</h2>
-                <div class="rule-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">기본 출퇴근 시간</label>
-                            <div class="time-input-group">
-                                <input type="time" id="defaultStartTime" class="time-input">
-                                <span class="time-separator">~</span>
-                                <input type="time" id="defaultEndTime" class="time-input">
+            <section class="rule-section">
+                <div class="card rule-form-card">
+                    <h2 class="section-title">회사 전체 기본 규칙</h2>
+                    <div class="rule-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">기본 출퇴근 시간</label>
+                                <div class="time-input-group">
+                                    <input type="time" id="defaultStartTime" class="time-input">
+                                    <span class="time-separator">~</span>
+                                    <input type="time" id="defaultEndTime" class="time-input">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">기본 휴게 시간</label>
+                                <div class="judgment-input">
+                                    <input type="text" id="defaultBreakMinutes" class="number-input"
+                                        inputmode="numeric">
+                                    <span class="input-suffix">분</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">지각 허용 기준</label>
-                            <div class="judgment-input">
-                                <input type="text" id="tardinessMinutes" class="number-input" inputmode="numeric">
-                                <span class="input-suffix">분</span>
-                            </div>
+                        <div class="form-actions">
+                            <button type="button" id="saveDefaultRuleBtn" class="btn-primary">
+                                <i class="fas fa-save"></i> 저장
+                            </button>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">기본 휴게 시간</label>
-                            <div class="judgment-input">
-                                <input type="text" id="defaultBreakMinutes" class="number-input" inputmode="numeric">
-                                <span class="input-suffix">분</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" id="saveDefaultRuleBtn" class="btn-primary">
-                            <i class="fas fa-save"></i> 저장
-                        </button>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <section class="rule-section">
-            <div class="section-header">
-                <h2 class="section-title">사원별 예외 규칙 관리</h2>
-                <button type="button" id="addExceptionRuleBtn" class="btn-primary">
-                    <i class="fas fa-plus"></i> 예외 규칙 추가
-                </button>
-            </div>
-            <div class="board-table-container">
-                <table class="board-table" id="exceptionTable">
-                    <thead>
-                    <tr>
-                        <th>대상 사원</th>
-                        <th>적용 기간</th>
-                        <th>출근 시간</th>
-                        <th>퇴근 시간</th>
-                        <th>휴게 시간</th>
-                        <th>사유</th>
-                        <th>등록일</th>
-                        <th>관리</th>
-                    </tr>
-                    </thead>
-                    <tbody id="exceptionRulesTableBody">
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    </div>
+            <section class="rule-section">
+                <div class="section-header">
+                    <h2 class="section-title">사원별 예외 규칙 관리</h2>
+                    <button type="button" id="addExceptionRuleBtn" class="btn-primary">
+                        <i class="fas fa-plus"></i> 예외 규칙 추가
+                    </button>
+                </div>
+                <div class="board-table-container">
+                    <table class="board-table" id="exceptionTable">
+                        <thead>
+                            <tr>
+                                <th>대상 사원</th>
+                                <th>적용 기간</th>
+                                <th>출근 시간</th>
+                                <th>퇴근 시간</th>
+                                <th>휴게 시간</th>
+                                <th>사유</th>
+                                <th>등록일</th>
+                                <th>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="exceptionRulesTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
 
-    <div id="exceptionRuleModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modalTitle">사원별 근태 예외 규칙 추가</h3>
-                <span class="close">&times;</span>
+        <div id="exceptionRuleModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle">사원별 근태 예외 규칙 추가</h3>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="exceptionRuleForm">
+                        <input type="hidden" id="selectedEmployeeId" name="employeeId">
+                        <div class="form-section">
+                            <div class="section-content">
+                                <label class="section-label">대상 사원 선택 <span style="color: red;">*</span></label>
+                                <div class="employee-search-group">
+                                    <input type="text" id="employeeSearchInput" class="form-control"
+                                        placeholder="이름 또는 사번">
+                                    <button type="button" id="employeeSearchBtn" class="btn-search">검색</button>
+                                </div>
+                                <div id="employeeSearchResults" class="employee-search-results"></div>
+                                <div id="selectedEmployeeInfo" class="selected-employee-info" style="display: none;">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-section">
+                            <div class="section-content">
+                                <label class="section-label">규칙 적용 기간 <span style="color: red;">*</span></label>
+                                <div class="date-input-group">
+                                    <div class="date-field">
+                                        <label>시작일</label>
+                                        <input type="date" id="validFrom" class="date-input" required>
+                                    </div>
+                                    <div class="date-field">
+                                        <label>종료일</label>
+                                        <input type="date" id="validTo" class="date-input">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-section">
+                            <div class="section-content">
+                                <label class="section-label">적용 시간 <span style="color: red;">*</span></label>
+                                <div class="override-fields">
+                                    <div class="override-row">
+                                        <div class="override-field">
+                                            <label>출근시간</label>
+                                            <input type="time" id="exceptionStartTime" class="time-input" required>
+                                        </div>
+                                        <div class="override-field">
+                                            <label>퇴근시간</label>
+                                            <input type="time" id="exceptionEndTime" class="time-input" required>
+                                        </div>
+                                        <div class="override-field">
+                                            <label>휴게시간(분)</label>
+                                            <input type="text" id="exceptionBreakMinutes" class="number-input"
+                                                maxlength="3">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-section">
+                            <div class="section-content">
+                                <label class="section-label">사유 <span style="color: red;">*</span></label>
+                                <textarea id="reason" class="reason-textarea" maxlength="40" required></textarea>
+                                <div class="char-count-wrapper"><span id="reasonCharCount">0 / 40</span></div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary close-modal">취소</button>
+                            <button type="submit" class="btn-primary">등록</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="modal-body">
-                <form id="exceptionRuleForm">
-                    <input type="hidden" id="selectedEmployeeId" name="employeeId">
-                    <div class="form-section">
-                        <div class="section-content">
-                            <label class="section-label">대상 사원 선택 <span style="color: red;">*</span></label>
-                            <div class="employee-search-group">
-                                <input type="text" id="employeeSearchInput" class="form-control" placeholder="이름 또는 사번">
-                                <button type="button" id="employeeSearchBtn" class="btn-search">검색</button>
-                            </div>
-                            <div id="employeeSearchResults" class="employee-search-results"></div>
-                            <div id="selectedEmployeeInfo" class="selected-employee-info" style="display: none;"></div>
-                        </div>
-                    </div>
-                    <div class="form-section">
-                        <div class="section-content">
-                            <label class="section-label">규칙 적용 기간 <span style="color: red;">*</span></label>
-                            <div class="date-input-group">
-                                <div class="date-field">
-                                    <label>시작일</label>
-                                    <input type="date" id="validFrom" class="date-input" required>
-                                </div>
-                                <div class="date-field">
-                                    <label>종료일</label>
-                                    <input type="date" id="validTo" class="date-input">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-section">
-                        <div class="section-content">
-                            <label class="section-label">적용 시간 <span style="color: red;">*</span></label>
-                            <div class="override-fields">
-                                <div class="override-row">
-                                    <div class="override-field">
-                                        <label>출근시간</label>
-                                        <input type="time" id="exceptionStartTime" class="time-input" required>
-                                    </div>
-                                    <div class="override-field">
-                                        <label>퇴근시간</label>
-                                        <input type="time" id="exceptionEndTime" class="time-input" required>
-                                    </div>
-                                    <div class="override-field">
-                                        <label>휴게시간(분)</label>
-                                        <input type="text" id="exceptionBreakMinutes" class="number-input" maxlength="3">
+        </div>
+
+        <div id="editExceptionRuleModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>사원별 근태 예외 규칙 수정</h3>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="editExceptionRuleForm">
+                        <input type="hidden" id="editRuleId">
+                        <input type="hidden" id="editValidFrom">
+                        <div class="form-section">
+                            <div class="section-content">
+                                <div class="employee-info-display">
+                                    <div class="info-field"><label>대상 사원 <span style="color: red;"></span>:</label><span
+                                            id="editEmployeeInfo"></span></div>
+                                    <div class="info-field"><label>기존 종료일:</label><span id="editOriginalValidTo"></span>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="form-section">
-                        <div class="section-content">
-                            <label class="section-label">사유 <span style="color: red;">*</span></label>
-                            <textarea id="reason" class="reason-textarea" maxlength="40" required></textarea>
-                            <div class="char-count-wrapper"><span id="reasonCharCount">0 / 40</span></div>
+                        <div class="form-section">
+                            <div class="section-content">
+                                <label class="section-label">적용 종료일 수정</label>
+                                <input type="date" id="editValidTo" class="date-input">
+                            </div>
                         </div>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" class="btn-secondary close-modal">취소</button>
-                        <button type="submit" class="btn-primary">등록</button>
-                    </div>
-                </form>
+                        <div class="form-section">
+                            <div class="section-content">
+                                <label class="section-label">시간 수정 <span style="color: red;">*</span></label>
+                                <div class="override-fields">
+                                    <div class="override-row">
+                                        <div class="override-field">
+                                            <label>출근시간</label>
+                                            <input type="time" id="editExceptionStartTime" class="time-input" required>
+                                        </div>
+                                        <div class="override-field">
+                                            <label>퇴근퇴근</label>
+                                            <input type="time" id="editExceptionEndTime" class="time-input" required>
+                                        </div>
+                                        <div class="override-field">
+                                            <label>휴게시간(분)</label>
+                                            <input type="text" id="editExceptionBreakMinutes" class="number-input"
+                                                maxlength="3">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-section">
+                            <div class="section-content">
+                                <label class="section-label">수정 사유 <span style="color: red;">*</span></label>
+                                <textarea id="editReason" class="reason-textarea" maxlength="40" required></textarea>
+                                <div class="char-count-wrapper"><span id="editReasonCharCount">0 / 40</span></div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary close-modal">취소</button>
+                            <button type="submit" class="btn-primary">수정 완료</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="editExceptionRuleModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>사원별 근태 예외 규칙 수정</h3>
-                <span class="close">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="editExceptionRuleForm">
-                    <input type="hidden" id="editRuleId">
-                    <input type="hidden" id="editValidFrom">
-                    <div class="form-section">
-                        <div class="section-content">
-                            <div class="employee-info-display">
-                                <div class="info-field"><label>대상 사원 <span style="color: red;"></span>:</label><span id="editEmployeeInfo"></span></div>
-                                <div class="info-field"><label>기존 종료일:</label><span id="editOriginalValidTo"></span></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-section">
-                        <div class="section-content">
-                            <label class="section-label">적용 종료일 수정</label>
-                            <input type="date" id="editValidTo" class="date-input">
-                        </div>
-                    </div>
-                    <div class="form-section">
-                        <div class="section-content">
-                            <label class="section-label">시간 수정 <span style="color: red;">*</span></label>
-                            <div class="override-fields">
-                                <div class="override-row">
-                                    <div class="override-field">
-                                        <label>출근시간</label>
-                                        <input type="time" id="editExceptionStartTime" class="time-input" required>
-                                    </div>
-                                    <div class="override-field">
-                                        <label>퇴근퇴근</label>
-                                        <input type="time" id="editExceptionEndTime" class="time-input" required>
-                                    </div>
-                                    <div class="override-field">
-                                        <label>휴게시간(분)</label>
-                                        <input type="text" id="editExceptionBreakMinutes" class="number-input" maxlength="3">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-section">
-                        <div class="section-content">
-                            <label class="section-label">수정 사유 <span style="color: red;">*</span></label>
-                            <textarea id="editReason" class="reason-textarea" maxlength="40" required></textarea>
-                            <div class="char-count-wrapper"><span id="editReasonCharCount">0 / 40</span></div>
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" class="btn-secondary close-modal">취소</button>
-                        <button type="submit" class="btn-primary">수정 완료</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<th:block th:fragment="pageScript">
-    <script th:src="@{/js/admin-attendance/rule.js}"></script>
-</th:block>
+    <th:block th:fragment="pageScript">
+        <script th:src="@{/js/admin-attendance/rule.js}"></script>
+    </th:block>
 </body>
+
 </html>
