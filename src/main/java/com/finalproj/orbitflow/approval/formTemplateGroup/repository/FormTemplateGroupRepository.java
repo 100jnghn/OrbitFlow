@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Please explain the class!!!
@@ -32,4 +33,6 @@ public interface FormTemplateGroupRepository extends JpaRepository<FormTemplateG
 
 
     boolean existsByCompanyIdAndName(Long companyId, String name);
+
+    Optional<FormTemplateGroup> findByCompany_IdAndName(Long companyId, String name);
 }

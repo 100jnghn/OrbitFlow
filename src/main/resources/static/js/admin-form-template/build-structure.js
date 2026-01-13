@@ -274,7 +274,7 @@ let templateGroupCategoryCode = null;
 
 // -- 입력 제한/정책 상수
 const DOCUMENT_TITLE_MAX = 25;
-const COMPONENT_LABEL_MAX = 20;
+const COMPONENT_LABEL_MAX = 10;
 const NOTICE_MESSAGE_MAX = 200;
 const POPUP_TEMPLATE_DESC_MAX = 200;
 const TABLE_ROW_MIN = 1;
@@ -299,6 +299,9 @@ function bindAutoClearInvalidFocus() {
     const clearError = (target) => {
         if (!(target instanceof HTMLElement)) return;
 
+        /* =========================
+           1️⃣ 자기 자신 scope 정리
+        ========================= */
         target.classList.remove('invalid-focus');
         target.closest('.invalid-focus')?.classList.remove('invalid-focus');
 
@@ -307,7 +310,31 @@ function bindAutoClearInvalidFocus() {
             hint.textContent = '';
             hint.className = 'hint';
         });
+
+        /* =========================
+           2️⃣ 🔥 min/max 입력 시
+               옵션 목록 에러도 해제
+        ========================= */
+        if (
+            target.id === 'option-min-selected' ||
+            target.id === 'option-max-selected'
+        ) {
+            const optionPane = document.getElementById('option-list-pane');
+            if (optionPane) {
+                optionPane
+                    .querySelectorAll('.invalid-focus')
+                    .forEach(el => el.classList.remove('invalid-focus'));
+
+                optionPane
+                    .querySelectorAll('.hint.error')
+                    .forEach(hint => {
+                        hint.textContent = '';
+                        hint.className = 'hint';
+                    });
+            }
+        }
     };
+
 
     document.addEventListener('input', e => clearError(e.target));
     document.addEventListener('change', e => clearError(e.target));
@@ -656,6 +683,9 @@ function validateOptionComponent(comp) {
     const min = comp.meta?.minSelected;
     const max = comp.meta?.maxSelected;
 
+    /* =========================
+       옵션 개수 최소 1
+    ========================= */
     if (options.length === 0) {
         focusComponentError({
             componentId: comp.id,
@@ -665,7 +695,30 @@ function validateOptionComponent(comp) {
         return false;
     }
 
-    if (min !== undefined && options.length < min) {
+    /* =========================
+       🔹 최소 ≤ 최대
+    ========================= */
+    if (
+        min !== undefined &&
+        max !== undefined &&
+        min > max
+    ) {
+        focusComponentError({
+            componentId: comp.id,
+            panelField: '#option-min-selected',
+            message: '최소 선택 수는 최대 선택 수보다 클 수 없습니다.'
+        });
+        return false;
+    }
+
+    /* =========================
+       🔹 옵션 개수 ≥ 최소
+       (기존 로직)
+    ========================= */
+    if (
+        min !== undefined &&
+        options.length < min
+    ) {
         focusComponentError({
             componentId: comp.id,
             panelField: '#option-list-pane',
@@ -674,17 +727,28 @@ function validateOptionComponent(comp) {
         return false;
     }
 
-    if (max !== undefined && options.length > max) {
+    /* =========================
+       🔹 옵션 개수 ≥ 최대
+       (이번에 추가)
+    ========================= */
+    if (
+        max !== undefined &&
+        options.length < max
+    ) {
         focusComponentError({
             componentId: comp.id,
             panelField: '#option-list-pane',
-            message: `옵션은 최대 ${max}개까지 가능합니다.`
+            message: `옵션 수가 최대 선택 수(${max})보다 적습니다.`
         });
         return false;
     }
 
+    /* =========================
+       옵션 라벨 검증
+    ========================= */
     for (let i = 0; i < options.length; i++) {
         const label = options[i].label?.trim() ?? '';
+
         if (!label) {
             focusComponentError({
                 componentId: comp.id,
@@ -694,6 +758,7 @@ function validateOptionComponent(comp) {
             });
             return false;
         }
+
         if (label.length > COMPONENT_LABEL_MAX) {
             focusComponentError({
                 componentId: comp.id,
@@ -1569,12 +1634,12 @@ function showComponentSettingPanel(componentId) {
             </div>
 
             <div class="setting-row option-limit-row">
-                <label>최소 선택 수</label>
+                <label>최소 선택 수 : </label>
                 <input type="number" id="option-min-selected" min="0">
             </div>
             
             <div class="setting-row option-limit-row">
-                <label>최대 선택 수</label>
+                <label>최대 선택 수 : </label>
                 <input type="number" id="option-max-selected" min="0">
             </div>
         `;
@@ -1598,12 +1663,12 @@ function showComponentSettingPanel(componentId) {
                 <div style="font-weight:600;">행 설정</div>
             
                 <label>
-                    최소 행
+                    최소 행 : 
                     <input type="number" id="table-row-min">
                 </label>
             
                 <label>
-                    최대 행
+                    최대 행 : 
                     <input type="number" id="table-row-max">
                 </label>
             
@@ -1719,8 +1784,8 @@ function showComponentSettingPanel(componentId) {
                         <input class="option-label-input"
                                value="${(opt.label ?? '').replace(/"/g, '&quot;')}">
                         <button type="button"
-                                class="option-delete-btn"
-                                aria-label="옵션 삭제">🗑️</button>
+                                class="option-delete-btn icon-delete-btn"
+                                aria-label="옵션 삭제"></button>
                     </div>
                     <div class="hint option-hint"></div>
                 `;
@@ -1755,15 +1820,48 @@ function showComponentSettingPanel(componentId) {
             renderFormComponents();
         });
 
-        document.getElementById("option-min-selected")
-            ?.addEventListener("input", e => {
-                comp.meta.minSelected = e.target.value === "" ? undefined : Number(e.target.value);
-            });
+        const clampOptionLimit = (inputEl, setter) => {
+            let v = inputEl.value;
 
-        document.getElementById("option-max-selected")
-            ?.addEventListener("input", e => {
-                comp.meta.maxSelected = e.target.value === "" ? undefined : Number(e.target.value);
+            // 🔹 숫자 외 문자 즉시 제거 (IME 포함 보정)
+            v = v.replace(/[^\d]/g, '');
+            inputEl.value = v;
+
+            // 🔹 빈 값 = 제한 없음
+            if (v === "") {
+                setter(undefined);
+                return;
+            }
+
+            v = Number(v);
+
+            if (isNaN(v)) v = 0;
+            if (v < 0) v = 0;
+            if (v > 10) v = 10;
+
+            inputEl.value = v;
+            setter(v);
+
+            // ⭐ 옵션 관련 에러 해제
+            clearOptionErrorState();
+        };
+
+
+        const minEl = document.getElementById("option-min-selected");
+        const maxEl = document.getElementById("option-max-selected");
+
+        minEl?.addEventListener("input", () => {
+            clampOptionLimit(minEl, v => {
+                comp.meta.minSelected = v;
             });
+        });
+
+        maxEl?.addEventListener("input", () => {
+            clampOptionLimit(maxEl, v => {
+                comp.meta.maxSelected = v;
+            });
+        });
+
     }
 
     /* ======================

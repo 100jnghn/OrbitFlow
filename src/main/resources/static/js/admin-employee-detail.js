@@ -66,7 +66,7 @@ async function loadEmployeeDetail(employeeId) {
     const result = await safeJson(res);
 
     if (!res.ok) {
-        alert(result?.message || '사원 상세 조회 실패');
+        await sweetError(result?.message || '사원 상세 조회에 실패했습니다.');
         return;
     }
 
@@ -142,7 +142,11 @@ function updateStatusButtons(status) {
 }
 
 btnResendActivate.onclick = async () => {
-    if (!confirm('활성화 메일을 다시 보내시겠습니까?')) return;
+    const result = await sweetConfirm(
+        '메일 재전송',
+        '활성화 메일을 다시 보내시겠습니까?'
+    );
+    if (!result.isConfirmed) return;
 
     const employeeId = document.getElementById('employeeId').value;
 
@@ -151,11 +155,11 @@ btnResendActivate.onclick = async () => {
     });
 
     if (!res.ok) {
-        alert('메일 재전송에 실패했습니다.');
+        await sweetError('메일 재전송에 실패했습니다.');
         return;
     }
 
-    toast('활성화 메일을 재전송했습니다.');
+    await sweetSuccess('활성화 메일을 재전송했습니다.');
 };
 
 
@@ -276,7 +280,13 @@ function bindStatusButtons(id) {
 }
 
 async function changeStatus(id, status) {
-    if (status === 'RESIGNED' && !confirm('퇴사 처리 시 되돌릴 수 없습니다. 진행할까요?')) return;
+    if (status === 'RESIGNED') {
+        const result = await sweetConfirm(
+            '퇴사 처리',
+            '퇴사 처리 시 되돌릴 수 없습니다. 진행하시겠습니까?'
+        );
+        if (!result.isConfirmed) return;
+    }
 
     const res = await apiFetch(`/api/admin/employees/${id}/status`, {
         method: 'PUT',
@@ -285,11 +295,11 @@ async function changeStatus(id, status) {
     });
 
     if (!res.ok) {
-        alert('상태 변경 실패');
+        await sweetError('상태 변경에 실패했습니다.');
         return;
     }
 
-    toast('상태가 변경되었습니다.');
+    await sweetSuccess('상태가 변경되었습니다.');
     loadEmployeeDetail(id);
     loadAuditLogs(id);
 }
@@ -388,7 +398,10 @@ async function openEditModal() {
 
     const res = await apiFetch(`/api/admin/employees/${employeeId}/edit`);
     const result = await safeJson(res);
-    if (!res.ok) return alert('사원 정보 조회 실패');
+    if (!res.ok) {
+        await sweetError('사원 정보 조회에 실패했습니다.');
+        return;
+    }
 
     const e = result.data;
 
@@ -523,11 +536,11 @@ async function saveEdit() {
     });
 
     if (!res.ok) {
-        alert('사원 정보 수정 실패');
+        await sweetError('사원 정보 수정에 실패했습니다.');
         return;
     }
 
-    toast('사원 정보가 수정되었습니다.');
+    await sweetSuccess('사원 정보가 수정되었습니다.');
     closeEditModal();
     loadEmployeeDetail(employeeId);
     loadAuditLogs(employeeId);

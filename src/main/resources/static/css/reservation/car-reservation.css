@@ -176,7 +176,7 @@
 .date-cell.selected {
     background: #cfe2ff;
     color: #084298;
-    border: 1px solid #0d6efd;
+    /*border: 1px solid #0d6efd;*/
 }
 
 /* 예약 불가 */

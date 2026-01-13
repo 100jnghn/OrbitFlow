@@ -206,10 +206,11 @@ async function save() {
 
     // 생성 + HEAD + parent 없음 경고
     if (isCreate && noParent && isHead) {
-        const ok = confirm(
+        const result = await sweetConfirm(
+            '최상위 결재처리자 생성',
             '상위 직책이 없는 최상위 결재처리자로 생성됩니다.\n계속 진행하시겠습니까?'
         );
-        if (!ok) return;
+        if (!result.isConfirmed) return;
     }
 
     const payload = isCreate
@@ -229,7 +230,9 @@ async function save() {
         hideModal();
         load();
     } catch (e) {
-        alert(e.message || '요청 처리 중 오류가 발생했습니다.');
+        await sweetError(
+            e?.message || '요청 처리 중 오류가 발생했습니다.'
+        );
     }
 }
 
@@ -303,11 +306,18 @@ async function saveOrder() {
             orderIndex: idx + 1
         }));
 
-    await apiFetch(`${API}/order`, {
-        method: 'PUT',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({orders: ids})
-    });
+    try {
+        await apiFetch(`${API}/order`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({orders: ids})
+        });
+    } catch (e) {
+        await sweetError(
+            e?.message || '정렬 저장 중 오류가 발생했습니다.'
+        );
+        return;
+    }
 
     orderChanged = false;
     $('#btnSaveOrder').disabled = true;

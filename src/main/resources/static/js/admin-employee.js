@@ -145,7 +145,7 @@ async function loadEmployees(page = 0) {
 
     } catch (e) {
         console.error(e);
-        alert('사원 목록 조회 중 오류가 발생했습니다.');
+        await sweetError('사원 목록 조회 중 오류가 발생했습니다.');
     }
 }
 
@@ -199,7 +199,7 @@ async function saveEmployee() {
     const birthDate = empBirthDate.value || null;
 
     if (!name || !email || !employeeNo || !hireDate || !gender || !orgId || !employmentType || !role) {
-        alert('필수 항목(*)을 모두 입력해 주세요.');
+        await sweetWarning('필수 항목(*)을 모두 입력해 주세요.');
         return;
     }
 
@@ -227,7 +227,7 @@ async function saveEmployee() {
 
     if (!res.ok) {
         const err = await res.json().catch(() => null);
-        alert(err?.message || '사원 생성 실패');
+        await sweetError(err?.message || '사원 생성에 실패했습니다.');
         return;
     }
 

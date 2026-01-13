@@ -1143,6 +1143,7 @@
         const endDateTime = new Date(`${endDate}T${endTime}`);
 
         if (endDateTime < startDateTime) {
+            closeScheduleModal();
             await sweetInfo('종료 날짜/시간은 시작 날짜/시간보다 이후여야 합니다.');
             return;
         }
