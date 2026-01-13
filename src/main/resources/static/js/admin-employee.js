@@ -342,7 +342,7 @@ function closeEmployeeModal() {
    Create
 ========================= */
 async function saveEmployee() {
-    // 🔒 연타 방지
+    // 연타 방지
     if (isSavingEmployee) return;
     isSavingEmployee = true;
     saveEmployeeBtn.disabled = true;
