@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const setupNumericLimit = (id, max) => {
         const input = document.getElementById(id);
         if (input) {
-            input.addEventListener('input', function() {
+            input.addEventListener('input', function () {
                 this.value = this.value.replace(/[^0-9]/g, '');
                 if (max && this.value && parseInt(this.value) > max) {
                     this.value = max.toString();
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     };
-    setupNumericLimit('tardinessMinutes', 10);
+
     setupNumericLimit('exceptionBreakMinutes', 480);
     setupNumericLimit('editExceptionBreakMinutes', 480);
     setupNumericLimit('defaultBreakMinutes', 480);
@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (rule) {
                     if (rule.defaultStartTime) document.getElementById('defaultStartTime').value = rule.defaultStartTime.substring(0, 5);
                     if (rule.defaultEndTime) document.getElementById('defaultEndTime').value = rule.defaultEndTime.substring(0, 5);
-                    document.getElementById('tardinessMinutes').value = rule.lateThresholdMin ?? 10;
+
                     document.getElementById('defaultBreakMinutes').value = rule.defaultBreakMinutes ?? 60;
                 }
             }
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = {
             defaultStartTime: startTime + ':00',
             defaultEndTime: endTime + ':00',
-            lateThresholdMin: parseInt(document.getElementById('tardinessMinutes').value) || 0,
+
             defaultBreakMinutes: parseInt(document.getElementById('defaultBreakMinutes').value) || 60
         };
 

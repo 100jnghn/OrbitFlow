@@ -50,9 +50,7 @@ public class AttendanceRuleService {
         rule.updateRule(
                 request.defaultStartTime(),
                 request.defaultEndTime(),
-                request.lateThresholdMin(),
-                request.defaultBreakMinutes()
-                );
+                request.defaultBreakMinutes());
         return new DefaultRuleResDto(rule);
     }
 
@@ -183,9 +181,9 @@ public class AttendanceRuleService {
                 .collect(Collectors.toMap(Employee::getId, emp -> emp));
     }
 
-
     /**
      * 새로운 회사를 위한 기본 근태 규칙(09:00 - 18:00)을 생성합니다.
+     * 
      * @param company 신규 생성된 회사 엔티티
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -199,10 +197,9 @@ public class AttendanceRuleService {
         AttendanceRule defaultRule = AttendanceRule.builder()
                 .companyId(company.getId())
                 .name("표준 근무 규칙")
-                .defaultStartTime(LocalTime.of(9, 0))  // 출근 시간 09:00
-                .defaultEndTime(LocalTime.of(18, 0))    // 퇴근 시간 18:00
-                .defaultBreakMinutes(60)                // 휴게시간 60분
-                .lateThresholdMin(10)                  // 10분 지각 허용
+                .defaultStartTime(LocalTime.of(9, 0)) // 출근 시간 09:00
+                .defaultEndTime(LocalTime.of(18, 0)) // 퇴근 시간 18:00
+                .defaultBreakMinutes(60) // 휴게시간 60분
                 .isDefault(true)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
