@@ -1802,3 +1802,19 @@
     border-color: var(--danger-color);
     box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
+
+/* =========================
+   Responsive Column Hiding
+========================= */
+/* 1000px 이하: 휴게시간, 사유, 등록일 열 숨김 */
+@media (max-width: 1000px) {
+
+    #exceptionTable th:nth-child(5),
+    #exceptionTable td:nth-child(5),
+    #exceptionTable th:nth-child(6),
+    #exceptionTable td:nth-child(6),
+    #exceptionTable th:nth-child(7),
+    #exceptionTable td:nth-child(7) {
+        display: none;
+    }
+}
