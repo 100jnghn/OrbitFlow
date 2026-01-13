@@ -201,7 +201,12 @@
     <div class="row">
         <div class="field">
             <label>회사명</label>
-            <input id="companyName" maxlength="100">
+            <div class="business-row">
+                <input id="companyName" maxlength="100">
+                <button type="button"
+                        class="btn-check"
+                        onclick="checkCompanyName(event)">확인</button>
+            </div>
             <div id="companyNameMsg" class="hint"></div>
         </div>
         <div class="field">
@@ -277,8 +282,8 @@
                 />
                 <button type="button"
                         class="pw-toggle"
-                        data-target="adminPassword"
-                        aria-label="비밀번호 보기">
+                        data-target="adminPasswordConfirm"
+                        aria-label="비밀번호 확인 보기">
                     <i class="fa-regular fa-eye"></i>
                 </button>
             </div>

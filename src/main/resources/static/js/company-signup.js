@@ -52,6 +52,7 @@ window.sweetQuestion = function (message, type = 'question') {
 
 let businessChecked = false;
 let emailChecked = false;
+let companyNameChecked = false;
 
 // 비밀번호 정책 (계정 활성화 화면과 동일)
 const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{8,}$/;
@@ -68,8 +69,9 @@ function showMsg(el, message, type) {
    버튼 상태
 ====================== */
 function updateSignupButtonState() {
-    signupBtn.disabled = !(
+    const enabled =
         validateCompanyName() &&
+        companyNameChecked &&
         validateAddress() &&
         validateRepresentativeName() &&
         validateEmail() &&
@@ -77,18 +79,30 @@ function updateSignupButtonState() {
         validateContact() &&
         businessChecked &&
         validatePasswordLength() &&
-        validatePasswordMatch()
-    );
+        validatePasswordMatch();
+
+    signupBtn.disabled = !enabled;
 }
 
 /* ======================
    회사명 / 주소
 ====================== */
+
+
+companyName.addEventListener('input', () => {
+    companyNameChecked = false;
+    showMsg(
+        companyNameMsg,
+        '회사명 중복 확인이 필요합니다.',
+        'error'
+    );
+    updateSignupButtonState();
+});
+
+
 function validateCompanyName() {
     const v = companyName.value.trim();
-    if (!v) return companyNameMsg.textContent = '', false;
-    showMsg(companyNameMsg, `${v.length}/100`, 'success');
-    return true;
+    return !!v;
 }
 
 function validateAddress() {
@@ -134,6 +148,14 @@ function validateContact() {
 ====================== */
 adminEmail.addEventListener('input', () => {
     adminEmail.value = adminEmail.value.replace(/[ㄱ-ㅎㅏ-ㅣ가-힣]/g, '');
+    emailChecked = false;
+
+    showMsg(
+        emailMsg,
+        '이메일 변경 시 중복 확인이 필요합니다.',
+        'error'
+    );
+
     validateEmail();
     updateSignupButtonState();
 });
@@ -240,11 +262,15 @@ adminPasswordConfirm.addEventListener('input', () => {
    사업자번호
 ====================== */
 businessNumber.addEventListener('input', () => {
-    businessNumber.value =
-        businessNumber.value.replace(/[^0-9]/g, '');
+    businessNumber.value = businessNumber.value.replace(/[^0-9]/g, '');
 
     businessChecked = false;
-    businessMsg.textContent = '';
+    showMsg(
+        businessMsg,
+        '사업자번호 확인이 필요합니다.',
+        'error'
+    );
+
     updateSignupButtonState();
 });
 
@@ -258,7 +284,15 @@ async function checkBusinessNumber() {
         return;
     }
 
+    // 1단계: 프론트 유효성
+    if (!validateBusinessNumberFormat(v)) {
+        businessChecked = false;
+        updateSignupButtonState();
+        return;
+    }
+
     try {
+        // 2단계: 서버 검증
         const json = await publicFetch(
             `/api/companies/check-business-number?businessNumber=${encodeURIComponent(v)}`
         );
@@ -269,7 +303,7 @@ async function checkBusinessNumber() {
     } catch (e) {
         showMsg(
             businessMsg,
-            e?.message || '사업자번호 검증 중 오류가 발생했습니다.',
+            e?.message || '유효하지 않은 사업자번호입니다.',
             'error'
         );
         businessChecked = false;
@@ -289,7 +323,27 @@ async function checkBusinessNumber() {
    제출 (SweetAlert 적용)
 ====================== */
 async function submitSignup() {
-    if (signupBtn.disabled) return;
+    if (signupBtn.disabled) {
+
+        if (!companyNameChecked) {
+            showMsg(companyNameMsg, '회사명 중복 확인이 필요합니다.', 'error');
+        }
+
+        if (!emailChecked) {
+            showMsg(emailMsg, '이메일 중복 확인이 필요합니다.', 'error');
+        }
+
+        validateAddress();
+        validateRepresentativeName();
+        validateEmail();
+        validateContact();
+        validatePasswordLength();
+        validatePasswordMatch();
+
+        sweetWarning('입력값을 다시 확인해주세요.');
+        return;
+    }
+
 
     const body = {
         companyName: companyName.value.trim(),
@@ -365,7 +419,7 @@ async function publicFetch(url, options = {}) {
     const json = text ? JSON.parse(text) : null;
 
     if (!res.ok) {
-        throw json || { message: '요청 처리 중 오류가 발생했습니다.' };
+        throw json || {message: '요청 처리 중 오류가 발생했습니다.'};
     }
 
     return json;
@@ -392,3 +446,53 @@ document.querySelectorAll('.pw-toggle').forEach(btn => {
         }
     });
 });
+
+
+function validateBusinessNumberFormat(v) {
+    // 예: 10자리 사업자번호
+    if (!/^\d{10}$/.test(v)) {
+        showMsg(
+            businessMsg,
+            '사업자번호는 숫자 10자리여야 합니다.',
+            'error'
+        );
+        return false;
+    }
+    return true;
+}
+
+
+async function checkCompanyName(event) {
+    const btn = event.target;
+    if (companyNameChecked) return;
+
+    btn.disabled = true;
+
+    try {
+        const v = companyName.value.trim();
+
+        if (!v) {
+            showMsg(companyNameMsg, '회사명을 입력해주세요.', 'error');
+            companyNameChecked = false;
+            return;
+        }
+
+        const json = await publicFetch(
+            `/api/companies/check-company-name?name=${encodeURIComponent(v)}`
+        );
+
+        showMsg(companyNameMsg, json.message, 'success');
+        companyNameChecked = true;
+
+    } catch (e) {
+        showMsg(
+            companyNameMsg,
+            e?.message || '이미 사용 중인 회사명입니다.',
+            'error'
+        );
+        companyNameChecked = false;
+    } finally {
+        btn.disabled = false;
+        updateSignupButtonState();
+    }
+}

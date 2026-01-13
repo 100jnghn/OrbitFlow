@@ -6,6 +6,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.text.Normalizer;
+
 /**
  * 회사 정보를 관리하는 엔티티.
  * - 멀티테넌트 환경에서 하나의 회사(테넌트)를 의미한다.
@@ -73,6 +75,15 @@ public class Company extends BaseEntity {
         company.representativeName = representativeName;
         company.representativeContact = representativeContact;
         return company;
+    }
+
+
+    @PrePersist
+    @PreUpdate
+    private void normalize() {
+        this.name = Normalizer.normalize(this.name, Normalizer.Form.NFKC)
+                .trim()
+                .replaceAll("\\s+", " ");
     }
 
 }
