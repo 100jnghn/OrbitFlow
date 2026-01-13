@@ -268,11 +268,24 @@ public class BoardPostService {
         // 파일 크기 검증
         validateFileSize(files);
 
-        // 기존 파일 정보 저장 (S3 삭제용)
-        List<File> existingFiles = boardPost.getFiles() != null ? new java.util.ArrayList<>(boardPost.getFiles())
-                : null;
+        // 1. 기존 파일 처리 (유지할 파일과 삭제할 파일 분리)
+        List<File> currentFiles = boardPost.getFiles();
+        List<File> filesToKeep = new java.util.ArrayList<>();
+        List<File> filesToDelete = new java.util.ArrayList<>();
 
-        // 새 파일 업로드
+        if (currentFiles != null && !currentFiles.isEmpty()) {
+            List<Long> keptIds = request.getKeptFileIds() != null ? request.getKeptFileIds()
+                    : new java.util.ArrayList<>();
+            for (File file : currentFiles) {
+                if (keptIds.contains(file.getId())) {
+                    filesToKeep.add(file);
+                } else {
+                    filesToDelete.add(file);
+                }
+            }
+        }
+
+        // 2. 새 파일 업로드
         List<File> attachedFiles = null;
         if (files != null && !files.isEmpty()) {
             attachedFiles = files.stream()
@@ -282,12 +295,18 @@ public class BoardPostService {
                     .toList();
         }
 
-        // 게시글 업데이트 (파일 교체)
-        boardPost.update(request.getBoardTitle(), request.getBoardContent(), attachedFiles);
+        // 3. 최종 파일 목록 구성 (기존 유지 파일 + 신규 업로드 파일)
+        List<File> finalFiles = new java.util.ArrayList<>(filesToKeep);
+        if (attachedFiles != null) {
+            finalFiles.addAll(attachedFiles);
+        }
 
-        // 기존 파일 삭제 (S3에서도 삭제) - 업데이트 후에 삭제
-        if (existingFiles != null && !existingFiles.isEmpty()) {
-            existingFiles.forEach(file -> {
+        // 4. 게시글 업데이트
+        boardPost.update(request.getBoardTitle(), request.getBoardContent(), finalFiles);
+
+        // 5. 삭제된 파일 처리 (S3에서도 삭제) - 업데이트 후에 삭제
+        if (!filesToDelete.isEmpty()) {
+            filesToDelete.forEach(file -> {
                 if (file.getObjectKey() != null) {
                     deleteObject(file.getObjectKey());
                 }

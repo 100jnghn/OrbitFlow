@@ -2,7 +2,7 @@
 
 const BOARD_API = '/api/board-posts';
 const BOARD_CATEGORY_API = '/api/board-categories';
-const COMMENT_API = '/api/board-posts';
+const COMMENT_API = '/api';
 
 let boardId = null;
 let categoryId = null;
@@ -602,7 +602,7 @@ async function loadComments(page = 0) {
     if (!boardId) return;
 
     try {
-        const response = await apiFetch(`${COMMENT_API}/${boardId}/comments?page=${page}&size=5&sort=createdAt,asc`, {
+        const response = await apiFetch(`${COMMENT_API}/board-posts/${boardId}/comments?page=${page}&size=5&sort=createdAt,asc`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -781,7 +781,7 @@ async function submitComment() {
     }
 
     try {
-        const response = await apiFetch(`${COMMENT_API}/${boardId}/comments`, {
+        const response = await apiFetch(`${COMMENT_API}/board-posts/${boardId}/comments`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

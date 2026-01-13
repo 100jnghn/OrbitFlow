@@ -418,6 +418,15 @@ async function handleSubmit(e) {
             // 수정 모드: @ModelAttribute를 사용하므로 직접 필드 추가
             formData.append('boardTitle', title);
             formData.append('boardContent', content);
+
+            // 유지할 기존 파일 ID 목록 추가
+            const existingFileItems = document.querySelectorAll('#fileList .file-item[data-is-existing="true"]');
+            existingFileItems.forEach(item => {
+                const fid = item.dataset.fileId;
+                if (fid) {
+                    formData.append('keptFileIds', fid);
+                }
+            });
         } else {
             // 작성 모드: 직접 필드 추가
             formData.append('categoryId', categoryId);
