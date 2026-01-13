@@ -4,6 +4,7 @@ let rankList = [];
 let selectedRankId = null;
 let sortable = null;
 let isOrderChanged = false;
+let initialOrderSnapshot = [];
 
 const els = {
     tbody: () => document.getElementById('rankTableBody'),
@@ -79,6 +80,8 @@ function filterRanks() {
 
     renderTable(filtered);
 
+    saveInitialOrder();
+
     if (!isSearchMode()) initSortable();
     else destroySortable();
 }
@@ -135,18 +138,6 @@ function dragHandle() {
           <span></span><span></span><span></span>
         </span>
       </span>`;
-}
-
-function initSortable() {
-    destroySortable();
-    sortable = Sortable.create(els.tbody(), {
-        handle: '.drag-handle',
-        animation: 150,
-        onEnd: () => {
-            isOrderChanged = true;
-            els.btnSaveOrder().disabled = false;
-        }
-    });
 }
 
 function destroySortable() {
@@ -269,4 +260,42 @@ function bindRankNameCounter() {
 
     input.addEventListener('input', update);
     update();
+}
+
+
+function saveInitialOrder() {
+    initialOrderSnapshot = [...els.tbody().querySelectorAll('tr[data-id]')]
+        .map(tr => tr.dataset.id);
+}
+
+function isOrderReallyChanged() {
+    const current = [...els.tbody().querySelectorAll('tr[data-id]')]
+        .map(tr => tr.dataset.id);
+
+    return JSON.stringify(current) !== JSON.stringify(initialOrderSnapshot);
+}
+
+
+function initSortable() {
+    destroySortable();
+
+    if (isSearchMode()) return;
+
+    const activeCount =
+        [...els.tbody().querySelectorAll('tr[data-id]')].length;
+
+    if (activeCount < 2) return;
+
+    sortable = Sortable.create(els.tbody(), {
+        handle: '.drag-handle',
+        animation: 150,
+        onEnd: () => {
+            if (isOrderReallyChanged()) {
+                isOrderChanged = true;
+                els.btnSaveOrder().disabled = false;
+            } else {
+                resetOrder();
+            }
+        }
+    });
 }
