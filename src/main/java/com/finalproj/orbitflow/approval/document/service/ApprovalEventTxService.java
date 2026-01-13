@@ -145,27 +145,9 @@ public class ApprovalEventTxService {
                     scheduleReqDto);
         }
 
-        // 5️⃣ 근태 기록 (실제 휴가 범위 기준)
-        LocalDate actualStart = result.effectiveDates().get(0);
-        LocalDate actualEnd = result.effectiveDates().get(result.effectiveDates().size() - 1);
-
-        AttendanceRecord record = AttendanceRecord.builder()
-                .employee(writer)
-                .company(writer.getCompany())
-                .startDate(actualStart)
-                .endDate(actualEnd)
-                .days(result.days())
-                .leaveType(result.leaveType())
-                .reason(result.payload().reason())
-                .sourceDocument(document)
-                .status(DocumentStatus.APPROVED)
-                .approvedAt(
-                        LocalDateTime.ofInstant(
-                                document.getUpdatedAt(),
-                                ZoneId.systemDefault()))
-                .build();
-
-        attendanceRecordRepository.save(record);
+        // 5️⃣ 근태 기록 갱신
+        attendanceRecordRepository.findBySourceDocument_Id(document.getId())
+                .ifPresent(AttendanceRecord::approvedDocument);
 
         // 6️⃣ 연차 차감 (이미 주말/공휴일 제외된 days 사용)
         leaveService.deduction(

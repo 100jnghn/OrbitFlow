@@ -4,7 +4,10 @@ import com.finalproj.orbitflow.approval.approvalLine.entity.ApprovalLine;
 import com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus;
 import com.finalproj.orbitflow.approval.approvalLine.repository.ApprovalLineRepository;
 import com.finalproj.orbitflow.approval.approvalLine.service.ApprovalLineDomainService;
+import com.finalproj.orbitflow.approval.attendanceRecord.entity.AttendanceRecord;
+import com.finalproj.orbitflow.approval.attendanceRecord.repository.AttendanceRecordRepository;
 import com.finalproj.orbitflow.approval.document.dto.DocumentCreateResDto;
+import com.finalproj.orbitflow.approval.document.dto.LeaveCalculationResult;
 import com.finalproj.orbitflow.approval.document.dto.PdfApprovalLineDto;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
@@ -22,6 +25,7 @@ import com.finalproj.orbitflow.approval.documentSignature.service.DocumentSignat
 import com.finalproj.orbitflow.approval.formTemplate.entity.FormTemplate;
 import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateRepository;
 import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
+import com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole;
 import com.finalproj.orbitflow.approval.pdfInternalImage.service.PdfInternalImageService;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
@@ -89,6 +93,8 @@ public class DocumentApplicationService {
     private final DocumentSignatureService documentSignatureService;
     private final DocumentFileService documentFileService;
     private final NotificationCommandService  notificationCommandService;
+    private final AttendanceRecordRepository attendanceRecordRepository;
+    private final LeaveCalculationService leaveCalculationService;
 
     @Value("${app.render-base-url}")
     private String baseUrl;
@@ -418,6 +424,9 @@ public class DocumentApplicationService {
 
         // 6. 문서 상태 반려
         document.reject();
+
+        attendanceRecordRepository.findBySourceDocument_Id(document.getId())
+                .ifPresent(AttendanceRecord::rejectedDocument);
     }
 
     @Transactional
@@ -554,6 +563,29 @@ public class DocumentApplicationService {
                 fileService.deleteObjectAfterCommit(file.getObjectKey());
             }
         }
+
+        if (document.getTemplateGroup().getBaseRole().equals(BaseRole.BUSINESS_TRIP) || document.getTemplateGroup().getBaseRole().equals(BaseRole.OUTWORK)) {
+            LeaveCalculationResult result = leaveCalculationService.calculate(document);
+
+            LocalDate actualStart = result.effectiveDates().get(0);
+            LocalDate actualEnd = result.effectiveDates().get(result.effectiveDates().size() - 1);
+
+            AttendanceRecord record = AttendanceRecord.builder()
+                    .employee(document.getWriter())
+                    .company(document.getCompany())
+                    .startDate(actualStart)
+                    .endDate(actualEnd)
+                    .days(result.days())
+                    .leaveType(result.leaveType())
+                    .reason(result.payload().reason())
+                    .sourceDocument(document)
+                    .status(DocumentStatus.IN_PROGRESS)
+                    .approvedAt(null)
+                    .build();
+
+            attendanceRecordRepository.save(record);
+        }
+
 
         notificationCommandService.createNotification(
                 lines.get(0).getCompany().getId(),

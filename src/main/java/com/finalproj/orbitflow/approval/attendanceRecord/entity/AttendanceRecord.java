@@ -75,4 +75,14 @@ public class AttendanceRecord extends BaseEntity {
         this.endDate = newEndDate;
         this.days = newDays;
     }
+
+    public void approvedDocument() {
+        this.status = DocumentStatus.APPROVED;
+        this.approvedAt = LocalDateTime.now();
+    }
+
+    public void rejectedDocument() {
+        this.status = DocumentStatus.REJECTED;
+        this.approvedAt = LocalDateTime.now();
+    }
 }

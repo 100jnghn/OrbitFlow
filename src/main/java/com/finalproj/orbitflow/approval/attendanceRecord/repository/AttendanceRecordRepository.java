@@ -10,7 +10,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -76,4 +75,6 @@ public interface AttendanceRecordRepository extends JpaRepository<AttendanceReco
                         @Param("date") LocalDate date);
 
     boolean existsByEmployee_IdAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(Long employeeId, DocumentStatus documentStatus, LocalDate date, LocalDate date1);
+
+    Optional<AttendanceRecord> findBySourceDocument_Id(Long documentId);
 }
