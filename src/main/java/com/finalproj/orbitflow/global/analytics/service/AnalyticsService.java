@@ -65,9 +65,16 @@ public class AnalyticsService {
     private List<Map<String, Object>> fetchRawData(String granularity, LocalDate from, LocalDate to,
             Long companyId) {
         String dateGroup = switch (granularity) {
-            case "week" -> "DATE_SUB(s.snapshot_date, INTERVAL (WEEKDAY(s.snapshot_date)) DAY)";
-            case "month" -> "DATE_FORMAT(s.snapshot_date, '%Y-%m-01')";
-            default -> "DATE_FORMAT(s.snapshot_date, '%Y-01-01')";
+            case "week" -> "DATE_FORMAT(s.snapshot_date, '%Y-%m-%d')";
+            case "month" -> "DATE_FORMAT(s.snapshot_date, '%Y-%m-%d')";
+            case "year" -> "DATE_FORMAT(s.snapshot_date, '%Y-%m')";
+            default -> {
+                long diffDays = java.time.temporal.ChronoUnit.DAYS.between(from, to);
+                if (diffDays <= 60)
+                    yield "DATE_FORMAT(s.snapshot_date, '%Y-%m-%d')";
+                else
+                    yield "DATE_FORMAT(s.snapshot_date, '%Y-%m')";
+            }
         };
 
         StringBuilder sql = new StringBuilder();
