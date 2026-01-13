@@ -4,7 +4,10 @@ import com.finalproj.orbitflow.approval.formTemplate.schema.FormFieldSchema;
 import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * FormTemplate의 fieldType 정의를 기반으로
@@ -19,179 +22,169 @@ import java.util.*;
  * @author Choi MinHyeok
  * @since 2025.12.21
  */
+
+
 @Service
 public class SampleDataGenerator {
 
-    private static final String PLACEHOLDER_IMAGE_URL = "https://placehold.co/300x200";
+    private static final String PLACEHOLDER_IMAGE_URL =
+            "https://placehold.co/600x400?text=Preview+Image";
 
-    /**
-     * FormTemplate(Entity)를 입력으로 받아
-     * fieldId → sample value 형태의 preview data를 생성한다.
-     */
-    public Map<String, Object> generate(FormTemplateSchema schema) {
-        Map<String, Object> previewData = new LinkedHashMap<>();
-        schema.getFields().stream()
-                .sorted(Comparator.comparing(
-                        f -> f.getOrder() == null ? Integer.MAX_VALUE : f.getOrder()
-                ))
-                .forEach(field ->
-                        previewData.put(field.getFieldId(), generateByType(field))
-                );
-        return previewData;
+    public void fillValues(FormTemplateSchema schema) {
+        schema.getFields().forEach(field ->
+                field.setValue(generateByType(field))
+        );
     }
 
-
-    /**
-     * fieldType 기준으로 샘플 값을 생성
-     */
     private Object generateByType(FormFieldSchema field) {
         String type = field.getFieldType();
         Map<String, Object> meta =
-                field.getMeta() != null ? field.getMeta() : Collections.emptyMap();
+                field.getMeta() != null ? field.getMeta() : Map.of();
 
         switch (type) {
 
-        /* =========================
-           Text / Display 계열
-        ========================= */
+            /* =========================
+               Basic
+            ========================= */
 
             case "document-title":
-                return Map.of("display",
-                        meta.getOrDefault("value", "문서 제목 예시"));
+                return "문서 제목 예시";
 
             case "text":
-                return Map.of("display", "텍스트 예시");
+                return "텍스트 예시";
 
             case "textarea":
-                return Map.of("display", "여러 줄 텍스트 예시\n두 번째 줄입니다.");
+                return "여러 줄 텍스트 예시\n두 번째 줄입니다.";
 
             case "number":
-                return Map.of("display", "1");
+                return 123;
 
             case "currency":
-                return Map.of("display", "100,000원");
-
-            case "address":
-                return Map.of("display", "서울특별시 강남구 테헤란로");
-
-            case "notice":
-                return Map.of("display",
-                        meta.getOrDefault("message", "안내 문구 예시"));
-
-        /* =========================
-           Date / Time 계열
-        ========================= */
+                return 100_000;
 
             case "time":
-                return Map.of("display", "09:00");
-
-            case "time-range":
-                return Map.of("display", "09:00 ~ 18:00");
+                return "09:00";
 
             case "date":
-                return Map.of("display", "2025-01-01");
+                return "2026-01-01";
 
-            case "date-range":
-            case "leave-date-range":
-                return Map.of("display", "2025-01-01 ~ 2025-01-05");
+            /* =========================
+               Range
+            ========================= */
 
-            case "schedule-date-range":
-                return Map.of("display",
-                        "2025-01-10 ~ 2025-01-12 (연말 프로젝트 일정)");
-
-        /* =========================
-           Leave
-        ========================= */
-
-            case "leave-reason":
-                return Map.of("display", "연차 (개인 사정)");
-
-        /* =========================
-           Selection
-        ========================= */
-
-            case "radio": {
-                Object optionsObj = meta.get("options");
-                if (!(optionsObj instanceof List)) {
-                    return null;
-                }
-
-                @SuppressWarnings("unchecked")
-                List<Map<String, Object>> options =
-                        (List<Map<String, Object>>) optionsObj;
-
-                return options.isEmpty()
-                        ? null
-                        : options.get(0).get("id");
-            }
-
-            case "checkbox": {
-                Object optionsObj = meta.get("options");
-                if (!(optionsObj instanceof List)) {
-                    return Collections.emptyList();
-                }
-
-                @SuppressWarnings("unchecked")
-                List<Map<String, Object>> options =
-                        (List<Map<String, Object>>) optionsObj;
-
-                return options.stream()
-                        .map(opt -> (String) opt.get("id"))
-                        .filter(Objects::nonNull)
-                        .toList();
-            }
-
-
-        /* =========================
-           🔴 구조 유지 (중요)
-        ========================= */
-
-            case "image":
-                // ✅ 실제 이미지 영역 미리보기 필요
+            case "time-range":
                 return Map.of(
-                        "src", PLACEHOLDER_IMAGE_URL,
-                        "alt", meta.getOrDefault("alt", "이미지 미리보기")
+                        "start", "09:00",
+                        "end", "18:00"
                 );
 
+            case "date-range":
+                return Map.of(
+                        "start", "2026-01-01",
+                        "end", "2026-01-03"
+                );
+
+            /* =========================
+               Selection
+            ========================= */
+
+            case "radio":
+                return firstOptionId(meta);
+
+            case "checkbox": {
+                String id = firstOptionId(meta);
+                return id == null ? List.of() : List.of(id);
+            }
+
+            /* =========================
+               Event
+            ========================= */
+
+            case "event-date-range":
+                return Map.of(
+                        "start", "2026-01-01",
+                        "end", "2026-01-03",
+                        "reason", "미리보기용 사유 예시",
+                        "vacationTypeId", "1"
+                );
+
+            /* =========================
+               Table
+            ========================= */
+
             case "table":
-                // ✅ 컬럼 구조 + 최소 행 수 반영
                 return generateTable(meta);
 
-        /* =========================
-           Search
-        ========================= */
+            /* =========================
+               Image
+            ========================= */
+
+            case "image":
+                return List.of(
+                        Map.of("url", PLACEHOLDER_IMAGE_URL)
+                );
+
+            /* =========================
+               Address
+            ========================= */
+
+            case "address":
+                return Map.of(
+                        "postcode", "12345",
+                        "roadAddress", "서울시 강남구 테헤란로",
+                        "detailAddress", "101호"
+                );
+
+            /* =========================
+               Search
+            ========================= */
 
             case "employee-search":
-                return Map.of("display", "홍길동");
+                return Map.of(
+                        "id", 1L,
+                        "name", "홍길동",
+                        "employeeNo", "OF-001",
+                        "displayText", "(OF-001) 홍길동"
+                );
 
             case "department-search":
-                return Map.of("display", "개발팀");
+                return Map.of(
+                        "id", 1L,
+                        "name", "개발팀"
+                );
 
-        /* =========================
-           Layout
-        ========================= */
+            /* =========================
+               Layout
+            ========================= */
 
             case "divider":
+            case "notice":
                 return null;
 
             default:
-                return Map.of("display", "");
+                return null;
         }
     }
 
-    /**
-     * table field의 샘플 row 생성
-     */
+    @SuppressWarnings("unchecked")
+    private String firstOptionId(Map<String, Object> meta) {
+        Object optionsObj = meta.get("options");
+        if (!(optionsObj instanceof List<?> options) || options.isEmpty()) {
+            return null;
+        }
+        Object id = ((Map<String, Object>) options.get(0)).get("id");
+        return id != null ? id.toString() : null;
+    }
+
     @SuppressWarnings("unchecked")
     private List<Map<String, Object>> generateTable(Map<String, Object> meta) {
         List<Map<String, Object>> rows = new ArrayList<>();
 
-        Map<String, Object> rowPolicy =
-                (Map<String, Object>) meta.get("rowPolicy");
-
         int minRows = 1;
-        if (rowPolicy != null && rowPolicy.get("min") instanceof Number) {
-            minRows = ((Number) rowPolicy.get("min")).intValue();
+        Object rowPolicyObj = meta.get("rowPolicy");
+        if (rowPolicyObj instanceof Map<?, ?> policy) {
+            Object min = policy.get("min");
+            if (min instanceof Number n) minRows = n.intValue();
         }
 
         List<Map<String, Object>> columns =
@@ -199,77 +192,25 @@ public class SampleDataGenerator {
 
         for (int i = 0; i < minRows; i++) {
             Map<String, Object> row = new LinkedHashMap<>();
-
             if (columns != null) {
-                for (Map<String, Object> column : columns) {
-                    String columnId = (String) column.get("id");
-                    String columnType = (String) column.get("type");
-                    row.put(columnId, generateTableColumnValue(columnType));
+                for (Map<String, Object> col : columns) {
+                    String colId = (String) col.get("id");
+                    String colType = (String) col.get("type");
+                    row.put(colId, sampleByColumnType(colType));
                 }
             }
-
             rows.add(row);
         }
-
         return rows;
     }
 
-    /**
-     * table column 타입별 샘플 값
-     */
-    private Object generateTableColumnValue(String type) {
-        if (type == null) {
-            return null;
-        }
-
-        switch (type) {
-            case "text":
-                return "텍스트";
-            case "number":
-                return 1;
-            case "currency":
-                return 10_000;
-            default:
-                return null;
-        }
-    }
-
-    /**
-     * radio / checkbox 첫 번째 옵션 id 반환
-     */
-    @SuppressWarnings("unchecked")
-    private String getFirstOptionId(Map<String, Object> meta) {
-        Object optionsObj = meta.get("options");
-
-        if (!(optionsObj instanceof List)) {
-            return null;
-        }
-
-        List<Map<String, Object>> options =
-                (List<Map<String, Object>>) optionsObj;
-
-        if (options.isEmpty()) {
-            return null;
-        }
-
-        return (String) options.get(0).get("id");
-    }
-
-    /**
-     * employee-search / department-search 샘플 값 생성
-     */
-    private Object generateSearchValue(
-            Map<String, Object> meta,
-            String id,
-            String name
-    ) {
-        boolean multiple = Boolean.TRUE.equals(meta.get("multiple"));
-
-        Map<String, Object> value = Map.of(
-                "id", id,
-                "name", name
-        );
-
-        return multiple ? List.of(value) : value;
+    private Object sampleByColumnType(String type) {
+        if (type == null) return null;
+        return switch (type) {
+            case "text" -> "텍스트";
+            case "number" -> 1;
+            case "currency" -> 10_000;
+            default -> null;
+        };
     }
 }

@@ -5,8 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.util.Map;
-
 /**
  * Please explain the class!!!
  *
@@ -21,18 +19,16 @@ import java.util.Map;
 public class FormTemplatePreviewResDto {
 
     private FormTemplateMetaDto meta;
-    private FormTemplateSchema schema;
-    private Map<String, Object> previewData;
+
+    private FormTemplateSchema contentSchema;
 
     public static FormTemplatePreviewResDto from(
             FormTemplateMetaDto meta,
-            FormTemplateSchema schema,
-            Map<String, Object> previewData
+            FormTemplateSchema contentSchema
     ) {
         return FormTemplatePreviewResDto.builder()
                 .meta(meta)
-                .schema(schema)
-                .previewData(previewData)
+                .contentSchema(contentSchema)
                 .build();
     }
 }
