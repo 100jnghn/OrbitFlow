@@ -127,10 +127,10 @@ function renderBoardTable(boards) {
         });
 
         row.innerHTML = `
-            <td>${rowNumber}</td>
-            <td>${escapeHTML(board.boardName || board.name || '')}</td>
-            <td>${createdAt}</td>
-            <td>
+            <td class="col-number">${rowNumber}</td>
+            <td class="col-name">${escapeHTML(board.boardName || board.name || '')}</td>
+            <td class="col-date mobile-hide">${createdAt}</td>
+            <td class="col-actions">
                 <div class="action-btns">
                     <button class="btn-edit" onclick="openEditBoardModal(${board.id})">수정</button>
                     <button class="btn-delete" onclick="deleteBoard(${board.id})">삭제</button>
