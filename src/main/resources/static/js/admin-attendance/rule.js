@@ -212,6 +212,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const isDuplicate = exceptionRulesList.some(rule =>
+            String(rule.employeeId) === String(employeeId)
+        );
+
+        if (isDuplicate) {
+            const empInfo = document.getElementById('selectedEmployeeInfo').innerText;
+            sweetWarning(`${empInfo} 사원은 이미 예외 규칙이 등록되어 있습니다.`);
+            return;
+        }
+
+
         const data = {
             employeeId: parseInt(employeeId),
             startTime: startTime + ':00',

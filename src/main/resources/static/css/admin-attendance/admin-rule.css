@@ -206,62 +206,32 @@
 }
 
 /* 버튼 스타일 (자원관리와 통일) */
+/* 버튼 스타일 (자원관리와 통일) - 통합된 디자인 */
 .btn-primary {
-    background: #4a69bd;
+    background: #2563eb;
     color: #fff;
     border: none;
-    padding: 12px 22px;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 600;
+    padding: 0 22px;
+    height: 42px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     transition: all 0.2s ease;
-}
-
-.btn-primary:hover {
-    background: #3a5aa0;
-}
-
-.btn-primary:active {
-    transform: translateY(0);
-}
-
-/* 예외규칙 추가 버튼 (자원관리 추가 버튼 스타일 참고) */
-#addExceptionRuleBtn {
-    height: 42px;
-    padding: 0 20px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 700;
-    background: #2563eb;
-    color: #fff;
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
-#addExceptionRuleBtn:hover {
+.btn-primary:hover {
     background: #1d4ed8;
     box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
 }
 
-/* 저장 버튼 (기본 규칙 저장) */
-#saveDefaultRuleBtn {
-    height: 42px;
-    padding: 0 20px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 700;
-    background: #4a69bd;
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(74, 105, 189, 0.25);
-}
-
-#saveDefaultRuleBtn:hover {
-    background: #3a5aa0;
-    box-shadow: 0 6px 16px rgba(74, 105, 189, 0.35);
+.btn-primary:active {
+    transform: translateY(0);
 }
 
 
@@ -486,7 +456,8 @@
 
 .close {
     color: var(--neutral-400);
-    font-size: 28px;/* 근태 규칙 관리 페이지 - 깔끔한 디자인 */
+    font-size: 28px;
+    /* 근태 규칙 관리 페이지 - 깔끔한 디자인 */
 
     /* 컬러 변수 */
     :root {
