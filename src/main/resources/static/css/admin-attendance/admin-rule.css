@@ -300,7 +300,14 @@
 /* 테이블 컬럼 정렬 */
 #exceptionTable th:nth-child(1),
 #exceptionTable td:nth-child(1) {
-    text-align: left;
+    text-align: center;
+}
+
+#exceptionTable td small {
+    display: block;
+    color: var(--neutral-500);
+    margin-top: 2px;
+    font-size: 12px;
 }
 
 #exceptionTable th:nth-child(2),
@@ -322,6 +329,12 @@
 #exceptionTable td:nth-child(8) {
     text-align: center;
     width: 150px;
+}
+
+/* 적용기간 컬럼 줄바꿈 방지 */
+#exceptionTable th:nth-child(2),
+#exceptionTable td:nth-child(2) {
+    white-space: nowrap;
 }
 
 /* 테이블 액션 버튼 (자원관리와 통일) */
@@ -1411,7 +1424,7 @@
     display: flex;
     align-items: flex-end;
     gap: 16px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
 .date-input {
