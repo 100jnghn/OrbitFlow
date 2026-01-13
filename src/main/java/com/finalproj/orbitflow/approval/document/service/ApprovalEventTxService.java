@@ -16,6 +16,8 @@ import com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole;
 import com.finalproj.orbitflow.attendance.leave.entity.LeaveType;
 import com.finalproj.orbitflow.attendance.leave.repository.LeaveTypeRepository;
 import com.finalproj.orbitflow.attendance.leave.service.LeaveService;
+import com.finalproj.orbitflow.attendance.rule.entity.AttendanceRule;
+import com.finalproj.orbitflow.attendance.rule.repository.AttendanceRuleRepository;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.WorkStatus;
@@ -31,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,6 +62,7 @@ public class ApprovalEventTxService {
     private final AttendanceEventRepository attendanceEventRepository;
     private final WorkingDayService workingDayService;
     private final LeaveTypeRepository leaveTypeRepository;
+    private final AttendanceRuleRepository attendanceRuleRepository;
 
     public static List<DateRange> splitToRanges(List<LocalDate> dates) {
 
@@ -299,6 +303,73 @@ public class ApprovalEventTxService {
             }
         }
     }
+
+    @Transactional
+    public void processCompanyEvent(Long documentId) {
+
+        // 1️⃣ 문서 조회
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() ->
+                        new NotFoundException("문서를 찾을 수 없습니다.")
+                );
+
+        // 2️⃣ COMPANY_EVENT가 아니면 무시
+        BaseRole baseRole = document.getTemplateGroup().getBaseRole();
+        if (baseRole != BaseRole.COMPANY_EVENT) {
+            return;
+        }
+
+        // 3️⃣ 문서 내용 조회 + 공통 Payload 파싱
+        DocumentContent content = documentContentRepository
+                .findByDocument_Id(documentId)
+                .orElseThrow(() ->
+                        new NotFoundException("문서 내용을 찾을 수 없습니다.")
+                );
+
+        CommonPayload payload =
+                documentContentParser.extractCommon(content);
+
+        // 4️⃣ 작성자 / 회사 정보
+        Employee writer = document.getWriter();
+        Long companyId = writer.getCompany().getId();
+
+        // 5️⃣ 회사 최상위 조직 조회
+        Organization rootOrg = orgRepository
+                .findFirstByCompanyIdAndParentOrgId(companyId, null)
+                .orElseThrow(() ->
+                        new NotFoundException("회사 최상위 조직 조회 실패")
+                );
+
+        // 6️⃣ 회사 기본 근무 시간 조회
+        AttendanceRule rule = attendanceRuleRepository
+                .findByCompanyIdAndIsDefaultTrue(companyId)
+                .orElseThrow(() ->
+                        new NotFoundException("회사 기본 근무 시간 조회 실패")
+                );
+
+        LocalTime startTime = rule.getDefaultStartTime();
+        LocalTime endTime = rule.getDefaultEndTime();
+
+        // 7️⃣ 회사 일정 생성
+        ScheduleReqDto scheduleReqDto = ScheduleReqDto.builder()
+                .isCompany(true)
+                .isPersonal(false)
+                .orgCategoryId(rootOrg.getCategoryId())
+                .title(payload.title())
+                .description(payload.description())
+                .startAt(payload.startDate().atTime(startTime))
+                .endAt(payload.endDate().atTime(endTime))
+                .status("RELEASE")
+                .build();
+
+        // 8️⃣ 일정 저장 (새 트랜잭션 분리 필요 시 내부에서 처리)
+        scheduleService.insertSchedule(
+                companyId,
+                writer.getId(),
+                scheduleReqDto
+        );
+    }
+
 
     public record DateRange(LocalDate start, LocalDate end) {
     }

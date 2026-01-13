@@ -564,11 +564,14 @@ public class DocumentApplicationService {
             }
         }
 
-        if (document.getTemplateGroup().getBaseRole().equals(BaseRole.BUSINESS_TRIP) || document.getTemplateGroup().getBaseRole().equals(BaseRole.OUTWORK)) {
+        BaseRole baseRole = document.getTemplateGroup().getBaseRole();
+
+        if (baseRole == BaseRole.BUSINESS_TRIP || baseRole == BaseRole.OUTWORK) {
             LeaveCalculationResult result = leaveCalculationService.calculate(document);
 
             LocalDate actualStart = result.effectiveDates().get(0);
-            LocalDate actualEnd = result.effectiveDates().get(result.effectiveDates().size() - 1);
+            LocalDate actualEnd = result.effectiveDates()
+                    .get(result.effectiveDates().size() - 1);
 
             AttendanceRecord record = AttendanceRecord.builder()
                     .employee(document.getWriter())

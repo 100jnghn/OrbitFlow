@@ -1178,18 +1178,28 @@ function renderFormComponents() {
             const deleteBtn = document.createElement("button");
             deleteBtn.className = "delete-btn";
             deleteBtn.innerHTML = "🗑️";
-            deleteBtn.onclick = e => {
+
+            deleteBtn.onclick = async e => {
                 e.stopPropagation();
-                if (confirm("이 컴포넌트를 삭제하시겠습니까?")) {
-                    removeComponent(comp.id);
-                }
+
+                const result = await sweetConfirm(
+                    '삭제 확인',
+                    '이 컴포넌트를 삭제하시겠습니까?'
+                );
+
+                if (!result.isConfirmed) return;
+
+                removeComponent(comp.id);
             };
+
             row.appendChild(deleteBtn);
         }
+
 
         container.appendChild(row);
     });
 }
+
 
 function renderPreviewIntoRow(row, comp) {
     if (comp.fixed) {
