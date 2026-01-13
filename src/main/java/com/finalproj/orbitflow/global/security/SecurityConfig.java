@@ -28,56 +28,56 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+                http
+                                .csrf(csrf -> csrf.disable())
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers(
+                                                                "/",
+                                                                "/api/auth/**",
+                                                                "/login",
+                                                                "/view/**",
+                                                                "/companies/**",
+                                                                "/api/companies/**",
+                                                                "/css/**",
+                                                                "/js/**",
+                                                                "/images/**",
+                                                                "/favicon.ico",
+                                                                "/internal/**",
+                                                                "/favicon.ico",
+                                                                "/activate/**",
+                                                                "/reset-password/**",
+                                                                "/find-password/**",
+                                                                "/api/email/**",
+                                                                "/api/email/**",
+                                                                "/actuator/prometheus",
+                                                                "/actuator/health",
+                                                                "/view/service-analytics",
+                                                                "/api/analytics/**")
+                                                .permitAll()
 
-        http
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/",
-                                "/api/auth/**",
-                                "/login",
-                                "/view/**",
-                                "/companies/**",
-                                "/api/companies/**",
-                                "/css/**",
-                                "/js/**",
-                                "/images/**",
-                                "/favicon.ico",
-                                "/internal/**",
-                                "/favicon.ico",
-                                "/activate/**",
-                                "/reset-password/**",
-                                "/find-password/**",
-                                "/api/email/**",
-                                "/actuator/prometheus",
-                                "/actuator/health" //배포용 링크 permitAll 필수
-                        ).permitAll()
+                                                .requestMatchers("/api/chatbot/**").authenticated()
+                                                .requestMatchers("/api/manual/**").authenticated()
 
-                        .requestMatchers("/api/chatbot/**").authenticated()
-                        .requestMatchers("/api/manual/**").authenticated()
+                                                .requestMatchers("/api/admin/**")
+                                                .hasAnyRole("ADMIN", "COMPANY_ADMIN")
 
-                        .requestMatchers("/api/admin/**")
-                        .hasAnyRole("ADMIN", "COMPANY_ADMIN")
+                                                .anyRequest().authenticated())
 
-                        .anyRequest().authenticated()
-                )
+                                .addFilterBefore(jwtAuthenticationFilter,
+                                                UsernamePasswordAuthenticationFilter.class);
 
-                .addFilterBefore(jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class);
+                return http.build();
+        }
 
-        return http.build();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 }

@@ -24,6 +24,8 @@ public class QAttendanceEvent extends EntityPathBase<AttendanceEvent> {
 
     public final com.finalproj.orbitflow.global.common.QBaseEntity _super = new com.finalproj.orbitflow.global.common.QBaseEntity(this);
 
+    public final DatePath<java.time.LocalDate> actualEndDate = createDate("actualEndDate", java.time.LocalDate.class);
+
     public final EnumPath<com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole> baseRole = createEnum("baseRole", com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole.class);
 
     public final com.finalproj.orbitflow.hr.company.entity.QCompany company;
