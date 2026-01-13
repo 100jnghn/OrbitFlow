@@ -10,9 +10,15 @@ let currentFilters = {
     endDate: null
 };
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     loadAllLeaveTypes(); // 필터용: 모든 휴가 유형 로드
     loadAllLeaveHistory(currentPage);
+
+    // 날짜 입력 필드에 변경 이벤트 리스너 추가 (실시간 필터링)
+    const startDateEl = document.getElementById('startDate');
+    const endDateEl = document.getElementById('endDate');
+    if (startDateEl) startDateEl.addEventListener('change', () => applyFilters());
+    if (endDateEl) endDateEl.addEventListener('change', () => applyFilters());
 });
 
 /**
@@ -110,10 +116,23 @@ async function loadAllLeaveHistory(page) {
 
 /** 필터 적용 함수 **/
 function applyFilters() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    // 날짜 유효성 검사
+    if (startDate && endDate) {
+        if (new Date(startDate) > new Date(endDate)) {
+            alert('시작일은 종료일보다 이전이어야 합니다.');
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            return;
+        }
+    }
+
     currentFilters.typeName = document.getElementById('filterType').value || null;
     currentFilters.status = document.getElementById('filterStatus').value || null;
-    currentFilters.startDate = document.getElementById('startDate').value || null;
-    currentFilters.endDate = document.getElementById('endDate').value || null;
+    currentFilters.startDate = startDate || null;
+    currentFilters.endDate = endDate || null;
 
     loadAllLeaveHistory(0);
 }
@@ -130,4 +149,14 @@ function renderPagination(pageData, loadFunc) {
         pageBtn.onclick = () => { loadFunc(i); };
         pagination.appendChild(pageBtn);
     }
+}
+
+/** 필터 초기화 **/
+function resetFilters() {
+    document.getElementById('filterType').value = '';
+    document.getElementById('filterStatus').value = '';
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+
+    applyFilters();
 }

@@ -17,13 +17,11 @@ let reasonPopoverAnchorEl = null;
 let hoverCloseTimer = null;
 
 document.addEventListener('DOMContentLoaded', function () {
-    // [기능: 금일 요약 현황 날짜 표시]
     const today = new Date();
     const formattedToday = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
     const todayLabel = document.getElementById('todayLabel');
     if (todayLabel) todayLabel.innerText = `금일 요약 현황 (${formattedToday})`;
 
-    // [기능: 정정 사유 글자수 제한 및 카운터]
     const modalReasonInput = document.getElementById('modalReason');
     const charCountElement = document.getElementById('charCount');
 
@@ -40,14 +38,12 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // [기능: 근태 규칙 반영 - 정정됨 호버 이벤트 위임]
     const table = document.getElementById('attendanceTable');
     if (table) {
         table.addEventListener('mouseover', handleCorrectedMouseOver);
         table.addEventListener('mouseout', handleCorrectedMouseOut);
     }
 
-    // [기능: 직원 검색 엔터키 지원]
     const searchInput = document.getElementById('searchKeyword');
     if (searchInput) {
         searchInput.addEventListener('keypress', function (e) {
@@ -55,14 +51,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 초기 데이터 로드
     loadSummaryData();
     loadAttendanceList();
 });
 
-/**
- * [기능: 출근 완료/지각/결근/기타 현황 집계]
- */
 async function loadSummaryData() {
     try {
         const response = await fetch('/api/admin/attendance/summary', {
@@ -72,13 +64,11 @@ async function loadSummaryData() {
 
         if (response.ok && result.data) {
             const d = result.data;
-            // 상단 메인 카드
             document.getElementById('totalEmployees').innerText = d.totalEmployees || 0;
             document.getElementById('onTimeCount').innerText = d.onTimeCount || 0;
             document.getElementById('lateCount').innerText = d.lateCount || 0;
             document.getElementById('absentCount').innerText = d.absentCount || 0;
 
-            // 기타 현황 바 (휴가/외근/출장/예정)
             if (document.getElementById('vacationCount')) document.getElementById('vacationCount').innerText = d.vacationCount || 0;
             if (document.getElementById('outsideCount')) document.getElementById('outsideCount').innerText = d.outsideCount || 0;
             if (document.getElementById('businessTripCount')) document.getElementById('businessTripCount').innerText = d.businessTripCount || 0;
@@ -89,9 +79,6 @@ async function loadSummaryData() {
     }
 }
 
-/**
- * [기능: 기간별/상태별/사원 검색 근태 내역 조회]
- */
 async function loadAttendanceList() {
     const { page, size, startDate, endDate, status, keyword } = currentSearchParams;
     const params = new URLSearchParams({ page, size, startDate, endDate, status, keyword });
@@ -104,7 +91,7 @@ async function loadAttendanceList() {
 
         if (response.ok && result.data) {
             renderAttendanceTable(result.data.content || []);
-            renderPagination(result.data); // [기능: 페이징 처리]
+            renderPagination(result.data);
         }
     } catch (e) {
         console.error("근태 목록 로드 실패:", e);
@@ -135,7 +122,6 @@ function renderAttendanceTable(list) {
 
         const corrected = item.correctionYn === 'Y' || item.isCorrected;
 
-        // ✅ 정정 버튼 디자인 수정: 일정 관리의 버튼 스타일 적용
         let actionBtn = corrected
             ? `<span class="badge-corrected" data-reason="${escapeHtml(item.correctionReason)}">정정됨</span>`
             : `<button class="btn-table-action" onclick="openCorrectionModal(${item.attendanceId}, '${statusCode}')">
@@ -160,9 +146,6 @@ function renderAttendanceTable(list) {
     }).join('');
 }
 
-/**
- * [기능: 정정버튼 작동 및 모달 제어]
- */
 function openCorrectionModal(id, status) {
     document.getElementById('targetAttendanceId').value = id;
     document.getElementById('modalStatus').value = status;
@@ -178,6 +161,9 @@ function closeModal() {
     document.body.style.overflow = '';
 }
 
+/**
+ * [수정: SweetAlert2 적용] 정정 사유 제출
+ */
 async function submitCorrection() {
     const reason = document.getElementById('modalReason').value.trim();
     if (!reason) {
@@ -187,6 +173,10 @@ async function submitCorrection() {
 
     const id = document.getElementById('targetAttendanceId').value;
     const status = document.getElementById('modalStatus').value;
+
+    // SweetAlert Confirm 추가
+    const confirmResult = await sweetConfirm("근태 정정", "입력하신 사유로 근태 정보를 정정하시겠습니까?");
+    if (!confirmResult.isConfirmed) return;
 
     try {
         const response = await fetch(`/api/admin/attendance/update/${id}`, {
@@ -201,21 +191,18 @@ async function submitCorrection() {
         const result = await response.json();
 
         if (response.ok) {
-            alert(result.message || "성공적으로 정정되었습니다.");
+            await sweetSuccess(result.message || "성공적으로 정정되었습니다.");
             closeModal();
-            loadAttendanceList(); // [기능: 실시간 상태 업데이트]
-            loadSummaryData();    // 통계 동기화
+            loadAttendanceList();
+            loadSummaryData();
         } else {
-            alert(result.message || "정정 처리에 실패했습니다.");
+            sweetError(result.message || "정정 처리에 실패했습니다.");
         }
     } catch (e) {
-        alert("네트워크 오류가 발생했습니다.");
+        sweetError("네트워크 오류가 발생했습니다.");
     }
 }
 
-/**
- * [기능: 초기화 버튼 - 필터링 항목 전체 초기화]
- */
 function resetFilters() {
     document.getElementById('startDate').value = '';
     document.getElementById('endDate').value = '';
@@ -226,13 +213,15 @@ function resetFilters() {
     loadAttendanceList();
 }
 
-function handleSearch() {
+/**
+ * [수정: SweetAlert2 적용] 검색 핸들러
+ */
+async function handleSearch() {
     const startDate = document.getElementById('startDate').value;
     const endDate = document.getElementById('endDate').value;
 
-    // [유효성 검사] 시작일이 종료일보다 늦을 경우 경고
     if (startDate && endDate && startDate > endDate) {
-        alert("종료일은 시작일보다 빠를 수 없습니다.");
+        sweetWarning("종료일은 시작일보다 빠를 수 없습니다.");
         return;
     }
 
@@ -244,9 +233,6 @@ function handleSearch() {
     loadAttendanceList();
 }
 
-/**
- * [기능: 근태 규칙 반영 - 정정 사유 팝오버]
- */
 function handleCorrectedMouseOver(e) {
     const target = e.target.closest('.badge-corrected');
     if (!target) return;
@@ -277,25 +263,16 @@ function closeReasonPopover() {
     }
 }
 
-/**
- * 유틸리티 함수
- */
-/**
- * [기능: 심플 페이지네이션 렌더링]
- */
 function renderPagination(pageData) {
     const pagination = document.getElementById('boardPagination');
     if (!pagination || !pageData) return;
 
     pagination.innerHTML = '';
-
     const page = pageData.number || 0;
     const totalPages = pageData.totalPages || 0;
-
     const wrapper = document.createElement('div');
     wrapper.className = 'pagination';
 
-    // 1. [이전] 화살표
     const prevBtn = document.createElement('button');
     prevBtn.className = 'page-btn';
     prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
@@ -306,11 +283,9 @@ function renderPagination(pageData) {
     };
     wrapper.appendChild(prevBtn);
 
-    // 2. 숫자 버튼 (간결하게 현재 페이지 주변 노출)
     const maxVisible = 5;
     let start = Math.max(0, page - Math.floor(maxVisible / 2));
     let end = Math.min(totalPages - 1, start + maxVisible - 1);
-
     if (end - start < maxVisible - 1) start = Math.max(0, end - maxVisible + 1);
 
     for (let i = start; i <= end; i++) {
@@ -324,7 +299,6 @@ function renderPagination(pageData) {
         wrapper.appendChild(btn);
     }
 
-    // 3. [다음] 화살표
     const nextBtn = document.createElement('button');
     nextBtn.className = 'page-btn';
     nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
@@ -337,8 +311,6 @@ function renderPagination(pageData) {
 
     pagination.appendChild(wrapper);
 }
-
-
 
 function escapeHtml(str) {
     if (!str) return '';
