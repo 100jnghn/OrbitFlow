@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${pageTitle}">OrbitFlow Analytics</title>
+    <!-- Font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="/css/admin/service-analytics.css">
+</head>
+
+<body>
+
+    <div class="loading-overlay" id="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="dashboard-container">
+        <div class="header">
+            <h1>OrbitFlow Analytics</h1>
+            <div class="filter-header">
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>회사 선택</label>
+                        <select id="company-filter" onchange="loadData()">
+                            <option value="0">전체 회사</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>단위</label>
+                        <select id="granularity" onchange="handleGranularityChange()">
+                            <option value="week">주별</option>
+                            <option value="month">월별</option>
+                            <option value="year">연별</option>
+                            <option value="period" selected>기간</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" id="period-picker-group">
+                        <label id="period-label">기간 선택</label>
+                        <div id="picker-wrapper">
+                            <!-- Dynamic Picker inserted here -->
+                        </div>
+                        <button type="button" class="btn-today" onclick="setToday()">오늘</button>
+                    </div>
+                    <div class="filter-group" id="range-group" style="display: none;">
+                        <label>범위</label>
+                        <input type="date" id="date-from" onchange="handleDateFromChange()">
+                        <span>~</span>
+                        <input type="date" id="date-to" onchange="loadData()">
+                    </div>
+                    <div class="filter-group">
+                        <label>비교</label>
+                        <select id="compare">
+                            <option value="none" selected>없음</option>
+                            <option value="prev_period">이전 기간</option>
+                            <option value="prev_year">전년 동기</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="action-bar">
+                    <button class="btn-apply" onclick="loadData()">적용</button>
+                    <button class="btn-sync" id="btn-sync" onclick="syncData()" title="현재 시점의 데이터를 집계 테이블에 반영합니다.">
+                        <i class="fas fa-sync-alt"></i> 데이터 동기화
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Section -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title" id="kpi-company-label">전체 회사 <i class="fas fa-building"></i></div>
+                <div class="kpi-value" id="kpi-company">0</div>
+                <div class="kpi-delta" id="delta-company"></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">활성 사원 수 <i class="fas fa-users"></i></div>
+                <div class="kpi-value" id="kpi-employee">0</div>
+                <div class="kpi-delta" id="delta-employee"></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">전체 파일 개수 <i class="fas fa-file-alt"></i></div>
+                <div class="kpi-value" id="kpi-file">0</div>
+                <div class="kpi-delta" id="delta-file"></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">사용 용량 (GB) <i class="fas fa-database"></i></div>
+                <div class="kpi-value" id="kpi-storage">0.0</div>
+                <div class="kpi-delta" id="delta-storage"></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">AI 사용량 <i class="fas fa-robot"></i></div>
+                <div class="kpi-value" id="kpi-ai">0</div>
+                <div class="kpi-delta" id="delta-ai"></div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>서비스 성장 추계</h3>
+                </div>
+                <div class="chart-content">
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>AI 기능별 점유율</h3>
+                </div>
+                <div class="chart-content">
+                    <canvas id="aiDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-grid">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>AI 사용량 추이</h3>
+                </div>
+                <canvas id="aiTrendChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>파일 업로드 현황</h3>
+                </div>
+                <canvas id="fileTrendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Top 10 Section -->
+        <div class="detail-grid" id="top10-section">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>회사별 AI 사용 순위 (Top 10)</h3>
+                </div>
+                <table class="rank-table">
+                    <thead>
+                        <tr>
+                            <th>순위</th>
+                            <th>회사명</th>
+                            <th class="text-right">사용 횟수</th>
+                        </tr>
+                    </thead>
+                    <tbody id="top10-ai-body"></tbody>
+                </table>
+            </div>
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>회사별 파일 용량 순위 (Top 10)</h3>
+                </div>
+                <table class="rank-table">
+                    <thead>
+                        <tr>
+                            <th>순위</th>
+                            <th>회사명</th>
+                            <th class="text-right">사용량 (MB)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="top10-file-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="/js/admin/service-analytics.js"></script>
+
+</body>
+
+</html>
