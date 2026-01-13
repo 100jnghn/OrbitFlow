@@ -153,23 +153,23 @@ function renderOrganizationTable(organizations) {
 
 
         row.innerHTML = `
-            <td>${rowNumber}</td>
-            <td>${escapeHTML(org.name)}</td>
-            <td>
+            <td class="col-number">${rowNumber}</td>
+            <td class="col-dept">${escapeHTML(org.name)}</td>
+            <td class="col-toggle">
                 ${hasBoard ? `
                 <div class="toggle-label">
-        <span class="status-inactive">비활성화</span>
+        <span class="status-inactive mobile-hide">비활성화</span>
         <label class="toggle-switch">
             <input type="checkbox" ${isActivated ? 'checked' : ''} 
                    data-org-id="${org.id}"
                    data-board-id="${boardCategoryId}">
             <span class="toggle-slider"></span>
         </label>
-        <span class="status-active">활성화</span>
+        <span class="status-active mobile-hide">활성화</span>
     </div>
                 ` : `
                 <div class="toggle-label" style="opacity: 0.5;">
-                    <span style="color: #9ca3af;">게시판 없음</span>
+                    <span class="mobile-hide" style="color: #9ca3af;">게시판 없음</span>
                     <label class="toggle-switch" style="pointer-events: none;">
                         <input type="checkbox" disabled>
                         <span class="toggle-slider"></span>

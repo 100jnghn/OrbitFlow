@@ -30,6 +30,20 @@
     min-height: calc(103vh - 180px);
 }
 
+@media (max-width: 768px) {
+    .board-admin-container {
+        padding: 10px;
+    }
+
+    .mobile-hide {
+        display: none !important;
+    }
+
+    .admin-section {
+        padding: 15px;
+    }
+}
+
 .admin-section {
     background: #fff;
     border-radius: 12px;
