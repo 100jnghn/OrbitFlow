@@ -51,6 +51,10 @@ public class AttendanceEvent extends BaseEntity {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
+    @Column(name = "actual_end_date")
+    private LocalDate actualEndDate;
+
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "source_document_id")
     private Document sourceDocument;

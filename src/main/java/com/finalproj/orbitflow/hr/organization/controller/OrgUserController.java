@@ -57,7 +57,7 @@ public class OrgUserController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponseDto<List<OrgResDto>>> listOrSearch(
+    public ResponseEntity<?> listOrSearch(
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "false") boolean includeDescendants
     ) {

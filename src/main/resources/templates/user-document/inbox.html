@@ -39,7 +39,7 @@
             <div class="approval-search-filters">
 
                 <!-- 날짜 필터 -->
-                <select id="dateFilter" class="approval-filter-select">
+                <select id="dateFilter" class="approval-filter-select ellipsis-input">
                     <option value="">결재일(기간)</option>
                     <option value="today">오늘</option>
                     <option value="week">이번 주</option>
@@ -58,7 +58,7 @@
                        style="display:none;">
 
                 <!-- 문서 상태 -->
-                <select id="documentStatus" class="approval-filter-select">
+                <select id="documentStatus" class="approval-filter-select ellipsis-input">
                     <option value="">문서 상태</option>
                     <option value="IN_PROGRESS">진행중</option>
                     <option value="APPROVED">승인</option>
@@ -66,7 +66,7 @@
                 </select>
 
                 <!-- 결재 상태 -->
-                <select id="approvalStatus" class="approval-filter-select">
+                <select id="approvalStatus" class="approval-filter-select ellipsis-input">
                     <option value="">결재 상태</option>
                     <option value="IN_PROGRESS">내 차례</option>
                     <option value="WAITING">대기중</option>
@@ -75,8 +75,8 @@
                 </select>
 
                 <!-- 검색 타입 -->
-                <select id="searchType" class="approval-filter-select">
-                    <option value="ALL">전체</option>
+                <select id="searchType" class="approval-filter-select ellipsis-input">
+                <option value="ALL">전체</option>
                     <option value="TITLE">문서 제목</option>
                     <option value="GROUP_NAME">양식명</option>
                 </select>
@@ -85,7 +85,7 @@
                 <input
                         type="text"
                         id="keyword"
-                        class="approval-search-input"
+                        class="approval-search-input ellipsis-input"
                         placeholder="검색어 입력"
                         maxlength="100"
                 >

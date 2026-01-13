@@ -29,6 +29,13 @@ let approvalState = {
 
 let currentPage = 0;
 let totalPages = 1;
+let isTemplateNameAvailable = false;
+let nameCheckDebounce = null;
+let isCheckingTemplateName = false;
+
+let templateNameCheckState = 'idle';
+// idle | checking | valid | invalid
+
 
 // ========================
 // 업데이트 팝업 상태
@@ -575,6 +582,9 @@ function showCreatePopup(initName = '', initDesc = '') {
     createBtn.disabled = true;
 
     document.getElementById('createPopup').style.display = 'flex';
+    templateNameCheckState = 'idle';
+    isTemplateNameAvailable = false;
+    clearTimeout(nameCheckDebounce);
 }
 
 
@@ -651,33 +661,69 @@ function enforceMaxLength(inputEl, max) {
 // ========================
 // 폼 검증 함수
 // ========================
-function validateTemplateName() {
+async function checkTemplateNameDuplicate(name) {
+    const res = await apiFetch(
+        `/api/admin/form-template-groups/check-name?name=${encodeURIComponent(name)}`,
+        {method: 'GET'}
+    );
+
+    if (!res.ok) {
+        throw new Error('중복 체크 실패');
+    }
+
+    const result = await res.json();
+
+   return result?.data
+}
+
+
+function validateTemplateName(showSuccess = true) {
     const v = popupTemplateName.value.trim();
 
     if (!v) {
-        showMsg(
-            popupTemplateNameMsg,
-            '양식명을 입력해주세요.',
-            'error'
-        );
+        templateNameCheckState = 'idle';
+        showMsg(popupTemplateNameMsg, '양식명을 입력해주세요.', 'error');
         return false;
     }
 
     if (v.length > TEMPLATE_NAME_MAX) {
+        templateNameCheckState = 'idle';
         showMsg(
             popupTemplateNameMsg,
-            `양식명은 ${TEMPLATE_NAME_MAX}자 이내여야 합니다. (${v.length}/${TEMPLATE_NAME_MAX})`,
+            `양식명은 ${TEMPLATE_NAME_MAX}자 이내여야 합니다.`,
             'error'
         );
         return false;
     }
 
-    showMsg(
-        popupTemplateNameMsg,
-        `사용 가능한 양식명입니다. (${v.length}/${TEMPLATE_NAME_MAX})`,
-        'success'
-    );
-    return true;
+    if (templateNameCheckState === 'checking') {
+        showMsg(
+            popupTemplateNameMsg,
+            '양식명 중복 확인 중입니다...',
+            'info'
+        );
+        return false;
+    }
+
+    if (templateNameCheckState === 'invalid') {
+        showMsg(
+            popupTemplateNameMsg,
+            '이미 사용 중인 양식명입니다.',
+            'error'
+        );
+        return false;
+    }
+
+    if (templateNameCheckState === 'valid' && showSuccess) {
+        showMsg(
+            popupTemplateNameMsg,
+            '사용 가능한 양식명입니다.',
+            'success'
+        );
+        return true;
+    }
+
+    return false;
 }
 
 
@@ -770,8 +816,57 @@ function bindEventHandlers() {
     if (popupTemplateName && popupTemplateDesc && popupCreateBtn) {
         popupTemplateName.addEventListener('input', () => {
             enforceMaxLength(popupTemplateName, TEMPLATE_NAME_MAX);
-            updateCreateButtonState();
+
+            clearTimeout(nameCheckDebounce);
+
+            const name = popupTemplateName.value.trim();
+
+            // 1. 기본 검증 실패 → idle
+            if (!name || name.length > TEMPLATE_NAME_MAX) {
+                templateNameCheckState = 'idle';
+                isTemplateNameAvailable = false;
+
+                validateTemplateName(false);
+                updateCreateButtonState();
+                return;
+            }
+
+            // 2. 서버 체크 시작
+            templateNameCheckState = 'checking';
+            isTemplateNameAvailable = false;
+
+            showMsg(
+                popupTemplateNameMsg,
+                '양식명 중복 확인 중입니다...',
+                'info'
+            );
+
+            nameCheckDebounce = setTimeout(async () => {
+                try {
+                    const currentValue = name;
+                    const available = await checkTemplateNameDuplicate(name);
+
+                    // 🔒 race-condition 방어
+                    if (popupTemplateName.value.trim() !== currentValue) return;
+
+                    if (available) {
+                        templateNameCheckState = 'valid';
+                        isTemplateNameAvailable = true;
+                    } else {
+                        templateNameCheckState = 'invalid';
+                        isTemplateNameAvailable = false;
+                    }
+
+                } catch (e) {
+                    templateNameCheckState = 'invalid';
+                    isTemplateNameAvailable = false;
+                } finally {
+                    validateTemplateName(true);
+                    updateCreateButtonState();
+                }
+            }, 300);
         });
+
 
         popupTemplateDesc.addEventListener('input', () => {
             enforceMaxLength(popupTemplateDesc, TEMPLATE_DESC_MAX);
@@ -1140,13 +1235,12 @@ function canEnableCreateButton() {
     const category = popupCategory?.value;
     const baseRole = popupBaseRole?.value;
 
-    // 1. 카테고리 미선택
+    if (templateNameCheckState !== 'valid') return false;
+
     if (!category) return false;
 
-    // 2. GENERAL → 바로 가능
     if (category === 'GENERAL') return true;
 
-    // 3. ATTENDANCE / SCHEDULE → 일정 유형 필수
     return !!baseRole;
 }
 

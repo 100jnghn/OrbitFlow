@@ -720,7 +720,7 @@ button:not(.primary):hover {
 .field-hint {
     margin-top: 4px;
     font-size: 12px;
-    color: #e74c3c;
+    color: #444444;
 }
 
 
@@ -733,7 +733,7 @@ button:not(.primary):hover {
 .approval-line-hint {
     margin-top: 6px;
     font-size: 12px;
-    color: #e74c3c;
+    color: #444444;
 }
 
 .date-range.field-error,
@@ -1072,6 +1072,12 @@ button:not(.primary):hover {
     font-size: 13px;
     color: #888;
 }
+
+.employee-item.active,
+.organization-item.active {
+    background: #e5f0ff;
+}
+
 
 /* ===============================
    doc-field 안에서
