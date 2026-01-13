@@ -339,7 +339,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function clearAllErrors() { document.querySelectorAll('.error-message').forEach(el => { el.style.display = 'none'; }); }
 
     document.querySelectorAll('.close').forEach(btn => btn.onclick = () => { closeModal(modal); closeModal(editModal); });
-    document.getElementById('cancelBtn')?.addEventListener('click', () => closeModal(modal));
-    document.getElementById('editCancelBtn')?.addEventListener('click', () => closeModal(editModal));
+    document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', () => { closeModal(modal); closeModal(editModal); }));
     window.onclick = (event) => { if (event.target == modal) closeModal(modal); if (event.target == editModal) closeModal(editModal); };
 });
