@@ -2,6 +2,7 @@ package com.finalproj.orbitflow.attendance.commute.entity;
 
 import aQute.bnd.annotation.headers.BundleLicense;
 import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
+import com.finalproj.orbitflow.global.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,7 +14,6 @@ import java.time.LocalDateTime;
         @UniqueConstraint(columnNames = {"employee_id", "work_date"}) // UK: uk_att_date
 })
 @Getter
-@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -65,4 +65,27 @@ public class Attendance {
     public void markAsCorrected() {
         this.isCorrected = true;
     }
+
+
+    public void updateTimeByAdmin(LocalDateTime commuteAt, LocalDateTime leaveAt) {
+
+        this.isCorrected = true;
+
+        if (commuteAt != null) {
+            this.commuteAt = commuteAt;
+        }
+        if (leaveAt != null) {
+            this.leaveAt = leaveAt;
+        }
+    }
+
+    public void recordLeave() {
+        if (this.leaveAt != null) {
+            throw new BusinessException("이미 퇴근 처리되었습니다."); // 엔티티 내부에서 상태 검증
+        }
+        this.leaveAt = LocalDateTime.now(); // 내부 필드 직접 업데이트
+    }
+
+
+
 }

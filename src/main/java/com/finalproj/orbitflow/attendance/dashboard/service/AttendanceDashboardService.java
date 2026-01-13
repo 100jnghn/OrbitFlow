@@ -166,7 +166,6 @@ public class AttendanceDashboardService {
                 .build();
     }
 
-    // ... (rest of the file until updateAttendanceRecord)
 
     /**
      * [관리자] 기록 수동 정정 (안정성 강화)
@@ -179,33 +178,30 @@ public class AttendanceDashboardService {
             attendance = commuteRepository.findById(attendanceId)
                     .orElseThrow(() -> new RuntimeException("근태 기록을 찾을 수 없습니다."));
         } else {
-            // "기록 누락" 사원의 경우 중복 생성 방지를 위해 재조회 후 생성
             attendance = commuteRepository.findByCompanyIdAndEmployeeIdAndWorkDate(
                     companyId, dto.getEmployeeId(), LocalDate.now()).orElseGet(
-                            () -> Attendance.builder()
-                                    .employeeId(dto.getEmployeeId())
-                                    .companyId(companyId)
-                                    .workDate(LocalDate.now())
-                                    .isCorrected(true)
-                                    .build());
+                    () -> Attendance.builder()
+                            .employeeId(dto.getEmployeeId())
+                            .companyId(companyId)
+                            .workDate(LocalDate.now())
+                            .isCorrected(true)
+                            .build());
         }
 
-        // 상태 및 사유 업데이트
+
         attendance.updateStatus(AttendanceStatus.valueOf(dto.getStatus()), dto.getCorrectionReason());
 
-        // 시간 정보 수동 입력 처리
-        if (dto.getCommuteAt() != null && !dto.getCommuteAt().isBlank()) {
-            attendance.setCommuteAt(parseDateTime(attendance.getWorkDate(), dto.getCommuteAt()));
-        }
-        if (dto.getLeaveAt() != null && !dto.getLeaveAt().isBlank()) {
-            attendance.setLeaveAt(parseDateTime(attendance.getWorkDate(), dto.getLeaveAt()));
-        }
+        LocalDateTime commuteTime = (dto.getCommuteAt() != null && !dto.getCommuteAt().isBlank())
+                ? parseDateTime(attendance.getWorkDate(), dto.getCommuteAt()) : null;
+        LocalDateTime leaveTime = (dto.getLeaveAt() != null && !dto.getLeaveAt().isBlank())
+                ? parseDateTime(attendance.getWorkDate(), dto.getLeaveAt()) : null;
 
+        attendance.updateTimeByAdmin(commuteTime, leaveTime);
         commuteRepository.save(attendance);
 
         // 🚀 [알림 전송] 근태 정정 알림
         try {
-            String message = String.format("[%s] 근태 상태가 '%s'(으)로 정정되었습니다. (사유: %s)",
+            String message = String.format("[%s] 근태 상태가 '%s'(으)로 정정되었습니다. \n사유: %s",
                     attendance.getWorkDate(),
                     attendance.getStatus().getDescription(),
                     dto.getCorrectionReason());
