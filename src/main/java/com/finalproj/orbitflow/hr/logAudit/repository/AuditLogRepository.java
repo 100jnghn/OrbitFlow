@@ -41,4 +41,20 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
             Pageable pageable
     );
 
+    @Query("""
+                select a
+                from AuditLog a
+                where a.company.id = :companyId
+                  and a.entityType = :entityType
+                  and a.entityId = :entityId
+                order by a.createdAt desc
+            """)
+    List<AuditLog> findEmployeeLogs(
+            @Param("companyId") Long companyId,
+            @Param("entityType") AuditEntityType entityType,
+            @Param("entityId") Long entityId
+    );
+
+
+
 }

@@ -54,8 +54,9 @@ public class AuditLogService {
     }
 
     @Transactional(readOnly = true)
-    public List<AuditLog> findEmployeeLogs(Long employeeId) {
-        return auditLogRepository.findByEntityTypeAndEntityIdOrderByCreatedAtDesc(
+    public List<AuditLog> findEmployeeLogs(Long companyId, Long employeeId) {
+        return auditLogRepository.findEmployeeLogs(
+                companyId,
                 AuditEntityType.EMPLOYEE,
                 employeeId
         );
@@ -142,6 +143,22 @@ public class AuditLogService {
                 log.getCreatedAt()
         );
     }
+
+    public AuditLogResDto toEmployeeDto(AuditLog log) {
+        return new AuditLogResDto(
+                log.getId(),
+                log.getEntityType().name(),
+                log.getEntityId(),
+                log.getEntityType().getDisplayName(),
+                log.getEventType().name(),
+                log.getActor().getName(),
+                log.getActor().getEmail(),
+                log.getBeforeData(),
+                log.getAfterData(),
+                log.getCreatedAt()
+        );
+    }
+
 
     private Map<String, Object> convertReadable(Map<String, Object> data) {
         if (data == null) return null;
