@@ -255,8 +255,10 @@ function humanizeData(data) {
 
         REGULAR: '정규직',
         NON_REGULAR: '비정규직',
+        CONTRACT: '계약직',
 
-        MALE: '남성',
+
+    MALE: '남성',
         FEMALE: '여성',
 
 

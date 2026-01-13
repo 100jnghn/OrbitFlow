@@ -166,7 +166,8 @@ btnResendActivate.onclick = async () => {
 function employmentLabel(v) {
     const map = {
         REGULAR: '정규직',
-        NON_REGULAR: '비정규직'
+        NON_REGULAR: '비정규직',
+        CONTRACT: '계약직'
     };
     return map[v] ?? v;
 }
