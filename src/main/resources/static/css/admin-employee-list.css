@@ -486,3 +486,29 @@ select#status {
 #tr-status {
     text-align: center;
 }
+
+/* =========================
+   Input Hint (글자수 / 검증 메시지)
+========================= */
+.hint {
+    font-size: 12px;
+    margin-top: 6px;
+    line-height: 1.4;
+}
+
+.hint.success {
+    color: #10b981;
+}
+
+.hint.error {
+    color: #ef4444;
+}
+
+/* 숫자 입력 필드 UX 안정화 */
+input[inputmode="numeric"] {
+    font-variant-numeric: tabular-nums;
+}
+
+.form-group .hint {
+    min-height: 16px; /* 한 줄 기준 */
+}

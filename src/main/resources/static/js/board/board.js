@@ -125,7 +125,7 @@ async function loadBoardCategories() {
         }
     } catch (error) {
         if (error.message !== 'SESSION_EXPIRED') {
-            alert('게시판 목록을 불러오는데 실패했습니다.');
+            sweetError('게시판 목록을 불러오는데 실패했습니다.');
         }
     }
 }
@@ -367,7 +367,7 @@ async function loadBoardList(page = 0) {
         renderPagination(currentPage);
     } catch (error) {
         if (error.message !== 'SESSION_EXPIRED') {
-            alert('게시글 목록을 불러오는데 실패했습니다.');
+            sweetError('게시글 목록을 불러오는데 실패했습니다.');
         }
     }
 }
@@ -571,11 +571,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 종료일 변경 시 시작일보다 이전인지 확인
     if (endDateInput && startDateInput) {
-        endDateInput.addEventListener('change', function () {
+        endDateInput.addEventListener('change', async function () {
             const endDate = this.value;
             const startDate = startDateInput.value;
             if (startDate && endDate && endDate < startDate) {
-                alert('종료일은 시작일보다 이전일 수 없습니다.');
+                await sweetWarning('종료일은 시작일보다 이전일 수 없습니다.');
                 this.value = startDate;
             }
         });
@@ -596,7 +596,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // 게시글 상세 보기
 function viewBoard(boardId) {
     if (!boardId) {
-        alert('게시글 ID가 없습니다.');
+        sweetWarning('게시글 ID가 없습니다.');
         return;
     }
     // 게시글 상세 페이지로 이동 (categoryId 포함)
@@ -610,7 +610,7 @@ function viewBoard(boardId) {
 // 글쓰기
 function writePost() {
     if (!currentCategoryId) {
-        alert('게시판을 선택해주세요.');
+        sweetWarning('게시판을 선택해주세요.');
         return;
     }
     // 글쓰기 페이지로 이동

@@ -143,8 +143,8 @@ function updateStatusButtons(status) {
 
 btnResendActivate.onclick = async () => {
     const result = await sweetConfirm(
-        '메일 재전송',
-        '활성화 메일을 다시 보내시겠습니까?'
+        '메일 전송',
+        '활성화 메일을 보내시겠습니까?'
     );
     if (!result.isConfirmed) return;
 
@@ -155,11 +155,11 @@ btnResendActivate.onclick = async () => {
     });
 
     if (!res.ok) {
-        await sweetError('메일 재전송에 실패했습니다.');
+        await sweetError('메일 전송에 실패했습니다.');
         return;
     }
 
-    await sweetSuccess('활성화 메일을 재전송했습니다.');
+    await sweetSuccess('활성화 메일을 전송했습니다.');
 };
 
 
@@ -605,11 +605,11 @@ function diffKeyLabel(k) {
         orgId: '조직',
         rankId: '직급',
         positionCategoryId: '직책',
-        employmentType: '고용 형태',
+        employmentType: '고용형태',
         role: '권한',
         hireDate: '입사일',
         phone: '연락처',
-        internalPhone: '사내 번호',
+        internalPhone: '내선번호',
         gender: '성별',
         birthDate: '생년월일'
     };

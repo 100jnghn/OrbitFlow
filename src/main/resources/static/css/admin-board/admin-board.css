@@ -422,6 +422,11 @@
     /* 부서명 열을 오른쪽으로 이동 */
 }
 
+/* SweetAlert2 모달이 기존 관리자 모달보다 위에 표시되도록 수정 */
+.swal2-container {
+    z-index: 100000 !important;
+}
+
 /* 모달 스타일 */
 .modal {
     display: none;
