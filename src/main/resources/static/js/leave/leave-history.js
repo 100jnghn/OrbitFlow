@@ -150,3 +150,13 @@ function renderPagination(pageData, loadFunc) {
         pagination.appendChild(pageBtn);
     }
 }
+
+/** 필터 초기화 **/
+function resetFilters() {
+    document.getElementById('filterType').value = '';
+    document.getElementById('filterStatus').value = '';
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+
+    applyFilters();
+}
