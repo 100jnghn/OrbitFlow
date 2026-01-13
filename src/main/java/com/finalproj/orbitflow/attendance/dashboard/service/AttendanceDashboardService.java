@@ -10,6 +10,7 @@ import com.finalproj.orbitflow.attendance.rule.entity.AttendanceRule;
 import com.finalproj.orbitflow.attendance.rule.repository.AttendanceRuleRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
+import com.finalproj.orbitflow.hr.employee.enums.WorkStatus;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,6 +24,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,36 +39,41 @@ public class AttendanceDashboardService {
     private final NotificationCommandService notificationCommandService;
 
     // 요약 통계
+    @Transactional(readOnly = true)
     public AdminSummaryResDto getTodaySummary(Long companyId) {
         LocalDate today = LocalDate.now();
 
-        // 1. 전체 재직 인원
-        int totalActive = employeeRepository.countByCompanyIdAndStatus(companyId, EmployeeStatus.ACTIVE);
+        // 1. 해당 회사의 모든 재직 중인 사원 목록을 한 번에 가져옵니다.
+        List<Employee> activeEmployees = employeeRepository.findByCompanyIdAndStatus(companyId, EmployeeStatus.ACTIVE);
+        int totalActive = activeEmployees.size();
 
-        // 2. 출근 기록 카운트
-        int onTime = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today, AttendanceStatus.ON_TIME);
-        int late = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today, AttendanceStatus.LATE);
+        // 2. Employee 테이블의 work_status 컬럼을 기준으로 그룹핑하여 카운트합니다. (실시간 상태)
+        Map<WorkStatus, Long> statusCounts = activeEmployees.stream()
+                .collect(Collectors.groupingBy(Employee::getWorkStatus, Collectors.counting()));
 
-        // 3. 기타 승인된 상태 카운트
-        int vacation = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today,
-                AttendanceStatus.VACATION);
-        int outside = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today,
-                AttendanceStatus.OUTSIDE);
-        int businessTrip = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today,
-                AttendanceStatus.BUSINESS_TRIP);
+        // 3. 실시간 상태(WorkStatus)에서 휴가/외근/출장 인원 추출
+        int vacation = statusCounts.getOrDefault(WorkStatus.VACATION, 0L).intValue();
+        int outside = statusCounts.getOrDefault(WorkStatus.OUTWORK, 0L).intValue();
+        int businessTrip = statusCounts.getOrDefault(WorkStatus.BUSINESS_TRIP, 0L).intValue();
 
-        // 4. 결근 인원 계산: 전체 - (출근자 + 휴가 + 외근 + 출장)
-        int totalAccountedFor = (onTime + late + vacation + outside + businessTrip);
-        int absentCount = totalActive - totalAccountedFor;
+        // 4. 근태 기록(Attendance) 테이블에서 출근 및 지각 인원 추출
+        // 출근 버튼을 누른 결과(ON_TIME, LATE)는 기록 테이블에서 가져오는 것이 정확합니다.
+        int onTimeRecord = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today, AttendanceStatus.ON_TIME);
+        int lateRecord = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today, AttendanceStatus.LATE);
+
+        // 5. 결근/미출근 인원 계산
+        // 전체 인원 - (출근 기록이 있는 인원 + 현재 휴가/외근/출장 중인 인원)
+        int totalPresent = onTimeRecord + lateRecord + vacation + outside + businessTrip;
+        int absentCount = Math.max(0, totalActive - totalPresent);
 
         return AdminSummaryResDto.builder()
                 .totalEmployees(totalActive)
-                .onTimeCount(onTime + late)
-                .lateCount(late)
-                .absentCount(Math.max(0, absentCount))
+                .onTimeCount(onTimeRecord + lateRecord)
+                .lateCount(lateRecord)
                 .vacationCount(vacation)
                 .outsideCount(outside)
                 .businessTripCount(businessTrip)
+                .absentCount(absentCount)
                 .build();
     }
 
