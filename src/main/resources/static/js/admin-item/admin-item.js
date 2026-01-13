@@ -251,15 +251,46 @@ async function validateImageFile(file) {
 /**
  * 이미지 선택 핸들러
  */
+/**
+ * 이미지 선택 핸들러
+ */
 async function handleImageSelect(event) {
     const file = event.target.files[0];
 
     if (!file) return;
 
+    // 업로드/전송 관련 버튼 비활성화, 스피너 표시
+    const itemImage = document.getElementById('item-image');
+    const placeholder = document.getElementById('upload-placeholder');
+    const removeBtn = document.getElementById('btn-remove');
+    const removeImgBtn = document.getElementById('btn-remove-img');
+    const itemImagePreview = document.getElementById('item-image-preview');
+
+    if (editBtn) editBtn.disabled = true;
+    if (removeBtn) removeBtn.style.display = 'none';
+    if (removeImgBtn) removeImgBtn.style.display = 'none';
+
+    // 기존 미리보기 숨김 & Placeholder 숨김
+    if (itemImage) itemImage.style.display = 'none';
+    if (placeholder) placeholder.style.display = 'none';
+
+    // 스피너 추가
+    let spinner = itemImagePreview.querySelector('.image-spinner');
+    if (!spinner) {
+        spinner = document.createElement('div');
+        spinner.className = 'image-spinner';
+        itemImagePreview.appendChild(spinner);
+    }
+
     // 이미지 파일 검증
     const validation = await validateImageFile(file);
 
     if (!validation.valid) {
+        spinner.remove();
+        if (placeholder) placeholder.style.display = 'flex';
+        // 버튼 상태 복구
+        updateEditButtonState();
+
         await sweetWarning(validation.message);
         // 파일 입력 초기화
         event.target.value = '';
@@ -271,11 +302,15 @@ async function handleImageSelect(event) {
     // 미리보기 표시
     const reader = new FileReader();
     reader.onload = (e) => {
-        displayImagePreview(e.target.result);
+        const imageUrl = e.target.result;
+        displayImagePreview(imageUrl); // 내부에서 스피너 제거 처리
     };
     reader.readAsDataURL(file);
 }
 
+/**
+ * 이미지 미리보기 표시
+ */
 /**
  * 이미지 미리보기 표시
  */
@@ -284,11 +319,29 @@ function displayImagePreview(imageUrl) {
     const placeholder = document.getElementById('upload-placeholder');
     const removeBtn = document.getElementById('btn-remove');
     const removeImgBtn = document.getElementById('btn-remove-img');
+    const itemImagePreview = document.getElementById('item-image-preview');
+
+    // 스피너 제거
+    const spinner = itemImagePreview.querySelector('.image-spinner');
+    if (spinner) spinner.remove();
 
     if (itemImage && placeholder) {
         itemImage.src = imageUrl;
-        itemImage.style.display = 'block';
-        placeholder.style.display = 'none';
+
+        // 이미지 로드 완료 시 표시
+        itemImage.onload = () => {
+            itemImage.style.display = 'block';
+            if (placeholder) placeholder.style.display = 'none';
+
+            // 버튼 복구
+            updateEditButtonState();
+        };
+
+        if (imageUrl.startsWith('data:')) {
+            itemImage.style.display = 'block';
+            if (placeholder) placeholder.style.display = 'none';
+            updateEditButtonState();
+        }
 
         // 새로 선택한 이미지는 btn-remove만 표시
         if (removeBtn) {
@@ -566,6 +619,7 @@ async function displayItemImage(fileId) {
     const placeholder = document.getElementById('upload-placeholder');
     const removeBtn = document.getElementById('btn-remove');
     const removeImgBtn = document.getElementById('btn-remove-img');
+    const itemImagePreview = document.getElementById('item-image-preview');
 
     if (!fileId) {
         // 이미지 없는 경우
@@ -576,8 +630,23 @@ async function displayItemImage(fileId) {
         if (removeBtn) removeBtn.style.display = 'none';
         if (removeImgBtn) removeImgBtn.style.display = 'none';
 
+        // 스피너 제거
+        const spinner = itemImagePreview.querySelector('.image-spinner');
+        if (spinner) spinner.remove();
+
         return;
     }
+
+    // 스피너 추가 & 버튼 비활성화
+    let spinner = itemImagePreview.querySelector('.image-spinner');
+    if (!spinner) {
+        spinner = document.createElement('div');
+        spinner.className = 'image-spinner';
+        itemImagePreview.appendChild(spinner);
+    }
+    if (placeholder) placeholder.style.display = 'none';
+    if (itemImage) itemImage.style.display = 'none';
+    if (editBtn) editBtn.disabled = true;
 
     try {
         // presigned URL 요청
@@ -588,9 +657,21 @@ async function displayItemImage(fileId) {
         const imageUrl = result.data.url;
 
         itemImage.src = imageUrl;
-        itemImage.style.display = 'block';
 
-        if (placeholder) placeholder.style.display = 'none';
+        itemImage.onload = () => {
+            if (spinner) spinner.remove();
+            itemImage.style.display = 'block';
+            updateEditButtonState();
+        };
+
+        itemImage.onerror = () => {
+            if (spinner) spinner.remove();
+            itemImage.style.display = 'none';
+            if (placeholder) placeholder.style.display = 'flex';
+            updateEditButtonState();
+        };
+
+
         // 기존 서버 이미지는 btn-remove-img만 표시
         if (removeBtn) removeBtn.style.display = 'none';
         if (removeImgBtn) removeImgBtn.style.display = 'inline-flex';
@@ -599,12 +680,14 @@ async function displayItemImage(fileId) {
         console.error('이미지 로드 실패', e);
 
         // 실패 시 placeholder 표시
+        if (spinner) spinner.remove();
         itemImage.src = '';
         itemImage.style.display = 'none';
 
         if (placeholder) placeholder.style.display = 'flex';
         if (removeBtn) removeBtn.style.display = 'none';
         if (removeImgBtn) removeImgBtn.style.display = 'none';
+        updateEditButtonState();
     }
 }
 
