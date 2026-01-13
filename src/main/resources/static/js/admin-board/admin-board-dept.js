@@ -93,19 +93,19 @@ async function loadOrganizationList(page = 0) {
         }
 
         // 부서 목록에 활성화 상태 및 게시판 ID 추가
-        const orgsWithActivation = organizations.map(org => {
-            const boardInfo = orgBoardsMap[org.id];
-            const activated = boardInfo !== undefined ? boardInfo.isActivated : true;
-            const boardCategoryId = boardInfo?.id || null;
+        const orgsWithActivation = organizations
+            .filter(org => org.parentOrgId !== null) // 최상위 조직(회사) 제외
+            .map(org => {
+                const boardInfo = orgBoardsMap[org.id];
+                const activated = boardInfo !== undefined ? boardInfo.isActivated : true;
+                const boardCategoryId = boardInfo?.id || null;
 
-
-
-            return {
-                ...org,
-                activated: activated,
-                boardCategoryId: boardCategoryId
-            };
-        });
+                return {
+                    ...org,
+                    activated: activated,
+                    boardCategoryId: boardCategoryId
+                };
+            });
 
 
 
