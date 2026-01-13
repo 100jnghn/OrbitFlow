@@ -5,6 +5,10 @@
 
 let emailChecked = false;
 // let internalPhoneChecked = true; // optional
+let isSavingEmployee = false;
+
+const saveEmployeeBtn =
+    document.querySelector('#employeeModal .modal-actions .btn-primary');
 
 function showMsg(el, message, type) {
     el.textContent = message;
@@ -295,23 +299,40 @@ function goDetail(id) {
 async function openCreate() {
     document.getElementById('employeeModal').classList.remove('hidden');
 
-    empName.value = '';
-    empEmail.value = '';
-    empNo.value = '';
-    empHireDate.value = '';
-    empGender.value = '';
-    empOrgId.value = '';
-    empEmploymentType.value = '';
-    empRole.value = '';
-    empRankId.value = '';
-
-    resetCreateValidation();
-
-    resetPositionSelect();
-    document.getElementById('createPositionResetNotice').style.display = 'none';
-
+    resetCreateForm();
     await loadLookupsForCreate();
 }
+
+function resetCreateForm() {
+    // text / date / select 값 초기화
+    [
+        empName,
+        empEmail,
+        empNo,
+        empHireDate,
+        empGender,
+        empPhone,
+        empInternalPhone,
+        empBirthDate,
+        empOrgId,
+        empEmploymentType,
+        empRole,
+        empRankId
+    ].forEach(el => {
+        if (el) el.value = '';
+    });
+
+    // 직책 초기화
+    resetPositionSelect();
+
+    // 검증 메시지 초기화
+    resetCreateValidation();
+
+    // UX 안내 숨김
+    document.getElementById('createPositionResetNotice').style.display = 'none';
+}
+
+
 
 function closeEmployeeModal() {
     document.getElementById('employeeModal').classList.add('hidden');
@@ -321,42 +342,53 @@ function closeEmployeeModal() {
    Create
 ========================= */
 async function saveEmployee() {
-    if (!emailChecked) {
-        showMsg(empEmailMsg, '이메일 중복 확인이 필요합니다.', 'error');
-        empEmail.focus();
-        return;
-    }
-
-    if (
-        !validateEmpName() ||
-        !validateEmpNo() ||
-        !validateEmpEmail()
-    ) {
-        return sweetWarning('입력값을 다시 확인해주세요.');
-    }
-
-    if (!empHireDate.value || !empGender.value || !empOrgId.value ||
-        !empEmploymentType.value || !empRole.value) {
-        return sweetWarning('필수 항목(*)을 모두 입력해 주세요.');
-    }
-
-    const payload = {
-        name: empName.value.trim(),
-        employeeNo: empNo.value.trim(),
-        email: empEmail.value.trim(),
-        hireDate: empHireDate.value,
-        gender: empGender.value,
-        phone: empPhone.value?.trim() || null,
-        internalPhone: empInternalPhone.value?.trim() || null,
-        birthDate: empBirthDate.value || null,
-        orgId: Number(empOrgId.value),
-        rankId: empRankId.value || null,
-        positionCategoryId: empPositionCategoryId.value || null,
-        employmentType: empEmploymentType.value,
-        role: empRole.value
-    };
+    // 연타 방지
+    if (isSavingEmployee) return;
+    isSavingEmployee = true;
+    saveEmployeeBtn.disabled = true;
 
     try {
+        if (!emailChecked) {
+            showMsg(empEmailMsg, '이메일 중복 확인이 필요합니다.', 'error');
+            empEmail.focus();
+            return;
+        }
+
+        if (
+            !validateEmpName() ||
+            !validateEmpNo() ||
+            !validateEmpEmail()
+        ) {
+            return sweetWarning('입력값을 다시 확인해주세요.');
+        }
+
+        if (
+            !empHireDate.value ||
+            !empGender.value ||
+            !empOrgId.value ||
+            !empEmploymentType.value ||
+            !empRole.value ||
+            !empRankId.value
+        ) {
+            return sweetWarning('필수 항목(*)을 모두 입력해 주세요.');
+        }
+
+        const payload = {
+            name: empName.value.trim(),
+            employeeNo: empNo.value.trim(),
+            email: empEmail.value.trim(),
+            hireDate: empHireDate.value,
+            gender: empGender.value,
+            phone: empPhone.value?.trim() || null,
+            internalPhone: empInternalPhone.value?.trim() || null,
+            birthDate: empBirthDate.value || null,
+            orgId: Number(empOrgId.value),
+            rankId: empRankId.value || null,
+            positionCategoryId: empPositionCategoryId.value || null,
+            employmentType: empEmploymentType.value,
+            role: empRole.value
+        };
+
         const res = await apiFetch('/api/admin/employees', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -374,6 +406,11 @@ async function saveEmployee() {
 
     } catch (e) {
         sweetError(e.message || '사원 생성 실패');
+
+    } finally {
+        // 복구
+        isSavingEmployee = false;
+        saveEmployeeBtn.disabled = false;
     }
 }
 

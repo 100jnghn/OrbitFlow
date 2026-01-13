@@ -173,6 +173,15 @@
     display: none !important;
 }
 
+.hero-work-dot.business, /* 출장 */
+.hero-work-dot.outwork { /* 외근 */
+    background: #5559fd;
+}
+
+.hero-work-dot.vacation { /* 휴가 */
+    background: #ff0ae9;
+}
+
 /* =========================
    Modal Backdrop
 ========================= */

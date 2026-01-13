@@ -545,9 +545,9 @@ public class EmployeeService {
             throw new IllegalStateException("다른 회사의 사원입니다.");
         }
 
-        return auditLogService.findEmployeeLogs(employeeId)
+        return auditLogService.findEmployeeLogs(companyId, employeeId)
                 .stream()
-                .map(AuditLogResDto::from)
+                .map(auditLogService::toEmployeeDto)
                 .toList();
     }
 
