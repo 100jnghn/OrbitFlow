@@ -230,6 +230,7 @@ function openAddBoardModal() {
     // 에러 메시지 초기화
     hideError('boardNameError');
     hideError('employeeSearchError');
+    document.getElementById('boardType').value = 'FREE';
     document.getElementById('boardModal').style.display = 'block';
     document.body.classList.add('modal-open');
     document.documentElement.classList.add('modal-open');
@@ -297,6 +298,8 @@ async function openEditBoardModal(boardId) {
         document.getElementById('submitBtn').textContent = '수정';
         document.getElementById('boardId').value = boardId;
         document.getElementById('boardName').value = board.boardName || '';
+
+        document.getElementById('boardType').value = board.boardType || 'FREE';
 
         // 댓글 허용 설정
         const commentRadio = document.querySelector(`input[name="commentActivated"][value="${board.commentActivated ? 'true' : 'false'}"]`);
@@ -373,7 +376,7 @@ async function handleBoardSubmit(e) {
     try {
         const formData = {
             boardName: boardName,
-            boardType: 'FREE', // 기본값, 필요시 수정
+            boardType: document.getElementById('boardType').value,
             isActivated: true,
             commentActivated: commentActivated
         };
@@ -408,8 +411,9 @@ async function handleBoardSubmit(e) {
             await saveBoardPermissions(savedBoardId);
         }
 
+        const message = isEditMode ? '게시판이 수정되었습니다.' : '게시판이 추가되었습니다.';
         closeBoardModal();
-        await sweetSuccess(isEditMode ? '게시판이 수정되었습니다.' : '게시판이 추가되었습니다.');
+        await sweetSuccess(message);
         loadBoardList(currentBoardPage);
     } catch (error) {
         console.error('Error saving board:', error);

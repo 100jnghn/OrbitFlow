@@ -10,12 +10,20 @@ let countdownTimer = null;
 let isExtendModalOpen = false;
 let sessionExpired = false;
 const SESSION_WARNING_SHOWN_KEY = 'sessionWarningShown';
-
+let sessionExpiredReason = null;
+let sessionCountdownInterval = null;
+let isSessionExtendPromptOpen = false;
 
 /* =========================
    API Fetch + Token Refresh (기존 로직 유지)
 ========================= */
 async function apiFetch(url, options = {}) {
+
+    // 세션 연장 모달 떠 있으면 모든 API 중단
+    if (isSessionExtendPromptOpen) {
+        throw new Error('SESSION_EXTEND_PENDING');
+    }
+
     const accessToken = sessionStorage.getItem('accessToken');
 
     // 토큰 없으면 즉시 로그인
@@ -65,6 +73,12 @@ async function apiFetch(url, options = {}) {
     isRefreshing = false;
 
     if (!refreshed) {
+
+        // 연장 모달 떠 있는 동안엔 종료시키지 않음
+        if (isSessionExtendPromptOpen) {
+            throw new Error('REFRESH_FAILED_DURING_EXTEND');
+        }
+
         sessionExpired = true;
         refreshSubscribers = [];
         handleSessionExpired();
@@ -102,36 +116,127 @@ async function refreshAccessToken() {
 
 function showSessionExtendModal() {
     if (isExtendModalOpen) return;
-
-    const modal = document.getElementById('extendSessionModal');
-    if (!modal) return;
-
     isExtendModalOpen = true;
-    if (modal) modal.style.display = 'flex';
+    isSessionExtendPromptOpen = true;
 
-    startSessionCountdown();
+    Swal.fire({
+        title: '세션 만료 예정',
+        html: `
+            <div style="font-size:14px; color:#6b7280; margin-bottom:12px;">
+                보안을 위해 세션이 곧 만료됩니다.<br>
+                계속 사용하시겠습니까?
+            </div>
+            <div id="swalSessionCountdown"
+                 style="font-size:26px; font-weight:700; color:#f59e0b;">
+                00:00
+            </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '세션 연장',
+        cancelButtonText: '로그아웃',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        focusConfirm: false,
+        didOpen: () => {
+            startSwalSessionCountdown();
+        },
+        willClose: () => {
+            stopSwalSessionCountdown();
+            isExtendModalOpen = false;
+            isSessionExtendPromptOpen = false;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            extendSession();
+        } else {
+            confirmSessionExpired();
+        }
+    });
 }
 
-function closeExtendSessionModal() {
-    const modal = document.getElementById('extendSessionModal');
-    if (modal) modal.style.display = 'none';
+function startSwalSessionCountdown() {
+    stopSwalSessionCountdown();
 
-    isExtendModalOpen = false;
-    clearInterval(countdownTimer);
+    sessionCountdownInterval = setInterval(() => {
+        const expiresAt = Number(sessionStorage.getItem('refreshExpiresAt'));
+        if (!expiresAt) return;
+
+        const remainingMs = expiresAt - Date.now();
+
+        if (remainingMs <= 0) {
+            stopSwalSessionCountdown();
+            Swal.close();
+            handleSessionExpired();
+            return;
+        }
+
+        const sec = Math.floor(remainingMs / 1000);
+        const mm = String(Math.floor(sec / 60)).padStart(2, '0');
+        const ss = String(sec % 60).padStart(2, '0');
+
+        const el = document.getElementById('swalSessionCountdown');
+        if (!el) return;
+
+        el.textContent = `${mm}:${ss}`;
+
+        // 1분 미만 색상 강조
+        if (sec <= 60) {
+            const ratio = sec / 60; // 1 → 0
+            const red = 239;
+            const green = Math.floor(68 + 120 * ratio); // 주황 → 빨강
+            el.style.color = `rgb(${red}, ${green}, 68)`;
+        } else {
+            el.style.color = '#f59e0b'; // 기본 경고 색
+        }
+    }, 1000);
 }
+
+function stopSwalSessionCountdown() {
+    if (sessionCountdownInterval) {
+        clearInterval(sessionCountdownInterval);
+        sessionCountdownInterval = null;
+    }
+}
+
 
 
 function handleSessionExpired() {
-    if (sessionExpired) return; // 중복 방지
+    if (sessionExpired) return;
     sessionExpired = true;
 
     sessionStorage.clear();
+    stopSwalSessionCountdown();
+    Swal.close();
 
-    const modal = document.getElementById('sessionModal');
-    if (modal) modal.style.display = 'block';
+    let message = '세션이 만료되었습니다.\n다시 로그인해 주세요.';
+
+    if (sessionExpiredReason === 'OTHER_EMPLOYEE_LOGIN') {
+        message =
+            '다른 계정으로 로그인되어\n현재 세션이 종료되었습니다.\n보안을 위해 다시 로그인해 주세요.';
+    }
+
+    Swal.fire({
+        title: '세션 종료',
+        text: message,
+        icon: 'info',
+        confirmButtonText: '로그인',
+        allowOutsideClick: false,
+        allowEscapeKey: false
+    }).then(() => {
+        location.href = '/login';
+    });
 }
 
-function confirmSessionExpired() { location.href = '/login'; }
+async function confirmSessionExpired() {
+    try {
+        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    } catch (e) {
+        // 무시
+    }
+    sessionStorage.clear();
+    location.href = '/login';
+}
 
 async function logout() {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
@@ -155,8 +260,13 @@ async function extendSession() {
 
         sessionStorage.removeItem('sessionWarningShown');
 
-        closeExtendSessionModal();
+        // 상태 정리
+        isSessionExtendPromptOpen = false;
+        isExtendModalOpen = false;
+
+        Swal.close();
         scheduleSessionWarning();
+
     } catch (e) {
         handleSessionExpired();
     }
@@ -166,6 +276,7 @@ async function extendSession() {
    메시지 카운트 업데이트
 ========================= */
 async function updateMessageCount() {
+    if (isSessionExtendPromptOpen) return;
     try {
         const response = await apiFetch('/api/messages/unread/count');
         if (!response.ok) {
@@ -277,6 +388,24 @@ function toggleAdminMenu(element) {
    사용자 정보 로드 및 초기화 실행
 ========================= */
 async function loadMe() {
+
+
+    window.addEventListener('storage', (e) => {
+        if (e.key !== 'currentEmployeeId') return;
+
+        const newEmployeeId = e.newValue;
+        const myEmployeeId = sessionStorage.getItem('employeeId');
+
+        if (!myEmployeeId || !newEmployeeId) return;
+
+        // 다른 사원으로 로그인됨
+        if (String(newEmployeeId) !== String(myEmployeeId)) {
+            sessionExpiredReason = 'OTHER_EMPLOYEE_LOGIN';
+            handleSessionExpired();
+        }
+    });
+
+
     const token = sessionStorage.getItem('accessToken');
     if (!token) {
         location.href = '/login';
@@ -289,6 +418,12 @@ async function loadMe() {
 
         const result = await res.json();
         const me = result.data;
+
+        // 회사명 세팅
+        const companyNameEl = document.getElementById('companyName');
+        if (companyNameEl) {
+            companyNameEl.innerText = me.companyName;
+        }
 
         const userNameEl = document.getElementById('userName');
         if (userNameEl) {
@@ -310,6 +445,9 @@ async function loadMe() {
         }
 
         scheduleSessionWarning(); // 여기서만 호출
+
+        // 현재 탭의 사원 ID 저장
+        sessionStorage.setItem('employeeId', me.employeeId);
 
     } catch (e) {
         location.href = '/login';
@@ -370,49 +508,19 @@ function scheduleSessionWarning() {
     if (!expiresAt) return;
 
     const now = Date.now();
-    if (expiresAt <= now) return;
-
-    // const WARNING_BEFORE_MS = 25 * 1000; // 테스트용 - 25초 전
-    const WARNING_BEFORE_MS = 5 * 60 * 1000; // 5분 전
+    const WARNING_BEFORE_MS = 1 * 60 * 1000; // 30분 전
     const delay = expiresAt - now - WARNING_BEFORE_MS;
 
     if (delay <= 0) {
-        showSessionExtendModalOnce();
+        showSessionExtendModal();
         return;
     }
 
     sessionWarningTimer = setTimeout(() => {
-        showSessionExtendModalOnce();
+        showSessionExtendModal();
     }, delay);
 }
 
-
-/** 카운트다운 시작 함수 **/
-function startSessionCountdown() {
-    const countdownEl = document.getElementById('sessionCountdown');
-    if (!countdownEl) return;
-
-    clearInterval(countdownTimer);
-
-    countdownTimer = setInterval(() => {
-        const expiresAt = Number(sessionStorage.getItem('refreshExpiresAt'));
-        if (!expiresAt) return;
-
-        const remainingMs = expiresAt - Date.now();
-
-        if (remainingMs <= 0) {
-            clearInterval(countdownTimer);
-            handleSessionExpired();
-            return;
-        }
-
-        const sec = Math.floor(remainingMs / 1000);
-        const mm = String(Math.floor(sec / 60)).padStart(2, '0');
-        const ss = String(sec % 60).padStart(2, '0');
-
-        countdownEl.textContent = `${mm}:${ss}`;
-    }, 1000);
-}
 
 function showSessionExtendModalOnce() {
     if (isExtendModalOpen) return;
@@ -582,6 +690,7 @@ document.head.appendChild(style);
 
 // 읽지 않은 메시지 수 불러오는 함수
 async function refreshUnreadCount() {
+    if (isSessionExtendPromptOpen) return;
     try {
         const res = await apiFetch("/api/notifications/unread");
         if (!res.ok) return;

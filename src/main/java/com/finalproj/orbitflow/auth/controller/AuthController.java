@@ -211,7 +211,7 @@ public class AuthController {
         public ResponseEntity<ResponseDto> me() {
                 SecurityUser user = SecurityUtils.getCurrentUser();
 
-                // 🔥 최신 workStatus를 가져오기 위해 Employee를 다시 조회
+                // 최신 workStatus를 가져오기 위해 Employee를 다시 조회
                 Employee employee = employeeRepository.findById(user.getEmployeeId())
                                 .orElseThrow(() -> new NotFoundException("사원을 찾을 수 없습니다."));
 
@@ -220,8 +220,8 @@ public class AuthController {
                                 user.getName(),
                                 user.getEmail(),
                                 user.getRole().name(),
-                                employee.getWorkStatus(), // 🔥 최신 workStatus 반환
-                                employee.getGender() // 🔥 성별 반환
+                                employee.getWorkStatus(), // 최신 workStatus 반환
+                                employee.getGender() // 성별 반환
                 );
 
                 return ResponseEntity.ok(

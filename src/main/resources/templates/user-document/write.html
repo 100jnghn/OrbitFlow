@@ -21,6 +21,7 @@
     <!-- 페이지별 CSS -->
     <th:block th:fragment="pageCss">
         <link rel="stylesheet" th:href="@{/css/user-document/write.css}">
+        <link rel="stylesheet" th:href="@{/css/ui/fullscreenSpinner.css}">
     </th:block>
 
     <!-- 페이지별 JS -->
@@ -28,7 +29,7 @@
         <!-- 다음 주소 API -->
         <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 
-        <script th:src="@{/js/user-document/write.js}"></script>
+        <script th:src="@{/js/user-document/write.js}" type="module"></script>
     </th:block>
 </head>
 

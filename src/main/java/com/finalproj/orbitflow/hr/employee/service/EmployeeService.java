@@ -245,6 +245,11 @@ public class EmployeeService {
                 .orElseThrow(() -> new IllegalArgumentException("사원을 찾을 수 없습니다."));
         if (!employee.getCompany().getId().equals(companyId)) throw new IllegalStateException("다른 회사의 사원입니다.");
 
+        // 퇴사 사원 수정 금지
+        if (employee.getStatus() == EmployeeStatus.RESIGNED) {
+            throw new IllegalStateException("퇴사한 사원의 정보는 수정할 수 없습니다.");
+        }
+
         Map<String, Object> before = new LinkedHashMap<>();
         Map<String, Object> after = new LinkedHashMap<>();
 
@@ -451,28 +456,6 @@ public class EmployeeService {
         );
     }
 
-    /* =============================
-       이메일 인증을 통한 계정 활성화 (SUSPENDED → ACTIVE)
-       ============================= */
-    public void activateSuspended(Employee employee) {
-
-        if (employee.getStatus() != EmployeeStatus.SUSPENDED) {
-            throw new IllegalStateException("정지 계정만 활성화할 수 있습니다.");
-        }
-
-        employee.activate();
-
-        auditLogService.log(
-                employee.getCompany(),
-                employee,
-                AuditEntityType.EMPLOYEE,
-                employee.getId(),
-                AuditEventType.ACTIVATE,
-                Map.of("status", EmployeeStatus.SUSPENDED.name()),
-                Map.of("status", EmployeeStatus.ACTIVE.name())
-        );
-    }
-
 
     /* =============================
        상태 변경 (별도 API)
@@ -491,24 +474,35 @@ public class EmployeeService {
         EmployeeStatus current = employee.getStatus();
         Employee actor = getActorEmployee();
 
-        // RESIGNED는 어떤 경우에도 변경 불가
         if (current == EmployeeStatus.RESIGNED) {
             throw new IllegalStateException("퇴사한 사원은 상태를 변경할 수 없습니다.");
         }
 
-        // TEMP는 퇴사만 가능 (ACTIVE는 이메일 인증 전용 API)
-        if (current == EmployeeStatus.TEMP && newStatus != EmployeeStatus.RESIGNED) {
-            throw new IllegalStateException("임시 계정은 이메일 인증을 통해서만 활성화할 수 있습니다.");
+        // TEMP는 이메일 인증으로만 ACTIVE 가능
+        if (current == EmployeeStatus.TEMP) {
+            if (newStatus == EmployeeStatus.ACTIVE) {
+                throw new IllegalStateException("임시 계정은 이메일 인증을 통해서만 활성화할 수 있습니다.");
+            }
+            if (newStatus != EmployeeStatus.RESIGNED) {
+                throw new IllegalStateException("임시 계정은 퇴사 처리만 가능합니다.");
+            }
         }
 
         if (current == newStatus) return;
 
         switch (newStatus) {
-            case ACTIVE -> throw new IllegalStateException("ACTIVE는 이메일 인증 전용");
+            case ACTIVE -> {
+                if (current != EmployeeStatus.SUSPENDED) {
+                    throw new IllegalStateException("ACTIVE로 변경할 수 없는 상태입니다.");
+                }
+                employee.activate();
+            }
+
             case SUSPENDED -> {
                 employee.suspend();
                 employee.updateWorkStatus(WorkStatus.OFF_WORK);
             }
+
             case RESIGNED -> processResignation(employee);
         }
 

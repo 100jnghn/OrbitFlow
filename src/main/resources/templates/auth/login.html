@@ -177,6 +177,13 @@
 
       const me = (await meRes.json()).data;
 
+      /* 현재 탭의 사원 ID 저장 */
+      sessionStorage.setItem('employeeId', String(me.employeeId));
+
+      /* 브라우저 전체에 "현재 로그인 사원" 기록 (다른 탭 로그아웃 트리거) */
+      localStorage.setItem('currentEmployeeId', String(me.employeeId));
+      localStorage.setItem('currentEmployeeChangedAt', String(Date.now())); // 이벤트 확실히 발생시키려고 한 번 더
+
       /* refresh 만료 시각 저장 */
       sessionStorage.setItem(
               'refreshExpiresAt',

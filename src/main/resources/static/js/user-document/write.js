@@ -1,3 +1,5 @@
+import {showFullscreenSpinner, hideFullscreenSpinner} from "/js/ui/fullscreenSpinner.js";
+
 /**
  * write.js
  * - 문서 초안 + 결재선 초안 조회
@@ -10,6 +12,7 @@
  */
 
 let hasUnsavedChanges = false;
+let allowUnload = false;
 let isInitializing = true;
 let documentFieldDefinitions = [];
 let attachmentFiles = [];
@@ -204,10 +207,13 @@ document.addEventListener('input', (e) => {
 
 // 페이지 이탈 경고
 window.addEventListener('beforeunload', (e) => {
+    if (allowUnload) return;
     if (!hasUnsavedChanges) return;
+
     e.preventDefault();
     e.returnValue = '';
 });
+
 
 document.addEventListener('DOMContentLoaded', async () => {
 
@@ -1244,6 +1250,17 @@ function createEmployeeSearchField(field) {
     // 🔥 검색 렌더링 권한 토큰
     let renderToken = 0;
 
+    // 🔥 IME 조합 상태
+    let isComposing = false;
+
+    input.addEventListener('compositionstart', () => {
+        isComposing = true;
+    });
+
+    input.addEventListener('compositionend', () => {
+        isComposing = false;
+    });
+
     /* =========================
        초기 값 복원
     ========================= */
@@ -1258,7 +1275,7 @@ function createEmployeeSearchField(field) {
        검색
     ========================= */
     input.addEventListener('input', async () => {
-        // 🔒 선택된 상태에서 값이 동일하면 검색 자체 종료
+        // 🔒 선택된 상태에서 값이 동일하면 검색 종료
         if (
             selectedEmployee &&
             input.value === selectedEmployee.displayText
@@ -1291,10 +1308,9 @@ function createEmployeeSearchField(field) {
             return;
         }
 
-        // 🔥 이 검색은 더 이상 유효하지 않음
+        // 🔥 오래된 검색 결과 무효화
         if (myToken !== renderToken) return;
 
-        // ===== 여기부터 렌더링 =====
         list.innerHTML = '';
         items = [];
         activeIndex = -1;
@@ -1316,6 +1332,7 @@ function createEmployeeSearchField(field) {
                 setActiveIndex(index);
             });
 
+            // 🔥 mousedown에서 즉시 선택 (blur/닫힘보다 먼저)
             li.addEventListener('mousedown', e => {
                 e.preventDefault();
                 selectEmployee(emp);
@@ -1372,9 +1389,12 @@ function createEmployeeSearchField(field) {
     });
 
     /* =========================
-       외부 클릭 닫기
+       외부 클릭 닫기 (IME 안전)
     ========================= */
     document.addEventListener('mousedown', e => {
+        // 🔥 한글 조합 중이면 닫지 않음
+        if (isComposing) return;
+
         if (!container.contains(e.target)) {
             dropdown.classList.add('hidden');
         }
@@ -1395,7 +1415,7 @@ function createEmployeeSearchField(field) {
             displayText: `(${emp.employeeNo}) ${emp.name}`
         };
 
-        // 🔥 모든 진행 중 검색 결과 무효화
+        // 🔥 모든 진행 중 검색 무효화
         renderToken++;
 
         input.value = selectedEmployee.displayText;
@@ -1451,8 +1471,19 @@ function createOrganizationSearchField(field) {
     let activeIndex = -1;
     let items = [];
 
-    // 🔥 렌더링 권한 토큰 (직원 검색과 동일)
+    // 🔥 렌더링 권한 토큰
     let renderToken = 0;
+
+    // 🔥 IME 조합 상태
+    let isComposing = false;
+
+    input.addEventListener('compositionstart', () => {
+        isComposing = true;
+    });
+
+    input.addEventListener('compositionend', () => {
+        isComposing = false;
+    });
 
     /* =========================
        🔹 초기 값 복원
@@ -1494,10 +1525,9 @@ function createOrganizationSearchField(field) {
             return;
         }
 
-        // 🔥 토큰 불일치 → 렌더링 금지
+        // 🔥 오래된 검색 결과 무효화
         if (myToken !== renderToken) return;
 
-        // ===== 여기부터 렌더링 =====
         list.innerHTML = '';
         items = [];
         activeIndex = -1;
@@ -1515,12 +1545,11 @@ function createOrganizationSearchField(field) {
             li.textContent = org.name;
             li._org = org;
 
-            // hover → 키보드 인덱스 동기화
             li.addEventListener('mouseenter', () => {
                 setActiveIndex(index);
             });
 
-            // blur 방지 + 즉시 선택
+            // 🔥 blur / 외부닫힘보다 먼저 선택
             li.addEventListener('mousedown', e => {
                 e.preventDefault();
                 selectOrg(org);
@@ -1577,9 +1606,12 @@ function createOrganizationSearchField(field) {
     });
 
     /* =========================
-       🔹 외부 클릭 시 닫기
+       🔹 외부 클릭 닫기 (IME 안전)
     ========================= */
     document.addEventListener('mousedown', e => {
+        // 🔥 한글 조합 중이면 닫지 않음
+        if (isComposing) return;
+
         if (!container.contains(e.target)) {
             dropdown.classList.add('hidden');
         }
@@ -1596,7 +1628,7 @@ function createOrganizationSearchField(field) {
             parentOrgId: org.parentOrgId
         };
 
-        // 🔥 모든 진행 중 검색 결과 무효화
+        // 🔥 모든 진행 중 검색 무효화
         renderToken++;
 
         input.value = org.name;
@@ -3383,14 +3415,15 @@ function clearRangeFieldErrorByFieldId(fieldId) {
 async function goToPreviousPage() {
     if (!(await confirmLeaveIfDirty())) return;
 
-    // history가 없을 경우 대비
+    allowUnload = true;   // 🔥 핵심
+
     if (window.history.length > 1) {
         history.back();
     } else {
-        // fallback (목록 페이지 등)
         location.href = '/view/document/my-documents';
     }
 }
+
 
 function bindAttachmentEvents(documentId) {
 
@@ -3562,79 +3595,87 @@ async function attachReferenceDocument(documentId, documentFileId) {
 
 async function bindEvents(documentId) {
 
-    // 임시 저장
     document.getElementById('tempSaveBtn')
         ?.addEventListener('click', async () => {
             await tempSave(documentId);
         });
 
-    // 이전
     document.getElementById('prevBtn')
         ?.addEventListener('click', async () => {
             await goToPreviousPage();
         });
 
+    const nextBtn = document.getElementById('nextBtn');
 
-    // 다음
-    document.getElementById('nextBtn')
-        ?.addEventListener('click', async () => {
+    nextBtn?.addEventListener('click', async () => {
 
-            // 0️⃣ 문서 제목 검증
-            if (!validateDocumentTitle()) return;
+        // 중복 클릭 차단
+        if (nextBtn.disabled) return;
+        nextBtn.disabled = true;
 
-            // 1️⃣ 결재선 검증
-            const res = await apiFetch(`/api/approval-lines/${DOCUMENT_ID}`);
-            const result = await res.json();
-            const approvalLines = result.data ?? [];
+        // 문서 제목 검증
+        if (!validateDocumentTitle()) {
+            nextBtn.disabled = false;
+            return;
+        }
 
-            if (!validateApprovalLines(approvalLines)) return;
+        const res = await apiFetch(`/api/approval-lines/${DOCUMENT_ID}`);
+        const result = await res.json();
+        const approvalLines = result.data ?? [];
 
-            // 2️⃣ 문서 값 수집
-            const payload = collectDocumentValues();
-            const valuesById = new Map(
-                payload.fields.map(f => [f.fieldId, f.value])
-            );
+        if (!validateApprovalLines(approvalLines)) {
+            nextBtn.disabled = false;
+            return;
+        }
 
-            // 3️⃣ required 검증
-            if (!await validateRequiredFieldsWithSchema(
-                documentFieldDefinitions,
-                valuesById
-            )) return;
+        const payload = collectDocumentValues();
+        const valuesById = new Map(
+            payload.fields.map(f => [f.fieldId, f.value])
+        );
 
-            // 4️⃣ 타입별 검증
-            if (!await validateFieldsByTypeWithSchema(
-                documentFieldDefinitions,
-                valuesById
-            )) return;
+        if (!await validateRequiredFieldsWithSchema(
+            documentFieldDefinitions,
+            valuesById
+        )) {
+            nextBtn.disabled = false;
+            return;
+        }
 
-            try {
-                // 5️⃣ 최종 저장
-                await apiFetch(`/api/document-contents/${DOCUMENT_ID}`, {
-                    method: 'PATCH',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(payload)
-                });
+        if (!await validateFieldsByTypeWithSchema(
+            documentFieldDefinitions,
+            valuesById
+        )) {
+            nextBtn.disabled = false;
+            return;
+        }
 
-                hasUnsavedChanges = false;
+        showFullscreenSpinner('문서를 상신하는 중입니다...');
 
-                // 6️⃣ 제출
-                await apiFetch(`/api/documents/${DOCUMENT_ID}/submit`, {
-                    method: 'POST'
-                });
+        try {
+            await apiFetch(`/api/document-contents/${DOCUMENT_ID}`, {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
 
-                // 7️⃣ 이동
-                await sweetSuccess("문서가 상신되었습니다.");
-                location.href = '/view/document/my-documents';
+            hasUnsavedChanges = false;
 
-            } catch (e) {
-                console.error(e);
-                await sweetWarning('문서 상신 중 오류가 발생했습니다.');
-            }
-        });
+            await apiFetch(`/api/documents/${DOCUMENT_ID}/submit`, {
+                method: 'POST'
+            });
 
-    /* =========================
-       첨부파일
-    ========================= */
+            await sweetSuccess('문서가 상신되었습니다.');
+            location.href = '/view/document/my-documents';
+
+        } catch (e) {
+            console.error(e);
+            await sweetWarning('문서 상신 중 오류가 발생했습니다.');
+        } finally {
+            hideFullscreenSpinner();
+            nextBtn.disabled = false;
+        }
+    });
+
     bindAttachmentEvents(documentId);
     await loadAttachments(documentId);
 }

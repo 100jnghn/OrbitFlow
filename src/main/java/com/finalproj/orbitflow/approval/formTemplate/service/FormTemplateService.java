@@ -25,7 +25,6 @@ import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -306,17 +305,18 @@ public class FormTemplateService {
         FormTemplate formTemplate = findFormTemplate(formTemplateId);
         checkCompany(companyId, formTemplate);
 
-        FormTemplateSchema schema =
+        FormTemplateSchema contentSchema =
                 parseSchema(formTemplate.getTemplateJson());
 
-        Map<String, Object> previewData =
-                sampleDataGenerator.generate(schema);
+        sampleDataGenerator.fillValues(contentSchema);
 
         FormTemplateMetaDto meta =
                 FormTemplateMetaDto.from(formTemplate);
 
-        return FormTemplatePreviewResDto.from(meta, schema, previewData);
+        return FormTemplatePreviewResDto.from(meta, contentSchema);
     }
+
+
 
     /* =====================================================
      * Private helpers

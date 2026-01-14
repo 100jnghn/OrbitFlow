@@ -27,7 +27,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtProvider jwtProvider;
 
-//    private static final long REFRESH_TOKEN_TTL_SECONDS = 30; // 테스트용
+//    private static final long REFRESH_TOKEN_TTL_SECONDS = 120; // 2분 (테스트용)
     private static final long REFRESH_TOKEN_TTL_SECONDS = 60 * 60 * 20;
 
 

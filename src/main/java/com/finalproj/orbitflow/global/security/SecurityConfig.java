@@ -12,6 +12,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import static jakarta.servlet.DispatcherType.ASYNC;
+
 /**
  * Spring Security 전반 설정을 담당하는 클래스.
  * - 인증이 필요한 요청과 허용 요청을 구분한다.
@@ -33,11 +35,14 @@ public class SecurityConfig {
         @Bean
         public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
+
                 http
                                 .csrf(csrf -> csrf.disable())
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(auth -> auth
+
+                                                .dispatcherTypeMatchers(ASYNC).permitAll()
                                                 .requestMatchers(
                                                                 "/",
                                                                 "/api/auth/**",

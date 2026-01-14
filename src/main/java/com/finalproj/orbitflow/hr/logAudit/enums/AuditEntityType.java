@@ -15,7 +15,8 @@ public enum AuditEntityType {
     EMPLOYEE("사원"),
     HR_RANK("직급"),
     POSITION("직책"),
-    ORG_POSITION_USAGE("조직-직책 정책");
+    ORG_POSITION_USAGE("조직-직책 정책"),
+    SIGNATURE("서명");
 
     private final String displayName;
 
