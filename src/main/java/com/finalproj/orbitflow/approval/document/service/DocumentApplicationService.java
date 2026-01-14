@@ -36,6 +36,7 @@ import com.finalproj.orbitflow.global.file.service.FileService;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
+import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import com.finalproj.orbitflow.notification.enums.NotificationType;
 import com.finalproj.orbitflow.notification.service.NotificationCommandService;
@@ -56,6 +57,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 import static com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder.FontStyle;
 
@@ -191,7 +193,6 @@ public class DocumentApplicationService {
         // 2. 결재선 조회
         List<ApprovalLine> lines = getApprovalLines(documentId);
 
-
         // 3. 내 결재선 찾기
         ApprovalLine myLine = lines.stream()
                 .filter(line ->
@@ -203,15 +204,13 @@ public class DocumentApplicationService {
                         new InvalidRequestException("자신의 결재 차례가 아닙니다.")
                 );
 
-
+        // (중복이지만 기존 코드 유지)
         if (myLine.getStatus() != ApprovalStatus.IN_PROGRESS) {
             throw new InvalidRequestException("자신의 결재 차례에만 승인할 수 있습니다.");
         }
 
         // 4. 내 결재선 승인
-        myLine.markApproved(comment); // → APPROVED
-
-
+        myLine.markApproved(comment);
 
         documentSignatureService.snapShotDocumentSignature(document, myLine);
 
@@ -224,10 +223,36 @@ public class DocumentApplicationService {
                 .findFirst()
                 .orElse(null);
 
-
         if (nextLine != null) {
-            // 6-1. 다음 결재자가 있다 → 결재 계속
-            nextLine.markInProgress(); // WAITING → IN_PROGRESS
+
+            // 결재자 상태 검증 로직
+
+            Employee nextApprover = nextLine.getApprover();
+
+            // 6-1. 다음 결재자 유효성 검증
+            if (!isValidApprover(nextApprover)
+                    || !matchesLineRole(nextLine, nextApprover)) {
+
+                // 조직/직책 기준으로 대체 결재자 탐색
+                Employee replacement = findReplacementApprover(nextLine);
+
+                if (replacement == null) {
+                    // 대체 결재자 없음 → 시스템 반려
+                    rejectBySystem(
+                            document,
+                            lines,
+                            myLine,
+                            "결재자 없음"
+                    );
+                    return;
+                }
+
+                // 대체 결재자 지정
+                nextLine.setApprover(replacement);
+            }
+
+            // 6-2. 다음 결재 진행
+            nextLine.markInProgress();
 
             String shortTitle = shortenTitle(document.getTitle(), 20);
 
@@ -246,9 +271,8 @@ public class DocumentApplicationService {
                     "/view/document/" + documentId
             );
 
-
         } else {
-            // 6-2. 다음 결재자가 없다 → 최종 승인
+            // 6-3. 다음 결재자가 없다 → 최종 승인 (기존 로직 그대로)
             document.approve();
 
             String shortTitle = shortenTitle(document.getTitle(), 20);
@@ -268,10 +292,297 @@ public class DocumentApplicationService {
                     "/view/document/" + documentId
             );
 
-
             applicationEventPublisher.publishEvent(document.getId());
         }
     }
+
+    @Transactional
+    public void reject(Long employeeId, Long documentId, String comment) {
+
+        Document document = getDocumentForApprover(documentId);
+
+        if (document.getStatus() != DocumentStatus.IN_PROGRESS) {
+            throw new InvalidRequestException("진행중인 결재 문서만 반려할 수 있습니다.");
+        }
+
+        List<ApprovalLine> lines = getApprovalLines(documentId);
+
+        ApprovalLine myLine = lines.stream()
+                .filter(line ->
+                        line.getApprover().getId().equals(employeeId)
+                                && line.getStatus() == ApprovalStatus.IN_PROGRESS
+                )
+                .findFirst()
+                .orElseThrow(() ->
+                        new InvalidRequestException("자신의 결재 차례가 아닙니다.")
+                );
+
+        rejectInternal(document, lines, myLine, comment, false);
+    }
+
+    private void rejectInternal(
+            Document document,
+            List<ApprovalLine> lines,
+            ApprovalLine rejectLine,
+            String comment,
+            boolean systemReject
+    ) {
+        // 4. 내 결재선 반려
+        rejectLine.reject(comment); // → REJECTED
+
+        String shortTitle = shortenTitle(document.getTitle(), 20);
+
+        String header = systemReject ? "자동 반려" : "결재 문서 반려";
+
+        String content =
+                "[" + header + " - " + formatNow() + "]\n" +
+                        "문서 제목 : " + shortTitle + "\n" +
+                        (systemReject
+                                ? "사유 : " + comment
+                                : "반려자 : " + rejectLine.getApprover().getName()
+                                + " | " + rejectLine.getApprover().getOrganization().getName()
+                                + " | " + rejectLine.getApprover().getPositionCategory().getName()
+                        );
+
+
+        notificationCommandService.createNotification(
+                document.getCompany().getId(),
+                document.getWriter().getId(),
+                NotificationType.APPROVAL,
+                content,
+                "/view/document/" + document.getId()
+        );
+
+        // 5. 내 이후 결재자 CANCELLED 처리
+        lines.stream()
+                .filter(line ->
+                        line.getOrderNo() > rejectLine.getOrderNo()
+                                && line.getStatus() == ApprovalStatus.WAITING
+                )
+                .forEach(ApprovalLine::markCancelled); // → CANCELLED
+
+        // 6. 문서 상태 반려
+        document.reject();
+
+        // 근태 반영 롤백
+        attendanceRecordRepository.findBySourceDocument_Id(document.getId())
+                .ifPresent(AttendanceRecord::rejectedDocument);
+    }
+
+    private void rejectBySystem(
+            Document document,
+            List<ApprovalLine> lines,
+            ApprovalLine actorLine,
+            String reason
+    ) {
+        // actorLine: 현재 IN_PROGRESS 또는 방금 승인한 라인
+        // (시스템 사용자 엔티티가 없다면, 가장 자연스럽게 로그/히스토리를 남길 수 있는 라인을 사용)
+        rejectInternal(document, lines, actorLine, reason, true);
+    }
+
+
+    @Transactional
+    public DocumentCreateResDto reviseDocument(Long employeeId, Long documentId) {
+
+        // 1. 작성자 조회
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new NotFoundException("사원을 찾지 못했습니다."));
+
+        // 2. 원본 문서 조회 (작성자 검증 포함)
+        Document rejected = getDocumentForWriter(employee, documentId);
+
+        // 3. 상태 검증
+        if (rejected.getStatus() != DocumentStatus.REJECTED) {
+            throw new InvalidRequestException("반려 상태의 문서만 재기안할 수 있습니다.");
+        }
+
+        // 4. 이미 재기안 문서 존재 여부 확인
+        boolean existsRevision =
+                documentRepository.existsByBeforeDocument_Id(rejected.getId());
+
+        if (existsRevision) {
+            throw new InvalidRequestException("이미 재기안 문서가 존재합니다.");
+        }
+
+        // 5. 사용된 양식 조회 (당시 버전 기준)
+        FormTemplate rejectedTemplate =
+                formTemplateRepository
+                        .findByTemplateGroup_idAndVersion(
+                                rejected.getTemplateGroup().getId(),
+                                rejected.getTemplateVersion()
+                        )
+                        .orElseThrow(() -> new NotFoundException("문서 양식 조회 실패"));
+
+        // 6. 재기안 문서 생성 (DRAFT)
+        Document revised = Document.reviseDraft(rejected);
+        documentRepository.save(revised);
+
+        // 기존 문서 첨부파일 조회
+        List<DocumentFile> originalFiles =
+                documentFileRepository.findByDocument_Id(rejected.getId());
+
+        // DocumentFile만 복제 (File은 공유)
+        for (DocumentFile df : originalFiles) {
+            if (df.getStatus() == DocumentFileStatus.DELETED) continue;
+
+            DocumentFile copied =
+                    DocumentFile.copyFor(revised, df);
+
+            documentFileRepository.save(copied);
+        }
+
+
+        // 7. 문서 내용 복사
+        DocumentContent rejectedContent =
+                documentContentRepository.findByDocument_Id(rejected.getId())
+                        .orElseThrow(() -> new NotFoundException("문서 내용을 찾을 수 없습니다."));
+
+        DocumentContent reviseContent =
+                DocumentContent.revise(revised, rejectedContent);
+
+        documentContentRepository.save(reviseContent);
+
+        // 8. 결재선 초안 초기화
+        approvalLineDomainService.initializeDraftLines(
+                revised,
+                rejectedTemplate,
+                employee
+        );
+
+        // 9. 결과 반환
+        return DocumentCreateResDto.from(revised.getId());
+    }
+
+    @Transactional
+    public void submitDocument(Long employeeId, Long documentId) {
+
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new NotFoundException("요청한 사원 정보를 찾을 수 없습니다."));
+
+        Document document = getDocumentForWriter(employee, documentId);
+
+        if (document.getStatus() != DocumentStatus.DRAFT) {
+            throw new InvalidRequestException(
+                    "이미 상신되었거나 처리 중인 문서는 다시 상신할 수 없습니다."
+            );
+        }
+
+        // 1. 문서 상태 변경
+        document.submit();
+
+        // 2. 결재선 조회
+        List<ApprovalLine> lines =
+                approvalLineRepository.findByDocument_IdOrderByOrderNoAsc(documentId);
+
+        if (lines.isEmpty()) {
+            throw new InvalidRequestException(
+                    "결재선이 지정되지 않은 문서는 상신할 수 없습니다."
+            );
+        }
+
+        // 🔽🔽🔽 추가된 최초 결재자 검증/대체 로직 🔽🔽🔽
+
+        ApprovalLine firstLine = lines.get(0);
+        Employee firstApprover = firstLine.getApprover();
+
+        if (!isValidApprover(firstApprover)
+                || !matchesLineRole(firstLine, firstApprover)) {
+
+            Employee replacement = findReplacementApprover(firstLine);
+
+            if (replacement == null) {
+                // 최초 결재자조차 없음 → 상신 자체 불가
+                throw new InvalidRequestException(
+                        "현재 결재 규칙에 해당하는 결재자가 없어 문서를 상신할 수 없습니다."
+                );
+            }
+
+            firstLine.setApprover(replacement);
+        }
+
+        // 3. 결재선 상태 변경
+        lines.forEach(ApprovalLine::markWaiting);
+        firstLine.markInProgress();
+
+        // 4. 첨부파일 조회
+        List<DocumentFile> documentFiles =
+                documentFileRepository.findByDocument_Id(documentId);
+
+        // 5. TEMP → FINAL
+        documentFiles.stream()
+                .filter(df -> df.getStatus() == DocumentFileStatus.TEMP)
+                .forEach(df -> df.updateStatus(DocumentFileStatus.FINAL));
+
+        // 6. DELETED 파일 분리
+        List<DocumentFile> deletedFiles = documentFiles.stream()
+                .filter(df -> df.getStatus() == DocumentFileStatus.DELETED)
+                .toList();
+
+        // 7. 문서-파일 관계 제거
+        documentFileRepository.deleteAll(deletedFiles);
+
+        entityManager.flush();
+
+        // 8. 실제 파일 삭제
+        for (DocumentFile df : deletedFiles) {
+            File file = df.getFile();
+
+            long refCount =
+                    documentFileRepository.countByFile_Id(file.getId());
+
+            if (refCount == 0) {
+                fileRepository.delete(file);
+                fileService.deleteObjectAfterCommit(file.getObjectKey());
+            }
+        }
+
+        // 9. 휴가 문서 처리 (기존 로직 그대로)
+        BaseRole baseRole = document.getTemplateGroup().getBaseRole();
+
+        if (BaseRole.VACATION.equals(baseRole)) {
+
+            LeaveCalculationResult result =
+                    leaveCalculationService.calculate(document);
+
+            LocalDate actualStart = result.effectiveDates().get(0);
+            LocalDate actualEnd = result.effectiveDates()
+                    .get(result.effectiveDates().size() - 1);
+
+            AttendanceRecord record = AttendanceRecord.builder()
+                    .employee(document.getWriter())
+                    .company(document.getCompany())
+                    .startDate(actualStart)
+                    .endDate(actualEnd)
+                    .days(result.days())
+                    .leaveType(result.leaveType())
+                    .reason(result.payload().reason())
+                    .sourceDocument(document)
+                    .status(DocumentStatus.IN_PROGRESS)
+                    .approvedAt(null)
+                    .build();
+
+            attendanceRecordRepository.save(record);
+        }
+
+        // 10. 최초 결재자 알림
+        String shortTitle = shortenTitle(document.getTitle(), 20);
+
+        String content =
+                "[결재 요청 - " + formatNow() + "]\n" +
+                        "문서 제목 : " + shortTitle + "\n" +
+                        "기안자 : " + document.getWriter().getName() +
+                        " | " + document.getWriter().getOrganization().getName() +
+                        " | " + document.getWriter().getPositionCategory().getName();
+
+        notificationCommandService.createNotification(
+                firstLine.getCompany().getId(),
+                firstLine.getApprover().getId(),
+                NotificationType.APPROVAL,
+                content,
+                "/view/document/" + documentId
+        );
+    }
+
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void generateAndStorePdf(Long documentId) {
@@ -392,257 +703,36 @@ public class DocumentApplicationService {
         }
     }
 
+    private boolean isValidApprover(Employee employee) {
+        return employee != null
+                && employee.getStatus() == EmployeeStatus.ACTIVE;
+    }
 
-    @Transactional
-    public void reject(Long employeeId, Long documentId, String comment) {
+    private boolean matchesLineRole(ApprovalLine line, Employee employee) {
+        return employee != null
+                && Objects.equals(
+                employee.getOrganization().getId(),
+                line.getOrganization().getId()
+        )
+                && Objects.equals(
+                employee.getPositionCategory().getId(),
+                line.getPositionCategory().getId()
+        );
+    }
 
-        // 1. 문서 조회 + 상태 검증
-        Document document = getDocumentForApprover(documentId);
-
-        if (document.getStatus() != DocumentStatus.IN_PROGRESS) {
-            throw new InvalidRequestException("진행중인 결재 문서만 반려할 수 있습니다.");
+    private Employee findReplacementApprover(ApprovalLine line) {
+        if (line.getOrganization() == null || line.getPositionCategory() == null) {
+            return null;
         }
 
-        // 2. 결재선 조회
-        List<ApprovalLine> lines = getApprovalLines(documentId);
-
-
-        // 3. 내 결재선 찾기
-        ApprovalLine myLine = lines.stream()
-                .filter(line ->
-                        line.getApprover().getId().equals(employeeId)
-                                && line.getStatus() == ApprovalStatus.IN_PROGRESS
+        return employeeRepository
+                .findHeadByOrgIdAndPositionCategoryIdAndStatus(
+                        line.getOrganization().getId(),
+                        line.getPositionCategory().getId(),
+                        EmployeeStatus.ACTIVE
                 )
-                .findFirst()
-                .orElseThrow(() ->
-                        new InvalidRequestException("자신의 결재 차례가 아닙니다.")
-                );
-
-
-        if (myLine.getStatus() != ApprovalStatus.IN_PROGRESS) {
-            throw new InvalidRequestException("자신의 결재 차례에만 반려할 수 있습니다.");
-        }
-
-        // 4. 내 결재선 반려
-        myLine.reject(comment); // → REJECTED
-
-
-        String shortTitle = shortenTitle(document.getTitle(), 20);
-
-        String content =
-                "[결재 문서 반려 - " + formatNow() + "]\n" +
-                        "문서 제목 : " + shortTitle + "\n" +
-                        "반려자 : " + myLine.getApprover().getName() +
-                        " | " + myLine.getApprover().getOrganization().getName() +
-                        " | " + myLine.getApprover().getPositionCategory().getName();
-
-
-        notificationCommandService.createNotification(
-                document.getCompany().getId(),
-                document.getWriter().getId(),
-                NotificationType.APPROVAL,
-                content,
-                "/view/document/" + documentId
-        );
-
-
-        // 5. 내 이후 결재자 CANCELLED 처리
-        lines.stream()
-                .filter(line ->
-                        line.getOrderNo() > myLine.getOrderNo()
-                                && line.getStatus() == ApprovalStatus.WAITING
-                )
-                .forEach(ApprovalLine::markCancelled); // → CANCELLED
-
-        // 6. 문서 상태 반려
-        document.reject();
-
-        attendanceRecordRepository.findBySourceDocument_Id(document.getId())
-                .ifPresent(AttendanceRecord::rejectedDocument);
+                .orElse(null);
     }
-
-    @Transactional
-    public DocumentCreateResDto reviseDocument(Long employeeId, Long documentId) {
-
-        // 1. 작성자 조회
-        Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new NotFoundException("사원을 찾지 못했습니다."));
-
-        // 2. 원본 문서 조회 (작성자 검증 포함)
-        Document rejected = getDocumentForWriter(employee, documentId);
-
-        // 3. 상태 검증
-        if (rejected.getStatus() != DocumentStatus.REJECTED) {
-            throw new InvalidRequestException("반려 상태의 문서만 재기안할 수 있습니다.");
-        }
-
-        // 4. 이미 재기안 문서 존재 여부 확인
-        boolean existsRevision =
-                documentRepository.existsByBeforeDocument_Id(rejected.getId());
-
-        if (existsRevision) {
-            throw new InvalidRequestException("이미 재기안 문서가 존재합니다.");
-        }
-
-        // 5. 사용된 양식 조회 (당시 버전 기준)
-        FormTemplate rejectedTemplate =
-                formTemplateRepository
-                        .findByTemplateGroup_idAndVersion(
-                                rejected.getTemplateGroup().getId(),
-                                rejected.getTemplateVersion()
-                        )
-                        .orElseThrow(() -> new NotFoundException("문서 양식 조회 실패"));
-
-        // 6. 재기안 문서 생성 (DRAFT)
-        Document revised = Document.reviseDraft(rejected);
-        documentRepository.save(revised);
-
-        // 기존 문서 첨부파일 조회
-        List<DocumentFile> originalFiles =
-                documentFileRepository.findByDocument_Id(rejected.getId());
-
-        // DocumentFile만 복제 (File은 공유)
-        for (DocumentFile df : originalFiles) {
-            if (df.getStatus() == DocumentFileStatus.DELETED) continue;
-
-            DocumentFile copied =
-                    DocumentFile.copyFor(revised, df);
-
-            documentFileRepository.save(copied);
-        }
-
-
-        // 7. 문서 내용 복사
-        DocumentContent rejectedContent =
-                documentContentRepository.findByDocument_Id(rejected.getId())
-                        .orElseThrow(() -> new NotFoundException("문서 내용을 찾을 수 없습니다."));
-
-        DocumentContent reviseContent =
-                DocumentContent.revise(revised, rejectedContent);
-
-        documentContentRepository.save(reviseContent);
-
-        // 8. 결재선 초안 초기화
-        approvalLineDomainService.initializeDraftLines(
-                revised,
-                rejectedTemplate,
-                employee
-        );
-
-        // 9. 결과 반환
-        return DocumentCreateResDto.from(revised.getId());
-    }
-
-    @Transactional
-    public void submitDocument(Long employeeId, Long documentId) {
-
-        Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new NotFoundException("요청한 사원 정보를 찾을 수 없습니다."));
-
-        Document document = getDocumentForWriter(employee, documentId);
-
-        if (document.getStatus() != DocumentStatus.DRAFT) {
-            throw new InvalidRequestException(
-                    "이미 상신되었거나 처리 중인 문서는 다시 상신할 수 없습니다."
-            );
-        }
-
-        // 1. 문서 상태 변경
-        document.submit();
-
-        // 2. 결재선 처리
-        List<ApprovalLine> lines =
-                approvalLineRepository.findByDocument_IdOrderByOrderNoAsc(documentId);
-
-        if (lines.isEmpty()) {
-            throw new InvalidRequestException(
-                    "결재선이 지정되지 않은 문서는 상신할 수 없습니다."
-            );
-        }
-
-        lines.forEach(ApprovalLine::markWaiting);
-        lines.get(0).markInProgress();
-
-        // 3. 첨부파일 조회
-        List<DocumentFile> documentFiles =
-                documentFileRepository.findByDocument_Id(documentId);
-
-        // 4. TEMP → FINAL
-        documentFiles.stream()
-                .filter(df -> df.getStatus() == DocumentFileStatus.TEMP)
-                .forEach(df -> df.updateStatus(DocumentFileStatus.FINAL));
-
-        // 5. DELETED 파일 분리
-        List<DocumentFile> deletedFiles = documentFiles.stream()
-                .filter(df -> df.getStatus() == DocumentFileStatus.DELETED)
-                .toList();
-
-        // 6. 문서-파일 관계 먼저 제거
-        documentFileRepository.deleteAll(deletedFiles);
-
-        // DB 반영
-        entityManager.flush();
-
-        // 7. File 참조 수 체크 후 실제 삭제
-        for (DocumentFile df : deletedFiles) {
-            File file = df.getFile();
-
-            long refCount =
-                    documentFileRepository.countByFile_Id(file.getId());
-
-            if (refCount == 0) {
-                fileRepository.delete(file);
-                fileService.deleteObjectAfterCommit(file.getObjectKey());
-            }
-        }
-
-        BaseRole baseRole = document.getTemplateGroup().getBaseRole();
-
-        if (BaseRole.VACATION.equals(baseRole)) {
-
-            LeaveCalculationResult result =
-                    leaveCalculationService.calculate(document);
-
-            LocalDate actualStart = result.effectiveDates().get(0);
-            LocalDate actualEnd = result.effectiveDates()
-                    .get(result.effectiveDates().size() - 1);
-
-            AttendanceRecord record = AttendanceRecord.builder()
-                    .employee(document.getWriter())
-                    .company(document.getCompany())
-                    .startDate(actualStart)
-                    .endDate(actualEnd)
-                    .days(result.days())
-                    .leaveType(result.leaveType())
-                    .reason(result.payload().reason())
-                    .sourceDocument(document)
-                    .status(DocumentStatus.IN_PROGRESS)
-                    .approvedAt(null)
-                    .build();
-
-            attendanceRecordRepository.save(record);
-        }
-
-
-        String shortTitle = shortenTitle(document.getTitle(), 20);
-
-        String content =
-                "[결재 요청 - " + formatNow() + "]\n" +
-                        "문서 제목 : " + shortTitle + "\n" +
-                        "기안자 : " + document.getWriter().getName() +
-                        " | " + document.getWriter().getOrganization().getName() +
-                        " | " + document.getWriter().getPositionCategory().getName();
-
-        notificationCommandService.createNotification(
-                lines.get(0).getCompany().getId(),
-                lines.get(0).getApprover().getId(),
-                NotificationType.APPROVAL,
-                content,
-                "/view/document/" + documentId
-        );
-
-    }
-
 
     private String shortenTitle(String title, int maxLength) {
         if (title == null) return "";
@@ -656,7 +746,6 @@ public class DocumentApplicationService {
         return java.time.LocalDateTime.now()
                 .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
     }
-
 
     private List<ApprovalLine> getApprovalLines(Long documentId) {
         List<ApprovalLine> lines =

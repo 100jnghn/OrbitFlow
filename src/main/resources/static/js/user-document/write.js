@@ -3581,7 +3581,8 @@ async function attachReferenceDocument(documentId, documentFileId) {
     );
 
     if (!res.ok) {
-        showFormToast('참조 문서 연결에 실패했습니다.', 'error');
+        const error = await res.json();
+        showFormToast(error.message, 'error');
         return;
     }
 
@@ -3652,29 +3653,44 @@ async function bindEvents(documentId) {
         showFullscreenSpinner('문서를 상신하는 중입니다...');
 
         try {
-            await apiFetch(`/api/document-contents/${DOCUMENT_ID}`, {
+            // 1️⃣ 문서 내용 저장
+            const saveRes = await apiFetch(`/api/document-contents/${DOCUMENT_ID}`, {
                 method: 'PATCH',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(payload)
             });
 
+            if (!saveRes.ok) {
+                const error = await saveRes.json();
+                await sweetWarning(error.message);
+                return;
+            }
+
             hasUnsavedChanges = false;
 
-            await apiFetch(`/api/documents/${DOCUMENT_ID}/submit`, {
+            // 2️⃣ 문서 상신
+            const submitRes = await apiFetch(`/api/documents/${DOCUMENT_ID}/submit`, {
                 method: 'POST'
             });
+
+            if (!submitRes.ok) {
+                const error = await submitRes.json();
+                await sweetWarning(error.message);
+                return;
+            }
 
             await sweetSuccess('문서가 상신되었습니다.');
             location.href = '/view/document/my-documents';
 
         } catch (e) {
             console.error(e);
-            await sweetWarning('문서 상신 중 오류가 발생했습니다.');
+            await sweetWarning('요청 처리 중 오류가 발생했습니다.');
         } finally {
             hideFullscreenSpinner();
             nextBtn.disabled = false;
         }
     });
+
 
     bindAttachmentEvents(documentId);
     await loadAttachments(documentId);
