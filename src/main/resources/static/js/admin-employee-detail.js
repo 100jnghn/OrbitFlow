@@ -5,6 +5,11 @@
  * - Audit Log 타임라인 + diff
  */
 
+
+// 현재 상태
+let currentEmployeeStatus = null;
+
+
 /* =========================
    Lookup Maps
 ========================= */
@@ -72,6 +77,13 @@ async function loadEmployeeDetail(employeeId) {
 
     const e = result.data;
 
+    currentEmployeeStatus = e.status;
+
+    const btnEdit = document.getElementById('btnEditEmployee');
+    if (btnEdit) {
+        btnEdit.disabled = (e.status === 'RESIGNED');
+    }
+
     /* avatar */
     const avatar = document.getElementById('empAvatar');
     if (avatar) {
@@ -119,9 +131,9 @@ async function loadEmployeeDetail(employeeId) {
 }
 
 function updateStatusButtons(status) {
-    btnActive.disabled = false;
-    btnSuspend.disabled = false;
-    btnResign.disabled = false;
+    btnActive.disabled   = (status === 'ACTIVE' || status === 'RESIGNED');
+    btnSuspend.disabled = (status === 'SUSPENDED' || status === 'RESIGNED');
+    btnResign.disabled  = (status === 'RESIGNED');
 
     btnResendActivate.style.display = 'none';
     tempNotice.style.display = 'none';
@@ -129,15 +141,8 @@ function updateStatusButtons(status) {
     if (status === 'TEMP') {
         btnActive.disabled = true;
         btnSuspend.disabled = true;
-
         btnResendActivate.style.display = 'inline-flex';
         tempNotice.style.display = 'block';
-    }
-
-    if (status === 'RESIGNED') {
-        btnActive.disabled = true;
-        btnSuspend.disabled = true;
-        btnResign.disabled = true;
     }
 }
 
@@ -281,6 +286,12 @@ function bindStatusButtons(id) {
 }
 
 async function changeStatus(id, status) {
+
+    // 이미 같은 상태면 아무 것도 안 함
+    if (currentEmployeeStatus === status) {
+        return;
+    }
+
     if (status === 'RESIGNED') {
         const result = await sweetConfirm(
             '퇴사 처리',
@@ -394,6 +405,13 @@ function toast(msg) {
    Edit Modal
 ========================= */
 async function openEditModal() {
+
+    // 퇴사 사원은 수정 모달 진입 불가
+    if (currentEmployeeStatus === 'RESIGNED') {
+        await sweetError('퇴사한 사원의 정보는 수정할 수 없습니다.');
+        return;
+    }
+
     const modal = document.getElementById('editEmployeeModal');
     const employeeId = document.getElementById('employeeId').value;
 

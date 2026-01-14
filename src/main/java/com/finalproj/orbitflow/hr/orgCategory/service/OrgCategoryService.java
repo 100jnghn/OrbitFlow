@@ -23,6 +23,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -193,34 +195,54 @@ public class OrgCategoryService {
 
 
     /* ================= 순서 변경 ================= */
-    public void updateOrder(Long companyId, List<OrgCategoryOrderUpdateReqDto.OrderItem> orders) {
-
+    @Transactional
+    public void updateOrder(
+            Long companyId,
+            List<OrgCategoryOrderUpdateReqDto.OrderItem> orders
+    ) {
         if (orders == null || orders.isEmpty()) {
             throw new InvalidRequestException("순서 정보가 비어 있습니다.");
         }
 
-        long activeCount = repository.countByCompanyIdAndIsActiveTrueAndIsRootFalse(companyId); // 루트 카테고리는 카운트에서 제외
-        if (activeCount != orders.size()) {
-            throw new InvalidStateException("정렬 대상 개수가 일치하지 않습니다.");
+        // 활성 + 비루트 전체 조회
+        List<OrgCategory> activeCategories =
+                repository.findByCompanyIdAndIsActiveTrueAndIsRootFalseOrderByOrderIndexAsc(companyId);
+
+        if (activeCategories.isEmpty()) {
+            return;
         }
 
-        // 1단계: 임시 order_index (충돌 방지)
-        int temp = -1;
+        // 프론트 순서를 우선순위 맵으로
+        Map<Long, Integer> priorityMap = new HashMap<>();
+        int p = 1;
         for (var item : orders) {
-            OrgCategory category = get(companyId, item.getId());
+            priorityMap.put(item.getId(), p++);
+        }
 
-            if (category.getIsRoot()) {
-                throw new InvalidStateException("회사 카테고리는 정렬할 수 없습니다.");
-            }
+        // 우선순위 → 기존 orderIndex 기준 정렬
+        activeCategories.sort(
+                Comparator
+                        .comparing(
+                                (OrgCategory c) ->
+                                        priorityMap.getOrDefault(c.getId(), Integer.MAX_VALUE)
+                        )
+                        .thenComparing(
+                                OrgCategory::getOrderIndex,
+                                Comparator.nullsLast(Integer::compareTo)
+                        )
+        );
 
+        // 1단계: 임시 음수 orderIndex (UNIQUE 충돌 방지)
+        int temp = -1;
+        for (OrgCategory category : activeCategories) {
             category.updateOrderIndex(temp--);
         }
         repository.flush();
 
-        // 2단계: 최종 order_index
+        // 2단계: 최종 1~N 재부여
         int index = 1;
-        for (var item : orders) {
-            get(companyId, item.getId()).updateOrderIndex(index++);
+        for (OrgCategory category : activeCategories) {
+            category.updateOrderIndex(index++);
         }
     }
 
