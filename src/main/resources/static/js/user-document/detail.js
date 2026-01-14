@@ -371,7 +371,11 @@ async function submitApprovalAction() {
             body: JSON.stringify({comment})
         });
 
-        if (!res.ok) throw new Error();
+        if (!res.ok) {
+            const error = await res.json();
+            await sweetWarning(error.message); // 🔥 핵심
+            return;
+        }
 
         await sweetSuccess(
             currentActionType === "approve"
@@ -383,8 +387,9 @@ async function submitApprovalAction() {
 
     } catch (e) {
         console.error(e);
+        await sweetWarning("요청 처리 중 오류가 발생했습니다.");
+    } finally {
         hideFullscreenSpinner();
-        await sweetWarning("처리 중 오류가 발생했습니다.");
     }
 }
 
@@ -1405,18 +1410,38 @@ async function setupRevisionButtons(docData) {
 
         reviseBtn.style.display = "inline-flex";
         reviseBtn.onclick = async () => {
-            if (!confirm("반려 문서를 재기안하시겠습니까?")) return;
 
-            const res = await apiFetch(
-                `/api/documents/${docData.documentId}/revise`,
-                {method: "POST"}
+            const result = await sweetConfirm(
+                "재기안 확인",
+                "반려 문서를 재기안하시겠습니까?"
             );
 
-            const json = await res.json();
-            location.href = `/view/document/write/${json.data.documentId}`;
+            if (!result.isConfirmed) return;
+
+            try {
+                const res = await apiFetch(
+                    `/api/documents/${docData.documentId}/revise`,
+                    {method: "POST"}
+                );
+
+                if (!res.ok) {
+                    const error = await res.json();
+                    await sweetWarning(error.message);
+                    return;
+                }
+
+                const json = await res.json();
+                location.href = `/view/document/write/${json.data.documentId}`;
+
+            } catch (e) {
+                console.error(e);
+                await sweetWarning("재기안 처리 중 오류가 발생했습니다.");
+            }
         };
+
         return;
     }
+
 
     if (!goRevisionBtn) return;
 
