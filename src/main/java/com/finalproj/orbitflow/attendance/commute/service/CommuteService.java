@@ -77,14 +77,10 @@ public class CommuteService {
         Attendance attendance = commuteRepository.findToday(companyId, employeeId)
                 .orElseThrow(() -> new BusinessException("출근 기록이 없습니다."));
 
-        if (attendance.getLeaveAt() != null) {
-            throw new BusinessException("이미 퇴근 처리되었습니다.");
-        }
-
         ActiveRuleResDto rule = getActiveRule(companyId, employeeId);
         validateCheckOutTime(rule.getEndTime());
 
-        attendance.setLeaveAt(LocalDateTime.now());
+        attendance.recordLeave();
         updateEmployeeWorkStatus(employeeId, WorkStatus.OFF_WORK);
 
         return new TodayAttResDto(commuteRepository.save(attendance), false);
