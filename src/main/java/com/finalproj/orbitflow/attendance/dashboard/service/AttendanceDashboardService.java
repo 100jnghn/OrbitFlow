@@ -205,13 +205,14 @@ public class AttendanceDashboardService {
                     .orElseThrow(() -> new RuntimeException("근태 기록을 찾을 수 없습니다."));
         } else {
             attendance = commuteRepository.findByCompanyIdAndEmployeeIdAndWorkDate(
-                    companyId, dto.getEmployeeId(), LocalDate.now()).orElseGet(
-                            () -> Attendance.builder()
-                                    .employeeId(dto.getEmployeeId())
-                                    .companyId(companyId)
-                                    .workDate(LocalDate.now())
-                                    .isCorrected(true)
-                                    .build());
+                    companyId, dto.getEmployeeId(), LocalDate.now()
+            ).orElseGet(() -> Attendance.builder()
+                    .employeeId(dto.getEmployeeId())
+                    .companyId(companyId)
+                    .workDate(LocalDate.now())
+                    .status(AttendanceStatus.BEFORE_WORK) // ✅ 신규 생성 시 status null 방지 (nullable=false)
+                    .isCorrected(false)
+                    .build());
         }
 
         attendance.updateStatus(AttendanceStatus.valueOf(dto.getStatus()), dto.getCorrectionReason());
@@ -224,6 +225,7 @@ public class AttendanceDashboardService {
                 : null;
 
         attendance.updateTimeByAdmin(commuteTime, leaveTime);
+
         commuteRepository.save(attendance);
 
         // 🚀 [알림 전송] 근태 정정 알림

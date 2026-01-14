@@ -685,3 +685,28 @@
     from { opacity: 0; transform: translateY(5px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+.corrected-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-reason {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--neutral-300);
+    background: #fff;
+    color: var(--text-main);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-reason:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: var(--neutral-50);
+    transform: translateY(-1px);
+}

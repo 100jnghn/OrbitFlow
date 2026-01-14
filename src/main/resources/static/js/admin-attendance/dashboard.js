@@ -11,18 +11,12 @@ let currentSearchParams = {
     keyword: ''
 };
 
-// 툴팁(정정 사유) 전역 상태
-let reasonPopoverEl = null;
-let hoverCloseTimer = null;
-
 document.addEventListener('DOMContentLoaded', function () {
-    // 1. 날짜 표시 로직
     const today = new Date();
     const formattedToday = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
     const todayLabel = document.getElementById('todayLabel');
     if (todayLabel) todayLabel.innerText = `금일 요약 현황 (${formattedToday})`;
 
-    // 2. 정정 모달 글자 수 카운터
     const modalReasonInput = document.getElementById('modalReason');
     const charCountElement = document.getElementById('charCount');
 
@@ -39,19 +33,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 3. 이벤트 위임 방식으로 마우스 오버 핸들링
-    const table = document.getElementById('attendanceTable');
-    if (table) {
-        table.addEventListener('mouseover', function (e) {
-            const target = e.target.closest('.badge-corrected');
-            if (target) {
-                handleCorrectedMouseOver(e, target);
-            }
-        });
-        table.addEventListener('mouseout', handleCorrectedMouseOut);
-    }
-
-    // 4. 검색창 엔터키 이벤트
     const searchInput = document.getElementById('searchKeyword');
     if (searchInput) {
         searchInput.addEventListener('keypress', function (e) {
@@ -59,7 +40,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // [추가] 시작일 변경 시 종료일 최소값 설정
     const startDateInput = document.getElementById('startDate');
     const endDateInput = document.getElementById('endDate');
 
@@ -67,12 +47,11 @@ document.addEventListener('DOMContentLoaded', function () {
         startDateInput.addEventListener('change', function () {
             endDateInput.min = this.value;
             if (endDateInput.value && endDateInput.value < this.value) {
-                endDateInput.value = ''; // 시작일보다 이전 날짜 선택 시 초기화
+                endDateInput.value = '';
             }
         });
     }
 
-    // 5. 초기 데이터 로드
     loadSummaryData();
     loadAttendanceList();
 });
@@ -108,7 +87,14 @@ async function loadSummaryData() {
  */
 async function loadAttendanceList() {
     const { page, size, startDate, endDate, status, keyword } = currentSearchParams;
-    const params = new URLSearchParams({ page, size, startDate, endDate, status: status || 'ALL', keyword: keyword || '' });
+    const params = new URLSearchParams({
+        page,
+        size,
+        startDate,
+        endDate,
+        status: status || 'ALL',
+        keyword: keyword || ''
+    });
 
     try {
         const token = sessionStorage.getItem('accessToken');
@@ -120,6 +106,8 @@ async function loadAttendanceList() {
         if (response.ok && result.data) {
             renderAttendanceTable(result.data.content || []);
             renderPagination(result.data);
+        } else {
+            console.error("목록 로드 실패:", result);
         }
     } catch (e) {
         console.error("목록 로드 중 오류:", e);
@@ -127,7 +115,9 @@ async function loadAttendanceList() {
 }
 
 /**
- * 테이블 렌더링 (정정 상태 로직 포함)
+ * 테이블 렌더링
+ * - 정정 전: [정정] 버튼
+ * - 정정 후: [정정됨] + [사유] 버튼(클릭 시 사유 확인)
  */
 function renderAttendanceTable(list) {
     const tbody = document.querySelector('#attendanceTable tbody');
@@ -143,34 +133,83 @@ function renderAttendanceTable(list) {
         const statusName = item.statusName || '근무 예정';
         const commuteStyle = statusCode === 'LATE' ? 'color: var(--warning-color); font-weight:600;' : '';
 
-        // [핵심수정] DB의 tinyint(1) 및 Boolean 대응
         const isCorrected = (item.isCorrected === true || item.isCorrected === 1 || item.correctionYn === 'Y');
         const reason = item.correctionReason || '사유가 등록되지 않았습니다.';
 
-        const actionBtn = isCorrected
-            ? `<div class="badge-corrected" data-reason="${escapeHtml(reason)}">
-                <i class="fa-solid fa-circle-info"></i> 정정됨
-               </div>`
-            : `<button class="btn-table-action" onclick="openCorrectionModal(${item.attendanceId}, '${item.employeeName}', '${statusCode}')">
-                <i class="fa-solid fa-pen-to-square"></i> 정정
-               </button>`;
+        const hasAttendanceId = item.attendanceId !== null && item.attendanceId !== undefined && item.attendanceId !== '';
+
+        let actionBtn = '';
+
+        if (isCorrected) {
+            // ✅ 정정됨 + 사유 버튼(동적으로)
+            // data-reason에 사유 저장해두고, 클릭하면 showCorrectionReason()로 보여줌
+            actionBtn = `
+        <div class="corrected-actions">
+          <span class="badge-corrected">
+            <i class="fa-solid fa-circle-check"></i> 정정됨
+          </span>
+          <button class="btn-reason"
+                  type="button"
+                  data-reason="${escapeHtml(reason)}"
+                  onclick="showCorrectionReason(this)">
+            사유
+          </button>
+        </div>
+      `;
+        } else if (hasAttendanceId) {
+            actionBtn = `
+        <button class="btn-table-action"
+                type="button"
+                onclick="openCorrectionModal(${item.attendanceId}, '${escapeHtml(item.employeeName)}', '${statusCode}')">
+          <i class="fa-solid fa-pen-to-square"></i> 정정
+        </button>
+      `;
+        } else {
+            actionBtn = `
+        <button class="btn-table-action"
+                type="button"
+                disabled
+                title="근태 기록이 없어 정정할 수 없습니다.">
+          <i class="fa-solid fa-pen-to-square"></i> 정정
+        </button>
+      `;
+        }
 
         return `
-            <tr>
-                <td>
-                    <div class="emp-info-cell">
-                        <div class="emp-name">${item.employeeName}</div>
-                        <div class="emp-num">${item.employeeNum}</div>
-                    </div>
-                </td>
-                <td style="${commuteStyle}">${item.commuteAt || '-'}</td>
-                <td>${item.leaveAt || '-'}</td>
-                <td>${item.workingTime || '-'}</td>
-                <td><span class="status-badge ${statusCode}">${statusName}</span></td>
-                <td>${item.workDate}</td>
-                <td>${actionBtn}</td>
-            </tr>`;
+      <tr>
+        <td>
+          <div class="emp-info-cell">
+            <div class="emp-name">${item.employeeName}</div>
+            <div class="emp-num">${item.employeeNum}</div>
+          </div>
+        </td>
+        <td style="${commuteStyle}">${item.commuteAt || '-'}</td>
+        <td>${item.leaveAt || '-'}</td>
+        <td>${item.workingTime || '-'}</td>
+        <td><span class="status-badge ${statusCode}">${statusName}</span></td>
+        <td>${item.workDate}</td>
+        <td>${actionBtn}</td>
+      </tr>
+    `;
     }).join('');
+}
+
+/**
+ * 사유 보기 버튼 클릭 시: SweetAlert(있으면) / 없으면 alert 로 표시
+ */
+async function showCorrectionReason(btnEl) {
+    const reason = btnEl?.getAttribute('data-reason') || '사유가 등록되지 않았습니다.';
+
+    if (typeof Swal !== 'undefined') {
+        await Swal.fire({
+            icon: 'info',
+            title: '정정 사유',
+            text: reason,
+            confirmButtonText: '확인'
+        });
+    } else {
+        alert('정정 사유\n\n' + reason);
+    }
 }
 
 /**
@@ -193,6 +232,7 @@ function closeModal() {
 
 /**
  * 정정 제출
+ * - 성공 시 목록 재조회 -> isCorrected=true 내려오면 자동으로 "정정됨 + 사유"로 렌더링됨
  */
 async function submitCorrection() {
     const reason = document.getElementById('modalReason').value.trim();
@@ -204,7 +244,15 @@ async function submitCorrection() {
     const id = document.getElementById('targetAttendanceId').value;
     const status = document.getElementById('modalStatus').value;
 
-    // SweetAlert Confirm (존재 가정)
+    if (!id || id === 'null' || id === 'undefined') {
+        if (typeof Swal !== 'undefined') {
+            await Swal.fire({ icon: 'warning', title: '정정 불가', text: '근태 기록이 없어 정정할 수 없습니다.' });
+        } else {
+            alert('근태 기록이 없어 정정할 수 없습니다.');
+        }
+        return;
+    }
+
     if (typeof Swal !== 'undefined') {
         const confirm = await Swal.fire({
             title: '근태 정정',
@@ -227,42 +275,29 @@ async function submitCorrection() {
 
         if (response.ok) {
             closeModal();
-            loadAttendanceList();
-            loadSummaryData();
+
+            // ✅ 재조회 -> 서버에서 isCorrected/correctionReason 내려오면 화면이 "정정됨+사유"로 전환됨
+            await loadAttendanceList();
+            await loadSummaryData();
+
+            if (typeof Swal !== 'undefined') {
+                await Swal.fire({ icon: 'success', title: '정정 완료', text: '근태 정정이 완료되었습니다.' });
+            }
+        } else {
+            const msg = await response.text();
+            if (typeof Swal !== 'undefined') {
+                await Swal.fire({ icon: 'error', title: '정정 실패', text: msg || '요청이 실패했습니다.' });
+            } else {
+                alert('정정 실패: ' + (msg || '요청이 실패했습니다.'));
+            }
         }
     } catch (e) {
         console.error("정정 요청 실패:", e);
-    }
-}
-
-/**
- * 마우스 오버 툴팁 처리
- */
-function handleCorrectedMouseOver(e, target) {
-    clearTimeout(hoverCloseTimer);
-    const reason = target.getAttribute('data-reason') || '사유 없음';
-
-    closeReasonPopover();
-
-    const pop = document.createElement('div');
-    pop.className = 'reason-popover';
-    pop.innerHTML = `<strong>정정 사유</strong><p style="margin:5px 0 0 0;">${escapeHtml(reason)}</p>`;
-    document.body.appendChild(pop);
-
-    const rect = target.getBoundingClientRect();
-    pop.style.left = `${rect.left}px`;
-    pop.style.top = `${rect.bottom + window.scrollY + 5}px`;
-    reasonPopoverEl = pop;
-}
-
-function handleCorrectedMouseOut() {
-    hoverCloseTimer = setTimeout(closeReasonPopover, 150);
-}
-
-function closeReasonPopover() {
-    if (reasonPopoverEl) {
-        reasonPopoverEl.remove();
-        reasonPopoverEl = null;
+        if (typeof Swal !== 'undefined') {
+            await Swal.fire({ icon: 'error', title: '정정 실패', text: '네트워크 오류가 발생했습니다.' });
+        } else {
+            alert('정정 실패: 네트워크 오류');
+        }
     }
 }
 
@@ -300,7 +335,6 @@ function renderPagination(pageData) {
     const wrapper = document.createElement('div');
     wrapper.className = 'pagination';
 
-    // 이전 버튼
     const prevBtn = document.createElement('button');
     prevBtn.className = 'page-btn';
     prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
@@ -308,7 +342,6 @@ function renderPagination(pageData) {
     prevBtn.onclick = () => { currentSearchParams.page = page - 1; loadAttendanceList(); };
     wrapper.appendChild(prevBtn);
 
-    // 페이지 숫자
     for (let i = 0; i < totalPages; i++) {
         if (totalPages > 10 && (i > 2 && i < totalPages - 3 && Math.abs(i - page) > 2)) continue;
         const btn = document.createElement('button');
@@ -318,7 +351,6 @@ function renderPagination(pageData) {
         wrapper.appendChild(btn);
     }
 
-    // 다음 버튼
     const nextBtn = document.createElement('button');
     nextBtn.className = 'page-btn';
     nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
