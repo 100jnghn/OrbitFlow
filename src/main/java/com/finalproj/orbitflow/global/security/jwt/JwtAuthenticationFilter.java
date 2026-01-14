@@ -1,6 +1,5 @@
 package com.finalproj.orbitflow.global.security.jwt;
 
-import com.finalproj.orbitflow.auth.entity.RefreshToken;
 import com.finalproj.orbitflow.auth.repository.RefreshTokenRepository;
 import com.finalproj.orbitflow.global.security.CustomUserDetailsService;
 import com.finalproj.orbitflow.global.security.SecurityUser;
@@ -11,7 +10,6 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -78,28 +76,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Long tokenCompanyId = jwtProvider.getCompanyId(token);
 
             authenticateUser(request, response, employeeId, tokenCompanyId);
-
-        } else {
-            // 2. 헤더가 없으면 Cookie 확인 (SSR 화면 요청)
-            String refreshTokenVal = getRefreshTokenFromCookie(request);
-            if (refreshTokenVal != null) {
-                // DB에서 리프레시 토큰 조회
-                refreshTokenRepository.findByToken(refreshTokenVal).ifPresent(refreshToken -> {
-                    if (!refreshToken.isExpired()) {
-                        try {
-                            authenticateUser(request, response, refreshToken.getEmployeeId(),
-                                    refreshToken.getCompanyId());
-                        } catch (Exception e) {
-                            // 인증 실패 시 로그만 남기고 익명 상태 유지 (화면 진입 자체를 막지 않음 - 권한은 SecurityConfig에서 처리)
-                            SecurityContextHolder.clearContext();
-                        }
-                    } else {
-                        // 만료된 토큰이면 삭제 (선택 사항)
-                        refreshTokenRepository.delete(refreshToken);
-                    }
-                });
-            }
         }
+
+        // refresh token으로 인증하는 로직 제거 (인증 = access token only)
 
         filterChain.doFilter(request, response);
     }
