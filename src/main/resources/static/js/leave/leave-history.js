@@ -14,11 +14,20 @@ document.addEventListener('DOMContentLoaded', function () {
     loadAllLeaveTypes(); // 필터용: 모든 휴가 유형 로드
     loadAllLeaveHistory(currentPage);
 
-    // 날짜 입력 필드에 변경 이벤트 리스너 추가 (실시간 필터링)
+    // 날짜 입력 필드에 변경 이벤트 리스너 추가 (실시간 필터링 + 유효성)
     const startDateEl = document.getElementById('startDate');
     const endDateEl = document.getElementById('endDate');
-    if (startDateEl) startDateEl.addEventListener('change', () => applyFilters());
-    if (endDateEl) endDateEl.addEventListener('change', () => applyFilters());
+
+    if (startDateEl && endDateEl) {
+        startDateEl.addEventListener('change', function () {
+            endDateEl.min = this.value;
+            if (endDateEl.value && endDateEl.value < this.value) {
+                endDateEl.value = '';
+            }
+            applyFilters();
+        });
+        endDateEl.addEventListener('change', () => applyFilters());
+    }
 });
 
 /**

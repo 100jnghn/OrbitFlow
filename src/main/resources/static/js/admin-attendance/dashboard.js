@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // 3. 이벤트 위임 방식으로 마우스 오버 핸들링
     const table = document.getElementById('attendanceTable');
     if (table) {
-        table.addEventListener('mouseover', function(e) {
+        table.addEventListener('mouseover', function (e) {
             const target = e.target.closest('.badge-corrected');
             if (target) {
                 handleCorrectedMouseOver(e, target);
@@ -56,6 +56,19 @@ document.addEventListener('DOMContentLoaded', function () {
     if (searchInput) {
         searchInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') handleSearch();
+        });
+    }
+
+    // [추가] 시작일 변경 시 종료일 최소값 설정
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+
+    if (startDateInput && endDateInput) {
+        startDateInput.addEventListener('change', function () {
+            endDateInput.min = this.value;
+            if (endDateInput.value && endDateInput.value < this.value) {
+                endDateInput.value = ''; // 시작일보다 이전 날짜 선택 시 초기화
+            }
         });
     }
 
