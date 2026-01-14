@@ -4,6 +4,7 @@ import com.finalproj.orbitflow.auth.repository.RefreshTokenRepository;
 import com.finalproj.orbitflow.global.security.CustomUserDetailsService;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -36,6 +37,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
+
+        if (request.getDispatcherType() == DispatcherType.ASYNC) {
+            return true; // ✅ SSE async dispatch는 건드리지 않음
+        }
+
         String path = request.getRequestURI();
         return isPublicPath(path);
     }
