@@ -58,8 +58,10 @@ public class AttendanceDashboardService {
 
         // 4. 근태 기록(Attendance) 테이블에서 출근 및 지각 인원 추출
         // 출근 버튼을 누른 결과(ON_TIME, LATE)는 기록 테이블에서 가져오는 것이 정확합니다.
-        int onTimeRecord = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today, AttendanceStatus.ON_TIME);
-        int lateRecord = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today, AttendanceStatus.LATE);
+        int onTimeRecord = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today,
+                AttendanceStatus.ON_TIME);
+        int lateRecord = commuteRepository.countByCompanyIdAndWorkDateAndStatus(companyId, today,
+                AttendanceStatus.LATE);
 
         // 5. 결근/미출근 인원 계산
         // 전체 인원 - (출근 기록이 있는 인원 + 현재 휴가/외근/출장 중인 인원)
@@ -92,9 +94,19 @@ public class AttendanceDashboardService {
                 .findByCompanyIdAndIsDefaultTrue(companyId)
                 .orElse(null);
 
-        // 3. 수정된 리포지토리 메서드 호출 (인자 5개 + pageable)
+        // 3. WorkStatus 매핑
+        WorkStatus targetWorkStatus = null;
+        if (statusEnum != null) {
+            switch (statusEnum) {
+                case VACATION -> targetWorkStatus = WorkStatus.VACATION;
+                case BUSINESS_TRIP -> targetWorkStatus = WorkStatus.BUSINESS_TRIP;
+                case OUTSIDE -> targetWorkStatus = WorkStatus.OUTWORK;
+            }
+        }
+
+        // 4. 수정된 리포지토리 메서드 호출
         return commuteRepository.findAllEmployeesWithAttendance(
-                companyId, startDate, endDate, statusEnum, keyword, pageable)
+                companyId, startDate, endDate, statusEnum, targetWorkStatus, keyword, pageable)
                 .map(result -> {
                     Employee emp = (Employee) result[0];
                     Attendance att = (Attendance) result[1];
@@ -117,31 +129,37 @@ public class AttendanceDashboardService {
             statusCode = att.getStatus().name();
         } else {
             // 출근 기록이 없는 경우
-            if (date.equals(LocalDate.now()) && defaultRule != null) {
-                // 오늘 날짜이고 기본 규칙이 있는 경우
-                LocalTime now = LocalTime.now();
-                LocalTime startTime = defaultRule.getDefaultStartTime();
-                LocalTime endTime = defaultRule.getDefaultEndTime();
+            if (date.equals(LocalDate.now())) {
+                // [수정] 오늘 날짜인 경우, Employee의 현재 상태(WorkStatus)를 우선 확인
+                if (emp.getWorkStatus() == WorkStatus.VACATION) {
+                    statusName = AttendanceStatus.VACATION.getDescription();
+                    statusCode = AttendanceStatus.VACATION.name();
+                } else if (emp.getWorkStatus() == WorkStatus.BUSINESS_TRIP) {
+                    statusName = AttendanceStatus.BUSINESS_TRIP.getDescription();
+                    statusCode = AttendanceStatus.BUSINESS_TRIP.name();
+                } else if (emp.getWorkStatus() == WorkStatus.OUTWORK) {
+                    statusName = AttendanceStatus.OUTSIDE.getDescription();
+                    statusCode = AttendanceStatus.OUTSIDE.name();
+                } else if (defaultRule != null) {
+                    // 기본 규칙이 있는 경우 시간 비교
+                    LocalTime now = LocalTime.now();
+                    LocalTime startTime = defaultRule.getDefaultStartTime();
+                    LocalTime endTime = defaultRule.getDefaultEndTime();
 
-                // 현재 시간이 출근 시간 이전이면 "근무예정"
-                if (now.isBefore(startTime)) {
+                    if (now.isBefore(startTime)) {
+                        statusName = AttendanceStatus.BEFORE_WORK.getDescription();
+                        statusCode = AttendanceStatus.BEFORE_WORK.name();
+                    } else if (now.isAfter(endTime)) {
+                        statusName = AttendanceStatus.ABSENT.getDescription();
+                        statusCode = AttendanceStatus.ABSENT.name();
+                    } else {
+                        statusName = AttendanceStatus.BEFORE_WORK.getDescription();
+                        statusCode = AttendanceStatus.BEFORE_WORK.name();
+                    }
+                } else {
                     statusName = AttendanceStatus.BEFORE_WORK.getDescription();
                     statusCode = AttendanceStatus.BEFORE_WORK.name();
                 }
-                // 현재 시간이 퇴근 시간 이후이면 "결근"
-                else if (now.isAfter(endTime)) {
-                    statusName = AttendanceStatus.ABSENT.getDescription();
-                    statusCode = AttendanceStatus.ABSENT.name();
-                }
-                // 출근 시간 이후, 퇴근 시간 이전이면 "근무예정" (아직 출근할 수 있는 시간)
-                else {
-                    statusName = AttendanceStatus.BEFORE_WORK.getDescription();
-                    statusCode = AttendanceStatus.BEFORE_WORK.name();
-                }
-            } else if (date.equals(LocalDate.now())) {
-                // 오늘 날짜이지만 기본 규칙이 없는 경우 기본값으로 "근무예정"
-                statusName = AttendanceStatus.BEFORE_WORK.getDescription();
-                statusCode = AttendanceStatus.BEFORE_WORK.name();
             } else {
                 // 과거 날짜면 "결근"
                 statusName = AttendanceStatus.ABSENT.getDescription();
@@ -175,7 +193,6 @@ public class AttendanceDashboardService {
                 .build();
     }
 
-
     /**
      * [관리자] 기록 수동 정정 (안정성 강화)
      */
@@ -189,21 +206,22 @@ public class AttendanceDashboardService {
         } else {
             attendance = commuteRepository.findByCompanyIdAndEmployeeIdAndWorkDate(
                     companyId, dto.getEmployeeId(), LocalDate.now()).orElseGet(
-                    () -> Attendance.builder()
-                            .employeeId(dto.getEmployeeId())
-                            .companyId(companyId)
-                            .workDate(LocalDate.now())
-                            .isCorrected(true)
-                            .build());
+                            () -> Attendance.builder()
+                                    .employeeId(dto.getEmployeeId())
+                                    .companyId(companyId)
+                                    .workDate(LocalDate.now())
+                                    .isCorrected(true)
+                                    .build());
         }
-
 
         attendance.updateStatus(AttendanceStatus.valueOf(dto.getStatus()), dto.getCorrectionReason());
 
         LocalDateTime commuteTime = (dto.getCommuteAt() != null && !dto.getCommuteAt().isBlank())
-                ? parseDateTime(attendance.getWorkDate(), dto.getCommuteAt()) : null;
+                ? parseDateTime(attendance.getWorkDate(), dto.getCommuteAt())
+                : null;
         LocalDateTime leaveTime = (dto.getLeaveAt() != null && !dto.getLeaveAt().isBlank())
-                ? parseDateTime(attendance.getWorkDate(), dto.getLeaveAt()) : null;
+                ? parseDateTime(attendance.getWorkDate(), dto.getLeaveAt())
+                : null;
 
         attendance.updateTimeByAdmin(commuteTime, leaveTime);
         commuteRepository.save(attendance);
