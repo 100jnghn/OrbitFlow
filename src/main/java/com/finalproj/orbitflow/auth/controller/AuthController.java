@@ -18,6 +18,7 @@ import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,7 @@ import java.time.Instant;
  * @filename : AuthController
  * @since : 2025-12-16 화요일
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -56,8 +58,9 @@ public class AuthController {
                         @RequestBody LoginReqDto request,
                         @CookieValue(value = "refreshToken", required = false) String oldRefreshToken,
                         HttpServletResponse response) {
+            log.info("[LOGIN] controller reached: {}", request.getEmail());
 
-                SecurityUser user;
+            SecurityUser user;
                 try {
                         user = userDetailsService.loadByEmail(request.getEmail());
                 } catch (UsernameNotFoundException e) { // email 없는 경우 처리
