@@ -228,15 +228,49 @@ async function validateImageFile(file) {
 /**
  * 이미지 선택 핸들러
  */
+/**
+ * 이미지 선택 핸들러
+ */
 async function handleImageSelect(event) {
     const file = event.target.files[0];
 
     if (!file) return;
 
+    // 업로드 버튼 및 저장 버튼 비활성화
+    const uploadBtn = document.getElementById('btn-upload'); // 필요하다면 ID 확인
+    const previewImage = document.getElementById('preview-image');
+    const placeholder = document.getElementById('upload-placeholder');
+    const removeBtn = document.getElementById('btn-remove');
+    const previewArea = document.getElementById('item-image-preview');
+
+    // btn-upload가 DOM에 없을 수도 있으니 체크 (보통 hidden input click 용도라)
+    if (uploadBtn) uploadBtn.disabled = true;
+    if (saveBtn) saveBtn.disabled = true;
+    if (removeBtn) removeBtn.style.display = 'none';
+
+    // 기존 미리보기 숨김 & Placeholder 숨김
+    if (previewImage) previewImage.style.display = 'none';
+    if (placeholder) placeholder.style.display = 'none';
+
+    // 스피너 추가
+    let spinner = previewArea.querySelector('.image-spinner');
+    if (!spinner) {
+        spinner = document.createElement('div');
+        spinner.className = 'image-spinner';
+        previewArea.appendChild(spinner);
+    }
+
     // 이미지 파일 검증
     const validation = await validateImageFile(file);
 
     if (!validation.valid) {
+        spinner.remove();
+        if (placeholder) placeholder.style.display = 'flex';
+
+        // 버튼 상태 복구
+        if (uploadBtn) uploadBtn.disabled = false;
+        updateSaveButtonState();
+
         await sweetWarning(validation.message);
         // 파일 입력 초기화
         event.target.value = '';
@@ -248,7 +282,8 @@ async function handleImageSelect(event) {
     // 미리보기 표시
     const reader = new FileReader();
     reader.onload = (e) => {
-        displayImagePreview(e.target.result);
+        const imageUrl = e.target.result;
+        displayImagePreview(imageUrl);
     };
     reader.readAsDataURL(file);
 }
@@ -256,15 +291,39 @@ async function handleImageSelect(event) {
 /**
  * 이미지 미리보기 표시
  */
+/**
+ * 이미지 미리보기 표시
+ */
 function displayImagePreview(imageUrl) {
     const previewImage = document.getElementById('preview-image');
     const placeholder = document.getElementById('upload-placeholder');
     const removeBtn = document.getElementById('btn-remove');
+    const uploadBtn = document.getElementById('btn-upload');
+    const previewArea = document.getElementById('item-image-preview');
+
+    // 스피너 제거
+    const spinner = previewArea.querySelector('.image-spinner');
+    if (spinner) spinner.remove();
 
     if (previewImage && placeholder) {
         previewImage.src = imageUrl;
-        previewImage.style.display = 'block';
-        placeholder.style.display = 'none';
+
+        // 이미지 로드 시
+        previewImage.onload = () => {
+            previewImage.style.display = 'block';
+            if (placeholder) placeholder.style.display = 'none';
+
+            // 버튼 복구
+            if (uploadBtn) uploadBtn.disabled = false;
+            updateSaveButtonState();
+        };
+
+        if (imageUrl.startsWith('data:')) {
+            previewImage.style.display = 'block';
+            if (placeholder) placeholder.style.display = 'none';
+            if (uploadBtn) uploadBtn.disabled = false;
+            updateSaveButtonState();
+        }
 
         if (removeBtn) {
             removeBtn.style.display = 'inline-flex';

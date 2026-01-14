@@ -20,11 +20,12 @@
     <!-- 페이지별 CSS -->
     <th:block th:fragment="pageCss">
         <link rel="stylesheet" th:href="@{/css/user-document/detail.css}">
+        <link rel="stylesheet" th:href="@{/css/ui/fullscreenSpinner.css}">
     </th:block>
 
     <!-- 페이지별 JS -->
     <th:block th:fragment="pageScript">
-        <script th:src="@{/js/user-document/detail.js}"></script>
+        <script th:src="@{/js/user-document/detail.js}" type="module"></script>
     </th:block>
 </head>
 

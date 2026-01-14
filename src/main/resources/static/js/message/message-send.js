@@ -402,6 +402,8 @@ async function handleSubmit(event) {
     }
 
     try {
+        setLoading(document.querySelector('.message-send-form'), true, '메시지 전송 중...');
+
         // FormData로 전송 (게시판과 동일하게)
         const formData = new FormData();
         formData.append('messageTitle', title);
@@ -444,6 +446,8 @@ async function handleSubmit(event) {
         window.location.href = '/view/message/sent';
     } catch (error) {
         sweetError(error.message || '메시지 전송에 실패했습니다.');
+    } finally {
+        setLoading(document.querySelector('.message-send-form'), false);
     }
 }
 
@@ -565,5 +569,30 @@ function escapeHTML(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+}
+
+// 로딩 스피너 제어
+function setLoading(targetEl, loading, message = '') {
+    if (!targetEl) return;
+
+    let overlay = targetEl.querySelector(':scope > .loading-overlay');
+
+    if (loading) {
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.className = 'loading-overlay';
+            overlay.innerHTML = `
+        <div class="spinner"></div>
+        ${message ? `<div class="loading-text">${message}</div>` : ''}
+      `;
+            targetEl.style.position = 'relative'; // 필요한 경우 주석 해제 (기본적으로 container가 relative여야 함)
+            targetEl.appendChild(overlay);
+        } else {
+            const textEl = overlay.querySelector('.loading-text');
+            if (textEl) textEl.textContent = message;
+        }
+    } else {
+        overlay?.remove();
+    }
 }
 

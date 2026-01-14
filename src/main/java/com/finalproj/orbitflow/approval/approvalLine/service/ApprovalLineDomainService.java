@@ -16,7 +16,6 @@ import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import com.finalproj.orbitflow.hr.organization.dto.OrgResDto;
-import com.finalproj.orbitflow.hr.organization.entity.Organization;
 import com.finalproj.orbitflow.hr.organization.repository.OrgRepository;
 import com.finalproj.orbitflow.hr.organization.service.OrgService;
 import com.finalproj.orbitflow.hr.positionCategory.entity.PositionCategory;
@@ -66,7 +65,7 @@ public class ApprovalLineDomainService {
         approvalLineRepository.flush();
 
         List<OrgResDto> userOrgs =
-                orgService.findOrgsByEmployeeId(writer.getId());
+                orgService.findOrgsByOrgId(writer.getOrganization().getId());
 
         if (userOrgs == null || userOrgs.isEmpty()) {
             throw new BusinessException("사용자 조직 정보가 비어 있습니다.");
@@ -145,6 +144,12 @@ public class ApprovalLineDomainService {
 
     /**
      * ORG_CATEGORY_CHAIN 처리
+     * <p>
+     * 정책:
+     * - 조직 체인 결재선에서는 실제 결재자가 존재하는 단계만 결재선으로 생성한다.
+     * - 결재자가 없는 조직 단계는 결재선에서 제거한다.
+     * - 상신 시점에서는 모든 결재선에 결재자가 지정되어 있어야 하므로,
+     * 생성 단계에서 null 결재선을 허용하지 않는다.
      */
     private List<ApprovalLine> createOrgCategoryChainLines(
             Document document,
@@ -191,31 +196,37 @@ public class ApprovalLineDomainService {
 
         for (OrgResDto org : chain) {
 
-            Organization organization =
-                    orgRepository.getReferenceById(org.getId());
-
             PositionCategory positionCategory =
                     positionCategoryRepository
                             .findHeadPositionByOrgCategoryId(org.getCategoryId())
                             .orElse(null);
 
-            Employee head = null;
-            if (positionCategory != null) {
-                head =
-                        employeeRepository
-                                .findHeadByOrgIdAndPositionCategoryIdAndStatus(
-                                        org.getId(),
-                                        positionCategory.getId(),
-                                        EmployeeStatus.ACTIVE
-                                )
-                                .orElse(null);
+            if (positionCategory == null) {
+                // 해당 조직 카테고리에 책임 직책이 없는 경우 결재선에서 제외
+                continue;
+            }
+
+            Employee head =
+                    employeeRepository
+                            .findHeadByOrgIdAndPositionCategoryIdAndStatus(
+                                    org.getId(),
+                                    positionCategory.getId(),
+                                    EmployeeStatus.ACTIVE
+                            )
+                            .orElse(null);
+
+            if (head == null) {
+                // 실제 결재자가 없는 조직 단계는 결재선에서 제거
+                continue;
             }
 
             result.add(
                     ApprovalLine.builder()
                             .document(document)
                             .company(company)
-                            .organization(organization)
+                            .organization(
+                                    orgRepository.getReferenceById(org.getId())
+                            )
                             .positionCategory(positionCategory)
                             .approver(head)
                             .orderNo(orderNo++)
@@ -226,6 +237,7 @@ public class ApprovalLineDomainService {
 
         return result;
     }
+
 
     /**
      * 단일 결재선 생성
@@ -260,6 +272,8 @@ public class ApprovalLineDomainService {
                     );
 
             case FIXED_EMPLOYEE -> {
+                // 지정된 결재자가 유효한 경우 우선 사용하고,
+                // 그렇지 않으면 조직/직책 기반 결재선으로 처리한다.
                 builder
                         .organization(
                                 orgRepository.getReferenceById(

@@ -29,7 +29,7 @@ public class FormTemplateController {
     private final FormTemplateService formTemplateService;
 
     @PostMapping("/admin/form-templates")
-    public ResponseEntity<ResponseDto> saveFormTemplate(
+    public ResponseEntity<?> saveFormTemplate(
             @RequestParam Long templateGroupId
     ) {
         Long formTemplateId = formTemplateService.saveFormTemplate(
@@ -38,7 +38,7 @@ public class FormTemplateController {
         );
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ResponseDto(
+                .body(new ResponseDto<>(
                         HttpStatus.CREATED,
                         "결재 양식 초안이 생성되었습니다.",
                         Map.of("formTemplateId", formTemplateId)
@@ -47,7 +47,7 @@ public class FormTemplateController {
 
 
     @PostMapping("/admin/form-templates/{templateGroupId}/revise")
-    public ResponseEntity<ResponseDto> reviseFormTemplate(
+    public ResponseEntity<?> reviseFormTemplate(
             @PathVariable Long templateGroupId
     ) {
         Long createdTemplateId =
@@ -57,7 +57,7 @@ public class FormTemplateController {
                 );
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ResponseDto(
+                .body(new ResponseDto<>(
                         HttpStatus.CREATED,
                         "결재 양식이 복제되었습니다.",
                         Map.of("createdTemplateId", createdTemplateId)
@@ -65,7 +65,7 @@ public class FormTemplateController {
     }
 
     @PatchMapping("/admin/form-templates/{formTemplateId}/structure")
-    public ResponseEntity<ResponseDto> updateFormTemplateStructure(
+    public ResponseEntity<?> updateFormTemplateStructure(
             @PathVariable Long formTemplateId,
             @RequestBody FormTemplateUpdateReqDto reqDto
     ) {
@@ -76,7 +76,7 @@ public class FormTemplateController {
         );
 
         return ResponseEntity.ok(
-                new ResponseDto(
+                new ResponseDto<>(
                         HttpStatus.OK,
                         "결재 양식 구조가 수정되었습니다.",
                         null
@@ -85,7 +85,7 @@ public class FormTemplateController {
     }
 
     @PatchMapping("/admin/form-templates/{formTemplateId}/approval-rule")
-    public ResponseEntity<ResponseDto> updateFormTemplateApprovalRule(
+    public ResponseEntity<?> updateFormTemplateApprovalRule(
             @PathVariable Long formTemplateId,
             @RequestBody FormTemplateUpdateReqDto reqDto
     ) {
@@ -96,7 +96,7 @@ public class FormTemplateController {
         );
 
         return ResponseEntity.ok(
-                new ResponseDto(
+                new ResponseDto<>(
                         HttpStatus.OK,
                         "결재선 규칙이 수정되었습니다.",
                         null
@@ -105,7 +105,7 @@ public class FormTemplateController {
     }
 
     @PostMapping("/admin/form-templates/{formTemplateId}/publish")
-    public ResponseEntity<ResponseDto> publishFormTemplate(
+    public ResponseEntity<?> publishFormTemplate(
             @PathVariable Long formTemplateId
     ) {
         formTemplateService.publishFormTemplate(
@@ -114,7 +114,7 @@ public class FormTemplateController {
         );
 
         return ResponseEntity.ok(
-                new ResponseDto(
+                new ResponseDto<>(
                         HttpStatus.OK,
                         "결재 양식이 활성화되었습니다.",
                         null
@@ -123,7 +123,7 @@ public class FormTemplateController {
     }
 
     @GetMapping("/admin/form-templates/{formTemplateId}/preview")
-    public ResponseEntity<ResponseDto> previewFormTemplate(
+    public ResponseEntity<?> previewFormTemplate(
             @PathVariable Long formTemplateId
     ) {
         FormTemplatePreviewResDto result =
@@ -133,7 +133,7 @@ public class FormTemplateController {
                 );
 
         return ResponseEntity.ok(
-                new ResponseDto(
+                new ResponseDto<>(
                         HttpStatus.OK,
                         "양식 구조 메타 데이터 반환 성공",
                         result
@@ -142,7 +142,7 @@ public class FormTemplateController {
     }
 
     @GetMapping("/admin/form-templates/all")
-    public ResponseEntity<ResponseDto> getAllFormTemplates(
+    public ResponseEntity<?> getAllFormTemplates(
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "10") int size,
             @ModelAttribute FormTemplateAllListReqDto reqDto
@@ -156,7 +156,7 @@ public class FormTemplateController {
                 );
 
         return ResponseEntity.ok(
-                new ResponseDto(
+                new ResponseDto<>(
                         HttpStatus.OK,
                         "문서 양식 전체 조회",
                         result
@@ -165,11 +165,11 @@ public class FormTemplateController {
     }
 
     @GetMapping("/form-templates/active")
-    public ResponseEntity<ResponseDto> getActiveFormTemplates(
+    public ResponseEntity<?> getActiveFormTemplates(
             @RequestParam(required = false) String keyword
     ) {
         return ResponseEntity.ok(
-                new ResponseDto(
+                new ResponseDto<>(
                         HttpStatus.OK,
                         "활성 상태 양식 목록 조회",
                         formTemplateService.getActiveFormTemplates(
@@ -181,7 +181,7 @@ public class FormTemplateController {
     }
 
     @GetMapping("/form-templates/{formTemplateId}")
-    public ResponseEntity<ResponseDto> getDetailFormTemplate(
+    public ResponseEntity<?> getDetailFormTemplate(
             @PathVariable Long formTemplateId
     ) {
         FormTemplateDetailResDto result =
@@ -191,7 +191,7 @@ public class FormTemplateController {
                 );
 
         return ResponseEntity.ok(
-                new ResponseDto(
+                new ResponseDto<>(
                         HttpStatus.OK,
                         "문서 양식 상세 조회 성공",
                         result

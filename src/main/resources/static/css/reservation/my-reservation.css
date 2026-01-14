@@ -294,29 +294,33 @@
     border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
-    border: 1px solid transparent;
+    /*border: 1px solid transparent;*/
     line-height: 1;
-    color: dimgray;
+    color: black;
 }
 
 .status-badge.status-confirmed {
-    background: #f0f9ff;
-    border: 1.2px solid #38bdf8;
+    background: #e3f2fd;
+    color: #1976d2;
+    /*border: 1.2px solid #38bdf8;*/
 }
 
 .status-badge.status-pending {
-    background: #fffbeb;
-    border: 1.2px solid #f5c417;
+    background: #fff7d6;
+    color: #e3cd38;
+    /*border: 1.2px solid #f5c417;*/
 }
 
 .status-badge.status-rejected {
-    background: #fef2f2;
-    border: 1.2px solid #f87171;
+    background: #fde2e2;
+    color: #b42318;
+    /*border: 1.2px solid #f87171;*/
 }
 
 .status-badge.status-cancelled {
     background: #e0e0e0;
-    border: 1.2px solid #2b2b2b;
+    color: #616161;
+    /*border: 1.2px solid #2b2b2b;*/
 }
 
 .resource-table td[data-fulltext] .status-badge {

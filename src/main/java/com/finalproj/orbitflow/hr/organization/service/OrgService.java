@@ -489,7 +489,7 @@ public class OrgService {
     }
 
 
-    public List<OrgResDto> findOrgsByEmployeeId(Long orgId) {
+    public List<OrgResDto> findOrgsByOrgId(Long orgId) {
 
         log.info("[OrgService] findHierarchy orgId={}", orgId);
 

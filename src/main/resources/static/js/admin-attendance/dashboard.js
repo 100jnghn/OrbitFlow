@@ -13,15 +13,16 @@ let currentSearchParams = {
 
 // 툴팁(정정 사유) 전역 상태
 let reasonPopoverEl = null;
-let reasonPopoverAnchorEl = null;
 let hoverCloseTimer = null;
 
 document.addEventListener('DOMContentLoaded', function () {
+    // 1. 날짜 표시 로직
     const today = new Date();
     const formattedToday = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
     const todayLabel = document.getElementById('todayLabel');
     if (todayLabel) todayLabel.innerText = `금일 요약 현황 (${formattedToday})`;
 
+    // 2. 정정 모달 글자 수 카운터
     const modalReasonInput = document.getElementById('modalReason');
     const charCountElement = document.getElementById('charCount');
 
@@ -38,12 +39,19 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // 3. 이벤트 위임 방식으로 마우스 오버 핸들링
     const table = document.getElementById('attendanceTable');
     if (table) {
-        table.addEventListener('mouseover', handleCorrectedMouseOver);
+        table.addEventListener('mouseover', function(e) {
+            const target = e.target.closest('.badge-corrected');
+            if (target) {
+                handleCorrectedMouseOver(e, target);
+            }
+        });
         table.addEventListener('mouseout', handleCorrectedMouseOut);
     }
 
+    // 4. 검색창 엔터키 이벤트
     const searchInput = document.getElementById('searchKeyword');
     if (searchInput) {
         searchInput.addEventListener('keypress', function (e) {
@@ -51,10 +59,14 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // 5. 초기 데이터 로드
     loadSummaryData();
     loadAttendanceList();
 });
 
+/**
+ * 요약 데이터 로드
+ */
 async function loadSummaryData() {
     try {
         const response = await fetch('/api/admin/attendance/summary', {
@@ -72,20 +84,23 @@ async function loadSummaryData() {
             if (document.getElementById('vacationCount')) document.getElementById('vacationCount').innerText = d.vacationCount || 0;
             if (document.getElementById('outsideCount')) document.getElementById('outsideCount').innerText = d.outsideCount || 0;
             if (document.getElementById('businessTripCount')) document.getElementById('businessTripCount').innerText = d.businessTripCount || 0;
-            if (document.getElementById('beforeWorkCount')) document.getElementById('beforeWorkCount').innerText = d.beforeWorkCount || 0;
         }
     } catch (e) {
         console.error("요약 데이터 로드 실패:", e);
     }
 }
 
+/**
+ * 근태 목록 로드
+ */
 async function loadAttendanceList() {
     const { page, size, startDate, endDate, status, keyword } = currentSearchParams;
-    const params = new URLSearchParams({ page, size, startDate, endDate, status, keyword });
+    const params = new URLSearchParams({ page, size, startDate, endDate, status: status || 'ALL', keyword: keyword || '' });
 
     try {
+        const token = sessionStorage.getItem('accessToken');
         const response = await fetch(`/api/admin/attendance/list?${params.toString()}`, {
-            headers: { 'Authorization': `Bearer ${sessionStorage.getItem('accessToken')}` }
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
         });
         const result = await response.json();
 
@@ -94,50 +109,49 @@ async function loadAttendanceList() {
             renderPagination(result.data);
         }
     } catch (e) {
-        console.error("근태 목록 로드 실패:", e);
+        console.error("목록 로드 중 오류:", e);
     }
 }
 
+/**
+ * 테이블 렌더링 (정정 상태 로직 포함)
+ */
 function renderAttendanceTable(list) {
     const tbody = document.querySelector('#attendanceTable tbody');
     if (!tbody) return;
 
-    if (list.length === 0) {
+    if (!list || list.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" class="loading-state">조회된 데이터가 없습니다.</td></tr>';
         return;
     }
 
     tbody.innerHTML = list.map(item => {
         const statusCode = item.statusCode || 'BEFORE_WORK';
-        let statusName = item.statusName;
-
-        if (statusCode === 'BEFORE_WORK') statusName = '근무 예정';
-
+        const statusName = item.statusName || '근무 예정';
         const commuteStyle = statusCode === 'LATE' ? 'color: var(--warning-color); font-weight:600;' : '';
 
-        let leaveDisplay = item.leaveAt || '-';
-        if (item.commuteAt && item.commuteAt !== '-' && !item.leaveAt) {
-            leaveDisplay = '<span style="color: var(--primary-color); font-weight:600;">근무 중</span>';
-        }
+        // [핵심수정] DB의 tinyint(1) 및 Boolean 대응
+        const isCorrected = (item.isCorrected === true || item.isCorrected === 1 || item.correctionYn === 'Y');
+        const reason = item.correctionReason || '사유가 등록되지 않았습니다.';
 
-        const corrected = item.correctionYn === 'Y' || item.isCorrected;
-
-        let actionBtn = corrected
-            ? `<span class="badge-corrected" data-reason="${escapeHtml(item.correctionReason)}">정정됨</span>`
-            : `<button class="btn-table-action" onclick="openCorrectionModal(${item.attendanceId}, '${statusCode}')">
-                <i class="fa-solid fa-pen-to-square" style="margin-right:4px;"></i>정정
+        const actionBtn = isCorrected
+            ? `<div class="badge-corrected" data-reason="${escapeHtml(reason)}">
+                <i class="fa-solid fa-circle-info"></i> 정정됨
+               </div>`
+            : `<button class="btn-table-action" onclick="openCorrectionModal(${item.attendanceId}, '${item.employeeName}', '${statusCode}')">
+                <i class="fa-solid fa-pen-to-square"></i> 정정
                </button>`;
 
         return `
             <tr>
                 <td>
-                    <div style="text-align:left; padding-left:15px;">
-                        <div style="font-weight:600; color:var(--text-main);">${item.employeeName}</div>
-                        <div style="font-size:12px; color:var(--text-muted);">${item.employeeNum}</div>
+                    <div class="emp-info-cell">
+                        <div class="emp-name">${item.employeeName}</div>
+                        <div class="emp-num">${item.employeeNum}</div>
                     </div>
                 </td>
                 <td style="${commuteStyle}">${item.commuteAt || '-'}</td>
-                <td>${leaveDisplay}</td>
+                <td>${item.leaveAt || '-'}</td>
                 <td>${item.workingTime || '-'}</td>
                 <td><span class="status-badge ${statusCode}">${statusName}</span></td>
                 <td>${item.workDate}</td>
@@ -146,7 +160,10 @@ function renderAttendanceTable(list) {
     }).join('');
 }
 
-function openCorrectionModal(id, status) {
+/**
+ * 모달 제어
+ */
+function openCorrectionModal(id, name, status) {
     document.getElementById('targetAttendanceId').value = id;
     document.getElementById('modalStatus').value = status;
     document.getElementById('modalReason').value = '';
@@ -162,7 +179,7 @@ function closeModal() {
 }
 
 /**
- * [수정: SweetAlert2 적용] 정정 사유 제출
+ * 정정 제출
  */
 async function submitCorrection() {
     const reason = document.getElementById('modalReason').value.trim();
@@ -174,9 +191,16 @@ async function submitCorrection() {
     const id = document.getElementById('targetAttendanceId').value;
     const status = document.getElementById('modalStatus').value;
 
-    // SweetAlert Confirm 추가
-    const confirmResult = await sweetConfirm("근태 정정", "입력하신 사유로 근태 정보를 정정하시겠습니까?");
-    if (!confirmResult.isConfirmed) return;
+    // SweetAlert Confirm (존재 가정)
+    if (typeof Swal !== 'undefined') {
+        const confirm = await Swal.fire({
+            title: '근태 정정',
+            text: '정정하시겠습니까?',
+            icon: 'question',
+            showCancelButton: true
+        });
+        if (!confirm.isConfirmed) return;
+    }
 
     try {
         const response = await fetch(`/api/admin/attendance/update/${id}`, {
@@ -188,59 +212,25 @@ async function submitCorrection() {
             body: JSON.stringify({ status: status, correctionReason: reason })
         });
 
-        const result = await response.json();
-
         if (response.ok) {
-            await sweetSuccess(result.message || "성공적으로 정정되었습니다.");
             closeModal();
             loadAttendanceList();
             loadSummaryData();
-        } else {
-            sweetError(result.message || "정정 처리에 실패했습니다.");
         }
     } catch (e) {
-        sweetError("네트워크 오류가 발생했습니다.");
+        console.error("정정 요청 실패:", e);
     }
-}
-
-function resetFilters() {
-    document.getElementById('startDate').value = '';
-    document.getElementById('endDate').value = '';
-    document.getElementById('statusFilter').value = 'ALL';
-    document.getElementById('searchKeyword').value = '';
-
-    currentSearchParams = { page: 0, size: 10, startDate: '', endDate: '', status: 'ALL', keyword: '' };
-    loadAttendanceList();
 }
 
 /**
- * [수정: SweetAlert2 적용] 검색 핸들러
+ * 마우스 오버 툴팁 처리
  */
-async function handleSearch() {
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-
-    if (startDate && endDate && startDate > endDate) {
-        sweetWarning("종료일은 시작일보다 빠를 수 없습니다.");
-        return;
-    }
-
-    currentSearchParams.startDate = startDate;
-    currentSearchParams.endDate = endDate;
-    currentSearchParams.status = document.getElementById('statusFilter').value;
-    currentSearchParams.keyword = document.getElementById('searchKeyword').value.trim();
-    currentSearchParams.page = 0;
-    loadAttendanceList();
-}
-
-function handleCorrectedMouseOver(e) {
-    const target = e.target.closest('.badge-corrected');
-    if (!target) return;
-
+function handleCorrectedMouseOver(e, target) {
     clearTimeout(hoverCloseTimer);
     const reason = target.getAttribute('data-reason') || '사유 없음';
 
     closeReasonPopover();
+
     const pop = document.createElement('div');
     pop.className = 'reason-popover';
     pop.innerHTML = `<strong>정정 사유</strong><p style="margin:5px 0 0 0;">${escapeHtml(reason)}</p>`;
@@ -253,7 +243,7 @@ function handleCorrectedMouseOver(e) {
 }
 
 function handleCorrectedMouseOut() {
-    hoverCloseTimer = setTimeout(closeReasonPopover, 100);
+    hoverCloseTimer = setTimeout(closeReasonPopover, 150);
 }
 
 function closeReasonPopover() {
@@ -263,50 +253,64 @@ function closeReasonPopover() {
     }
 }
 
+/**
+ * 검색 및 필터
+ */
+function handleSearch() {
+    currentSearchParams.startDate = document.getElementById('startDate').value;
+    currentSearchParams.endDate = document.getElementById('endDate').value;
+    currentSearchParams.status = document.getElementById('statusFilter').value;
+    currentSearchParams.keyword = document.getElementById('searchKeyword').value.trim();
+    currentSearchParams.page = 0;
+    loadAttendanceList();
+}
+
+function resetFilters() {
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+    document.getElementById('statusFilter').value = 'ALL';
+    document.getElementById('searchKeyword').value = '';
+    currentSearchParams = { page: 0, size: 10, startDate: '', endDate: '', status: 'ALL', keyword: '' };
+    loadAttendanceList();
+}
+
+/**
+ * 페이지네이션
+ */
 function renderPagination(pageData) {
     const pagination = document.getElementById('boardPagination');
     if (!pagination || !pageData) return;
-
     pagination.innerHTML = '';
+
     const page = pageData.number || 0;
     const totalPages = pageData.totalPages || 0;
     const wrapper = document.createElement('div');
     wrapper.className = 'pagination';
 
+    // 이전 버튼
     const prevBtn = document.createElement('button');
     prevBtn.className = 'page-btn';
     prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
     prevBtn.disabled = page === 0;
-    prevBtn.onclick = () => {
-        currentSearchParams.page = page - 1;
-        loadAttendanceList();
-    };
+    prevBtn.onclick = () => { currentSearchParams.page = page - 1; loadAttendanceList(); };
     wrapper.appendChild(prevBtn);
 
-    const maxVisible = 5;
-    let start = Math.max(0, page - Math.floor(maxVisible / 2));
-    let end = Math.min(totalPages - 1, start + maxVisible - 1);
-    if (end - start < maxVisible - 1) start = Math.max(0, end - maxVisible + 1);
-
-    for (let i = start; i <= end; i++) {
+    // 페이지 숫자
+    for (let i = 0; i < totalPages; i++) {
+        if (totalPages > 10 && (i > 2 && i < totalPages - 3 && Math.abs(i - page) > 2)) continue;
         const btn = document.createElement('button');
         btn.className = `page-number ${i === page ? 'active' : ''}`;
         btn.innerText = i + 1;
-        btn.onclick = () => {
-            currentSearchParams.page = i;
-            loadAttendanceList();
-        };
+        btn.onclick = () => { currentSearchParams.page = i; loadAttendanceList(); };
         wrapper.appendChild(btn);
     }
 
+    // 다음 버튼
     const nextBtn = document.createElement('button');
     nextBtn.className = 'page-btn';
     nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
     nextBtn.disabled = page >= totalPages - 1;
-    nextBtn.onclick = () => {
-        currentSearchParams.page = page + 1;
-        loadAttendanceList();
-    };
+    nextBtn.onclick = () => { currentSearchParams.page = page + 1; loadAttendanceList(); };
     wrapper.appendChild(nextBtn);
 
     pagination.appendChild(wrapper);

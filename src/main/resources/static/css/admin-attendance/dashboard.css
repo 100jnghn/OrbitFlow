@@ -342,6 +342,28 @@
     cursor: help;
 }
 
+.btn-table-action:disabled,
+.btn-table-action.disabled-correction {
+    background: var(--neutral-100);
+    /* 매우 연한 회색 */
+    color: var(--neutral-400);
+    /* 연한 텍스트 */
+    border-color: var(--neutral-200);
+    cursor: not-allowed;
+    transform: none;
+    pointer-events: auto;
+    /* 툴팁 이벤트 수신을 위해 auto 유지 */
+}
+
+.btn-table-action:disabled:hover,
+.btn-table-action.disabled-correction:hover {
+    border-color: var(--neutral-200);
+    color: var(--neutral-400);
+    background: var(--neutral-100);
+    transform: none;
+    box-shadow: none;
+}
+
 /* ✅ 고도화된 페이지네이션 디자인 (User Board Style) */
 .board-bottom-actions {
     display: flex;
@@ -608,4 +630,58 @@
     font-size: 13px;
     margin-top: 6px;
     display: none;
+}
+
+
+/* dashboard.css 추가 */
+
+.badge-corrected {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: var(--neutral-100); /* 연한 회색 배경 */
+    color: var(--neutral-600);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: help; /* 물음표 커서로 정보가 있음을 암시 */
+    border: 1px solid var(--neutral-200);
+    transition: all 0.2s ease;
+}
+
+.badge-corrected:hover {
+    background: var(--neutral-200);
+    color: var(--text-main);
+}
+
+.badge-corrected i {
+    color: var(--primary-color); /* 아이콘에 포인트 컬러 부여 */
+}
+
+/* 정정 사유 팝오버 스타일 보강 */
+.reason-popover {
+    position: fixed;
+    background: #fff;
+    border: 1px solid var(--primary-color); /* 테두리를 포인트 컬러로 변경 */
+    padding: 14px;
+    border-radius: 10px;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    z-index: 2000;
+    font-size: 13px;
+    max-width: 280px;
+    line-height: 1.6;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.reason-popover strong {
+    display: block;
+    color: var(--primary-color);
+    margin-bottom: 6px;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
 }

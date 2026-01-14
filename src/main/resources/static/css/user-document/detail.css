@@ -435,7 +435,7 @@
 .sub-field-row {
     display: grid;
     grid-template-columns: 100px 1fr;
-    align-items: start;
+    align-items: stretch;
     box-sizing: border-box;
     border-bottom: 1px solid #000;
 }
@@ -453,13 +453,15 @@
     border-right: 1px solid #000;
 
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     text-align: center;
 
     white-space: normal;
     word-break: keep-all;
     overflow-wrap: break-word;
+
+    height: auto;
 }
 
 

@@ -1,3 +1,6 @@
+import {showFullscreenSpinner, hideFullscreenSpinner} from "/js/ui/fullscreenSpinner.js";
+
+
 let currentActionType = null;   // "approve" | "reject"
 let currentDocumentId = null;
 let currentBeforeDocumentId = null;
@@ -339,8 +342,6 @@ async function submitApprovalAction() {
         .value
         .trim();
 
-    const hint = document.getElementById("approvalCommentHint");
-
     if (currentActionType === "reject" && !comment) {
         const hint = document.getElementById("approvalCommentHint");
         hint.textContent = "반려 사유는 필수 입력입니다.";
@@ -356,29 +357,39 @@ async function submitApprovalAction() {
             : `/api/documents/${currentDocumentId}/reject`;
 
     try {
+        closeApprovalModal();
+
+        showFullscreenSpinner(
+            currentActionType === "approve"
+                ? "문서를 승인 중입니다..."
+                : "문서를 반려 중입니다..."
+        );
+
         const res = await apiFetch(url, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify({comment})
         });
 
         if (!res.ok) {
-            throw new Error("결재 처리 실패");
+            const error = await res.json();
+            await sweetWarning(error.message); // 🔥 핵심
+            return;
         }
 
-        closeApprovalModal();
-        await Promise.resolve();
+        await sweetSuccess(
+            currentActionType === "approve"
+                ? "승인되었습니다."
+                : "반려되었습니다."
+        );
 
-        await sweetSuccess(currentActionType === "approve"
-            ? "승인되었습니다."
-            : "반려되었습니다.");
-        location.reload(); // 상태 갱신
+        location.reload();
 
     } catch (e) {
         console.error(e);
-        await sweetWarning("처리 중 오류가 발생했습니다.");
+        await sweetWarning("요청 처리 중 오류가 발생했습니다.");
+    } finally {
+        hideFullscreenSpinner();
     }
 }
 
@@ -854,14 +865,14 @@ function renderEventDateRange(field) {
         ));
     }
 
-    // 3️⃣ 휴가 사유 OR 일정 설명
+    // 3️⃣ 휴가 사유 OR 일정 설명 (긴 텍스트 대응)
     if (v.reason) {
-        wrapper.appendChild(createSubRow(
+        wrapper.appendChild(createMultilineSubRow(
             "휴가 사유",
             v.reason
         ));
     } else if (v.description) {
-        wrapper.appendChild(createSubRow(
+        wrapper.appendChild(createMultilineSubRow(
             "일정 설명",
             v.description
         ));
@@ -871,6 +882,7 @@ function renderEventDateRange(field) {
             "-"
         ));
     }
+
 
     return createFieldWrapper(field, wrapper);
 }
@@ -886,6 +898,25 @@ function createSubRow(label, value) {
     const v = document.createElement("div");
     v.className = "sub-field-value";
     v.textContent = value;
+
+    row.append(l, v);
+    return row;
+}
+
+
+function createMultilineSubRow(label, value) {
+    const row = document.createElement("div");
+    row.className = "sub-field-row multiline";
+
+    const l = document.createElement("div");
+    l.className = "sub-field-label";
+    l.textContent = label;
+
+    const v = document.createElement("div");
+    v.className = "sub-field-value multiline";
+    v.textContent = value;
+    v.style.whiteSpace = "pre-wrap";   // ⭐ 핵심
+    v.style.wordBreak = "break-word";  // ⭐ 긴 단어 대응
 
     row.append(l, v);
     return row;
@@ -1379,18 +1410,38 @@ async function setupRevisionButtons(docData) {
 
         reviseBtn.style.display = "inline-flex";
         reviseBtn.onclick = async () => {
-            if (!confirm("반려 문서를 재기안하시겠습니까?")) return;
 
-            const res = await apiFetch(
-                `/api/documents/${docData.documentId}/revise`,
-                {method: "POST"}
+            const result = await sweetConfirm(
+                "재기안 확인",
+                "반려 문서를 재기안하시겠습니까?"
             );
 
-            const json = await res.json();
-            location.href = `/view/document/write/${json.data.documentId}`;
+            if (!result.isConfirmed) return;
+
+            try {
+                const res = await apiFetch(
+                    `/api/documents/${docData.documentId}/revise`,
+                    {method: "POST"}
+                );
+
+                if (!res.ok) {
+                    const error = await res.json();
+                    await sweetWarning(error.message);
+                    return;
+                }
+
+                const json = await res.json();
+                location.href = `/view/document/write/${json.data.documentId}`;
+
+            } catch (e) {
+                console.error(e);
+                await sweetWarning("재기안 처리 중 오류가 발생했습니다.");
+            }
         };
+
         return;
     }
+
 
     if (!goRevisionBtn) return;
 
