@@ -18,6 +18,7 @@
 
     <!-- 페이지별 CSS -->
     <th:block th:fragment="pageCss">
+        <link rel="stylesheet" th:href="@{/css/user-document/detail.css}">
         <link rel="stylesheet" th:href="@{/css/admin-form-template/preview.css}">
     </th:block>
 
@@ -26,7 +27,7 @@
         <script th:inline="javascript">
             const templateId = /*[[${templateId}]]*/ null
         </script>
-        <script th:src="@{/js/admin-form-template/preview.js}"></script>
+        <script type="module" th:src="@{/js/admin-form-template/preview.js}"></script>
     </th:block>
 </head>
 
@@ -36,8 +37,10 @@
 <div th:fragment="content">
     <div class="preview-container">
 
-        <!-- 📄 결재 문서 전체 래퍼 -->
-        <div class="document-wrapper">
+        <!-- 📄 문서 전체 래퍼 -->
+        <div class="document-wrapper document-detail-page preview-only">
+
+            <!-- ← 뒤로가기 -->
             <button
                     type="button"
                     class="preview-back-button"
@@ -45,28 +48,28 @@
                 ← 이전 페이지
             </button>
 
-            <!-- 🧾 문서 헤더 (제목 / 기본정보용) -->
-            <!-- ※ 1페이지만 표시되도록 JS/CSS에서 제어 예정 -->
+            <!-- 🧾 문서 헤더 (선택) -->
             <div class="document-header">
-                <!-- JS에서 문서 제목, 작성자, 작성일 등을 채울 영역 -->
+                <!-- 필요하면 JS로 제목/설명 채움 -->
             </div>
 
-            <!-- 📄 본문 페이지 루트 -->
-            <div id="document-root" class="document-root">
-                <!--
-                  JS 결과 구조:
-                  <div class="page">
-                    <div class="page-content">
-                      ...
+            <!-- 📄 문서 본문 -->
+            <div class="document-body">
+
+                <!-- ✅ 상세보기 CSS 핵심 영역 -->
+                <div class="document-content-panel">
+                    <div id="documentContentContainer">
+                        <!-- JS에서 renderDocumentContent 결과 삽입 -->
                     </div>
-                  </div>
-                -->
+                </div>
+
+                <!-- ❌ 사이드 패널은 미리보기에서 사용 안 함 -->
+                <!-- <div class="document-side-panel"></div> -->
+
             </div>
 
-            <!-- ✍️ 결재선 / 푸터 (추후 확장용) -->
-            <div class="document-footer">
-                <!-- 결재선, 페이지 번호 등 -->
-            </div>
+            <!-- 푸터 (선택) -->
+            <div class="document-footer"></div>
 
         </div>
     </div>

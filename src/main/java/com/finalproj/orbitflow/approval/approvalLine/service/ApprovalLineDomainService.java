@@ -66,7 +66,7 @@ public class ApprovalLineDomainService {
         approvalLineRepository.flush();
 
         List<OrgResDto> userOrgs =
-                orgService.findOrgsByEmployeeId(writer.getId());
+                orgService.findOrgsByOrgId(writer.getOrganization().getId());
 
         if (userOrgs == null || userOrgs.isEmpty()) {
             throw new BusinessException("사용자 조직 정보가 비어 있습니다.");

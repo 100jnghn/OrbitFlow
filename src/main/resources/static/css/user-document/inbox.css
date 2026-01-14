@@ -371,7 +371,7 @@
     font-size: 12px;
     font-weight: 600;
     line-height: 1;
-    border: 1px solid transparent;
+    /*border: 1px solid transparent;*/
     color: dimgray;
     transition: all 0.15s ease;
 }
@@ -379,31 +379,31 @@
 /* 파란색 (진행 / 처리 필요) */
 .status-blue {
     background: #F0F9FF;
-    border: 1.2px solid #38BDF8;
+    /*border: 1.2px solid #38BDF8;*/
 }
 
 /* 노란색 (대기중) */
 .status-yellow {
     background: #FFFBEB;
-    border: 1.2px solid #F5C417;
+    /*border: 1.2px solid #F5C417;*/
 }
 
 /* 빨간색 (반려) */
 .status-red {
     background: #FEF2F2;
-    border: 1.2px solid #F87171;
+    /*border: 1.2px solid #F87171;*/
 }
 
 /* 회색 (취소 등) */
 .status-gray {
     background: #E0E0E0;
-    border: 1.2px solid #2B2B2B;
+    /*border: 1.2px solid #2B2B2B;*/
 }
 
 /* 연두색 (승인) */
 .status-green {
     background: #ECFDF5;
-    border: 1.2px solid #10B981;
+    /*border: 1.2px solid #10B981;*/
 }
 
 /* hover */

@@ -163,7 +163,7 @@ public class ScheduleSummaryService {
                 true
         );
 
-        List<Long> userOrgs = orgService.findOrgsByEmployeeId(employeeId).stream().map(OrgResDto::getId).collect(Collectors.toList());
+        List<Long> userOrgs = orgService.findOrgsByOrgId(orgId).stream().map(OrgResDto::getId).collect(Collectors.toList());
 
         log.info("사용자 조직 트리 : " + userOrgs);
 

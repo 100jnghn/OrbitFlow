@@ -7,13 +7,11 @@ import com.finalproj.orbitflow.approval.attendanceRecord.repository.AttendanceRe
 import com.finalproj.orbitflow.approval.document.dto.CommonPayload;
 import com.finalproj.orbitflow.approval.document.dto.LeaveCalculationResult;
 import com.finalproj.orbitflow.approval.document.entity.Document;
-import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
 import com.finalproj.orbitflow.approval.document.event.DocumentContentParser;
 import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
 import com.finalproj.orbitflow.approval.documentContent.entity.DocumentContent;
 import com.finalproj.orbitflow.approval.documentContent.repository.DocumentContentRepository;
 import com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole;
-import com.finalproj.orbitflow.attendance.leave.entity.LeaveType;
 import com.finalproj.orbitflow.attendance.leave.repository.LeaveTypeRepository;
 import com.finalproj.orbitflow.attendance.leave.service.LeaveService;
 import com.finalproj.orbitflow.attendance.rule.entity.AttendanceRule;
@@ -30,11 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -219,40 +214,6 @@ public class ApprovalEventTxService {
             return;
         }
 
-        // 🔥 4-1. AttendanceRecord 저장 (전체 기간 기준) - 스케줄러 동기화를 위해 필수
-        LocalDate actualStart = workingDates.get(0);
-        LocalDate actualEnd = workingDates.get(workingDates.size() - 1);
-
-        // 출장/외근은 연차 차감이 없으므로 days는 0으로 설정
-        // leaveType은 NOT NULL 제약이 있으므로, 비차감 항목(isCountable = false) 중 첫 번째를 찾아서 설정
-        // 실제로는 출장/외근에 leaveType이 의미가 없지만, DB 제약을 위해 설정
-        LeaveType defaultLeaveType = leaveTypeRepository.findAll().stream()
-                .filter(lt -> !Boolean.TRUE.equals(lt.getIsCountable()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("비차감 휴가 유형을 찾을 수 없습니다. 시스템 설정을 확인해주세요."));
-
-        AttendanceRecord record = AttendanceRecord.builder()
-                .employee(writer)
-                .company(writer.getCompany())
-                .startDate(actualStart)
-                .endDate(actualEnd)
-                .days(BigDecimal.ZERO) // 출장/외근은 연차 차감 없음
-                .leaveType(defaultLeaveType) // DB 제약을 위해 비차감 휴가 유형 설정 (실제 차감은 하지 않음)
-                .reason(payload.description())
-                .sourceDocument(document)
-                .status(DocumentStatus.APPROVED)
-                .approvedAt(
-                        LocalDateTime.ofInstant(
-                                document.getUpdatedAt(),
-                                ZoneId.systemDefault()))
-                .build();
-
-        attendanceRecordRepository.save(record);
-        log.info("[AttendanceApproval] AttendanceRecord 저장 완료: documentId={}, 사원={}, 기간={}~{}",
-                documentId, writer.getName(), actualStart, actualEnd);
-
-        // 5️⃣ 일별 일정 + 근태 이벤트 등록
-        LocalDate today = LocalDate.now();
 
         for (LocalDate date : workingDates) {
 
@@ -274,19 +235,9 @@ public class ApprovalEventTxService {
                     writer.getId(),
                     scheduleReqDto);
 
-            // 🕒 근태 이벤트 저장 (일별)
-            attendanceEventRepository.save(
-                    AttendanceEvent.builder()
-                            .employee(writer)
-                            .company(writer.getCompany())
-                            .baseRole(baseRole)
-                            .startDate(date)
-                            .endDate(date)
-                            .sourceDocument(document)
-                            .build());
 
             // 6️⃣ 🔥 추가된 로직: 승인된 날짜 중 오늘이 포함되어 있으면 즉시 근무 상태 변경
-            if (date.equals(today)) {
+            if (date.equals(LocalDate.now())) {
                 // BaseRole에 따라 WorkStatus 매핑 (출장 중 또는 외근 중)
                 WorkStatus targetStatus;
                 if (baseRole == BaseRole.BUSINESS_TRIP) {
@@ -302,6 +253,17 @@ public class ApprovalEventTxService {
                         title, writer.getName(), date);
             }
         }
+
+        // 🕒근태 이벤트 저장(전체 저장하고 스케쥴러에서 오늘이 근무일인지 체크)
+        attendanceEventRepository.save(
+                AttendanceEvent.builder()
+                        .employee(writer)
+                        .company(writer.getCompany())
+                        .baseRole(baseRole)
+                        .startDate(workingDates.get(0))
+                        .endDate(workingDates.get(workingDates.size() - 1))
+                        .sourceDocument(document)
+                        .build());
     }
 
     @Transactional

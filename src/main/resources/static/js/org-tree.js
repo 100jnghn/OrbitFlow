@@ -153,7 +153,7 @@ async function loadEmployeeWorkStatus(employeeId) {
 ========================= */
 async function checkMySignature() {
     try {
-        const res = await apiFetch('/api/approval/signature/me');
+        const res = await apiFetch('/api/employee-signature');
         if (!res.ok) return false;
 
         const result = await res.json();
@@ -180,7 +180,7 @@ async function openSignatureModal() {
 
 
     try {
-        const res = await apiFetch('/api/approval/signature/me');
+        const res = await apiFetch('/api/employee-signature');
         if (!res.ok) return;
 
         const {data} = await res.json();
@@ -264,7 +264,7 @@ saveBtn?.addEventListener('click', async () => {
         saveBtn.disabled = true;
         saveBtn.textContent = '저장 중...';
 
-        const res = await apiFetch('/api/approval/signature', {
+        const res = await apiFetch('/api/employee-signature', {
             method: 'POST',
             body: formData
         });

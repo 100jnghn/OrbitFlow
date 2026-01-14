@@ -1,3 +1,6 @@
+import {showFullscreenSpinner, hideFullscreenSpinner} from "/js/ui/fullscreenSpinner.js";
+
+
 let currentActionType = null;   // "approve" | "reject"
 let currentDocumentId = null;
 let currentBeforeDocumentId = null;
@@ -339,8 +342,6 @@ async function submitApprovalAction() {
         .value
         .trim();
 
-    const hint = document.getElementById("approvalCommentHint");
-
     if (currentActionType === "reject" && !comment) {
         const hint = document.getElementById("approvalCommentHint");
         hint.textContent = "반려 사유는 필수 입력입니다.";
@@ -356,28 +357,33 @@ async function submitApprovalAction() {
             : `/api/documents/${currentDocumentId}/reject`;
 
     try {
+        closeApprovalModal();
+
+        showFullscreenSpinner(
+            currentActionType === "approve"
+                ? "문서를 승인 중입니다..."
+                : "문서를 반려 중입니다..."
+        );
+
         const res = await apiFetch(url, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify({comment})
         });
 
-        if (!res.ok) {
-            throw new Error("결재 처리 실패");
-        }
+        if (!res.ok) throw new Error();
 
-        closeApprovalModal();
-        await Promise.resolve();
+        await sweetSuccess(
+            currentActionType === "approve"
+                ? "승인되었습니다."
+                : "반려되었습니다."
+        );
 
-        await sweetSuccess(currentActionType === "approve"
-            ? "승인되었습니다."
-            : "반려되었습니다.");
-        location.reload(); // 상태 갱신
+        location.reload();
 
     } catch (e) {
         console.error(e);
+        hideFullscreenSpinner();
         await sweetWarning("처리 중 오류가 발생했습니다.");
     }
 }
@@ -854,14 +860,14 @@ function renderEventDateRange(field) {
         ));
     }
 
-    // 3️⃣ 휴가 사유 OR 일정 설명
+    // 3️⃣ 휴가 사유 OR 일정 설명 (긴 텍스트 대응)
     if (v.reason) {
-        wrapper.appendChild(createSubRow(
+        wrapper.appendChild(createMultilineSubRow(
             "휴가 사유",
             v.reason
         ));
     } else if (v.description) {
-        wrapper.appendChild(createSubRow(
+        wrapper.appendChild(createMultilineSubRow(
             "일정 설명",
             v.description
         ));
@@ -871,6 +877,7 @@ function renderEventDateRange(field) {
             "-"
         ));
     }
+
 
     return createFieldWrapper(field, wrapper);
 }
@@ -886,6 +893,25 @@ function createSubRow(label, value) {
     const v = document.createElement("div");
     v.className = "sub-field-value";
     v.textContent = value;
+
+    row.append(l, v);
+    return row;
+}
+
+
+function createMultilineSubRow(label, value) {
+    const row = document.createElement("div");
+    row.className = "sub-field-row multiline";
+
+    const l = document.createElement("div");
+    l.className = "sub-field-label";
+    l.textContent = label;
+
+    const v = document.createElement("div");
+    v.className = "sub-field-value multiline";
+    v.textContent = value;
+    v.style.whiteSpace = "pre-wrap";   // ⭐ 핵심
+    v.style.wordBreak = "break-word";  // ⭐ 긴 단어 대응
 
     row.append(l, v);
     return row;
