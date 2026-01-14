@@ -229,24 +229,45 @@ public class DocumentApplicationService {
             // 6-1. 다음 결재자가 있다 → 결재 계속
             nextLine.markInProgress(); // WAITING → IN_PROGRESS
 
+            String shortTitle = shortenTitle(document.getTitle(), 20);
+
+            String content =
+                    "[결재 요청]\n" +
+                            "문서 제목 : " + shortTitle + "\n" +
+                            "기안자 : " + document.getWriter().getName() +
+                            " | " + document.getWriter().getOrganization().getName() +
+                            " | " + document.getWriter().getPositionCategory().getName();
+
             notificationCommandService.createNotification(
                     nextLine.getCompany().getId(),
                     nextLine.getApprover().getId(),
                     NotificationType.APPROVAL,
-                    "결재 차례인 문서가 있습니다.",
+                    content,
                     "/view/document/" + documentId
             );
+
+
         } else {
             // 6-2. 다음 결재자가 없다 → 최종 승인
             document.approve();
+
+            String shortTitle = shortenTitle(document.getTitle(), 20);
+
+            String content =
+                    "[결재 완료]\n" +
+                            "문서 제목 : " + shortTitle + "\n" +
+                            "최종 승인자 : " + myLine.getApprover().getName() +
+                            " | " + myLine.getApprover().getOrganization().getName() +
+                            " | " + myLine.getApprover().getPositionCategory().getName();
 
             notificationCommandService.createNotification(
                     document.getCompany().getId(),
                     document.getWriter().getId(),
                     NotificationType.APPROVAL,
-                    "결재가 최종 승인 되었습니다.",
+                    content,
                     "/view/document/" + documentId
             );
+
 
             applicationEventPublisher.publishEvent(document.getId());
         }
@@ -406,13 +427,23 @@ public class DocumentApplicationService {
         myLine.reject(comment); // → REJECTED
 
 
+        String shortTitle = shortenTitle(document.getTitle(), 20);
+
+        String content =
+                "[결재 문서 반려]\n" +
+                        "문서 제목 : " + shortTitle + "\n" +
+                        "반려자 : " + myLine.getApprover().getName() +
+                        " | " + myLine.getApprover().getOrganization().getName() +
+                        " | " + myLine.getApprover().getPositionCategory().getName();
+
         notificationCommandService.createNotification(
                 document.getCompany().getId(),
                 document.getWriter().getId(),
                 NotificationType.APPROVAL,
-                "결재 문서가 반려되었습니다.",
+                content,
                 "/view/document/" + documentId
         );
+
 
         // 5. 내 이후 결재자 CANCELLED 처리
         lines.stream()
@@ -590,14 +621,34 @@ public class DocumentApplicationService {
         }
 
 
+        String shortTitle = shortenTitle(document.getTitle(), 20);
+
+        String content =
+                "[결재 요청]\n" +
+                        "문서 제목 : " + shortTitle + "\n" +
+                        "기안자 : " + document.getWriter().getName() +
+                        " | " + document.getWriter().getOrganization().getName() +
+                        " | " + document.getWriter().getPositionCategory().getName();
+
         notificationCommandService.createNotification(
                 lines.get(0).getCompany().getId(),
                 lines.get(0).getApprover().getId(),
                 NotificationType.APPROVAL,
-                "결재 차례인 문서가 있습니다.",
+                content,
                 "/view/document/" + documentId
         );
+
     }
+
+
+    private String shortenTitle(String title, int maxLength) {
+        if (title == null) return "";
+        if (title.length() <= maxLength) {
+            return title;
+        }
+        return title.substring(0, maxLength) + "...";
+    }
+
 
     private List<ApprovalLine> getApprovalLines(Long documentId) {
         List<ApprovalLine> lines =
