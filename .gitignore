@@ -52,3 +52,4 @@ logs/
 # Env
 .env
 application-local.yml
+/web.pem
