@@ -1,3 +1,5 @@
+import {showFullscreenSpinner, hideFullscreenSpinner} from "/js/ui/fullscreenSpinner.js";
+
 /**
  * write.js
  * - 문서 초안 + 결재선 초안 조회
@@ -3593,79 +3595,87 @@ async function attachReferenceDocument(documentId, documentFileId) {
 
 async function bindEvents(documentId) {
 
-    // 임시 저장
     document.getElementById('tempSaveBtn')
         ?.addEventListener('click', async () => {
             await tempSave(documentId);
         });
 
-    // 이전
     document.getElementById('prevBtn')
         ?.addEventListener('click', async () => {
             await goToPreviousPage();
         });
 
+    const nextBtn = document.getElementById('nextBtn');
 
-    // 다음
-    document.getElementById('nextBtn')
-        ?.addEventListener('click', async () => {
+    nextBtn?.addEventListener('click', async () => {
 
-            // 0️⃣ 문서 제목 검증
-            if (!validateDocumentTitle()) return;
+        // 중복 클릭 차단
+        if (nextBtn.disabled) return;
+        nextBtn.disabled = true;
 
-            // 1️⃣ 결재선 검증
-            const res = await apiFetch(`/api/approval-lines/${DOCUMENT_ID}`);
-            const result = await res.json();
-            const approvalLines = result.data ?? [];
+        // 문서 제목 검증
+        if (!validateDocumentTitle()) {
+            nextBtn.disabled = false;
+            return;
+        }
 
-            if (!validateApprovalLines(approvalLines)) return;
+        const res = await apiFetch(`/api/approval-lines/${DOCUMENT_ID}`);
+        const result = await res.json();
+        const approvalLines = result.data ?? [];
 
-            // 2️⃣ 문서 값 수집
-            const payload = collectDocumentValues();
-            const valuesById = new Map(
-                payload.fields.map(f => [f.fieldId, f.value])
-            );
+        if (!validateApprovalLines(approvalLines)) {
+            nextBtn.disabled = false;
+            return;
+        }
 
-            // 3️⃣ required 검증
-            if (!await validateRequiredFieldsWithSchema(
-                documentFieldDefinitions,
-                valuesById
-            )) return;
+        const payload = collectDocumentValues();
+        const valuesById = new Map(
+            payload.fields.map(f => [f.fieldId, f.value])
+        );
 
-            // 4️⃣ 타입별 검증
-            if (!await validateFieldsByTypeWithSchema(
-                documentFieldDefinitions,
-                valuesById
-            )) return;
+        if (!await validateRequiredFieldsWithSchema(
+            documentFieldDefinitions,
+            valuesById
+        )) {
+            nextBtn.disabled = false;
+            return;
+        }
 
-            try {
-                // 5️⃣ 최종 저장
-                await apiFetch(`/api/document-contents/${DOCUMENT_ID}`, {
-                    method: 'PATCH',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(payload)
-                });
+        if (!await validateFieldsByTypeWithSchema(
+            documentFieldDefinitions,
+            valuesById
+        )) {
+            nextBtn.disabled = false;
+            return;
+        }
 
-                hasUnsavedChanges = false;
+        showFullscreenSpinner('문서를 상신하는 중입니다...');
 
-                // 6️⃣ 제출
-                await apiFetch(`/api/documents/${DOCUMENT_ID}/submit`, {
-                    method: 'POST'
-                });
+        try {
+            await apiFetch(`/api/document-contents/${DOCUMENT_ID}`, {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
 
-                // 7️⃣ 이동
-                await sweetSuccess("문서가 상신되었습니다.");
-                location.href = '/view/document/my-documents';
+            hasUnsavedChanges = false;
 
-            } catch (e) {
-                console.error(e);
-                await sweetWarning('문서 상신 중 오류가 발생했습니다.');
-            }
-        });
+            await apiFetch(`/api/documents/${DOCUMENT_ID}/submit`, {
+                method: 'POST'
+            });
 
-    /* =========================
-       첨부파일
-    ========================= */
+            await sweetSuccess('문서가 상신되었습니다.');
+            location.href = '/view/document/my-documents';
+
+        } catch (e) {
+            console.error(e);
+            await sweetWarning('문서 상신 중 오류가 발생했습니다.');
+        } finally {
+            hideFullscreenSpinner();
+            nextBtn.disabled = false;
+        }
+    });
+
     bindAttachmentEvents(documentId);
     await loadAttachments(documentId);
 }

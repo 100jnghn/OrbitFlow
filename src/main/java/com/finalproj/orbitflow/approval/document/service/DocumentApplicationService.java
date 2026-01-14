@@ -232,7 +232,7 @@ public class DocumentApplicationService {
             String shortTitle = shortenTitle(document.getTitle(), 20);
 
             String content =
-                    "[결재 요청]\n" +
+                    "[결재 요청 - " + formatNow() + "]\n" +
                             "문서 제목 : " + shortTitle + "\n" +
                             "기안자 : " + document.getWriter().getName() +
                             " | " + document.getWriter().getOrganization().getName() +
@@ -254,7 +254,7 @@ public class DocumentApplicationService {
             String shortTitle = shortenTitle(document.getTitle(), 20);
 
             String content =
-                    "[결재 완료]\n" +
+                    "[결재 완료 - " + formatNow() + "]\n" +
                             "문서 제목 : " + shortTitle + "\n" +
                             "최종 승인자 : " + myLine.getApprover().getName() +
                             " | " + myLine.getApprover().getOrganization().getName() +
@@ -430,11 +430,12 @@ public class DocumentApplicationService {
         String shortTitle = shortenTitle(document.getTitle(), 20);
 
         String content =
-                "[결재 문서 반려]\n" +
+                "[결재 문서 반려 - " + formatNow() + "]\n" +
                         "문서 제목 : " + shortTitle + "\n" +
                         "반려자 : " + myLine.getApprover().getName() +
                         " | " + myLine.getApprover().getOrganization().getName() +
                         " | " + myLine.getApprover().getPositionCategory().getName();
+
 
         notificationCommandService.createNotification(
                 document.getCompany().getId(),
@@ -597,8 +598,10 @@ public class DocumentApplicationService {
 
         BaseRole baseRole = document.getTemplateGroup().getBaseRole();
 
-        if (baseRole.equals(BaseRole.VACATION)) {
-            LeaveCalculationResult result = leaveCalculationService.calculate(document);
+        if (BaseRole.VACATION.equals(baseRole)) {
+
+            LeaveCalculationResult result =
+                    leaveCalculationService.calculate(document);
 
             LocalDate actualStart = result.effectiveDates().get(0);
             LocalDate actualEnd = result.effectiveDates()
@@ -624,7 +627,7 @@ public class DocumentApplicationService {
         String shortTitle = shortenTitle(document.getTitle(), 20);
 
         String content =
-                "[결재 요청]\n" +
+                "[결재 요청 - " + formatNow() + "]\n" +
                         "문서 제목 : " + shortTitle + "\n" +
                         "기안자 : " + document.getWriter().getName() +
                         " | " + document.getWriter().getOrganization().getName() +
@@ -647,6 +650,11 @@ public class DocumentApplicationService {
             return title;
         }
         return title.substring(0, maxLength) + "...";
+    }
+
+    private String formatNow() {
+        return java.time.LocalDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
     }
 
 

@@ -1,3 +1,6 @@
+import {showFullscreenSpinner, hideFullscreenSpinner} from "/js/ui/fullscreenSpinner.js";
+
+
 let currentActionType = null;   // "approve" | "reject"
 let currentDocumentId = null;
 let currentBeforeDocumentId = null;
@@ -339,8 +342,6 @@ async function submitApprovalAction() {
         .value
         .trim();
 
-    const hint = document.getElementById("approvalCommentHint");
-
     if (currentActionType === "reject" && !comment) {
         const hint = document.getElementById("approvalCommentHint");
         hint.textContent = "반려 사유는 필수 입력입니다.";
@@ -356,28 +357,33 @@ async function submitApprovalAction() {
             : `/api/documents/${currentDocumentId}/reject`;
 
     try {
+        closeApprovalModal();
+
+        showFullscreenSpinner(
+            currentActionType === "approve"
+                ? "문서를 승인 중입니다..."
+                : "문서를 반려 중입니다..."
+        );
+
         const res = await apiFetch(url, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify({comment})
         });
 
-        if (!res.ok) {
-            throw new Error("결재 처리 실패");
-        }
+        if (!res.ok) throw new Error();
 
-        closeApprovalModal();
-        await Promise.resolve();
+        await sweetSuccess(
+            currentActionType === "approve"
+                ? "승인되었습니다."
+                : "반려되었습니다."
+        );
 
-        await sweetSuccess(currentActionType === "approve"
-            ? "승인되었습니다."
-            : "반려되었습니다.");
-        location.reload(); // 상태 갱신
+        location.reload();
 
     } catch (e) {
         console.error(e);
+        hideFullscreenSpinner();
         await sweetWarning("처리 중 오류가 발생했습니다.");
     }
 }
