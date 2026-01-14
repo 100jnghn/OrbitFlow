@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.attendance.dashboard.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,6 +27,8 @@ public class AdminAttendanceResDto {
     private String workingTime;     // 총 근무 시간
     private String statusName;      // 상태 명칭 (정상, 지각, 결근 등)
     private String statusCode;      // 상태 코드 (LATE, ABSENT 등)
+
+    @JsonProperty("isCorrected")
     private boolean isCorrected;    // 수정 여부 (0 또는 1)
     private String correctionReason; // 정정 사유
 }

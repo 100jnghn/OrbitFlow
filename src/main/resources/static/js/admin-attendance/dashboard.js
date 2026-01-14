@@ -141,12 +141,11 @@ function renderAttendanceTable(list) {
         let actionBtn = '';
 
         if (isCorrected) {
-            // ✅ 정정됨 + 사유 버튼(동적으로)
-            // data-reason에 사유 저장해두고, 클릭하면 showCorrectionReason()로 보여줌
+            // ✅ 정정됨 + 사유 버튼
             actionBtn = `
         <div class="corrected-actions">
           <span class="badge-corrected">
-            <i class="fa-solid fa-circle-check"></i> 정정됨
+            정정됨
           </span>
           <button class="btn-reason"
                   type="button"
@@ -197,19 +196,19 @@ function renderAttendanceTable(list) {
 /**
  * 사유 보기 버튼 클릭 시: SweetAlert(있으면) / 없으면 alert 로 표시
  */
-async function showCorrectionReason(btnEl) {
+/**
+ * 사유 보기 모달 열기
+ */
+function showCorrectionReason(btnEl) {
     const reason = btnEl?.getAttribute('data-reason') || '사유가 등록되지 않았습니다.';
+    document.getElementById('readOnlyReason').value = reason;
+    document.getElementById('reasonModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
 
-    if (typeof Swal !== 'undefined') {
-        await Swal.fire({
-            icon: 'info',
-            title: '정정 사유',
-            text: reason,
-            confirmButtonText: '확인'
-        });
-    } else {
-        alert('정정 사유\n\n' + reason);
-    }
+function closeReasonModal() {
+    document.getElementById('reasonModal').style.display = 'none';
+    document.body.style.overflow = '';
 }
 
 /**
@@ -378,4 +377,5 @@ function clearFieldError(id) {
 
 function handleModalBackdropClick(e) {
     if (e.target.id === 'correctionModal') closeModal();
+    if (e.target.id === 'reasonModal') closeReasonModal();
 }
