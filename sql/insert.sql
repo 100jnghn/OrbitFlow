@@ -2261,7 +2261,7 @@ SELECT
     o.company_id,
     o.id AS organization_id,
     CONCAT(o.name, ' 게시판') AS board_name,
-    'FREE',
+    'ORGANIZATION',
     1,
     1
 FROM organization o

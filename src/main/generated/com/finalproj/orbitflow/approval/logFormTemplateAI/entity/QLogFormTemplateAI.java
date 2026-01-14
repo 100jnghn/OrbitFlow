@@ -20,7 +20,7 @@ public class QLogFormTemplateAi extends EntityPathBase<LogFormTemplateAi> {
 
     private static final PathInits INITS = PathInits.DIRECT2;
 
-    public static final QLogFormTemplateAi logFormTemplateAi = new QLogFormTemplateAi("logFormTemplateAI");
+    public static final QLogFormTemplateAi logFormTemplateAi = new QLogFormTemplateAi("logFormTemplateAi");
 
     public final com.finalproj.orbitflow.global.common.QBaseEntity _super = new com.finalproj.orbitflow.global.common.QBaseEntity(this);
 

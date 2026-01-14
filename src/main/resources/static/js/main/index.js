@@ -280,7 +280,7 @@ async function loadNotices() {
 
         const noticeCategory = categories.find(cat =>
             (cat.boardType === '공지사항' || cat.boardType === 'NOTICE') &&
-            cat.organizationId === null
+            (cat.organizationId == null)
         );
 
         if (!noticeCategory) {
