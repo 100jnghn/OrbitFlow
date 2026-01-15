@@ -79,4 +79,10 @@ public interface DocumentFileRepository extends JpaRepository<DocumentFile, Long
             @Param("referenceType") ReferenceType referenceType,
             @Param("status") DocumentFileStatus status
     );
+
+    Optional<DocumentFile> findByDocument_IdAndReferenceTypeAndReferenceTargetIdIsNullAndStatus(
+            Long documentId,
+            ReferenceType referenceType,
+            DocumentFileStatus status
+    );
 }

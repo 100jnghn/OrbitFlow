@@ -2,11 +2,13 @@ package com.finalproj.orbitflow.approval.documentFile.controller;
 
 import com.finalproj.orbitflow.approval.documentFile.dto.DocumentFileAttachedListResDto;
 import com.finalproj.orbitflow.approval.documentFile.dto.DocumentFileUploadResDto;
+import com.finalproj.orbitflow.approval.documentFile.dto.PdfStatusRes;
 import com.finalproj.orbitflow.approval.documentFile.enums.DocumentFileStatus;
 import com.finalproj.orbitflow.approval.documentFile.service.DocumentFileService;
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +24,7 @@ import java.util.List;
  * @since : 26. 1. 2. 금요일
  **/
 
+@Slf4j
 @RestController
 @RequestMapping("/api/document-file")
 @RequiredArgsConstructor
@@ -36,13 +39,13 @@ public class DocumentFileController {
     ) {
 
         DocumentFileUploadResDto result = documentFileService.uploadDocumentFile(
-                        SecurityUtils.getCompanyId(),
-                        SecurityUtils.getEmployeeId(),
-                        documentId,
-                        file
-                );
+                SecurityUtils.getCompanyId(),
+                SecurityUtils.getEmployeeId(),
+                documentId,
+                file
+        );
 
-        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.CREATED, "파일 업로드 성공",  result));
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.CREATED, "파일 업로드 성공", result));
     }
 
     @PostMapping("/{documentId}/image")
@@ -71,7 +74,7 @@ public class DocumentFileController {
     ) {
         List<DocumentFileAttachedListResDto> result = documentFileService.getAttachedFiles(SecurityUtils.getEmployeeId(), documentId);
 
-        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "첨부 파일 목록 조회 성공",  result));
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "첨부 파일 목록 조회 성공", result));
     }
 
 
@@ -98,4 +101,20 @@ public class DocumentFileController {
         );
     }
 
+    @GetMapping("/{documentId}/pdf")
+    public ResponseEntity<?> getDocumentPdfStatus(
+            @PathVariable Long documentId
+    ) {
+
+        log.info("[PDF] 문서 상태 조회 진입");
+        PdfStatusRes result = documentFileService.getPdfStatus(documentId);
+
+        return ResponseEntity.ok(
+                new ResponseDto<>(
+                        HttpStatus.OK,
+                        "PDF 문서 상태 조회 성공",
+                        result
+                )
+        );
+    }
 }
