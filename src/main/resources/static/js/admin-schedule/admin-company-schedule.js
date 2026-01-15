@@ -881,6 +881,8 @@ async function setCompanyOrgCategory() {
         const result = await response.json();
         const categories = result.data || [];
 
+        console.log("category : " + categories[0].categoryId)
+
         const rootCategories = categories.filter(cat => cat.parentOrgId === null);
 
         const select = document.getElementById('scheduleOrgCategory');
@@ -888,15 +890,16 @@ async function setCompanyOrgCategory() {
 
         rootCategories.forEach(cat => {
             const option = document.createElement('option');
-            option.value = cat.id;
+            option.value = cat.categoryId;
             option.textContent = cat.name;
             select.appendChild(option);
+
         });
 
         // 기본값: 회사
         const companyCategory = rootCategories.find(cat => cat.name === '회사');
         if (companyCategory) {
-            select.value = companyCategory.id;
+            select.value = companyCategory.categoryId;
         }
 
         select.disabled = true;
@@ -993,6 +996,8 @@ async function handleScheduleSubmit(e) {
     const orgCategoryId = document.getElementById('scheduleOrgCategory').value;
 
     console.log('Form values:', { startHour, startMinute, endHour, endMinute });
+    console.log('org category id : ' + orgCategoryId);
+
 
     if (!title) {
         await sweetInfo('제목을 입력해주세요.');

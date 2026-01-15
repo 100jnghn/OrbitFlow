@@ -146,7 +146,7 @@
 .btn-add-schedule {
     margin-left: auto;
     padding: 10px 20px;
-    background: var(--success-color);
+    background: #3B82F6;
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -160,9 +160,8 @@
 }
 
 .btn-add-schedule:hover {
-    background: #059669;
+    background-color: #2563EB;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .btn-add-schedule i {

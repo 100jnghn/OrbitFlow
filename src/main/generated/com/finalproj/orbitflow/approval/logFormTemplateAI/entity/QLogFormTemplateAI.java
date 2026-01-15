@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.logFormTemplateAI.entity;
+package com.finalproj.orbitflow.approval.logformtemplateai.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 

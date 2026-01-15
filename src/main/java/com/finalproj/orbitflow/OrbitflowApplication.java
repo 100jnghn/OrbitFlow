@@ -10,7 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableAsync
 @EnableScheduling
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.finalproj.orbitflow")
 @EnableConfigurationProperties({JwtProperties.class, HolidayApiProperties.class})
 public class OrbitflowApplication {
 

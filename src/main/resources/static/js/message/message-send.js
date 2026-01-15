@@ -20,6 +20,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // 답장 모드 확인 및 초기화
     initializeReplyMode();
 
+    // 조직도 등에서 넘어온 수신자 자동 추가 확인
+    initializeRecipientFromUrl();
+
     // 글자수 카운터 설정
     setupCharCounters();
 
@@ -293,6 +296,10 @@ function setupCharCounters() {
             updateContentCharCount();
         });
     }
+
+    // ✅ 페이지 진입 시에도 바로 표시되게 초기 1회 실행
+    updateTitleCharCount();
+    updateContentCharCount();
 }
 
 // 제목 글자수 카운터 업데이트
@@ -327,35 +334,31 @@ function updateTitleCharCount() {
     }
 }
 
-// 내용 글자수 카운터 업데이트
+// 내용 글자수 카운터 업데이트 (메시지, 상시 표시)
 function updateContentCharCount() {
     const contentTextarea = document.getElementById('messageContent');
     const contentCharCount = document.getElementById('contentCharCount');
 
     if (!contentTextarea || !contentCharCount) return;
 
-    const currentLength = contentTextarea.value.length;
     const maxLength = 3000;
-
-    // 2,500자 이상부터 표시
-    if (currentLength >= 2500) {
-        contentCharCount.style.display = 'block';
-        contentCharCount.textContent = `${currentLength} / ${maxLength}`;
-
-        // 2,800자 이상부터 경고 색상
-        if (currentLength >= 2800) {
-            contentCharCount.style.color = '#EF4444'; // 경고 색상
-        } else {
-            contentCharCount.style.color = '#6B7280'; // 기본 색상
-        }
-    } else {
-        contentCharCount.style.display = 'none';
-    }
+    let currentLength = contentTextarea.value.length;
 
     // 3,000자 초과 시 입력 차단
     if (currentLength > maxLength) {
         contentTextarea.value = contentTextarea.value.substring(0, maxLength);
-        updateContentCharCount(); // 다시 업데이트
+        currentLength = maxLength;
+    }
+
+    // 항상 표시
+    contentCharCount.style.display = 'block';
+    contentCharCount.textContent = `${currentLength} / ${maxLength}`;
+
+    // 2,800자 이상부터 경고 색상
+    if (currentLength >= 2800) {
+        contentCharCount.style.color = '#EF4444'; // 경고
+    } else {
+        contentCharCount.style.color = '#6B7280'; // 기본
     }
 }
 
@@ -595,4 +598,34 @@ function setLoading(targetEl, loading, message = '') {
         overlay?.remove();
     }
 }
+
+/**
+ * URL 파라미터(recipientId)가 있을 경우 해당 사원을 수신자로 자동 추가
+ */
+async function initializeRecipientFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const recipientId = urlParams.get('recipientId');
+
+    if (!recipientId) return;
+
+    try {
+        const response = await apiFetch(`/api/employees/${recipientId}`);
+        if (response.ok) {
+            const { data: emp } = await response.json();
+            if (emp) {
+                // message-send.js의 selectRecipient 함수는 검색 결과 객체 구조를 기대함
+                selectRecipient({
+                    id: emp.employeeId || emp.id,
+                    name: emp.name,
+                    employeeNo: emp.employeeNo,
+                    organizationName: emp.orgName || emp.organizationName || emp.orgPath,
+                    positionName: emp.positionName
+                });
+            }
+        }
+    } catch (error) {
+        console.error('수신자 정보 로드 실패:', error);
+    }
+}
+
 

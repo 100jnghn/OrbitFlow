@@ -7,6 +7,7 @@ import com.finalproj.orbitflow.approval.approvalLine.service.ApprovalLineDomainS
 import com.finalproj.orbitflow.approval.attendanceRecord.entity.AttendanceRecord;
 import com.finalproj.orbitflow.approval.attendanceRecord.repository.AttendanceRecordRepository;
 import com.finalproj.orbitflow.approval.document.dto.DocumentCreateResDto;
+import com.finalproj.orbitflow.approval.document.dto.DocumentMainInfoResDto;
 import com.finalproj.orbitflow.approval.document.dto.LeaveCalculationResult;
 import com.finalproj.orbitflow.approval.document.dto.PdfApprovalLineDto;
 import com.finalproj.orbitflow.approval.document.entity.Document;
@@ -55,7 +56,10 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -794,4 +798,65 @@ public class DocumentApplicationService {
         return documentRepository.findById(documentId)
                 .orElseThrow(() -> new NotFoundException("문서를 찾지 못했습니다."));
     }
+
+    public DocumentMainInfoResDto getMainInfo(Long employeeId) {
+
+        int waitingCount =
+                approvalLineRepository.countByApproverAndStatus(
+                        employeeId,
+                        ApprovalStatus.WAITING
+                );
+
+        int progressCount =
+                documentRepository.countByWriterAndStatus(
+                        employeeId,
+                        DocumentStatus.IN_PROGRESS
+                );
+
+        int rejectCount =
+                documentRepository.countRejectedNotResubmitted(
+                        employeeId,
+                        DocumentStatus.REJECTED
+                );
+
+        ZoneId zone = ZoneId.systemDefault();
+        ZonedDateTime now = ZonedDateTime.now(zone);
+
+        Instant startOfThisMonth =
+                now.withDayOfMonth(1)
+                        .toLocalDate()
+                        .atStartOfDay(zone)
+                        .toInstant();
+
+        Instant startOfLastMonth =
+                now.minusMonths(1)
+                        .withDayOfMonth(1)
+                        .toLocalDate()
+                        .atStartOfDay(zone)
+                        .toInstant();
+
+        int monthApprovedCount =
+                documentRepository.countByWriterAndStatusFromDate(
+                        employeeId,
+                        DocumentStatus.APPROVED,
+                        startOfThisMonth
+                );
+
+        int beforeMonthApprovedCount =
+                documentRepository.countByWriterAndStatusBetween(
+                        employeeId,
+                        DocumentStatus.APPROVED,
+                        startOfLastMonth,
+                        startOfThisMonth
+                );
+
+        return new DocumentMainInfoResDto(
+                waitingCount,
+                progressCount,
+                rejectCount,
+                monthApprovedCount,
+                beforeMonthApprovedCount
+        );
+    }
+
 }

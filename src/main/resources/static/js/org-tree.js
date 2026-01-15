@@ -44,6 +44,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         myBtn.addEventListener('click', openSignatureModal);
     }
 
+    // 조직도 대상 메시지 보내기(대상자를 수신자로 선택)
+    const sendMsgBtn = document.getElementById('sendMessageBtn');
+    if (sendMsgBtn) {
+        sendMsgBtn.addEventListener('click', () => {
+            if (currentEmployeeId) {
+                location.href = `/view/message/send?recipientId=${currentEmployeeId}`;
+            }
+        });
+    }
+
     // 초기 선택
     if (typeof targetEmployeeId !== 'undefined' && targetEmployeeId) {
         loadEmployeeDetail(targetEmployeeId);
@@ -96,7 +106,7 @@ async function loadEmployeeDetail(id) {
     if (myBtn) myBtn.classList.add('hidden');
 
     const res = await apiFetch(`/api/employees/${id}`);
-    const {data: e} = await res.json();
+    const { data: e } = await res.json();
 
     // 기본 정보
     document.getElementById('empAvatar').src =
@@ -119,13 +129,23 @@ async function loadEmployeeDetail(id) {
     document.getElementById('empPosition').textContent = e.positionName ?? '-';
 
     // 본인 여부 판단
-    if (myBtn && loginEmployeeId === currentEmployeeId) {
-        myBtn.classList.remove('hidden');
+    const sendMsgBtn = document.getElementById('sendMessageBtn');
 
-        const hasSignature = await checkMySignature();
-        myBtn.textContent = hasSignature
-            ? '결재 서명 변경'
-            : '결재 서명 등록';
+    if (loginEmployeeId === currentEmployeeId) {
+        if (myBtn) {
+            myBtn.classList.remove('hidden');
+
+            const hasSignature = await checkMySignature();
+            myBtn.textContent = hasSignature
+                ? '결재 서명 변경'
+                : '결재 서명 등록';
+        }
+        if (sendMsgBtn) sendMsgBtn.classList.add('hidden');
+    } else {
+        if (myBtn) myBtn.classList.add('hidden');
+        if (sendMsgBtn) {
+            sendMsgBtn.classList.remove('hidden');
+        }
     }
 
     await loadEmployeeWorkStatus(id);
@@ -136,7 +156,7 @@ async function loadEmployeeDetail(id) {
 ========================= */
 async function loadEmployeeWorkStatus(employeeId) {
     const res = await apiFetch(`/api/attendance/work-status/${employeeId}`);
-    const {data} = await res.json();
+    const { data } = await res.json();
 
     if (Number(employeeId) !== currentEmployeeId) return;
 
@@ -183,7 +203,7 @@ async function openSignatureModal() {
         const res = await apiFetch('/api/employee-signature');
         if (!res.ok) return;
 
-        const {data} = await res.json();
+        const { data } = await res.json();
         if (!data.exists) return;
 
         document.getElementById('signaturePreviewImage').src = data.imageUrl;
