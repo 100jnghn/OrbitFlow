@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const manuals = data.data || [];
 
                 if (manuals.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px;">등록된 매뉴얼이 없습니다.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">등록된 매뉴얼이 없습니다.</td></tr>';
                 } else {
                     manuals.forEach(manual => {
                         const row = document.createElement('tr');
