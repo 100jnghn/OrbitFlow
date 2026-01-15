@@ -338,14 +338,31 @@ function showStatusDropdown(badge, reservation) {
         activeDropdown = null;
     }
 
+    // Rule: '예약 취소' 상태이면 드롭다운 표시 안 함
+    if (reservation.reservationStatusName === '예약 취소') {
+        return;
+    }
+
     // 드롭다운 생성
     const dropdown = document.createElement('div');
     dropdown.className = 'status-dropdown';
     dropdown.dataset.reservationId = reservation.reservationId;
 
-    // 회의실인 경우 필터링된 상태 목록 사용
     let filteredStatusList = statusList;
-    if (reservation.typeCode === 'MEETING') {
+    const currentStatus = reservation.reservationStatusName;
+
+    if (currentStatus === '예약 확정') {
+        // '예약 확정' -> '승인 대기', '예약 취소'
+        filteredStatusList = statusList.filter(status =>
+            status.statusName === '승인 대기' || status.statusName === '예약 취소'
+        );
+    } else if (currentStatus === '예약 반려') {
+        // '예약 반려' -> '예약 확정'
+        filteredStatusList = statusList.filter(status =>
+            status.statusName === '예약 확정'
+        );
+    } else if (reservation.typeCode === 'MEETING') {
+        // 회의실 기존 로직 (승인 대기 상태 등에서 적용됨)
         // 회의실은 '예약 확정', '예약 취소'만 표시
         filteredStatusList = statusList.filter(status =>
             status.statusName === '예약 확정' || status.statusName === '예약 취소'

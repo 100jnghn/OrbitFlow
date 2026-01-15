@@ -425,4 +425,5 @@
     background: #adb5bd;
     cursor: not-allowed;
     opacity: 0.6;
+    pointer-events: none;
 }

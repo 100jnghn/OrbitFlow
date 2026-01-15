@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
        Polling
     ========================= */
     loadExtensionTree(); // 최초
-    setInterval(loadExtensionTree, 3000);
+    setInterval(loadExtensionTree, 10000);
 
     /* =========================
        트리 렌더링

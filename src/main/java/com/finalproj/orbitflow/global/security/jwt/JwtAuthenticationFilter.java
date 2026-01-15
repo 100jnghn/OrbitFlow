@@ -11,6 +11,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -27,6 +28,7 @@ import java.util.Arrays;
  * @filename : JwtAuthenticationFilter
  * @since : 2025-12-16 화요일
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -56,8 +58,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.startsWith("/images/")
                 || path.startsWith("/api/companies/")
                 || path.startsWith("/companies/")
-                || path.startsWith("/internal")
-                || path.endsWith("/pdf");
+                || path.startsWith("/internal");
     }
 
     @Override

@@ -18,8 +18,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const boardForm = document.getElementById('boardForm');
         if (boardForm) {
             boardForm.addEventListener('submit', handleBoardSubmit);
-        } else {
+        }
 
+        // 게시판 이름 입력 시 글자 수 업데이트 이벤트 리스너 추가
+        const boardNameInput = document.getElementById('boardName');
+        if (boardNameInput) {
+            boardNameInput.addEventListener('input', updateCharCount);
         }
     } catch (error) {
         console.error('Error initializing board admin page:', error);
@@ -109,7 +113,7 @@ function renderBoardTable(boards) {
     tbody.innerHTML = '';
 
     if (boards.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px; color: #9ca3af;">등록된 게시판이 없습니다.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #9ca3af;">등록된 게시판이 없습니다.</td></tr>';
         return;
     }
 
@@ -126,8 +130,11 @@ function renderBoardTable(boards) {
             second: '2-digit'
         });
 
+        const boardTypeLabel = board.boardType === 'NOTICE' ? '공지' : '일반';
+
         row.innerHTML = `
             <td class="col-number">${rowNumber}</td>
+            <td class="col-type">${boardTypeLabel}</td>
             <td class="col-name">${escapeHTML(board.boardName || board.name || '')}</td>
             <td class="col-date mobile-hide">${createdAt}</td>
             <td class="col-actions">
@@ -231,6 +238,7 @@ function openAddBoardModal() {
     hideError('boardNameError');
     hideError('employeeSearchError');
     document.getElementById('boardType').value = 'FREE';
+    updateCharCount(); // 글자 수 초기화
     document.getElementById('boardModal').style.display = 'block';
     document.body.classList.add('modal-open');
     document.documentElement.classList.add('modal-open');
@@ -309,6 +317,7 @@ async function openEditBoardModal(boardId) {
 
         // 선택된 사원 표시
         renderSelectedEmployees();
+        updateCharCount(); // 글자 수 초기화
         document.getElementById('employeeSearchResults').innerHTML = '';
         document.getElementById('boardModal').style.display = 'block';
         document.body.classList.add('modal-open');
@@ -333,8 +342,26 @@ function closeBoardModal() {
     // 에러 메시지 초기화
     hideError('boardNameError');
     hideError('employeeSearchError');
+    updateCharCount(); // 글자 수 초기화
     isEditMode = false;
     editingBoardId = null;
+}
+
+// 글자 수 업데이트 함수
+function updateCharCount() {
+    const boardNameInput = document.getElementById('boardName');
+    const charCountDisplay = document.getElementById('boardNameCharCount');
+    if (boardNameInput && charCountDisplay) {
+        const length = boardNameInput.value.length;
+        charCountDisplay.textContent = `${length}/30`;
+
+        // 25자 이상이면 경고 색상
+        if (length >= 25) {
+            charCountDisplay.classList.add('warning');
+        } else {
+            charCountDisplay.classList.remove('warning');
+        }
+    }
 }
 
 // 에러 메시지 표시/숨김 함수
@@ -368,8 +395,8 @@ async function handleBoardSubmit(e) {
         return;
     }
 
-    if (boardName.length > 100) {
-        showError('boardNameError', '게시판 이름은 100자 이하여야 합니다.');
+    if (boardName.length > 30) {
+        showError('boardNameError', '게시판 이름은 30자 이하여야 합니다.');
         return;
     }
 
@@ -796,14 +823,17 @@ function escapeHTML(str) {
     return div.innerHTML;
 }
 
-// 모달 외부 클릭 시 닫기
+// 모달 외부 클릭 시 닫기 (요구사항에 따라 제거 또는 주석 처리)
 window.onclick = function (event) {
     const boardModal = document.getElementById('boardModal');
     const deleteModal = document.getElementById('deleteModal');
 
+    // boardModal 외부 클릭 시 닫히지 않도록 수정
+    /*
     if (event.target === boardModal) {
         closeBoardModal();
     }
+    */
     if (event.target === deleteModal) {
         closeDeleteModal();
     }

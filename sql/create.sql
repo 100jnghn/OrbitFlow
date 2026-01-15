@@ -868,6 +868,8 @@ CREATE TABLE document_file
         UNIQUE (document_id, reference_type, reference_target_id)
 ) ENGINE = InnoDB;
 
+CREATE INDEX idx_document_file_pdf_lookup
+    ON document_file (document_id, reference_type, status);
 
 /* =========================================================
    SIGNATURE (전자 서명)

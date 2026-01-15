@@ -198,4 +198,15 @@ public class DocumentController {
         return ResponseEntity.ok().build();
     }
 
+
+    @GetMapping("/dashboard")
+    public ResponseEntity<?> getMainInfo() {
+
+        DocumentMainInfoResDto result =
+                documentApplicationService.getMainInfo(SecurityUtils.getEmployeeId());
+
+        return ResponseEntity.ok(
+                new ResponseDto<>(HttpStatus.OK, "대시보드 메인 정보 조회 성공", result)
+        );
+    }
 }

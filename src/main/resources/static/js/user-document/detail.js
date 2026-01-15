@@ -1,4 +1,6 @@
 import {showFullscreenSpinner, hideFullscreenSpinner} from "/js/ui/fullscreenSpinner.js";
+import {initPdfArea} from "/js/user-document/pdf/pdfPolling.js";
+import {fetchPresignedDownloadUrlByFileId} from "/js/user-document/file/fileApi.js";
 
 
 let currentActionType = null;   // "approve" | "reject"
@@ -455,8 +457,10 @@ async function initDocumentDetailPage(data) {
     await setupRevisionButtons(data);
 
     bindBackButton();
-    addPdfDownloadButton(data);
-
+    const actionLeft = document.querySelector(".action-left");
+    if (actionLeft) {
+        initPdfArea(data.documentId, actionLeft);
+    }
     initAiPanels(data.documentId);
 }
 
@@ -1202,56 +1206,6 @@ function controlActionButtons(data) {
 }
 
 
-function addPdfDownloadButton(data) {
-    if (!data.pdfFileId) return;
-
-    const actionLeft = document.querySelector(".action-left");
-    if (!actionLeft) return;
-
-    const pdfBtn = document.createElement("button");
-    pdfBtn.className = "action-btn secondary";
-    pdfBtn.textContent = "PDF 다운로드";
-
-    pdfBtn.onclick = async () => {
-        if (pdfBtn.disabled) return;
-
-        const MIN_DISPLAY_TIME = 800;
-        const startTime = Date.now();
-
-        try {
-            pdfBtn.disabled = true;
-            pdfBtn.textContent = "PDF 다운로드 중...";
-
-            const url = await fetchPresignedDownloadUrlByFileId(
-                data.pdfFileId
-            );
-
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "";
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-
-            // ⭐ 너무 빨리 끝나면 기다렸다가 복구
-            const elapsed = Date.now() - startTime;
-            if (elapsed < MIN_DISPLAY_TIME) {
-                await delay(MIN_DISPLAY_TIME - elapsed);
-            }
-
-        } catch (e) {
-            console.error(e);
-            await sweetWarning("PDF 다운로드 중 오류가 발생했습니다.");
-        } finally {
-            pdfBtn.disabled = false;
-            pdfBtn.textContent = "PDF 다운로드";
-        }
-    };
-
-    actionLeft.appendChild(pdfBtn);
-}
-
-
 /* ===============================
    API
 =============================== */
@@ -1285,17 +1239,6 @@ async function fetchDocumentFiles(documentId) {
     return json.data ?? [];
 }
 
-
-async function fetchPresignedDownloadUrlByFileId(fileId) {
-    const res = await apiFetch(`/api/files/${fileId}/presigned`);
-
-    if (!res.ok) {
-        throw new Error("다운로드 URL 생성 실패");
-    }
-
-    const json = await res.json();
-    return json.data?.url;
-}
 
 
 let downloadingFileId = null;

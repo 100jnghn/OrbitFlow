@@ -403,6 +403,7 @@ public class ReservationService {
             }
         }
 
+        // 예약 승인
         if (!approveIds.isEmpty()) {
             reservationRepository.bulkUpdateStatus(
                     approveIds,

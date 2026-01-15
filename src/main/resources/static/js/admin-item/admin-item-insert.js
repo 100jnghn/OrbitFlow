@@ -1,3 +1,5 @@
+import { showFullscreenSpinner, hideFullscreenSpinner } from "/js/ui/fullscreenSpinner.js";
+
 /**
  * 관리자 - 비품 추가 페이지
  */
@@ -391,6 +393,10 @@ async function handleSave() {
     }
 
     try {
+        // 스피너 표시 및 버튼 비활성화
+        showFullscreenSpinner("비품을 등록 중입니다...");
+        saveBtn.disabled = true;
+
         const response = await apiFetch(
             '/api/admin/items',
             {
@@ -410,6 +416,10 @@ async function handleSave() {
     } catch (error) {
         console.error(error);
         await sweetError('비품 등록에 실패했습니다.');
+        // 실패 시 버튼 상태 복구
+        updateSaveButtonState();
+    } finally {
+        hideFullscreenSpinner();
     }
 }
 

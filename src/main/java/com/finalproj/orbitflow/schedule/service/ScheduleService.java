@@ -340,6 +340,9 @@ public class ScheduleService {
         Schedule schedule = ScheduleMapper.toEntity(companyId, employeeId, dto);
         scheduleRepository.save(schedule);
 
+        log.info("서비스 - 일정: " + "회사이이디 : " + companyId + " 사원 아이디 : " + employeeId);
+        log.info("서비스 - 두산에너빌리티 회사 org category id : " + dto.getOrgCategoryId());
+
         // 알림 전송 - 전사
         if (schedule.isCompany() && !schedule.isPersonal() && dto.getStatus().equals(ScheduleStatus.RELEASE)) {
             createCompanyNotification(schedule);

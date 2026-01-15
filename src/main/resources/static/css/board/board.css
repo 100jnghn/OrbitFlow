@@ -288,6 +288,10 @@
     background: var(--neutral-50);
 }
 
+.board-table tbody tr {
+    cursor: pointer;
+}
+
 .board-table tbody tr:last-child td {
     border-bottom: none;
 }

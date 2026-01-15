@@ -27,6 +27,7 @@ const WORK_STATUS_STORAGE_KEY = 'optimisticWorkStatus';
 document.addEventListener('DOMContentLoaded', async function () {
     initWorkStatusBadgeInteractions();
     applyOptimisticWorkStatusIfAny();
+    initDashboardStatCardNavigation();
     await loadDashboardData();
 });
 
@@ -501,11 +502,13 @@ function renderMarkdown(text) {
 
 // 결재 통계 로드
 async function loadApprovalStats() {
-    // 요소가 있는 경우에만 기본값 설정
-    ['pendingApprovals', 'documentsCreated', 'approvedThisWeek', 'rejected'].forEach(id => {
-        safeSetText(id, '-');
-    });
+    // 초기 플레이스홀더
+    ['pendingApprovals', 'documentsInProgress', 'approvedThisMonth', 'rejected']
+        .forEach(id => safeSetText(id, '-'));
+
+    startApprovalPolling();
 }
+
 
 // 날짜 포맷팅
 function formatDate(dateString) {
@@ -539,4 +542,113 @@ function escapeHTML(str) {
 function safeSetText(id, text) {
     const el = document.getElementById(id);
     if (el) el.textContent = text;
+}
+
+// ===============================
+// 결재 문서 대시보드
+// ===============================
+
+const DOCUMENT_DASHBOARD_API = '/api/documents/dashboard';
+const APPROVAL_POLLING_INTERVAL = 10_000; // 10초
+
+let approvalPollingTimer = null;
+
+async function fetchApprovalDashboard() {
+    try {
+        const response = await apiFetch(DOCUMENT_DASHBOARD_API);
+        if (!response.ok) {
+            console.error('[ApprovalDashboard] API error:', response.status);
+            return;
+        }
+
+        const result = await response.json();
+        const data = result.data;
+        if (!data) return;
+
+        renderApprovalDashboard(data);
+    } catch (e) {
+        console.error('[ApprovalDashboard] fetch failed:', e);
+    }
+}
+
+function renderApprovalDashboard(data) {
+    safeSetText('pendingApprovals', data.waitingCount);
+    safeSetText('documentsInProgress', data.progressCount);
+    safeSetText('approvedThisMonth', data.monthApprovedCount);
+    safeSetText('rejected', data.rejectCount);
+
+    // 🔥 이번 달 승인 변화량 계산
+    renderApprovedChange(
+        data.monthApprovedCount,
+        data.beforeMonthApprovedCount
+    );
+}
+
+function renderApprovedChange(current, previous) {
+    const el = document.getElementById('approvedChange');
+    if (!el) return;
+
+    const text = formatApprovalChange(current, previous);
+    el.textContent = text;
+
+    // 기존 상태 클래스 초기화
+    el.classList.remove('change-up', 'change-down', 'change-new');
+
+    // 상태별 스타일 분기
+    if (previous === 0 && current > 0) {
+        el.classList.add('change-new');     // 신규
+    } else {
+        const diff = current - previous;
+        if (diff > 0) el.classList.add('change-up');
+        else if (diff < 0) el.classList.add('change-down');
+    }
+}
+
+function startApprovalPolling() {
+    fetchApprovalDashboard(); // 최초 1회 즉시 실행
+
+    if (approvalPollingTimer) return;
+
+    approvalPollingTimer = setInterval(
+        fetchApprovalDashboard,
+        APPROVAL_POLLING_INTERVAL
+    );
+}
+
+function stopApprovalPolling() {
+    if (!approvalPollingTimer) return;
+    clearInterval(approvalPollingTimer);
+    approvalPollingTimer = null;
+}
+
+function formatApprovalChange(current, previous) {
+    if (previous === 0 && current > 0) {
+        return `신규 ${current}건`;
+    }
+
+    if (previous > 0 && current === 0) {
+        return `▼ -${previous}`;
+    }
+
+    const diff = current - previous;
+
+    if (diff > 0) return `▲ +${diff}`;
+    if (diff < 0) return `▼ ${diff}`;
+    return '변동 없음';
+}
+
+// ===============================
+// 대시보드 결재 카드 클릭 이동
+// ===============================
+function initDashboardStatCardNavigation() {
+    document
+        .querySelectorAll('.dashboard-stat-card[data-href]')
+        .forEach(card => {
+            card.addEventListener('click', () => {
+                const href = card.dataset.href;
+                if (href) {
+                    location.href = href;
+                }
+            });
+        });
 }

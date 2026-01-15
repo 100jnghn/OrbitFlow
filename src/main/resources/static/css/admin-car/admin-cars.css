@@ -45,13 +45,12 @@
     align-items: center;
     gap: 8px;
 
-    background: #2563eb;
+    background: #3B82F6;
     color: #fff;
-    box-shadow: 0 8px 22px rgba(37, 99, 235, .25);
 }
 
 .btn-add:hover {
-    filter: brightness(0.97);
+    background-color: #2563EB;
 }
 
 /* =========================
