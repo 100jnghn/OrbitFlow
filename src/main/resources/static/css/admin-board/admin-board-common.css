@@ -132,3 +132,18 @@
     z-index: 100;
     overflow: visible;
 }
+
+/* 글자 수 표시 스타일 */
+.char-count {
+    display: block !important;
+    text-align: right !important;
+    width: 100% !important;
+    margin-top: 6px !important;
+    font-size: 12px !important;
+    color: var(--neutral-500) !important;
+    transition: color 0.2s ease;
+}
+
+.char-count.warning {
+    color: #EF4444 !important;
+}

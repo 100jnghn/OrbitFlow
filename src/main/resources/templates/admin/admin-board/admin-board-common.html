@@ -18,7 +18,7 @@
         <link rel="stylesheet" th:href="@{/css/layout.css}">
         <link rel="stylesheet" th:href="@{/css/layout-admin.css}">
         <link rel="stylesheet" th:href="@{/css/admin-board/admin-board.css}">
-        <link rel="stylesheet" th:href="@{/css/admin-board/admin-board-common.css}">
+        <link rel="stylesheet" th:href="@{/css/admin-board/admin-board-common.css(v=1.0)}">
     </th:block>
 
     <th:block th:fragment="pageScript">
@@ -77,8 +77,9 @@
                         <div class="form-group">
                             <label for="boardName" class="form-label">제목</label>
                             <input type="text" id="boardName" name="boardName" required placeholder="게시판 이름을 입력하세요"
-                                class="form-input" maxlength="100" oninput="this.setCustomValidity('')"
+                                class="form-input" maxlength="30" oninput="this.setCustomValidity('')"
                                 oninvalid="this.setCustomValidity('게시판 이름을 입력하세요')">
+                            <div id="boardNameCharCount" class="char-count">0/30</div>
                             <div id="boardNameError" class="error-message" style="display: none;"></div>
                         </div>
 
