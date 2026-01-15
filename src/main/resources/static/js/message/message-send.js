@@ -293,6 +293,10 @@ function setupCharCounters() {
             updateContentCharCount();
         });
     }
+
+    // ✅ 페이지 진입 시에도 바로 표시되게 초기 1회 실행
+    updateTitleCharCount();
+    updateContentCharCount();
 }
 
 // 제목 글자수 카운터 업데이트
