@@ -61,51 +61,35 @@ public class LeaveService {
     }
 
     private void processEmployeeAnnualLeave(Employee emp, LocalDate grantDate, Integer year) {
-        if (emp.getHireDate() == null)
-            return;
+        if (emp.getHireDate() == null) return;
 
-        // 중복 부여 방지
-        if (leaveGrantRepository.existsByEmployeeIdAndGrantTypeAndGrantDate(emp.getId(), "ANNUAL_REGULAR", grantDate)) {
+        // 1. 해당 연도(year)에 이미 연차(ANNUAL_REGULAR 또는 ANNUAL_PROPORTIONAL)를 받았는지 체크
+        // Repository에 정의된 인자 2개짜리 메서드만 사용합니다.
+        if (leaveGrantRepository.existsAnnualLeaveForYear(emp.getId(), year)) {
+            log.info("사원 ID: {} - {}년도 연차가 이미 부여되어 건너뜁니다.", emp.getId(), year);
             return;
         }
 
         BigDecimal grantDays;
-        String type = "ANNUAL_REGULAR";
+        String type;
 
-        // 입사 1년 이상 여부 확인
-        if (!emp.getHireDate().isAfter(grantDate.minusYears(1))) {
-            int yearsOfService = Period.between(emp.getHireDate(), grantDate).getYears();
+        // 2. 기준일(1월 1일) 기준 1년 이상 근무자 여부 판별
+        LocalDate standardDate = LocalDate.of(year, 1, 1);
+        if (!emp.getHireDate().isAfter(standardDate.minusYears(1))) {
+            // 1년 이상 근속자: 정기 연차 (15일 + 가산 연차)
+            int yearsOfService = Period.between(emp.getHireDate(), standardDate).getYears();
             grantDays = calculateStandardDays(yearsOfService);
+            type = "ANNUAL_REGULAR";
         } else {
-            // 1년 미만자 비례 계산
+            // 1년 미만 근속자: 회계연도 기준 비례분 부여
             grantDays = calculateProportionalDays(emp.getHireDate(), year);
             type = "ANNUAL_PROPORTIONAL";
         }
 
+        // 3. 부여 내역 저장 및 잔액 업데이트
         saveGrantAndBalance(emp, grantDate, grantDays, type);
     }
 
-    /**
-     * [스케줄러] 신입사원 월차 부여 (1년 미만자 매월 1일)
-     */
-    @Transactional
-    public void grantMonthlyLeaveForCompany(Long companyId) {
-        LocalDate today = LocalDate.now();
-        List<Employee> active = employeeRepository.findByCompanyIdAndStatus(companyId, EmployeeStatus.ACTIVE);
-
-        for (Employee e : active) {
-            if (e.getHireDate() == null)
-                continue;
-
-            // 1년 미만 여부 판별
-            if (!e.getHireDate().isAfter(today.minusYears(1)))
-                continue;
-            if (leaveGrantRepository.existsByEmployeeIdAndGrantTypeAndGrantDate(e.getId(), "ANNUAL_MONTHLY", today))
-                continue;
-
-            saveGrantAndBalance(e, today, new BigDecimal("1.00"), "ANNUAL_MONTHLY");
-        }
-    }
 
     /**
      * [스케줄러] 연차 소멸 처리
@@ -280,63 +264,6 @@ public class LeaveService {
         return new LeaveRemainingResDto(leaveBalance.getRemainingDays());
     }
 
-    public LeaveValidationResDto validateLeave(
-            Long employeeId,
-            LeaveValidationReqDto reqDto) {
-        // 1. 잔여 연차 조회
-        LeaveBalance leaveBalance = leaveBalanceRepository
-                .findTopByEmployeeIdOrderByYearDesc(employeeId)
-                .orElseThrow(() -> new NotFoundException("잔여 연차 조회 실패"));
-
-        // 2. 휴가 유형 조회
-        LeaveType leaveType = leaveTypeRepository.findById(reqDto.getLeaveTypeId())
-                .orElseThrow(() -> new NotFoundException("휴가 유형 조회 실패"));
-
-        BigDecimal remainingDays = leaveBalance.getRemainingDays();
-
-        /*
-         * =========================
-         * 차감되지 않는 휴가
-         * =========================
-         */
-        if (!leaveType.getIsCountable()) {
-            return LeaveValidationResDto.builder()
-                    .valid(true)
-                    .requiredDays(BigDecimal.ZERO)
-                    .remainingDays(remainingDays)
-                    .message("연차 차감 대상이 아닌 휴가입니다")
-                    .build();
-        }
-
-        /*
-         * =========================
-         * 차감되는 휴가
-         * =========================
-         */
-
-        // 3. 전체 기간 (inclusive)
-        long totalDays = ChronoUnit.DAYS.between(
-                reqDto.getStartDate(),
-                reqDto.getEndDate()) + 1;
-
-        // 4. 필요 연차 계산
-        BigDecimal requiredDays = leaveType.getUnitDays()
-                .multiply(BigDecimal.valueOf(totalDays));
-
-        // 5. 검증
-        boolean valid = remainingDays.compareTo(requiredDays) >= 0;
-
-        String message = valid
-                ? "신청 가능한 휴가입니다"
-                : "잔여 연차가 부족합니다";
-
-        return LeaveValidationResDto.builder()
-                .valid(valid)
-                .requiredDays(requiredDays)
-                .remainingDays(remainingDays)
-                .message(message)
-                .build();
-    }
 
     @Transactional
     public void updateWorkStatus(Long employeeId, WorkStatus status) {
@@ -344,6 +271,7 @@ public class LeaveService {
                 .orElseThrow(() -> new NotFoundException("사원을 찾을 수 없습니다."));
         employee.updateWorkStatus(status);
     }
+
 
     /**
      * 🚀 [수정] 통일된 Enum 값에 맞춰 매핑 로직 단순화
