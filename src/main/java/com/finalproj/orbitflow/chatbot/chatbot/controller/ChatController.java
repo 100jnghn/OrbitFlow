@@ -5,6 +5,7 @@ import com.finalproj.orbitflow.chatbot.chatbot.service.ChatService;
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ import java.util.Map;
  * @filename : ChatbotController
  * @since : 2025. 12. 30. 화요일
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/auth/chatbot")
 @RequiredArgsConstructor
@@ -121,12 +123,22 @@ public class ChatController {
             @PathVariable Long conversationId,
             @RequestBody ChatMessageRequestDto request
     ) {
+
+        long start = System.currentTimeMillis();
+
         ChatMessageResponseDto res = chatService.sendMessage(
                 user.getCompanyId(),
                 user.getEmployeeId(),
                 conversationId,
                 request.getContent()
         );
+
+        long end = System.currentTimeMillis();
+        log.info("[CHAT][CONVERSATION] responseTimeMs={}, companyId={}, conversationId={}",
+                end - start,
+                user.getCompanyId(),
+                conversationId);
+
 
         return ResponseEntity.ok(
                 new ResponseDto<>(HttpStatus.OK, "챗봇 답변 생성 및 저장 완료", res)

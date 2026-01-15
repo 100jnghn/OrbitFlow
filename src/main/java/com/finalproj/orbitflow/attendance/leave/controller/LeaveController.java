@@ -133,12 +133,6 @@ public class LeaveController {
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "복귀 처리가 완료되었습니다.", null));
     }
 
-    @PostMapping("/grant-monthly")
-    public ResponseEntity<?> grantMonthlyLeave(@RequestParam Long companyId) {
-        leaveService.grantMonthlyLeaveForCompany(companyId);
-        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "신입사원 월차 부여가 완료되었습니다.\")", null));
-
-    }
 
     /**
      * [관리자] 특정 신입사원에게 가입 즉시 비례 연차 부여 실행
