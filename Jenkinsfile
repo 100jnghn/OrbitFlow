@@ -146,7 +146,7 @@ pipeline {
                      credentialsId: 'aws-credentials']
                 ]) {
                     sh '''
-                      kubectl apply -f k8s/monitoring/
+                     kubectl apply -f k8s/monitoring/servicemonitor.yaml
                     '''
                 }
             }
