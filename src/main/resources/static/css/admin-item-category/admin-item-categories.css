@@ -150,9 +150,17 @@
 }
 
 .btn-edit,
-.btn-delete,
-.btn-add-row {
+.btn-delete {
     padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-add-row {
+    padding: 6px 6px;
     border-radius: 4px;
     font-size: 13px;
     border: none;
