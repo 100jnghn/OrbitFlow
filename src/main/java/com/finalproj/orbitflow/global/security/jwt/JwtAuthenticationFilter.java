@@ -11,7 +11,6 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -28,7 +27,6 @@ import java.util.Arrays;
  * @filename : JwtAuthenticationFilter
  * @since : 2025-12-16 화요일
  */
-@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -40,20 +38,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
 
-        String path = request.getRequestURI();
-        log.info("[JWT FILTER] shouldNotFilter check: {}", path);
-
         if (request.getDispatcherType() == DispatcherType.ASYNC) {
-            log.info("[JWT FILTER] skip because ASYNC");
-            return true;
+            return true; // ✅ SSE async dispatch는 건드리지 않음
         }
 
-        boolean isPublic = isPublicPath(path);
-        log.info("[JWT FILTER] isPublicPath = {}", isPublic);
-
-        return isPublic;
+        String path = request.getRequestURI();
+        return isPublicPath(path);
     }
-
 
     private boolean isPublicPath(String path) {
         // SSR 페이지(/view/**, /)는 이제 필터를 거쳐야 인증 정보(companyName 등)를 얻을 수 있음.
@@ -75,12 +66,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
 
-        log.info("[JWT FILTER] {} {}", request.getMethod(), request.getRequestURI());
-
-
         String header = request.getHeader("Authorization");
-        log.info("[JWT FILTER] Authorization header = {}", header);
-
 
         // 1. Authorization 헤더 확인 (API 요청)
         if (header != null && header.startsWith("Bearer ")) {
@@ -114,9 +100,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 .orElse(null);
     }
 
-    private void authenticateUser(HttpServletRequest request, HttpServletResponse response, Long employeeId, Long companyId) {
-        log.info("[JWT FILTER] authenticateUser employeeId={}, companyId={}",
-                employeeId, companyId);
+    private void authenticateUser(HttpServletRequest request, HttpServletResponse response, Long employeeId,
+            Long companyId) {
         SecurityUser user = userDetailsService.loadByEmployeeId(employeeId);
 
         // 테넌트 불일치
