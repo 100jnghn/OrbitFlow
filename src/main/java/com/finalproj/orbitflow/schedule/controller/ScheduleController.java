@@ -232,19 +232,19 @@ public class ScheduleController {
 
     /**
      * 사용자 - 일정 등록
-     *
+     * <p>
      * -- 전사 일정 --
      * 관리자 - isCompany : TRUE / isPersonal : FALSE / companyId : NOT NULL / orgCategoryId : NOT NULL / orgId : NULL
-     *
+     * <p>
      * -- 개인 일정 + 전사 일정 --
      * 사용자 - isCompany : TRUE / isPersonal : TRUE / companyId : NOT NULL / orgCategoryId : NOT NULL / orgId : NOT NULL
-     *
+     * <p>
      * -- 개인 일정 --
      * 사용자 - isCompany : FALSE / isPersonal : TRUE / companyId : NOT NULL / orgCategoryId : NULL / orgId : NULL
-     *
+     * <p>
      * -- 조직 일정 --
      * 사용자 - isCompany : FALSE / isPersonal : FALSE / companyId : NOT NULL / orgCategoryId : NOT NULL / orgId : NOT NULL
-     *
+     * <p>
      * 사용자의 예약의 status는 'RELEASE' OR 삭제
      * 관리자의 예약의 status는 'RELEASE' OR 'HOLD' OR 삭제
      */
@@ -259,6 +259,9 @@ public class ScheduleController {
         Long employeeId = user.getEmployeeId();
 
         // isCompany 여부는 front에서 dto에 포함시켜 전달함
+
+        log.info("컨트롤러 - 일정: " + "회사이이디 : " + companyId + " 사원 아이디 : " + employeeId);
+        log.info("컨트롤러 - 두산에너빌리티 회사 org category id : " + scheduleReqDto.getOrgCategoryId());
 
         scheduleService.insertSchedule(companyId, employeeId, scheduleReqDto);
 
