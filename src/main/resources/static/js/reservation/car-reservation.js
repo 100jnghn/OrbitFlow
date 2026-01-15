@@ -502,8 +502,22 @@ async function openCarImageModal(car) {
     // 차량 이름 설정
     modalCarName.textContent = car.name;
 
+    // 모달 표시
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
+
     // 차량 이미지 로드
     if (car.fileId) {
+        // 스피너 추가
+        let spinner = modal.querySelector('.image-spinner');
+        if (!spinner) {
+            spinner = document.createElement('div');
+            spinner.className = 'image-spinner';
+            modal.querySelector('.modal-image-container').appendChild(spinner);
+        }
+
+        modalCarImage.style.display = 'none';
+
         try {
             // presigned URL 요청
             const res = await apiFetch(`/api/files/${car.fileId}/presigned`);
@@ -513,20 +527,30 @@ async function openCarImageModal(car) {
             const imageUrl = result.data.url;
 
             modalCarImage.src = imageUrl;
-            modalCarImage.style.display = 'block';
+
+            modalCarImage.onload = () => {
+                if (spinner) spinner.remove();
+                modalCarImage.style.display = 'block';
+            };
+
+            modalCarImage.onerror = () => {
+                if (spinner) spinner.remove();
+                modalCarImage.style.display = 'block';
+                modalCarImage.src = '';
+                modalCarImage.alt = '이미지를 불러올 수 없습니다.';
+            };
         } catch (e) {
             console.error('이미지 로드 실패', e);
+            if (spinner) spinner.remove();
+            modalCarImage.style.display = 'block';
             modalCarImage.src = '';
             modalCarImage.alt = '이미지를 불러올 수 없습니다.';
         }
     } else {
         modalCarImage.src = '';
         modalCarImage.alt = '등록된 이미지가 없습니다.';
+        modalCarImage.style.display = 'block';
     }
-
-    // 모달 표시
-    modal.classList.add('show');
-    document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
 }
 
 function closeCarImageModal() {

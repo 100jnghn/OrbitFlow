@@ -523,8 +523,22 @@ async function openItemImageModal(item) {
     // 자원 이름 설정
     modalItemName.textContent = item.name;
 
+    // 모달 표시
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
+
     // 자원 이미지 로드
     if (item.fileId) {
+        // 스피너 추가
+        let spinner = modal.querySelector('.image-spinner');
+        if (!spinner) {
+            spinner = document.createElement('div');
+            spinner.className = 'image-spinner';
+            modal.querySelector('.modal-image-container').appendChild(spinner);
+        }
+
+        modalItemImage.style.display = 'none';
+
         try {
             // presigned URL 요청
             const res = await apiFetch(`/api/files/${item.fileId}/presigned`);
@@ -534,20 +548,30 @@ async function openItemImageModal(item) {
             const imageUrl = result.data.url;
 
             modalItemImage.src = imageUrl;
-            modalItemImage.style.display = 'block';
+
+            modalItemImage.onload = () => {
+                if (spinner) spinner.remove();
+                modalItemImage.style.display = 'block';
+            };
+
+            modalItemImage.onerror = () => {
+                if (spinner) spinner.remove();
+                modalItemImage.style.display = 'block';
+                modalItemImage.src = '';
+                modalItemImage.alt = '이미지를 불러올 수 없습니다.';
+            };
         } catch (e) {
             console.error('이미지 로드 실패', e);
+            if (spinner) spinner.remove();
+            modalItemImage.style.display = 'block';
             modalItemImage.src = '';
             modalItemImage.alt = '이미지를 불러올 수 없습니다.';
         }
     } else {
         modalItemImage.src = '';
         modalItemImage.alt = '등록된 이미지가 없습니다.';
+        modalItemImage.style.display = 'block';
     }
-
-    // 모달 표시
-    modal.classList.add('show');
-    document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
 }
 
 function closeItemImageModal() {
