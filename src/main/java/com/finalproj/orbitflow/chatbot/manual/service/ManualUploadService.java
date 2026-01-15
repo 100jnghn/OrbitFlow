@@ -49,6 +49,7 @@ public class ManualUploadService {
     private final ManualRepository manualMetadataRepository;
     private final ManualCategoryRepository manualCategoryRepository;
     private final EmployeeRepository employeeRepository;
+    private final ManualRepository manualRepository;
     private final FileService fileService;
     private final EmbeddingModel embeddingModel;
     private final EmbeddingStore<TextSegment> embeddingStore;
@@ -250,5 +251,19 @@ public class ManualUploadService {
         manual.toggleActive();
         manual.updateStatus("DELETE");
 
+    }
+
+
+    @Transactional
+    public void updateManualActive(Long companyId, Long manualId, boolean isActive) {
+        ManualMetadata manual = manualRepository
+                .findByIdAndCompanyId(manualId, companyId)
+                .orElseThrow(() -> new IllegalArgumentException("매뉴얼이 없거나 권한이 없습니다."));
+
+        if (isActive) {
+            manual.activate();
+        } else {
+            manual.deactivate();
+        }
     }
 }

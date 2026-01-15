@@ -63,8 +63,6 @@ public class LeaveService {
     private void processEmployeeAnnualLeave(Employee emp, LocalDate grantDate, Integer year) {
         if (emp.getHireDate() == null) return;
 
-        // 1. 해당 연도(year)에 이미 연차(ANNUAL_REGULAR 또는 ANNUAL_PROPORTIONAL)를 받았는지 체크
-        // Repository에 정의된 인자 2개짜리 메서드만 사용합니다.
         if (leaveGrantRepository.existsAnnualLeaveForYear(emp.getId(), year)) {
             log.info("사원 ID: {} - {}년도 연차가 이미 부여되어 건너뜁니다.", emp.getId(), year);
             return;
@@ -86,7 +84,6 @@ public class LeaveService {
             type = "ANNUAL_PROPORTIONAL";
         }
 
-        // 3. 부여 내역 저장 및 잔액 업데이트
         saveGrantAndBalance(emp, grantDate, grantDays, type);
     }
 

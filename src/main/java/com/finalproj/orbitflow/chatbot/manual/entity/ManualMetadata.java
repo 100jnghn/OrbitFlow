@@ -83,4 +83,21 @@ public class ManualMetadata extends BaseEntity {
     public void toggleActive() {
         this.isActive = !this.isActive;
     }
+
+
+    /**
+     * 매뉴얼 활성화
+     */
+    public void activate() {
+        this.isActive = true;
+    }
+
+    /**
+     * 매뉴얼 비활성화
+     */
+    public void deactivate() {
+        this.isActive = false;
+    }
+
+
 }

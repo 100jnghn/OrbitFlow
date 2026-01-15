@@ -182,12 +182,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     manuals.forEach(manual => {
                         const row = document.createElement('tr');
                         const registeredDate = manual.createdAt ? new Date(manual.createdAt).toLocaleDateString('ko-KR') : '-';
+                        const isActive = manual.isActive === true || manual.active === true;
+
                         row.innerHTML = `
                             <td>${manual.fileName || '알 수 없음'}</td>
                             <td>${registeredDate}</td>
+                            <td>
+                                <div class="toggle-row" style="justify-content: center;">
+                                    <label class="switch">
+                                        <input type="checkbox" class="manual-active-toggle" data-id="${manual.id}" ${isActive ? 'checked' : ''}>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </td>
                             <td><button class="btn-delete" data-id="${manual.id}">삭제</button></td>
                         `;
                         tbody.appendChild(row);
+                    });
+
+                    document.querySelectorAll('.manual-active-toggle').forEach(toggle => {
+                        toggle.addEventListener('change', (e) => updateManualStatus(e.target.dataset.id, e.target.checked));
                     });
 
                     document.querySelectorAll('.btn-delete').forEach(btn => {
@@ -223,6 +237,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+
+    async function updateManualStatus(manualId, isActive) {
+        try {
+            const token = sessionStorage.getItem('accessToken');
+            const response = await fetch(`/api/admin/manual/${manualId}/active?isActive=${isActive}`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                // await sweetSuccess('상태가 변경되었습니다.'); // 너무 빈번한 알림은 방해될 수 있으므로 toast 또는 생략 가능하지만 요청사항 준수
+                // Toast 스타일로 변경하는 것이 좋으나, 기존 코드 스타일 유지
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 1500,
+                    timerProgressBar: true
+                });
+                Toast.fire({
+                    icon: 'success',
+                    title: isActive ? '매뉴얼이 활성화되었습니다.' : '매뉴얼이 비활성화되었습니다.'
+                });
+            } else {
+                const error = await response.json();
+                await sweetError('상태 변경 실패: ' + (error.message || '알 수 없는 오류'));
+                // 실패 시 UI 롤백
+                loadManualList(selectedCategoryId);
+            }
+        } catch (error) {
+            await sweetError('상태 변경 중 오류가 발생했습니다.');
+            loadManualList(selectedCategoryId);
+        }
+    }
+
     document.getElementById('addCategoryBtn').addEventListener('click', () => openCategoryModal(null));
 
     function openCategoryModal(category) {
@@ -243,13 +292,13 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.style.display = 'flex';
     }
 
-    window.closeCategoryModal = function() {
+    window.closeCategoryModal = function () {
         document.getElementById('categoryModal').style.display = 'none';
         editingCategoryId = null;
         document.getElementById('categoryForm').reset();
     };
 
-    window.saveCategory = async function() {
+    window.saveCategory = async function () {
         const categoryName = document.getElementById('categoryName').value.trim();
         const description = document.getElementById('categoryDescription').value.trim();
         const sortOrder = document.getElementById('categorySortOrder').value;

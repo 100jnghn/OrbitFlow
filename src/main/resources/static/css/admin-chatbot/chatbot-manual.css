@@ -475,3 +475,61 @@
     resize: vertical;
     min-height: 80px;
 }
+
+/* =========================
+   토글 (사용여부) - Copied from admin-org-category.css
+========================= */
+
+.toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* 스위치 */
+.switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+}
+
+.switch input {
+    display: none;
+}
+
+.slider {
+    position: absolute;
+    inset: 0;
+    background: #e5e7eb;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.slider::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    transition: .2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+}
+
+.switch input:checked+.slider {
+    background: var(--primary-color);
+    /* Changed from --primary to match chatbot-manual css variable if needed, but safe to use hex or defined var */
+}
+
+.switch input:checked+.slider::before {
+    transform: translateX(20px);
+}
+
+.toggle-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--neutral-700);
+}

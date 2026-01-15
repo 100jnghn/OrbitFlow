@@ -84,4 +84,25 @@ public class ManualController {
         manualUploadService.deleteManual(manualId, user.getCompanyId());
         return ResponseEntity.ok(new ResponseDto(HttpStatus.OK, "매뉴얼 삭제 완료", null));
     }
+
+
+    @PatchMapping("/{manualId}/active")
+    public ResponseEntity<ResponseDto> updateManualActive(
+            @AuthenticationPrincipal SecurityUser user,
+            @PathVariable Long manualId,
+            @RequestParam boolean isActive
+    ) {
+        manualUploadService.updateManualActive(
+                user.getCompanyId(),
+                manualId,
+                isActive
+        );
+
+        return ResponseEntity.ok(
+                new ResponseDto(HttpStatus.OK, "매뉴얼 활성 상태 변경 완료", null)
+        );
+    }
+
+
+
 }
