@@ -10,13 +10,17 @@ import com.finalproj.orbitflow.chatbot.chatbot.entity.ChatConversation;
 import com.finalproj.orbitflow.chatbot.chatbot.entity.ChatMessage;
 import com.finalproj.orbitflow.chatbot.chatbot.repository.ChatConversationRepository;
 import com.finalproj.orbitflow.chatbot.chatbot.repository.ChatMessageRepository;
+import com.finalproj.orbitflow.chatbot.manual.entity.ManualMetadata;
 import com.finalproj.orbitflow.chatbot.manualCategory.entity.ManualCategory;
 import com.finalproj.orbitflow.chatbot.manualCategory.repository.ManualCategoryRepository;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
+import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
+import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.EmbeddingStore;
+import dev.langchain4j.store.embedding.filter.Filter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,7 +28,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import static dev.langchain4j.store.embedding.filter.MetadataFilterBuilder.metadataKey;
 
 /**
  * Please explain the class!!!
@@ -193,65 +200,61 @@ public class ChatService {
          * :contentReference[oaicite:2]{index=2}
          */
         public String askQuestion(String question, Long companyId, Long categoryId) {
-                var questionEmbedding = embeddingModel.embed(question).content();
 
+                // 1) 질문 임베딩
+                var questionEmbedding = embeddingModel.embed(question).content();
                 log.info("질문 기반 검색 시작: {}", question);
 
-                List<EmbeddingMatch<TextSegment>> matches = embeddingStore.findRelevant(questionEmbedding, 50); // 검색
-                                                                                                                // 후보군을
-                                                                                                                // 늘림
-                                                                                                                // (필터링
-                                                                                                                // 고려)
-                log.info("ChromaDB에서 찾은 원본 데이터 수: {}", matches.size());
+                // 2) 활성 매뉴얼 조회 (삭제/비활성 매뉴얼 노출 방지용)
+                List<ManualMetadata> activeManuals = (categoryId != null)
+                        ? manualRepository.findByCompanyIdAndCategoryIdAndIsActiveTrueOrderByIdDesc(companyId, categoryId)
+                        : manualRepository.findAllByCompanyIdAndIsActiveTrueOrderByIdDesc(companyId);
 
-                // 1. 활성 매뉴얼(File ID) 목록 조회
-                List<com.finalproj.orbitflow.chatbot.manual.entity.ManualMetadata> activeManuals;
-                if (categoryId != null) {
-                        activeManuals = manualRepository.findByCompanyIdAndCategoryIdAndIsActiveTrueOrderByIdDesc(
-                                        companyId, categoryId);
-                } else {
-                        activeManuals = manualRepository.findAllByCompanyIdAndIsActiveTrueOrderByIdDesc(companyId);
+
+                // ✅ List -> Set (contains O(1))
+                Set<String> activeFileIdSet = activeManuals.stream()
+                                                .map(m -> m.getFile().getId().toString())
+                                                .collect(Collectors.toSet());
+
+
+                // 3) ✅ Chroma 검색 단계에서 company/category 필터 적용
+                String companyIdStr = companyId.toString();
+                String categoryIdStr = (categoryId == null ? null : categoryId.toString());
+
+                Filter filter = metadataKey("company_id").isEqualTo(companyIdStr);
+                if (categoryIdStr != null) {
+                    filter = filter.and(metadataKey("category_id").isEqualTo(categoryIdStr));
                 }
 
-                // 검색 최적화를 위해 활성 파일 ID Set 생성
-                List<String> activeFileIds = activeManuals.stream()
-                                .map(m -> m.getFile().getId().toString())
-                                .collect(Collectors.toList());
+                EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
+                                                .queryEmbedding(questionEmbedding)
+                                                .maxResults(50)       // 이제 "우리 회사(및 카테고리)" 범위 안에서 TopK
+                                                .minScore(0.0)        // 필요하면 0.2~0.4로 올려서 잡음 줄이기
+                                                .filter(filter)
+                                                .build();
 
+
+                EmbeddingSearchResult<TextSegment> result = embeddingStore.search(request);
+                List<EmbeddingMatch<TextSegment>> matches = result.matches();
+
+                log.info("Chroma(필터 적용) 검색 결과 수: {}", matches.size());
+
+                // 4) 남은 후필터: 활성 파일만 통과 (정책상 안전)
                 String context = matches.stream()
-                                .filter(match -> {
-                                        var metadata = match.embedded().metadata().toMap();
-                                        Object storedCompanyId = metadata.get("company_id");
-                                        Object storedCategoryId = metadata.get("category_id");
-                                        Object storedFileId = metadata.get("file_id"); // file_id 확인
+                                        .filter(m -> {
+                                            var metadata = m.embedded().metadata().toMap();
+                                            Object storedFileId = metadata.get("file_id");
+                                            return storedFileId != null && activeFileIdSet.contains(storedFileId.toString());
+                                        })
+                                        .map(m -> m.embedded().text())
+                                        .collect(Collectors.joining("\n\n"));
 
-                                        boolean companyMatch = storedCompanyId != null
-                                                        && storedCompanyId.toString().equals(companyId.toString());
 
-                                        boolean categoryMatch = (categoryId == null)
-                                                        || (storedCategoryId != null && storedCategoryId.toString()
-                                                                        .equals(categoryId.toString()));
-
-                                        // ⚡️ 삭제된 매뉴얼(비활성) 필터링: activeFileIds에 포함되어야 함
-                                        boolean activeMatch = storedFileId != null
-                                                        && activeFileIds.contains(storedFileId.toString());
-
-                                        // file_id가 메타데이터에 없을 경우(구형 데이터)는 보수적으로 제외하거나 포함할 수 있음.
-                                        // 여기서는 안전하게 제외하도록 함. (activeMatch가 false가 됨)
-
-                                        log.info("필터링 체크 - company={}, category={}, active={}, storedFileId={}",
-                                                        companyMatch, categoryMatch, activeMatch, storedFileId);
-
-                                        return companyMatch && categoryMatch && activeMatch;
-                                })
-                                .map(match -> match.embedded().text())
-                                .collect(Collectors.joining("\n\n"));
-
-                if (context.trim().isEmpty())
-
-                {
-                        log.warn("검색 결과 없음 - 회사ID: {}, 카테고리ID: {}, 질문: {}", companyId, categoryId, question);
-                        return "해당 질문에 대한 정보를 매뉴얼에서 찾을 수 없습니다.";
+                // 5) 검색 결과 없음 처리
+                if (context.isBlank()) {
+                    log.warn("검색 결과 없음 - companyId={}, categoryId={}, question={}",
+                            companyId, categoryId, question);
+                    return "해당 질문에 대한 정보를 매뉴얼에서 찾을 수 없습니다.";
                 }
 
                 String prompt = String.format(
