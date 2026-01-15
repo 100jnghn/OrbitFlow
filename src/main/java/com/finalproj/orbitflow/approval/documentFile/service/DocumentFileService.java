@@ -6,8 +6,10 @@ import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
 import com.finalproj.orbitflow.approval.document.service.DocumentService;
 import com.finalproj.orbitflow.approval.documentFile.dto.DocumentFileAttachedListResDto;
 import com.finalproj.orbitflow.approval.documentFile.dto.DocumentFileUploadResDto;
+import com.finalproj.orbitflow.approval.documentFile.dto.PdfStatusRes;
 import com.finalproj.orbitflow.approval.documentFile.entity.DocumentFile;
 import com.finalproj.orbitflow.approval.documentFile.enums.DocumentFileStatus;
+import com.finalproj.orbitflow.approval.documentFile.enums.PdfStatus;
 import com.finalproj.orbitflow.approval.documentFile.enums.ReferenceType;
 import com.finalproj.orbitflow.approval.documentFile.repository.DocumentFileRepository;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
@@ -25,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Please explain the class!!!
@@ -245,4 +248,28 @@ public class DocumentFileService {
     }
 
 
+    public PdfStatusRes getPdfStatus(Long documentId) {
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new NotFoundException("문서를 찾을 수 없습니다."));
+
+        // 1️⃣ 승인 전 → NONE
+        if (document.getStatus() != DocumentStatus.APPROVED) {
+            return new PdfStatusRes(PdfStatus.NONE, null);
+        }
+
+        // 2️⃣ 최종 PDF 조회
+        Optional<DocumentFile> pdfOpt =
+                documentFileRepository
+                        .findByDocument_IdAndReferenceTypeAndReferenceTargetIdIsNullAndStatus(
+                                documentId,
+                                ReferenceType.DOCUMENT,
+                                DocumentFileStatus.FINAL
+                        );
+
+        // 3️⃣ 승인 완료 + PDF 없음 → GENERATING
+        return pdfOpt.map(documentFile -> new PdfStatusRes(
+                PdfStatus.READY,
+                documentFile.getFile().getId()
+        )).orElseGet(() -> new PdfStatusRes(PdfStatus.GENERATING, null));
+    }
 }
