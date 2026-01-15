@@ -4,6 +4,8 @@ import com.finalproj.orbitflow.approval.approvalLine.entity.ApprovalLine;
 import com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,4 +32,17 @@ public interface ApprovalLineRepository extends JpaRepository<ApprovalLine, Long
     boolean existsByDocumentIdAndApproverId(Long id, Long employeeId);
 
     Optional<ApprovalLine> findByDocument_IdAndStatus(Long documentId, ApprovalStatus approvalStatus);
+
+    @Query("""
+    select count(al)
+    from ApprovalLine al
+    where al.approver.id = :employeeId
+      and al.status = :status
+    """)
+    int countByApproverAndStatus(
+            @Param("employeeId") Long employeeId,
+            @Param("status") ApprovalStatus status
+    );
+
+
 }

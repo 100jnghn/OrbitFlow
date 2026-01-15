@@ -491,7 +491,6 @@ function showMsg(el, message, type) {
         console.warn('[showMsg] hint element not found');
         return;
     }
-    console.log('[showMsg]', {el, message, type});
     el.textContent = message;
     el.className = `hint active ${type}`;
 }

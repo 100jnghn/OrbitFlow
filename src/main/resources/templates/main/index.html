@@ -204,34 +204,35 @@
                 <!-- 하단 통계 위젯 행 -->
                 <div class="dashboard-stats">
                     <!-- 대기 중인 결재 -->
-                    <div class="dashboard-stat-card stat-pending">
+                    <div class="dashboard-stat-card stat-pending"
+                         data-href="/view/document/inbox">
                         <div class="stat-content">
                             <div class="stat-label">대기 중인 결재</div>
                             <div class="stat-value" id="pendingApprovals">-</div>
-                            <div class="stat-change" id="pendingChange">-</div>
                         </div>
                         <div class="stat-icon">
                             <i class="fas fa-clock"></i>
                         </div>
                     </div>
 
-                    <!-- 작성한 문서 -->
-                    <div class="dashboard-stat-card stat-created">
+                    <!-- 진행 중인 문서 -->
+                    <div class="dashboard-stat-card stat-created"
+                         data-href="/view/document/my-documents">
                         <div class="stat-content">
-                            <div class="stat-label">작성한 문서</div>
-                            <div class="stat-value" id="documentsCreated">-</div>
-                            <div class="stat-change" id="createdChange">-</div>
+                            <div class="stat-label">진행 중인 문서</div>
+                            <div class="stat-value" id="documentsInProgress">-</div>
                         </div>
                         <div class="stat-icon">
                             <i class="fas fa-file-alt"></i>
                         </div>
                     </div>
 
-                    <!-- 이번 주 승인 -->
-                    <div class="dashboard-stat-card stat-approved">
+                    <!-- 이번 달 승인 (변화량 표시) -->
+                    <div class="dashboard-stat-card stat-approved"
+                         data-href="/view/document/my-documents">
                         <div class="stat-content">
-                            <div class="stat-label">이번 주 승인</div>
-                            <div class="stat-value" id="approvedThisWeek">-</div>
+                            <div class="stat-label">이번 달 승인</div>
+                            <div class="stat-value" id="approvedThisMonth">-</div>
                             <div class="stat-change" id="approvedChange">-</div>
                         </div>
                         <div class="stat-icon">
@@ -240,11 +241,11 @@
                     </div>
 
                     <!-- 반려 -->
-                    <div class="dashboard-stat-card stat-rejected">
+                    <div class="dashboard-stat-card stat-rejected"
+                         data-href="/view/document/my-documents">
                         <div class="stat-content">
                             <div class="stat-label">반려</div>
                             <div class="stat-value" id="rejected">-</div>
-                            <div class="stat-change" id="rejectedChange">-</div>
                         </div>
                         <div class="stat-icon">
                             <i class="fas fa-times-circle"></i>
