@@ -56,23 +56,23 @@ function formatHour(hour) {
 function createCell(value = '-', tooltip = false) {
     const td = document.createElement('td');
     const text = (value ?? '').toString();
-    
+
     td.textContent = text;
-    
+
     if (tooltip && text.length > 0 && text !== '-') {
         td.dataset.fulltext = text;
         td.addEventListener('mouseenter', showTooltip);
         td.addEventListener('mousemove', moveTooltip);
         td.addEventListener('mouseleave', hideTooltip);
     }
-    
+
     return td;
 }
 
 function createCategoryCell(typeCode, typeName) {
     const td = document.createElement('td');
     td.textContent = typeName || '-';
-    
+
     // hover 시 전체 텍스트 보기 기능
     if (typeName && typeName !== '-') {
         td.dataset.fulltext = typeName;
@@ -80,7 +80,7 @@ function createCategoryCell(typeCode, typeName) {
         td.addEventListener('mousemove', moveTooltip);
         td.addEventListener('mouseleave', hideTooltip);
     }
-    
+
     return td;
 }
 
@@ -89,7 +89,7 @@ function createStatusCell(reservation) {
     const badge = document.createElement('span');
     badge.className = 'status-badge';
     badge.textContent = reservation.reservationStatusName;
-    
+
     // 상태별 클래스 추가
     const statusName = reservation.reservationStatusName;
     if (statusName === '예약 확정') {
@@ -101,26 +101,39 @@ function createStatusCell(reservation) {
     } else if (statusName === '예약 취소') {
         badge.classList.add('status-cancelled');
     }
-    
+
     td.appendChild(badge);
-    
+
     // '예약 반려' 또는 '예약 취소'일 때 rejectReason tooltip 추가
-    if ((reservation.reservationStatusName === '예약 반려' || reservation.reservationStatusName === '예약 취소') 
+    if ((reservation.reservationStatusName === '예약 반려' || reservation.reservationStatusName === '예약 취소')
         && reservation.rejectReason) {
         td.dataset.fulltext = reservation.rejectReason;
         td.addEventListener('mouseenter', showTooltip);
         td.addEventListener('mousemove', moveTooltip);
         td.addEventListener('mouseleave', hideTooltip);
     }
-    
+
     return td;
 }
 
 function createActionCell(reservation) {
     const td = document.createElement('td');
 
-    // 승인 대기(1), 예약 확정(2)만 취소 가능
-    if (reservation.reservationStatusId === 1 || reservation.reservationStatusId === 2) {
+    // 종료 시간 계산
+    let endDateTime = new Date(reservation.endDate);
+
+    // endTime이 있으면 해당 시간을 설정, 없으면(null) 해당 날짜의 23:59:59로 설정 (차량 등)
+    if (reservation.endTime !== null && reservation.endTime !== undefined) {
+        endDateTime.setHours(reservation.endTime, 0, 0, 0);
+    } else {
+        endDateTime.setHours(23, 59, 59, 999);
+    }
+
+    const now = new Date();
+    const isBeforeEnd = now < endDateTime;
+
+    // 승인 대기(1), 예약 확정(2) 이면서, 아직 종료 시간이 지나지 않은 경우에만 취소 가능
+    if ((reservation.reservationStatusId === 1 || reservation.reservationStatusId === 2) && isBeforeEnd) {
         const btn = document.createElement('button');
         btn.className = 'btn-cancel';
         btn.textContent = '취소';
@@ -152,12 +165,12 @@ async function loadStatuses() {
     try {
         const res = await apiFetch(
             '/api/reservation/status',
-            {method: 'GET'}
+            { method: 'GET' }
         );
 
-        if(!res.ok) throw new Error();
+        if (!res.ok) throw new Error();
 
-        const {data} = await res.json();
+        const { data } = await res.json();
         const select = document.getElementById("status-filter")
 
         select.innerHTML = '<option value="">전체</option>';
@@ -168,7 +181,7 @@ async function loadStatuses() {
             option.textContent = status.statusName;
             select.appendChild(option);
         });
-    } catch(e) {
+    } catch (e) {
         console.error(e);
         await sweetError("상태 목록 조회 실패");
     }
@@ -197,7 +210,7 @@ async function loadReservations(page = 0) {
 
         if (!res.ok) throw new Error();
 
-        const {data} = await res.json();
+        const { data } = await res.json();
         const tbody = document.querySelector('.resource-table tbody');
         tbody.innerHTML = '';
 
@@ -250,7 +263,7 @@ function renderPagination(pageData) {
     const container = document.querySelector('.pagination');
     container.innerHTML = '';
 
-    const {number, totalPages, first, last} = pageData;
+    const { number, totalPages, first, last } = pageData;
 
     const prev = document.createElement('button');
     prev.textContent = '<';

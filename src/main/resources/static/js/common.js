@@ -734,6 +734,13 @@ window.sweetSuccess = function (message, type = 'success') {
 };
 
 window.sweetError = function (message, type = 'error') {
+    if (message && message.includes('\n')) {
+        return Swal.fire({
+            html: message.replace(/\n/g, '<br>'),
+            icon: type,
+            confirmButtonText: '확인'
+        });
+    }
     return Swal.fire({
         text: message,
         icon: type,

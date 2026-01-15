@@ -89,6 +89,12 @@
     }
 }
 
+@media (max-width: 700px) {
+    .admin-table .col-number {
+        display: none !important;
+    }
+}
+
 .filter-select {
     padding: 12px 16px;
     padding-right: 40px;
