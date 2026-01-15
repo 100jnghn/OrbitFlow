@@ -1,4 +1,4 @@
-import {showFullscreenSpinner, hideFullscreenSpinner} from "/js/ui/fullscreenSpinner.js";
+import { showFullscreenSpinner, hideFullscreenSpinner } from "/js/ui/fullscreenSpinner.js";
 
 /**
  * 관리자 - 회의실 추가 페이지
@@ -167,6 +167,10 @@ async function handleSave() {
     };
 
     try {
+        // 스피너 표시 및 버튼 비활성화
+        showFullscreenSpinner("회의실을 등록 중입니다...");
+        saveBtn.disabled = true;
+
         const response = await apiFetch(
             '/api/admin/meetingrooms',
             {
@@ -190,6 +194,11 @@ async function handleSave() {
     } catch (error) {
         console.error(error);
         await sweetError(error.message || '회의실 등록에 실패했습니다.');
+        // 실패 시 버튼 다시 활성화
+        updateSaveButtonState();
+    } finally {
+        // 스피너 숨김
+        hideFullscreenSpinner();
     }
 }
 
@@ -213,7 +222,7 @@ async function loadStatusOptions() {
     try {
         const response = await apiFetch(
             '/api/admin/resource-status',
-            {method: 'GET'}
+            { method: 'GET' }
         );
 
         if (!response.ok) throw new Error();
