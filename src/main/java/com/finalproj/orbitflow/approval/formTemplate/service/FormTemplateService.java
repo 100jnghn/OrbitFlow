@@ -8,7 +8,7 @@ import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateRepo
 import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
 import com.finalproj.orbitflow.approval.formTemplateGroup.entity.FormTemplateGroup;
 import com.finalproj.orbitflow.approval.formTemplateGroup.repository.FormTemplateGroupRepository;
-import com.finalproj.orbitflow.approval.templateCategory.repository.TemplateCategoryRepository;
+import com.finalproj.orbitflow.approval.logformtemplateai.repository.LogFormTemplateAiRepository;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
@@ -64,7 +64,7 @@ public class FormTemplateService {
     private final SampleDataGenerator sampleDataGenerator;
     private final FormTemplateRepository formTemplateRepository;
     private final FormTemplateGroupRepository formTemplateGroupRepository;
-    private final TemplateCategoryRepository templateCategoryRepository;
+    private final LogFormTemplateAiRepository logFormTemplateAiRepository;
     private final ObjectMapper objectMapper;
 
     /* =====================================================
@@ -314,6 +314,29 @@ public class FormTemplateService {
                 FormTemplateMetaDto.from(formTemplate);
 
         return FormTemplatePreviewResDto.from(meta, contentSchema);
+    }
+
+    @Transactional
+    public void deleteDraftFormTemplate(Long formTemplateId) {
+
+        FormTemplate template = findFormTemplate(formTemplateId);
+
+        if (template.getStatus() != FormTemplateStatus.DRAFT) {
+            throw new InvalidRequestException("임시 상태의 양식만 삭제할 수 있습니다.");
+        }
+
+        FormTemplateGroup group = template.getTemplateGroup();
+
+        long templateCount =
+                formTemplateRepository.countByTemplateGroup_Id(group.getId());
+
+        if (templateCount <= 1) {
+            throw new InvalidRequestException(
+                    "양식 그룹에는 최소 1개의 양식이 필요합니다. 삭제할 수 없습니다."
+            );
+        }
+
+        formTemplateRepository.delete(template);
     }
 
 
