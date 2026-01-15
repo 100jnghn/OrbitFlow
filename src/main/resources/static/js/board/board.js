@@ -386,6 +386,9 @@ function renderBoardTable(boards) {
         const row = document.createElement('tr');
         const rowNumber = currentPage * 10 + index + 1;
 
+        // 행 전체 클릭 이벤트 추가
+        row.onclick = () => viewBoard(board.id);
+
         // 필드명 매핑: boardTitle -> title, writer.name -> authorName
         const title = board.boardTitle || board.title || '';
         const authorName = board.writer?.name || board.authorName || '';
@@ -399,7 +402,7 @@ function renderBoardTable(boards) {
             <td>${rowNumber}</td>
             <td class="board-title-cell">
                 <div class="title-container">
-                    <a href="#" class="board-title-link" onclick="viewBoard(${board.id}); return false;">
+                    <a href="#" class="board-title-link" onclick="event.preventDefault();">
                         <span class="title-text">${escapeHTML(title)}</span>${commentHtml}
                     </a>
                     ${(board.hasFile === true || board.has_file === true) ? '<i class="fas fa-paperclip attachment-icon" title="첨부파일 있음"></i>' : ''}
