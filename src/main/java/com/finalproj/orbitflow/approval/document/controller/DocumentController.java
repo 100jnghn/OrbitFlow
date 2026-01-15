@@ -39,7 +39,7 @@ public class DocumentController {
 
         Page<DocumentListResDto> result = documentService.getMyWrittenDocuments(SecurityUtils.getCompanyId(), SecurityUtils.getEmployeeId(), offset, size, reqDto);
 
-        return ResponseEntity.ok(new ResponseDto(HttpStatus.OK, "나의 기안 목록 조회 성공", result));
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "나의 기안 목록 조회 성공", result));
     }
 
 
@@ -59,7 +59,7 @@ public class DocumentController {
                 );
 
         return ResponseEntity.ok(
-                new ResponseDto(HttpStatus.OK, "내 결재 목록 조회 성공", documentsToApprove)
+                new ResponseDto<>(HttpStatus.OK, "내 결재 목록 조회 성공", documentsToApprove)
         );
     }
 
@@ -72,6 +72,15 @@ public class DocumentController {
         DocumentCreateResDto result = documentApplicationService.createDraft(SecurityUtils.getCompanyId(), SecurityUtils.getEmployeeId(), formTemplateId, beforeDocumentId);
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.CREATED, "결재 문서 초안 생성 성공", result));
     }
+
+    @DeleteMapping("/draft/{documentId}")
+    public ResponseEntity<?> deleteDraftDocument(
+            @PathVariable Long documentId
+    ) {
+        documentApplicationService.deleteDraftDocument(SecurityUtils.getEmployeeId(), documentId);
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.ACCEPTED, "임시 문서 삭제 성공", null));
+    }
+
 
     @PostMapping("/{documentId}/revise")
     public ResponseEntity<?> reviseDocument(
