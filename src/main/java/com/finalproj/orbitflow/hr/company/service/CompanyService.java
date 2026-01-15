@@ -92,16 +92,16 @@ public class CompanyService {
 
         // 기본 조직 카테고리 생성
         OrgCategory companyCat = orgCategoryRepository.save(
-                OrgCategory.create(company.getId(), "회사", 1, true)
+                OrgCategory.create(company.getId(), "회사", null, true)
         );
         OrgCategory hqCat = orgCategoryRepository.save(
-                OrgCategory.create(company.getId(), "본부", 2, false)
+                OrgCategory.create(company.getId(), "본부", 1, false)
         );
         OrgCategory deptCat = orgCategoryRepository.save(
-                OrgCategory.create(company.getId(), "부서", 3, false)
+                OrgCategory.create(company.getId(), "부서", 2, false)
         );
         OrgCategory teamCat = orgCategoryRepository.save(
-                OrgCategory.create(company.getId(), "팀", 4, false)
+                OrgCategory.create(company.getId(), "팀", 3, false)
         );
 
         // 기본 조직 트리 생성
