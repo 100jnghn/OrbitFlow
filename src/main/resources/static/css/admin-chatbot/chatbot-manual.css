@@ -80,27 +80,26 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    background: #2563eb;
+    background: var(--primary-color);
     color: #fff;
     border: none;
     padding: 10px 20px;
     border-radius: 8px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
 }
 
 .btn-add-category:hover {
-    background: #1d4ed8;
-    box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+    background: var(--primary-hover);
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .btn-add-category:active {
     transform: translateY(0);
-    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+    box-shadow: none;
 }
 
 .btn-add-category i {
@@ -246,31 +245,30 @@
 }
 
 .btn-primary {
-    background: #4a69bd;
+    background: var(--primary-color);
     color: #fff;
     border: none;
-    padding: 10px 22px;
+    padding: 10px 20px;
     border-radius: 8px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(74, 105, 189, 0.2);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
 }
 
 .btn-primary:hover:not(:disabled) {
-    background: #3a5aa0;
-    box-shadow: 0 4px 8px rgba(74, 105, 189, 0.3);
+    background: var(--primary-hover);
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .btn-primary:active:not(:disabled) {
     transform: translateY(0);
-    box-shadow: 0 1px 2px rgba(74, 105, 189, 0.2);
+    box-shadow: none;
 }
 
 .btn-primary:disabled {
@@ -309,17 +307,18 @@
 }
 
 .exception-table th {
-    padding: 14px 16px;
-    text-align: left;
+    padding: 16px;
+    text-align: center;
     font-weight: 600;
     font-size: 14px;
     color: #495057;
-    /* border-bottom: 2px solid #e0e0e0; -> Reset to none or inherited from thead */
     border-bottom: none;
 }
 
 .exception-table td {
-    padding: 14px 16px;
+    padding: 16px;
+    text-align: center;
+    vertical-align: middle;
     font-size: 14px;
     color: #555;
     border-bottom: 1px solid #f0f0f0;
@@ -474,4 +473,62 @@
 .form-textarea {
     resize: vertical;
     min-height: 80px;
+}
+
+/* =========================
+   토글 (사용여부) - Copied from admin-org-category.css
+========================= */
+
+.toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* 스위치 */
+.switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+}
+
+.switch input {
+    display: none;
+}
+
+.slider {
+    position: absolute;
+    inset: 0;
+    background: #e5e7eb;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.slider::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    transition: .2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+}
+
+.switch input:checked+.slider {
+    background: var(--primary-color);
+    /* Changed from --primary to match chatbot-manual css variable if needed, but safe to use hex or defined var */
+}
+
+.switch input:checked+.slider::before {
+    transform: translateX(20px);
+}
+
+.toggle-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--neutral-700);
 }

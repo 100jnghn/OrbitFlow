@@ -207,12 +207,14 @@ async function fetchUpdateTemplates(keyword) {
 function renderTableRows(docs) {
     const tbody = document.getElementById('approvalTableBody');
     const emptyMsg = document.getElementById('approvalTableEmpty');
+
     tbody.innerHTML = '';
 
     if (!docs || docs.length === 0) {
         emptyMsg.style.display = 'block';
         return;
     }
+
     emptyMsg.style.display = 'none';
 
     docs.forEach(doc => {
@@ -221,15 +223,15 @@ function renderTableRows(docs) {
         tr.tabIndex = 0;
         tr.setAttribute('role', 'button');
 
+        const isDraft = doc.formTemplateStatus === 'DRAFT';
+
         if (doc.formTemplateStatus === 'ACTIVE') {
             tr.classList.add('row-active');
         } else if (doc.formTemplateStatus === 'INACTIVE') {
             tr.classList.add('row-inactive');
-        } else if (doc.formTemplateStatus === 'DRAFT') {
+        } else if (isDraft) {
             tr.classList.add('row-draft');
         }
-
-        const isDraft = doc.formTemplateStatus === 'DRAFT';
 
         tr.style.cursor = 'pointer';
 
@@ -237,21 +239,22 @@ function renderTableRows(docs) {
             tr.classList.add('row-view-only');
         }
 
-        tr.addEventListener('click', () => {
-            const templateId = doc.formTemplateId;
+        // 행 클릭 (삭제 버튼 클릭 제외)
+        tr.addEventListener('click', (e) => {
+            if (e.target.closest('.row-delete-btn')) return;
 
+            const templateId = doc.formTemplateId;
             if (!templateId) return;
 
             if (isDraft) {
-                // 임시 저장 → 편집
                 window.location.href =
                     `/view/admin/create-template?templateId=${templateId}`;
             } else {
-                // 활성 / 비활성 → 미리보기
                 window.location.href =
                     `/view/admin/preview-template/${templateId}`;
             }
         });
+
         tr.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -260,6 +263,7 @@ function renderTableRows(docs) {
         });
 
         tr.innerHTML = `
+            <!-- 1. 양식명 -->
             <td class="col-title" title="${escapeHTML(doc.formTemplateGroupName)}">
                 <div class="title-wrap">
                     <span class="title-text">
@@ -268,19 +272,128 @@ function renderTableRows(docs) {
                     ${renderActionIcon(doc.formTemplateStatus)}
                 </div>
             </td>
-        
-            <td class="col-category">${renderTemplateCategoryText(doc.templateCategoryCode)}</td>
-        
+
+            <!-- 2. 카테고리 -->
+            <td class="col-category">
+                ${renderTemplateCategoryText(doc.templateCategoryCode)}
+            </td>
+
+            <!-- 3. 버전 -->
             <td class="col-version">${doc.formTemplateVersion}</td>
+
+            <!-- 4. 사용 문서 수 -->
             <td class="col-usedoc">${doc.useDocument || 0}</td>
-            <td class="col-updated"> ${formatDateTime(doc.updatedAt)}</td>
-            <td class="col-attend">${renderAttend(doc.templateCategoryCode)}</td>
-            <td class="col-schedule">${renderSchedule(doc.templateCategoryCode)}</td>
-            <td class="col-status">${renderStatusBadge(doc.formTemplateStatus)}</td>
+
+            <!-- 5. 근태 연동 -->
+            <td class="col-attend">
+                ${renderAttend(doc.templateCategoryCode)}
+            </td>
+
+            <!-- 6. 일정 연동 -->
+            <td class="col-schedule">
+                ${renderSchedule(doc.templateCategoryCode)}
+            </td>
+
+            <!-- 7. 상태 -->
+            <td class="col-status">
+                ${renderStatusBadge(doc.formTemplateStatus)}
+            </td>
+
+            <!-- 8. 최종 수정일 + 삭제 버튼 -->
+            <td class="col-updated progress-cell ellipsis">
+                <span class="progress-text">
+                    ${formatDateTime(doc.updatedAt)}
+                </span>
+                ${
+            isDraft
+                ? `<button
+                               type="button"
+                               class="row-delete-btn"
+                               data-id="${doc.formTemplateId}">
+                               삭제
+                           </button>`
+                : ''
+        }
+            </td>
         `;
+
         tbody.appendChild(tr);
     });
 }
+
+function bindDraftTemplateDeleteEvent() {
+    const tbody = document.getElementById('approvalTableBody');
+    if (!tbody) return;
+
+    tbody.addEventListener('click', (e) => {
+        const btn = e.target.closest('.row-delete-btn');
+        if (!btn) return;
+
+        e.stopPropagation();
+
+        const templateId = btn.dataset.id;
+        if (!templateId) return;
+
+        confirmDeleteDraftTemplate(templateId);
+    });
+}
+
+async function confirmDeleteDraftTemplate(templateId) {
+    const result = await sweetConfirm(
+        '임시 양식 삭제',
+        '삭제한 양식은 복구할 수 없습니다.'
+    );
+
+    if (!result.isConfirmed) return;
+
+    try {
+        const res = await apiFetch(
+            `/api/admin/form-templates/draft/${templateId}`,
+            {method: 'DELETE'}
+        );
+
+        // ❌ 실패 응답
+        if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            const message =
+                body?.message ||
+                '양식을 삭제할 수 없습니다.';
+
+            // 정책 위반 → warning
+            if (res.status === 400) {
+                await Swal.fire({
+                    icon: 'warning',
+                    title: '삭제 불가',
+                    text: message
+                });
+                return;
+            }
+
+            // 그 외 → error
+            throw new Error(message);
+        }
+
+        // ✅ 성공
+        await Swal.fire({
+            icon: 'success',
+            title: '삭제 완료',
+            text: '임시 결재 양식이 삭제되었습니다.',
+            timer: 1200,
+            showConfirmButton: false
+        });
+
+        // 목록 갱신 (현재 페이지 유지)
+        loadAndRender({page: approvalState.page});
+
+    } catch (e) {
+        await Swal.fire({
+            icon: 'error',
+            title: '삭제 실패',
+            text: e.message || '삭제 중 오류가 발생했습니다.'
+        });
+    }
+}
+
 
 function renderUpdateDropdown(items) {
     const dropdown = document.getElementById('updateDropdown');
@@ -1282,7 +1395,9 @@ document.addEventListener('DOMContentLoaded', function () {
     bindEventHandlers();
     bindUpdatePopupEvents();
     bindUpdateEditButton();
+    bindDraftTemplateDeleteEvent();
 
     loadAndRender({});
 });
+
 

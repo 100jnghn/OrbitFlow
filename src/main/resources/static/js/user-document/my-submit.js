@@ -280,7 +280,6 @@ async function showSelectedTemplateDescription(groupId) {
 }
 
 
-
 function bindWritePopupEvents() {
     const input = document.getElementById('writeTemplateSearch');
     const dropdown = document.getElementById('writeTemplateDropdown');
@@ -346,6 +345,59 @@ function bindWritePopupEvents() {
 
     document.getElementById('writePopupCancelBtn')
         ?.addEventListener('click', closeWritePopup);
+}
+
+function bindDraftDeleteEvent() {
+    const tbody = document.getElementById("mydocTbody");
+    if (!tbody) return;
+
+    tbody.addEventListener("click", (e) => {
+        const btn = e.target.closest(".row-delete-btn");
+        if (!btn) return;
+
+        e.stopPropagation(); // 행 클릭 방지
+
+        confirmDeleteDraft(btn.dataset.id);
+    });
+}
+
+
+async function confirmDeleteDraft(documentId) {
+    const result = await sweetConfirm(
+        '임시 문서 삭제',
+        '삭제한 문서는 복구할 수 없습니다.'
+    );
+
+    if (!result.isConfirmed) return;
+
+    try {
+        const res = await deleteDraftDocument(documentId);
+        if (!res.ok) throw new Error();
+
+        await Swal.fire({
+            icon: 'success',
+            title: '삭제 완료',
+            text: '임시 문서가 삭제되었습니다.',
+            timer: 1200,
+            showConfirmButton: false
+        });
+
+        fetchAndRender();
+    } catch {
+        Swal.fire({
+            icon: 'error',
+            title: '삭제 실패',
+            text: '문서를 삭제할 수 없습니다.'
+        });
+    }
+}
+
+
+async function deleteDraftDocument(documentId) {
+    return apiFetch(
+        `/api/documents/draft/${documentId}`,
+        {method: 'DELETE'}
+    );
 }
 
 
@@ -478,19 +530,40 @@ function renderTable(docs) {
             <td>${formatDateTime(doc.createdAt)}</td>
             <td>${renderDocumentStatusBadge(doc.status)}</td>
             <td>${renderApprovalStep(doc)}</td>
-            <td class="ellipsis">${renderCurrentApprover(doc)}</td>
+            <td class="progress-cell ellipsis">
+                <span class="progress-text">
+                    ${renderCurrentApprover(doc)}
+                </span>
+                ${
+            doc.status === 'DRAFT'
+                ? `<button
+                               type="button"
+                               class="row-delete-btn"
+                               data-id="${doc.documentId}">
+                               삭제
+                           </button>`
+                : ''
+        }
+            </td>
         `;
 
         tr.classList.add("clickable");
-        tr.onclick = () => {
+
+        // ✅ 행 클릭 시 상세 이동 (삭제 버튼 클릭은 제외)
+        tr.addEventListener("click", (e) => {
+            if (e.target.closest(".row-delete-btn")) {
+                return; // 삭제 버튼 클릭 → 이동 금지
+            }
+
             location.href = doc.status === "DRAFT"
                 ? `/view/document/write/${doc.documentId}`
                 : `/view/document/${doc.documentId}`;
-        };
+        });
 
         tbody.appendChild(tr);
     });
 }
+
 
 function renderApprovalStep(doc) {
     if (doc.status === 'DRAFT') {
@@ -662,7 +735,6 @@ function enforceMaxLength(inputEl, max) {
 }
 
 
-
 function formatDateTime(isoString) {
     if (!isoString) return "-";
     const d = new Date(isoString);
@@ -687,6 +759,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (document.querySelector(".my-documents-page")) {
         initMyDocumentPage();
         bindWritePopupEvents();
+        bindDraftDeleteEvent();
     }
 });
 

@@ -528,17 +528,8 @@ public class DocumentApplicationService {
         entityManager.flush();
 
         // 8. 실제 파일 삭제
-        for (DocumentFile df : deletedFiles) {
-            File file = df.getFile();
+        cleanupDetachedFiles(deletedFiles);
 
-            long refCount =
-                    documentFileRepository.countByFile_Id(file.getId());
-
-            if (refCount == 0) {
-                fileRepository.delete(file);
-                fileService.deleteObjectAfterCommit(file.getObjectKey());
-            }
-        }
 
         // 9. 휴가 문서 처리 (기존 로직 그대로)
         BaseRole baseRole = document.getTemplateGroup().getBaseRole();
@@ -857,6 +848,70 @@ public class DocumentApplicationService {
                 monthApprovedCount,
                 beforeMonthApprovedCount
         );
+    }
+
+    @Transactional
+    public void deleteDraftDocument(Long employeeId, Long documentId) {
+
+        // 1️⃣ 문서 조회 + 기본 검증
+        Document draft = validateDeletableDraft(employeeId, documentId);
+
+        // 2️⃣ 첨부파일 관계 삭제
+        List<DocumentFile> documentFiles =
+                documentFileRepository.findByDocument_Id(draft.getId());
+
+        documentFileRepository.deleteAll(documentFiles);
+        entityManager.flush();
+
+        cleanupDetachedFiles(documentFiles);
+
+        // 3️⃣ 결재선 삭제 (DRAFT 전용)
+        approvalLineRepository.deleteByDocument(draft);
+
+        // 4️⃣ 문서 본문 삭제
+        documentContentRepository.deleteByDocument(draft);
+
+        // 5️⃣ 문서 삭제
+        documentRepository.delete(draft);
+    }
+
+    private Document validateDeletableDraft(Long employeeId, Long documentId) {
+
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new NotFoundException("문서 탐색 실패"));
+
+        // 상태 검증
+        if (document.getStatus() != DocumentStatus.DRAFT) {
+            throw new InvalidRequestException("임시 문서만 삭제할 수 있습니다.");
+        }
+
+        // 작성자 검증
+        if (!document.getWriter().getId().equals(employeeId)) {
+            throw new InvalidRequestException("삭제 권한 없음");
+        }
+
+        return document;
+    }
+
+    private void cleanupDetachedFiles(List<DocumentFile> detachedFiles) {
+
+        for (DocumentFile df : detachedFiles) {
+
+            File file = df.getFile();
+            if (file == null) {
+                continue; // 참조 문서 / URL 타입
+            }
+
+            String objectKey = file.getObjectKey();
+
+            long refCount =
+                    documentFileRepository.countByFile_Id(file.getId());
+
+            if (refCount == 0) {
+                fileRepository.delete(file);
+                fileService.deleteObjectAfterCommit(objectKey);
+            }
+        }
     }
 
 }

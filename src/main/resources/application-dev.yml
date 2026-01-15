@@ -97,3 +97,4 @@ chroma:
   scheme: http
   host: localhost
   port: 8000
+  collection: orbitflow_manuals
