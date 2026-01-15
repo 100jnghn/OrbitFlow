@@ -103,6 +103,7 @@ chroma:
   host: chromadb                # ✅ chromadb Service 이름
   port: 8000
   scheme: http
+  collection: orbitflow_manuals
 
 # ===============================
 # 🤖 OpenAI / LangChain

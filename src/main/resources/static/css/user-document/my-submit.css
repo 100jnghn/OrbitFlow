@@ -297,3 +297,49 @@
     align-items: center;
     line-height: 1;
 }
+
+/* ===============================
+   DRAFT 행 삭제 버튼 (hover)
+=============================== */
+.progress-cell {
+    position: relative;
+    padding-right: 46px; /* 삭제 버튼 공간 */
+    white-space: nowrap;
+}
+
+.row-delete-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%) scale(0.95);
+
+    opacity: 0;
+    pointer-events: none;
+
+    height: 20px;
+    padding: 0 9px;
+    border-radius: 999px;
+
+    border: 1px solid #fca5a5;
+    background-color: #fee2e2;
+    color: #b91c1c;
+
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+
+    cursor: pointer;
+    transition: opacity 0.15s ease,
+    transform 0.15s ease,
+    background-color 0.15s ease;
+}
+
+tr:hover .row-delete-btn {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(-50%) scale(1);
+}
+
+.row-delete-btn:hover {
+    background-color: #fecaca;
+}

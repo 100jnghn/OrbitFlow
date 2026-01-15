@@ -45,4 +45,5 @@ public interface ApprovalLineRepository extends JpaRepository<ApprovalLine, Long
     );
 
 
+    void deleteByDocument(Document draft);
 }
