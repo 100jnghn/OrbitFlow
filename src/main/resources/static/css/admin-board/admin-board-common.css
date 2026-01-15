@@ -42,7 +42,12 @@
 
 /* 반응형 스타일 */
 .admin-table .col-number {
-    width: 60px !important;
+    width: 80px !important;
+}
+
+.admin-table .col-type {
+    width: 100px !important;
+    text-align: center !important;
 }
 
 .admin-table .col-name {
@@ -86,6 +91,16 @@
 
     .admin-table .col-actions {
         width: 110px !important;
+    }
+
+    .admin-table .col-type {
+        display: none !important;
+    }
+}
+
+@media (max-width: 1000px) {
+    .admin-table .col-date {
+        display: none !important;
     }
 }
 

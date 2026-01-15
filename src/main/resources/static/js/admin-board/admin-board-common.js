@@ -109,7 +109,7 @@ function renderBoardTable(boards) {
     tbody.innerHTML = '';
 
     if (boards.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px; color: #9ca3af;">등록된 게시판이 없습니다.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #9ca3af;">등록된 게시판이 없습니다.</td></tr>';
         return;
     }
 
@@ -126,8 +126,11 @@ function renderBoardTable(boards) {
             second: '2-digit'
         });
 
+        const boardTypeLabel = board.boardType === 'NOTICE' ? '공지' : '일반';
+
         row.innerHTML = `
             <td class="col-number">${rowNumber}</td>
+            <td class="col-type">${boardTypeLabel}</td>
             <td class="col-name">${escapeHTML(board.boardName || board.name || '')}</td>
             <td class="col-date mobile-hide">${createdAt}</td>
             <td class="col-actions">
