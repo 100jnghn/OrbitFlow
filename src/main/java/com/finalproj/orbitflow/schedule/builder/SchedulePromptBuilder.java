@@ -1,13 +1,10 @@
 package com.finalproj.orbitflow.schedule.builder;
 
 import com.finalproj.orbitflow.schedule.dto.ScheduleSummaryReqDto;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
 
 /**
  * Please explain the class!!!
@@ -16,26 +13,25 @@ import java.util.stream.Collectors;
  * @filename : SchedulePromptBuilder
  * @since : 2025-12-30 오후 8:07 화요일
  */
+@Slf4j
 public class SchedulePromptBuilder {
-
-    // 일일 요약 프롬프트 작성
     public static String buildDailySummaryPrompt(
             LocalDate today,
             List<ScheduleSummaryReqDto> dailySchedules
     ) {
         StringBuilder sb = new StringBuilder();
 
-        // 1. System + 규칙 (User prompt에 같이 포함)
+        // 1. System + 규칙
         sb.append("""
-                너는 직장인의 일정 요약 비서다.
-                아래 일정을 바탕으로 하루 일정을 요약하라.
+                너는 직장인의 주간 일정 요약 비서다.
+                아래 규칙을 엄격히 준수해서 이번 주 일정을 요약하라.
                 
                 규칙:
                 - 주어진 일정만 근거로 작성할 것
                 - 추측하거나 없는 정보를 만들지 말 것
                 - 시간 흐름이 드러나도록 요약할 것
-                - 시작날짜와 종료 날짜가 다른 경우 종료 날짜를 정확시 명시할 것
-                - '전사', '조직', '개인' 일정 별로 구분하고 줄바꿈할 것
+                - 시작날짜와 종료 날짜가 다른 경우 종료 날짜를 정확히 명시할 것
+                - '전사', '조직', '개인' 일정 별로 확실하게 일정을 구분하고 출력하고 줄바꿈할 것
                 - 음슴체를 사용해서 최대 5문장 이내로 간결하게 작성할 것
                 
                 """);
@@ -46,27 +42,31 @@ public class SchedulePromptBuilder {
         // 3. startAt ASC 정렬
         List<ScheduleSummaryReqDto> sorted =
                 dailySchedules.stream()
-                        .sorted(Comparator.comparing(
-                                ScheduleSummaryReqDto::getStartAt
-                        ))
+                        .sorted(Comparator.comparing(ScheduleSummaryReqDto::getStartAt))
                         .toList();
 
-        // 4. organizationName 기준 분류
-        Map<String, List<ScheduleSummaryReqDto>> grouped =
-                sorted.stream()
-                        .collect(Collectors.groupingBy(
-                                ScheduleSummaryReqDto::getOrganizationName,
-                                LinkedHashMap::new,
-                                Collectors.toList()
-                        ));
+        // 4. 분류
+        List<ScheduleSummaryReqDto> companySchedules = new ArrayList<>();
+        List<ScheduleSummaryReqDto> personalSchedules = new ArrayList<>();
+        List<ScheduleSummaryReqDto> orgSchedules = new ArrayList<>();
 
-        // 5. 출력 순서 고정
-        appendSection(sb, grouped, "전사", "전사 일정");
-        appendSection(sb, grouped, "조직", "조직 일정", true);
-        appendSection(sb, grouped, "개인", "개인 일정");
+        for (ScheduleSummaryReqDto dto : sorted) {
+            if ("전사".equals(dto.getOrganizationName())) {
+                companySchedules.add(dto);
+            } else if ("개인".equals(dto.getOrganizationName())) {
+                personalSchedules.add(dto);
+            } else {
+                orgSchedules.add(dto); // 그 외 조직
+            }
+        }
+
+        appendSection(sb, companySchedules, "전사");
+        appendSection(sb, orgSchedules, "조직", true);
+        appendSection(sb, personalSchedules, "개인");
 
         return sb.toString();
     }
+
 
     public static String buildWeeklySummaryPrompt(
             LocalDate weekStart,
@@ -76,51 +76,46 @@ public class SchedulePromptBuilder {
 
         LocalDate weekEnd = weekStart.plusDays(6);
 
-        // 1. System + 규칙
         sb.append("""
                 너는 직장인의 주간 일정 요약 비서다.
-                아래 일정을 바탕으로 이번 주 일정을 요약하라.
+                아래 규칙을 엄격히 준수해서 이번 주 일정을 요약하라.
                 
                 규칙:
                 - 주어진 일정만 근거로 작성할 것
                 - 추측하거나 없는 정보를 만들지 말 것
-                - 이번 주 전체 흐름을 먼저 요약할 것
-                - 이후 날짜별 특징을 자연스럽게 반영할 것
-                - 시작일, 종료일, 시작 시간, 종료 시간을 정확시 명시할 것
-                - '전사', '조직', '개인' 일정 별로 구분하고 줄바꿈할 것
-                - 음슴체를 사용해서 최대 10문장 이내로 간결하게 작성할 것
+                - 이번 주 전체 흐름을 먼저 요약해서 첫 줄에 출력할 것
+                - 이후 날짜별 일정을 자연스럽게 반영해
+                - 시작일, 종료일, 시작 시간, 종료 시간을 정확히 명시할 것
+                - "일정 없음"은 출력하지 말 것
+                - 요일 정보는 한글로 출력할 것
+                - '전사', '조직', '개인' 일정 별로 확실하게 일정을 구분하고 줄바꿈할 것
+                - '음슴체'를 사용해서 최대 10문장 이내로 간결하게 작성할 것
                 
                 """);
 
-        // 2. 주간 기간
         sb.append("기간: ")
                 .append(weekStart)
                 .append(" ~ ")
                 .append(weekEnd)
                 .append("\n\n");
 
-        // 3. 날짜 → startAt ASC 정렬
-        List<ScheduleSummaryReqDto> sorted =
-                weeklyReqDtos.stream()
-                        .sorted(Comparator.comparing(
-                                ScheduleSummaryReqDto::getStartAt
-                        ))
-                        .toList();
+        // startAt ASC 정렬
+        List<ScheduleSummaryReqDto> sorted = weeklyReqDtos == null ? List.of()
+                : weeklyReqDtos.stream()
+                .sorted(Comparator.comparing(ScheduleSummaryReqDto::getStartAt))
+                .toList();
 
-        // 4. 날짜별 그룹핑
-        Map<LocalDate, List<ScheduleSummaryReqDto>> byDate =
-                sorted.stream()
-                        .collect(Collectors.groupingBy(
-                                dto -> dto.getStartAt().toLocalDate(),
-                                LinkedHashMap::new,
-                                Collectors.toList()
-                        ));
+        // 날짜별 그룹핑
+        Map<LocalDate, List<ScheduleSummaryReqDto>> byDate = new LinkedHashMap<>();
+        for (ScheduleSummaryReqDto dto : sorted) {
+            LocalDate date = dto.getStartAt().toLocalDate();
+            byDate.computeIfAbsent(date, k -> new ArrayList<>()).add(dto);
+        }
 
-        // 5. 날짜별 출력
-        for (Map.Entry<LocalDate, List<ScheduleSummaryReqDto>> entry : byDate.entrySet()) {
-
-            LocalDate date = entry.getKey();
-            List<ScheduleSummaryReqDto> dailySchedules = entry.getValue();
+        // 월~일까지 전부 출력 (일정 없으면 '일정 없음')
+        for (int i = 0; i < 7; i++) {
+            LocalDate date = weekStart.plusDays(i);
+            List<ScheduleSummaryReqDto> dailySchedules = byDate.getOrDefault(date, List.of());
 
             sb.append("[")
                     .append(date)
@@ -128,43 +123,54 @@ public class SchedulePromptBuilder {
                     .append(date.getDayOfWeek())
                     .append(")]\n");
 
-            // 날짜 내에서도 organizationName 기준 분류
-            Map<String, List<ScheduleSummaryReqDto>> grouped =
-                    dailySchedules.stream()
-                            .collect(Collectors.groupingBy(
-                                    ScheduleSummaryReqDto::getOrganizationName,
-                                    LinkedHashMap::new,
-                                    Collectors.toList()
-                            ));
+            if (dailySchedules.isEmpty()) {
+                sb.append("- 일정 없음\n\n");
+                continue;
+            }
 
-            appendSection(sb, grouped, "전사", "전사 일정");
-            appendSection(sb, grouped, "조직", "조직 일정", true);
-            appendSection(sb, grouped, "개인", "개인 일정");
+            // 전사 / 개인 / 조직
+            List<ScheduleSummaryReqDto> companySchedules = new ArrayList<>();
+            List<ScheduleSummaryReqDto> personalSchedules = new ArrayList<>();
+            List<ScheduleSummaryReqDto> orgSchedules = new ArrayList<>();
+
+            for (ScheduleSummaryReqDto dto : dailySchedules) {
+                String orgName = dto.getOrganizationName();
+
+                if ("전사".equals(orgName)) {
+                    companySchedules.add(dto);
+
+                } else if ("개인".equals(orgName)) {
+                    personalSchedules.add(dto);
+
+                } else {
+                    orgSchedules.add(dto);
+                }
+            }
+
+            appendSection(sb, companySchedules, "전사");
+            appendSection(sb, orgSchedules, "조직", true);
+            appendSection(sb, personalSchedules, "개인");
         }
+
+        log.info("프롬프트 : " + sb.toString());
 
         return sb.toString();
     }
 
-
-    // 섹션 출력
     private static void appendSection(
             StringBuilder sb,
-            Map<String, List<ScheduleSummaryReqDto>> grouped,
-            String key,
+            List<ScheduleSummaryReqDto> schedules,
             String title
     ) {
-        appendSection(sb, grouped, key, title, false);
+        appendSection(sb, schedules, title, false);
     }
 
     private static void appendSection(
             StringBuilder sb,
-            Map<String, List<ScheduleSummaryReqDto>> grouped,
-            String key,
+            List<ScheduleSummaryReqDto> schedules,
             String title,
             boolean showOrgName
     ) {
-        List<ScheduleSummaryReqDto> schedules = grouped.get(key);
-
         if (schedules == null || schedules.isEmpty()) {
             return;
         }
@@ -180,24 +186,10 @@ public class SchedulePromptBuilder {
                         .append("] ");
             }
 
-            LocalDate startDate = s.getStartAt().toLocalDate();
-            LocalDate endDate = s.getEndAt().toLocalDate();
-
-            if (!startDate.equals(endDate)) {
-                sb.append(startDate)
-                        .append(" ")
-                        .append(s.getStartAt().toLocalTime())
-                        .append(" ~ ")
-                        .append(endDate)
-                        .append(" ")
-                        .append(s.getEndAt().toLocalTime());
-            } else {
-                sb.append(s.getStartAt().toLocalTime())
-                        .append("~")
-                        .append(s.getEndAt().toLocalTime());
-            }
-
-            sb.append(" ")
+            sb.append(s.getStartAt().toLocalTime())
+                    .append("~")
+                    .append(s.getEndAt().toLocalTime())
+                    .append(" ")
                     .append(s.getTitle())
                     .append("\n");
         }

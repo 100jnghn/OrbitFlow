@@ -169,6 +169,9 @@ function renderMessageTable(messages) {
         // 폴더별로 다른 컬럼 렌더링
         if (currentFolder === 'INBOX') {
             // 받은 메시지함: 번호 | 제목 | 발신자 | 수신일 | 읽음 여부
+            // 행 전체 클릭 이벤트 추가
+            row.onclick = () => viewMessage(message.messageId, folderType);
+
             // 미읽음은 제목 Bold, 읽음 여부는 읽었을 때만 ✔ 표시
             const titleClass = read ? '' : 'message-unread';
             const readStatus = read ? '<span style="color: #10B981;">✔</span>' : '';
@@ -176,7 +179,7 @@ function renderMessageTable(messages) {
             row.innerHTML = `
                 <td>${rowNumber}</td>
                 <td>
-                    <a href="#" class="board-title-link ${titleClass}" onclick="viewMessage(${message.messageId}, '${folderType}'); return false;">
+                    <a href="#" class="board-title-link ${titleClass}" onclick="event.preventDefault();">
                         ${escapeHTML(title)}
                         ${message.hasFile ? '<i class="fas fa-paperclip attachment-icon" title="첨부파일 있음"></i>' : ''}
                     </a>
@@ -187,12 +190,15 @@ function renderMessageTable(messages) {
             `;
         } else if (currentFolder === 'SENT') {
             // 보낸 메시지함: 번호 | 제목 | 수신자 | 발신일 | 읽은 일시
+            // 행 전체 클릭 이벤트 추가
+            row.onclick = () => viewMessage(message.messageId, folderType, message.recipientId);
+
             const readDateTime = readAt ? readAt : '-';
 
             row.innerHTML = `
                 <td>${rowNumber}</td>
                 <td>
-                    <a href="#" class="board-title-link" onclick="viewMessage(${message.messageId}, '${folderType}', ${message.recipientId}); return false;">
+                    <a href="#" class="board-title-link" onclick="event.preventDefault();">
                         ${escapeHTML(title)}
                         ${message.hasFile ? '<i class="fas fa-paperclip attachment-icon" title="첨부파일 있음"></i>' : ''}
                     </a>
@@ -203,6 +209,9 @@ function renderMessageTable(messages) {
             `;
         } else if (currentFolder === 'ARCHIVE') {
             // 보관함: 번호 | 제목 | 구분 | 발신자 | 수신자 | 메시지 일시
+            // 행 전체 클릭 이벤트 추가
+            row.onclick = () => viewMessage(message.messageId, folderType);
+
             const folderIcon = folderType === 'INBOX' ? '📥 받은 메시지' : '📤 보낸 메시지';
             // 수신자 이름: 보관함에서 받은 메시지는 현재 사용자(recipientName), 보낸 메시지는 peerName
             const displayRecipientName = recipientName || (folderType === 'INBOX' ? '' : peerName);
@@ -210,7 +219,7 @@ function renderMessageTable(messages) {
             row.innerHTML = `
                 <td>${rowNumber}</td>
                 <td>
-                    <a href="#" class="board-title-link" onclick="viewMessage(${message.messageId}, '${folderType}'); return false;">
+                    <a href="#" class="board-title-link" onclick="event.preventDefault();">
                         ${escapeHTML(title)}
                         ${message.hasFile ? '<i class="fas fa-paperclip attachment-icon" title="첨부파일 있음"></i>' : ''}
                     </a>
@@ -222,10 +231,13 @@ function renderMessageTable(messages) {
             `;
         } else {
             // 기본값 (예외 처리)
+            // 행 전체 클릭 이벤트 추가
+            row.onclick = () => viewMessage(message.messageId, folderType);
+
             row.innerHTML = `
                 <td>${rowNumber}</td>
                 <td>
-                    <a href="#" class="board-title-link" onclick="viewMessage(${message.messageId}, '${folderType}'); return false;">
+                    <a href="#" class="board-title-link" onclick="event.preventDefault();">
                         ${escapeHTML(title)}
                         ${message.hasFile ? '<i class="fas fa-paperclip attachment-icon" title="첨부파일 있음"></i>' : ''}
                     </a>

@@ -9,7 +9,7 @@ const WORK_STATUS_MAP = {
     'VACATION': { text: '휴가중', className: 'badge-vacation' },
     'BUSINESS_TRIP': { text: '출장중', className: 'badge-business' },
     'OUTWORK': { text: '외근중', className: 'badge-outside' },
-    'AWAY': { text: '자리비움', className: 'badge-outside' },
+    'AWAY': { text: '자리비움', className: 'badge-away' },
     'OFF_WORK': { text: '퇴근완료', className: 'badge-off-work' },
     'BEFORE_WORK': { text: '출근전', className: 'badge-before-work' },
     'DEFAULT': { text: '출근전', className: 'badge-before-work' }
