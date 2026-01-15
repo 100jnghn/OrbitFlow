@@ -20,6 +20,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // 답장 모드 확인 및 초기화
     initializeReplyMode();
 
+    // 조직도 등에서 넘어온 수신자 자동 추가 확인
+    initializeRecipientFromUrl();
+
     // 글자수 카운터 설정
     setupCharCounters();
 
@@ -595,4 +598,34 @@ function setLoading(targetEl, loading, message = '') {
         overlay?.remove();
     }
 }
+
+/**
+ * URL 파라미터(recipientId)가 있을 경우 해당 사원을 수신자로 자동 추가
+ */
+async function initializeRecipientFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const recipientId = urlParams.get('recipientId');
+
+    if (!recipientId) return;
+
+    try {
+        const response = await apiFetch(`/api/employees/${recipientId}`);
+        if (response.ok) {
+            const { data: emp } = await response.json();
+            if (emp) {
+                // message-send.js의 selectRecipient 함수는 검색 결과 객체 구조를 기대함
+                selectRecipient({
+                    id: emp.employeeId || emp.id,
+                    name: emp.name,
+                    employeeNo: emp.employeeNo,
+                    organizationName: emp.orgName || emp.organizationName || emp.orgPath,
+                    positionName: emp.positionName
+                });
+            }
+        }
+    } catch (error) {
+        console.error('수신자 정보 로드 실패:', error);
+    }
+}
+
 

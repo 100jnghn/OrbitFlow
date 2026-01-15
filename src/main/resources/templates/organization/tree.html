@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/layout-user :: layout(
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/layout-user :: layout(
          ~{::content},
          ~{fragments/header :: header},
          ~{::user-sidebar-menu},
@@ -29,10 +28,7 @@
 
             <!-- Hero -->
             <div class="emp-hero">
-                <img id="empAvatar"
-                     class="emp-avatar"
-                     src="/images/male.png"
-                     alt="profile"/>
+                <img id="empAvatar" class="emp-avatar" src="/images/male.png" alt="profile" />
 
                 <div class="emp-main">
                     <div class="emp-name">
@@ -41,7 +37,7 @@
                     </div>
                     <div class="emp-summary" id="empSummary">-</div>
 
-<!--                    <div id="empStatus" class="emp-status"></div>-->
+                    <!--                    <div id="empStatus" class="emp-status"></div>-->
 
                     <div class="emp-meta">
                         <span id="empEmail">-</span>
@@ -51,6 +47,9 @@
                 </div>
 
                 <div class="emp-actions">
+                    <button id="sendMessageBtn" class="btn-secondary hidden" style="margin-right: 8px;">
+                        <i class="fa-regular fa-paper-plane"></i> 메시지 보내기
+                    </button>
                     <button id="myActionBtn" class="btn-primary hidden">
                         결재 서명 등록
                     </button>
@@ -112,12 +111,7 @@
                         </div>
                     </div>
 
-                    <button
-                            type="button"
-                            class="signature-remove-btn"
-                            id="signatureRemoveBtn"
-                            style="display:none;"
-                    >
+                    <button type="button" class="signature-remove-btn" id="signatureRemoveBtn" style="display:none;">
                         제거
                     </button>
                 </div>
@@ -139,7 +133,7 @@
 ========================= -->
 <th:block th:fragment="pageScript">
     <script th:inline="javascript">
-        const targetEmployeeId = [[${employeeId}]];
+        const targetEmployeeId = [[${ employeeId }]];
     </script>
     <script th:src="@{/js/org-tree.js}"></script>
 </th:block>
