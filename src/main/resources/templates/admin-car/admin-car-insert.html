@@ -1,7 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko"
-      xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/layout-admin :: layout(
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/layout-admin :: layout(
         ~{::content},
         ~{fragments/header :: header},
         ~{sidebar/admin-sidebar :: menu},
@@ -14,157 +12,140 @@
     <meta charset="UTF-8">
     <title>차량 등록</title>
 
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <!-- 페이지별 CSS -->
     <th:block th:fragment="pageCss">
         <link rel="stylesheet" th:href="@{/css/admin-car/admin-car-insert.css}">
+        <link rel="stylesheet" th:href="@{/css/ui/fullscreenSpinner.css}">
     </th:block>
 
     <!-- ✅ 페이지별 JS -->
     <th:block th:fragment="pageScript">
-        <script th:src="@{/js/admin-car/admin-car-insert.js}"></script>
+        <script th:src="@{/js/admin-car/admin-car-insert.js}" type="module"></script>
     </th:block>
 </head>
+
 <body>
 
-<!-- Main Content -->
-<div th:fragment="content">
+    <!-- Main Content -->
+    <div th:fragment="content">
 
-    <!-- Page Header -->
-    <div class="detail-header">
-        <div class="header-left">
-            <button type="button" class="btn-back" onclick="history.back()">
-                <i class="fas fa-arrow-left"></i>
-                뒤로가기
-            </button>
-            <h1 class="page-title">차량 등록</h1>
+        <!-- Page Header -->
+        <div class="detail-header">
+            <div class="header-left">
+                <button type="button" class="btn-back" onclick="history.back()">
+                    <i class="fas fa-arrow-left"></i>
+                    뒤로가기
+                </button>
+                <h1 class="page-title">차량 등록</h1>
+            </div>
+            <div class="header-actions">
+                <button type="button" class="btn-primary" id="btn-save">
+                    <i class="fas fa-save"></i>
+                    등록
+                </button>
+                <button type="button" class="btn-secondary" id="btn-cancel">
+                    <i class="fas fa-times"></i>
+                    취소
+                </button>
+            </div>
         </div>
-        <div class="header-actions">
-            <button type="button" class="btn-primary" id="btn-save">
-                <i class="fas fa-save"></i>
-                등록
-            </button>
-            <button type="button" class="btn-secondary" id="btn-cancel">
-                <i class="fas fa-times"></i>
-                취소
-            </button>
-        </div>
-    </div>
 
-    <!-- Content Wrapper -->
-    <div class="content-wrapper">
+        <!-- Content Wrapper -->
+        <div class="content-wrapper">
 
-        <!-- Left Column: 기본 정보 -->
-        <div class="left-column">
+            <!-- Left Column: 기본 정보 -->
+            <div class="left-column">
 
-            <!-- 기본 정보 섹션 -->
-            <section class="info-card">
-                <div class="card-header">
-                    <h2 class="card-title">
-                        <i class="fas fa-info-circle"></i>
-                        기본 정보
-                    </h2>
-                </div>
+                <!-- 기본 정보 섹션 -->
+                <section class="info-card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-info-circle"></i>
+                            기본 정보
+                        </h2>
+                    </div>
 
-                <div class="card-body">
-                    <div class="info-grid">
-                        <!-- 차량 번호 -->
-                        <div class="info-item">
-                            <label class="info-label">차량 번호 <span class="required">*</span></label>
-                            <input type="text"
-                                   class="info-input"
-                                   id="car-number"
-                                   placeholder="차량 번호를 입력하세요"
-                                   maxlength="15"/>
-                            <span class="hint" id="car-number-msg"></span>
-                        </div>
+                    <div class="card-body">
+                        <div class="info-grid">
+                            <!-- 차량 번호 -->
+                            <div class="info-item">
+                                <label class="info-label">차량 번호 <span class="required">*</span></label>
+                                <input type="text" class="info-input" id="car-number" placeholder="차량 번호를 입력하세요"
+                                    maxlength="15" />
+                                <span class="hint" id="car-number-msg"></span>
+                            </div>
 
-                        <!-- 차종 -->
-                        <div class="info-item">
-                            <label class="info-label">차종 <span class="required">*</span></label>
-                            <input type="text"
-                                   class="info-input"
-                                   id="car-model"
-                                   placeholder="차종을 입력하세요"
-                                   maxlength="50"/>
-                            <span class="hint" id="car-model-msg"></span>
-                        </div>
+                            <!-- 차종 -->
+                            <div class="info-item">
+                                <label class="info-label">차종 <span class="required">*</span></label>
+                                <input type="text" class="info-input" id="car-model" placeholder="차종을 입력하세요"
+                                    maxlength="50" />
+                                <span class="hint" id="car-model-msg"></span>
+                            </div>
 
-                        <!-- 차량 이미지 업로드 -->
-                        <div class="car-image-wrapper">
-                            <label class="info-label">차량 이미지 (선택사항)</label>
-                            <div class="car-image-upload-container">
-                                <input type="file"
-                                       id="car-image-input"
-                                       accept="image/*"
-                                       style="display: none;">
-                                <div class="car-image-preview" id="car-image-preview">
-                                    <img id="preview-image"
-                                         src=""
-                                         alt="미리보기"
-                                         style="display: none;">
-                                    <div class="upload-placeholder" id="upload-placeholder">
-                                        <i class="fas fa-cloud-upload-alt"></i>
-                                        <p>클릭하여 이미지 업로드</p>
-                                        <span class="upload-hint">JPG, PNG (최대 50MB)</span>
+                            <!-- 차량 이미지 업로드 -->
+                            <div class="car-image-wrapper">
+                                <label class="info-label">차량 이미지 (선택사항)</label>
+                                <div class="car-image-upload-container">
+                                    <input type="file" id="car-image-input" accept="image/*" style="display: none;">
+                                    <div class="car-image-preview" id="car-image-preview">
+                                        <img id="preview-image" src="" alt="미리보기" style="display: none;">
+                                        <div class="upload-placeholder" id="upload-placeholder">
+                                            <i class="fas fa-cloud-upload-alt"></i>
+                                            <p>클릭하여 이미지 업로드</p>
+                                            <span class="upload-hint">JPG, PNG (최대 50MB)</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- 운전 가능 나이 -->
+                            <div class="info-item">
+                                <label class="info-label">운전 가능 나이 <span class="required">*</span></label>
+                                <input type="number" class="info-input" id="car-age" placeholder="운전 가능한 나이를 입력하세요"
+                                    min="0" />
+                                <span class="hint" id="car-age-msg"></span>
+                            </div>
+
+                            <div class="upload-actions">
+                                <!--                                    <button type="button" class="btn-upload" id="btn-upload">-->
+                                <!--                                        <i class="fas fa-upload"></i>-->
+                                <!--                                        이미지 선택-->
+                                <!--                                    </button>-->
+                                <button type="button" class="btn-remove" id="btn-remove" style="display: none;">
+                                    <i class="fas fa-trash"></i>
+                                    제거
+                                </button>
+                            </div>
+
+                            <!-- 상태 -->
+                            <div class="info-item">
+                                <label class="info-label">상태 <span class="required">*</span></label>
+                                <select class="info-select" id="car-status">
+                                    <option value="">상태 선택</option>
+                                </select>
+                                <span class="hint" id="car-status-msg"></span>
+                            </div>
                         </div>
 
-                        <!-- 운전 가능 나이 -->
-                        <div class="info-item">
-                            <label class="info-label">운전 가능 나이 <span class="required">*</span></label>
-                            <input type="number"
-                                   class="info-input"
-                                   id="car-age"
-                                   placeholder="운전 가능한 나이를 입력하세요"
-                                   min="0"/>
-                            <span class="hint" id="car-age-msg"></span>
-                        </div>
-
-                        <div class="upload-actions">
-                            <!--                                    <button type="button" class="btn-upload" id="btn-upload">-->
-                            <!--                                        <i class="fas fa-upload"></i>-->
-                            <!--                                        이미지 선택-->
-                            <!--                                    </button>-->
-                            <button type="button" class="btn-remove" id="btn-remove" style="display: none;">
-                                <i class="fas fa-trash"></i>
-                                제거
-                            </button>
-                        </div>
-
-                        <!-- 상태 -->
-                        <div class="info-item">
-                            <label class="info-label">상태 <span class="required">*</span></label>
-                            <select class="info-select" id="car-status">
-                                <option value="">상태 선택</option>
-                            </select>
-                            <span class="hint" id="car-status-msg"></span>
+                        <!-- 비고 -->
+                        <div class="info-description-wrapper">
+                            <label class="info-label">비고</label>
+                            <input type="text" class="info-textarea" id="car-description"
+                                placeholder="비고 내용을 입력하세요 (선택)" maxlength="255" />
+                            <span class="hint" id="car-description-msg"></span>
                         </div>
                     </div>
+                </section>
 
-                    <!-- 비고 -->
-                    <div class="info-description-wrapper">
-                        <label class="info-label">비고</label>
-                        <input type="text"
-                               class="info-textarea"
-                               id="car-description"
-                               placeholder="비고 내용을 입력하세요 (선택)"
-                               maxlength="255"/>
-                        <span class="hint" id="car-description-msg"></span>
-                    </div>
-                </div>
-            </section>
+            </div>
 
         </div>
-
     </div>
-</div>
 
 </body>
+
 </html>
