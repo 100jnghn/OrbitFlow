@@ -170,7 +170,7 @@ public class LeaveService {
             String typeName, DocumentStatus status, LocalDate startDate, LocalDate endDate,
             Pageable pageable) {
         // AttendanceRecordRepository에 작성된 쿼리를 사용하여 차감되는 항목만 조회
-        // 필터: 승인됨(APPROVED) + 차감대상(isCountable=true) + 해당 연도 + 추가 필터
+        // 필터: 차감대상(isCountable=true) + 해당 연도 + 추가 필터 (상태 조건 제거됨)
         return attendanceRecordRepository.findUsageHistoryWithFilters(
                 companyId, employeeId, year, typeName, status, startDate, endDate, pageable)
                 .map(this::mapRecordToDto);

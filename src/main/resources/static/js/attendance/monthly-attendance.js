@@ -51,6 +51,16 @@ const MonthlyAttendance = {
 
         // 초기화 버튼 클릭
         this.elements.resetBtn.addEventListener('click', () => this.handleReset());
+
+        // [추가] 시작일 변경 시 종료일 최소값 설정
+        if (this.elements.startDate && this.elements.endDate) {
+            this.elements.startDate.addEventListener('change', () => {
+                this.elements.endDate.min = this.elements.startDate.value;
+                if (this.elements.endDate.value && this.elements.endDate.value < this.elements.startDate.value) {
+                    this.elements.endDate.value = '';
+                }
+            });
+        }
     },
 
     resetInputs() {

@@ -66,6 +66,19 @@ document.addEventListener('DOMContentLoaded', () => {
     setupNumericLimit('editExceptionBreakMinutes', 480);
     setupNumericLimit('defaultBreakMinutes', 480);
 
+    // [추가] 예외 규칙 추가 모달: 시작일 변경 시 종료일 최소값 설정
+    const validFromInput = document.getElementById('validFrom');
+    const validToInput = document.getElementById('validTo');
+
+    if (validFromInput && validToInput) {
+        validFromInput.addEventListener('change', function () {
+            validToInput.min = this.value;
+            if (validToInput.value && validToInput.value < this.value) {
+                validToInput.value = ''; // 시작일보다 이전 날짜 선택 시 초기화
+            }
+        });
+    }
+
     // ============================================
     // 1. 기본 규칙 관련 (Default Rule)
     // ============================================
@@ -170,6 +183,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('editOriginalValidTo').textContent = rule.validTo || '무기한';
                 document.getElementById('editValidFrom').value = rule.validFrom;
                 document.getElementById('editValidTo').value = rule.validTo || '';
+                // [추가] 수정 모달: 종료일 최소값 설정 (시작일 기준)
+                const editValidToInput = document.getElementById('editValidTo');
+                if (editValidToInput) editValidToInput.min = rule.validFrom;
                 document.getElementById('editExceptionStartTime').value = rule.startTime?.substring(0, 5) || '';
                 document.getElementById('editExceptionEndTime').value = rule.endTime?.substring(0, 5) || '';
                 document.getElementById('editExceptionBreakMinutes').value = rule.breakMinutes || '';

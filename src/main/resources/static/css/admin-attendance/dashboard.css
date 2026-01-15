@@ -269,48 +269,58 @@
     /* 기본 테두리 설정 */
 }
 
-/* 각 상태별 배경색 및 매칭되는 테두리 색상 */
+/* 각 상태별 배경색 및 매칭되는 테두리 색상 (Index.css와 통일: 투명도 10%/20%, 글자는 Solid) */
+/* 정상 출근 - 초록 */
+/* 정상 출근 - 밝은 그린 */
 .ON_TIME {
-    background: rgba(16, 185, 129, 0.08);
-    border-color: rgba(16, 185, 129, 0.3);
-    /* 초록색 계열 테두리 */
+    background: rgba(34, 197, 94, 0.12);
+    border-color: rgba(34, 197, 94, 0.35);
+    color: #696969;
 }
 
+/* 지각 - 밝은 오렌지 */
 .LATE {
-    background: rgba(245, 158, 11, 0.08);
-    border-color: rgba(245, 158, 11, 0.3);
-    /* 주황색 계열 테두리 */
+    background: rgba(251, 191, 36, 0.18);
+    border-color: rgba(251, 146, 60, 0.45);
+    color: #696969;
 }
 
+/* 결근 - 밝은 레드 */
 .ABSENT {
-    background: rgba(220, 38, 38, 0.08);
-    border-color: rgba(220, 38, 38, 0.3);
-    /* 빨간색 계열 테두리 */
+    background: rgba(248, 113, 113, 0.18);
+    border-color: rgba(239, 68, 68, 0.45);
+    color: #696969;
 }
 
+/* 근무 예정 - 밝은 쿨그레이 */
 .BEFORE_WORK {
-    background: rgba(59, 130, 246, 0.08);
-    border-color: rgba(59, 130, 246, 0.3);
-    /* 파란색 계열 테두리 */
+    background: rgba(203, 213, 225, 0.25);
+    border-color: rgba(148, 163, 184, 0.45);
+    color: #696969;
 }
 
+/* 휴가 - 밝은 핑크 */
 .VACATION {
-    background: rgba(139, 92, 246, 0.08);
-    border-color: rgba(139, 92, 246, 0.3);
-    /* 보라색 계열 테두리 */
+    background: rgba(244, 114, 182, 0.18);
+    border-color: rgba(236, 72, 153, 0.45);
+    color: #696969;
 }
 
+/* 외근 - 밝은 블루 */
 .OUTSIDE {
-    background: rgba(14, 165, 233, 0.08);
-    border-color: rgba(14, 165, 233, 0.3);
-    /* 하늘색 계열 테두리 */
+    background: rgba(147, 197, 253, 0.22);
+    border-color: rgba(59, 130, 246, 0.45);
+    color: #696969;
 }
 
+/* 출장 - 선명한 블루 (외근보다 살짝 진함) */
 .BUSINESS_TRIP {
-    background: rgba(249, 115, 22, 0.08);
-    border-color: rgba(249, 115, 22, 0.3);
-    /* 진주황색 계열 테두리 */
+    background: rgba(191, 219, 254, 0.22);
+    border-color: rgba(37, 99, 235, 0.5);
+    color: #696969;
 }
+
+
 
 /* 정정 버튼 디자인 */
 .btn-table-action {
@@ -635,53 +645,48 @@
 
 /* dashboard.css 추가 */
 
+.corrected-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
 .badge-corrected {
     display: inline-flex;
     align-items: center;
-    padding: 6px 12px;
+    justify-content: center;
+    /* 아이콘 제거되면서 중앙 정렬 필요 */
+    padding: 6px 14px;
     border-radius: 6px;
-    background: var(--neutral-100); /* 연한 회색 배경 */
-    color: var(--neutral-600);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: help; /* 물음표 커서로 정보가 있음을 암시 */
-    border: 1px solid var(--neutral-200);
-    transition: all 0.2s ease;
-}
-
-.badge-corrected:hover {
-    background: var(--neutral-200);
+    background: var(--neutral-100);
     color: var(--text-main);
-}
-
-.badge-corrected i {
-    color: var(--primary-color); /* 아이콘에 포인트 컬러 부여 */
-}
-
-/* 정정 사유 팝오버 스타일 보강 */
-.reason-popover {
-    position: fixed;
-    background: #fff;
-    border: 1px solid var(--primary-color); /* 테두리를 포인트 컬러로 변경 */
-    padding: 14px;
-    border-radius: 10px;
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-    z-index: 2000;
     font-size: 13px;
-    max-width: 280px;
-    line-height: 1.6;
-    animation: fadeIn 0.2s ease-out;
+    font-weight: 500;
+    /* 정정 버튼(500)과 동일하게 맞춤 */
+    border: 1px solid var(--neutral-200);
+    line-height: normal;
+    /* line-height 1 -> normal로 변경하거나 높이 맞춤 */
 }
 
-.reason-popover strong {
-    display: block;
+.btn-reason {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--neutral-300);
+    background: #fff;
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    line-height: normal;
+}
+
+.btn-reason:hover {
+    border-color: var(--primary-color);
     color: var(--primary-color);
-    margin-bottom: 6px;
-    font-size: 12px;
-    text-transform: uppercase;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
+    background: var(--neutral-50);
 }
