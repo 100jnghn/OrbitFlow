@@ -33,6 +33,9 @@ spec:
             - name: SPRING_PROFILES_ACTIVE
               value: "prod"
 
+            - name: PUBLIC_BASE_URL
+              value: "${PUBLIC_BASE_URL}"
+
             - name: RENDER_BASE_URL
               value: "http://spring-boot-service"
 
@@ -51,14 +54,20 @@ spec:
             - name: AWS_REGION
               value: eu-west-3
 
+            # ===============================
+            # 🧠 JVM Heap 설정 (🔥 PDF OOM 해결 핵심)
+            # ===============================
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Xms256m -Xmx768m"
+
           # ===============================
-          # 🚀 Startup Probe (🔥 핵심 추가)
+          # 🚀 Startup Probe
           # ===============================
           startupProbe:
             httpGet:
               path: /actuator/health
               port: 8090
-            failureThreshold: 30   # 최대 5분 대기 (30 * 10s)
+            failureThreshold: 30
             periodSeconds: 10
             timeoutSeconds: 3
 
@@ -87,15 +96,15 @@ spec:
             failureThreshold: 3
 
           # ===============================
-          # ⚙️ Resource
+          # ⚙️ Resource (🔥 메모리 상향)
           # ===============================
           resources:
             requests:
               cpu: "250m"
-              memory: "256Mi"
+              memory: "512Mi"
             limits:
               cpu: "500m"
-              memory: "512Mi"
+              memory: "1Gi"
 
 ---
 apiVersion: v1
@@ -113,4 +122,3 @@ spec:
       targetPort: 8090
       protocol: TCP
   type: ClusterIP
-
