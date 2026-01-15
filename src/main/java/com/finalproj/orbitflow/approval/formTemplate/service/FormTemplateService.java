@@ -64,7 +64,6 @@ public class FormTemplateService {
     private final SampleDataGenerator sampleDataGenerator;
     private final FormTemplateRepository formTemplateRepository;
     private final FormTemplateGroupRepository formTemplateGroupRepository;
-    private final LogFormTemplateAiRepository logFormTemplateAiRepository;
     private final ObjectMapper objectMapper;
 
     /* =====================================================
