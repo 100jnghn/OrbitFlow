@@ -18,15 +18,16 @@ public class BoardCategoryReqDto {
     @Builder
     public static class Create {
 
-//        /** 게시판이 속할 회사 ID (필수) */
-//        @NotNull(message = "회사 ID는 필수입니다.")
-//        private Long companyId;
+        // /** 게시판이 속할 회사 ID (필수) */
+        // @NotNull(message = "회사 ID는 필수입니다.")
+        // private Long companyId;
 
         /** 조직 ID (Organization ID) - 일반 게시판일 경우 null 허용 */
         private Long organizationId;
 
         /** 게시판 이름 (필수) */
         @NotBlank(message = "게시판 이름은 필수입니다.")
+        @Size(max = 30, message = "게시판 이름은 30자 이하여야 합니다.")
         private String boardName;
 
         /** 게시판 유형 ('공지사항', '자유게시판' 등) (필수) */
@@ -42,7 +43,6 @@ public class BoardCategoryReqDto {
         private Boolean commentActivated;
     }
 
-
     /** 게시판 수정 DTO */
     @Getter
     @NoArgsConstructor
@@ -51,7 +51,7 @@ public class BoardCategoryReqDto {
 
         /** 게시판 이름 (필수) */
         @NotBlank(message = "게시판 이름은 필수입니다.")
-        @Size(max = 100, message = "게시판 이름은 100자 이하여야 합니다.")
+        @Size(max = 30, message = "게시판 이름은 30자 이하여야 합니다.")
         private String boardName;
 
         /** 게시판 유형 ('공지사항', '자유게시판' 등) (필수) */
