@@ -147,6 +147,24 @@
                 </div>
             </div>
         </div>
+
+        <!-- 정정 사유 확인 모달 -->
+        <div id="reasonModal" class="modal" onclick="handleModalBackdropClick(event)">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>정정 사유</h3>
+                    <span class="close" onclick="closeReasonModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <textarea id="readOnlyReason" class="form-textarea" rows="4" readonly></textarea>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-submit" type="button" onclick="closeReasonModal()">확인</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <th:block th:fragment="pageScript">

@@ -1,15 +1,24 @@
 let currentPage = 0;
 
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', async function () {
     await initYearFilter();
     refreshLeaveData();
     loadLeaveTypes();
 
-    // 날짜 입력 필드에 변경 이벤트 리스너 추가 (실시간 필터링)
+    // 날짜 입력 필드에 변경 이벤트 리스너 추가 (실시간 필터링 + 유효성)
     const startDateEl = document.getElementById('startDate');
     const endDateEl = document.getElementById('endDate');
-    if (startDateEl) startDateEl.addEventListener('change', () => applyFilters(0));
-    if (endDateEl) endDateEl.addEventListener('change', () => applyFilters(0));
+
+    if (startDateEl && endDateEl) {
+        startDateEl.addEventListener('change', function () {
+            endDateEl.min = this.value;
+            if (endDateEl.value && endDateEl.value < this.value) {
+                endDateEl.value = '';
+            }
+            applyFilters(0);
+        });
+        endDateEl.addEventListener('change', () => applyFilters(0));
+    }
 });
 
 async function initYearFilter() {
