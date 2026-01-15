@@ -11,6 +11,8 @@ import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
+import com.finalproj.orbitflow.hr.organization.repository.OrgRepository;
+import com.finalproj.orbitflow.hr.organization.repository.OrgResView;
 import com.finalproj.orbitflow.notification.enums.NotificationType;
 import com.finalproj.orbitflow.notification.service.NotificationCommandService;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +31,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final EmployeeRepository employeeRepository;
     private final NotificationCommandService notificationCommandService;
+    private final OrgRepository orgRepository;
 
     /** 댓글 목록 조회 */
     public Page<CommentResDto.ListInfo> getCommentList(
@@ -56,9 +61,23 @@ public class CommentService {
         if (!category.isActivated()) {
             throw new ForbiddenException("비활성화된 게시판입니다.");
         }
+
+        // 조직 게시판인 경우: 내 조직 + 상위 조직까지 허용
         if (category.getOrganization() != null) {
-            if (organizationId == null || !category.getOrganization().getId().equals(organizationId)) {
-                throw new ForbiddenException("소속 조직 게시판이 아닙니다.");
+            if (organizationId == null) {
+                throw new ForbiddenException("소속 조직 정보가 없습니다.");
+            }
+
+            Long categoryOrgId = category.getOrganization().getId();
+
+            // 내 조직의 상위 계층 조회 (BoardCategoryService와 동일 방식)
+            List<Long> allowedOrgIds = orgRepository.findHierarchy(organizationId).stream()
+                    .filter(view -> view.getParentOrgId() != null)   // 최상위 회사 제외 정책이면 유지
+                    .map(OrgResView::getId)
+                    .toList();
+
+            if (!allowedOrgIds.contains(categoryOrgId)) {
+                throw new ForbiddenException("소속 조직/상위 조직 게시판이 아닙니다.");
             }
         }
     }
