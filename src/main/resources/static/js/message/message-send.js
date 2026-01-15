@@ -327,35 +327,31 @@ function updateTitleCharCount() {
     }
 }
 
-// 내용 글자수 카운터 업데이트
+// 내용 글자수 카운터 업데이트 (메시지, 상시 표시)
 function updateContentCharCount() {
     const contentTextarea = document.getElementById('messageContent');
     const contentCharCount = document.getElementById('contentCharCount');
 
     if (!contentTextarea || !contentCharCount) return;
 
-    const currentLength = contentTextarea.value.length;
     const maxLength = 3000;
-
-    // 2,500자 이상부터 표시
-    if (currentLength >= 2500) {
-        contentCharCount.style.display = 'block';
-        contentCharCount.textContent = `${currentLength} / ${maxLength}`;
-
-        // 2,800자 이상부터 경고 색상
-        if (currentLength >= 2800) {
-            contentCharCount.style.color = '#EF4444'; // 경고 색상
-        } else {
-            contentCharCount.style.color = '#6B7280'; // 기본 색상
-        }
-    } else {
-        contentCharCount.style.display = 'none';
-    }
+    let currentLength = contentTextarea.value.length;
 
     // 3,000자 초과 시 입력 차단
     if (currentLength > maxLength) {
         contentTextarea.value = contentTextarea.value.substring(0, maxLength);
-        updateContentCharCount(); // 다시 업데이트
+        currentLength = maxLength;
+    }
+
+    // 항상 표시
+    contentCharCount.style.display = 'block';
+    contentCharCount.textContent = `${currentLength} / ${maxLength}`;
+
+    // 2,800자 이상부터 경고 색상
+    if (currentLength >= 2800) {
+        contentCharCount.style.color = '#EF4444'; // 경고
+    } else {
+        contentCharCount.style.color = '#6B7280'; // 기본
     }
 }
 

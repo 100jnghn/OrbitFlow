@@ -406,8 +406,8 @@ async function handleSubmit(e) {
         return;
     }
 
-    if (content.length > 10000) {
-        showError('boardContentError', '내용은 10000자 이하여야 합니다.');
+    if (content.length > 5000) {
+        showError('boardContentError', '내용은 5000자 이하여야 합니다.');
         return;
     }
 
@@ -542,28 +542,25 @@ function updateTitleCharCount() {
     }
 }
 
-// 내용 글자수 카운터 업데이트 (8000자 이상부터 표시, 9500자 이상 경고)
+// 내용 글자수 카운터 업데이트 (최대 5000자, 상시 표시)
 function updateContentCharCount() {
     const input = document.getElementById('boardContent');
     const countElement = document.getElementById('contentCharCount');
-    if (input && countElement) {
-        const currentLength = input.value.length;
-        const maxLength = 10000;
 
-        // 8000자 이상일 때만 표시
-        if (currentLength >= 8000) {
-            countElement.style.display = 'block';
-            countElement.textContent = `${currentLength} / ${maxLength}`;
+    if (!input || !countElement) return;
 
-            // 9500자 이상이면 경고 색상
-            if (currentLength >= 9500) {
-                countElement.style.color = '#EF4444';
-            } else {
-                countElement.style.color = '#6B7280';
-            }
-        } else {
-            countElement.style.display = 'none';
-        }
+    const currentLength = input.value.length;
+    const maxLength = 5000;
+
+    // 항상 표시
+    countElement.style.display = 'block';
+    countElement.textContent = `${currentLength} / ${maxLength}`;
+
+    // 4500자 이상이면 경고 색상
+    if (currentLength >= 4500) {
+        countElement.style.color = '#EF4444'; // red
+    } else {
+        countElement.style.color = '#6B7280'; // gray
     }
 }
 
