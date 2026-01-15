@@ -1,3 +1,5 @@
+import {showFullscreenSpinner, hideFullscreenSpinner} from "/js/ui/fullscreenSpinner.js";
+
 /**
  * 관리자 - 회의실 추가 페이지
  */
