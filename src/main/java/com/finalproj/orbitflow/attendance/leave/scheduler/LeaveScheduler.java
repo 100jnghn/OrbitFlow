@@ -19,30 +19,6 @@ public class LeaveScheduler {
     private final CompanyRepository companyRepository;
     private final LeaveService leaveService;
 
-    /**
-     * [매일 00:01] 연차 소멸 처리 및 신입사원 월차 부여
-     */
-    @Scheduled(cron = "0 1 0 * * *")
-    public void runDailyLeaveJob() {
-        log.info("데일리 연차 자동 관리 작업을 시작합니다.");
-
-        // 1. 소멸 처리는 전사 공통 실행
-        try {
-            leaveService.expireOutdatedLeaves();
-        } catch (Exception e) {
-            log.error("연차 소멸 처리 중 오류 발생", e);
-        }
-
-        // 2. 회사별 신입사원 월차 부여 (트랜잭션 격리)
-        List<Company> companies = companyRepository.findAll();
-        for (Company company : companies) {
-            try {
-                leaveService.grantMonthlyLeaveForCompany(company.getId());
-            } catch (Exception e) {
-                log.error("회사 ID: {} 신입사원 월차 부여 중 오류 발생: {}", company.getId(), e.getMessage());
-            }
-        }
-    }
 
     /**
      * [매년 1월 1일 00:05] 정기 연차 일괄 부여 (회계년도 기준)

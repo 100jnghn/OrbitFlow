@@ -36,12 +36,10 @@ public class FormTemplateAiController {
     public ResponseEntity<?> generateFormTemplate(
             @Valid @RequestBody FormTemplateAiReqDto reqDto
     ) {
-        log.info("[START] generateFormTemplate]");
         FormTemplateAiResDto result = formTemplateAiService.requestFormTemplate(
                 SecurityUtils.getEmployeeId(),
                 reqDto
         );
-
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.CREATED, "Ai 양식 생성 성공", result));
     }
 }

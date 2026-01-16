@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.chatbot.manual.service;
 
+import com.finalproj.orbitflow.chatbot.chorma.service.ChromaVectorService;
 import com.finalproj.orbitflow.chatbot.manual.entity.ManualMetadata;
 import com.finalproj.orbitflow.chatbot.manual.repository.ManualRepository;
 import com.finalproj.orbitflow.chatbot.manualCategory.entity.ManualCategory;
@@ -49,9 +50,11 @@ public class ManualUploadService {
     private final ManualRepository manualMetadataRepository;
     private final ManualCategoryRepository manualCategoryRepository;
     private final EmployeeRepository employeeRepository;
+    private final ManualRepository manualRepository;
     private final FileService fileService;
     private final EmbeddingModel embeddingModel;
     private final EmbeddingStore<TextSegment> embeddingStore;
+    private final ChromaVectorService chromaVectorService;
 
     /**
      * 특정 회사의 매뉴얼 목록 조회
@@ -239,16 +242,41 @@ public class ManualUploadService {
      */
     @Transactional
     public void deleteManual(Long manualId, Long companyId) {
+
         ManualMetadata manual = manualMetadataRepository.findById(manualId)
                 .orElseThrow(() -> new NotFoundException("매뉴얼을 찾을 수 없습니다."));
 
-        // 회사 ID 검증
         if (!manual.getCompany().getId().equals(companyId)) {
             throw new InvalidRequestException("해당 매뉴얼을 삭제할 권한이 없습니다.");
         }
 
-        manual.toggleActive();
+        // 1) DB 논리삭제(먼저 적용)
+        manual.deactivate();           // setter 대신 도메인 메서드 추천
         manual.updateStatus("DELETE");
 
+        // 2) ✅ Chroma 벡터 삭제 (file_id 기준)
+        String fileId = manual.getFile().getId().toString();
+        try {
+            chromaVectorService.deleteByFileId(companyId, fileId);  // 회사도 같이 넣으면 더 안전
+        } catch (Exception e) {
+            // 실패하면: DB는 삭제됐지만 벡터는 남을 수 있음
+            // 운영에서는 재시도/배치로 eventually delete 하는 방식 추천
+            log.error("Chroma 벡터 삭제 실패 - manualId={}, fileId={}, companyId={}",
+                    manualId, fileId, companyId, e);
+        }
+    }
+
+
+    @Transactional
+    public void updateManualActive(Long companyId, Long manualId, boolean isActive) {
+        ManualMetadata manual = manualRepository
+                .findByIdAndCompanyId(manualId, companyId)
+                .orElseThrow(() -> new IllegalArgumentException("매뉴얼이 없거나 권한이 없습니다."));
+
+        if (isActive) {
+            manual.activate();
+        } else {
+            manual.deactivate();
+        }
     }
 }

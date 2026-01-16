@@ -217,30 +217,34 @@
 /* 버튼 스타일 (자원관리와 통일) */
 /* 버튼 스타일 (자원관리와 통일) - 통합된 디자인 */
 .btn-primary {
-    background: #2563eb;
+    background: var(--primary-color);
     color: #fff;
     border: none;
-    padding: 0 22px;
-    height: 42px;
-    border-radius: 12px;
+    padding: 10px 20px;
+    height: auto;
+    /* Reset height */
+    border-radius: 8px;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 500;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    box-shadow: none;
+    /* Reset shadow */
 }
 
 .btn-primary:hover {
-    background: #1d4ed8;
-    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .btn-primary:active {
     transform: translateY(0);
+    box-shadow: none;
 }
 
 
@@ -718,36 +722,40 @@
 
     /* 예외규칙 추가 버튼 (자원관리 추가 버튼 스타일 참고) */
     #addExceptionRuleBtn {
-        height: 42px;
-        padding: 0 20px;
-        border-radius: 12px;
+        height: auto;
+        padding: 10px 20px;
+        border-radius: 8px;
         font-size: 14px;
-        font-weight: 700;
-        background: #2563eb;
+        font-weight: 500;
+        background: var(--primary-color);
         color: #fff;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        box-shadow: none;
+        border: none;
     }
 
     #addExceptionRuleBtn:hover {
-        background: #1d4ed8;
-        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
     }
 
     /* 저장 버튼 (기본 규칙 저장) */
     #saveDefaultRuleBtn {
-        height: 42px;
-        padding: 0 20px;
-        border-radius: 12px;
+        height: auto;
+        padding: 10px 20px;
+        border-radius: 8px;
         font-size: 14px;
-        font-weight: 700;
-        background: #4a69bd;
+        font-weight: 500;
+        background: var(--primary-color);
         color: #fff;
-        box-shadow: 0 4px 12px rgba(74, 105, 189, 0.25);
+        box-shadow: none;
+        border: none;
     }
 
     #saveDefaultRuleBtn:hover {
-        background: #3a5aa0;
-        box-shadow: 0 6px 16px rgba(74, 105, 189, 0.35);
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
     }
 
 
