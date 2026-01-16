@@ -221,7 +221,12 @@ function humanizeKey(key) {
         status: '상태',
         gender: '성별',
         hireDate: '입사일',
-        employmentType: '고용형태'
+        employmentType: '고용형태',
+        signatureId: '서명',
+        signatureType: '서명 유형',
+        fileId: '서명 파일',
+        signatureFileId: '서명 파일',
+        isActive: '활성 여부'
     };
     return map[key] ?? key;
 }
@@ -229,7 +234,18 @@ function humanizeKey(key) {
 
 function formatDateTime(isoString) {
     if (!isoString) return '-';
-    return isoString.replace('T', ' ').substring(0, 19);
+
+    const date = new Date(isoString);
+
+    return date.toLocaleString('ko-KR', {
+        timeZone: 'Asia/Seoul',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
 }
 
 function humanizeEvent(event) {
@@ -241,12 +257,17 @@ function humanizeEvent(event) {
         UNASSIGN: '직급/직책 해제',
         STATUS_CHANGE: '상태 변경',
         CREATE: '생성',
-        UPDATE: '정보 수정'
+        UPDATE: '정보 수정',
+        SIGN: '서명 등록',
+        UNSIGN: '서명 삭제'
     };
     return map[event] ?? event;
 }
 
 function humanizeData(data) {
+    if (data === true) return '활성';
+    if (data === false) return '비활성';
+
     const map = {
         ACTIVE: '재직',
         SUSPENDED: '휴직',
