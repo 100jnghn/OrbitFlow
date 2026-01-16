@@ -8,6 +8,7 @@
 
 // 현재 상태
 let currentEmployeeStatus = null;
+const editRoleReadonly = document.getElementById('editRoleReadonly');
 
 
 /* =========================
@@ -425,6 +426,24 @@ async function openEditModal() {
 
     const e = result.data;
 
+    // Role 처리 (회사 관리자 read-only)
+    if (e.role === 'COMPANY_ADMIN') {
+        // select 숨기고
+        editRole.classList.add('hidden');
+        editRole.disabled = true;
+
+        // 텍스트 표시
+        editRoleReadonly.textContent = '회사 관리자';
+        editRoleReadonly.classList.remove('hidden');
+    } else {
+        // 일반 사원 / 관리자
+        editRole.classList.remove('hidden');
+        editRole.disabled = false;
+
+        editRoleReadonly.classList.add('hidden');
+        editRole.value = e.role ?? '';
+    }
+
     // input
     editName.value = e.name ?? '';
     editEmployeeNo.value = e.employeeNo ?? '';
@@ -441,7 +460,6 @@ async function openEditModal() {
     editOrgId.value = String(e.orgId ?? '');
     editRankId.value = String(e.rankId ?? '');
     editEmploymentType.value = e.employmentType ?? '';
-    editRole.value = e.role ?? '';
 
     // 직책은 org 기준으로 option 만든 후 value
     await loadEditPositionsByOrg(e.orgId);
@@ -536,9 +554,14 @@ async function saveEdit() {
             ? Number(editPositionCategoryId.value)
             : null,
 
-        employmentType: editEmploymentType.value || null,
-        role: editRole.value || null
+        employmentType: editEmploymentType.value || null
     };
+
+    // 회사 관리자면 role은 보내지 않음
+    if (!editRole.disabled) {
+        payload.role = editRole.value || null;
+    }
+
 
     const res = await apiFetch(`/api/admin/employees/${employeeId}`, {
         method: 'PUT',
