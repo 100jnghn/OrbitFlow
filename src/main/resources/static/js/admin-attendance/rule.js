@@ -142,6 +142,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.ok) {
                 const response = await res.json();
                 exceptionRulesList = response.data || [];
+                // 최신순 정렬 (ID 내림차순)
+                exceptionRulesList.sort((a, b) => b.overrideId - a.overrideId);
                 renderExceptionRulesTable(exceptionRulesList);
             }
         } catch (error) { console.error('목록 로드 실패:', error); }

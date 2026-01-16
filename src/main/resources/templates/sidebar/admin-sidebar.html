@@ -33,11 +33,11 @@
                 <i class="fas fa-chevron-down arrow"></i>
             </div>
             <ul class="sub-menu">
-                <li th:classappend="${currentMenu == 'attendance-dashboard'} ? 'selected' : ''">
-                    <a th:href="@{/view/admin/attendance/dashboard}">근태 대시보드</a>
-                </li>
                 <li th:classappend="${currentMenu == 'attendance-rules'} ? 'selected' : ''">
                     <a th:href="@{/view/admin/attendance/rules}">근태 규칙 관리</a>
+                </li>
+                <li th:classappend="${currentMenu == 'attendance-dashboard'} ? 'selected' : ''">
+                    <a th:href="@{/view/admin/attendance/dashboard}">근태 대시보드</a>
                 </li>
             </ul>
         </li>
