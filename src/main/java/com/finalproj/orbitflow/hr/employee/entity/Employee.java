@@ -264,4 +264,8 @@ public class Employee extends BaseEntity {
         }
     }
 
+    public void changeEmployeeNo(String employeeNo) {
+        this.employeeNo = employeeNo;
+    }
+
 }
