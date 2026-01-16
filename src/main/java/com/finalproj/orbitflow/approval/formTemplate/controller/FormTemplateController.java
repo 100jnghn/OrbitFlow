@@ -45,6 +45,14 @@ public class FormTemplateController {
                 ));
     }
 
+    @DeleteMapping("/admin/form-templates/draft/{formTemplateId}")
+    public ResponseEntity<?> deleteDraftFormTemplate(
+            @PathVariable Long formTemplateId
+    ) {
+        formTemplateService.deleteDraftFormTemplate(formTemplateId);
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.NO_CONTENT, "임시 양식 삭제 성공", null));
+    }
+
 
     @PostMapping("/admin/form-templates/{templateGroupId}/revise")
     public ResponseEntity<?> reviseFormTemplate(

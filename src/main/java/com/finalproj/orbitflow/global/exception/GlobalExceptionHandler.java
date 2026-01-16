@@ -8,6 +8,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.io.IOException;
+
 /**
  * 전역 예외 처리기.
  * 애플리케이션 전반에서 발생하는 예외를 공통 응답(ResponseDto) 형식으로 변환한다.
@@ -115,6 +117,14 @@ public class GlobalExceptionHandler {
                 .body(new ResponseDto<>(HttpStatus.BAD_REQUEST, message, null));
     }
 
+    @ExceptionHandler(RealTimeAccessException.class)
+    public ResponseEntity<?> handleRealTimeAccess(RealTimeAccessException e) {
+        log.warn("SSE 연결이 아닌 상태");
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), null));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleAll(Exception e) {
         log.error("🔥 UNHANDLED EXCEPTION", e);
@@ -124,6 +134,14 @@ public class GlobalExceptionHandler {
                         e.getMessage(),
                         null
                 ));
+    }
+
+    @ExceptionHandler(IOException.class)
+    public ResponseEntity<?> handleIOException(IOException e) {
+        log.warn("IOException 발생");
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), null));
     }
 
 

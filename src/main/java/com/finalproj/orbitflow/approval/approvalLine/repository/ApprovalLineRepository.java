@@ -3,6 +3,7 @@ package com.finalproj.orbitflow.approval.approvalLine.repository;
 import com.finalproj.orbitflow.approval.approvalLine.entity.ApprovalLine;
 import com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus;
 import com.finalproj.orbitflow.approval.document.entity.Document;
+import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -33,16 +34,28 @@ public interface ApprovalLineRepository extends JpaRepository<ApprovalLine, Long
 
     Optional<ApprovalLine> findByDocument_IdAndStatus(Long documentId, ApprovalStatus approvalStatus);
 
+
+    void deleteByDocument(Document draft);
+
     @Query("""
-    select count(al)
+    select count(distinct al.document.id)
     from ApprovalLine al
     where al.approver.id = :employeeId
-      and al.status = :status
+      and al.document.status = :documentStatus
     """)
-    int countByApproverAndStatus(
+    int countMyTurnWaiting(
             @Param("employeeId") Long employeeId,
-            @Param("status") ApprovalStatus status
+            @Param("documentStatus") DocumentStatus documentStatus
     );
 
-
+    @Query("""
+    select count(distinct al.document.id)
+    from ApprovalLine al
+    where al.approver.id = :employeeId
+      and al.status = :approvalStatus
+    """)
+    int countWaitingBeforeMyTurn(
+            @Param("employeeId") Long employeeId,
+            @Param("approvalStatus") ApprovalStatus approvalStatus
+    );
 }

@@ -622,6 +622,7 @@
     }
 }
 
+
 .stat-change {
     margin-top: 6px;
     font-size: 12px;
@@ -649,4 +650,19 @@
 
 .stat-approved .stat-value {
     margin-bottom: 2px;
+}
+
+/* ===============================
+   대기 중인 결재 - 서브 텍스트
+=============================== */
+.stat-pending .stat-change {
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 500;
+
+    padding: 0;
+    border-radius: 0;
+
+    background: none;
+    color: var(--neutral-600);
 }

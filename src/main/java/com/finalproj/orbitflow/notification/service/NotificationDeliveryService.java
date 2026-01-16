@@ -1,10 +1,12 @@
 package com.finalproj.orbitflow.notification.service;
 
+import com.finalproj.orbitflow.global.exception.RealTimeAccessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -65,8 +67,8 @@ public class NotificationDeliveryService {
                 emitter.send(SseEmitter.event()
                         .name("notification")
                         .data(data));
-            } catch (Exception e) {
-                removeEmitter(employeeId, emitter);
+            } catch (RealTimeAccessException | IOException e) {
+                log.info("SSE 연결 제거");
             }
         }
     }
@@ -74,11 +76,12 @@ public class NotificationDeliveryService {
     // 해당 emitter 제거
     private void removeEmitter(Long employeeId, SseEmitter emitter) {
         Set<SseEmitter> userEmitters = emitters.get(employeeId);
-        if (userEmitters != null) {
-            userEmitters.remove(emitter);
-            if (userEmitters.isEmpty()) {
-                emitters.remove(employeeId);
-            }
+        if (userEmitters == null) return;
+
+        userEmitters.remove(emitter);
+
+        if (userEmitters.isEmpty()) {
+            emitters.remove(employeeId);
         }
     }
 

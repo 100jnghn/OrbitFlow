@@ -27,7 +27,7 @@ public class DocumentAiSummaryController {
 
 
     @PostMapping("/{documentId}/summary")
-    public ResponseEntity<ResponseDto> sendReqSummary(
+    public ResponseEntity<?> sendReqSummary(
             @PathVariable Long documentId
     ) {
         documentAiSummaryService.sendReqSummary(SecurityUtils.getEmployeeId(), documentId);
@@ -82,7 +82,7 @@ public class DocumentAiSummaryController {
     }
 
     @PostMapping("/{documentId}/diff")
-    public ResponseEntity<ResponseDto> sendReqDiff(
+    public ResponseEntity<?> sendReqDiff(
             @PathVariable Long documentId
     ) {
         documentAiSummaryService.sendReqDiff(SecurityUtils.getEmployeeId(), documentId);
