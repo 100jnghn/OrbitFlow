@@ -261,7 +261,7 @@ public class ScheduleController {
         // isCompany 여부는 front에서 dto에 포함시켜 전달함
 
         log.info("컨트롤러 - 일정: " + "회사이이디 : " + companyId + " 사원 아이디 : " + employeeId);
-        log.info("컨트롤러 - 두산에너빌리티 회사 org category id : " + scheduleReqDto.getOrgCategoryId());
+        log.info("컨트롤러 - 회사 org category id : " + scheduleReqDto.getOrgCategoryId());
 
         scheduleService.insertSchedule(companyId, employeeId, scheduleReqDto);
 

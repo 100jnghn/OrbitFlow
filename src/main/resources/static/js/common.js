@@ -636,20 +636,17 @@ function showToast(dto) {
     toast.appendChild(iconArea);
     toast.appendChild(contentArea);
 
-    // 🔥 핵심 수정 부분
     toast.addEventListener('click', (e) => {
         if (e.target.closest('.notification-toast-check-btn')) return;
 
-        e.stopPropagation(); // ⭐ document 클릭 방지
+        e.stopPropagation();
 
-        // 1️⃣ 드롭다운 먼저 열기
         const dropdown = document.getElementById('notificationDropdown');
         if (dropdown) {
             dropdown.classList.remove('hidden');
             switchTab?.('unread');
         }
 
-        // 2️⃣ 토스트 즉시 제거 (이벤트 루프 뒤)
         setTimeout(() => {
             toast.remove();
         }, 0);
@@ -696,15 +693,29 @@ document.head.appendChild(style);
 // 읽지 않은 메시지 수 불러오는 함수
 async function refreshUnreadCount() {
     if (isSessionExtendPromptOpen) return;
+
+    console.log("[unread] start");
+
     try {
+        console.log("[unread] before fetch");
         const res = await apiFetch("/api/notifications/unread");
-        if (!res.ok) return;
+        console.log("[unread] after fetch", res?.status, res?.ok);
 
+        console.log("[unread] before json");
         const result = await res.json();
-        const list = result.data;
-        const badge = document.getElementById("notificationBadge");
+        console.log("[unread] after json", result);
 
-        if (!badge) return;
+        const badge = document.getElementById("notificationBadge");
+        console.log("[unread] badge exists?", !!badge);
+
+        if (!badge) {
+            console.log("Notification : Badge 없음");
+            return;
+        }
+
+        const list = result.data ?? [];
+        const count = Array.isArray(list) ? list.length : 0;
+        console.log("[unread] count", count);
 
         if (list.length > 0) {
 
@@ -714,7 +725,11 @@ async function refreshUnreadCount() {
             badge.classList.remove("hidden");
             badge.style.display = "flex";
         } else {
+            console.log("안 읽은 메시지 없음");
+
+            badge.innerText = "";
             badge.classList.add("hidden");
+            badge.style.display = "none";
         }
     } catch (e) {
         console.error("읽지 않은 알림 불러오기 실패", e);
