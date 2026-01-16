@@ -340,15 +340,20 @@ public class ScheduleService {
         Schedule schedule = ScheduleMapper.toEntity(companyId, employeeId, dto);
         scheduleRepository.save(schedule);
 
-        log.info("서비스 - 일정: " + "회사이이디 : " + companyId + " 사원 아이디 : " + employeeId);
-        log.info("서비스 - 두산에너빌리티 회사 org category id : " + dto.getOrgCategoryId());
+        log.info("Notification Company : " + schedule.isCompany());
+        log.info("Notification Company : " + schedule.isPersonal());
+        log.info("Notification Company : " + dto.getStatus());
+
+        ScheduleStatus dtoStatus = ScheduleStatus.valueOf(dto.getStatus());
 
         // 알림 전송 - 전사
-        if (schedule.isCompany() && !schedule.isPersonal() && dto.getStatus().equals(ScheduleStatus.RELEASE)) {
+        if (schedule.isCompany() && !schedule.isPersonal() && dtoStatus.equals(ScheduleStatus.RELEASE)) {
+            log.info("Notification: " + "전사 일정 알림");
             createCompanyNotification(schedule);
         }
         // 알림 전송 - 조직
         else if (!schedule.isCompany() && !schedule.isPersonal()) {
+            log.info("Notification: " + "조직 일정 알림");
             createOrganizationNotification(schedule);
         }
     }

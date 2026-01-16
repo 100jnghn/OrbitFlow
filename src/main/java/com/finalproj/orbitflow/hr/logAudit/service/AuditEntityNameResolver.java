@@ -41,6 +41,8 @@ public class AuditEntityNameResolver {
                     .map(p -> p.getName()).orElse("알 수 없음");
             case COMPANY -> companyRepository.findById(entityId)
                     .map(c -> c.getName()).orElse("알 수 없음");
+            case SIGNATURE -> "전자서명";
+
             default -> "알 수 없음";
         };
     }

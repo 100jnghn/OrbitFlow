@@ -49,13 +49,17 @@ public interface ApprovalLineRepository extends JpaRepository<ApprovalLine, Long
     );
 
     @Query("""
-    select count(distinct al.document.id)
-    from ApprovalLine al
-    where al.approver.id = :employeeId
-      and al.status = :approvalStatus
+    SELECT COUNT(al)
+    FROM ApprovalLine al
+    JOIN al.document d
+    WHERE al.approver.id = :employeeId
+      AND al.status = :waitingStatus
+      AND d.status = :documentStatus
     """)
     int countWaitingBeforeMyTurn(
             @Param("employeeId") Long employeeId,
-            @Param("approvalStatus") ApprovalStatus approvalStatus
+            @Param("waitingStatus") ApprovalStatus waitingStatus,
+            @Param("documentStatus") DocumentStatus documentStatus
     );
+
 }

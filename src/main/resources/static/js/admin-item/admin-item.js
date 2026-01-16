@@ -1,3 +1,5 @@
+import { showFullscreenSpinner, hideFullscreenSpinner } from "/js/ui/fullscreenSpinner.js";
+
 /**
  * 관리자 - 비품 상세 조회 페이지
  */
@@ -442,6 +444,10 @@ async function handleEdit() {
     }
 
     try {
+        // 스피너 표시 및 버튼 비활성화
+        showFullscreenSpinner("비품을 수정 중입니다...");
+        editBtn.disabled = true;
+
         const response = await apiFetch(
             `/api/admin/items/${currentItemId}`,
             {
@@ -460,6 +466,10 @@ async function handleEdit() {
     } catch (error) {
         console.error(error);
         await sweetError('비품 수정에 실패했습니다.');
+        // 실패 시 버튼 상태 복구
+        updateEditButtonState();
+    } finally {
+        hideFullscreenSpinner();
     }
 }
 

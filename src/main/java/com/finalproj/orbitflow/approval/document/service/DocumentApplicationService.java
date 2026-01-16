@@ -801,8 +801,10 @@ public class DocumentApplicationService {
         int waitingBeforeMyTurnCount =
                 approvalLineRepository.countWaitingBeforeMyTurn(
                         employeeId,
-                        ApprovalStatus.WAITING
+                        ApprovalStatus.WAITING,
+                        DocumentStatus.IN_PROGRESS
                 );
+
 
         int progressCount =
                 documentRepository.countByWriterAndStatus(

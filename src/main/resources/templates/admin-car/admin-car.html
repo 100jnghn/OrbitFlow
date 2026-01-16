@@ -18,11 +18,12 @@
     <!-- 페이지별 CSS -->
     <th:block th:fragment="pageCss">
         <link rel="stylesheet" th:href="@{/css/admin-car/admin-car.css}">
+        <link rel="stylesheet" th:href="@{/css/ui/fullscreenSpinner.css}">
     </th:block>
 
     <!-- ✅ 페이지별 JS -->
     <th:block th:fragment="pageScript">
-        <script th:src="@{/js/admin-car/admin-car.js}"></script>
+        <script th:src="@{/js/admin-car/admin-car.js}" type="module"></script>
     </th:block>
 </head>
 
