@@ -726,7 +726,10 @@ async function refreshUnreadCount() {
             badge.style.display = "flex";
         } else {
             console.log("안 읽은 메시지 없음");
+
+            badge.innerText = "";
             badge.classList.add("hidden");
+            badge.style.display = "none";
         }
     } catch (e) {
         console.error("읽지 않은 알림 불러오기 실패", e);
