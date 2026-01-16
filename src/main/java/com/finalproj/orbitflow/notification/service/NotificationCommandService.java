@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -136,8 +138,14 @@ public class NotificationCommandService {
         // dto 변환
         NotificationMessageDto dto = NotificationMessageDto.fromEntity(notification);
 
-        // 알림 publish (발행)
-        notificationPublisher.publish(dto);
+        // 알림 publish
+        // db에 알림 저장 트랜잭션 수행 후 publish
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                notificationPublisher.publish(dto);
+            }
+        });
 
         log.debug("Notification created & published. id={}", notification.getId());
     }
