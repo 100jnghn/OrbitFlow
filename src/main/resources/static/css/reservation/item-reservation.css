@@ -215,7 +215,7 @@
 
 .time-cell.available:hover {
     background: #e8f5e9;
-    transform: scale(1.02);
+    /*transform: scale(1.02);*/
 }
 
 /* 선택됨 */
