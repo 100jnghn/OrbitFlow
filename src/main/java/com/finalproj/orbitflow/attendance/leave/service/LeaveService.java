@@ -71,15 +71,12 @@ public class LeaveService {
         BigDecimal grantDays;
         String type;
 
-        // 2. 기준일(1월 1일) 기준 1년 이상 근무자 여부 판별
         LocalDate standardDate = LocalDate.of(year, 1, 1);
         if (!emp.getHireDate().isAfter(standardDate.minusYears(1))) {
-            // 1년 이상 근속자: 정기 연차 (15일 + 가산 연차)
             int yearsOfService = Period.between(emp.getHireDate(), standardDate).getYears();
             grantDays = calculateStandardDays(yearsOfService);
             type = "ANNUAL_REGULAR";
         } else {
-            // 1년 미만 근속자: 회계연도 기준 비례분 부여
             grantDays = calculateProportionalDays(emp.getHireDate(), year);
             type = "ANNUAL_PROPORTIONAL";
         }
@@ -270,19 +267,13 @@ public class LeaveService {
     }
 
 
-    /**
-     * 🚀 [수정] 통일된 Enum 값에 맞춰 매핑 로직 단순화
-     */
+
     @Transactional
     public void updateAllEmployeesWorkStatus(LocalDate today) {
-        log.info("[Scheduler] 전사 근무 상태 동기화 시작: {}", today);
 
-        // 1. 복구 로직: 특수 상태 사원 초기화
-        List<WorkStatus> specialStatuses = List.of(
-                WorkStatus.VACATION,
-                WorkStatus.BUSINESS_TRIP,
-                WorkStatus.OUTWORK);
+        List<WorkStatus> specialStatuses = getSpecialWorkStatuses();
 
+        // 기존 특수 상태 초기화
         List<Employee> specialStatusEmployees = employeeRepository.findByStatusAndWorkStatusIn(
                 EmployeeStatus.ACTIVE, specialStatuses);
 
@@ -290,7 +281,7 @@ public class LeaveService {
             emp.updateWorkStatus(WorkStatus.OFF_WORK);
         }
 
-        // 2. 오늘 날짜 승인 근태 기록 적용
+        // 오늘 기준 유효한 출근/휴가 기록 조회
         List<AttendanceRecord> activeRecords = attendanceRecordRepository.findActiveAttendanceRecords(today);
 
         for (AttendanceRecord record : activeRecords) {
@@ -298,18 +289,26 @@ public class LeaveService {
             if (record.getSourceDocument() == null || record.getSourceDocument().getTemplateGroup() == null)
                 continue;
 
+            // 승인 문서(BaseRole)를 기준으로 최종 상태 결정
             BaseRole role = record.getSourceDocument().getTemplateGroup().getBaseRole();
 
-            // 🚀 [핵심] BaseRole과 WorkStatus가 동일하므로 직접 변환 가능
             try {
                 WorkStatus targetStatus = WorkStatus.valueOf(role.name());
                 employee.updateWorkStatus(targetStatus);
-                log.info("[Scheduler] 사원: {}, 상태 변경: {}", employee.getName(), targetStatus);
             } catch (IllegalArgumentException e) {
-                log.warn("매핑되지 않는 BaseRole: {}", role);
             }
         }
     }
+
+
+    private List<WorkStatus> getSpecialWorkStatuses() {
+        return List.of(
+                WorkStatus.VACATION,
+                WorkStatus.BUSINESS_TRIP,
+                WorkStatus.OUTWORK
+        );
+    }
+
 
     /**
      * [API] 조기 복귀 처리
