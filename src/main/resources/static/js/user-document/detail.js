@@ -1441,8 +1441,10 @@ function getApprovalStatusText(status) {
 
 const AI_STATUS = {
     PROCESSING: "PROCESSING",
-    COMPLETED: "COMPLETED"
+    COMPLETED: "COMPLETED",
+    FAILED: "FAILED"
 };
+
 
 const AI_TYPE = {
     CONTENT: "CONTENT",
@@ -1496,7 +1498,12 @@ async function createAi(documentId, type) {
  *  - "COMPLETED": 결과만
  */
 function applyAiPanelState(panelEls, mode, opts = {}) {
-    const {emptyMsg, resultText, canCreate} = opts;
+    const {
+        emptyMsg,
+        resultText,
+        loadingMsg,
+        canCreate
+    } = opts;
 
     // 초기화
     hide(panelEls.empty);
@@ -1504,6 +1511,7 @@ function applyAiPanelState(panelEls, mode, opts = {}) {
 
     if (panelEls.result) {
         panelEls.result.classList.remove("loading");
+        panelEls.result.innerHTML = ""; // ⭐ 기존 내용 제거
     }
 
     if (panelEls.createBtn) {
@@ -1515,6 +1523,7 @@ function applyAiPanelState(panelEls, mode, opts = {}) {
     if (emptyMsg != null && panelEls.emptyText) {
         panelEls.emptyText.textContent = emptyMsg;
     }
+
     if (resultText != null && panelEls.result) {
         panelEls.result.textContent = resultText;
     }
@@ -1537,7 +1546,15 @@ function applyAiPanelState(panelEls, mode, opts = {}) {
         case "PROCESSING": {
             show(panelEls.result);
             panelEls.result.classList.add("loading");
-            panelEls.result.textContent = "";
+
+            panelEls.result.innerHTML = `
+                <div class="ai-loading-center">
+                  <div class="ai-spinner"></div>
+                  <div class="ai-loading-text">
+                    ${loadingMsg ?? "AI 처리 중입니다..."}
+                  </div>
+                </div>
+              `;
             break;
         }
 
@@ -1549,14 +1566,14 @@ function applyAiPanelState(panelEls, mode, opts = {}) {
     }
 }
 
-function startPolling(documentId, type, panelEls) {
+async function startPolling(documentId, type, panelEls) {
     stopPolling(type);
 
     aiPollTimers[type] = setInterval(async () => {
         try {
             const {data} = await fetchAi(documentId, type);
 
-            // data=null이면 아직 생성 안된 상태로 되돌아간 것 → 폴링 중단 + NONE 처리
+            // 생성 취소 / 삭제 등
             if (!data) {
                 stopPolling(type);
                 applyAiPanelState(panelEls, "NONE", {
@@ -1566,22 +1583,35 @@ function startPolling(documentId, type, panelEls) {
                 return;
             }
 
-            // 처리 중이면 계속
+            // 처리 중
             if (data.aiStatus === AI_STATUS.PROCESSING) return;
 
-            // 완료면 중단 + 완료 표시
+            // ❗ FAILED → 여기서만 책임지고 종료
+            if (data.aiStatus === AI_STATUS.FAILED) {
+                stopPolling(type);
+                applyAiPanelState(panelEls, "NONE", {
+                    emptyMsg: data.failMessage
+                        ?? "AI 생성에 실패했습니다. 다시 시도해주세요.",
+                    canCreate: true
+                });
+                return;
+            }
+
+            // 완료
             if (data.aiStatus === AI_STATUS.COMPLETED) {
                 stopPolling(type);
                 applyAiPanelState(panelEls, "COMPLETED", {
                     resultText: data.context
                 });
             }
+
         } catch (e) {
             console.error(`[AI POLL ${type}]`, e);
             stopPolling(type);
         }
     }, AI_POLL_INTERVAL);
 }
+
 
 /* ===============================
    AI 요약 패널
@@ -1601,42 +1631,73 @@ async function initAiSummaryPanel(documentId) {
     const els = getSummaryPanelEls();
     if (!els.empty || !els.result || !els.createBtn) return;
 
-    // ✅ init 순간에 절대 스피너가 돌면 안됨 → 일단 전부 숨김 후 서버 상태로 결정
-    applyAiPanelState(els, "NONE", {emptyMsg: "AI 요약 상태를 불러오는 중...", canCreate: false});
+    applyAiPanelState(els, "NONE", {
+        emptyMsg: "AI 요약 상태를 불러오는 중...",
+        canCreate: false
+    });
 
     try {
         const {data} = await fetchAi(documentId, AI_TYPE.CONTENT);
 
-        // 1) data=null → 생성 전(버튼 활성 + placeholder)
+        // 1️⃣ 생성 전
         if (!data) {
             applyAiPanelState(els, "NONE", {
                 emptyMsg: "아직 생성되지 않았습니다.",
                 canCreate: true
             });
 
+            els.createBtn.onclick = null;
             els.createBtn.onclick = async () => {
-                // 버튼 누른 순간: placeholder 제거 + 스피너 + 폴링 시작
-                applyAiPanelState(els, "PROCESSING", {loadingMsg: "AI 요약을 생성 중입니다..."});
+                applyAiPanelState(els, "PROCESSING", {
+                    loadingMsg: "AI 요약을 생성 중입니다..."
+                });
                 await createAi(documentId, AI_TYPE.CONTENT);
                 startPolling(documentId, AI_TYPE.CONTENT, els);
             };
             return;
         }
 
-        // 2) PROCESSING → 스피너 + 폴링
+        // 2️⃣ 처리 중
         if (data.aiStatus === AI_STATUS.PROCESSING) {
-            applyAiPanelState(els, "PROCESSING", {loadingMsg: "AI 요약을 생성 중입니다..."});
+            applyAiPanelState(els, "PROCESSING", {
+                loadingMsg: "AI 요약을 생성 중입니다..."
+            });
             startPolling(documentId, AI_TYPE.CONTENT, els);
             return;
         }
 
-        // 3) COMPLETED → 결과
-        if (data.aiStatus === AI_STATUS.COMPLETED) {
-            applyAiPanelState(els, "COMPLETED", {resultText: data.context});
+        // 3️⃣ 실패
+        if (data.aiStatus === AI_STATUS.FAILED) {
+            applyAiPanelState(els, "NONE", {
+                emptyMsg: data.failMessage
+                    ?? "AI 요약 생성에 실패했습니다.",
+                canCreate: true
+            });
+
+            els.createBtn.onclick = null;
+            els.createBtn.onclick = async () => {
+                applyAiPanelState(els, "PROCESSING", {
+                    loadingMsg: "AI 요약을 재생성 중입니다..."
+                });
+                await createAi(documentId, AI_TYPE.CONTENT);
+                startPolling(documentId, AI_TYPE.CONTENT, els);
+            };
+            return;
         }
+
+        // 4️⃣ 완료
+        if (data.aiStatus === AI_STATUS.COMPLETED) {
+            applyAiPanelState(els, "COMPLETED", {
+                resultText: data.context
+            });
+        }
+
     } catch (e) {
         console.error("[AI SUMMARY INIT]", e);
-        applyAiPanelState(els, "NONE", {emptyMsg: "AI 요약 정보를 불러오지 못했습니다.", canCreate: false});
+        applyAiPanelState(els, "NONE", {
+            emptyMsg: "AI 요약 정보를 불러오지 못했습니다.",
+            canCreate: false
+        });
     }
 }
 
@@ -1658,48 +1719,81 @@ async function initAiDiffPanel(documentId, beforeDocumentId) {
     const els = getDiffPanelEls();
     if (!els.empty || !els.result || !els.createBtn) return;
 
-    // ✅ 비교 대상 없으면: 스피너 절대 X, 버튼 숨김
     if (!beforeDocumentId) {
         stopPolling(AI_TYPE.DIFF);
-        applyAiPanelState(els, "NO_TARGET", {emptyMsg: "비교 대상이 없습니다."});
+        applyAiPanelState(els, "NO_TARGET", {
+            emptyMsg: "비교 대상이 없습니다."
+        });
         return;
     }
 
-    // init 순간 노출 방지
-    applyAiPanelState(els, "NONE", {emptyMsg: "AI 비교 상태를 불러오는 중...", canCreate: false});
+    applyAiPanelState(els, "NONE", {
+        emptyMsg: "AI 비교 상태를 불러오는 중...",
+        canCreate: false
+    });
 
     try {
         const {data} = await fetchAi(documentId, AI_TYPE.DIFF);
 
-        // 1) data=null → 생성 전(버튼 활성)
+        // 1️⃣ 생성 전
         if (!data) {
             applyAiPanelState(els, "NONE", {
                 emptyMsg: "아직 생성되지 않았습니다.",
                 canCreate: true
             });
 
+            els.createBtn.onclick = null;
             els.createBtn.onclick = async () => {
-                applyAiPanelState(els, "PROCESSING", {loadingMsg: "AI 비교를 생성 중입니다..."});
+                applyAiPanelState(els, "PROCESSING", {
+                    loadingMsg: "AI 비교를 생성 중입니다..."
+                });
                 await createAi(documentId, AI_TYPE.DIFF);
                 startPolling(documentId, AI_TYPE.DIFF, els);
             };
             return;
         }
 
-        // 2) PROCESSING → 스피너 + 폴링
+        // 2️⃣ 처리 중
         if (data.aiStatus === AI_STATUS.PROCESSING) {
-            applyAiPanelState(els, "PROCESSING", {loadingMsg: "AI 비교를 생성 중입니다..."});
+            applyAiPanelState(els, "PROCESSING", {
+                loadingMsg: "AI 비교를 생성 중입니다..."
+            });
             startPolling(documentId, AI_TYPE.DIFF, els);
             return;
         }
 
-        // 3) COMPLETED → 결과
-        if (data.aiStatus === AI_STATUS.COMPLETED) {
-            applyAiPanelState(els, "COMPLETED", {resultText: data.context});
+        // 3️⃣ 실패
+        if (data.aiStatus === AI_STATUS.FAILED) {
+            applyAiPanelState(els, "NONE", {
+                emptyMsg: data.failMessage
+                    ?? "AI 비교 생성에 실패했습니다.",
+                canCreate: true
+            });
+
+            els.createBtn.onclick = null;
+            els.createBtn.onclick = async () => {
+                applyAiPanelState(els, "PROCESSING", {
+                    loadingMsg: "AI 비교를 재생성 중입니다..."
+                });
+                await createAi(documentId, AI_TYPE.DIFF);
+                startPolling(documentId, AI_TYPE.DIFF, els);
+            };
+            return;
         }
+
+        // 4️⃣ 완료
+        if (data.aiStatus === AI_STATUS.COMPLETED) {
+            applyAiPanelState(els, "COMPLETED", {
+                resultText: data.context
+            });
+        }
+
     } catch (e) {
         console.error("[AI DIFF INIT]", e);
-        applyAiPanelState(els, "NONE", {emptyMsg: "AI 비교 정보를 불러오지 못했습니다.", canCreate: false});
+        applyAiPanelState(els, "NONE", {
+            emptyMsg: "AI 비교 정보를 불러오지 못했습니다.",
+            canCreate: false
+        });
     }
 }
 

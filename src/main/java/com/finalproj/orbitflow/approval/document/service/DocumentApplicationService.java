@@ -792,8 +792,14 @@ public class DocumentApplicationService {
 
     public DocumentMainInfoResDto getMainInfo(Long employeeId) {
 
-        int waitingCount =
-                approvalLineRepository.countByApproverAndStatus(
+        int myTurnWaitingCount =
+                approvalLineRepository.countMyTurnWaiting(
+                        employeeId,
+                        DocumentStatus.IN_PROGRESS
+                );
+
+        int waitingBeforeMyTurnCount =
+                approvalLineRepository.countWaitingBeforeMyTurn(
                         employeeId,
                         ApprovalStatus.WAITING
                 );
@@ -842,7 +848,8 @@ public class DocumentApplicationService {
                 );
 
         return new DocumentMainInfoResDto(
-                waitingCount,
+                myTurnWaitingCount,
+                waitingBeforeMyTurnCount,
                 progressCount,
                 rejectCount,
                 monthApprovedCount,

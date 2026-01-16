@@ -91,7 +91,10 @@ public class DocumentAiSummaryService {
 
         documentAiSummaryRepository
                 .findByDocumentAndSummaryType(document, SummaryType.CONTENT)
-                .filter(summary -> summary.getStatus() == AiStatus.COMPLETED)
+                .filter(summary ->
+                        summary.getStatus() == AiStatus.COMPLETED
+                                || summary.getStatus() == AiStatus.PROCESSING
+                )
                 .ifPresent(summary -> {
                     throw new InvalidRequestException("이미 완료된 ai 요약이 존재합니다.");
                 });
@@ -335,7 +338,10 @@ public class DocumentAiSummaryService {
                         beforeDocument,
                         SummaryType.DIFF
                 )
-                .filter(summary -> summary.getStatus() == AiStatus.COMPLETED)
+                .filter(summary ->
+                        summary.getStatus() == AiStatus.COMPLETED
+                                || summary.getStatus() == AiStatus.PROCESSING
+                )
                 .ifPresent(summary -> {
                     throw new InvalidRequestException("이미 완료된 AI 비교가 존재합니다.");
                 });

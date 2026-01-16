@@ -79,7 +79,10 @@ public class DocumentAISummary extends BaseEntity {
     }
 
 
-    public void markFailed() {
+    public void markFailed(String failMessage) {
         this.status = AiStatus.FAILED;
+        if(failMessage != null) {
+            this.content = failMessage;
+        }
     }
 }
