@@ -356,6 +356,13 @@ function showStatusDropdown(badge, reservation) {
         filteredStatusList = statusList.filter(status =>
             status.statusName === '승인 대기' || status.statusName === '예약 취소'
         );
+    } else if (currentStatus === '승인 대기') {
+        // '승인 대기' -> '예약 취소' 제외 (즉, 승인 대기, 예약 확정, 예약 반려 등 표시하되 취소는 안 됨? 
+        // 요구사항: '승인대기' 상태 배지를 눌렀을 때 '예약취소' 리스트는 출력하지 않아야 해
+        // 기존 statusList에는 '예약 취소'가 포함되어 있으므로 이를 제외
+        filteredStatusList = statusList.filter(status =>
+            status.statusName !== '예약 취소'
+        );
     } else if (currentStatus === '예약 반려') {
         // '예약 반려' -> '예약 확정'
         filteredStatusList = statusList.filter(status =>
