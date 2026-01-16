@@ -87,7 +87,8 @@ public class AuditLogService {
                 AuditEntityType.EMPLOYEE,
                 AuditEntityType.HR_RANK,
                 AuditEntityType.POSITION,
-                AuditEntityType.ORG_POSITION_USAGE
+                AuditEntityType.ORG_POSITION_USAGE,
+                AuditEntityType.SIGNATURE
         );
 
         List<AuditEventType> allowedEvents = List.of(
