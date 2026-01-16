@@ -87,6 +87,7 @@ public class AnalyticsService {
                 .append("SUM(a.doc_summary_cnt) as ai_doc, ")
                 .append("SUM(a.compare_summary_cnt) as ai_compare, ")
                 .append("SUM(a.outline_gen_cnt) as ai_outline, ")
+                .append("SUM(a.chatbot_cnt) as ai_chatbot, ")
                 .append("SUM(s.file_count) as file_cnt, ")
                 .append("SUM(s.file_bytes) as file_bytes ")
                 .append("FROM company_daily_snapshot s ")
@@ -120,8 +121,9 @@ public class AnalyticsService {
             map.put("ai_doc", row[5] != null ? ((Number) row[5]).longValue() : 0L);
             map.put("ai_compare", row[6] != null ? ((Number) row[6]).longValue() : 0L);
             map.put("ai_outline", row[7] != null ? ((Number) row[7]).longValue() : 0L);
-            map.put("file_cnt", row[8] != null ? ((Number) row[8]).longValue() : 0L);
-            map.put("file_bytes", row[9] != null ? ((Number) row[9]).longValue() : 0L);
+            map.put("ai_chatbot", row[8] != null ? ((Number) row[8]).longValue() : 0L);
+            map.put("file_cnt", row[9] != null ? ((Number) row[9]).longValue() : 0L);
+            map.put("file_bytes", row[10] != null ? ((Number) row[10]).longValue() : 0L);
             data.add(map);
         }
         return data;
