@@ -869,56 +869,60 @@ button.active {
 }
 
 /* ===============================
-   로딩 상태
+   AI 로딩 상태
 =============================== */
+
+/* ✅ 로딩일 때는 기존 ai-result 스타일(특히 padding/flex) 다 무시 */
 .ai-result.loading {
-    color: transparent; /* 텍스트 숨김 */
+    position: relative !important;
+    display: block !important;
+
+    padding: 0 !important; /* ← 기존 padding 12px 무조건 무력화 */
+    min-height: 120px;
+    background: var(--neutral-50);
 }
 
-/* 반투명 오버레이 */
-.ai-result.loading::before {
-    content: '';
+/* ✅ 박스(=ai-result) 기준으로 정확히 정중앙 */
+.ai-result.loading > .ai-loading-center {
     position: absolute;
     inset: 0;
 
-    background: rgba(249, 250, 251, 0.6);
-    border-radius: 6px;
-    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* 좌우 중앙 */
+    justify-content: center; /* 상하 중앙 */
+
+    gap: 12px;
+    text-align: center;
 }
 
-/* ✅ 스피너 (ai-result 기준 중앙) */
-.ai-result.loading::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-
-    width: 22px;
-    height: 22px;
-
+/* 스피너 */
+.ai-spinner {
+    width: 28px;
+    height: 28px;
     border: 3px solid #e5e7eb;
     border-top-color: var(--primary-color);
     border-radius: 50%;
-
-    transform: translate(-50%, -50%);
-    animation: spin 0.8s linear infinite;
-
-    z-index: 2;
+    animation: ai-spin 0.8s linear infinite;
 }
 
-/* 로딩 텍스트 (spinner 아래) */
-.ai-result.loading .ai-loading-text {
-    position: absolute;
-    top: calc(50% + 22px);
-    left: 50%;
-    transform: translateX(-50%);
-
+/* 텍스트 */
+.ai-loading-text {
+    text-align: center;
     font-size: 13px;
+    line-height: 1.4;
     color: var(--neutral-600);
-    white-space: nowrap;
-
-    z-index: 2;
 }
+
+@keyframes ai-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 
 /* ===============================
    스크롤바 (선택)
