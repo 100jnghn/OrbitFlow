@@ -20,11 +20,12 @@ public class EmployeeUpdateReqDto {
 
     /* ==============================
        기본 정보 (관리자 수정 가능)
-       --> email, employeeNo 일부러 안 넣음
-       (로그인 ID + 인사 기준값이라 관리자 수정 불가 정책 유지)
+       --> email 일부러 안 넣음
+       (로그인 ID라 관리자 수정 불가 정책 유지)
        ============================== */
 
     private String name;
+    private String employeeNo;
     @Pattern(regexp = "^[0-9]*$", message = "연락처는 숫자만 입력 가능합니다.")
     private String phone;
 

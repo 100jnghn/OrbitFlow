@@ -228,6 +228,7 @@ public class EmployeeService {
                 null,
                 after
         );
+
     }
 
 
@@ -263,6 +264,30 @@ public class EmployeeService {
             putDiff(before, after, "name", employee.getName(), name);
             employee.updateBasicInfo(name, null, null, null);
         }
+
+        String employeeNo = normalizeStr(dto.getEmployeeNo());
+
+        if (employeeNo != null && !employeeNo.equals(employee.getEmployeeNo())) {
+
+            if (actor.getRole() != EmployeeRole.COMPANY_ADMIN) {
+                throw new IllegalStateException("대표 관리자만 사번을 변경할 수 있습니다.");
+            }
+
+            // 회사 내 사번 중복 체크 (본인 제외)
+            if (employeeRepository.findByCompanyIdAndEmployeeNo(companyId, employeeNo)
+                    .filter(e -> !e.getId().equals(employee.getId()))
+                    .isPresent()) {
+                throw new IllegalArgumentException("이미 사용 중인 사번입니다.");
+            }
+
+            putDiff(before, after, "employeeNo",
+                    employee.getEmployeeNo(),
+                    employeeNo);
+
+            employee.changeEmployeeNo(employeeNo);
+
+        }
+
         if (dto.getGender() != null && dto.getGender() != employee.getGender()) {
             putDiff(before, after, "gender", employee.getGender().name(), dto.getGender().name());
             employee.changeGender(dto.getGender());

@@ -467,3 +467,9 @@ function statusLabel(s) {
         TEMP: '임시'
     }[s] ?? s;
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const today = new Date().toISOString().split('T')[0];
+    const birth = document.getElementById('empBirthDate');
+    if (birth) birth.max = today;
+});

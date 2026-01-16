@@ -21,4 +21,5 @@ public class MeResDto {
     private String role;
     private WorkStatus workStatus;
     private Gender gender;
+    String companyName;
 }

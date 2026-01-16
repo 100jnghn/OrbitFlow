@@ -165,29 +165,29 @@ CREATE TABLE org_position_usage
 
 CREATE TABLE employee
 (
-    id                   BIGINT AUTO_INCREMENT PRIMARY KEY,                                                   -- 사원 아이디
-    company_id           BIGINT                                           NOT NULL,                           -- 회사 아이디 (fk)
-    employee_no          VARCHAR(20)                                      NOT NULL,                           -- 사번
-    internal_phone       VARCHAR(20),                                                                         -- 내선번호
-    phone                VARCHAR(20),                                                                         -- 전화번호
-    org_id               BIGINT                                           NOT NULL,                           -- 조직 아이디 (fk)
-    hr_rank_id           BIGINT                                           NULL,                               -- 직급 아이디 (fk)
-    position_category_id BIGINT                                           NULL,                               -- 직책 카테고리 아이디 (fk)
+    id                   BIGINT AUTO_INCREMENT PRIMARY KEY,                                                            -- 사원 아이디
+    company_id           BIGINT                                                    NOT NULL,                           -- 회사 아이디 (fk)
+    employee_no          VARCHAR(20)                                               NOT NULL,                           -- 사번
+    internal_phone       VARCHAR(20),                                                                                  -- 내선번호
+    phone                VARCHAR(20),                                                                                  -- 전화번호
+    org_id               BIGINT                                                    NOT NULL,                           -- 조직 아이디 (fk)
+    hr_rank_id           BIGINT                                                    NULL,                               -- 직급 아이디 (fk)
+    position_category_id BIGINT                                                    NULL,                               -- 직책 카테고리 아이디 (fk)
 
-    name                 VARCHAR(50)                                      NOT NULL,                           -- 이름
-    email                VARCHAR(100)                                     NOT NULL,                           -- 이메일 (로그인 id)
-    password             VARCHAR(255)                                     NOT NULL,                           -- 비밀번호
-    role                 ENUM ('COMPANY_ADMIN', 'ADMIN', 'EMPLOYEE')      NOT NULL DEFAULT 'EMPLOYEE',
-    gender               ENUM ('MALE', 'FEMALE')                          NOT NULL,                           -- 성별
-    birth_date           DATE,                                                                                -- 생년월일
-    employment_type      ENUM ('REGULAR', 'NON_REGULAR')                  NOT NULL,                           -- 고용 형태
-    status               ENUM ('TEMP', 'ACTIVE', 'SUSPENDED', 'RESIGNED') NOT NULL,                           -- 재직 상태
+    name                 VARCHAR(50)                                               NOT NULL,                           -- 이름
+    email                VARCHAR(100)                                              NOT NULL,                           -- 이메일 (로그인 id)
+    password             VARCHAR(255)                                              NOT NULL,                           -- 비밀번호
+    role                 ENUM ('TEAM_ORBIT', 'COMPANY_ADMIN', 'ADMIN', 'EMPLOYEE') NOT NULL DEFAULT 'EMPLOYEE',
+    gender               ENUM ('MALE', 'FEMALE')                                   NOT NULL,                           -- 성별
+    birth_date           DATE,                                                                                         -- 생년월일
+    employment_type      ENUM ('REGULAR', 'NON_REGULAR')                           NOT NULL,                           -- 고용 형태
+    status               ENUM ('TEMP', 'ACTIVE', 'SUSPENDED', 'RESIGNED')          NOT NULL,                           -- 재직 상태
 
     work_status          ENUM ('WORKING', 'AWAY', 'ON_LEAVE', 'OFF_WORK')
-                                                                          NOT NULL DEFAULT 'OFF_WORK',        -- 근무 상태
-    hire_date            DATE                                             NOT NULL,
-    created_at           TIMESTAMP                                        NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 생성일시
-    updated_at           TIMESTAMP                                        NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                                                                   NOT NULL DEFAULT 'OFF_WORK',        -- 근무 상태
+    hire_date            DATE                                                      NOT NULL,
+    created_at           TIMESTAMP                                                 NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 생성일시
+    updated_at           TIMESTAMP                                                 NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
 
     UNIQUE KEY uk_employee_company_no (company_id, employee_no),
@@ -380,12 +380,12 @@ CREATE TABLE form_template
         ON UPDATE CURRENT_TIMESTAMP,
 
     active_version     INT
-        GENERATED ALWAYS AS (
-            CASE
-                WHEN status = 'ACTIVE' THEN version
-                ELSE NULL
-                END
-            ) STORED,
+                       GENERATED ALWAYS AS (
+                           CASE
+                               WHEN status = 'ACTIVE' THEN version
+                               ELSE NULL
+                               END
+                           ) STORED,
 
     CONSTRAINT fk_ft_company
         FOREIGN KEY (company_id)
@@ -886,12 +886,12 @@ CREATE TABLE employee_signature
 
     -- 활성 서명만 UNIQUE 제약을 걸기 위한 가상 컬럼
     active_flag TINYINT
-        GENERATED ALWAYS AS (
-            CASE
-                WHEN is_active = TRUE THEN 1
-                ELSE NULL
-                END
-            ),
+                GENERATED ALWAYS AS (
+                    CASE
+                        WHEN is_active = TRUE THEN 1
+                        ELSE NULL
+                        END
+                    ),
 
     created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -1490,21 +1490,21 @@ CREATE INDEX idx_calendar_day_type
 
 CREATE TABLE chat_conversation
 (
-    id                     BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id                   BIGINT AUTO_INCREMENT PRIMARY KEY,
 
-    company_id              BIGINT       NOT NULL,
-    employee_id             BIGINT       NOT NULL,
+    company_id           BIGINT                    NOT NULL,
+    employee_id          BIGINT                    NOT NULL,
 
-    manual_category_id      BIGINT       NULL,
-    manual_category_name    VARCHAR(255) NULL, -- 카테고리명 스냅샷(선택이 없을 수도 있으면 NULL 허용)
+    manual_category_id   BIGINT                    NULL,
+    manual_category_name VARCHAR(255)              NULL, -- 카테고리명 스냅샷(선택이 없을 수도 있으면 NULL 허용)
 
-    title                   VARCHAR(255) NULL, -- 첫 질문 요약 등
-    status                  ENUM ('ACTIVE', 'CLOSED') NOT NULL DEFAULT 'ACTIVE',
+    title                VARCHAR(255)              NULL, -- 첫 질문 요약 등
+    status               ENUM ('ACTIVE', 'CLOSED') NOT NULL DEFAULT 'ACTIVE',
 
-    is_deleted              BOOLEAN      NOT NULL DEFAULT FALSE,
+    is_deleted           BOOLEAN                   NOT NULL DEFAULT FALSE,
 
-    created_at              TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at              TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at           TIMESTAMP                 NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at           TIMESTAMP                 NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_chat_conv_company
@@ -1537,16 +1537,16 @@ CREATE INDEX idx_chat_conv_not_deleted
 
 CREATE TABLE chat_message
 (
-    id                BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
 
-    company_id         BIGINT        NOT NULL,
-    conversation_id    BIGINT        NOT NULL,
+    company_id      BIGINT                               NOT NULL,
+    conversation_id BIGINT                               NOT NULL,
 
-    role               ENUM ('USER', 'ASSISTANT', 'SYSTEM') NOT NULL,
-    content            LONGTEXT      NOT NULL,
+    role            ENUM ('USER', 'ASSISTANT', 'SYSTEM') NOT NULL,
+    content         LONGTEXT                             NOT NULL,
 
-    meta_json          JSON          NULL, -- 모델명, 토큰 사용량, 근거 문서 등
-    created_at         TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    meta_json       JSON                                 NULL, -- 모델명, 토큰 사용량, 근거 문서 등
+    created_at      TIMESTAMP                            NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_chat_msg_company
         FOREIGN KEY (company_id) REFERENCES company (id)
@@ -1571,19 +1571,19 @@ CREATE INDEX idx_chat_msg_company_created
 
 CREATE TABLE chat_message_reference
 (
-    id               BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
 
-    company_id        BIGINT    NOT NULL,
-    message_id        BIGINT    NOT NULL,
+    company_id         BIGINT        NOT NULL,
+    message_id         BIGINT        NOT NULL,
 
-    manual_metadata_id BIGINT   NULL, -- 특정 매뉴얼(파일) 단위 근거
-    file_id           BIGINT    NULL, -- 또는 파일 직접 참조(둘 중 하나만 써도 됨)
+    manual_metadata_id BIGINT        NULL, -- 특정 매뉴얼(파일) 단위 근거
+    file_id            BIGINT        NULL, -- 또는 파일 직접 참조(둘 중 하나만 써도 됨)
 
     -- 선택: 근거 범위/점수 같은 확장
-    ref_score         DECIMAL(6, 5) NULL,
-    ref_note          VARCHAR(255)  NULL,
+    ref_score          DECIMAL(6, 5) NULL,
+    ref_note           VARCHAR(255)  NULL,
 
-    created_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at         TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_chat_ref_company
         FOREIGN KEY (company_id) REFERENCES company (id)
