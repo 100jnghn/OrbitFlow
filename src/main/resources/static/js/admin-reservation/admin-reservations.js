@@ -560,7 +560,7 @@ async function updateReservationStatusWithReason(reservationId, statusId, status
         }
 
         closeStatusReasonModal();
-        await sweetSuccess(`예약 상태가 "${statusName}"으로 변경되었습니다.`);
+        await sweetSuccess(`예약 상태가 "${statusName}"(으)로 변경되었습니다.`);
         loadReservations(currentPage);
 
     } catch (e) {
@@ -584,7 +584,7 @@ async function updateReservationStatus(reservationId, statusId, statusName) {
             throw new Error(error.message || '상태 변경에 실패했습니다.');
         }
 
-        await sweetSuccess(`예약 상태가 "${statusName}"으로 변경되었습니다.`);
+        await sweetSuccess(`예약 상태가 "${statusName}"(으)로 변경되었습니다.`);
         loadReservations(currentPage);
 
     } catch (e) {
