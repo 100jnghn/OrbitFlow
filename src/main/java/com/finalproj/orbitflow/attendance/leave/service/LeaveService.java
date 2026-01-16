@@ -1,10 +1,15 @@
 package com.finalproj.orbitflow.attendance.leave.service;
 
+import com.finalproj.orbitflow.approval.attendanceEvent.entity.AttendanceEvent;
+import com.finalproj.orbitflow.approval.attendanceEvent.repository.AttendanceEventRepository;
 import com.finalproj.orbitflow.approval.attendanceRecord.entity.AttendanceRecord;
 import com.finalproj.orbitflow.approval.attendanceRecord.repository.AttendanceRecordRepository;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
 import com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole;
+import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
+import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
+import com.finalproj.orbitflow.attendance.commute.repository.CommuteRepository;
 import com.finalproj.orbitflow.attendance.leave.dto.*;
 import com.finalproj.orbitflow.attendance.leave.entity.LeaveBalance;
 import com.finalproj.orbitflow.attendance.leave.entity.LeaveGrant;
@@ -12,6 +17,7 @@ import com.finalproj.orbitflow.attendance.leave.entity.LeaveType;
 import com.finalproj.orbitflow.attendance.leave.repository.LeaveBalanceRepository;
 import com.finalproj.orbitflow.attendance.leave.repository.LeaveGrantRepository;
 import com.finalproj.orbitflow.attendance.leave.repository.LeaveTypeRepository;
+import com.finalproj.orbitflow.global.exception.BusinessException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
@@ -28,10 +34,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -43,9 +52,8 @@ public class LeaveService {
     private final LeaveGrantRepository leaveGrantRepository;
     private final LeaveBalanceRepository leaveBalanceRepository;
     private final AttendanceRecordRepository attendanceRecordRepository;
-    private final LeaveTypeRepository leaveTypeRepository;
-    private final com.finalproj.orbitflow.approval.attendanceEvent.repository.AttendanceEventRepository attendanceEventRepository;
-    private final com.finalproj.orbitflow.schedule.repository.ScheduleRepository scheduleRepository;
+    private final AttendanceEventRepository attendanceEventRepository;
+    private final CommuteRepository commuteRepository;
 
     /**
      * [스케줄러/관리자] 정기 연차 부여 (회계년도 기준)
@@ -227,7 +235,7 @@ public class LeaveService {
     }
 
     public void deduction(Employee employee,
-            BigDecimal days,
+               BigDecimal days,
             Document document,
             LeaveType leaveType) {
 
@@ -310,95 +318,8 @@ public class LeaveService {
     }
 
 
-    /**
-     * [API] 조기 복귀 처리
-     * - 현재 진행 중인 휴가/출장 기록을 오늘 날짜 기준으로 종료 처리
-     * - 잔여 연차 환불 (연차 차감 대상인 경우)
-     * - 미래의 근태 이벤트 및 일정 삭제
-     * - 사원 상태 '근무중'으로 변경
-     */
-    @Transactional
-    public void processEarlyReturn(Long employeeId) {
-        LocalDate today = LocalDate.now();
 
-        // 1. 현재 진행 중인 근태 기록 조회
-        AttendanceRecord record = attendanceRecordRepository.findActiveRecord(employeeId, today)
-                .orElseThrow(() -> new NotFoundException("현재 진행 중인 휴가/출장 기록이 없습니다."));
 
-        // 2. 사원 조회
-        Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new NotFoundException("사원을 찾을 수 없습니다."));
-
-        // 3. 기록 단축 및 환불 계산
-        LocalDate originalEndDate = record.getEndDate();
-
-        // 이미 종료된 기록이면 패스 (쿼리에서 걸러지지만 안전장치)
-        if (originalEndDate.isBefore(today)) {
-            throw new IllegalStateException("이미 종료된 휴가입니다.");
-        }
-
-        // 새 종료일: 어제 (오늘 복귀했으므로 어제까지만 휴가)
-        LocalDate newEndDate = today.minusDays(1);
-
-        // 전체 취소 여부 (시작일이 오늘이거나 미래인 경우) -> 로직상 start <= today 이므로 start == today 인 경우
-        boolean isFullCancellation = record.getStartDate().isAfter(newEndDate);
-
-        // 사용일수 재계산
-        BigDecimal newUsedDays;
-        if (isFullCancellation) {
-            newUsedDays = BigDecimal.ZERO;
-        } else {
-            // 🔥 null 체크 강화: 출장/외근의 경우 leaveType이 null일 수 있음
-            if (record.getLeaveType() == null) {
-                // 출장/외근의 경우 연차 차감이 없으므로 0
-                newUsedDays = BigDecimal.ZERO;
-            } else {
-                long dayCount = ChronoUnit.DAYS.between(record.getStartDate(), newEndDate) + 1;
-                newUsedDays = record.getLeaveType().getUnitDays().multiply(BigDecimal.valueOf(dayCount));
-            }
-        }
-
-        // 환불할 일수 = 기존 차감 일수 - 실제 사용 일수
-        BigDecimal refundDays = record.getDays().subtract(newUsedDays);
-
-        // 4. 연차 환불 처리 (차감 대상인 경우)
-        // 🔥 null 체크 강화: 출장/외근의 경우 leaveType이 null일 수 있음
-        if (record.getLeaveType() != null
-                && Boolean.TRUE.equals(record.getLeaveType().getIsCountable())
-                && refundDays.compareTo(BigDecimal.ZERO) > 0) {
-            LeaveBalance balance = leaveBalanceRepository
-                    .findTopByEmployeeIdOrderByYearDesc(employeeId)
-                    .orElseThrow(() -> new NotFoundException("잔여 연차 정보를 찾을 수 없습니다."));
-
-            balance.updateBalance(refundDays);
-        }
-
-        // 5. 기록 업데이트
-        record.updateDuration(newEndDate, newUsedDays);
-
-        // 6. 미래 이벤트 및 일정 삭제
-        // 🔥 [수정] 오늘 날짜를 포함하여 이후의 자동 생성된 이벤트/일정 삭제
-        // 이유: 오늘 조기 복귀했으므로, 시스템 상 '오늘'은 더 이상 휴가/출장 상태가 아니어야 함 (또는 근무 상태로 전환됨)
-
-        // 날짜 기준: 어제
-        LocalDate yesterday = today.minusDays(1);
-
-        // AttendanceEvent: 어제 이후(즉, 오늘부터) 삭제
-        attendanceEventRepository.deleteByEmployeeIdAndStartDateAfter(employeeId, yesterday);
-
-        // Schedule: 어제 23:59:59 이후(즉, 오늘 00:00:00부터) 삭제
-        // 🚀 일반 일정(개인 약속 등)은 유지하고, 시스템이 생성한(isCompany=true && isPersonal=true) 일정만 삭제
-        scheduleRepository.deleteByEmployeeIdAndIsCompanyTrueAndIsPersonalTrueAndStartAtAfter(
-                employeeId,
-                yesterday.atTime(23, 59, 59));
-
-        // 7. 상태 변경
-        employee.updateWorkStatus(WorkStatus.WORKING);
-
-        log.info("조기 복귀 처리 완료 - 사원: {}, 환불일수: {}", employee.getName(), refundDays);
-    }
-
-    // -----------------
 
     /**
      * 신규 사원 가입(입사) 직후 비례 연차 즉시 부여
@@ -455,4 +376,84 @@ public class LeaveService {
         return employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new NotFoundException("ID [" + employeeId + "] 사원을 찾을 수 없습니다."));
     }
+
+
+    @Transactional
+    public void normalizeTodayAttendanceStatus(Long companyId, LocalDate today) {
+
+        List<Employee> employees =
+                employeeRepository.findByCompanyIdAndStatus(companyId, EmployeeStatus.ACTIVE);
+
+        for (Employee employee : employees) {
+
+            WorkStatus workStatus = employee.getWorkStatus();
+            if (workStatus == null) continue;
+
+            AttendanceStatus targetStatus = mapToAttendanceStatus(workStatus);
+            if (targetStatus == null) continue;
+
+            upsertTodayAttendance(
+                    companyId,
+                    employee.getId(),
+                    today,
+                    targetStatus
+            );
+        }
+    }
+
+
+    /**
+     * ✅ WorkStatus → AttendanceStatus 매핑
+     */
+    private AttendanceStatus mapToAttendanceStatus(WorkStatus workStatus) {
+        return switch (workStatus) {
+            case VACATION -> AttendanceStatus.VACATION;
+            case OUTWORK -> AttendanceStatus.OUTSIDE;
+            case BUSINESS_TRIP -> AttendanceStatus.BUSINESS_TRIP;
+            default -> null;
+        };
+    }
+
+    /**
+     * ✅ 오늘자 attendance upsert
+     * - 없으면 생성
+     * - 있으면 상태만 자동 보정 (정정 아님)
+     */
+    @Transactional
+    protected void upsertTodayAttendance(
+            Long companyId,
+            Long employeeId,
+            LocalDate workDate,
+            AttendanceStatus targetStatus
+    ) {
+
+        Attendance attendance = commuteRepository
+                .findByCompanyIdAndEmployeeIdAndWorkDate(companyId, employeeId, workDate)
+                .orElse(null);
+
+        // 1️⃣ 오늘 기록이 없으면 생성
+        if (attendance == null) {
+            Attendance created = Attendance.builder()
+                    .companyId(companyId)
+                    .employeeId(employeeId)
+                    .workDate(workDate)
+                    .commuteAt(null)     // 휴가/외근/출장은 출근시간 생성 안 함
+                    .leaveAt(null)
+                    .isCorrected(false)
+                    .status(targetStatus)
+                    .build();
+
+            commuteRepository.save(created);
+            return;
+        }
+
+        // 2️⃣ 이미 있으면 상태만 보정 (스케줄러 = 정정 아님)
+        attendance.updateStatusAutomatically(targetStatus);
+        commuteRepository.save(attendance);
+    }
+
+
+
+
+
 }

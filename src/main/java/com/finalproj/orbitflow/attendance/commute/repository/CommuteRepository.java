@@ -88,4 +88,9 @@ public interface CommuteRepository extends JpaRepository<Attendance, Long> {
 
         // 스케줄러: 기록 존재 여부
         boolean existsByEmployeeIdAndWorkDate(Long employeeId, LocalDate workDate);
+
+
+        List<Attendance> findByCompanyIdAndEmployeeIdAndWorkDateBetween(
+                Long companyId, Long employeeId, LocalDate start, LocalDate end);
+
 }

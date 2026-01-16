@@ -127,12 +127,6 @@ public class LeaveController {
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "연차 사용 검증 결과 반환", result));
     }
 
-    @PostMapping("/leave/return")
-    public ResponseEntity<?> earlyReturn(@AuthenticationPrincipal SecurityUser user) {
-        leaveService.processEarlyReturn(user.getEmployeeId());
-        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "복귀 처리가 완료되었습니다.", null));
-    }
-
 
     /**
      * [관리자] 특정 신입사원에게 가입 즉시 비례 연차 부여 실행

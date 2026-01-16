@@ -53,4 +53,23 @@ public class LeaveScheduler {
             log.error("근무 상태 업데이트 중 오류 발생", e);
         }
     }
+
+    /**
+     * [매일 00:10] 당일 attendance 상태 보정
+     */
+    @Scheduled(cron = "0 10 0 * * *")
+    public void normalizeTodayAttendanceStatus() {
+        LocalDate today = LocalDate.now();
+        log.info("당일 attendance 상태 보정 배치 시작");
+
+        List<Company> companies = companyRepository.findAll();
+        for (Company company : companies) {
+            try {
+                leaveService.normalizeTodayAttendanceStatus(company.getId(), today);
+            } catch (Exception e) {
+                log.error("회사 {} attendance 보정 실패", company.getId(), e);
+            }
+        }
+    }
+
 }
