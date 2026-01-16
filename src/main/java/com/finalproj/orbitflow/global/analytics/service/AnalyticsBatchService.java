@@ -79,7 +79,9 @@ public class AnalyticsBatchService {
                 +
                 "    (SELECT COUNT(*) FROM document_ai_summary ds WHERE ds.company_id = c.id AND ds.summary_type = 'DIFF' AND DATE(ds.created_at) = :date) as compare_cnt, "
                 +
-                "    (SELECT COUNT(*) FROM log_form_template_ai la WHERE la.company_id = c.id AND la.status = 'COMPLETED' AND DATE(la.created_at) = :date) as outline_cnt "
+                "    (SELECT COUNT(*) FROM log_form_template_ai la WHERE la.company_id = c.id AND la.status = 'COMPLETED' AND DATE(la.created_at) = :date) as outline_cnt, "
+                +
+                "    (SELECT COUNT(*) FROM chat_message cm WHERE cm.company_id = c.id AND cm.role = 'ASSISTANT' AND DATE(cm.created_at) = :date) as chatbot_cnt "
                 +
                 "FROM company c";
 
@@ -94,7 +96,8 @@ public class AnalyticsBatchService {
             Integer docCnt = ((Number) row[2]).intValue();
             Integer compareCnt = ((Number) row[3]).intValue();
             Integer outlineCnt = ((Number) row[4]).intValue();
-            Integer totalCnt = scheduleCnt + docCnt + compareCnt + outlineCnt;
+            Integer chatbotCnt = ((Number) row[5]).intValue();
+            Integer totalCnt = scheduleCnt + docCnt + compareCnt + outlineCnt + chatbotCnt;
 
             CompanyDailyAiUsage aiUsage = CompanyDailyAiUsage.builder()
                     .usageDate(date)
@@ -103,6 +106,7 @@ public class AnalyticsBatchService {
                     .docSummaryCnt(docCnt)
                     .compareSummaryCnt(compareCnt)
                     .outlineGenCnt(outlineCnt)
+                    .chatbotCnt(chatbotCnt)
                     .totalCnt(totalCnt)
                     .build();
 

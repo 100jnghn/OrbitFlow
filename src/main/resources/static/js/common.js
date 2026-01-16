@@ -575,6 +575,11 @@ function connectSse() {
         const dto = JSON.parse(event.data);
         showToast(dto);
         refreshUnreadCount();
+
+        // 메시지 알림인 경우 메시지 배지 카운트도 즉시 업데이트
+        if (dto.type === '메시지') {
+            updateMessageCount();
+        }
     });
 
     eventSource.onopen = () => {

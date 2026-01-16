@@ -34,6 +34,9 @@ public class CompanyDailyAiUsage {
     @Column(name = "outline_gen_cnt", nullable = false)
     private Integer outlineGenCnt;
 
+    @Column(name = "chatbot_cnt", nullable = false)
+    private Integer chatbotCnt;
+
     @Column(name = "total_cnt", nullable = false)
     private Integer totalCnt;
 }
