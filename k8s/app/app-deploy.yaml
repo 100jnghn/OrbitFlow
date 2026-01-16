@@ -33,9 +33,6 @@ spec:
             - name: SPRING_PROFILES_ACTIVE
               value: "prod"
 
-            - name: PUBLIC_BASE_URL
-              value: "${PUBLIC_BASE_URL}"
-
             - name: RENDER_BASE_URL
               value: "http://spring-boot-service"
 
