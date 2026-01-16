@@ -572,17 +572,30 @@ async function fetchApprovalDashboard() {
 }
 
 function renderApprovalDashboard(data) {
-    safeSetText('pendingApprovals', data.waitingCount);
+    safeSetText('pendingApprovals', data.myTurnWaitingCount);
+
+    // 🔹 대기 중인 결재 (서브: 앞 결재자 처리 중)
+    const subEl = document.getElementById('pendingApprovalsSub');
+    if (subEl) {
+        if (data.waitingBeforeMyTurnCount > 0) {
+            subEl.textContent = `(앞 결재자 처리 중 : ${data.waitingBeforeMyTurnCount}건)`;
+        } else {
+            subEl.textContent = '모두 내 결재 차례';
+        }
+    }
+
     safeSetText('documentsInProgress', data.progressCount);
+
     safeSetText('approvedThisMonth', data.monthApprovedCount);
+
     safeSetText('rejected', data.rejectCount);
 
-    // 🔥 이번 달 승인 변화량 계산
     renderApprovedChange(
         data.monthApprovedCount,
         data.beforeMonthApprovedCount
     );
 }
+
 
 function renderApprovedChange(current, previous) {
     const el = document.getElementById('approvedChange');
