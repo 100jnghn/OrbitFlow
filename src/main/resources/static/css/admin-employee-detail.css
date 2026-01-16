@@ -735,3 +735,12 @@
     border-top: 1px solid var(--line);
     background: #ffffff;
 }
+
+.readonly-text {
+    padding: 6px 0;
+    color: #667085;
+    font-weight: 500;
+}
+.hidden {
+    display: none;
+}

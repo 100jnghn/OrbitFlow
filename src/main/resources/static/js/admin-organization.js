@@ -15,6 +15,7 @@ let isEditMode = false;
 let isOrderChanged = false;
 let sortable = null;
 let orgCategories = [];
+let orgCategoryMap = new Map();
 
 const expandedSet = new Set();
 const MAX_ORG_NAME_LENGTH = 100;
@@ -92,6 +93,16 @@ async function loadOrgCategories() {
     const res = await apiFetch('/api/admin/org-categories/selectable');
     const json = await res.json();
     orgCategories = json.data || [];
+
+    // 검증용 (비활성 포함 전체)
+    const res2 = await apiFetch('/api/admin/org-categories?includeInactive=true');
+    const json2 = await res2.json();
+
+    orgCategoryMap.clear();
+    (json2.data || []).forEach(c => {
+        orgCategoryMap.set(c.id, c);
+    });
+
 }
 
 /* ======================
@@ -297,7 +308,7 @@ function openCreate() {
     document.getElementById('inactiveHelp').style.display = 'none';
 
     buildCategorySelect(orgCategories[0]?.id);
-    buildParentSelect(null);
+    buildParentSelect(null, {mode: 'create'});
 
     currentOrgCategoryId = orgCategories[0]?.id;
     loadPositionPolicies(null, currentOrgCategoryId);
@@ -338,39 +349,76 @@ async function openEdit(id) {
     document.getElementById('orgNameCount').textContent = (org.name ?? '').length;
 
     buildCategorySelect(org.categoryId);
-    buildParentSelect(org.parentOrgId ?? null);
+    buildParentSelect(org.parentOrgId ?? null, {mode: 'edit'});
     document.getElementById('parentOrgSelectValue').value = org.parentOrgId;
 
     // 회사 루트 조직 전용 제어
     if (isRootOrg) {
-        const label = document.querySelector('#categorySelect .custom-select-selected');
-        const hidden = document.getElementById('categorySelectValue');
+        // ===== 조직명 =====
+        els.orgName().setAttribute('readonly', true);
+        els.orgName().classList.add('readonly-input');
 
-        // 강제 세팅
-        label.textContent = '회사';
-        hidden.value = ''; // 서버에서 categoryId 안 써도 OK (update 로직도 허용함)
+        const nameHelp = document.getElementById('orgNameHelp');
+        nameHelp.textContent = '회사명은 조직 관리에서 수정할 수 없습니다.';
+        nameHelp.style.display = 'block';
 
-        // 카테고리 고정
+        // ===== 카테고리 / 상위 조직 =====
         document.getElementById('categorySelect').classList.add('disabled');
-
-        // 상위 조직 없음
         document.getElementById('parentOrgSelect').classList.add('disabled');
 
-        // 활성 고정
+        const readonlyHelp = document.getElementById('readonlyHelp');
+        readonlyHelp.textContent =
+            '회사 루트 조직은 조직 카테고리 및 상위 조직을 변경할 수 없습니다.';
+        readonlyHelp.style.display = 'block';
+
+        // ===== 활성 여부 =====
         const toggle = document.getElementById('activeToggle');
         toggle.checked = true;
         toggle.disabled = true;
 
         document.getElementById('inactiveHelp').style.display = 'none';
     } else {
-        // 기존 로직 그대로
+        // 카테고리 / 부모 조직은 수정 불가
         document.getElementById('categorySelect').classList.add('disabled');
         document.getElementById('parentOrgSelect').classList.add('disabled');
 
+        const readonlyHelp = document.getElementById('readonlyHelp');
+        readonlyHelp.textContent =
+            '조직 카테고리와 상위 조직은 생성 이후 변경할 수 없습니다.';
+        readonlyHelp.style.display = 'block';
+
         const toggle = document.getElementById('activeToggle');
-        toggle.checked = normalizeActive(org);
-        toggle.disabled = false;
+        let inactiveReason = '';
+
+        // 카테고리 기준 활성화 차단
+        const category = orgCategoryMap.get(org.categoryId);
+        if (category && !category.isActive) {
+            inactiveReason =
+                '비활성 상태인 조직 카테고리에 속한 조직은 활성화할 수 없습니다. ' +
+                '먼저 조직 카테고리를 활성화해주세요.';
+        }
+
+        // 상위 조직 기준 활성화 차단
+        const parent = allOrgList.find(o => o.id === org.parentOrgId);
+        if (!inactiveReason && parent && !normalizeActive(parent)) {
+            inactiveReason =
+                '상위 조직이 비활성 상태이므로 이 조직을 활성화할 수 없습니다.';
+        }
+
+        if (inactiveReason) {
+            toggle.checked = false;
+            toggle.disabled = true;
+
+            const help = document.getElementById('inactiveHelp');
+            help.textContent = inactiveReason;
+            help.style.display = 'block';
+        } else {
+            toggle.checked = normalizeActive(org);
+            toggle.disabled = false;
+            document.getElementById('inactiveHelp').style.display = 'none';
+        }
     }
+
 
     await loadPositionPolicies(id, currentOrgCategoryId);
     openModal();
@@ -420,7 +468,8 @@ async function saveOrg() {
     }
 
 
-    if (!categoryValue && !(isEditMode && allOrgList.find(o => o.id === selectedOrgId)?.isRootOrg)) {
+    // CREATE 모드에서만 카테고리 선택 검증
+    if (!isEditMode && !categoryValue) {
         help.textContent = '조직 카테고리를 선택해주세요.';
         return;
     }
@@ -438,12 +487,6 @@ async function saveOrg() {
         payload.isActive = activeToggle.checked;
     }
 
-
-    // 활성 토글이 사용 가능한 경우만 전달
-    if (isEditMode && !activeToggle.disabled) {
-        payload.isActive = activeToggle.checked;
-    }
-
     const url = selectedOrgId ? `${API_BASE}/${selectedOrgId}` : API_BASE;
     const method = selectedOrgId ? 'PUT' : 'POST';
 
@@ -456,14 +499,17 @@ async function saveOrg() {
     const json = await res.json();
     const savedOrgId = selectedOrgId ?? json.data;
 
-    await apiFetch('/api/admin/org-position-policies', {
-        method: 'PUT',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            orgId: savedOrgId,
-            positionCategoryIds: Array.from(selectedPositionIds)
-        })
-    });
+    // 정책이 하나라도 선택된 경우에만 호출
+    if (selectedPositionIds.size > 0) {
+        await apiFetch('/api/admin/org-position-policies', {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                orgId: savedOrgId,
+                positionCategoryIds: Array.from(selectedPositionIds)
+            })
+        });
+    }
 
     closeModal();
     await loadOrganizations();
@@ -510,7 +556,7 @@ function buildCategorySelect(selectedId) {
     });
 }
 
-function buildParentSelect(selectedParentId) {
+function buildParentSelect(selectedParentId, {mode}) {
     const select = document.getElementById('parentOrgSelect');
     const options = select.querySelector('.custom-select-options');
     const label = select.querySelector('.custom-select-selected');
@@ -519,45 +565,45 @@ function buildParentSelect(selectedParentId) {
     options.innerHTML = '';
     select.classList.remove('disabled');
 
-    // 1. 상위 조직이 "회사 루트 조직"인 경우
-    const parent = allOrgList.find(o => o.id === selectedParentId);
+    const isCreate = mode === 'create';
+    const isEdit = mode === 'edit';
 
-    if (parent && parent.isRootOrg) {
-        label.textContent = parent.name;     // 회사명 표시
-        hidden.value = parent.id;
+    // buildParentSelect에서는 "수정은 무조건 read-only"만 책임
+    if (isEdit) {
+        const parent = allOrgList.find(o => o.id === selectedParentId);
 
-        // 선택 불가 처리
+        if (parent) {
+            label.textContent = parent.name;
+            hidden.value = parent.id;
+        } else {
+            label.textContent = '상위 조직 없음';
+            hidden.value = '';
+        }
+
         select.classList.add('disabled');
         return;
     }
 
-    // 2. 일반 케이스
+    // 생성 모드
     label.textContent = '상위 조직 선택';
     hidden.value = '';
 
     allOrgList
         .filter(o =>
             normalizeActive(o) &&
-            !o.isRootOrg &&
-            o.id !== selectedOrgId
+            o.id !== selectedOrgId    // 자기 자신만 제외
         )
         .forEach(o => {
             const div = document.createElement('div');
             div.className = 'custom-select-option';
-            div.textContent = o.name;
-
-            if (o.id === selectedParentId) {
-                div.classList.add('selected');
-                label.textContent = o.name;
-                hidden.value = o.id;
-            }
+            div.textContent = o.isRootOrg ? `${o.name} (회사)` : o.name;
 
             div.onclick = () => {
                 options.querySelectorAll('.selected')
                     .forEach(el => el.classList.remove('selected'));
 
                 div.classList.add('selected');
-                label.textContent = o.name;
+                label.textContent = div.textContent;
                 hidden.value = o.id;
 
                 select.classList.remove('active');

@@ -292,40 +292,17 @@ public class OrgService {
         // ===== 회사 루트 조직 =====
         if (org.getParentOrgId() == null) {
 
+            if (!Objects.equals(oldName, newName)) {
+                throw new InvalidStateException("회사명은 조직 관리에서 수정할 수 없습니다.");
+            }
+
             if (Boolean.FALSE.equals(reqActive)) {
                 throw new InvalidStateException("회사 루트 조직은 비활성화할 수 없습니다.");
             }
 
-            // 회사 루트 조직은 parentOrgId를 절대 변경하지 않는다
-            org.update(org.getParentOrgId(), newName);
-
-            if (!Objects.equals(oldName, newName)) {
-                Employee actor = employeeRepository.findById(
-                        SecurityUtils.getEmployeeId()
-                ).orElseThrow(() -> new IllegalStateException("행위자 사원 정보 없음"));
-
-                Map<String, Object> before = new java.util.HashMap<>();
-                before.put("name", oldName);
-
-                Map<String, Object> after = new java.util.HashMap<>();
-                after.put("name", newName);
-
-                auditLogService.log(
-                        company,
-                        actor,
-                        AuditEntityType.ORGANIZATION,
-                        org.getId(),
-                        AuditEventType.UPDATE,
-                        before,
-                        after
-                );
-
-
-                organizationBoardCategorySyncService
-                        .syncBoardName(companyId, organizationId, newName);
-            }
             return;
         }
+
 
         // ===== 일반 조직 =====
 
@@ -344,6 +321,25 @@ public class OrgService {
         // 재활성
         if (Boolean.TRUE.equals(reqActive) && Boolean.FALSE.equals(org.getIsActive())) {
 
+            // 조직 카테고리 활성 여부 검증
+            var category = orgCategoryRepository.findById(org.getCategoryId())
+                    .orElseThrow(() -> new NotFoundException("조직 카테고리를 찾을 수 없습니다."));
+
+            if (!Boolean.TRUE.equals(category.getIsActive())) {
+                throw new InvalidStateException(
+                        "비활성 조직 카테고리에 속한 조직은 활성화할 수 없습니다."
+                );
+            }
+
+            // 상위 조직 활성 여부 검증
+            Organization parent = getOrgInCompanyOrThrow(companyId, org.getParentOrgId());
+            if (!Boolean.TRUE.equals(parent.getIsActive())) {
+                throw new InvalidStateException(
+                        "상위 조직이 비활성 상태이므로 해당 조직을 활성화할 수 없습니다."
+                );
+            }
+
+            // 재활성 처리
             int nextOrderIndex =
                     orgRepository.findMaxOrderIndex(companyId, org.getParentOrgId()) + 1;
 
