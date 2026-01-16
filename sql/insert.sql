@@ -2641,10 +2641,3 @@ INSERT INTO message_recipient (company_id, message_id, employee_id, is_read, mes
 -- 회사 3 수신 데이터
 (3, 121, 55, 0, 'INBOX'), (3, 122, 50, 1, 'INBOX'), (3, 123, 45, 0, 'INBOX');
 
-
-INSERT INTO manual_category (company_id, category_name, description, is_active, sort_order, created_at, updated_at, created_by)
-VALUES
-(1, 'APPROVAL', '결제 문서 정책 문의', TRUE, 1, NOW(), NOW(), 1),
-(1, 'ATTENDANCE', '근태 및 휴가 정책 문의', TRUE, 2, NOW(), NOW(), 1),
-(1, 'RESOURCE', '자원 예약 및 일정 문의', TRUE, 3, NOW(), NOW(), 1),
-(1, 'GENERAL', '기타 질문', TRUE, 4, NOW(), NOW(), 1);

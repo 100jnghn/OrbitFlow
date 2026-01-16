@@ -86,6 +86,15 @@ public class Attendance {
         this.leaveAt = LocalDateTime.now(); // 내부 필드 직접 업데이트
     }
 
+    public void updateStatusAutomatically(AttendanceStatus status) {
+        this.status = status;
+    }
+
+    public void updateCommuteTime(LocalDateTime commuteAt){
+        this.commuteAt = commuteAt;
+    }
+
+
 
 
 }

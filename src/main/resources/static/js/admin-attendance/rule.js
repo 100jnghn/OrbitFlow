@@ -106,6 +106,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        if (startTime >= endTime) {
+            sweetWarning('퇴근 시간은 출근 시간보다 늦어야 합니다.');
+            return;
+        }
+
         const data = {
             defaultStartTime: startTime + ':00',
             defaultEndTime: endTime + ':00',

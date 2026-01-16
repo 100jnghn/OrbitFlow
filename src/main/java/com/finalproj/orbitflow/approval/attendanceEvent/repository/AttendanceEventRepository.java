@@ -3,9 +3,12 @@ package com.finalproj.orbitflow.approval.attendanceEvent.repository;
 import com.finalproj.orbitflow.approval.attendanceEvent.entity.AttendanceEvent;
 import com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Please explain the class!!!
@@ -24,5 +27,14 @@ public interface AttendanceEventRepository extends JpaRepository<AttendanceEvent
             LocalDate startDate
     );
 
-    void deleteByEmployeeIdAndStartDateAfter(Long employeeId, LocalDate date);
+
+    @Query("""
+        select e from AttendanceEvent e
+        where e.employee.id = :employeeId
+          and :today between e.startDate and coalesce(e.actualEndDate, e.endDate)
+    """)
+    Optional<AttendanceEvent> findActiveEvent(
+            @Param("employeeId") Long employeeId,
+            @Param("today") LocalDate today
+    );
 }
