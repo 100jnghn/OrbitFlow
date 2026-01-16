@@ -19,6 +19,8 @@ public class QCompanyDailyAiUsage extends EntityPathBase<CompanyDailyAiUsage> {
 
     public static final QCompanyDailyAiUsage companyDailyAiUsage = new QCompanyDailyAiUsage("companyDailyAiUsage");
 
+    public final NumberPath<Integer> chatbotCnt = createNumber("chatbotCnt", Integer.class);
+
     public final NumberPath<Long> companyId = createNumber("companyId", Long.class);
 
     public final NumberPath<Integer> compareSummaryCnt = createNumber("compareSummaryCnt", Integer.class);

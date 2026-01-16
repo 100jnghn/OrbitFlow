@@ -1,8 +1,11 @@
 package com.finalproj.orbitflow.global.exception;
 
 import com.finalproj.orbitflow.global.common.ResponseDto;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -28,8 +31,7 @@ public class GlobalExceptionHandler {
      **/
     @ExceptionHandler(UnauthorizedException.class) // → 401
     public ResponseEntity<?> handleUnauthorized(UnauthorizedException e) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ResponseDto<>(HttpStatus.UNAUTHORIZED, e.getMessage(), null));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseDto<>(HttpStatus.UNAUTHORIZED, e.getMessage(), null));
     }
 
 
@@ -38,8 +40,7 @@ public class GlobalExceptionHandler {
      **/
     @ExceptionHandler(ForbiddenException.class) // → 403
     public ResponseEntity<?> handleForbidden(ForbiddenException e) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(new ResponseDto<>(HttpStatus.FORBIDDEN, e.getMessage(), null));
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseDto<>(HttpStatus.FORBIDDEN, e.getMessage(), null));
     }
 
 
@@ -48,8 +49,7 @@ public class GlobalExceptionHandler {
      **/
     @ExceptionHandler(NotFoundException.class) // → 404
     public ResponseEntity<?> handleNotFound(NotFoundException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ResponseDto<>(HttpStatus.NOT_FOUND, e.getMessage(), null));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseDto<>(HttpStatus.NOT_FOUND, e.getMessage(), null));
     }
 
 
@@ -58,8 +58,7 @@ public class GlobalExceptionHandler {
      **/
     @ExceptionHandler(BusinessException.class) // → 409
     public ResponseEntity<?> handleBusiness(BusinessException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(new ResponseDto<>(HttpStatus.CONFLICT, e.getMessage(), null));
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseDto<>(HttpStatus.CONFLICT, e.getMessage(), null));
     }
 
     /**
@@ -67,8 +66,7 @@ public class GlobalExceptionHandler {
      **/
     @ExceptionHandler(ConfirmRequiredException.class) // → 409
     public ResponseEntity<?> handleConfirm(ConfirmRequiredException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(new ResponseDto<>(HttpStatus.CONFLICT, e.getMessage(), null));
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseDto<>(HttpStatus.CONFLICT, e.getMessage(), null));
     }
 
     /**
@@ -76,8 +74,7 @@ public class GlobalExceptionHandler {
      **/
     @ExceptionHandler(InvalidRequestException.class) // → 400
     public ResponseEntity<?> handleInvalidRequest(InvalidRequestException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ResponseDto<>(HttpStatus.BAD_REQUEST, e.getMessage(), null));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseDto<>(HttpStatus.BAD_REQUEST, e.getMessage(), null));
     }
 
     /**
@@ -85,64 +82,59 @@ public class GlobalExceptionHandler {
      **/
     @ExceptionHandler(InvalidStateException.class) // → 409
     public ResponseEntity<?> handleInvalidState(InvalidStateException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(new ResponseDto<>(HttpStatus.CONFLICT, e.getMessage(), null));
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseDto<>(HttpStatus.CONFLICT, e.getMessage(), null));
     }
 
     @ExceptionHandler(DuplicateCarNumberException.class)
     public ResponseEntity<?> handleDuplicateCarNumber(DuplicateCarNumberException e) {
         log.info(e.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(new ResponseDto<>(HttpStatus.CONFLICT, e.getMessage(), null));
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseDto<>(HttpStatus.CONFLICT, e.getMessage(), null));
     }
 
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<?> handleIllegalState(IllegalStateException e) {
-        return ResponseEntity.badRequest()
-                .body(new ResponseDto<>(HttpStatus.BAD_REQUEST, e.getMessage(), null));
+        return ResponseEntity.badRequest().body(new ResponseDto<>(HttpStatus.BAD_REQUEST, e.getMessage(), null));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleValidation(MethodArgumentNotValidException e) {
-        String message = e.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(err -> err.getField() + " : " + err.getDefaultMessage())
-                .findFirst()
-                .orElse("Invalid request");
+        String message = e.getBindingResult().getFieldErrors().stream().map(err -> err.getField() + " : " + err.getDefaultMessage()).findFirst().orElse("Invalid request");
 
         log.error("❌ Validation failed", e);
 
-        return ResponseEntity.badRequest()
-                .body(new ResponseDto<>(HttpStatus.BAD_REQUEST, message, null));
+        return ResponseEntity.badRequest().body(new ResponseDto<>(HttpStatus.BAD_REQUEST, message, null));
     }
 
     @ExceptionHandler(RealTimeAccessException.class)
     public ResponseEntity<?> handleRealTimeAccess(RealTimeAccessException e) {
         log.warn("SSE 연결이 아닌 상태");
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), null));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), null));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleAll(Exception e) {
         log.error("🔥 UNHANDLED EXCEPTION", e);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseDto<>(
-                        HttpStatus.INTERNAL_SERVER_ERROR,
-                        e.getMessage(),
-                        null
-                ));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), null));
     }
 
     @ExceptionHandler(IOException.class)
-    public ResponseEntity<?> handleIOException(IOException e) {
-        log.warn("IOException 발생");
+    public ResponseEntity<?> handleIOException(IOException e, HttpServletRequest request) {
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), null));
+        // SSE 요청인지 판별 (Accept 또는 produces 기준)
+        String accept = request.getHeader(HttpHeaders.ACCEPT);
+        boolean isSse = accept != null && accept.contains(MediaType.TEXT_EVENT_STREAM_VALUE);
+
+        // SSE 연결 요청
+        if (isSse) {
+            // SSE에서는 JSON 응답을 만들면 안 됨
+            // 클라이언트가 탭 닫거나 네트워크 끊겨서 나는 정상 케이스.
+            log.debug("SSE IOException (likely client disconnect): {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        }
+
+        // 일반 API 요청은 기존처럼 JSON 응답
+        log.warn("IOException 발생: {}", e.getMessage(), e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), null));
     }
-
-
 }

@@ -297,17 +297,26 @@ function renderCharts(series) {
     }, {
         scales: {
             y: { beginAtZero: true, grid: { color: '#f3f4f6' }, ticks: { color: '#94a3b8' } },
-            x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+            x: { offset: true, grid: { display: false }, ticks: { color: '#94a3b8' } }
         }
     });
 
     // 2. AI Distribution (Doughnut)
-    const latest = series.length > 0 ? series[series.length - 1].data : {};
+    const aiTotals = series.reduce((acc, curr) => {
+        const d = curr.data;
+        acc.schedule += (d.ai_schedule || 0);
+        acc.doc += (d.ai_doc || 0);
+        acc.compare += (d.ai_compare || 0);
+        acc.outline += (d.ai_outline || 0);
+        acc.chatbot += (d.ai_chatbot || 0);
+        return acc;
+    }, { schedule: 0, doc: 0, compare: 0, outline: 0, chatbot: 0 });
+
     updateChart('aiDistributionChart', 'doughnut', {
-        labels: ['일정 요약', '문서 요약', '비교 요약', '구조 생성'],
+        labels: ['일정 요약', '문서 요약', '비교 요약', '구조 생성', '챗봇 매뉴얼'],
         datasets: [{
-            data: [latest.ai_schedule || 0, latest.ai_doc || 0, latest.ai_compare || 0, latest.ai_outline || 0],
-            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+            data: [aiTotals.schedule, aiTotals.doc, aiTotals.compare, aiTotals.outline, aiTotals.chatbot],
+            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
             borderWidth: 4,
             borderColor: '#ffffff'
         }]
@@ -329,7 +338,7 @@ function renderCharts(series) {
     }, {
         scales: {
             y: { grid: { color: '#f3f4f6' }, ticks: { color: '#94a3b8' } },
-            x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+            x: { offset: true, grid: { display: false }, ticks: { color: '#94a3b8' } }
         }
     });
 
@@ -344,12 +353,22 @@ function renderCharts(series) {
             fill: true,
             borderWidth: 3,
             tension: 0.4,
-            pointRadius: 0
+            pointRadius: 4,
+            pointBackgroundColor: '#fff'
         }]
     }, {
         scales: {
-            y: { grid: { color: '#f3f4f6' }, ticks: { color: '#94a3b8' } },
-            x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+            y: {
+                beginAtZero: true,
+                grid: { color: '#f3f4f6' },
+                ticks: {
+                    color: '#94a3b8',
+                    callback: function (value) {
+                        return value.toLocaleString() + ' MB';
+                    }
+                }
+            },
+            x: { offset: true, grid: { display: false }, ticks: { color: '#94a3b8' } }
         }
     });
 }
