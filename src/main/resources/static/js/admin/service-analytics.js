@@ -124,7 +124,7 @@ function updateDatesByYear(year) {
 
 async function initCompanies() {
     try {
-        const response = await fetch('/api/analytics/companies');
+        const response = await apiFetch('/api/analytics/companies');
         const result = await response.json();
         const companies = result.data;
         const select = document.getElementById('company-filter');
@@ -150,7 +150,7 @@ async function loadData() {
     const companyId = document.getElementById('company-filter').value;
 
     try {
-        const response = await fetch(`/api/analytics/overview?granularity=${granularity}&from=${from}&to=${to}&compare=${compare}&companyId=${companyId}`);
+        const response = await apiFetch(`/api/analytics/overview?granularity=${granularity}&from=${from}&to=${to}&compare=${compare}&companyId=${companyId}`);
         const result = await response.json();
         const data = result.data; // ResponseDto.data 추출
 
@@ -189,7 +189,7 @@ async function syncData() {
 
     btn.classList.add('spinning');
     try {
-        const response = await fetch('/api/analytics/sync', { method: 'POST' });
+        const response = await apiFetch('/api/analytics/sync', { method: 'POST' });
         if (response.ok) {
             await Swal.fire('완료', '데이터 집계가 성공적으로 완료되었습니다.', 'success');
             loadData();
@@ -394,6 +394,25 @@ function updateChart(id, type, data, options = {}) {
 }
 
 window.onload = async () => {
+    // [보안] TEAM_ORBIT 권한 체크 (비인가 접근 차단)
+    try {
+        const response = await apiFetch('/api/auth/me');
+        if (response.ok) {
+            const meResult = await response.json();
+            if (!meResult.data || meResult.data.role !== 'TEAM_ORBIT') {
+                location.replace('/');
+                return;
+            }
+        } else {
+            location.replace('/login');
+            return;
+        }
+    } catch (e) {
+        console.error('Auth check error:', e);
+        location.replace('/login');
+        return;
+    }
+
     initDates();
     handleGranularityChange(); // 초기 단위에 맞게 Picker 노출
     await initCompanies();

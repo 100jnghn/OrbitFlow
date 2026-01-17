@@ -24,6 +24,20 @@ const SPECIAL_STATUSES = {
 const WORK_STATUS_STORAGE_KEY = 'optimisticWorkStatus';
 
 document.addEventListener('DOMContentLoaded', async function () {
+    // [보안] TEAM_ORBIT 권한 체크 및 자동 전환 (홈 접근 제한)
+    try {
+        const response = await apiFetch('/api/auth/me');
+        if (response.ok) {
+            const meResult = await response.json();
+            if (meResult.data && meResult.data.role === 'TEAM_ORBIT') {
+                location.replace('/view/service-analytics');
+                return;
+            }
+        }
+    } catch (e) {
+        console.warn('Auth check failed:', e);
+    }
+
     initWorkStatusBadgeInteractions();
     applyOptimisticWorkStatusIfAny();
     initDashboardStatCardNavigation();
