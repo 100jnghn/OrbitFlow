@@ -1,3 +1,5 @@
+import { showFullscreenSpinner, hideFullscreenSpinner } from "/js/ui/fullscreenSpinner.js";
+
 /* ==========================
    Tooltip (singleton)
 ========================== */
@@ -215,6 +217,8 @@ async function deleteCar(id) {
     if (!result.isConfirmed) return;
 
     try {
+        showFullscreenSpinner("차량을 삭제 중입니다...");
+
         const res = await apiFetch(
             `/api/admin/cars/${id}/delete`,
             { method: 'DELETE' }
@@ -229,6 +233,8 @@ async function deleteCar(id) {
     } catch (e) {
         console.error(e);
         await sweetError('차량 삭제에 실패했습니다.');
+    } finally {
+        hideFullscreenSpinner();
     }
 }
 
