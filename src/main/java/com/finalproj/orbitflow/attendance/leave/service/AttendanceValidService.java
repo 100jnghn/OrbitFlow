@@ -61,10 +61,10 @@ public class AttendanceValidService {
         boolean isVacation = reqDto.getLeaveTypeId() != null;
 
         // ❌ 근무일은 있으나 전부 휴일
-        if (isVacation && workingDates.isEmpty()) {
+        if (workingDates.isEmpty()) {
             return LeaveValidationResDto.builder()
                     .valid(false)
-                    .message("선택한 기간에는 휴가 차감 대상 근무일이 없습니다.")
+                    .message("선택한 기간에는 근무일이 없습니다.")
                     .build();
         }
 
