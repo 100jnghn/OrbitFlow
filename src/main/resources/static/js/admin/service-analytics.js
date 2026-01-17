@@ -394,6 +394,25 @@ function updateChart(id, type, data, options = {}) {
 }
 
 window.onload = async () => {
+    // [보안] TEAM_ORBIT 권한 체크 (비인가 접근 차단)
+    try {
+        const response = await apiFetch('/api/auth/me');
+        if (response.ok) {
+            const meResult = await response.json();
+            if (!meResult.data || meResult.data.role !== 'TEAM_ORBIT') {
+                location.replace('/');
+                return;
+            }
+        } else {
+            location.replace('/login');
+            return;
+        }
+    } catch (e) {
+        console.error('Auth check error:', e);
+        location.replace('/login');
+        return;
+    }
+
     initDates();
     handleGranularityChange(); // 초기 단위에 맞게 Picker 노출
     await initCompanies();
