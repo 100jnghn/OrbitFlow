@@ -13,24 +13,6 @@ START TRANSACTION;
 SET @pw := '$2a$10$1CQx3GSceOnsh1Lne0nQzeR4ZH.OcD/WWayDba4BBorqwVcjxBuhK';
 -- 12345678
 
-INSERT INTO company (id, name, business_number, address,
-                     representative_name, representative_contact, created_at, updated_at)
-VALUES (999, 'OrbitFlow Service', '0000000000', 'SYSTEM', 'SYSTEM', '0000000000', NOW(), NOW());
-
-INSERT INTO org_category (id, company_id, name) VALUES (999, 999, 'OrbitFlow');
-
-INSERT INTO organization (id, company_id, category_id, name, parent_org_id, created_at, updated_at)
-VALUES (999, 999, 999, 'SYSTEM_ORG', NULL, NOW(), NOW());
-
-
-INSERT INTO employee (id, company_id, employee_no, org_id,
-                      name, email, password, role, gender, employment_type, status,
-                      hire_date, created_at, updated_at)
-VALUES (999, 999, 'ORBITFLOW-01', 999,
-        'Orbit 관리자', 'test@test.com', @pw, 'TEAM_ORBIT', 'MALE', 'REGULAR', 'ACTIVE',
-        '2026-01-17', NOW(), NOW());
-
-
 /* =====================================================
    공통 템플릿: 회사 1세트 생성 (회사별로 변수만 다르게)
 ===================================================== */
@@ -1883,6 +1865,29 @@ ON DUPLICATE KEY UPDATE internal_phone=VALUES(internal_phone),
                         work_status=VALUES(work_status),
                         hire_date=VALUES(hire_date),
                         updated_at=NOW();
+
+
+
+
+INSERT INTO company (id, name, business_number, address,
+                     representative_name, representative_contact, created_at, updated_at)
+VALUES (999, 'OrbitFlow Service', '0000000000', 'SYSTEM', 'SYSTEM', '0000000000', NOW(), NOW());
+
+INSERT INTO org_category (id, company_id, name) VALUES (999, 999, 'OrbitFlow');
+
+INSERT INTO organization (id, company_id, category_id, name, parent_org_id, created_at, updated_at)
+VALUES (999, 999, 999, 'SYSTEM_ORG', NULL, NOW(), NOW());
+
+
+INSERT INTO employee (id, company_id, employee_no, org_id,
+                      name, email, password, role, gender, employment_type, status,
+                      hire_date, created_at, updated_at)
+VALUES (999, 999, 'ORBITFLOW-01', 999,
+        'Orbit 관리자', 'test@test.com', @pw, 'TEAM_ORBIT', 'MALE', 'REGULAR', 'ACTIVE',
+        '2026-01-17', NOW(), NOW());
+
+
+
 
 COMMIT;
 
