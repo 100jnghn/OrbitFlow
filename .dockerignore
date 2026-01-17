@@ -1,0 +1,20 @@
+# Git
+.git
+.gitignore
+
+# Gradle cache
+.gradle
+**/.gradle
+
+# Node / Front
+node_modules
+
+# IDE
+.idea
+.vscode
+
+# Logs
+**/*.log
+
+# OS
+.DS_Store
