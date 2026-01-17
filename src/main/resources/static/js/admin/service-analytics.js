@@ -124,7 +124,7 @@ function updateDatesByYear(year) {
 
 async function initCompanies() {
     try {
-        const response = await fetch('/api/analytics/companies');
+        const response = await apiFetch('/api/analytics/companies');
         const result = await response.json();
         const companies = result.data;
         const select = document.getElementById('company-filter');
@@ -150,7 +150,7 @@ async function loadData() {
     const companyId = document.getElementById('company-filter').value;
 
     try {
-        const response = await fetch(`/api/analytics/overview?granularity=${granularity}&from=${from}&to=${to}&compare=${compare}&companyId=${companyId}`);
+        const response = await apiFetch(`/api/analytics/overview?granularity=${granularity}&from=${from}&to=${to}&compare=${compare}&companyId=${companyId}`);
         const result = await response.json();
         const data = result.data; // ResponseDto.data 추출
 
@@ -189,7 +189,7 @@ async function syncData() {
 
     btn.classList.add('spinning');
     try {
-        const response = await fetch('/api/analytics/sync', { method: 'POST' });
+        const response = await apiFetch('/api/analytics/sync', { method: 'POST' });
         if (response.ok) {
             await Swal.fire('완료', '데이터 집계가 성공적으로 완료되었습니다.', 'success');
             loadData();
