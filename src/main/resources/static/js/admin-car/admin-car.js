@@ -498,10 +498,16 @@ async function handleDelete() {
 
     if (!result.isConfirmed) return;
 
+    const deleteBtn = document.getElementById('btn-delete');
+
     try {
+        // 스피너 표시 및 버튼 비활성화
+        showFullscreenSpinner("차량을 삭제 중입니다...");
+        if (deleteBtn) deleteBtn.disabled = true;
+
         const response = await apiFetch(
             `/api/admin/cars/${currentCarId}/delete`,
-            { method: 'PATCH' }
+            { method: 'DELETE' }
         );
 
         if (!response.ok) {
@@ -513,6 +519,11 @@ async function handleDelete() {
     } catch (error) {
         console.error(error);
         await sweetError('차량 삭제에 실패했습니다.');
+        // 실패 시 버튼 다시 활성화
+        if (deleteBtn) deleteBtn.disabled = false;
+    } finally {
+        // 스피너 숨김
+        hideFullscreenSpinner();
     }
 }
 

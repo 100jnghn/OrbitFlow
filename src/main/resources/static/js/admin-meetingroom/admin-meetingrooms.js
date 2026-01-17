@@ -213,7 +213,7 @@ async function deleteMeetingRoom(id) {
     try {
         const response = await apiFetch(
             `/api/admin/meetingrooms/${id}/delete`,
-            { method: 'PATCH' }
+            { method: 'DELETE' }
         );
 
         if (!response.ok) {

@@ -62,10 +62,6 @@ public class Item extends BaseEntity {
         this.file = file;
     }
 
-    public void delete(ResourceStatus deletedStatus) {
-        this.resourceStatus = deletedStatus;
-    }
-
     public void deleteFile() {
         this.file = null;
     }

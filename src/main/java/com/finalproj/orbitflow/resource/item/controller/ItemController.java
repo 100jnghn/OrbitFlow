@@ -144,7 +144,7 @@ public class ItemController {
     }
 
     // 관리자 - 자원 삭제
-    @PatchMapping("/admin/items/{itemId}/delete")
+    @DeleteMapping("/admin/items/{itemId}/delete")
     public ResponseEntity<ResponseDto> deleteItem(
             @PathVariable Long itemId
     ) {

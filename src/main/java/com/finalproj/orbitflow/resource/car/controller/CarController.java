@@ -108,7 +108,7 @@ public class CarController {
     }
 
     // 관리자 - 차량 삭제
-    @PatchMapping("/admin/cars/{carId}/delete")
+    @DeleteMapping("/admin/cars/{carId}/delete")
     public ResponseEntity<ResponseDto> deleteCar(
             @PathVariable Long carId
     ) {
