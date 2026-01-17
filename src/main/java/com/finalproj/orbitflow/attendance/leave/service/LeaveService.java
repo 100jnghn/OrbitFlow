@@ -52,7 +52,6 @@ public class LeaveService {
     private final LeaveGrantRepository leaveGrantRepository;
     private final LeaveBalanceRepository leaveBalanceRepository;
     private final AttendanceRecordRepository attendanceRecordRepository;
-    private final AttendanceEventRepository attendanceEventRepository;
     private final CommuteRepository commuteRepository;
 
     /**
@@ -431,13 +430,12 @@ public class LeaveService {
                 .findByCompanyIdAndEmployeeIdAndWorkDate(companyId, employeeId, workDate)
                 .orElse(null);
 
-        // 1️⃣ 오늘 기록이 없으면 생성
         if (attendance == null) {
             Attendance created = Attendance.builder()
                     .companyId(companyId)
                     .employeeId(employeeId)
                     .workDate(workDate)
-                    .commuteAt(null)     // 휴가/외근/출장은 출근시간 생성 안 함
+                    .commuteAt(null)
                     .leaveAt(null)
                     .isCorrected(false)
                     .status(targetStatus)
@@ -447,7 +445,6 @@ public class LeaveService {
             return;
         }
 
-        // 2️⃣ 이미 있으면 상태만 보정 (스케줄러 = 정정 아님)
         attendance.updateStatusAutomatically(targetStatus);
         commuteRepository.save(attendance);
     }
