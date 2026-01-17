@@ -571,7 +571,7 @@
 }
 
 .btn-search {
-    background: var(--neutral-700);
+    background: var(--primary-color);
     color: white;
     border: none;
     padding: 0 16px;
@@ -582,7 +582,7 @@
 }
 
 .btn-search:hover {
-    background: var(--neutral-900);
+    background: var(--primary-hover);
 }
 
 /* 날짜 입력 그룹 */
