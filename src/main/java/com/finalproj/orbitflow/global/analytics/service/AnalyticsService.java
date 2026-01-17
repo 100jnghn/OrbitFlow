@@ -96,6 +96,9 @@ public class AnalyticsService {
 
         if (companyId != null && companyId > 0) {
             sql.append("AND s.company_id = :companyId ");
+        } else {
+            // OrbitFlow Service (ID 999) 제외
+            sql.append("AND s.company_id != 999 ");
         }
 
         sql.append("GROUP BY label ORDER BY label ASC");
@@ -185,8 +188,8 @@ public class AnalyticsService {
     private Map<String, List<Map<String, Object>>> fetchTop10(LocalDate from, LocalDate to, Long companyId) {
         Map<String, List<Map<String, Object>>> top10 = new HashMap<>();
 
-        // 특정 회사 선택 시 해당 회사의 데이터만 보여줌 (Top 10은 무의미할 수 있으므로 필터링된 1개만 나옴)
-        String companyFilter = (companyId != null && companyId > 0) ? " AND c.id = :companyId " : "";
+        // 특정 회사 선택 시 해당 회사의 데이터만 보여주며, 선택하지 않은 경우 OrbitFlow Service(999)를 제외함
+        String companyFilter = (companyId != null && companyId > 0) ? " AND c.id = :companyId " : " AND c.id != 999 ";
 
         // 1. AI 사용량 Top 10
         String aiSql = "SELECT c.name, SUM(a.total_cnt) as total " +
@@ -229,6 +232,7 @@ public class AnalyticsService {
 
     public List<Map<String, Object>> getCompanyList() {
         return companyRepository.findAll().stream()
+                .filter(c -> c.getId() != 999) // OrbitFlow Service 제외
                 .map(c -> {
                     Map<String, Object> m = new HashMap<>();
                     m.put("id", c.getId());
