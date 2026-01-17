@@ -1,204 +1,207 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>로그인 | OrbitFlow</title>
+    <meta charset="UTF-8">
+    <title>로그인 | OrbitFlow</title>
 
-  <!-- Font -->
-  <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap">
+    <!-- Font -->
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap">
 
-  <style>
-    * {
-      box-sizing: border-box;
-      font-family: 'Noto Sans KR', sans-serif;
-    }
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
 
-    body {
-      margin: 0;
-      background: #f6f8fb;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+        body {
+            margin: 0;
+            background: #f6f8fb;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-    .login-card {
-      width: 420px;
-      background: #fff;
-      border-radius: 16px;
-      padding: 48px 40px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-    }
+        .login-card {
+            width: 420px;
+            background: #fff;
+            border-radius: 16px;
+            padding: 48px 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        }
 
-    .login-title {
-      text-align: center;
-      margin-bottom: 32px;
-    }
+        .login-title {
+            text-align: center;
+            margin-bottom: 32px;
+        }
 
-    .login-title h1 {
-      margin: 0;
-      font-size: 26px;
-      font-weight: 700;
-      color: #111;
-    }
+        .login-title h1 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 700;
+            color: #111;
+        }
 
-    .login-title p {
-      margin-top: 8px;
-      font-size: 14px;
-      color: #666;
-    }
+        .login-title p {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #666;
+        }
 
-    .form-group {
-      margin-bottom: 20px;
-    }
+        .form-group {
+            margin-bottom: 20px;
+        }
 
-    label {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 14px;
-      font-weight: 500;
-      color: #333;
-    }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
 
-    input {
-      width: 100%;
-      height: 44px;
-      padding: 0 14px;
-      border-radius: 8px;
-      border: 1px solid #d1d5db;
-      font-size: 14px;
-      outline: none;
-    }
+        input {
+            width: 100%;
+            height: 44px;
+            padding: 0 14px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+            outline: none;
+        }
 
-    input:focus {
-      border-color: #4f7cff;
-      box-shadow: 0 0 0 3px rgba(79,124,255,0.15);
-    }
+        input:focus {
+            border-color: #4f7cff;
+            box-shadow: 0 0 0 3px rgba(79, 124, 255, 0.15);
+        }
 
-    .error-msg {
-      margin-top: 6px;
-      font-size: 13px;
-      color: #ef4444;
-      display: none;
-    }
+        .error-msg {
+            margin-top: 6px;
+            font-size: 13px;
+            color: #ef4444;
+            display: none;
+        }
 
-    .login-btn {
-      width: 100%;
-      height: 48px;
-      border-radius: 10px;
-      border: none;
-      background: #4f7cff;
-      color: #fff;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 12px;
-    }
+        .login-btn {
+            width: 100%;
+            height: 48px;
+            border-radius: 10px;
+            border: none;
+            background: #4f7cff;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 12px;
+        }
 
-    .login-btn:hover {
-      background: #3f6bf2;
-    }
-  </style>
+        .login-btn:hover {
+            background: #3f6bf2;
+        }
+    </style>
 </head>
 <body>
 
 <form class="login-card" onsubmit="login(event)">
-  <div class="login-title">
-    <h1>OrbitFlow</h1>
-    <p>로그인 정보를 입력하세요.</p>
-  </div>
+    <div class="login-title">
+        <h1>OrbitFlow</h1>
+        <p>로그인 정보를 입력하세요.</p>
+    </div>
 
-  <div class="form-group">
-    <label for="email">이메일</label>
-    <input id="email" type="email" placeholder="example@company.com" required>
-  </div>
+    <div class="form-group">
+        <label for="email">이메일</label>
+        <input id="email" type="email" placeholder="example@company.com" required>
+    </div>
 
-  <div class="form-group">
-    <label for="password">비밀번호</label>
-    <input id="password" type="password" placeholder="비밀번호를 입력하세요" required>
-    <div id="loginError" class="error-msg"></div>
-  </div>
+    <div class="form-group">
+        <label for="password">비밀번호</label>
+        <input id="password" type="password" placeholder="비밀번호를 입력하세요" required>
+        <div id="loginError" class="error-msg"></div>
+    </div>
 
-  <button class="login-btn" type="submit">로그인</button>
+    <button class="login-btn" type="submit">로그인</button>
 
-  <div style="margin-top:16px; text-align:center;">
-    <a href="/find-password"
-       style="font-size:13px; color:#4f7cff; text-decoration:none;">
-      비밀번호를 잊으셨나요?
-    </a>
-  </div>
+    <div style="margin-top:16px; text-align:center;">
+        <a href="/find-password"
+           style="font-size:13px; color:#4f7cff; text-decoration:none;">
+            비밀번호를 잊으셨나요?
+        </a>
+    </div>
 
 </form>
 
 
 <script>
-  async function login(event) {
-    event.preventDefault();
-    const errorEl = document.getElementById('loginError');
-    errorEl.style.display = 'none';
+    async function login(event) {
+        event.preventDefault();
+        const errorEl = document.getElementById('loginError');
+        errorEl.style.display = 'none';
 
-    try {
-      /* 로그인 (refresh 개념 없음 → fetch 사용) */
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: email.value,
-          password: password.value
-        })
-      });
+        try {
+            /* 로그인 (refresh 개념 없음 → fetch 사용) */
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    email: email.value,
+                    password: password.value
+                })
+            });
 
-      const result = await res.json();
+            const result = await res.json();
 
-      if (!res.ok) {
-        errorEl.textContent = result.message;
-        errorEl.style.display = 'block';
-        return;
-      }
+            if (!res.ok) {
+                errorEl.textContent = result.message;
+                errorEl.style.display = 'block';
+                return;
+            }
 
-      /* accessToken 저장 */
-      const accessToken = result.data.accessToken;
-      sessionStorage.setItem('accessToken', accessToken);
+            /* accessToken 저장 */
+            const accessToken = result.data.accessToken;
+            sessionStorage.setItem('accessToken', accessToken);
 
-      /* 내 정보 조회 (apiFetch 사용 금지) */
-      const meRes = await fetch('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
+            /* 내 정보 조회 (apiFetch 사용 금지) */
+            const meRes = await fetch('/api/auth/me', {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+
+            if (!meRes.ok) {
+                console.error('me 조회 실패');
+                errorEl.textContent = '로그인 처리 중 오류가 발생했습니다.';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            const me = (await meRes.json()).data;
+
+            if (me.role === 'TEAM_ORBIT') {
+                location.replace('/view/service-analytics');
+            } else {
+                location.replace('/');
+            }
+
+            /* 현재 탭의 사원 ID 저장 */
+            sessionStorage.setItem('employeeId', String(me.employeeId));
+
+            /* 브라우저 전체에 "현재 로그인 사원" 기록 (다른 탭 로그아웃 트리거) */
+            localStorage.setItem('currentEmployeeId', String(me.employeeId));
+            localStorage.setItem('currentEmployeeChangedAt', String(Date.now())); // 이벤트 확실히 발생시키려고 한 번 더
+
+            /* refresh 만료 시각 저장 */
+            sessionStorage.setItem(
+                'refreshExpiresAt',
+                new Date(result.data.refreshExpiresAt).getTime()
+            );
+
+        } catch (e) {
+            console.error(e);
+            errorEl.textContent = '로그인 중 오류가 발생했습니다.';
+            errorEl.style.display = 'block';
         }
-      });
-
-      if (!meRes.ok) {
-        console.error('me 조회 실패');
-        errorEl.textContent = '로그인 처리 중 오류가 발생했습니다.';
-        errorEl.style.display = 'block';
-        return;
-      }
-
-      const me = (await meRes.json()).data;
-
-      /* 현재 탭의 사원 ID 저장 */
-      sessionStorage.setItem('employeeId', String(me.employeeId));
-
-      /* 브라우저 전체에 "현재 로그인 사원" 기록 (다른 탭 로그아웃 트리거) */
-      localStorage.setItem('currentEmployeeId', String(me.employeeId));
-      localStorage.setItem('currentEmployeeChangedAt', String(Date.now())); // 이벤트 확실히 발생시키려고 한 번 더
-
-      /* refresh 만료 시각 저장 */
-      sessionStorage.setItem(
-              'refreshExpiresAt',
-              new Date(result.data.refreshExpiresAt).getTime()
-      );
-
-      /* 홈 대시보드로 이동 */
-      location.href = '/';
-
-    } catch (e) {
-      console.error(e);
-      errorEl.textContent = '로그인 중 오류가 발생했습니다.';
-      errorEl.style.display = 'block';
     }
-  }
 </script>
 
 </body>
