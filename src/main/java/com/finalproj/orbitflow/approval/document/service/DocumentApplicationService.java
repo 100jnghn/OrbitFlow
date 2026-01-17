@@ -484,7 +484,6 @@ public class DocumentApplicationService {
             );
         }
 
-        // 🔽🔽🔽 추가된 최초 결재자 검증/대체 로직 🔽🔽🔽
 
         ApprovalLine firstLine = lines.get(0);
         Employee firstApprover = firstLine.getApprover();
@@ -539,9 +538,18 @@ public class DocumentApplicationService {
             LeaveCalculationResult result =
                     leaveCalculationService.calculate(document);
 
-            LocalDate actualStart = result.effectiveDates().get(0);
-            LocalDate actualEnd = result.effectiveDates()
-                    .get(result.effectiveDates().size() - 1);
+            List<LocalDate> dates = result.effectiveDates();
+            if (dates == null || dates.isEmpty()) {
+                throw new InvalidRequestException("유효한 휴가 일자가 없습니다.");
+            }
+
+            LocalDate actualStart = dates.get(0);
+            LocalDate actualEnd = dates.get(dates.size() - 1);
+
+            // 선택적 안전장치 (권장)
+            if (actualEnd.isBefore(actualStart)) {
+                actualEnd = actualStart;
+            }
 
             AttendanceRecord record = AttendanceRecord.builder()
                     .employee(document.getWriter())
@@ -558,6 +566,7 @@ public class DocumentApplicationService {
 
             attendanceRecordRepository.save(record);
         }
+
 
         // 10. 최초 결재자 알림
         String shortTitle = shortenTitle(document.getTitle(), 20);

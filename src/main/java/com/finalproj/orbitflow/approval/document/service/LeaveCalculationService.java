@@ -45,18 +45,20 @@ public class LeaveCalculationService {
         LeaveType leaveType = leaveTypeRepository
                 .findById(payload.vacationTypeId())
                 .orElseThrow();
-
-        // 🔥 근무일 계산 (분리된 책임)
         List<LocalDate> effectiveDates =
                 workingDayService.getWorkingDates(
                         payload.startDate(),
                         payload.endDate()
                 );
-
+        if (effectiveDates == null || effectiveDates.isEmpty()) {
+            throw new IllegalStateException(
+                    "유효한 휴가 일자가 없습니다. start=" +
+                            payload.startDate() + ", end=" + payload.endDate()
+            );
+        }
         BigDecimal days =
                 BigDecimal.valueOf(effectiveDates.size())
                         .multiply(leaveType.getUnitDays());
-
         return new LeaveCalculationResult(
                 payload,
                 leaveType,
@@ -64,4 +66,5 @@ public class LeaveCalculationService {
                 effectiveDates
         );
     }
+
 }
