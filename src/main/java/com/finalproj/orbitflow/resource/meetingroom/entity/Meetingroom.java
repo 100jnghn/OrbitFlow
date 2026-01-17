@@ -48,7 +48,4 @@ public class Meetingroom extends BaseEntity {
         this.resourceStatus = resourceStatus;
     }
 
-    public void delete(ResourceStatus deletedStatus) {
-        this.resourceStatus = deletedStatus;
-    }
 }

@@ -217,7 +217,7 @@ async function deleteCar(id) {
     try {
         const res = await apiFetch(
             `/api/admin/cars/${id}/delete`,
-            { method: 'PATCH' }
+            { method: 'DELETE' }
         );
 
         if (!res.ok) throw new Error();

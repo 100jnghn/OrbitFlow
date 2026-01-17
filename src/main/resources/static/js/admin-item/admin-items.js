@@ -262,7 +262,7 @@ async function deleteItem(id) {
     try {
         const res = await apiFetch(
             `/api/admin/items/${id}/delete`,
-            { method: 'PATCH' }
+            { method: 'DELETE' }
         );
 
         if (!res.ok) throw new Error();

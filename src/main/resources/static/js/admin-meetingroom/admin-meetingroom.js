@@ -195,7 +195,7 @@ async function handleEdit() {
 
 /**
  * 삭제 버튼
- * ※ Controller 기준: PATCH /admin/meetingrooms/{id}/delete
+ * ※ Controller 기준: DELETE /admin/meetingrooms/{id}/delete
  */
 async function handleDelete() {
 
@@ -210,7 +210,7 @@ async function handleDelete() {
     try {
         const response = await apiFetch(
             `/api/admin/meetingrooms/${currentRoomId}/delete`,
-            { method: 'PATCH' }
+            { method: 'DELETE' }
         );
 
         if (!response.ok) {

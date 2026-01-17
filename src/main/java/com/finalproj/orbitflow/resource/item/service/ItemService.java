@@ -192,8 +192,7 @@ public class ItemService {
             boolean result = deleteItemFileInternal(item);
         }
 
-        ResourceStatus deleteStatus = resourceStatusRepository.findByResourceStatusCode(ResourceStatusCode.DELETED);
-        item.delete(deleteStatus);
+        itemRepository.delete(item);
     }
 
     // 자원 이미지 삭제

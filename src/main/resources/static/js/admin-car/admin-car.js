@@ -501,7 +501,7 @@ async function handleDelete() {
     try {
         const response = await apiFetch(
             `/api/admin/cars/${currentCarId}/delete`,
-            { method: 'PATCH' }
+            { method: 'DELETE' }
         );
 
         if (!response.ok) {

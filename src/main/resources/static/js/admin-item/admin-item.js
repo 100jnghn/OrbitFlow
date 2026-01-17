@@ -488,7 +488,7 @@ async function handleDelete() {
     try {
         const response = await apiFetch(
             `/api/admin/items/${currentItemId}/delete`,
-            { method: 'PATCH' }
+            { method: 'DELETE' }
         );
 
         if (!response.ok) {
