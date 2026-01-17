@@ -189,7 +189,7 @@ async function markAsRead(notificationId, event) {
 
         // 알림 카운트도 새로고침
         if (typeof refreshUnreadCount === 'function') {
-            refreshUnreadCount();
+            await refreshUnreadCount();
         }
     } catch (error) {
         console.error('알림 읽음 처리 실패:', error);
@@ -214,7 +214,7 @@ async function markAllAsRead() {
 
         // 알림 카운트도 새로고침
         if (typeof refreshUnreadCount === 'function') {
-            refreshUnreadCount();
+            await refreshUnreadCount();
         }
 
         // 성공 메시지 (선택사항)

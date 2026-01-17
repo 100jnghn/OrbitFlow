@@ -155,6 +155,11 @@
                         </div>
 
                         <div class="form-group">
+                            <label>사번</label>
+                            <input id="editEmployeeNo" maxlength="20">
+                        </div>
+
+                        <div class="form-group">
                             <label>성별</label>
                             <select id="editGender">
                                 <option value="">선택</option>
@@ -166,7 +171,7 @@
 
                         <div class="form-group">
                             <label>생년월일</label>
-                            <input type="date" id="editBirthDate">
+                            <input type="date" id="editBirthDate" max="">
                         </div>
                     </div>
                 </div>
@@ -192,13 +197,20 @@
 
                         <div class="form-group">
                             <label>권한</label>
+
+                            <!-- 수정 가능할 때 -->
                             <select id="editRole">
                                 <option value="">선택</option>
                                 <option value="EMPLOYEE">일반 사원</option>
                                 <option value="ADMIN">관리자</option>
-                                <option value="COMPANY_ADMIN">회사 관리자</option>
                             </select>
+
+                            <!-- 회사 관리자일 때 표시용 -->
+                            <span id="editRoleReadonly" class="readonly-text hidden">
+                                회사 관리자
+                            </span>
                         </div>
+
                     </div>
                 </div>
 

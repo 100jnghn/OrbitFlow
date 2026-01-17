@@ -538,3 +538,9 @@ html {
     background: #f9fafb;
     cursor: not-allowed;
 }
+
+.readonly-input {
+    background-color: #f9fafb;
+    color: #6b7280;
+    cursor: not-allowed;
+}

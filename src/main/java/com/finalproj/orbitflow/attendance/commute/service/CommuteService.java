@@ -1,5 +1,7 @@
 package com.finalproj.orbitflow.attendance.commute.service;
 
+import com.finalproj.orbitflow.approval.attendanceEvent.entity.AttendanceEvent;
+import com.finalproj.orbitflow.approval.attendanceEvent.repository.AttendanceEventRepository;
 import com.finalproj.orbitflow.attendance.commute.dto.ActiveRuleResDto;
 import com.finalproj.orbitflow.attendance.commute.dto.TodayAttResDto;
 import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
@@ -7,6 +9,7 @@ import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
 import com.finalproj.orbitflow.attendance.commute.repository.CommuteRepository;
 import com.finalproj.orbitflow.attendance.rule.repository.AttendanceRuleRepository;
 import com.finalproj.orbitflow.attendance.rule.repository.EmployeeRuleRepository;
+import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.WorkStatus;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
@@ -18,6 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +34,7 @@ public class CommuteService {
     private final AttendanceRuleRepository attendanceRuleRepository;
     private final EmployeeRuleRepository employeeRuleRepository;
     private final EmployeeRepository employeeRepository;
+    private final AttendanceEventRepository attendanceEventRepository;
 
 
     public ActiveRuleResDto getActiveRule(Long companyId, Long employeeId) {
@@ -50,7 +57,7 @@ public class CommuteService {
 
 
     @Transactional
-    public TodayAttResDto checkIn(Long companyId, Long employeeId) {
+    public TodayAttResDto checkIn(Long companyId, Long employeeId, AttendanceStatus forcedStatus) {
         // 이미 출근했는지 검증
         commuteRepository.findToday(companyId, employeeId)
                 .ifPresent(a -> { throw new BusinessException("이미 출근 처리되었습니다."); });
@@ -58,13 +65,17 @@ public class CommuteService {
         ActiveRuleResDto rule = getActiveRule(companyId, employeeId);
         LocalDateTime now = LocalDateTime.now();
 
+        AttendanceStatus status = (forcedStatus != null)
+                ? forcedStatus
+                : determineAttendanceStatus(now.toLocalTime(), rule.getStartTime());
+
         Attendance attendance = Attendance.builder()
                 .companyId(companyId)
                 .employeeId(employeeId)
                 .workDate(now.toLocalDate())
                 .commuteAt(now)
                 .isCorrected(false)
-                .status(determineAttendanceStatus(now.toLocalTime(), rule.getStartTime()))
+                .status(status)
                 .build();
 
         updateEmployeeWorkStatus(employeeId, WorkStatus.WORKING);
@@ -145,5 +156,57 @@ public class CommuteService {
 
         return employee.getWorkStatus();
     }
+
+    @Transactional
+    public void returnFromOutsideOrTrip(Long companyId, Long employeeId) {
+        LocalDate today = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
+
+        // 1) 오늘 진행중인 출장/외근 이벤트 확인 (actualEndDate 반영된 조회여야 함)
+        AttendanceEvent event = attendanceEventRepository.findActiveEvent(employeeId, today)
+                .orElseThrow(() -> new NotFoundException("현재 진행 중인 출장/외근 기록이 없습니다."));
+
+        // 2) 오늘 attendance upsert + 정상출근(ON_TIME) 확정
+        Attendance att = commuteRepository
+                .findByCompanyIdAndEmployeeIdAndWorkDate(companyId, employeeId, today)
+                .orElseGet(() -> Attendance.builder()
+                        .companyId(companyId)
+                        .employeeId(employeeId)
+                        .workDate(today)
+                        .commuteAt(null)
+                        .leaveAt(null)
+                        .isCorrected(false)
+                        .status(AttendanceStatus.ON_TIME)
+                        .build()
+                );
+
+        // 출근 시간이 비어있으면 채워줌(정책: 자리복귀=오늘 출근 확정)
+        if (att.getCommuteAt() == null) {
+            // 프로젝트에 updateCommuteTime이 있으면 그게 더 깔끔함
+            // 없다면 updateTimeByAdmin 재사용
+            att.updateTimeByAdmin(now, null);
+        }
+
+        // 오늘은 정상출근으로 확정
+        att.updateStatusAutomatically(AttendanceStatus.ON_TIME);
+
+        commuteRepository.save(att);
+
+        // 3) 배지/버튼 정상화를 위해 WORKING으로 복귀
+        employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new NotFoundException("사원을 찾을 수 없습니다."))
+                .updateWorkStatus(WorkStatus.WORKING);
+
+        // 4) ★중요★ 이벤트 종료 처리 (오늘부터는 더 이상 출장/외근 상태가 아니게)
+        event.updateEndDate(today.minusDays(1));
+    }
+
+
+
+
+
+
+
+
 
 }

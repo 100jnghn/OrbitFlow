@@ -17,7 +17,6 @@ const WORK_STATUS_MAP = {
 
 // 🚀 특수 상태 정의 (차단 및 '자리 복귀' 전환용)
 const SPECIAL_STATUSES = {
-    'VACATION': '휴가중',
     'BUSINESS_TRIP': '출장중',
     'OUTWORK': '외근중'
 };
@@ -211,6 +210,8 @@ async function loadUserProfile() {
         safeSetText('profileName', '사용자');
     }
 }
+
+
 /**
  * 2. 이름 옆 근무 상태 배지 UI 업데이트
  */
@@ -218,10 +219,10 @@ function updateNameAdjacentBadge(status) {
     const nameEl = document.getElementById('profileName');
     if (!nameEl) return;
 
-    // awayBtn은 commute.js에서도 사용하므로 여기서 찾음
     const awayBtn = document.getElementById('awayBtn');
+    const checkInBtn = document.getElementById('checkInBtn');
+    const checkOutBtn = document.getElementById('checkOutBtn');
 
-    // 🔥 대소문자 정규화: status가 null이거나 undefined, 또는 빈 문자열이면 DEFAULT로 처리
     let normalizedStatus = 'DEFAULT';
     if (status && typeof status === 'string' && status.trim() !== '') {
         normalizedStatus = status.toUpperCase();
@@ -235,21 +236,42 @@ function updateNameAdjacentBadge(status) {
     }
 
     const config = WORK_STATUS_MAP[normalizedStatus] || WORK_STATUS_MAP['DEFAULT'];
-
     badge.textContent = config.text;
     badge.className = `work-status-badge ${config.className}`;
     badge.style.display = 'inline-block';
     badge.style.marginLeft = '8px';
 
-    // 🔥 디버깅 로그: workStatus 확인 (필요시 제거 가능)
-    if (!status || normalizedStatus === 'DEFAULT') {
-        console.warn('[updateNameAdjacentBadge] status가 없거나 DEFAULT입니다. status:', status);
+    // ✅ 버튼 잠금/해제 유틸
+    const setLocked = (locked) => {
+        [checkInBtn, awayBtn, checkOutBtn].forEach(btn => {
+            if (!btn) return;
+            btn.toggleAttribute('disabled', locked);
+            btn.classList.toggle('is-locked', locked);
+            // <a> 태그 등 disabled가 안 먹는 경우 대비
+            btn.style.pointerEvents = locked ? 'none' : '';
+        });
+    };
+
+    // 1) 휴가중이면: 자리비움 텍스트 유지 + 버튼 전체 비활성화
+    if (normalizedStatus === 'VACATION') {
+        setLocked(true);
+
+        if (awayBtn) {
+            const btnText = awayBtn.querySelector('span');
+            if (btnText) btnText.textContent = '자리비움';  // ✅ 그대로
+            awayBtn.classList.remove('btn-return');          // ✅ 복귀 스타일 제거
+        }
+        return;
     }
 
-    // 🚀 특수 상태일 때 '자리비움' 버튼을 '자리 복귀'로 전환
+    // 2) 휴가가 아니면: 버튼 잠금 해제
+    setLocked(false);
+
+    // 3) 외근/출장일 때만 '자리 복귀'로 전환
     if (awayBtn) {
         const btnText = awayBtn.querySelector('span');
-        if (SPECIAL_STATUSES[normalizedStatus]) {
+
+        if (SPECIAL_STATUSES[normalizedStatus]) { // BUSINESS_TRIP / OUTWORK만 남겨둔 상태
             if (btnText) btnText.textContent = '자리 복귀';
             awayBtn.classList.add('btn-return');
         } else {
@@ -258,6 +280,7 @@ function updateNameAdjacentBadge(status) {
         }
     }
 }
+
 
 
 // 공지사항 로드

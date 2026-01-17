@@ -106,6 +106,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        if (startTime >= endTime) {
+            sweetWarning('퇴근 시간은 출근 시간보다 늦어야 합니다.');
+            return;
+        }
+
         const data = {
             defaultStartTime: startTime + ':00',
             defaultEndTime: endTime + ':00',
@@ -137,6 +142,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.ok) {
                 const response = await res.json();
                 exceptionRulesList = response.data || [];
+                // 최신순 정렬 (ID 내림차순)
+                exceptionRulesList.sort((a, b) => b.overrideId - a.overrideId);
                 renderExceptionRulesTable(exceptionRulesList);
             }
         } catch (error) { console.error('목록 로드 실패:', error); }

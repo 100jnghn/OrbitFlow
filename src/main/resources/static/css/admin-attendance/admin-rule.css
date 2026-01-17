@@ -269,7 +269,7 @@
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
-    height: 100%;
+    /* height: 100%; removed to prevent row stretching */
 }
 
 .board-table thead {
@@ -316,9 +316,14 @@
 }
 
 /* 테이블 컬럼 정렬 */
+
+/* 테이블 컬럼 정렬 및 너비 설정 */
+/* 테이블 컬럼 정렬 및 너비 설정 - 동일 간격 (12.5% * 8 = 100%) */
 #exceptionTable th:nth-child(1),
 #exceptionTable td:nth-child(1) {
     text-align: center;
+    width: 12.5%;
+    /* 대상 사원 */
 }
 
 #exceptionTable td small {
@@ -329,30 +334,49 @@
 }
 
 #exceptionTable th:nth-child(2),
-#exceptionTable td:nth-child(2),
+#exceptionTable td:nth-child(2) {
+    text-align: center;
+    white-space: nowrap;
+    width: 12.5%;
+    /* 적용 기간 */
+}
+
 #exceptionTable th:nth-child(3),
 #exceptionTable td:nth-child(3),
 #exceptionTable th:nth-child(4),
-#exceptionTable td:nth-child(4),
+#exceptionTable td:nth-child(4) {
+    text-align: center;
+    width: 12.5%;
+    /* 시간 */
+}
+
 #exceptionTable th:nth-child(5),
-#exceptionTable td:nth-child(5),
+#exceptionTable td:nth-child(5) {
+    text-align: center;
+    width: 12.5%;
+    /* 휴게 */
+}
+
 #exceptionTable th:nth-child(6),
-#exceptionTable td:nth-child(6),
+#exceptionTable td:nth-child(6) {
+    text-align: center;
+    /* 사유도 중앙 정렬 */
+    width: 12.5%;
+    /* 사유 */
+}
+
 #exceptionTable th:nth-child(7),
 #exceptionTable td:nth-child(7) {
     text-align: center;
+    width: 12.5%;
+    /* 등록일 */
 }
 
 #exceptionTable th:nth-child(8),
 #exceptionTable td:nth-child(8) {
     text-align: center;
-    width: 150px;
-}
-
-/* 적용기간 컬럼 줄바꿈 방지 */
-#exceptionTable th:nth-child(2),
-#exceptionTable td:nth-child(2) {
-    white-space: nowrap;
+    width: 12.5%;
+    /* 관리 */
 }
 
 /* 테이블 액션 버튼 (자원관리와 통일) */
@@ -488,1004 +512,17 @@
 .close {
     color: var(--neutral-400);
     font-size: 28px;
-    /* 근태 규칙 관리 페이지 - 깔끔한 디자인 */
-
-    /* 컬러 변수 */
-    :root {
-        --primary-color: #3B82F6;
-        --primary-hover: #2563EB;
-        --danger-color: #DC2626;
-        --danger-hover: #B91C1C;
-        --warning-color: #F59E0B;
-        --success-color: #10B981;
-        --neutral-50: #F9FAFB;
-        --neutral-100: #F3F4F6;
-        --neutral-200: #E5E7EB;
-        --neutral-300: #D1D5DB;
-        --neutral-400: #9CA3AF;
-        --neutral-500: #6B7280;
-        --neutral-600: #4B5563;
-        --neutral-700: #374151;
-        --neutral-800: #1F2937;
-        --neutral-900: #111827;
-    }
-
-    /* 컨테이너: 게시판과 동일한 크기 */
-    .board-admin-container {
-        background-color: white;
-        border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        padding: 20px;
-        max-width: 1400px;
-        margin: 0 auto;
-        display: flex;
-        flex-direction: column;
-        min-height: calc(103vh - 180px);
-        box-sizing: border-box;
-    }
-
-    /* 게시판 헤더 스타일 */
-    .board-header {
-        margin-bottom: 32px;
-        text-align: left;
-    }
-
-    .board-header h1 {
-        font-size: 24px;
-        font-weight: 700;
-        color: var(--neutral-900);
-        margin: 0;
-        letter-spacing: -0.02em;
-    }
-
-    /* 규칙 섹션 */
-    .rule-section {
-        margin-bottom: 28px;
-    }
-
-    .rule-section:last-child {
-        margin-bottom: 0;
-    }
-
-    .rule-section .section-header {
-        margin-bottom: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .section-title {
-        font-size: 18px;
-        font-weight: 600;
-        color: var(--neutral-800);
-        margin: 0;
-        letter-spacing: -0.01em;
-    }
-
-    .rule-form-card .section-title {
-        margin-bottom: 0;
-        padding-bottom: 0;
-        border-bottom: none;
-    }
-
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    }
-
-    .section-header .section-title {
-        margin-bottom: 0;
-    }
-
-    /* 기본 규칙 폼 카드 */
-    .rule-form-card {
-        background: #ffffff;
-        border-radius: 12px;
-        border: 1px solid var(--neutral-200);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-        padding: 24px 28px;
-        margin-bottom: 24px;
-    }
-
-    .rule-form {
-        margin-top: 20px;
-    }
-
-    .form-row {
-        display: flex;
-        gap: 40px;
-        align-items: flex-end;
-        margin-bottom: 24px;
-    }
-
-    .form-group {
-        margin-bottom: 0;
-        flex: 1;
-    }
-
-    .form-group:last-of-type {
-        margin-bottom: 0;
-    }
-
-    .form-label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: var(--neutral-700);
-        font-size: 13px;
-    }
-
-    .form-group label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: var(--neutral-700);
-        font-size: 13px;
-    }
-
-    .time-input-group {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .time-input {
-        padding: 10px 12px;
-        border: 1.5px solid var(--neutral-300);
-        border-radius: 8px;
-        font-size: 14px;
-        color: var(--neutral-800);
-        transition: all 0.2s ease;
-        width: 140px !important;
-        min-width: 140px;
-        max-width: 140px;
-        background: #ffffff;
-        box-sizing: border-box;
-    }
-
-    .time-input:focus {
-        outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-
-    .time-separator {
-        color: var(--neutral-500);
-        font-weight: 500;
-    }
-
-    .judgment-input {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .number-input {
-        padding: 10px 12px;
-        border: 1.5px solid var(--neutral-300);
-        border-radius: 8px;
-        font-size: 14px;
-        color: var(--neutral-800);
-        transition: all 0.2s ease;
-        width: 120px !important;
-        min-width: 120px;
-        max-width: 120px;
-        background: #ffffff;
-        box-sizing: border-box;
-    }
-
-    .number-input:focus {
-        outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-
-    .input-suffix {
-        color: var(--neutral-600);
-        font-size: 14px;
-    }
-
-    .form-actions {
-        display: flex;
-        justify-content: flex-end;
-        margin-top: 20px;
-        padding-top: 20px;
-        border-top: 1px solid var(--neutral-200);
-    }
-
-    /* 버튼 스타일 (자원관리와 통일) */
-    .btn-primary {
-        background: #4a69bd;
-        color: #fff;
-        border: none;
-        padding: 12px 22px;
-        border-radius: 8px;
-        font-size: 15px;
-        font-weight: 600;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        transition: all 0.2s ease;
-    }
-
-    .btn-primary:hover {
-        background: #3a5aa0;
-    }
-
-    .btn-primary:active {
-        transform: translateY(0);
-    }
-
-    /* 예외규칙 추가 버튼 (자원관리 추가 버튼 스타일 참고) */
-    #addExceptionRuleBtn {
-        height: auto;
-        padding: 10px 20px;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 500;
-        background: var(--primary-color);
-        color: #fff;
-        box-shadow: none;
-        border: none;
-    }
-
-    #addExceptionRuleBtn:hover {
-        background: var(--primary-hover);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    }
-
-    /* 저장 버튼 (기본 규칙 저장) */
-    #saveDefaultRuleBtn {
-        height: auto;
-        padding: 10px 20px;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 500;
-        background: var(--primary-color);
-        color: #fff;
-        box-shadow: none;
-        border: none;
-    }
-
-    #saveDefaultRuleBtn:hover {
-        background: var(--primary-hover);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    }
-
-
-    /* 테이블 컨테이너 스타일 (대시보드와 통일) */
-    .board-table-container {
-        margin-bottom: 24px;
-        background: white;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-        border: 1px solid var(--neutral-200);
-        min-height: 400px;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-    }
-
-    /* 테이블 스타일 (대시보드와 통일) */
-    .board-table {
-        width: 100%;
-        border-collapse: collapse;
-        table-layout: fixed;
-        height: 100%;
-    }
-
-    .board-table thead {
-        background: var(--neutral-50);
-    }
-
-    .board-table th {
-        padding: 14px 16px;
-        font-weight: 600;
-        font-size: 13px;
-        color: var(--neutral-700);
-        border-bottom: 1px solid var(--neutral-200);
-        text-align: center;
-        background: var(--neutral-50);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .board-table td {
-        padding: 14px 16px;
-        border-bottom: 1px solid var(--neutral-100);
-        font-size: 14px;
-        color: var(--neutral-800);
-        vertical-align: middle;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-        box-sizing: border-box;
-        text-align: center;
-    }
-
-    .board-table tbody tr {
-        transition: background-color 0.15s ease;
-    }
-
-    .board-table tbody tr:hover {
-        background: var(--neutral-50);
-    }
-
-    .board-table tbody tr:last-child td {
-        border-bottom: none;
-    }
-
-    /* 테이블 컬럼 정렬 */
-    #exceptionTable th:nth-child(1),
-    #exceptionTable td:nth-child(1) {
-        text-align: left;
-    }
-
-    #exceptionTable th:nth-child(2),
-    #exceptionTable td:nth-child(2),
-    #exceptionTable th:nth-child(3),
-    #exceptionTable td:nth-child(3),
-    #exceptionTable th:nth-child(4),
-    #exceptionTable td:nth-child(4),
-    #exceptionTable th:nth-child(5),
-    #exceptionTable td:nth-child(5),
-    #exceptionTable th:nth-child(6),
-    #exceptionTable td:nth-child(6),
-    #exceptionTable th:nth-child(7),
-    #exceptionTable td:nth-child(7) {
-        text-align: center;
-    }
-
-    #exceptionTable th:nth-child(8),
-    #exceptionTable td:nth-child(8) {
-        text-align: center;
-        width: 150px;
-    }
-
-    /* 테이블 액션 버튼 (자원관리와 통일) */
-    .btn-edit,
-    .btn-delete {
-        padding: 6px 12px;
-        border-radius: 12px;
-        font-size: 13px;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-
-    .btn-edit {
-        background: #e3f2fd;
-        border: 1.2px solid #6d8cdc;
-        color: #1976d2;
-    }
-
-    .btn-edit:hover {
-        background: #bbdefb;
-    }
-
-    .btn-delete {
-        background: #ffebee;
-        border: 1.2px solid #e79898;
-        color: #c62828;
-    }
-
-    .btn-delete:hover {
-        background: #ffcdd2;
-    }
-
-    /* 액션 링크 컨테이너 */
-    .action-links {
-        display: flex;
-        gap: 8px;
-        justify-content: center;
-        align-items: center;
-    }
-
-    /* 하위 호환성을 위한 기존 스타일 유지 */
-    .action-links a {
-        color: var(--primary-color);
-        text-decoration: none;
-        font-size: 13px;
-        font-weight: 500;
-        transition: color 0.2s ease;
-    }
-
-    .action-links a:hover {
-        color: var(--primary-hover);
-        text-decoration: underline;
-    }
-
-    .action-links a.delete-link {
-        color: var(--danger-color);
-    }
-
-    .action-links a.delete-link:hover {
-        color: var(--danger-hover);
-    }
-
-    /* 경고 박스 */
-    .warning-box {
-        background: #FFFBEB;
-        border: 1px solid #FCD34D;
-        border-radius: 8px;
-        padding: 14px 18px;
-        margin-top: 20px;
-        font-size: 13px;
-        color: #78350F;
-        line-height: 1.6;
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-    }
-
-    .warning-box i {
-        color: #F59E0B;
-        margin-top: 2px;
-        flex-shrink: 0;
-        font-size: 16px;
-    }
-
-    .warning-box strong {
-        font-weight: 600;
-    }
-
-    /* 모달 스타일 */
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 9999;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        overflow: auto;
-        backdrop-filter: blur(2px);
-    }
-
-    .modal-content {
-        background-color: #fff;
-        margin: 5% auto;
-        padding: 0;
-        border-radius: 12px;
-        width: 90%;
-        max-width: 600px;
-        max-height: 90vh;
-        overflow-y: auto;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        position: relative;
-        z-index: 10000;
-    }
-
-    .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        padding: 32px 32px 24px 32px;
-        border-bottom: 1px solid var(--neutral-200);
-    }
-
-    .modal-header h3 {
-        margin: 0;
-        font-size: 20px;
-        font-weight: 600;
-        color: var(--neutral-800);
-        letter-spacing: -0.02em;
-    }
-
-    .close {
-        color: var(--neutral-400);
-        font-size: 28px;
-        font-weight: bold;
-        cursor: pointer;
-        line-height: 1;
-        padding: 4px;
-        border-radius: 4px;
-        transition: all 0.2s ease;
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .close:hover {
-        color: var(--neutral-800);
-        background: var(--neutral-100);
-    }
-
-    .modal-body {
-        padding: 32px;
-    }
-
-    .modal-subtitle {
-        font-size: 13px;
-        color: var(--neutral-500);
-        margin: 8px 0 0 0;
-        font-weight: normal;
-    }
-
-    .form-control {
-        width: 100%;
-        padding: 10px 14px;
-        border: 1px solid var(--neutral-300);
-        border-radius: 8px;
-        font-size: 14px;
-        color: var(--neutral-800);
-        transition: all 0.2s ease;
-        box-sizing: border-box;
-    }
-
-    .form-control:focus {
-        outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-
-    .date-input-group {
-        display: flex;
-        align-items: flex-end;
-        gap: 16px;
-        flex-wrap: wrap;
-    }
-
-    .date-input {
-        padding: 10px 14px;
-        border: 1px solid var(--neutral-300);
-        border-radius: 8px;
-        font-size: 14px;
-        color: var(--neutral-700);
-        transition: all 0.2s ease;
-        width: 180px;
-    }
-
-    .date-input:focus {
-        outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-
-    .date-field {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .date-field label {
-        font-size: 13px;
-        color: var(--neutral-600);
-        font-weight: 500;
-    }
-
-    .readonly-badge {
-        display: inline-block;
-        padding: 4px 8px;
-        background: var(--neutral-100);
-        color: var(--neutral-600);
-        border-radius: 4px;
-        font-size: 12px;
-        margin-left: 8px;
-        font-weight: 500;
-    }
-
-    /* 폼 섹션 스타일 */
-    .form-section {
-        margin-bottom: 24px;
-    }
-
-    .section-content {
-        width: 100%;
-    }
-
-    .section-label {
-        display: block;
-        font-weight: 600;
-        color: var(--neutral-700);
-        margin-bottom: 12px;
-        font-size: 14px;
-    }
-
-    /* 사원 검색 스타일 */
-    .employee-search-group {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 12px;
-    }
-
-    .employee-search-input {
-        flex: 1;
-    }
-
-    .btn-search {
-        padding: 10px 20px;
-        background: var(--primary-color);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        transition: all 0.2s ease;
-        white-space: nowrap;
-    }
-
-    .btn-search:hover {
-        background: var(--primary-hover);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    }
-
-    .employee-search-results {
-        margin-top: 12px;
-    }
-
-    .employee-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        border: 1px solid var(--neutral-200);
-        border-radius: 8px;
-        max-height: 200px;
-        overflow-y: auto;
-        background: white;
-    }
-
-    .employee-item {
-        padding: 12px 16px;
-        border-bottom: 1px solid var(--neutral-200);
-        cursor: pointer;
-        transition: background 0.2s ease;
-    }
-
-    .employee-item:hover {
-        background: var(--neutral-50);
-    }
-
-    .employee-item:last-child {
-        border-bottom: none;
-    }
-
-    .employee-name {
-        font-weight: 600;
-        color: var(--neutral-800);
-        margin-bottom: 4px;
-        font-size: 14px;
-    }
-
-    .employee-details {
-        font-size: 12px;
-        color: var(--neutral-500);
-    }
-
-    .no-results {
-        padding: 16px;
-        text-align: center;
-        color: var(--neutral-500);
-        font-size: 14px;
-    }
-
-    .selected-employee-info {
-        margin-top: 12px;
-        padding: 12px 16px;
-        background: #EFF6FF;
-        border: 1px solid var(--primary-color);
-        border-radius: 8px;
-    }
-
-    .selected-employee {
-        color: var(--neutral-800);
-        font-size: 14px;
-        font-weight: 500;
-    }
-
-    /* 오버라이드 설정 섹션 */
-    .override-section {
-        /* 노란색 배경 제거 - 깔끔한 스타일 */
-    }
-
-    .override-fields {
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
-        margin: 0;
-        padding: 0;
-    }
-
-    .override-row {
-        display: flex;
-        align-items: flex-end;
-        gap: 16px;
-        flex-wrap: wrap;
-        margin: 0;
-        padding: 0;
-    }
-
-    .override-row:last-child {
-        /* 휴게시간도 동일한 크기 유지 */
-    }
-
-    .override-field {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .override-field label {
-        font-size: 13px;
-        color: var(--neutral-700);
-        font-weight: 600;
-    }
-
-    .override-field .time-input,
-    .override-field .number-input {
-        width: 180px;
-        padding: 10px 14px;
-        border: 1px solid var(--neutral-300);
-        border-radius: 8px;
-        font-size: 14px;
-        color: var(--neutral-700);
-        transition: all 0.2s ease;
-        background: #ffffff;
-    }
-
-    .override-field .time-input:focus,
-    .override-field .number-input:focus {
-        outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-
-    /* 사유 텍스트 영역 */
-    .reason-textarea {
-        min-height: 100px;
-        resize: vertical;
-        font-family: inherit;
-        width: 100%;
-        padding: 10px 14px;
-        border: 1.5px solid var(--neutral-300);
-        border-radius: 8px;
-        font-size: 14px;
-        color: var(--neutral-800);
-        transition: all 0.2s ease;
-        box-sizing: border-box;
-        background: #ffffff;
-    }
-
-    .char-count-wrapper {
-        display: flex;
-        justify-content: flex-end;
-        margin-top: 8px;
-    }
-
-    .char-count {
-        font-size: 12px;
-        color: var(--neutral-500);
-        font-weight: 500;
-    }
-
-    .char-count.warning {
-        color: var(--warning-color);
-    }
-
-    .char-count.error {
-        color: var(--danger-color);
-    }
-
-    .reason-textarea:focus {
-        outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-
-    /* 사원 정보 표시 */
-    .employee-info-display {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .info-field {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .info-field label {
-        font-weight: 500;
-        color: var(--neutral-600);
-        min-width: 120px;
-        font-size: 14px;
-    }
-
-    .info-field span {
-        color: var(--neutral-800);
-        font-size: 14px;
-    }
-
-    /* 버튼 스타일 */
-    .btn-secondary {
-        background: #95a5a6;
-        color: #fff;
-        border: none;
-        padding: 12px 22px;
-        border-radius: 8px;
-        font-size: 15px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-    }
-
-    .btn-secondary:hover {
-        background: #7f8c8d;
-    }
-
-    .btn-warning {
-        background: #F59E0B;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-    }
-
-    .btn-warning:hover {
-        background: #D97706;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
-    }
-
-    .modal-body .form-actions {
-        margin-top: 32px;
-        padding-top: 24px;
-        border-top: 1px solid var(--neutral-200);
-        display: flex;
-        justify-content: flex-end;
-        gap: 12px;
-    }
-
-    /* 에러 메시지 스타일 */
-    .error-message {
-        display: block;
-        color: var(--danger-color);
-        font-size: 12px;
-        margin-top: 4px;
-        min-height: 16px;
-        line-height: 1.4;
-    }
-
-    .date-field .error-message,
-    .override-field .error-message {
-        font-size: 12px;
-        margin-top: 4px;
-    }
-
-    .date-input.error,
-    .time-input.error,
-    .number-input.error,
-    .form-control.error,
-    .reason-textarea.error {
-        border-color: var(--danger-color);
-    }
-
-    .date-input.error:focus,
-    .time-input.error:focus,
-    .number-input.error:focus,
-    .form-control.error:focus,
-    .reason-textarea.error:focus {
-        border-color: var(--danger-color);
-        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
-    }
-
     font-weight: bold;
     cursor: pointer;
-    line-height: 1;
-    padding: 4px;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    transition: color 0.2s;
 }
 
 .close:hover {
-    color: var(--neutral-800);
-    background: var(--neutral-100);
+    color: var(--neutral-600);
 }
 
 .modal-body {
     padding: 32px;
-}
-
-.modal-subtitle {
-    font-size: 13px;
-    color: var(--neutral-500);
-    margin: 8px 0 0 0;
-    font-weight: normal;
-}
-
-.form-control {
-    width: 100%;
-    padding: 10px 14px;
-    border: 1px solid var(--neutral-300);
-    border-radius: 8px;
-    font-size: 14px;
-    color: var(--neutral-800);
-    transition: all 0.2s ease;
-    box-sizing: border-box;
-}
-
-.form-control:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.date-input-group {
-    display: flex;
-    align-items: flex-end;
-    gap: 16px;
-    flex-wrap: nowrap;
-}
-
-.date-input {
-    padding: 10px 14px;
-    border: 1px solid var(--neutral-300);
-    border-radius: 8px;
-    font-size: 14px;
-    color: var(--neutral-700);
-    transition: all 0.2s ease;
-    width: 180px;
-}
-
-.date-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.date-field {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.date-field label {
-    font-size: 13px;
-    color: var(--neutral-600);
-    font-weight: 500;
-}
-
-.readonly-badge {
-    display: inline-block;
-    padding: 4px 8px;
-    background: var(--neutral-100);
-    color: var(--neutral-600);
-    border-radius: 4px;
-    font-size: 12px;
-    margin-left: 8px;
-    font-weight: 500;
 }
 
 /* 폼 섹션 스타일 */
@@ -1493,8 +530,15 @@
     margin-bottom: 24px;
 }
 
+.form-section:last-of-type {
+    margin-bottom: 0;
+}
+
 .section-content {
-    width: 100%;
+    background: var(--neutral-50);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--neutral-200);
 }
 
 .section-label {
@@ -1505,315 +549,234 @@
     font-size: 14px;
 }
 
-/* 사원 검색 스타일 */
+/* 검색 필드 */
 .employee-search-group {
     display: flex;
-    gap: 12px;
-    margin-bottom: 12px;
+    gap: 8px;
 }
 
-.employee-search-input {
+.form-control {
     flex: 1;
+    padding: 10px 12px;
+    border: 1.5px solid var(--neutral-300);
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .btn-search {
-    padding: 10px 20px;
     background: var(--primary-color);
     color: white;
     border: none;
+    padding: 0 16px;
     border-radius: 8px;
     font-size: 14px;
-    font-weight: 500;
     cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: all 0.2s ease;
-    white-space: nowrap;
+    transition: background 0.2s;
 }
 
 .btn-search:hover {
     background: var(--primary-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
+/* 날짜 입력 그룹 */
+.date-input-group {
+    display: flex;
+    gap: 20px;
+}
+
+.date-field {
+    flex: 1;
+}
+
+.date-field label {
+    display: block;
+    font-size: 12px;
+    color: var(--neutral-500);
+    margin-bottom: 4px;
+}
+
+.date-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--neutral-300);
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+/* 시간 입력 필드 */
+.override-fields {
+    background: white;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--neutral-200);
+}
+
+.override-row {
+    display: flex;
+    gap: 16px;
+}
+
+.override-field {
+    flex: 1;
+}
+
+.override-field label {
+    display: block;
+    font-size: 12px;
+    color: var(--neutral-500);
+    margin-bottom: 4px;
+}
+
+.override-field .time-input,
+.override-field .number-input {
+    width: 100% !important;
+    min-width: 0;
+}
+
+/* 사유 입력 */
+.reason-textarea {
+    width: 100%;
+    height: 80px;
+    padding: 12px;
+    border: 1.5px solid var(--neutral-300);
+    border-radius: 8px;
+    resize: none;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.char-count-wrapper {
+    text-align: right;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--neutral-500);
+}
+
+.char-count-wrapper .error {
+    color: var(--danger-color);
+}
+
+/* 모달 하단 버튼 */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--neutral-200);
+}
+
+.btn-secondary {
+    background: white;
+    border: 1px solid var(--neutral-300);
+    color: var(--neutral-700);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background: var(--neutral-50);
+    border-color: var(--neutral-400);
+}
+
+/* 사원 검색 결과 */
 .employee-search-results {
-    margin-top: 12px;
+    margin-top: 8px;
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid var(--neutral-200);
+    border-radius: 8px;
+    display: empty;
+}
+
+.employee-search-results:not(:empty) {
+    display: block;
 }
 
 .employee-list {
     list-style: none;
     padding: 0;
     margin: 0;
-    border: 1px solid var(--neutral-200);
-    border-radius: 8px;
-    max-height: 200px;
-    overflow-y: auto;
-    background: white;
 }
 
 .employee-item {
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--neutral-200);
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--neutral-100);
     cursor: pointer;
-    transition: background 0.2s ease;
-}
-
-.employee-item:hover {
-    background: var(--neutral-50);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .employee-item:last-child {
     border-bottom: none;
 }
 
+.employee-item:hover {
+    background-color: var(--neutral-50);
+}
+
 .employee-name {
     font-weight: 600;
     color: var(--neutral-800);
-    margin-bottom: 4px;
-    font-size: 14px;
 }
 
 .employee-details {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--neutral-500);
-}
-
-.no-results {
-    padding: 16px;
-    text-align: center;
-    color: var(--neutral-500);
-    font-size: 14px;
 }
 
 .selected-employee-info {
     margin-top: 12px;
-    padding: 12px 16px;
+    padding: 10px 12px;
     background: #EFF6FF;
-    border: 1px solid var(--primary-color);
+    border: 1px solid #DBEAFE;
     border-radius: 8px;
-}
-
-.selected-employee {
-    color: var(--neutral-800);
+    color: #1E40AF;
     font-size: 14px;
-    font-weight: 500;
 }
 
-/* 오버라이드 설정 섹션 */
-.override-section {
-    /* 노란색 배경 제거 - 깔끔한 스타일 */
-}
-
-.override-fields {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    margin: 0;
-    padding: 0;
-}
-
-.override-row {
-    display: flex;
-    align-items: flex-end;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin: 0;
-    padding: 0;
-}
-
-.override-row:last-child {
-    /* 휴게시간도 동일한 크기 유지 */
-}
-
-.override-field {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.override-field label {
-    font-size: 13px;
-    color: var(--neutral-700);
-    font-weight: 600;
-}
-
-.override-field .time-input,
-.override-field .number-input {
-    width: 180px;
-    padding: 10px 14px;
-    border: 1px solid var(--neutral-300);
-    border-radius: 8px;
-    font-size: 14px;
-    color: var(--neutral-700);
-    transition: all 0.2s ease;
-    background: #ffffff;
-}
-
-.override-field .time-input:focus,
-.override-field .number-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-/* 사유 텍스트 영역 */
-.reason-textarea {
-    min-height: 100px;
-    resize: vertical;
-    font-family: inherit;
-    width: 100%;
-    padding: 10px 14px;
-    border: 1.5px solid var(--neutral-300);
-    border-radius: 8px;
-    font-size: 14px;
-    color: var(--neutral-800);
-    transition: all 0.2s ease;
-    box-sizing: border-box;
-    background: #ffffff;
-}
-
-.char-count-wrapper {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 8px;
-}
-
-.char-count {
-    font-size: 12px;
-    color: var(--neutral-500);
-    font-weight: 500;
-}
-
-.char-count.warning {
-    color: var(--warning-color);
-}
-
-.char-count.error {
-    color: var(--danger-color);
-}
-
-.reason-textarea:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-/* 사원 정보 표시 */
+/* 수정 모달 내 정보 표시 */
 .employee-info-display {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
 }
 
 .info-field {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
+    font-size: 14px;
 }
 
 .info-field label {
-    font-weight: 500;
+    font-weight: 600;
     color: var(--neutral-600);
-    min-width: 120px;
-    font-size: 14px;
+    width: 80px;
 }
 
 .info-field span {
-    color: var(--neutral-800);
-    font-size: 14px;
+    color: var(--neutral-900);
 }
 
-/* 버튼 스타일 */
-.btn-secondary {
-    background: #95a5a6;
-    color: #fff;
-    border: none;
-    padding: 12px 22px;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-}
 
-.btn-secondary:hover {
-    background: #7f8c8d;
-}
-
-.btn-warning {
-    background: #F59E0B;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.btn-warning:hover {
-    background: #D97706;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
-}
-
-.modal-body .form-actions {
-    margin-top: 32px;
-    padding-top: 24px;
-    border-top: 1px solid var(--neutral-200);
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-}
-
-/* 에러 메시지 스타일 */
-.error-message {
-    display: block;
-    color: var(--danger-color);
-    font-size: 12px;
-    margin-top: 4px;
-    min-height: 16px;
-    line-height: 1.4;
-}
-
-.date-field .error-message,
-.override-field .error-message {
-    font-size: 12px;
-    margin-top: 4px;
-}
-
-.date-input.error,
-.time-input.error,
-.number-input.error,
-.form-control.error,
-.reason-textarea.error {
-    border-color: var(--danger-color);
-}
-
-.date-input.error:focus,
-.time-input.error:focus,
-.number-input.error:focus,
-.form-control.error:focus,
-.reason-textarea.error:focus {
-    border-color: var(--danger-color);
-    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
-}
 
 /* =========================
    Responsive Column Hiding
-========================= */
+======================== */
 /* 1000px 이하: 휴게시간, 사유, 등록일 열 숨김 */
 @media (max-width: 1000px) {
 

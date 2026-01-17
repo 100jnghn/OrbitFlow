@@ -25,252 +25,237 @@ import java.util.Optional;
 
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
-    /**
-     * 이메일(로그인 ID)을 기준으로 사원 조회
-     */
-    Optional<Employee> findByEmail(String email);
+        /**
+         * 이메일(로그인 ID)을 기준으로 사원 조회
+         */
+        Optional<Employee> findByEmail(String email);
 
-    /**
-     * 회사 ID + 사번을 기준으로 사원 조회
-     */
-    Optional<Employee> findByCompanyIdAndEmployeeNo(Long companyId, String employeeNo);
+        /**
+         * 회사 ID + 사번을 기준으로 사원 조회
+         */
+        Optional<Employee> findByCompanyIdAndEmployeeNo(Long companyId, String employeeNo);
 
-    /**
-     * 회사 ID + 이메일(로그인 ID)을 기준으로 사원 조회
-     */
-    Optional<Employee> findByCompanyIdAndEmail(Long companyId, String email);
+        /**
+         * 회사 ID + 이메일(로그인 ID)을 기준으로 사원 조회
+         */
+        Optional<Employee> findByCompanyIdAndEmail(Long companyId, String email);
 
+        List<Employee> findAllByIdIn(List<Long> ids);
 
-    List<Employee> findAllByIdIn(List<Long> ids);
+        /**
+         * 조직 비활성화 가능 여부 판단용
+         * - ACTIVE 사원이 존재하면 true
+         */
+        boolean existsByCompanyIdAndOrganizationIdAndStatus(
+                        Long companyId,
+                        Long organizationId,
+                        EmployeeStatus status);
 
-    /**
-     * 조직 비활성화 가능 여부 판단용
-     * - ACTIVE 사원이 존재하면 true
-     */
-    boolean existsByCompanyIdAndOrganizationIdAndStatus(
-            Long companyId,
-            Long organizationId,
-            EmployeeStatus status
-    );
+        /**
+         * 조직에 실제 근무 중인 사원이 존재하는지 확인
+         * (조직 비활성화 차단 조건)
+         */
+        @Query("""
+                        select count(e) > 0
+                        from Employee e
+                        where e.company.id = :companyId
+                        and e.organization.id = :orgId
+                        and e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE
+                                """)
+        boolean existsActiveEmployeeInOrg(
+                        @Param("companyId") Long companyId,
+                        @Param("orgId") Long orgId);
 
+        /**
+         * 회사 ID + 이름, 사번 또는 이메일로 사원 검색
+         */
+        @Query("SELECT e FROM Employee e WHERE e.company.id = :companyId " +
+                        "AND (e.name LIKE CONCAT('%', :keyword, '%') OR e.employeeNo LIKE CONCAT('%', :keyword, '%') OR e.email LIKE CONCAT('%', :keyword, '%')) "
+                        +
+                        "AND e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE")
+        List<Employee> searchByCompanyIdAndKeyword(
+                        @Param("companyId") Long companyId,
+                        @Param("keyword") String keyword
 
-    /**
-     * 조직에 실제 근무 중인 사원이 존재하는지 확인
-     * (조직 비활성화 차단 조건)
-     */
-    @Query("""
-            select count(e) > 0
-            from Employee e
-            where e.company.id = :companyId
-            and e.organization.id = :orgId
-            and e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE
-                    """)
-    boolean existsActiveEmployeeInOrg(
-            @Param("companyId") Long companyId,
-            @Param("orgId") Long orgId
-    );
+        );
 
+        boolean existsByEmail(String email);
 
+        /**
+         * 직급에 부여된 사원 수 조회
+         */
+        long countByCompanyIdAndRank_Id(Long companyId, Long rankId);
 
-    /**
-     * 회사 ID + 이름, 사번 또는 이메일로 사원 검색
-     */
-    @Query("SELECT e FROM Employee e WHERE e.company.id = :companyId " +
-            "AND (e.name LIKE CONCAT('%', :keyword, '%') OR e.employeeNo LIKE CONCAT('%', :keyword, '%') OR e.email LIKE CONCAT('%', :keyword, '%')) " +
-            "AND e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE")
-    List<Employee> searchByCompanyIdAndKeyword(
-            @Param("companyId") Long companyId,
-            @Param("keyword") String keyword
+        List<Employee> findAllByStatus(EmployeeStatus status);
 
-    );
+        int countByCompanyIdAndStatus(Long companyId, EmployeeStatus status);
 
-    boolean existsByEmail(String email);
+        List<Employee> findByCompany_IdAndOrganization_IdAndPositionCategory_IdAndStatus(
+                        Long companyId,
+                        Long organizationId,
+                        Long positionCategoryId,
+                        EmployeeStatus status);
 
-    /**
-     * 직급에 부여된 사원 수 조회
-     */
-    long countByCompanyIdAndRank_Id(Long companyId, Long rankId);
+        @Query("""
+                                    select e
+                                    from Employee e
+                                    join e.positionCategory pc
+                                    join e.organization o
+                                    where o.id = :organizationId
+                                      and pc.orgCategory.id = :orgCategoryId
+                                      and pc.isHead = true
+                                      and pc.isActive = true
+                                      and e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE
+                        """)
+        Optional<Employee> findHeadByOrganizationAndOrgCategory(
+                        @Param("organizationId") Long organizationId,
+                        @Param("orgCategoryId") Long orgCategoryId);
 
+        @Query("""
+                            select case when count(e) > 0 then true else false end
+                            from Employee e
+                            join e.organization o
+                            join e.positionCategory pc
+                            where e.id = :employeeId
+                              and o.id = :organizationId
+                              and pc.id = :positionCategoryId
+                              and e.status = "ACTIVE"
+                              and pc.isActive = true
+                        """)
+        boolean existsInOrgAndPositionCategory(
+                        @Param("employeeId") Long employeeId,
+                        @Param("organizationId") Long organizationId,
+                        @Param("positionCategoryId") Long positionCategoryId);
 
-    List<Employee> findAllByStatus(EmployeeStatus status);
+        @Query("""
+                            select e
+                            from Employee e
+                            join e.organization o
+                            join e.positionCategory pc
+                            where o.id = :orgId
+                              and pc.isHead = true
+                              and pc.isActive = true
+                              and pc.orgCategory.id = o.categoryId
+                              and e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE
+                            order by e.id asc
+                        """)
+        List<Employee> findHeadsByOrgId(@Param("orgId") Long orgId);
 
-    int countByCompanyIdAndStatus(Long companyId, EmployeeStatus status);
+        default Optional<Employee> findHeadByOrgId(Long orgId) {
+                List<Employee> heads = findHeadsByOrgId(orgId);
+                return heads.isEmpty() ? Optional.empty() : Optional.of(heads.get(0));
+        }
 
-    List<Employee> findByCompany_IdAndOrganization_IdAndPositionCategory_IdAndStatus(
-            Long companyId,
-            Long organizationId,
-            Long positionCategoryId,
-            EmployeeStatus status
-    );
-
-
-    @Query("""
+        @Query("""
                         select e
                         from Employee e
-                        join e.positionCategory pc
                         join e.organization o
-                        where o.id = :organizationId
-                          and pc.orgCategory.id = :orgCategoryId
-                          and pc.isHead = true
-                          and pc.isActive = true
-                          and e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE
-            """)
-    Optional<Employee> findHeadByOrganizationAndOrgCategory(
-            @Param("organizationId") Long organizationId,
-            @Param("orgCategoryId") Long orgCategoryId
-    );
+                        join e.positionCategory pc
+                        where o.id = :orgId
+                          and pc.id = :positionCategoryId
+                          and e.status = :status
+                        """)
+        Optional<Employee> findHeadByOrgIdAndPositionCategoryIdAndStatus(
+                        @Param("orgId") Long orgId,
+                        @Param("positionCategoryId") Long positionCategoryId,
+                        @Param("status") EmployeeStatus status);
 
-    @Query("""
-                select case when count(e) > 0 then true else false end
-                from Employee e
-                join e.organization o
-                join e.positionCategory pc
-                where e.id = :employeeId
-                  and o.id = :organizationId
-                  and pc.id = :positionCategoryId
-                  and e.status = "ACTIVE"
-                  and pc.isActive = true
-            """)
-    boolean existsInOrgAndPositionCategory(
-            @Param("employeeId") Long employeeId,
-            @Param("organizationId") Long organizationId,
-            @Param("positionCategoryId") Long positionCategoryId
-    );
+        @Query("""
+                        select e
+                        from Employee e
+                        join e.organization o
+                        join e.positionCategory pc
+                        where e.id = :employeeId
+                          and o.id = :orgId
+                          and pc.id = :positionCategoryId
+                          and e.status = :status
+                        """)
+        Optional<Employee> findByIdAndOrgIdAndPositionCategoryIdAndStatus(
+                        @Param("employeeId") Long employeeId,
+                        @Param("orgId") Long orgId,
+                        @Param("positionCategoryId") Long positionCategoryId,
+                        @Param("status") EmployeeStatus status);
 
+        List<Employee> findByStatus(EmployeeStatus employeeStatus);
 
-    @Query("""
-                select e
-                from Employee e
-                join e.organization o
-                join e.positionCategory pc
-                where o.id = :orgId
-                  and pc.isHead = true
-                  and pc.isActive = true
-                  and pc.orgCategory.id = o.categoryId
-                  and e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE
-                order by e.id asc
-            """)
-    List<Employee> findHeadsByOrgId(@Param("orgId") Long orgId);
+        @Query("""
+                            select e
+                            from Employee e
+                            join e.organization o
+                            where e.company.id = :companyId
+                              and (:status is null or e.status = :status)
+                              and (
+                                :keyword is null
+                                or e.name like concat('%', :keyword, '%')
+                                or e.email like concat('%', :keyword, '%')
+                                or e.employeeNo like concat('%', :keyword, '%')
+                              )
+                        """)
+        Page<Employee> searchAdmin(
+                        @Param("companyId") Long companyId,
+                        @Param("keyword") String keyword,
+                        @Param("status") EmployeeStatus status,
+                        Pageable pageable);
 
-    default Optional<Employee> findHeadByOrgId(Long orgId) {
-        List<Employee> heads = findHeadsByOrgId(orgId);
-        return heads.isEmpty() ? Optional.empty() : Optional.of(heads.get(0));
-    }
+        List<Employee> findByCompanyIdAndStatus(Long companyId, EmployeeStatus employeeStatus);
 
-    @Query("""
-            select e
-            from Employee e
-            join e.organization o
-            join e.positionCategory pc
-            where o.id = :orgId
-              and pc.id = :positionCategoryId
-              and e.status = :status
-            """)
-    Optional<Employee> findHeadByOrgIdAndPositionCategoryIdAndStatus(
-            @Param("orgId") Long orgId,
-            @Param("positionCategoryId") Long positionCategoryId,
-            @Param("status") EmployeeStatus status
-    );
+        @Query("""
+                            select e
+                            from Employee e
+                            join fetch e.organization o
+                            where e.company.id = :companyId
+                              and e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE
+                              and e.internalPhone is not null
+                        """)
+        List<Employee> findActiveWithExtension(Long companyId);
 
-    @Query("""
-            select e
-            from Employee e
-            join e.organization o
-            join e.positionCategory pc
-            where e.id = :employeeId
-              and o.id = :orgId
-              and pc.id = :positionCategoryId
-              and e.status = :status
-            """)
-    Optional<Employee> findByIdAndOrgIdAndPositionCategoryIdAndStatus(
-            @Param("employeeId") Long employeeId,
-            @Param("orgId") Long orgId,
-            @Param("positionCategoryId") Long positionCategoryId,
-            @Param("status") EmployeeStatus status
-    );
+        // company.id = :companyId 인 Employee의 id만 조회
+        @Query("""
+                            select e.id
+                            from Employee e
+                            where e.company.id = :companyId
+                        """)
+        List<Long> findEmployeeIdsByCompanyId(@Param("companyId") Long companyId);
 
-    List<Employee> findByStatus(EmployeeStatus employeeStatus);
+        @Query("""
+                            select e.id
+                            from Employee e
+                            where e.organization.id = :orgId
+                        """)
+        List<Long> findEmployeeIdsByOrganizationId(@Param("orgId") Long orgId);
 
-    @Query("""
-                select e
-                from Employee e
-                join e.organization o
-                where e.company.id = :companyId
-                  and (:status is null or e.status = :status)
-                  and (
-                    :keyword is null
-                    or e.name like concat('%', :keyword, '%')
-                    or e.email like concat('%', :keyword, '%')
-                  )
-            """)
-    Page<Employee> searchAdmin(
-            @Param("companyId") Long companyId,
-            @Param("keyword") String keyword,
-            @Param("status") EmployeeStatus status,
-            Pageable pageable
-    );
+        @Query("""
+                            SELECT COUNT(e)
+                            FROM Employee e
+                            WHERE e.company.id = :companyId
+                              AND e.organization.id = :orgId
+                              AND e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE
+                        """)
+        long countActiveEmployeesByOrg(
+                        @Param("companyId") Long companyId,
+                        @Param("orgId") Long orgId);
 
+        Optional<Employee> findByIdAndStatus(Long id, EmployeeStatus status);
 
-    List<Employee> findByCompanyIdAndStatus(Long companyId, EmployeeStatus employeeStatus);
+        List<Employee> findByStatusAndWorkStatusIn(EmployeeStatus employeeStatus,
+                        java.util.List<com.finalproj.orbitflow.hr.employee.enums.WorkStatus> specialStatuses);
 
-    @Query("""
-                select e
-                from Employee e
-                join fetch e.organization o
-                where e.company.id = :companyId
-                  and e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE
-                  and e.internalPhone is not null
-            """)
-    List<Employee> findActiveWithExtension(Long companyId);
+        boolean existsByCompany_IdAndInternalPhone(Long companyId, String internalPhone);
 
+        boolean existsByCompanyIdAndEmail(Long companyId, String email);
 
-    // company.id = :companyId 인 Employee의 id만 조회
-    @Query("""
-                select e.id
-                from Employee e 
-                where e.company.id = :companyId
-            """)
-    List<Long> findEmployeeIdsByCompanyId(@Param("companyId") Long companyId);
-
-    @Query("""
-                select e.id
-                from Employee e 
-                where e.organization.id = :orgId
-            """)
-    List<Long> findEmployeeIdsByOrganizationId(@Param("orgId") Long orgId);
-
-    @Query("""
-                SELECT COUNT(e)
-                FROM Employee e
-                WHERE e.company.id = :companyId
-                  AND e.organization.id = :orgId
-                  AND e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE
-            """)
-    long countActiveEmployeesByOrg(
-            @Param("companyId") Long companyId,
-            @Param("orgId") Long orgId
-    );
-
-    Optional<Employee> findByIdAndStatus(Long id, EmployeeStatus status);
-
-    List<Employee> findByStatusAndWorkStatusIn(EmployeeStatus employeeStatus, java.util.List<com.finalproj.orbitflow.hr.employee.enums.WorkStatus> specialStatuses);
-
-    boolean existsByCompany_IdAndInternalPhone(Long companyId, String internalPhone);
-
-    boolean existsByCompanyIdAndEmail(Long companyId, String email);
-
-    /**
-     * 사이드바 / 조직도용
-     * - 재직중(ACTIVE) 사원 전체 조회
-     * - 내선번호 null 허용
-     */
-    @Query("""
-        select e
-        from Employee e
-        join fetch e.organization o
-        where e.company.id = :companyId
-          and e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE
-    """)
-    List<Employee> findActiveForSidebar(Long companyId);
+        /**
+         * 사이드바 / 조직도용
+         * - 재직중(ACTIVE) 사원 전체 조회
+         * - 내선번호 null 허용
+         */
+        @Query("""
+                            select e
+                            from Employee e
+                            join fetch e.organization o
+                            where e.company.id = :companyId
+                              and e.status = com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus.ACTIVE
+                        """)
+        List<Employee> findActiveForSidebar(Long companyId);
 
 }

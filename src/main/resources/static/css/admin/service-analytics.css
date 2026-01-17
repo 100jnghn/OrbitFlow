@@ -1,3 +1,7 @@
+* {
+    box-sizing: border-box;
+}
+
 :root {
     --primary: #3b82f6;
     --primary-light: #60a5fa;
@@ -28,6 +32,7 @@ body {
     max-width: 1400px;
     margin: 0 auto;
     padding: 40px 20px;
+    width: 100%;
 }
 
 .header {
@@ -35,6 +40,8 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 40px;
+    width: 100%;
+    gap: 20px;
 }
 
 .header h1 {
@@ -43,6 +50,7 @@ body {
     margin: 0;
     color: #111827;
     letter-spacing: -0.025em;
+    flex-shrink: 0;
 }
 
 .filter-header {
@@ -51,26 +59,18 @@ body {
     border-radius: 16px;
     border: 1px solid var(--border);
     box-shadow: var(--shadow);
+    flex-grow: 1;
+    max-width: 100%;
 }
 
 /* Filters */
 .filters {
     display: flex;
     flex-wrap: nowrap;
-    overflow-x: auto;
+    /* Keep on one line on desktop */
     gap: 15px;
     align-items: center;
-    scrollbar-width: thin;
-    padding-bottom: 5px;
-}
-
-.filters::-webkit-scrollbar {
-    height: 4px;
-}
-
-.filters::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 4px;
+    width: 100%;
 }
 
 .action-bar {
@@ -84,6 +84,7 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-shrink: 0;
 }
 
 .filter-group label {
@@ -91,7 +92,6 @@ body {
     font-weight: 600;
     color: #6b7280;
     white-space: nowrap;
-    flex-shrink: 0;
 }
 
 select,
@@ -152,7 +152,6 @@ input:focus {
 .btn-sync i {
     font-size: 0.9rem;
     width: 14px;
-    /* Fixed width to prevent wobble */
     text-align: center;
 }
 
@@ -170,7 +169,6 @@ input:focus {
     cursor: pointer;
     margin-left: 5px;
     white-space: nowrap;
-    flex-shrink: 0;
 }
 
 /* KPI Cards */
@@ -328,5 +326,153 @@ canvas {
 @keyframes spin {
     to {
         transform: rotate(360deg);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .dashboard-container {
+        padding: 20px 15px;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .charts-grid,
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 1024px) {
+    .header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 20px;
+    }
+
+    .header h1 {
+        text-align: center;
+        margin-bottom: 5px;
+    }
+
+    .filter-header {
+        width: 100%;
+    }
+
+    .filters {
+        flex-wrap: wrap;
+        /* Allow wrapping on tablet */
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 1.8rem;
+    }
+
+    .filters {
+        gap: 10px;
+    }
+
+    .filter-group {
+        flex: 1 1 calc(33.333% - 10px);
+        /* Row 1: 3 items (Company, Unit, Compare) */
+        min-width: 100px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    #period-picker-group,
+    #range-group {
+        flex: 1 1 100%;
+        /* Force new line for date pickers */
+    }
+
+    .filter-group label {
+        font-size: 0.75rem;
+    }
+
+    select,
+    input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #period-picker-group {
+        flex-direction: row;
+        align-items: flex-end;
+        flex-wrap: wrap;
+    }
+
+    #picker-wrapper {
+        flex-grow: 1;
+        width: calc(100% - 70px);
+    }
+
+    .btn-today {
+        width: 60px;
+        padding: 8px 0;
+        margin-left: 10px;
+        margin-bottom: 2px;
+    }
+
+    #range-group {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 5px;
+    }
+
+    #range-group input {
+        width: calc(45% - 5px);
+    }
+
+    .action-bar {
+        justify-content: center;
+        width: 100%;
+        margin-top: 20px;
+        flex-direction: row;
+        /* Stay on one line if possible */
+    }
+
+    .btn-apply,
+    .btn-sync {
+        flex: 1;
+        justify-content: center;
+        white-space: nowrap;
+    }
+
+    .kpi-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .kpi-card {
+        padding: 16px;
+    }
+
+    .kpi-value {
+        font-size: 1.5rem;
+    }
+
+    .rank-table {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .filter-group {
+        flex: 1 1 calc(50% - 10px);
+        /* 2 items per row if 33% is too small */
+    }
+
+    /* Keep '비교' on the same line as others maybe? */
+    /* If the user really wants '비교' on the same line even on small screens: */
+
+    .header h1 {
+        font-size: 1.5rem;
     }
 }

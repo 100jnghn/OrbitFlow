@@ -66,15 +66,11 @@ public interface AttendanceRecordRepository extends JpaRepository<AttendanceReco
     @Query("SELECT r FROM AttendanceRecord r WHERE :today BETWEEN r.startDate AND r.endDate AND r.status = 'APPROVED'")
     List<AttendanceRecord> findActiveAttendanceRecords(@Param("today") LocalDate today);
 
-    @Query("SELECT r FROM AttendanceRecord r " +
-            "WHERE r.employee.id = :employeeId " +
-            "AND :date BETWEEN r.startDate AND r.endDate " +
-            "AND r.status = 'APPROVED'")
-    Optional<AttendanceRecord> findActiveRecord(@Param("employeeId") Long employeeId,
-            @Param("date") LocalDate date);
+
 
     boolean existsByEmployee_IdAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(Long employeeId,
             DocumentStatus documentStatus, LocalDate date, LocalDate date1);
 
     Optional<AttendanceRecord> findBySourceDocument_Id(Long documentId);
+
 }

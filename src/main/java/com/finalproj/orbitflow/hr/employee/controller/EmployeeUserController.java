@@ -77,4 +77,18 @@ public class EmployeeUserController {
         );
     }
 
+
+    @GetMapping("/by-org-and-position")
+    public ResponseEntity<?> listByOrgAndPosition(
+            @RequestParam Long orgId,
+            @RequestParam Long positionCategoryId
+    ) {
+        return ResponseEntity.ok(
+                new ResponseDto<>(
+                        HttpStatus.OK,
+                        "조직/직책별 사원 조회 성공",
+                        employeeService.findByOrgAndPosition(SecurityUtils.getCompanyId(), orgId, positionCategoryId)
+                )
+        );
+    }
 }

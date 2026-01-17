@@ -44,7 +44,7 @@ public class CommuteController {
 
     @PostMapping("/checkin")
     public ResponseEntity<?> checkIn(@AuthenticationPrincipal SecurityUser user) {
-        TodayAttResDto result = commuteService.checkIn(user.getCompanyId(), user.getEmployeeId());
+        TodayAttResDto result = commuteService.checkIn(user.getCompanyId(), user.getEmployeeId(),null);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDto<>(
                 HttpStatus.CREATED,
@@ -106,5 +106,18 @@ public class CommuteController {
                 )
         );
     }
+
+    @PostMapping("/return")
+    public ResponseEntity<?> returnFromOutsideOrTrip(@AuthenticationPrincipal SecurityUser user) {
+        commuteService.returnFromOutsideOrTrip(
+                user.getCompanyId(),
+                user.getEmployeeId()
+        );
+
+        return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "자리복귀 및 정상출근 처리 완료", null));
+    }
+
+
+
 
 }

@@ -59,12 +59,14 @@
     font-weight: 400;
 }
 
-.count-used { 
-    color: #DC2626 !important;      /* 사용일수 강조 */
+.count-used {
+    color: #DC2626 !important;
+    /* 사용일수 강조 */
 }
 
-.count-remaining { 
-    color: var(--primary-color) !important; /* 잔여일수 강조 */
+.count-remaining {
+    color: var(--primary-color) !important;
+    /* 잔여일수 강조 */
 }
 
 /* 범례 스타일 */
@@ -74,85 +76,58 @@
     gap: 6px;
 }
 
-/* 테이블 컬럼 정렬 및 간격 통일 (연차 조회 페이지용) */
-#leaveHistoryTable th,
-#leaveHistoryTable td {
+/* 테이블 컬럼 정렬 및 간격 통일 (연차 조회 페이지용 & 휴가 신청 현황용) */
+.board-table {
+    table-layout: fixed;
+    /* 고정 레이아웃 필수 */
+    width: 100%;
+}
+
+.board-table th,
+.board-table td {
     padding: 12px 16px;
+    text-align: center;
+    /* 기본 중앙 정렬 */
+    vertical-align: middle;
+    word-break: keep-all;
+    /* 단어 단위 줄바꿈 */
+    box-sizing: border-box;
+    /* 패딩 포함 너비 계산 */
 }
 
-#leaveHistoryTable th:nth-child(1),
-#leaveHistoryTable td:nth-child(1) {
-    text-align: left !important;
-    padding-left: 20px;
-    width: auto;
-    min-width: 120px;
+/* 5개 컬럼 테이블 (내 연차 현황) - 20%씩 등분 */
+#leaveHistoryTable.table-5-cols th,
+#leaveHistoryTable.table-5-cols td {
+    width: 20% !important;
 }
 
-#leaveHistoryTable th:nth-child(2),
-#leaveHistoryTable td:nth-child(2) {
-    text-align: center !important;
-    width: auto;
-    min-width: 140px;
+/* 4개 컬럼 테이블 (휴가 신청 현황) - 25%씩 등분 */
+#leaveHistoryTable.table-4-cols th,
+#leaveHistoryTable.table-4-cols td {
+    width: 25% !important;
 }
 
-#leaveHistoryTable th:nth-child(3),
-#leaveHistoryTable td:nth-child(3) {
-    text-align: center !important;
-    width: auto;
-    min-width: 200px;
-}
+/* 내용이 길어질 수 있는 기간 컬럼 등 미세 조정 필요 시 아래에서 오버라이드 가능하지만
+   사용자가 "동일한 여백(spacing)"을 요청했으므로 강제 등분 유지 */
 
-#leaveHistoryTable th:nth-child(4),
-#leaveHistoryTable td:nth-child(4) {
-    text-align: center !important;
-    width: auto;
-    min-width: 100px;
-}
-
-#leaveHistoryTable th:nth-child(5),
-#leaveHistoryTable td:nth-child(5) {
-    text-align: center !important;
-    width: auto;
-    min-width: 120px;
-}
-
-/* 기간 컬럼 스타일 개선 - 한 줄 표시 */
-#leaveHistoryTable td:nth-child(3),
-#leaveHistoryTable .period-cell {
+/* 기간 컬럼 스타일 개선 - 한 줄 표시 (줄바꿈 방지) */
+#leaveHistoryTable.table-5-cols td:nth-child(3),
+#leaveHistoryTable.table-4-cols td:nth-child(2) {
     white-space: nowrap;
-    font-size: 14px;
-    color: var(--neutral-700);
-    font-weight: 500;
-    line-height: 1.5;
-}
-
-/* 휴가 신청 현황 테이블 컬럼 정렬 */
-#otherLeaveTable th:nth-child(1),
-#otherLeaveTable td:nth-child(1) {
-    text-align: left !important;
-    padding-left: 20px;
-}
-
-#otherLeaveTable th:nth-child(2),
-#otherLeaveTable td:nth-child(2),
-#otherLeaveTable th:nth-child(3),
-#otherLeaveTable td:nth-child(3),
-#otherLeaveTable th:nth-child(4),
-#otherLeaveTable td:nth-child(4),
-#otherLeaveTable th:nth-child(5),
-#otherLeaveTable td:nth-child(5) {
-    text-align: center !important;
 }
 
 /* 일수 강조 색상 */
-.count-plus { 
-    color: #10B981; 
-    font-weight: 600; 
+
+/* 일수 강조 색상 */
+.count-plus {
+    color: #10B981;
+    font-weight: 600;
 }
 
-.count-minus, .text-red { 
-    color: #DC2626; 
-    font-weight: 600; 
+.count-minus,
+.text-red {
+    color: #DC2626;
+    font-weight: 600;
 }
 
 /* 상태 배지 스타일 (월별 근태 현황과 통일) */
@@ -258,7 +233,8 @@
     flex-direction: column;
     gap: 8px;
     align-items: flex-start;
-    height: 72px; /* label(20px) + gap(8px) + input(44px) = 72px */
+    height: 72px;
+    /* label(20px) + gap(8px) + input(44px) = 72px */
     position: relative;
     z-index: 1000;
     overflow: visible;

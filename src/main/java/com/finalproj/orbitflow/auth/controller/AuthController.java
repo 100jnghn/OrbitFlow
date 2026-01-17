@@ -224,7 +224,8 @@ public class AuthController {
                                 user.getEmail(),
                                 user.getRole().name(),
                                 employee.getWorkStatus(), // 최신 workStatus 반환
-                                employee.getGender() // 성별 반환
+                                employee.getGender(), // 성별 반환
+                                employee.getCompany().getName()
                 );
 
                 return ResponseEntity.ok(

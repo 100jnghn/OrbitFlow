@@ -56,7 +56,6 @@ public class ApprovalEventTxService {
     private final DocumentContentParser documentContentParser;
     private final AttendanceEventRepository attendanceEventRepository;
     private final WorkingDayService workingDayService;
-    private final LeaveTypeRepository leaveTypeRepository;
     private final AttendanceRuleRepository attendanceRuleRepository;
 
     public static List<DateRange> splitToRanges(List<LocalDate> dates) {
@@ -85,44 +84,45 @@ public class ApprovalEventTxService {
     @Transactional
     public void processVacationApproval(Long documentId) {
 
-        // 1️⃣ 문서 조회
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> {
                     log.error(
                             "[ApprovalEventTxService] Document not found - documentId={}",
-                            documentId);
+                            documentId
+                    );
                     return new IllegalStateException("Document not found");
                 });
 
-        // 휴가 문서가 아니면 종료
         if (document.getTemplateGroup().getBaseRole() != BaseRole.VACATION) {
             return;
         }
 
         Employee writer = document.getWriter();
 
-        // 2️⃣ 휴가 계산 (주말 + 공휴일 제외는 여기서 이미 완료됨)
         LeaveCalculationResult result = leaveCalculationService.calculate(document);
 
-        // 실제 휴가 날짜가 없으면 (전부 주말/공휴일)
-        if (result.effectiveDates().isEmpty()) {
+        List<LocalDate> dates = result.effectiveDates();
+        if (dates == null || dates.isEmpty()) {
             log.warn(
-                    "[ApprovalEventTxService] No effective vacation days - documentId={}",
-                    documentId);
+                    "[ApprovalEventTxService] Invalid vacation dates - documentId={}, start={}, end={}",
+                    documentId,
+                    result.payload().startDate(),
+                    result.payload().endDate()
+            );
             return;
         }
 
-        // 3️⃣ 최상위 조직 조회
         Organization org = orgRepository
                 .findFirstByCompanyIdAndParentOrgId(
                         writer.getCompany().getId(), null)
                 .orElseThrow(() -> new NotFoundException("작성자의 최상위 조직 조회 실패"));
 
-        // 4️⃣ 스케줄 등록 (effectiveDates → 연속 구간 분해)
-        List<DateRange> ranges = splitToRanges(result.effectiveDates());
+        List<DateRange> ranges = splitToRanges(dates);
 
-        String writerInfo = writer.getOrganization().getName() + " | " + writer.getRank().getName() + " | "
-                + writer.getName();
+        String writerInfo =
+                writer.getOrganization().getName() + " | " +
+                        writer.getRank().getName() + " | " +
+                        writer.getName();
 
         for (DateRange range : ranges) {
 
@@ -141,29 +141,31 @@ public class ApprovalEventTxService {
             scheduleService.insertSchedule(
                     writer.getCompany().getId(),
                     writer.getId(),
-                    scheduleReqDto);
+                    scheduleReqDto
+            );
         }
 
-        // 5️⃣ 근태 기록 갱신
         attendanceRecordRepository.findBySourceDocument_Id(document.getId())
                 .ifPresent(AttendanceRecord::approvedDocument);
 
-        // 6️⃣ 연차 차감 (이미 주말/공휴일 제외된 days 사용)
         leaveService.deduction(
                 writer,
                 result.days(),
                 document,
-                result.leaveType());
+                result.leaveType()
+        );
 
-        // 7️⃣ 🔥 근무 상태 즉시 변경 로직 추가
         LocalDate today = LocalDate.now();
-        // effectiveDates에 오늘이 포함되어 있는지 확인
-        if (result.effectiveDates().contains(today)) {
-            // WorkStatus.VACATION 등의 열거형을 사용해 상태 업데이트
+        if (dates.contains(today)) {
             leaveService.updateWorkStatus(writer.getId(), WorkStatus.VACATION);
-            log.info("[StatusUpdate] 휴가 승인으로 인한 상태 변경: 사원={}, 상태=휴가중", writer.getName());
+            log.info(
+                    "[StatusUpdate] Vacation approved - employeeId={}, name={}",
+                    writer.getId(),
+                    writer.getName()
+            );
         }
     }
+
 
     @Transactional
     public void processAttendanceApproval(Long documentId) {

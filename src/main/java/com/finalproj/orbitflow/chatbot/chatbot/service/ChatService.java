@@ -225,7 +225,7 @@ public class ChatService {
                                                 .collect(Collectors.toSet());
 
 
-                // 3) ✅ Chroma 검색 단계에서 company/category 필터 적용
+
                 String companyIdStr = companyId.toString();
                 String categoryIdStr = (categoryId == null ? null : categoryId.toString());
 
@@ -236,8 +236,8 @@ public class ChatService {
 
                 EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
                                                 .queryEmbedding(questionEmbedding)
-                                                .maxResults(50)       // 이제 "우리 회사(및 카테고리)" 범위 안에서 TopK
-                                                .minScore(0.0)        // 필요하면 0.2~0.4로 올려서 잡음 줄이기
+                                                .maxResults(50)
+                                                .minScore(0.0)
                                                 .filter(filter)
                                                 .build();
 

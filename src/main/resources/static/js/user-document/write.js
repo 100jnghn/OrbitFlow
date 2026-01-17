@@ -2366,7 +2366,7 @@ async function fetchEmployeesForApproval(line) {
         positionCategoryId: line.positionCategoryId
     });
 
-    const res = await apiFetch(`/api/admin/employees/by-org-and-position?${params}`);
+    const res = await apiFetch(`/api/employees/by-org-and-position?${params}`);
     if (!res.ok) {
         await sweetWarning('사원 목록을 불러오지 못했습니다.');
         return [];

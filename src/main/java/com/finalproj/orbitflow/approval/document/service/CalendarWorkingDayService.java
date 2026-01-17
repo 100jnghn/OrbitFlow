@@ -31,19 +31,22 @@ public class CalendarWorkingDayService implements WorkingDayService {
     ) {
         List<LocalDate> result = new ArrayList<>();
 
+        if (start == null || end == null || end.isBefore(start)) {
+            return result; // 잘못된 입력 → 빈 리스트
+        }
+
         for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
 
             CalendarDay day = calendarDayRepository.findById(date).orElse(null);
 
             if (day == null) {
-                return null;
+                continue;
             }
 
             if (day.isChargeableForLeave()) {
                 result.add(date);
             }
         }
-
         return result;
     }
 }

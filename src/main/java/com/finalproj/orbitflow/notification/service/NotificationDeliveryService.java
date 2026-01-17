@@ -1,6 +1,5 @@
 package com.finalproj.orbitflow.notification.service;
 
-import com.finalproj.orbitflow.global.exception.RealTimeAccessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -53,22 +52,40 @@ public class NotificationDeliveryService {
      * NotificationDeliveryService가 SSE로 밀어준다
      */
     public void send(Long employeeId, Object data) {
-
         Set<SseEmitter> userEmitters = emitters.get(employeeId);
         log.info("SSE send 호출됨 employeeId={}", employeeId);
 
-        if (userEmitters == null) {
+        if (userEmitters == null || userEmitters.isEmpty()) {
             log.warn("SSE emitter 없음 employeeId={}", employeeId);
             return;
         }
 
-        for (SseEmitter emitter : userEmitters) {
+        // 순회 중 제거 이슈 방지용 스냅샷
+        for (SseEmitter emitter : Set.copyOf(userEmitters)) {
             try {
                 emitter.send(SseEmitter.event()
                         .name("notification")
                         .data(data));
-            } catch (RealTimeAccessException | IOException e) {
-                log.info("SSE 연결 제거");
+            } catch (IOException | IllegalStateException e) {
+                log.info("SSE 연결 끊김 -> emitter 제거 employeeId={}", employeeId);
+                removeEmitter(employeeId, emitter);
+
+                try {
+                    emitter.complete();
+                } catch (Exception ignore) {
+
+                }
+
+            } catch (Exception e) {
+                // 혹시 모를 예외도 제거
+                log.warn("SSE send 실패 -> emitter 제거 employeeId={}", employeeId, e);
+                removeEmitter(employeeId, emitter);
+
+                try {
+                    emitter.completeWithError(e);
+                } catch (Exception ignore) {
+
+                }
             }
         }
     }

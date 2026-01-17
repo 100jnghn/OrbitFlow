@@ -59,4 +59,9 @@ public class AttendanceEvent extends BaseEntity {
     @JoinColumn(name = "source_document_id")
     private Document sourceDocument;
 
+
+    public void updateEndDate(LocalDate actualEndDate) {
+        this.actualEndDate = actualEndDate;
+    }
+
 }
