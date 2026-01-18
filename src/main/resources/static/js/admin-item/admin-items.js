@@ -1,3 +1,5 @@
+import { showFullscreenSpinner, hideFullscreenSpinner } from "/js/ui/fullscreenSpinner.js";
+
 /* ==========================
    Tooltip (singleton)
 ========================== */
@@ -260,9 +262,11 @@ async function deleteItem(id) {
     if (!result.isConfirmed) return;
 
     try {
+        showFullscreenSpinner("비품을 삭제 중입니다...");
+
         const res = await apiFetch(
             `/api/admin/items/${id}/delete`,
-            { method: 'PATCH' }
+            { method: 'DELETE' }
         );
 
         if (!res.ok) throw new Error();
@@ -275,6 +279,8 @@ async function deleteItem(id) {
     } catch (e) {
         console.error(e);
         await sweetError('비품 삭제에 실패했습니다.');
+    } finally {
+        hideFullscreenSpinner();
     }
 }
 

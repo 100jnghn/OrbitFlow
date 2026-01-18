@@ -1,3 +1,5 @@
+import { showFullscreenSpinner, hideFullscreenSpinner } from "/js/ui/fullscreenSpinner.js";
+
 /**
  * 관리자 - 회의실 상세 조회 페이지 (필수 기능만)
  */
@@ -195,7 +197,7 @@ async function handleEdit() {
 
 /**
  * 삭제 버튼
- * ※ Controller 기준: PATCH /admin/meetingrooms/{id}/delete
+ * ※ Controller 기준: DELETE /admin/meetingrooms/{id}/delete
  */
 async function handleDelete() {
 
@@ -206,11 +208,16 @@ async function handleDelete() {
 
     if (!result.isConfirmed) return;
 
+    const deleteBtn = document.getElementById('btn-delete');
 
     try {
+        // 스피너 표시 및 버튼 비활성화
+        showFullscreenSpinner("회의실을 삭제 중입니다...");
+        if (deleteBtn) deleteBtn.disabled = true;
+
         const response = await apiFetch(
             `/api/admin/meetingrooms/${currentRoomId}/delete`,
-            { method: 'PATCH' }
+            { method: 'DELETE' }
         );
 
         if (!response.ok) {
@@ -222,6 +229,11 @@ async function handleDelete() {
     } catch (error) {
         console.error(error);
         await sweetError('회의실 삭제에 실패했습니다.');
+        // 실패 시 버튼 다시 활성화
+        if (deleteBtn) deleteBtn.disabled = false;
+    } finally {
+        // 스피너 숨김
+        hideFullscreenSpinner();
     }
 }
 

@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.resource.meetingroom.service;
 
+import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
@@ -100,13 +101,11 @@ public class MeetingroomService {
 
     @Transactional
     public void deleteMeetingroom(Long meetingroomId) {
+        if (!meetingroomRepository.existsById(meetingroomId)) {
+            throw new NotFoundException("이미 삭제된 회의실");
+        }
 
-        Meetingroom meetingroom = findMeetingroomById(meetingroomId);
-
-        ResourceStatus deleteStatus = resourceStatusRepository
-                .findByResourceStatusCode(ResourceStatusCode.DELETED);
-
-        meetingroom.delete(deleteStatus);
+        meetingroomRepository.deleteById(meetingroomId);
     }
 
 

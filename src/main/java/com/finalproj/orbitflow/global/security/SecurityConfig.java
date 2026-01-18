@@ -35,7 +35,6 @@ public class SecurityConfig {
         @Bean
         public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-
                 http
                                 .csrf(csrf -> csrf.disable())
                                 .sessionManagement(session -> session
@@ -55,16 +54,12 @@ public class SecurityConfig {
                                                                 "/images/**",
                                                                 "/favicon.ico",
                                                                 "/internal/**",
-                                                                "/favicon.ico",
                                                                 "/activate/**",
                                                                 "/reset-password/**",
                                                                 "/find-password/**",
                                                                 "/api/email/**",
-                                                                "/api/email/**",
                                                                 "/actuator/prometheus",
-                                                                "/actuator/health",
-                                                                "/view/service-analytics",
-                                                                "/api/analytics/**")
+                                                                "/actuator/health")
                                                 .permitAll()
 
                                                 .requestMatchers("/api/chatbot/**").authenticated()
@@ -72,6 +67,9 @@ public class SecurityConfig {
 
                                                 .requestMatchers("/api/admin/**")
                                                 .hasAnyRole("ADMIN", "COMPANY_ADMIN")
+
+                                                .requestMatchers("/api/analytics/**")
+                                                .hasRole("TEAM_ORBIT")
 
                                                 .anyRequest().authenticated())
 

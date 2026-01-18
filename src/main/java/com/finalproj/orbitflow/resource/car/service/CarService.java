@@ -179,8 +179,7 @@ public class CarService {
             boolean result = deleteCarFileInternal(car);
         }
 
-        ResourceStatus deleteStatus = resourceStatusRepository.findByResourceStatusCode(ResourceStatusCode.DELETED);
-        car.delete(deleteStatus);
+        carRepository.delete(car);
     }
 
 

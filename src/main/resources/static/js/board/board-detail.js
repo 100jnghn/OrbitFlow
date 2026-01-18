@@ -687,7 +687,7 @@ function renderComments(comments) {
                         </div>
                     </div>
                 </div>
-                <div class="comment-actions" ${showEditDelete}>
+                <div class="comment-actions" id="comment-actions-${commentId}" ${showEditDelete}>
                     <button type="button" class="btn-comment-edit" onclick="editComment(${commentId})">수정</button>
                     <button type="button" class="btn-comment-delete" onclick="deleteComment(${commentId})">삭제</button>
                 </div>
@@ -818,10 +818,12 @@ function editComment(commentId) {
 
     const displayDiv = document.getElementById(`comment-content-display-${commentId}`);
     const editDiv = document.getElementById(`comment-content-edit-${commentId}`);
+    const actionDiv = document.getElementById(`comment-actions-${commentId}`);
 
     if (displayDiv && editDiv) {
         displayDiv.style.display = 'none';
         editDiv.style.display = 'block';
+        if (actionDiv) actionDiv.style.display = 'none';
         editingCommentId = commentId;
 
         // 텍스트 영역에 포커스
@@ -838,10 +840,12 @@ function editComment(commentId) {
 function cancelEditComment(commentId) {
     const displayDiv = document.getElementById(`comment-content-display-${commentId}`);
     const editDiv = document.getElementById(`comment-content-edit-${commentId}`);
+    const actionDiv = document.getElementById(`comment-actions-${commentId}`);
 
     if (displayDiv && editDiv) {
         displayDiv.style.display = 'block';
         editDiv.style.display = 'none';
+        if (actionDiv) actionDiv.style.display = 'flex';
         editingCommentId = null;
     }
 }

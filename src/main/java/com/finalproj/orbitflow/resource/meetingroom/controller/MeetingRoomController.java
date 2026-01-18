@@ -101,7 +101,7 @@ public class MeetingRoomController {
     }
 
     // 관리자 - 회의실 삭제
-    @PatchMapping("/admin/meetingrooms/{meetingroomId}/delete")
+    @DeleteMapping("/admin/meetingrooms/{meetingroomId}/delete")
     public ResponseEntity<ResponseDto> deleteMeetingroom(
             @PathVariable Long meetingroomId
     ) {
