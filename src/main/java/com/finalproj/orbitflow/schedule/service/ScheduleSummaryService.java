@@ -111,7 +111,7 @@ public class ScheduleSummaryService {
                 .map(schedule -> {
                     String organizationName = "개인";
 
-                    if (schedule.isCompany() && schedule.isPersonal()) {
+                    if (schedule.isCompany() && !schedule.isPersonal()) {
                         organizationName = "전사";
 
                     } else if (!schedule.isCompany() && schedule.isPersonal()){
