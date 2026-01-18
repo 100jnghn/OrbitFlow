@@ -148,8 +148,8 @@ public class SchedulePromptBuilder {
             }
 
             appendSection(sb, companySchedules, "전사");
-            appendSection(sb, orgSchedules, "조직", true);
             appendSection(sb, personalSchedules, "개인");
+            appendSection(sb, orgSchedules, "조직", true);
         }
 
         log.info("프롬프트 : " + sb.toString());
