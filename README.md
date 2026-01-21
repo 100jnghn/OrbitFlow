@@ -339,21 +339,6 @@
 
 ---
 
-## 시연 영상    ┃       ┃ ┣ 📜 header.html
-         ┃       ┃ ┗ 📜 sidebar.html
-         ┃       ┣ 📂 layout
-         ┃       ┣ 📂 main
-         ┃       ┣ 📂 message
-         ┃       ┣ 📂 organization
-         ┃       ┣ 📂 reservation
-         ┃       ┣ 📂 schedule
-         ┃       ┣ 📂 sidebar
-         ┃       ┗ 📂 user-document
-    </code>
-  </pre>
-</details>
-<br>
-
 ## 🔐 인증 & 보안 설계
 
 - JWT Access / Refresh Token 구조
