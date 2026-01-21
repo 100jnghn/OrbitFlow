@@ -105,7 +105,7 @@
 
 ## 🏗 시스템 아키텍처
 
-<img width="1024" height="541" alt="image" src="https://github.com/user-attachments/assets/854ce2e7-9d22-41ea-b751-732757807b8a" />
+<img width="5056" height="3392" alt="Gemini_Generated_Image_qfdxvgqfdxvgqfdx (1)" src="https://github.com/user-attachments/assets/8a82e9b2-0d9a-42fe-bc3c-f5cf4c2ee6a2" />
 
 
 ## 🛠 Tech stack 
