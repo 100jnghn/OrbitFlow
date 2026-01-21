@@ -6,12 +6,23 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
- * Please explain the class!!!
+ * 문서 변경 사항(diff) 분석을 위한 기본 지침 프롬프트를 구성하는 컴포넌트.
+ * <p>
+ * AI가 어떤 역할로 문서를 비교해야 하는지,
+ * 그리고 어떤 기준과 규칙을 따라 변경 사항을 요약해야 하는지를
+ * 프롬프트의 가장 앞부분에서 명확히 정의한다.
+ * <p>
+ * 변경 요약의 범위, 표현 방식, 언어, 분량 등의 기본 규칙을 고정하여
+ * 이후에 이어지는 diff 관련 컴포넌트들의 출력 결과가
+ * 일관된 기준 아래 해석되도록 하는 역할을 한다.
+ * <p>
+ * DiffPromptContext를 사용하는 PromptComponent 중
+ * 가장 앞단에 위치하는 기본 컴포넌트로 사용된다.
  *
  * @author : Choi MinHyeok
  * @filename : DiffBasePromptComponent
  * @since : 26. 1. 6. 화요일
- **/
+ */
 
 
 @Component

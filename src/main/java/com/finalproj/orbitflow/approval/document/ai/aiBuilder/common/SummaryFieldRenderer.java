@@ -7,12 +7,34 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Please explain the class!!!
+ * AI 문서 요약 프롬프트 생성을 위한 필드 렌더링 유틸리티.
  *
- * @author : Choi MinHyeok
- * @filename : SummaryFieldRenderer
- * @since : 26. 1. 6. 화요일
- **/
+ * <p>
+ * {@link AiSummaryField} 목록을 사람이 읽기 쉬운 텍스트 형태로 변환하여
+ * AI 프롬프트에 삽입하는 역할을 담당한다.
+ * </p>
+ *
+ * <p>
+ * 필드 타입에 따라 렌더링 방식을 분기하며,
+ * 일반 텍스트/숫자/날짜 필드는 단순 항목 형태로,
+ * 테이블(table) 타입 필드는 행 단위 요약 형태로 변환한다.
+ * </p>
+ *
+ * <p>
+ * 본 클래스는 상태를 가지지 않는 순수 유틸리티 클래스로 설계되었으며,
+ * 프롬프트 구성 로직과 AI 호출 로직으로부터 독립적으로
+ * 요약 표현 규칙만을 책임진다.
+ * </p>
+ *
+ * <p>
+ * 렌더링 결과는 AI 모델이 문서 구조와 내용을
+ * 명확히 이해할 수 있도록 일관된 포맷을 유지한다.
+ * </p>
+ *
+ * @author Choi MinHyeok
+ * @fileName SummaryFieldRenderer
+ * @since 2026.01.06
+ */
 
 
 public class SummaryFieldRenderer {

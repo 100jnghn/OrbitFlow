@@ -9,12 +9,22 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * Please explain the class!!!
+ * 문서 변경 사항(diff) 분석을 위해 문서 본문 내용을 프롬프트에 추가하는 컴포넌트.
+ * <p>
+ * 이전 문서와 현재 문서의 요약 정보를 각각 출력하여,
+ * AI가 두 문서의 내용을 직접 비교할 수 있도록 프롬프트를 구성한다.
+ * <p>
+ * 문서 제목과 함께 핵심 항목과 기타 항목을 구분하여 전달하며,
+ * 각 필드의 라벨과 값을 그대로 제공함으로써
+ * 변경 전·후 차이를 명확하게 파악할 수 있도록 돕는다.
+ * <p>
+ * AiDiffReqDto를 컨텍스트로 사용하는 PromptComponent로,
+ * 프롬프트 내에서 실제 문서 내용 비교 영역을 담당한다.
  *
  * @author : Choi MinHyeok
  * @filename : DiffContentComponent
  * @since : 26. 1. 6. 화요일
- **/
+ */
 
 
 @Component

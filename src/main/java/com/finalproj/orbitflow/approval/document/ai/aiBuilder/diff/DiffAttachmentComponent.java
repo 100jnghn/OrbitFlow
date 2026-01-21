@@ -8,12 +8,22 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * Please explain the class!!!
+ * 문서 변경 사항(diff) 중 첨부파일 변경 정보를 프롬프트에 추가하는 컴포넌트.
+ * <p>
+ * 이전 문서와 현재 문서의 첨부파일 목록을 비교하여,
+ * 파일명 기준으로 변경 여부를 AI가 판단할 수 있도록
+ * 프롬프트에 첨부파일 구성 정보를 텍스트 형태로 출력한다.
+ * <p>
+ * 첨부파일의 실제 내용은 제공되지 않으며,
+ * 오직 파일명 목록만을 기반으로 분석하도록 명시하는 역할을 한다.
+ * <p>
+ * DiffPromptContext를 사용하는 PromptComponent 중 하나로,
+ * 프롬프트 내에서 첨부파일 변경 영역만을 책임진다.
  *
  * @author : Choi MinHyeok
  * @filename : DiffAttachmentComponent
  * @since : 26. 1. 6. 화요일
- **/
+ */
 
 
 @Component

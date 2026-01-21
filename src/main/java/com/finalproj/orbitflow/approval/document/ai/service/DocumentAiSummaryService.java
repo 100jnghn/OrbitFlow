@@ -34,12 +34,32 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.util.*;
 
 /**
- * Please explain the class!!!
+ * 결재 문서에 대한 AI 요약(summary) 및 변경 비교(diff) 요청을 관리하는 서비스.
+ * <p>
+ * 본 서비스는 AI 기능의 진입점 역할을 하며,
+ * 문서 접근 권한 검증, 입력 데이터 정규화,
+ * 프롬프트 생성, AI 작업 상태 관리 흐름을 담당한다.
+ * <p>
+ * 요약 및 비교 요청은 즉시 결과를 반환하지 않고,
+ * PROCESSING 상태의 DocumentAISummary 엔티티를 먼저 생성한 뒤
+ * 트랜잭션 커밋 이후 비동기 서비스(DocumentAiSummaryAsyncService)를 통해
+ * 실제 AI 호출이 수행되도록 설계되었다.
+ * <p>
+ * FormTemplateSchema를 기반으로 문서 내용을 정규화하여
+ * AI 입력 DTO(AiSummaryReqDto / AiDiffReqDto)로 변환하며,
+ * 핵심 정보와 부가 정보를 구분하여 프롬프트 품질을 안정화한다.
+ * <p>
+ * 이미 처리 중이거나 완료된 동일 유형(summary / diff)의 AI 요청이 존재하는 경우,
+ * 중복 실행을 방지하기 위해 요청을 차단한다.
+ * <p>
+ * 본 서비스는 AI 호출 자체를 수행하지 않으며,
+ * 비동기 실행, 재시도, 실패 처리 로직은 별도의 Async 서비스에 위임한다.
  *
  * @author : Choi MinHyeok
  * @filename : DocumentAiSummaryService
  * @since : 26. 1. 5. 월요일
- **/
+ */
+
 
 @Service
 @RequiredArgsConstructor

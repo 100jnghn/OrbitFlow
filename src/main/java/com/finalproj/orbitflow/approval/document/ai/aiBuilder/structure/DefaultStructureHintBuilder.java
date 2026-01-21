@@ -9,12 +9,26 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Please explain the class!!!
+ * 기본 문서 구조 힌트 생성을 담당하는 StructureHintBuilder 구현체.
+ * <p>
+ * 결재 양식의 FormTemplateSchema를 분석하여,
+ * 문서가 어떤 형태와 성격을 가지는지에 대한
+ * 구조적 힌트 문장을 생성한다.
+ * <p>
+ * 필드 타입, 컬럼 구성, 라벨명 등을 기준으로
+ * 텍스트 중심 문서, 표 기반 문서, 일정/금액/조직 정보 포함 여부 등을 판단하며,
+ * AI가 문서를 올바르게 해석할 수 있도록 보조적인 설명을 제공한다.
+ * <p>
+ * 생성된 구조 힌트는 요약이나 변경 분석의 결과를 직접 만들기 위한 것이 아니라,
+ * 프롬프트 내에서 문서의 전반적인 맥락과 형태를 이해시키기 위한 참고 정보로 사용된다.
+ * <p>
+ * 과도한 힌트 생성을 방지하기 위해 중복 문장은 제거되며,
+ * 최대 5개의 핵심 힌트만 반환하도록 제한되어 있다.
  *
  * @author : Choi MinHyeok
  * @filename : DefaultStructureHintBuilder
  * @since : 26. 1. 6. 화요일
- **/
+ */
 
 
 @Component
