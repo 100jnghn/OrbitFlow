@@ -1,22 +1,21 @@
 package com.finalproj.orbitflow.approval.document.service.domain;
 
-import com.finalproj.orbitflow.approval.line.dto.ApprovalLineViewResDto;
-import com.finalproj.orbitflow.approval.line.enums.ApprovalStatus;
-import com.finalproj.orbitflow.approval.line.repository.ApprovalLineRepository;
+import com.finalproj.orbitflow.approval.document.content.entity.DocumentContent;
+import com.finalproj.orbitflow.approval.document.content.repository.DocumentContentRepository;
 import com.finalproj.orbitflow.approval.document.dto.*;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
-import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
-import com.finalproj.orbitflow.approval.document.schema.PdfContentSchema;
-import com.finalproj.orbitflow.approval.document.service.render.DocumentContentRenderService;
-import com.finalproj.orbitflow.approval.document.service.assembler.PdfContentSchemaAssembler;
-import com.finalproj.orbitflow.approval.document.content.entity.DocumentContent;
-import com.finalproj.orbitflow.approval.document.content.repository.DocumentContentRepository;
 import com.finalproj.orbitflow.approval.document.file.entity.DocumentFile;
 import com.finalproj.orbitflow.approval.document.file.enums.DocumentFileStatus;
 import com.finalproj.orbitflow.approval.document.file.enums.ReferenceType;
 import com.finalproj.orbitflow.approval.document.file.repository.DocumentFileRepository;
+import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
+import com.finalproj.orbitflow.approval.document.service.assembler.PdfContentSchemaAssembler;
+import com.finalproj.orbitflow.approval.document.service.render.DocumentContentRenderService;
 import com.finalproj.orbitflow.approval.form.template.schema.FormTemplateSchema;
+import com.finalproj.orbitflow.approval.line.dto.ApprovalLineViewResDto;
+import com.finalproj.orbitflow.approval.line.enums.ApprovalStatus;
+import com.finalproj.orbitflow.approval.line.repository.ApprovalLineRepository;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
@@ -28,8 +27,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 
 /**
@@ -265,64 +262,6 @@ public class DocumentService {
                 );
     }
 
-    public DocumentPdfViewDto getPdfViewData(Long documentId) {
-
-        // 1️⃣ 문서 조회
-        Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new NotFoundException("문서를 찾을 수 없습니다."));
-
-        if (document.getStatus() != DocumentStatus.APPROVED) {
-            throw new IllegalStateException("승인 완료된 문서만 PDF로 생성할 수 있습니다.");
-        }
-
-        // 2️⃣ 문서 본문(JSON) 조회
-        DocumentContent content = documentContentRepository
-                .findByDocument_Id(documentId)
-                .orElseThrow(() -> new NotFoundException(
-                        "DocumentContent not found. documentId=" + documentId
-                ));
-
-        // 3️⃣ JSON → FormTemplateSchema
-        FormTemplateSchema schema = parseSchema(content.getContentJson());
-        if (schema.getFields() == null || schema.getFields().isEmpty()) {
-            throw new IllegalStateException("양식에 필드가 없습니다.");
-        }
-
-        // 4️⃣ FormTemplateSchema → PdfContentSchema
-        PdfContentSchema pdfSchema =
-                pdfContentSchemaAssembler.from(schema);
-
-        // 🔥 5️⃣ PdfContentSchema → HTML (이미 만들어둔 렌더러 사용)
-        String documentContentHtml =
-                documentContentRenderService.render(documentId, pdfSchema);
-
-        // 6️⃣ PDF View DTO 생성
-        return DocumentPdfViewDto.builder()
-                .documentId(document.getId())
-                .title(document.getTitle())
-                .status(document.getStatus())
-
-                .submittedAt(
-                        document.getSubmittedAt() == null ? null :
-                                LocalDateTime.ofInstant(
-                                        document.getSubmittedAt(),
-                                        ZoneId.systemDefault()
-                                )
-                )
-                .submittedBy(document.getWriter().getName())
-
-                .approvedAt(
-                        document.getUpdatedAt() == null ? null :
-                                LocalDateTime.ofInstant(
-                                        document.getUpdatedAt(),
-                                        ZoneId.systemDefault()
-                                )
-                )
-
-                // 🔥 서버에서 완성한 PDF 본문 HTML
-                .documentContentHtml(documentContentHtml)
-                .build();
-    }
 
 
     public List<ReferenceSearchResDto> searchReference(
