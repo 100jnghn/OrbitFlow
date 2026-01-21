@@ -19,7 +19,6 @@ function setToday() {
     document.getElementById('date-from').value = today;
     document.getElementById('date-to').value = today;
 
-    // 다른 Picker들이 선택되어 있었다면 초기화해주는 것이 깔끔할 수 있음
     const granularity = document.getElementById('granularity').value;
     if (granularity !== 'period') {
         const picker = document.querySelector('#picker-wrapper input, #picker-wrapper select');
