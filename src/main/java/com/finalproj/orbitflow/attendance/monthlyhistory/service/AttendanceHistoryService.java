@@ -1,9 +1,9 @@
-package com.finalproj.orbitflow.attendance.monthly_history.service;
+package com.finalproj.orbitflow.attendance.monthlyhistory.service;
 
 import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
 import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
 import com.finalproj.orbitflow.attendance.commute.repository.CommuteRepository;
-import com.finalproj.orbitflow.attendance.monthly_history.dto.*;
+import com.finalproj.orbitflow.attendance.monthlyhistory.dto.*;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

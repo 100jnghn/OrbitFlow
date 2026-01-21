@@ -1,6 +1,6 @@
-package com.finalproj.orbitflow.attendance.monthly_history.controller;
-import com.finalproj.orbitflow.attendance.monthly_history.dto.MonthlyHistoryResDto;
-import com.finalproj.orbitflow.attendance.monthly_history.service.AttendanceHistoryService;
+package com.finalproj.orbitflow.attendance.monthlyhistory.controller;
+import com.finalproj.orbitflow.attendance.monthlyhistory.dto.MonthlyHistoryResDto;
+import com.finalproj.orbitflow.attendance.monthlyhistory.service.AttendanceHistoryService;
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import lombok.RequiredArgsConstructor;

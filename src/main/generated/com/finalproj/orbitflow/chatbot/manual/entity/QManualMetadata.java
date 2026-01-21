@@ -24,7 +24,7 @@ public class QManualMetadata extends EntityPathBase<ManualMetadata> {
 
     public final com.finalproj.orbitflow.global.common.QBaseEntity _super = new com.finalproj.orbitflow.global.common.QBaseEntity(this);
 
-    public final com.finalproj.orbitflow.chatbot.manualCategory.entity.QManualCategory category;
+    public final com.finalproj.orbitflow.chatbot.manualcategory.entity.QManualCategory category;
 
     public final com.finalproj.orbitflow.hr.company.entity.QCompany company;
 
@@ -70,7 +70,7 @@ public class QManualMetadata extends EntityPathBase<ManualMetadata> {
 
     public QManualMetadata(Class<? extends ManualMetadata> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.category = inits.isInitialized("category") ? new com.finalproj.orbitflow.chatbot.manualCategory.entity.QManualCategory(forProperty("category"), inits.get("category")) : null;
+        this.category = inits.isInitialized("category") ? new com.finalproj.orbitflow.chatbot.manualcategory.entity.QManualCategory(forProperty("category"), inits.get("category")) : null;
         this.company = inits.isInitialized("company") ? new com.finalproj.orbitflow.hr.company.entity.QCompany(forProperty("company")) : null;
         this.file = inits.isInitialized("file") ? new com.finalproj.orbitflow.global.file.entity.QFile(forProperty("file"), inits.get("file")) : null;
     }

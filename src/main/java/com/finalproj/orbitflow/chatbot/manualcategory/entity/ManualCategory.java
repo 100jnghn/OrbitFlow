@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.chatbot.manualCategory.entity;
+package com.finalproj.orbitflow.chatbot.manualcategory.entity;
 
 
 import com.finalproj.orbitflow.global.common.BaseEntity;

@@ -3,8 +3,8 @@ package com.finalproj.orbitflow.chatbot.manual.service;
 import com.finalproj.orbitflow.chatbot.chorma.service.ChromaVectorService;
 import com.finalproj.orbitflow.chatbot.manual.entity.ManualMetadata;
 import com.finalproj.orbitflow.chatbot.manual.repository.ManualRepository;
-import com.finalproj.orbitflow.chatbot.manualCategory.entity.ManualCategory;
-import com.finalproj.orbitflow.chatbot.manualCategory.repository.ManualCategoryRepository;
+import com.finalproj.orbitflow.chatbot.manualcategory.entity.ManualCategory;
+import com.finalproj.orbitflow.chatbot.manualcategory.repository.ManualCategoryRepository;
 
 import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.global.file.enums.FileDomain;
@@ -26,7 +26,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.hwpf.extractor.WordExtractor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,7 +39,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.UUID;
 
 /**
  *

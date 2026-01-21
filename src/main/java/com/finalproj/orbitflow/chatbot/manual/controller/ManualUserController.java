@@ -1,8 +1,8 @@
 package com.finalproj.orbitflow.chatbot.manual.controller;
 
 import com.finalproj.orbitflow.chatbot.manual.service.ManualUploadService;
-import com.finalproj.orbitflow.chatbot.manualCategory.dto.ManualCategoryResDto;
-import com.finalproj.orbitflow.chatbot.manualCategory.entity.ManualCategory;
+import com.finalproj.orbitflow.chatbot.manualcategory.dto.ManualCategoryResDto;
+import com.finalproj.orbitflow.chatbot.manualcategory.entity.ManualCategory;
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import lombok.RequiredArgsConstructor;

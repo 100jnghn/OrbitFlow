@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.monthly_history.controller;
+package com.finalproj.orbitflow.attendance.monthlyhistory.controller;
 
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;

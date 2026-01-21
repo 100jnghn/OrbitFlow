@@ -1,9 +1,9 @@
-package com.finalproj.orbitflow.chatbot.manualCategory.service;
+package com.finalproj.orbitflow.chatbot.manualcategory.service;
 
 import com.finalproj.orbitflow.chatbot.manual.repository.ManualRepository;
-import com.finalproj.orbitflow.chatbot.manualCategory.dto.ManualCategoryReqDto;
-import com.finalproj.orbitflow.chatbot.manualCategory.entity.ManualCategory;
-import com.finalproj.orbitflow.chatbot.manualCategory.repository.ManualCategoryRepository;
+import com.finalproj.orbitflow.chatbot.manualcategory.dto.ManualCategoryReqDto;
+import com.finalproj.orbitflow.chatbot.manualcategory.entity.ManualCategory;
+import com.finalproj.orbitflow.chatbot.manualcategory.repository.ManualCategoryRepository;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;

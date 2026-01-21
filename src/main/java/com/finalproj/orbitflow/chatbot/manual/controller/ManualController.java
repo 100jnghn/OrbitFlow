@@ -2,12 +2,11 @@ package com.finalproj.orbitflow.chatbot.manual.controller;
 
 import com.finalproj.orbitflow.chatbot.manual.entity.ManualMetadata;
 import com.finalproj.orbitflow.chatbot.manual.service.ManualUploadService;
-import com.finalproj.orbitflow.chatbot.manualCategory.dto.ManualCategoryResDto;
-import com.finalproj.orbitflow.chatbot.manualCategory.entity.ManualCategory;
+import com.finalproj.orbitflow.chatbot.manualcategory.dto.ManualCategoryResDto;
+import com.finalproj.orbitflow.chatbot.manualcategory.entity.ManualCategory;
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

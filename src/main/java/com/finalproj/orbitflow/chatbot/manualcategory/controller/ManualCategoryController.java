@@ -1,8 +1,8 @@
-package com.finalproj.orbitflow.chatbot.manualCategory.controller;
+package com.finalproj.orbitflow.chatbot.manualcategory.controller;
 
 
-import com.finalproj.orbitflow.chatbot.manualCategory.dto.ManualCategoryReqDto;
-import com.finalproj.orbitflow.chatbot.manualCategory.service.ManualCategoryService;
+import com.finalproj.orbitflow.chatbot.manualcategory.dto.ManualCategoryReqDto;
+import com.finalproj.orbitflow.chatbot.manualcategory.service.ManualCategoryService;
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import lombok.RequiredArgsConstructor;
@@ -10,8 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  *

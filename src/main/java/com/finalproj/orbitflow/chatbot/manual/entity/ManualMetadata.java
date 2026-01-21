@@ -8,7 +8,7 @@ package com.finalproj.orbitflow.chatbot.manual.entity;
  * @since : 2025. 12. 30. 화요일
  */
 
-import com.finalproj.orbitflow.chatbot.manualCategory.entity.ManualCategory;
+import com.finalproj.orbitflow.chatbot.manualcategory.entity.ManualCategory;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.global.file.entity.File;
 import com.finalproj.orbitflow.hr.company.entity.Company;
