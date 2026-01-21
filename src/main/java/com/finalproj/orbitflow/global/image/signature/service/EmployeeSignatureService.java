@@ -22,8 +22,19 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Please explain the class!!!
+ * Employee 서명(Signature) 관리 서비스.
  *
+ * <p>
+ * - 사원별 서명 이미지를 등록/교체한다.
+ * - 하나의 사원(Employee)은 동시에 하나의 활성 서명만 가질 수 있다.
+ * - 새로운 서명이 등록되면 기존 활성 서명은 비활성화된다.
+ * - 서명 등록/변경 이력은 감사 로그(Audit Log)로 기록된다.
+ * </p>
+ *
+ * <p>
+ * 파일 업로드는 {@link FileService}에 위임하며,
+ * 본 서비스는 서명 도메인의 비즈니스 규칙과 상태 전이를 책임진다.
+ * </p>
  * @author : Choi MinHyeok
  * @filename : EmployeeSignatureService
  * @since : 26. 1. 8. 목요일
@@ -61,7 +72,7 @@ public class EmployeeSignatureService {
             employeeSignatureRepository.save(sig);
             employeeSignatureRepository.flush();
 
-            // 🔹 Audit Log (UPDATE)
+            // 감사 로그 생성
             auditLogService.log(
                     employee.getCompany(),
                     employee,

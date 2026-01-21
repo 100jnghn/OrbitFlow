@@ -10,7 +10,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * Please explain the class!!!
+ * 사원(Employee) 서명(Signature) 관리 REST API 컨트롤러.
+ *
+ * <p>
+ * 인증된 사원이 자신의 서명 이미지를 등록하거나,
+ * 현재 활성화된 서명 보유 여부를 조회할 수 있는 API를 제공한다.
+ * </p>
  *
  * @author : Choi MinHyeok
  * @filename : EmployeeSignature
