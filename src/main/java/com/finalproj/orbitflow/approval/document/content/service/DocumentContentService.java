@@ -21,12 +21,25 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Please explain the class!!!
+ * 결재 문서의 작성 내용을 조회하고 수정하는 서비스.
+ * <p>
+ * DocumentContent에 저장된 JSON 형태의 문서 내용을
+ * FormTemplateSchema로 변환하여 조회하거나,
+ * 임시 저장(DRAFT) 상태의 문서에 한해 일부 필드 값을 수정한다.
+ * <p>
+ * 문서 내용의 구조 자체는 변경하지 않고,
+ * 필드 식별자(fieldId)를 기준으로 값만 덮어쓰는 방식으로 동작한다.
+ * <p>
+ * 결재 진행 중인 문서는 수정이 불가능하며,
+ * 수정 과정에서 문서 제목이 변경된 경우 Document 엔티티의 제목도 함께 갱신한다.
+ * <p>
+ * JSON 파싱 및 직렬화 오류는 시스템 오류로 간주하여 예외를 발생시킨다.
  *
  * @author : Choi MinHyeok
  * @filename : DocumentContentService
  * @since : 25. 12. 26. 금요일
- **/
+ */
+
 
 @RequiredArgsConstructor
 @Service
@@ -72,7 +85,6 @@ public class DocumentContentService {
             throw new ForbiddenException("결재 진행 중인 문서는 수정할 수 없습니다.");
         }
 
-        // 기존 JSON 파싱
         ObjectNode root =
                 (ObjectNode) objectMapper.readTree(content.getContentJson());
 
@@ -82,7 +94,6 @@ public class DocumentContentService {
             throw new IllegalStateException("문서 필드 정보가 없습니다.");
         }
 
-        // 요청 값 Map으로 변환
         Map<String, JsonNode> patchMap = reqDto.getFields().stream()
                 .filter(f -> f.getFieldId() != null)
                 .filter(f -> f.getValue() != null)
@@ -93,7 +104,6 @@ public class DocumentContentService {
 
         String newTitle = null;
 
-        // 기존 fields 순회하며 value만 덮어쓰기
         for (JsonNode fieldNode : fieldsNode) {
             String fieldId = fieldNode.get("fieldId").asText();
 
@@ -114,7 +124,6 @@ public class DocumentContentService {
             document.updateTitle(newTitle);
         }
 
-        // 다시 JSON 저장
         try {
             content.updateContentJson(
                     objectMapper.writeValueAsString(root)
