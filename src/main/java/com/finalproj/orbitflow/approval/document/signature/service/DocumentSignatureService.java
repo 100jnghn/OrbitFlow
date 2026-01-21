@@ -34,7 +34,7 @@ public class DocumentSignatureService {
                         document.getId(),
                         approvalLine.getId()
                 )) {
-            return; // 이미 스냅샷 존재 → 무시
+            return;
         }
 
         EmployeeSignature employeeSignature = employeeSignatureService.getEmployeeActiveSignature(approvalLine.getApprover().getId())
