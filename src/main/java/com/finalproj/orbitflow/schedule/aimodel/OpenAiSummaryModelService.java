@@ -84,11 +84,9 @@ public class OpenAiSummaryModelService implements SummaryModel {
                     .getMessage()
                     .getContent();
 
-            log.debug("GPT 요약 결과: {}", result);
             return result;
 
         } catch (Exception e) {
-            log.error("GPT 요약 호출 실패", e);
             throw new RuntimeException("GPT 요약 생성 실패", e);
         }
     }

@@ -125,9 +125,6 @@ public class ReservationController {
         );
     }
 
-    // ----------------------------------------------------------------------- //
-    // 관리자 예약 관리 기능 //
-
     // 관리자 - 예약 신청 리스트 조회
     @GetMapping("/admin/reservations")
     public ResponseEntity<ResponseDto> getReservations(

@@ -37,8 +37,6 @@ public class RedisPublisher {
                     json
             );
 
-            log.debug("발행된 알림 메시지 : {}", json);
-
         } catch (Exception e) {
             log.error("Redis publish 실패", e);
         }

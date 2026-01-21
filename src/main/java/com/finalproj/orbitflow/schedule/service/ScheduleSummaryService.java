@@ -14,7 +14,6 @@ import com.finalproj.orbitflow.schedule.dto.ScheduleSummaryResDto;
 import com.finalproj.orbitflow.schedule.entity.ScheduleSummary;
 import com.finalproj.orbitflow.schedule.repository.ScheduleSummaryRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,7 +32,6 @@ import java.util.stream.Stream;
  * @since : 2025-12-30 오후 5:22 화요일
  */
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class ScheduleSummaryService {
 
@@ -55,17 +53,14 @@ public class ScheduleSummaryService {
 
         // 새로운 사용자가 요약 시도 -> 요약 실행
         if (summaryRecord == null) {
-            log.info("새로운 사용자 요약");
             result = doSummary(companyId, orgId, employeeId, false);
         }
         // 기존 사용자가 요약 시도 + 시간 충족 -> 요약 실행
         else if (summaryRecord != null && getCoolTime(employeeId)) {
-            log.info("기존 요약 업데이트 시도");
             result = doSummary(companyId, orgId, employeeId, true);
         }
         // 기존 사용자가 요약 시도 + 시간 불충족 -> 기존 데이터 반환
         else {
-            log.info("시간 불충족. 업데이트 패스");
             ScheduleSummary scheduleSummary = scheduleSummaryRepository.findByEmployee_Id(employeeId).get();
             result.setDailySummary(scheduleSummary.getDailySummary());
             result.setWeeklySummary(scheduleSummary.getWeeklySummary());
@@ -79,9 +74,6 @@ public class ScheduleSummaryService {
 
         Instant updatedAt = scheduleSummaryRepository.findByEmployee_Id(employeeId).get().getUpdatedAt();
         Instant now = Instant.now();
-
-        log.info("현재 시간 : " + now);
-        log.info("마지막 업데이트 시간 : " + updatedAt);
 
         return now.isAfter(updatedAt.plus(COOL_TIME));
     }
@@ -165,8 +157,6 @@ public class ScheduleSummaryService {
 
         List<Long> userOrgs = orgService.findOrgsByOrgId(orgId).stream().map(OrgResDto::getId).collect(Collectors.toList());
 
-        log.info("사용자 조직 트리 : " + userOrgs);
-
         List<ScheduleResDto> orgSchedules = scheduleService.getOrganizationSchedules(
                 companyId,
                 today.getYear(),
@@ -174,8 +164,6 @@ public class ScheduleSummaryService {
                 userOrgs,
                 true
         );
-        log.info("조직 일정 수 : " + orgSchedules.size());
-        log.info("조직 일정 : " + orgSchedules);
 
         weeklySchedules = Stream
                 .of(companySchedules, employeeSchedules, orgSchedules)

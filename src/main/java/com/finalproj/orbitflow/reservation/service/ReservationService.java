@@ -61,7 +61,6 @@ public class ReservationService {
     @Transactional(readOnly = true)
     public Page<ReservationResDto> getMyReservations(Long employeeId, boolean showPast, Long statusId, String typeCode, Pageable pageable) {
 
-        // typeCode -> Enum 변환
         ReservationTypeCode type = null;
         if (typeCode != null) {
 
@@ -76,8 +75,6 @@ public class ReservationService {
 
         LocalDate today = LocalDate.now();
 
-        // showPast = true  -> 과거 예약
-        // showPast = false -> 오늘 이후 예약
         return reservationRepository.getMyReservations(
                 employeeId,
                 showPast,
@@ -101,8 +98,6 @@ public class ReservationService {
 
     @Transactional
     public void insertReservation(Long companyId, Long userId, ReservationReqDto reservation) {
-
-//        log.info("예약 타입 : " + reservation.getTypeCode());
 
         Company company = companyRepository.getReferenceById(companyId);
         Employee employee = employeeRepository.getReferenceById(userId);
@@ -312,10 +307,6 @@ public class ReservationService {
                 "/view/reservation/me"
         );
     }
-
-
-    // ---------------------------------------------------------------------------------- //
-    // region 예약 일괄 승인 관련 함수
 
     /*
      * @param companyId
@@ -551,10 +542,6 @@ public class ReservationService {
         return reservationStatusRepository.findByStatusCode(ReservationStatusCode.CONFIRM);
     }
 
-    // endregion
-    // ---------------------------------------------------------------------------------- //
-
-
     // Entity -> Dto
     private ReservationResDto convertToDto(Reservation reservation) {
 
@@ -596,8 +583,8 @@ public class ReservationService {
                 .resourceName(resourceName)
                 .reservationDate(reservation.getReservationDate())
                 .endDate(reservation.getEndDate())
-                .startTime(reservation.getStartTime())                      // 차량은 - 으로 표시
-                .endTime(reservation.getEndTime())                          // 차량은 - 으로 표시
+                .startTime(reservation.getStartTime())
+                .endTime(reservation.getEndTime())
                 .reservationReason(reservation.getReservationReason())
                 .rejectReason(reservation.getRejectReason())
                 .reservationStatusId(reservationStatusId)
