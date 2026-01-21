@@ -25,12 +25,38 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Please explain the class!!!
+ * AI를 이용한 결재 양식 생성 요청을 처리하는 서비스 클래스이다.
+ * <p>
+ * 이 서비스는 단순히 AI를 호출하는 역할에 그치지 않고,
+ * 프롬프트 구성부터 AI 응답 처리, 정책 보정, 결과 조립,
+ * 그리고 전체 과정에 대한 로그 저장까지의 흐름을 책임진다.
+ * <p>
+ * 처리 흐름은 다음과 같이 구성된다.
+ * - 요청자(사원) 및 기준이 되는 템플릿 정보 조회
+ * - 문서 유형에 따른 요청 컨텍스트 구성
+ * - 프롬프트 빌더를 통해 AI 입력 프롬프트 생성
+ * - AI 호출 및 원본 응답 수신
+ * - AI 응답 JSON 파싱
+ * - 정책 및 규칙 기반 파이프라인 처리
+ * - 최종 양식 JSON 조립
+ * - 요청/응답 전 과정 로그 저장
+ * <p>
+ * AI 응답이 실패하거나 파싱에 실패한 경우에도,
+ * 당시의 프롬프트와 컨텍스트, 오류 정보는
+ * LogFormTemplateAi 엔티티로 반드시 기록된다.
+ * <p>
+ * 이 서비스에서 반환하는 결과는
+ * 실제 저장용 FormTemplate이 아니라,
+ * 프론트에서 미리보기 및 추가 편집을 위해 사용하는
+ * 양식 JSON 구조이다.
+ * <p>
+ * 즉, 이 클래스는
+ * “AI 양식 생성 기능의 진입점이자 전체 조정자” 역할을 수행한다.
  *
- * @author : Choi MinHyeok
- * @filename : FormTemplateAiService
- * @since : 26. 1. 7. 수요일
- **/
+ * @author Choi MinHyeok
+ * @filename FormTemplateAiService
+ * @since 2026. 1. 7.
+ */
 
 
 @Service
@@ -66,7 +92,6 @@ public class FormTemplateAiService {
             Long employeeId,
             FormTemplateAiReqDto reqDto
     ) {
-        // 1️⃣ 작성자 / 템플릿 조회
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new NotFoundException("No employee with id: " + employeeId));
 
@@ -79,7 +104,6 @@ public class FormTemplateAiService {
 
         boolean allowScheduleEvent = (baseRole != null);
 
-        // 2️⃣ 요청 컨텍스트
         FormDesignReqContext reqCtx = new FormDesignReqContext(
                 reqDto.formTemplateId(),
                 reqDto.formName(),
@@ -96,7 +120,6 @@ public class FormTemplateAiService {
                 allowScheduleEvent
         );
 
-        // 3️⃣ AI 호출
         String rawJson;
         try {
             rawJson = formDesignAiClient.completeFormDesign(prompt);
@@ -115,7 +138,6 @@ public class FormTemplateAiService {
             throw e;
         }
 
-        // 4️⃣ 파싱
         AiFormDesignResult parsed;
         try {
             parsed = resultParser.parse(rawJson);
@@ -134,10 +156,8 @@ public class FormTemplateAiService {
             throw e;
         }
 
-        // 5️⃣ 파이프라인 처리
         FormDesignPipeline.PipelineResult processed = pipeline.run(parsed, reqCtx);
 
-        // 🔑 프론트 반환용 (DTO와 동일한 방식)
         Object templateJson;
         try {
             templateJson = objectMapper.readValue(
@@ -148,10 +168,8 @@ public class FormTemplateAiService {
             throw new RuntimeException("AI template JSON 변환 실패", e);
         }
 
-        // 🔑 로그 저장용
         String responseContextJson = toJsonSafe(processed.responseContext());
 
-        // 6️⃣ 로그 저장
         logRepo.save(LogFormTemplateAi.builder()
                 .company(employee.getCompany())
                 .templateGroup(formTemplate.getTemplateGroup())
@@ -164,7 +182,6 @@ public class FormTemplateAiService {
                 .errorMessage(null)
                 .build());
 
-        // 7️⃣ 미리보기 반환
         return new FormTemplateAiResDto(templateJson);
     }
 

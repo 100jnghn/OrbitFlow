@@ -51,7 +51,6 @@ public class FormTemplateGroupRepositoryImpl
                         g.baseRole,
                         g.active,
 
-                        // ⭐ ACTIVE 문서 존재 여부
                         JPAExpressions
                                 .selectOne()
                                 .from(t)

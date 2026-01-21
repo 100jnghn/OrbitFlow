@@ -5,12 +5,28 @@ import com.finalproj.orbitflow.approval.form.template.ai.dto.AiComponentCatalogI
 import java.util.List;
 
 /**
- * Please explain the class!!!
+ * AI가 결재 양식을 자동으로 생성할 때 참고하는
+ * 입력 컴포넌트 정의 모음 클래스이다.
+ * <p>
+ * 양식 생성 과정에서 AI가 임의로 컴포넌트를 만들어내는 것을 방지하고,
+ * 미리 정의된 컴포넌트 중에서만 의미에 맞는 항목을 선택하도록 하기 위해
+ * 이 카탈로그를 분리하여 관리한다.
+ * <p>
+ * 각 컴포넌트는 type, 설명, 내부 입력 구조, 사용 권장 상황,
+ * 그리고 중복 생성이나 의미 충돌을 막기 위한 규칙 정보를 함께 가진다.
+ * <p>
+ * 이 클래스는 실행 로직을 가지지 않으며,
+ * 모든 컴포넌트는 static 상수로 정의되어
+ * AI 프롬프트 생성 및 양식 구조 판단 시 참조 용도로만 사용된다.
+ * <p>
+ * 새로운 입력 컴포넌트를 추가하거나
+ * 기존 컴포넌트의 사용 정책이 변경되는 경우에는
+ * 반드시 이 파일에서 함께 관리하도록 한다.
  *
- * @author : Choi MinHyeok
- * @filename : AiComponentCatalog
- * @since : 26. 1. 7. 수요일
- **/
+ * @author Choi MinHyeok
+ * @filename AiComponentCatalog
+ * @since 2026. 1. 7.
+ */
 
 
 public class AiComponentCatalog {

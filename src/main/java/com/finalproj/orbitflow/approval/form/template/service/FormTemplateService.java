@@ -27,28 +27,35 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * 결재 양식(FormTemplate)의 생명주기 전반을 관리하는 서비스 클래스.
- * -
- * 주요 책임:
- * - 결재 양식 초안 생성 (버전 관리 포함)
- * - 결재 양식 구조(JSON), 카테고리, 영향 태그 수정
- * - 결재선 규칙 저장
- * - 결재 양식 최종 활성화(publish) 및 기존 ACTIVE 양식 비활성화
- * -
- * 설계 원칙:
- * - DRAFT 상태에서만 수정 가능
- * - publish는 단순 상태 변경이 아닌 비즈니스 행위(Command)
- * - ACTIVE 양식은 템플릿 그룹당 하나만 유지
- * - 모든 수정/활성화 시 회사 소속 검증 수행
- * -
- * 이 클래스는 CRUD 중심이 아닌
- * "결재 양식 도메인의 유스케이스 단위 서비스"를 지향한다.
- * *
+ * 결재 양식(FormTemplate)의 생성부터 수정, 활성화, 조회까지
+ * 양식의 전체 생명주기를 관리하는 도메인 서비스 클래스이다.
+ * <p>
+ * 이 서비스는 단순한 CRUD 처리가 아니라,
+ * 결재 양식 도메인에서 정의한 비즈니스 규칙과 흐름을
+ * 유스케이스 단위로 구현하는 것을 목표로 한다.
+ * <p>
+ * 주요 책임은 다음과 같다.
+ * - 결재 양식 초안(DRAFT) 생성 및 버전 관리
+ * - 기존 양식을 기준으로 한 개정(복제) 흐름 제공
+ * - 양식 구조(templateJson) 및 결재선 규칙(approvalRuleJson) 수정
+ * - 결재 양식 활성화(publish) 처리 및 기존 ACTIVE 양식 비활성화
+ * - 회사 단위 권한 검증 및 상태(DRAFT/ACTIVE/INACTIVE) 제약 관리
+ * <p>
+ * 설계 상 다음 원칙을 따른다.
+ * - 결재 양식은 DRAFT 상태에서만 수정 가능하다.
+ * - publish는 단순한 상태 변경이 아닌 명확한 비즈니스 행위(Command)이다.
+ * - 하나의 양식 그룹(FormTemplateGroup)에는 항상 하나의 ACTIVE 양식만 존재한다.
+ * - 모든 변경 작업은 회사 소속 검증을 선행한다.
+ * <p>
+ * 이 서비스는 컨트롤러나 저장소 중심의 구조가 아니라,
+ * 결재 양식 도메인의 규칙과 흐름을 중심으로 한
+ * 핵심 비즈니스 서비스 계층 역할을 수행한다.
  *
- * @author : Choi MinHyeok
- * @filename : FormTemplateService
- * @since : 25. 12. 17. 수요일
- **/
+ * @author Choi MinHyeok
+ * @filename FormTemplateService
+ * @since 2025. 12. 17.
+ */
+
 
 @Service
 @RequiredArgsConstructor
@@ -56,18 +63,12 @@ import java.util.Optional;
 @Slf4j
 public class FormTemplateService {
 
-    /* =====================================================
-     * Dependencies
-     * ===================================================== */
-
-    private final SampleDataGenerator sampleDataGenerator;
     private final FormTemplateRepository formTemplateRepository;
     private final FormTemplateGroupRepository formTemplateGroupRepository;
+
+    private final SampleDataGenerator sampleDataGenerator;
     private final ObjectMapper objectMapper;
 
-    /* =====================================================
-     * Business Logic
-     * ===================================================== */
 
     @Transactional
     public Long saveFormTemplate(
@@ -123,7 +124,6 @@ public class FormTemplateService {
             );
         }
 
-        // 1. 기존 DRAFT 우선
         Optional<FormTemplate> draft =
                 formTemplateRepository
                         .findTopByTemplateGroup_IdAndStatusOrderByUpdatedAtDesc(
@@ -134,7 +134,6 @@ public class FormTemplateService {
             return draft.get().getId();
         }
 
-        // 2. ACTIVE 우선
         Optional<FormTemplate> active =
                 formTemplateRepository
                         .findTopByTemplateGroup_IdAndStatusOrderByVersionDesc(
@@ -143,7 +142,6 @@ public class FormTemplateService {
 
         FormTemplate base;
 
-        // 3. ACTIVE 없으면 가장 최신 INACTIVE
         base = active.orElseGet(() -> formTemplateRepository
                 .findTopByTemplateGroup_IdAndStatusOrderByVersionDesc(
                         groupId, FormTemplateStatus.INACTIVE
@@ -156,7 +154,7 @@ public class FormTemplateService {
 
         return createDraftTemplate(
                 group,
-                base.getVersion(),   // version은 publish 시 다시 재계산
+                base.getVersion(),
                 base.getTemplateJson(),
                 base.getApprovalRuleJson(),
                 base.getAffectTags()
@@ -339,9 +337,6 @@ public class FormTemplateService {
 
 
 
-    /* =====================================================
-     * Private helpers
-     * ===================================================== */
 
     private List<AffectTag> buildAffectTags(FormTemplateGroup group) {
         return switch (group.getTemplateCategory().getCode()) {

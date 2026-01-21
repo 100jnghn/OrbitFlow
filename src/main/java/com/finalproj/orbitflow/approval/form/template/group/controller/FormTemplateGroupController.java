@@ -11,12 +11,31 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * Please explain the class!!!
+ * 결재 양식 그룹(FormTemplateGroup)과 관련된 REST API 요청을 처리하는 컨트롤러이다.
+ * <p>
+ * 양식 그룹은 여러 개의 결재 양식(FormTemplate)을 묶는 상위 개념으로,
+ * 회사 단위로 관리되며 결재 양식의 분류 기준 역할을 한다.
+ * <p>
+ * 이 컨트롤러에서는
+ * - 전체 양식 그룹 목록 조회
+ * - 특정 양식 그룹 상세 조회
+ * - 양식 그룹 생성 및 수정
+ * - 양식 그룹명 중복 여부 확인
+ * 과 같은 기능을 제공한다.
+ * <p>
+ * 조회 API는 일반 사용자도 접근 가능하지만,
+ * 생성 및 수정과 같이 관리가 필요한 기능은 관리자 권한을 전제로 한다.
+ * <p>
+ * 컨트롤러는 요청 파라미터 처리와 응답 반환까지만 담당하며,
+ * 실제 비즈니스 로직과 검증은 FormTemplateGroupService에 위임한다.
+ * <p>
+ * 모든 양식 그룹 데이터는 회사 단위(companyId)로 구분되며,
+ * 현재 로그인한 사용자의 회사 정보는 SecurityUtils를 통해 조회한다.
  *
- * @author : Choi MinHyeok
- * @filename : FormTemplateGroupController
- * @since : 25. 12. 16. 화요일
- **/
+ * @author Choi MinHyeok
+ * @filename FormTemplateGroupController
+ * @since 2025. 12. 16.
+ */
 
 
 @RestController

@@ -13,15 +13,37 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 /**
- * 결재 양식(FormTemplate) 관련 REST API 컨트롤러
+ * 결재 양식(FormTemplate)과 관련된 모든 REST API 요청을 처리하는 컨트롤러이다.
  * <p>
- * - 관리자: 생성 / 수정 / 복제 / 활성화 / 미리보기 / 전체 조회
- * - 일반 사용자: 활성 양식 조회 / 상세 조회
+ * 이 컨트롤러는 관리자와 일반 사용자의 접근 범위를 구분하여,
+ * 결재 양식의 생성부터 수정, 개정, 활성화, 조회까지의 전체 흐름을 담당한다.
  * <p>
+ * 관리자 권한으로는
+ * - 결재 양식 초안 생성
+ * - 기존 양식 복제(개정)
+ * - 양식 구조 및 결재선 규칙 수정
+ * - 양식 활성화(배포)
+ * - 양식 미리보기 및 전체 목록 조회
+ * 기능을 제공한다.
+ * <p>
+ * 일반 사용자에게는
+ * - 활성화된 결재 양식 목록 조회
+ * - 특정 결재 양식의 상세 정보 조회
+ * 기능만을 허용한다.
+ * <p>
+ * 이 컨트롤러는 HTTP 요청과 응답 처리, 그리고
+ * 현재 로그인한 사용자 및 회사 정보 식별까지만 담당하며,
+ * 실제 비즈니스 로직은 FormTemplateService에 위임한다.
+ * <p>
+ * 모든 API는 회사 단위(companyId)로 동작하며,
+ * 회사 정보는 SecurityUtils를 통해 조회한다.
  *
  * @author Choi MinHyeok
- * @since 25.12.17
+ * @filename FormTemplateController
+ * @since 2025. 12. 17.
  */
+
+
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor

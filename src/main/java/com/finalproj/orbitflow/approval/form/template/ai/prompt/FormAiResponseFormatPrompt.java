@@ -1,12 +1,32 @@
 package com.finalproj.orbitflow.approval.form.template.ai.prompt;
 
 /**
- * Please explain the class!!!
+ * AI가 문서 폼 설계 결과를 반환할 때 따라야 하는
+ * JSON 응답 형식을 명확히 규정하기 위한 프롬프트 프래그먼트이다.
+ * <p>
+ * AI 응답은 이후 파이프라인에서 바로 파싱되고 처리되기 때문에,
+ * 형식이 조금이라도 어긋나면 전체 흐름이 깨질 수 있다.
+ * 이를 방지하기 위해, 이 프롬프트에서는
+ * AI가 반드시 지켜야 할 JSON 구조와 작성 규칙을 명시적으로 전달한다.
+ * <p>
+ * 이 규칙에는
+ * - 최상위 JSON 구조
+ * - 공통 필드(type, label, required, meta)
+ * - 컴포넌트별 meta 사용 방식
+ * - radio, checkbox, table, event-date-range 등의 특수 규칙
+ * - AI가 절대 생성해서는 안 되는 항목
+ * 이 모두가 포함된다.
+ * <p>
+ * 이 클래스는 실제 로직을 수행하지 않으며,
+ * 프롬프트 구성 단계에서 AI에게 "출력 형식 계약"을 전달하는 역할만 한다.
+ * <p>
+ * order 값은 전체 프롬프트 구성 순서에서
+ * 응답 형식 규칙이 어느 시점에 삽입될지를 결정한다.
  *
- * @author : Choi MinHyeok
- * @filename : FormAiResponseFormatPrompt
- * @since : 26. 1. 7. 수요일
- **/
+ * @author Choi MinHyeok
+ * @filename FormAiResponseFormatPrompt
+ * @since 2026. 1. 7.
+ */
 
 
 public final class FormAiResponseFormatPrompt implements PromptFragment {

@@ -21,12 +21,35 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 /**
- * Please explain the class!!!
+ * 결재 양식 그룹(FormTemplateGroup)에 대한
+ * 생성, 조회, 수정 및 검증 로직을 담당하는 서비스 클래스이다.
+ * <p>
+ * 양식 그룹은 여러 개의 결재 양식을 묶는 상위 개념으로,
+ * 회사 단위로 관리되며 카테고리와 기본 문서 성격(baseRole)을 기준으로
+ * 양식 생성 및 AI 설계 정책의 기준이 된다.
+ * <p>
+ * 이 서비스에서는 다음과 같은 책임을 가진다.
+ * - 회사별 양식 그룹 목록 조회 (활성 양식 기준)
+ * - 양식 그룹 생성 시 카테고리와 baseRole 조합 검증
+ * - 양식 그룹 상세 정보 조회
+ * - 양식 그룹 활성/비활성 상태 변경
+ * - 양식 그룹 비활성화 시, 연결된 활성 양식의 상태 동기화 처리
+ * - 양식 그룹명 중복 여부 확인
+ * <p>
+ * 특히 카테고리(TemplateCategory)와 baseRole의 조합은
+ * 일정/근태 도메인 정책과 직접적으로 연결되기 때문에,
+ * validateCategoryAndBaseRole 메서드를 통해
+ * 허용되지 않는 조합을 사전에 차단한다.
+ * <p>
+ * 이 클래스는 트랜잭션 경계를 기준으로
+ * 조회 로직과 변경 로직을 명확히 분리하여 설계되었으며,
+ * 실제 HTTP 요청/응답 처리나 권한 판단은
+ * 컨트롤러 계층에서 수행한다.
  *
- * @author : Choi MinHyeok
- * @filename : FormTemplateGroupService
- * @since : 25. 12. 16. 화요일
- **/
+ * @author Choi MinHyeok
+ * @filename FormTemplateGroupService
+ * @since 2025. 12. 16.
+ */
 
 
 @Service
@@ -60,7 +83,6 @@ public class FormTemplateGroupService {
                         "회사를 찾을 수 없습니다. companyId = " + companyId
                 ));
 
-        // ✅ 기본 값 검증
         if (dto.getName() == null || dto.getName().isBlank()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -80,7 +102,6 @@ public class FormTemplateGroupService {
                 dto.getBaseRole()
         );
 
-        // ✅ 중복 체크
         if (formTemplateGroupRepository.existsByCompanyIdAndName(
                 companyId, dto.getName()
         )) {

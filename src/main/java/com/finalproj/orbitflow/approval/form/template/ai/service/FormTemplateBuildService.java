@@ -13,12 +13,31 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Please explain the class!!!
+ * AI가 설계한 컴포넌트 결과를
+ * 실제 문서 폼에서 사용할 수 있는 필드 구조로 변환하는 서비스이다.
+ * <p>
+ * 이 클래스는 AI가 반환한 설계 결과(AiFormDesignResult)를 그대로 저장하지 않고,
+ * 시스템에서 사용하는 FormTemplateJson 구조로 한 번 더 가공하는 역할을 맡는다.
+ * <p>
+ * 처리 과정에서는 다음과 같은 작업을 수행한다.
+ * - 문서 제목 필드를 항상 최상단에 자동 추가
+ * - AI가 설계한 각 컴포넌트를 FormField 단위로 변환
+ * - fieldId, optionId, order 등 시스템 내부 식별자 생성
+ * - 컴포넌트 타입별 기본 meta 값 보정 및 구조 정규화
+ * <p>
+ * 이 단계에서는 정책 판단이나 의미 검증은 수행하지 않으며,
+ * 해당 책임은 앞선 Processor 파이프라인 단계에서 이미 완료되었다고 가정한다.
+ * 여기서는 오직 “사용 가능한 폼 구조로 만드는 것”에만 집중한다.
+ * <p>
+ * 즉, 이 서비스는
+ * AI 설계 결과와 실제 폼 렌더링/저장 구조 사이를 연결하는
+ * 마지막 변환 단계 역할을 수행한다.
  *
- * @author : Choi MinHyeok
- * @filename : FormTemplateBuildService
- * @since : 26. 1. 8. 목요일
- **/
+ * @author Choi MinHyeok
+ * @filename FormTemplateBuildService
+ * @since 2026. 1. 8.
+ */
+
 
 @Service
 public class FormTemplateBuildService {
@@ -31,7 +50,7 @@ public class FormTemplateBuildService {
 
         fields.add(createDocumentTitleField(formName));
 
-        int order = 2; // ⬅️ 2번부터 시작
+        int order = 2;
         for (AiFormComponent component : aiResult.components()) {
             FormField field = convert(component, order++);
             fields.add(field);
@@ -89,11 +108,9 @@ public class FormTemplateBuildService {
             case "text":
             case "textarea":
                 m.putIfAbsent("placeholder", "");
-                // maxLength는 선택
                 break;
 
             case "number":
-                // min, max 선택
                 break;
 
             case "date":
@@ -186,15 +203,12 @@ public class FormTemplateBuildService {
                 break;
 
             case "event-date-range":
-                // ⚠️ 정책은 여기서 판단하지 않음
                 m.putIfAbsent("startLabel", "시작일");
                 m.putIfAbsent("endLabel", "종료일");
-                // baseRole / affect / ui 는 processor 단계에서 이미 세팅됐다고 가정
                 break;
 
             case "divider":
             default:
-                // meta 없음
                 break;
         }
 

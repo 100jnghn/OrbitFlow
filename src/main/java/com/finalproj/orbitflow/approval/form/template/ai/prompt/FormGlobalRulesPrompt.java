@@ -3,12 +3,31 @@ package com.finalproj.orbitflow.approval.form.template.ai.prompt;
 import static com.finalproj.orbitflow.approval.form.template.ai.policy.FormInputConstraints.*;
 
 /**
- * Please explain the class!!!
+ * AI가 문서 폼을 설계할 때 반드시 따라야 하는
+ * 전역 규칙(Global Rules)을 정의한 프롬프트 프래그먼트이다.
+ * <p>
+ * 이 프롬프트는 개별 컴포넌트 설명 이전에 전달되며,
+ * AI가 폼을 어떤 관점에서 구성해야 하는지에 대한
+ * 기본적인 사고 방향과 제약 조건을 먼저 고정하는 역할을 한다.
+ * <p>
+ * 여기에는 다음과 같은 내용이 포함된다.
+ * - AI와 서버 간의 역할 분리 기준
+ * - 컴포넌트 선택에 대한 전역 원칙
+ * - event-date-range와 같은 특수 컴포넌트 사용 규칙
+ * - 라벨, 컬럼명, 옵션명에 대한 네이밍 규칙
+ * - 입력 길이, 이미지 개수 등 전역 입력 제약 조건
+ * - required 설정에 대한 공통 해석 기준
+ * <p>
+ * 이 규칙들은 특정 문서 유형이나 상황에 따라 달라지지 않으며,
+ * 모든 AI 폼 설계 요청에 공통적으로 적용되는 최상위 기준으로 사용된다.
+ * <p>
+ * 실제 제한 값(TEXT_MAX_LENGTH 등)은 코드 상수로 관리되며,
+ * 이 프롬프트에서는 해당 값을 AI에게 명시적으로 전달하는 용도로만 사용된다.
  *
- * @author : Choi MinHyeok
- * @filename : FormGlobalRulesPrompt
- * @since : 26. 1. 7. 수요일
- **/
+ * @author Choi MinHyeok
+ * @filename FormGlobalRulesPrompt
+ * @since 2026. 1. 7.
+ */
 
 
 public final class FormGlobalRulesPrompt implements PromptFragment {

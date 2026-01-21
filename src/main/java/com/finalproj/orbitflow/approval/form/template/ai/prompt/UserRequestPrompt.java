@@ -1,12 +1,30 @@
 package com.finalproj.orbitflow.approval.form.template.ai.prompt;
 
 /**
- * Please explain the class!!!
+ * 실제 사용자 요청 내용을 AI 프롬프트에 전달하기 위한
+ * 프롬프트 프래그먼트이다.
+ * <p>
+ * 이 프래그먼트는 앞서 정의된 시스템 역할과 전역 규칙을 바탕으로,
+ * AI가 어떤 문서 폼을, 어떤 의도로 설계해야 하는지를
+ * 구체적으로 알려주는 역할을 한다.
+ * <p>
+ * 문서 폼 이름과 목적 정보는
+ * AI가 전체적인 폼 구성 방향을 잡는 참고 정보로 사용되며,
+ * 시스템에서 자동으로 처리되는 항목(작성자, 작성일 등)은
+ * 명시적으로 제외하도록 안내한다.
+ * <p>
+ * 또한 해당 문서가 일정 기반 이벤트를 생성할 수 있는지 여부를 함께 전달하여,
+ * event-date-range 컴포넌트 사용 가능 여부를
+ * AI가 사전에 인지하도록 한다.
+ * <p>
+ * 이 프래그먼트는 프롬프트의 마지막 단계에 위치하며,
+ * AI가 최종적으로 “어떤 입력 항목을 구성해야 하는지”를
+ * 판단하는 기준점 역할을 한다.
  *
- * @author : Choi MinHyeok
- * @filename : UserRequestPrompt
- * @since : 26. 1. 7. 수요일
- **/
+ * @author Choi MinHyeok
+ * @filename UserRequestPrompt
+ * @since 2026. 1. 7.
+ */
 
 
 public class UserRequestPrompt implements PromptFragment {
