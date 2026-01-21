@@ -11,7 +11,27 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.util.List;
 
 /**
- * Please explain the class!!!
+ * OpenAI Chat Completion API 연동을 담당하는 Gateway 컴포넌트.
+ *
+ * <p>
+ * 결재 양식 생성 및 AI 기반 문서 처리 기능에서 사용되는
+ * OpenAI Chat Completion API 호출을 캡슐화한다.
+ * </p>
+ *
+ * <p>
+ * 본 Gateway는 다음 역할만을 책임진다:
+ * <ul>
+ *   <li>OpenAI 요청 DTO 구성</li>
+ *   <li>외부 OpenAI API 호출</li>
+ *   <li>응답 검증 및 결과 텍스트 추출</li>
+ * </ul>
+ * </p>
+ *
+ * <p>
+ * 비즈니스 로직이나 프롬프트 생성 규칙은 포함하지 않으며,
+ * AI 모델 선택, 메시지 구성, 예외 처리 등
+ * 외부 AI 서비스 연동에 대한 기술적 책임만을 담당한다.
+ * </p>
  *
  * @author : Choi MinHyeok
  * @filename : OpenAiChatGateway
