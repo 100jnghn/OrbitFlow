@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow.approval.document.support.title;
 
-import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
+import com.finalproj.orbitflow.approval.form.template.schema.FormTemplateSchema;
 import org.springframework.stereotype.Component;
 
 /**

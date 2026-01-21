@@ -47,7 +47,7 @@ public class QDocument extends EntityPathBase<Document> {
 
     public final DateTimePath<java.time.Instant> submittedAt = createDateTime("submittedAt", java.time.Instant.class);
 
-    public final com.finalproj.orbitflow.approval.formTemplateGroup.entity.QFormTemplateGroup templateGroup;
+    public final com.finalproj.orbitflow.approval.form.template.group.entity.QFormTemplateGroup templateGroup;
 
     public final NumberPath<Integer> templateVersion = createNumber("templateVersion", Integer.class);
 
@@ -78,7 +78,7 @@ public class QDocument extends EntityPathBase<Document> {
         super(type, metadata, inits);
         this.beforeDocument = inits.isInitialized("beforeDocument") ? new QDocument(forProperty("beforeDocument"), inits.get("beforeDocument")) : null;
         this.company = inits.isInitialized("company") ? new com.finalproj.orbitflow.hr.company.entity.QCompany(forProperty("company")) : null;
-        this.templateGroup = inits.isInitialized("templateGroup") ? new com.finalproj.orbitflow.approval.formTemplateGroup.entity.QFormTemplateGroup(forProperty("templateGroup"), inits.get("templateGroup")) : null;
+        this.templateGroup = inits.isInitialized("templateGroup") ? new com.finalproj.orbitflow.approval.form.template.group.entity.QFormTemplateGroup(forProperty("templateGroup"), inits.get("templateGroup")) : null;
         this.writer = inits.isInitialized("writer") ? new com.finalproj.orbitflow.hr.employee.entity.QEmployee(forProperty("writer"), inits.get("writer")) : null;
     }
 

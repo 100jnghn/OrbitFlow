@@ -3,7 +3,7 @@ package com.finalproj.orbitflow.approval.document.ai.aiBuilder.summary;
 import com.finalproj.orbitflow.approval.document.ai.aiBuilder.common.PromptComponent;
 import com.finalproj.orbitflow.approval.document.ai.dto.AiSummaryReqDto;
 import com.finalproj.orbitflow.approval.document.ai.dto.SummaryPromptContext;
-import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
+import com.finalproj.orbitflow.approval.form.template.schema.FormTemplateSchema;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

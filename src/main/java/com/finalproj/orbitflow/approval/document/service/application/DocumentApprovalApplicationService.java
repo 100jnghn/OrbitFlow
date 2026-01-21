@@ -1,10 +1,10 @@
 package com.finalproj.orbitflow.approval.document.service.application;
 
-import com.finalproj.orbitflow.approval.approvalLine.entity.ApprovalLine;
-import com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus;
-import com.finalproj.orbitflow.approval.approvalLine.repository.ApprovalLineRepository;
-import com.finalproj.orbitflow.approval.attendanceRecord.entity.AttendanceRecord;
-import com.finalproj.orbitflow.approval.attendanceRecord.repository.AttendanceRecordRepository;
+import com.finalproj.orbitflow.approval.line.entity.ApprovalLine;
+import com.finalproj.orbitflow.approval.line.enums.ApprovalStatus;
+import com.finalproj.orbitflow.approval.line.repository.ApprovalLineRepository;
+import com.finalproj.orbitflow.approval.attendance.record.entity.AttendanceRecord;
+import com.finalproj.orbitflow.approval.attendance.record.repository.AttendanceRecordRepository;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
 import com.finalproj.orbitflow.approval.document.support.access.DocumentAccessValidator;

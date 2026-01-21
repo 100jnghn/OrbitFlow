@@ -1,7 +1,7 @@
 package com.finalproj.orbitflow.attendance.commute.service;
 
-import com.finalproj.orbitflow.approval.attendanceEvent.entity.AttendanceEvent;
-import com.finalproj.orbitflow.approval.attendanceEvent.repository.AttendanceEventRepository;
+import com.finalproj.orbitflow.approval.attendance.event.entity.AttendanceEvent;
+import com.finalproj.orbitflow.approval.attendance.event.repository.AttendanceEventRepository;
 import com.finalproj.orbitflow.attendance.commute.dto.ActiveRuleResDto;
 import com.finalproj.orbitflow.attendance.commute.dto.TodayAttResDto;
 import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
@@ -21,9 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

@@ -2,7 +2,7 @@ package com.finalproj.orbitflow.approval.document.documentContent.controller;
 
 import com.finalproj.orbitflow.approval.document.documentContent.dto.DocumentContentPatchReqDto;
 import com.finalproj.orbitflow.approval.document.documentContent.service.DocumentContentService;
-import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
+import com.finalproj.orbitflow.approval.form.template.schema.FormTemplateSchema;
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

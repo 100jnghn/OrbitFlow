@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.templateCategory.entity;
+package com.finalproj.orbitflow.approval.form.template.category.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -17,9 +17,9 @@ public class QTemplateCategory extends EntityPathBase<TemplateCategory> {
 
     private static final long serialVersionUID = -185547494L;
 
-    public static final QTemplateCategory templateCategory = new QTemplateCategory("templateCategory");
+    public static final QTemplateCategory templateCategory = new QTemplateCategory("category");
 
-    public final EnumPath<com.finalproj.orbitflow.approval.templateCategory.enums.TemplateCategoryCode> code = createEnum("code", com.finalproj.orbitflow.approval.templateCategory.enums.TemplateCategoryCode.class);
+    public final EnumPath<com.finalproj.orbitflow.approval.form.template.category.enums.TemplateCategoryCode> code = createEnum("code", com.finalproj.orbitflow.approval.form.template.category.enums.TemplateCategoryCode.class);
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 

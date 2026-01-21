@@ -1,11 +1,11 @@
 package com.finalproj.orbitflow.approval.document.signature.service;
 
-import com.finalproj.orbitflow.approval.approvalLine.entity.ApprovalLine;
+import com.finalproj.orbitflow.approval.line.entity.ApprovalLine;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.signature.entity.DocumentSignature;
 import com.finalproj.orbitflow.approval.document.signature.repository.DocumentSignatureRepository;
-import com.finalproj.orbitflow.approval.employeeSignature.entity.EmployeeSignature;
-import com.finalproj.orbitflow.approval.employeeSignature.service.EmployeeSignatureService;
+import com.finalproj.orbitflow.global.image.signature.entity.EmployeeSignature;
+import com.finalproj.orbitflow.global.image.signature.service.EmployeeSignatureService;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow.approval.document.ai.aiBuilder.structure;
 
-import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
+import com.finalproj.orbitflow.approval.form.template.schema.FormTemplateSchema;
 
 /**
  * Please explain the class!!!

@@ -1,9 +1,9 @@
 package com.finalproj.orbitflow.approval.document.service.application;
 
-import com.finalproj.orbitflow.approval.approvalLine.entity.ApprovalLine;
-import com.finalproj.orbitflow.approval.approvalLine.repository.ApprovalLineRepository;
-import com.finalproj.orbitflow.approval.attendanceRecord.entity.AttendanceRecord;
-import com.finalproj.orbitflow.approval.attendanceRecord.repository.AttendanceRecordRepository;
+import com.finalproj.orbitflow.approval.line.entity.ApprovalLine;
+import com.finalproj.orbitflow.approval.line.repository.ApprovalLineRepository;
+import com.finalproj.orbitflow.approval.attendance.record.entity.AttendanceRecord;
+import com.finalproj.orbitflow.approval.attendance.record.repository.AttendanceRecordRepository;
 import com.finalproj.orbitflow.approval.document.dto.LeaveCalculationResult;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
@@ -15,7 +15,7 @@ import com.finalproj.orbitflow.approval.document.file.entity.DocumentFile;
 import com.finalproj.orbitflow.approval.document.file.enums.DocumentFileStatus;
 import com.finalproj.orbitflow.approval.document.file.repository.DocumentFileRepository;
 import com.finalproj.orbitflow.approval.document.file.service.DocumentFileCleanupService;
-import com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole;
+import com.finalproj.orbitflow.approval.form.template.group.enums.BaseRole;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;

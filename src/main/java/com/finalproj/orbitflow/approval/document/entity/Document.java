@@ -10,8 +10,8 @@ package com.finalproj.orbitflow.approval.document.entity;
 
 
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
-import com.finalproj.orbitflow.approval.formTemplate.entity.FormTemplate;
-import com.finalproj.orbitflow.approval.formTemplateGroup.entity.FormTemplateGroup;
+import com.finalproj.orbitflow.approval.form.template.entity.FormTemplate;
+import com.finalproj.orbitflow.approval.form.template.group.entity.FormTemplateGroup;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.hr.company.entity.Company;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;

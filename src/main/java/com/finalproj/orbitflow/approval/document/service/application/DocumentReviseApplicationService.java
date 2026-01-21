@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow.approval.document.service.application;
 
-import com.finalproj.orbitflow.approval.approvalLine.service.ApprovalLineDomainService;
+import com.finalproj.orbitflow.approval.line.service.ApprovalLineDomainService;
 import com.finalproj.orbitflow.approval.document.dto.DocumentCreateResDto;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
@@ -11,8 +11,8 @@ import com.finalproj.orbitflow.approval.document.documentContent.repository.Docu
 import com.finalproj.orbitflow.approval.document.file.entity.DocumentFile;
 import com.finalproj.orbitflow.approval.document.file.enums.DocumentFileStatus;
 import com.finalproj.orbitflow.approval.document.file.repository.DocumentFileRepository;
-import com.finalproj.orbitflow.approval.formTemplate.entity.FormTemplate;
-import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateRepository;
+import com.finalproj.orbitflow.approval.form.template.entity.FormTemplate;
+import com.finalproj.orbitflow.approval.form.template.repository.FormTemplateRepository;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;

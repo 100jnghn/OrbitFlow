@@ -1,12 +1,10 @@
 package com.finalproj.orbitflow.attendance.leave.service;
 
-import com.finalproj.orbitflow.approval.attendanceEvent.entity.AttendanceEvent;
-import com.finalproj.orbitflow.approval.attendanceEvent.repository.AttendanceEventRepository;
-import com.finalproj.orbitflow.approval.attendanceRecord.entity.AttendanceRecord;
-import com.finalproj.orbitflow.approval.attendanceRecord.repository.AttendanceRecordRepository;
+import com.finalproj.orbitflow.approval.attendance.record.entity.AttendanceRecord;
+import com.finalproj.orbitflow.approval.attendance.record.repository.AttendanceRecordRepository;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
-import com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole;
+import com.finalproj.orbitflow.approval.form.template.group.enums.BaseRole;
 import com.finalproj.orbitflow.attendance.commute.entity.Attendance;
 import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
 import com.finalproj.orbitflow.attendance.commute.repository.CommuteRepository;
@@ -16,8 +14,6 @@ import com.finalproj.orbitflow.attendance.leave.entity.LeaveGrant;
 import com.finalproj.orbitflow.attendance.leave.entity.LeaveType;
 import com.finalproj.orbitflow.attendance.leave.repository.LeaveBalanceRepository;
 import com.finalproj.orbitflow.attendance.leave.repository.LeaveGrantRepository;
-import com.finalproj.orbitflow.attendance.leave.repository.LeaveTypeRepository;
-import com.finalproj.orbitflow.global.exception.BusinessException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
@@ -34,13 +30,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

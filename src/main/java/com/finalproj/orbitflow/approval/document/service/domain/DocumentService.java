@@ -1,8 +1,8 @@
 package com.finalproj.orbitflow.approval.document.service.domain;
 
-import com.finalproj.orbitflow.approval.approvalLine.dto.ApprovalLineViewResDto;
-import com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus;
-import com.finalproj.orbitflow.approval.approvalLine.repository.ApprovalLineRepository;
+import com.finalproj.orbitflow.approval.line.dto.ApprovalLineViewResDto;
+import com.finalproj.orbitflow.approval.line.enums.ApprovalStatus;
+import com.finalproj.orbitflow.approval.line.repository.ApprovalLineRepository;
 import com.finalproj.orbitflow.approval.document.dto.*;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
@@ -16,7 +16,7 @@ import com.finalproj.orbitflow.approval.document.file.entity.DocumentFile;
 import com.finalproj.orbitflow.approval.document.file.enums.DocumentFileStatus;
 import com.finalproj.orbitflow.approval.document.file.enums.ReferenceType;
 import com.finalproj.orbitflow.approval.document.file.repository.DocumentFileRepository;
-import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
+import com.finalproj.orbitflow.approval.form.template.schema.FormTemplateSchema;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;

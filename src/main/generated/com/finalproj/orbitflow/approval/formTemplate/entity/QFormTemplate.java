@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.formTemplate.entity;
+package com.finalproj.orbitflow.approval.form.template.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -20,13 +20,13 @@ public class QFormTemplate extends EntityPathBase<FormTemplate> {
 
     private static final PathInits INITS = PathInits.DIRECT2;
 
-    public static final QFormTemplate formTemplate = new QFormTemplate("formTemplate");
+    public static final QFormTemplate formTemplate = new QFormTemplate("template");
 
     public final com.finalproj.orbitflow.global.common.QBaseEntity _super = new com.finalproj.orbitflow.global.common.QBaseEntity(this);
 
     public final NumberPath<Integer> activeVersion = createNumber("activeVersion", Integer.class);
 
-    public final ListPath<com.finalproj.orbitflow.approval.formTemplate.enums.AffectTag, EnumPath<com.finalproj.orbitflow.approval.formTemplate.enums.AffectTag>> affectTags = this.<com.finalproj.orbitflow.approval.formTemplate.enums.AffectTag, EnumPath<com.finalproj.orbitflow.approval.formTemplate.enums.AffectTag>>createList("affectTags", com.finalproj.orbitflow.approval.formTemplate.enums.AffectTag.class, EnumPath.class, PathInits.DIRECT2);
+    public final ListPath<com.finalproj.orbitflow.approval.form.template.enums.AffectTag, EnumPath<com.finalproj.orbitflow.approval.form.template.enums.AffectTag>> affectTags = this.<com.finalproj.orbitflow.approval.form.template.enums.AffectTag, EnumPath<com.finalproj.orbitflow.approval.form.template.enums.AffectTag>>createList("affectTags", com.finalproj.orbitflow.approval.form.template.enums.AffectTag.class, EnumPath.class, PathInits.DIRECT2);
 
     public final StringPath approvalRuleJson = createString("approvalRuleJson");
 
@@ -43,9 +43,9 @@ public class QFormTemplate extends EntityPathBase<FormTemplate> {
     //inherited
     public final NumberPath<Long> modifiedBy = _super.modifiedBy;
 
-    public final EnumPath<com.finalproj.orbitflow.approval.formTemplate.enums.FormTemplateStatus> status = createEnum("status", com.finalproj.orbitflow.approval.formTemplate.enums.FormTemplateStatus.class);
+    public final EnumPath<com.finalproj.orbitflow.approval.form.template.enums.FormTemplateStatus> status = createEnum("status", com.finalproj.orbitflow.approval.form.template.enums.FormTemplateStatus.class);
 
-    public final com.finalproj.orbitflow.approval.formTemplateGroup.entity.QFormTemplateGroup templateGroup;
+    public final com.finalproj.orbitflow.approval.form.template.group.entity.QFormTemplateGroup templateGroup;
 
     public final StringPath templateJson = createString("templateJson");
 
@@ -73,7 +73,7 @@ public class QFormTemplate extends EntityPathBase<FormTemplate> {
     public QFormTemplate(Class<? extends FormTemplate> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.company = inits.isInitialized("company") ? new com.finalproj.orbitflow.hr.company.entity.QCompany(forProperty("company")) : null;
-        this.templateGroup = inits.isInitialized("templateGroup") ? new com.finalproj.orbitflow.approval.formTemplateGroup.entity.QFormTemplateGroup(forProperty("templateGroup"), inits.get("templateGroup")) : null;
+        this.templateGroup = inits.isInitialized("templateGroup") ? new com.finalproj.orbitflow.approval.form.template.group.entity.QFormTemplateGroup(forProperty("templateGroup"), inits.get("templateGroup")) : null;
     }
 
 }

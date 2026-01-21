@@ -1,7 +1,7 @@
 package com.finalproj.orbitflow.approval.document.service.assembler;
 
-import com.finalproj.orbitflow.approval.approvalLine.entity.ApprovalLine;
-import com.finalproj.orbitflow.approval.approvalLine.repository.ApprovalLineRepository;
+import com.finalproj.orbitflow.approval.line.entity.ApprovalLine;
+import com.finalproj.orbitflow.approval.line.repository.ApprovalLineRepository;
 import com.finalproj.orbitflow.approval.document.dto.PdfApprovalLineDto;
 import com.finalproj.orbitflow.approval.document.dto.PdfApproverDto;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;

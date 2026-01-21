@@ -1,7 +1,7 @@
 package com.finalproj.orbitflow.approval.document.schema;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
+import com.finalproj.orbitflow.approval.form.template.schema.FormTemplateSchema;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

@@ -1,7 +1,7 @@
 package com.finalproj.orbitflow.approval.document.dto;
 
 import com.finalproj.orbitflow.approval.document.enums.FieldType;
-import com.finalproj.orbitflow.approval.formTemplate.schema.FormFieldSchema;
+import com.finalproj.orbitflow.approval.form.template.schema.FormFieldSchema;
 import lombok.Builder;
 import lombok.Data;
 

@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.calendarDay.entity;
+package com.finalproj.orbitflow.global.time.calendar.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -17,13 +17,13 @@ public class QCalendarDay extends EntityPathBase<CalendarDay> {
 
     private static final long serialVersionUID = 1256049040L;
 
-    public static final QCalendarDay calendarDay = new QCalendarDay("calendarDay");
+    public static final QCalendarDay calendarDay = new QCalendarDay("calendar");
 
     public final DatePath<java.time.LocalDate> date = createDate("date", java.time.LocalDate.class);
 
     public final NumberPath<Integer> dayOfWeek = createNumber("dayOfWeek", Integer.class);
 
-    public final EnumPath<com.finalproj.orbitflow.approval.calendarDay.enums.CalendarDayType> dayType = createEnum("dayType", com.finalproj.orbitflow.approval.calendarDay.enums.CalendarDayType.class);
+    public final EnumPath<com.finalproj.orbitflow.global.time.calendar.enums.CalendarDayType> dayType = createEnum("dayType", com.finalproj.orbitflow.global.time.calendar.enums.CalendarDayType.class);
 
     public final StringPath holidayName = createString("holidayName");
 

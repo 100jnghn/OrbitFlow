@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow.approval.document.ai.service;
 
-import com.finalproj.orbitflow.approval.approvalLine.service.ApprovalLineService;
+import com.finalproj.orbitflow.approval.line.service.ApprovalLineService;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.render.support.VacationTypeNameResolver;
 import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
@@ -17,8 +17,8 @@ import com.finalproj.orbitflow.approval.document.file.entity.DocumentFile;
 import com.finalproj.orbitflow.approval.document.file.enums.DocumentFileStatus;
 import com.finalproj.orbitflow.approval.document.file.enums.ReferenceType;
 import com.finalproj.orbitflow.approval.document.file.repository.DocumentFileRepository;
-import com.finalproj.orbitflow.approval.formTemplate.schema.FormFieldSchema;
-import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
+import com.finalproj.orbitflow.approval.form.template.schema.FormFieldSchema;
+import com.finalproj.orbitflow.approval.form.template.schema.FormTemplateSchema;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.global.file.entity.File;

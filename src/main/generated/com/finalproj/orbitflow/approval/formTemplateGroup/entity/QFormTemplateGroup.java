@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.formTemplateGroup.entity;
+package com.finalproj.orbitflow.approval.form.template.group.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -20,13 +20,13 @@ public class QFormTemplateGroup extends EntityPathBase<FormTemplateGroup> {
 
     private static final PathInits INITS = PathInits.DIRECT2;
 
-    public static final QFormTemplateGroup formTemplateGroup = new QFormTemplateGroup("formTemplateGroup");
+    public static final QFormTemplateGroup formTemplateGroup = new QFormTemplateGroup("group");
 
     public final com.finalproj.orbitflow.global.common.QBaseEntity _super = new com.finalproj.orbitflow.global.common.QBaseEntity(this);
 
     public final BooleanPath active = createBoolean("active");
 
-    public final EnumPath<com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole> baseRole = createEnum("baseRole", com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole.class);
+    public final EnumPath<com.finalproj.orbitflow.approval.form.template.group.enums.BaseRole> baseRole = createEnum("baseRole", com.finalproj.orbitflow.approval.form.template.group.enums.BaseRole.class);
 
     public final com.finalproj.orbitflow.hr.company.entity.QCompany company;
 
@@ -45,7 +45,7 @@ public class QFormTemplateGroup extends EntityPathBase<FormTemplateGroup> {
 
     public final StringPath name = createString("name");
 
-    public final com.finalproj.orbitflow.approval.templateCategory.entity.QTemplateCategory templateCategory;
+    public final com.finalproj.orbitflow.approval.form.template.category.entity.QTemplateCategory templateCategory;
 
     //inherited
     public final DateTimePath<java.time.Instant> updatedAt = _super.updatedAt;
@@ -69,7 +69,7 @@ public class QFormTemplateGroup extends EntityPathBase<FormTemplateGroup> {
     public QFormTemplateGroup(Class<? extends FormTemplateGroup> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.company = inits.isInitialized("company") ? new com.finalproj.orbitflow.hr.company.entity.QCompany(forProperty("company")) : null;
-        this.templateCategory = inits.isInitialized("templateCategory") ? new com.finalproj.orbitflow.approval.templateCategory.entity.QTemplateCategory(forProperty("templateCategory")) : null;
+        this.templateCategory = inits.isInitialized("category") ? new com.finalproj.orbitflow.approval.form.template.category.entity.QTemplateCategory(forProperty("category")) : null;
     }
 
 }

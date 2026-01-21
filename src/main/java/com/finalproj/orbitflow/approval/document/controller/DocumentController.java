@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow.approval.document.controller;
 
-import com.finalproj.orbitflow.approval.approvalLine.dto.ReferenceCreateReqDto;
+import com.finalproj.orbitflow.approval.line.dto.ReferenceCreateReqDto;
 import com.finalproj.orbitflow.approval.document.dto.*;
 import com.finalproj.orbitflow.approval.document.service.application.*;
 import com.finalproj.orbitflow.approval.document.service.domain.DocumentService;

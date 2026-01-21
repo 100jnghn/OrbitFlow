@@ -13,7 +13,7 @@ import com.finalproj.orbitflow.approval.document.service.assembler.PdfContentSch
 import com.finalproj.orbitflow.approval.document.documentContent.entity.DocumentContent;
 import com.finalproj.orbitflow.approval.document.documentContent.repository.DocumentContentRepository;
 import com.finalproj.orbitflow.approval.document.file.service.DocumentFileService;
-import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
+import com.finalproj.orbitflow.approval.form.template.schema.FormTemplateSchema;
 import com.finalproj.orbitflow.approval.document.render.image.PdfInternalImageService;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.global.file.entity.File;

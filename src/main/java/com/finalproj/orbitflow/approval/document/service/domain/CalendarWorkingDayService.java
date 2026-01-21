@@ -1,7 +1,7 @@
 package com.finalproj.orbitflow.approval.document.service.domain;
 
-import com.finalproj.orbitflow.approval.calendarDay.entity.CalendarDay;
-import com.finalproj.orbitflow.approval.calendarDay.repository.CalendarDayRepository;
+import com.finalproj.orbitflow.global.time.calendar.entity.CalendarDay;
+import com.finalproj.orbitflow.global.time.calendar.repository.CalendarDayRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

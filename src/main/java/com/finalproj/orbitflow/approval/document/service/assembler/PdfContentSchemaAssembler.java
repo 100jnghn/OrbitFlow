@@ -2,8 +2,8 @@ package com.finalproj.orbitflow.approval.document.service.assembler;
 
 import com.finalproj.orbitflow.approval.document.schema.PdfField;
 import com.finalproj.orbitflow.approval.document.schema.PdfContentSchema;
-import com.finalproj.orbitflow.approval.formTemplate.schema.FormFieldSchema;
-import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
+import com.finalproj.orbitflow.approval.form.template.schema.FormFieldSchema;
+import com.finalproj.orbitflow.approval.form.template.schema.FormTemplateSchema;
 import org.springframework.stereotype.Component;
 
 import java.util.*;

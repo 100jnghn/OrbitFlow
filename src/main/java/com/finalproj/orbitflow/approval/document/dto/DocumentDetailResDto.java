@@ -1,9 +1,9 @@
 package com.finalproj.orbitflow.approval.document.dto;
 
-import com.finalproj.orbitflow.approval.approvalLine.dto.ApprovalLineViewResDto;
+import com.finalproj.orbitflow.approval.line.dto.ApprovalLineViewResDto;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
-import com.finalproj.orbitflow.approval.formTemplate.schema.FormTemplateSchema;
+import com.finalproj.orbitflow.approval.form.template.schema.FormTemplateSchema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

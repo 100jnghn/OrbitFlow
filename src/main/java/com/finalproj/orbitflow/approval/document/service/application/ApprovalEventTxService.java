@@ -1,9 +1,9 @@
 package com.finalproj.orbitflow.approval.document.service.application;
 
-import com.finalproj.orbitflow.approval.attendanceEvent.entity.AttendanceEvent;
-import com.finalproj.orbitflow.approval.attendanceEvent.repository.AttendanceEventRepository;
-import com.finalproj.orbitflow.approval.attendanceRecord.entity.AttendanceRecord;
-import com.finalproj.orbitflow.approval.attendanceRecord.repository.AttendanceRecordRepository;
+import com.finalproj.orbitflow.approval.attendance.event.entity.AttendanceEvent;
+import com.finalproj.orbitflow.approval.attendance.event.repository.AttendanceEventRepository;
+import com.finalproj.orbitflow.approval.attendance.record.entity.AttendanceRecord;
+import com.finalproj.orbitflow.approval.attendance.record.repository.AttendanceRecordRepository;
 import com.finalproj.orbitflow.approval.document.dto.CommonPayload;
 import com.finalproj.orbitflow.approval.document.dto.LeaveCalculationResult;
 import com.finalproj.orbitflow.approval.document.entity.Document;
@@ -13,7 +13,7 @@ import com.finalproj.orbitflow.approval.document.service.domain.LeaveCalculation
 import com.finalproj.orbitflow.approval.document.service.domain.WorkingDayService;
 import com.finalproj.orbitflow.approval.document.documentContent.entity.DocumentContent;
 import com.finalproj.orbitflow.approval.document.documentContent.repository.DocumentContentRepository;
-import com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole;
+import com.finalproj.orbitflow.approval.form.template.group.enums.BaseRole;
 import com.finalproj.orbitflow.attendance.leave.service.LeaveService;
 import com.finalproj.orbitflow.attendance.rule.entity.AttendanceRule;
 import com.finalproj.orbitflow.attendance.rule.repository.AttendanceRuleRepository;

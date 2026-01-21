@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow.approval.document.signature.entity;
 
-import com.finalproj.orbitflow.approval.approvalLine.entity.ApprovalLine;
+import com.finalproj.orbitflow.approval.line.entity.ApprovalLine;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.global.file.entity.File;

@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow;
 
-import com.finalproj.orbitflow.approval.calendarDay.service.impl.props.HolidayApiProperties;
+import com.finalproj.orbitflow.global.time.calendar.service.impl.props.HolidayApiProperties;
 import com.finalproj.orbitflow.global.security.jwt.JwtProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

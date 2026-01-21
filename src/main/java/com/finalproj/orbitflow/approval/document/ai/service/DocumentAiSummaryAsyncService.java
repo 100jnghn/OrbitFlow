@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow.approval.document.ai.service;
 
-import com.finalproj.orbitflow.approval.aiClient.DocumentSummaryAiClient;
+import com.finalproj.orbitflow.approval.document.ai.service.client.DocumentSummaryAiClient;
 import com.finalproj.orbitflow.approval.document.ai.entity.DocumentAISummary;
 import com.finalproj.orbitflow.approval.document.ai.repository.DocumentAiSummaryRepository;
 import lombok.RequiredArgsConstructor;

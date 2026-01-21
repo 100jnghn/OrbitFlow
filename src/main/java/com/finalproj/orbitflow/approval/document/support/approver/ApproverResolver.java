@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow.approval.document.support.approver;
 
-import com.finalproj.orbitflow.approval.approvalLine.entity.ApprovalLine;
+import com.finalproj.orbitflow.approval.line.entity.ApprovalLine;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;

@@ -1,7 +1,7 @@
 package com.finalproj.orbitflow.approval.document.service.application;
 
-import com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus;
-import com.finalproj.orbitflow.approval.approvalLine.repository.ApprovalLineRepository;
+import com.finalproj.orbitflow.approval.line.enums.ApprovalStatus;
+import com.finalproj.orbitflow.approval.line.repository.ApprovalLineRepository;
 import com.finalproj.orbitflow.approval.document.dto.DocumentMainInfoResDto;
 import com.finalproj.orbitflow.approval.document.dto.TimeRange;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;

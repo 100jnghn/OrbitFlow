@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.employeeSignature.entity;
+package com.finalproj.orbitflow.global.image.signature.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -20,7 +20,7 @@ public class QEmployeeSignature extends EntityPathBase<EmployeeSignature> {
 
     private static final PathInits INITS = PathInits.DIRECT2;
 
-    public static final QEmployeeSignature employeeSignature = new QEmployeeSignature("employeeSignature");
+    public static final QEmployeeSignature employeeSignature = new QEmployeeSignature("signature");
 
     public final com.finalproj.orbitflow.hr.company.entity.QCompany company;
 
