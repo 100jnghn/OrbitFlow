@@ -1,10 +1,10 @@
-package com.finalproj.orbitflow.approval.document.documentContent.service;
+package com.finalproj.orbitflow.approval.document.content.service;
 
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
-import com.finalproj.orbitflow.approval.document.documentContent.dto.DocumentContentPatchReqDto;
-import com.finalproj.orbitflow.approval.document.documentContent.entity.DocumentContent;
-import com.finalproj.orbitflow.approval.document.documentContent.repository.DocumentContentRepository;
+import com.finalproj.orbitflow.approval.document.content.dto.DocumentContentPatchReqDto;
+import com.finalproj.orbitflow.approval.document.content.entity.DocumentContent;
+import com.finalproj.orbitflow.approval.document.content.repository.DocumentContentRepository;
 import com.finalproj.orbitflow.approval.form.template.schema.FormTemplateSchema;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;

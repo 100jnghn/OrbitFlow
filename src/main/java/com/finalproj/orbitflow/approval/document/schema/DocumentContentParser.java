@@ -2,7 +2,7 @@ package com.finalproj.orbitflow.approval.document.schema;
 
 import com.finalproj.orbitflow.approval.document.dto.CommonPayload;
 import com.finalproj.orbitflow.approval.document.dto.VacationPayload;
-import com.finalproj.orbitflow.approval.document.documentContent.entity.DocumentContent;
+import com.finalproj.orbitflow.approval.document.content.entity.DocumentContent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.type.TypeReference;

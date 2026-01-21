@@ -1,7 +1,7 @@
-package com.finalproj.orbitflow.approval.document.documentContent.repository;
+package com.finalproj.orbitflow.approval.document.content.repository;
 
 import com.finalproj.orbitflow.approval.document.entity.Document;
-import com.finalproj.orbitflow.approval.document.documentContent.entity.DocumentContent;
+import com.finalproj.orbitflow.approval.document.content.entity.DocumentContent;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

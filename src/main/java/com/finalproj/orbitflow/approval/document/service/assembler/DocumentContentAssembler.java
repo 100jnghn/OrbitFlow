@@ -3,7 +3,7 @@ package com.finalproj.orbitflow.approval.document.service.assembler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.finalproj.orbitflow.approval.document.dto.DocumentFormFieldDto;
 import com.finalproj.orbitflow.approval.document.entity.Document;
-import com.finalproj.orbitflow.approval.document.documentContent.entity.DocumentContent;
+import com.finalproj.orbitflow.approval.document.content.entity.DocumentContent;
 import com.finalproj.orbitflow.approval.form.template.schema.FormFieldSchema;
 import com.finalproj.orbitflow.approval.form.template.schema.FormTemplateSchema;
 import lombok.RequiredArgsConstructor;

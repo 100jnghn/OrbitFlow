@@ -1,7 +1,7 @@
-package com.finalproj.orbitflow.approval.document.documentContent.controller;
+package com.finalproj.orbitflow.approval.document.content.controller;
 
-import com.finalproj.orbitflow.approval.document.documentContent.dto.DocumentContentPatchReqDto;
-import com.finalproj.orbitflow.approval.document.documentContent.service.DocumentContentService;
+import com.finalproj.orbitflow.approval.document.content.dto.DocumentContentPatchReqDto;
+import com.finalproj.orbitflow.approval.document.content.service.DocumentContentService;
 import com.finalproj.orbitflow.approval.form.template.schema.FormTemplateSchema;
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import lombok.RequiredArgsConstructor;

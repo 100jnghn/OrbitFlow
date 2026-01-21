@@ -10,8 +10,8 @@ import com.finalproj.orbitflow.approval.document.schema.FormTemplateSchemaParser
 import com.finalproj.orbitflow.approval.document.service.assembler.DocumentContentAssembler;
 import com.finalproj.orbitflow.approval.document.support.access.DocumentAccessValidator;
 import com.finalproj.orbitflow.approval.document.support.title.DocumentTitleResolver;
-import com.finalproj.orbitflow.approval.document.documentContent.entity.DocumentContent;
-import com.finalproj.orbitflow.approval.document.documentContent.repository.DocumentContentRepository;
+import com.finalproj.orbitflow.approval.document.content.entity.DocumentContent;
+import com.finalproj.orbitflow.approval.document.content.repository.DocumentContentRepository;
 import com.finalproj.orbitflow.approval.document.file.entity.DocumentFile;
 import com.finalproj.orbitflow.approval.document.file.repository.DocumentFileRepository;
 import com.finalproj.orbitflow.approval.document.file.service.DocumentFileCleanupService;

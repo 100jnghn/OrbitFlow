@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.document.documentContent.entity;
+package com.finalproj.orbitflow.approval.document.content.entity;
 
 /*
  * Please explain the class!!!

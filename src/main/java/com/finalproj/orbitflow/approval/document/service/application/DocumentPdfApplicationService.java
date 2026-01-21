@@ -10,8 +10,8 @@ import com.finalproj.orbitflow.approval.document.schema.FormTemplateSchemaParser
 import com.finalproj.orbitflow.approval.document.schema.PdfContentSchema;
 import com.finalproj.orbitflow.approval.document.service.assembler.PdfApprovalLineAssembler;
 import com.finalproj.orbitflow.approval.document.service.assembler.PdfContentSchemaAssembler;
-import com.finalproj.orbitflow.approval.document.documentContent.entity.DocumentContent;
-import com.finalproj.orbitflow.approval.document.documentContent.repository.DocumentContentRepository;
+import com.finalproj.orbitflow.approval.document.content.entity.DocumentContent;
+import com.finalproj.orbitflow.approval.document.content.repository.DocumentContentRepository;
 import com.finalproj.orbitflow.approval.document.file.service.DocumentFileService;
 import com.finalproj.orbitflow.approval.form.template.schema.FormTemplateSchema;
 import com.finalproj.orbitflow.approval.document.render.image.PdfInternalImageService;

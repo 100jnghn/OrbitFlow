@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.document.documentContent.dto;
+package com.finalproj.orbitflow.approval.document.content.dto;
 
 import lombok.Data;
 import tools.jackson.databind.JsonNode;

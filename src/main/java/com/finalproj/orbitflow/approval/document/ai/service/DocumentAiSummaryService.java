@@ -12,7 +12,7 @@ import com.finalproj.orbitflow.approval.document.ai.entity.DocumentAISummary;
 import com.finalproj.orbitflow.approval.document.ai.enums.AiStatus;
 import com.finalproj.orbitflow.approval.document.ai.enums.SummaryType;
 import com.finalproj.orbitflow.approval.document.ai.repository.DocumentAiSummaryRepository;
-import com.finalproj.orbitflow.approval.document.documentContent.service.DocumentContentService;
+import com.finalproj.orbitflow.approval.document.content.service.DocumentContentService;
 import com.finalproj.orbitflow.approval.document.file.entity.DocumentFile;
 import com.finalproj.orbitflow.approval.document.file.enums.DocumentFileStatus;
 import com.finalproj.orbitflow.approval.document.file.enums.ReferenceType;
