@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.documentAISummary.entity;
+package com.finalproj.orbitflow.approval.document.ai.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -20,7 +20,7 @@ public class QDocumentAISummary extends EntityPathBase<DocumentAISummary> {
 
     private static final PathInits INITS = PathInits.DIRECT2;
 
-    public static final QDocumentAISummary documentAISummary = new QDocumentAISummary("documentAISummary");
+    public static final QDocumentAISummary documentAISummary = new QDocumentAISummary("ai");
 
     public final com.finalproj.orbitflow.global.common.QBaseEntity _super = new com.finalproj.orbitflow.global.common.QBaseEntity(this);
 
@@ -47,9 +47,9 @@ public class QDocumentAISummary extends EntityPathBase<DocumentAISummary> {
 
     public final StringPath prompt = createString("prompt");
 
-    public final EnumPath<com.finalproj.orbitflow.approval.documentAISummary.enums.AiStatus> status = createEnum("status", com.finalproj.orbitflow.approval.documentAISummary.enums.AiStatus.class);
+    public final EnumPath<com.finalproj.orbitflow.approval.document.ai.enums.AiStatus> status = createEnum("status", com.finalproj.orbitflow.approval.document.ai.enums.AiStatus.class);
 
-    public final EnumPath<com.finalproj.orbitflow.approval.documentAISummary.enums.SummaryType> summaryType = createEnum("summaryType", com.finalproj.orbitflow.approval.documentAISummary.enums.SummaryType.class);
+    public final EnumPath<com.finalproj.orbitflow.approval.document.ai.enums.SummaryType> summaryType = createEnum("summaryType", com.finalproj.orbitflow.approval.document.ai.enums.SummaryType.class);
 
     //inherited
     public final DateTimePath<java.time.Instant> updatedAt = _super.updatedAt;

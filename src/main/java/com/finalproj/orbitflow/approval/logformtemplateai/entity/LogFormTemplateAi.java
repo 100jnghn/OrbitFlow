@@ -9,7 +9,7 @@ package com.finalproj.orbitflow.approval.logformtemplateai.entity;
  */
 
 
-import com.finalproj.orbitflow.approval.documentAISummary.enums.AiStatus;
+import com.finalproj.orbitflow.approval.document.ai.enums.AiStatus;
 import com.finalproj.orbitflow.approval.formTemplate.entity.FormTemplate;
 import com.finalproj.orbitflow.approval.formTemplateGroup.entity.FormTemplateGroup;
 import com.finalproj.orbitflow.global.common.BaseEntity;

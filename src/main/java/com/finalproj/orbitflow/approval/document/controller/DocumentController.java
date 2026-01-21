@@ -2,8 +2,8 @@ package com.finalproj.orbitflow.approval.document.controller;
 
 import com.finalproj.orbitflow.approval.approvalLine.dto.ReferenceCreateReqDto;
 import com.finalproj.orbitflow.approval.document.dto.*;
-import com.finalproj.orbitflow.approval.document.service.DocumentApplicationService;
-import com.finalproj.orbitflow.approval.document.service.DocumentService;
+import com.finalproj.orbitflow.approval.document.service.application.*;
+import com.finalproj.orbitflow.approval.document.service.domain.DocumentService;
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +27,11 @@ import java.util.List;
 @RequestMapping("/api/documents")
 public class DocumentController {
     private final DocumentService documentService;
-    private final DocumentApplicationService documentApplicationService;
-
+    private final DocumentDraftApplicationService documentDraftApplicationService;
+    private final DocumentApprovalApplicationService documentApprovalApplicationService;
+    private final DocumentDashboardQueryService  documentDashboardQueryService;
+    private final DocumentReviseApplicationService documentReviseApplicationService;
+    private final DocumentSubmitApplicationService documentSubmitApplicationService;
 
     @GetMapping("/my-written")
     public ResponseEntity<?> getMyWrittenDocuments(
@@ -69,7 +72,7 @@ public class DocumentController {
             @PathVariable Long formTemplateId,
             @RequestParam(required = false) Long beforeDocumentId
     ) {
-        DocumentCreateResDto result = documentApplicationService.createDraft(SecurityUtils.getCompanyId(), SecurityUtils.getEmployeeId(), formTemplateId, beforeDocumentId);
+        DocumentCreateResDto result = documentDraftApplicationService.createDraft(SecurityUtils.getCompanyId(), SecurityUtils.getEmployeeId(), formTemplateId, beforeDocumentId);
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.CREATED, "결재 문서 초안 생성 성공", result));
     }
 
@@ -77,7 +80,7 @@ public class DocumentController {
     public ResponseEntity<?> deleteDraftDocument(
             @PathVariable Long documentId
     ) {
-        documentApplicationService.deleteDraftDocument(SecurityUtils.getEmployeeId(), documentId);
+        documentDraftApplicationService.deleteDraft(SecurityUtils.getEmployeeId(), documentId);
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.ACCEPTED, "임시 문서 삭제 성공", null));
     }
 
@@ -86,7 +89,7 @@ public class DocumentController {
     public ResponseEntity<?> reviseDocument(
             @PathVariable Long documentId
     ) {
-        DocumentCreateResDto result = documentApplicationService.reviseDocument(SecurityUtils.getEmployeeId(), documentId);
+        DocumentCreateResDto result = documentReviseApplicationService.revise(SecurityUtils.getEmployeeId(), documentId);
 
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.CREATED, "반려 결재 문서 복제 성공", result));
     }
@@ -115,7 +118,7 @@ public class DocumentController {
     public ResponseEntity<?> submitDocument(
             @PathVariable Long documentId
     ) {
-        documentApplicationService.submitDocument(SecurityUtils.getEmployeeId(), documentId);
+        documentSubmitApplicationService.submit(SecurityUtils.getEmployeeId(), documentId);
 
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "문서 상신 성공", null));
     }
@@ -136,7 +139,7 @@ public class DocumentController {
     ) {
         String comment = reqDto != null ? reqDto.getComment() : null;
 
-        documentApplicationService.approve(
+        documentApprovalApplicationService.approve(
                 SecurityUtils.getEmployeeId(),
                 documentId,
                 comment
@@ -155,7 +158,7 @@ public class DocumentController {
     ) {
         String comment = reqDto != null ? reqDto.getComment() : null;
 
-        documentApplicationService.reject(
+        documentApprovalApplicationService.reject(
                 SecurityUtils.getEmployeeId(),
                 documentId,
                 comment
@@ -212,7 +215,7 @@ public class DocumentController {
     public ResponseEntity<?> getMainInfo() {
 
         DocumentMainInfoResDto result =
-                documentApplicationService.getMainInfo(SecurityUtils.getEmployeeId());
+                documentDashboardQueryService.getMainInfo(SecurityUtils.getEmployeeId());
 
         return ResponseEntity.ok(
                 new ResponseDto<>(HttpStatus.OK, "대시보드 메인 정보 조회 성공", result)

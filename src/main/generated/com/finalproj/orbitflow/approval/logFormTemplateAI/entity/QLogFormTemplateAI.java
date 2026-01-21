@@ -51,7 +51,7 @@ public class QLogFormTemplateAi extends EntityPathBase<LogFormTemplateAi> {
 
     public final StringPath responseContext = createString("responseContext");
 
-    public final EnumPath<com.finalproj.orbitflow.approval.documentAISummary.enums.AiStatus> status = createEnum("status", com.finalproj.orbitflow.approval.documentAISummary.enums.AiStatus.class);
+    public final EnumPath<com.finalproj.orbitflow.approval.document.ai.enums.AiStatus> status = createEnum("status", com.finalproj.orbitflow.approval.document.ai.enums.AiStatus.class);
 
     public final com.finalproj.orbitflow.approval.formTemplateGroup.entity.QFormTemplateGroup templateGroup;
 

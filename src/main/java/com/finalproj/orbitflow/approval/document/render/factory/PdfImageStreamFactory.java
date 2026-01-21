@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow.approval.document.render.factory;
 
-import com.finalproj.orbitflow.approval.pdfInternalImage.service.PdfInternalImageService;
+import com.finalproj.orbitflow.approval.document.render.image.PdfInternalImageService;
 import com.openhtmltopdf.extend.FSStream;
 import com.openhtmltopdf.extend.FSStreamFactory;
 import lombok.RequiredArgsConstructor;

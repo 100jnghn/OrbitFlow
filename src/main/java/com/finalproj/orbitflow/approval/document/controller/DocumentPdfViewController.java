@@ -1,7 +1,7 @@
 package com.finalproj.orbitflow.approval.document.controller;
 
 import com.finalproj.orbitflow.approval.document.dto.DocumentPdfViewDto;
-import com.finalproj.orbitflow.approval.document.service.DocumentService;
+import com.finalproj.orbitflow.approval.document.service.domain.DocumentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

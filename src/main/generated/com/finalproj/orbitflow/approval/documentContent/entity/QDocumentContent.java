@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.documentContent.entity;
+package com.finalproj.orbitflow.approval.document.documentContent.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 

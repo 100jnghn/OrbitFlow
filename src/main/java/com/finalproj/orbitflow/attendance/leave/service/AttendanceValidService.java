@@ -3,7 +3,7 @@ package com.finalproj.orbitflow.attendance.leave.service;
 import com.finalproj.orbitflow.approval.attendanceEvent.repository.AttendanceEventRepository;
 import com.finalproj.orbitflow.approval.attendanceRecord.repository.AttendanceRecordRepository;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
-import com.finalproj.orbitflow.approval.document.service.CalendarWorkingDayService;
+import com.finalproj.orbitflow.approval.document.service.domain.CalendarWorkingDayService;
 import com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole;
 import com.finalproj.orbitflow.attendance.leave.dto.LeaveValidationReqDto;
 import com.finalproj.orbitflow.attendance.leave.dto.LeaveValidationResDto;

@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow.approval.document.event;
 
-import com.finalproj.orbitflow.approval.document.service.ApprovalEventTxService;
+import com.finalproj.orbitflow.approval.document.service.application.ApprovalEventTxService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;

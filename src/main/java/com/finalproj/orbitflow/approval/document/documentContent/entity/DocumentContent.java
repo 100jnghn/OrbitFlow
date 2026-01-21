@@ -1,0 +1,58 @@
+package com.finalproj.orbitflow.approval.document.documentContent.entity;
+
+/*
+ * Please explain the class!!!
+ *
+ * @filename    : DocumentContent
+ * @author      : Choi MinHyeok
+ * @since       : 25. 12. 15. 월요일
+ */
+
+
+import com.finalproj.orbitflow.approval.document.entity.Document;
+import com.finalproj.orbitflow.global.common.BaseEntity;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+
+@Entity
+@Table(name = "document_content")
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class DocumentContent extends BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "document_id", nullable = false, unique = true)
+    private Document document;
+
+    @Column(name = "content_json", nullable = false, columnDefinition = "json")
+    private String contentJson;
+
+    public void updateContentJson(String updateJson) {
+        this.contentJson = updateJson;
+    }
+
+    public static DocumentContent create(Document document, String contentJson) {
+        return DocumentContent.builder()
+                .document(document)
+                .contentJson(contentJson)
+                .build();
+    }
+
+    public static DocumentContent revise(Document revised, DocumentContent rejectedContent) {
+        return DocumentContent.builder()
+                .document(revised)
+                .contentJson(rejectedContent.contentJson)
+                .build();
+    }
+}
+

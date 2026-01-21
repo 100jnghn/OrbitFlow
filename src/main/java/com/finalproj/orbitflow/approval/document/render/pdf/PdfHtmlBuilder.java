@@ -2,7 +2,7 @@ package com.finalproj.orbitflow.approval.document.render.pdf;
 
 import com.finalproj.orbitflow.approval.document.schema.PdfContentSchema;
 import com.finalproj.orbitflow.approval.document.dto.PdfApprovalLineDto;
-import com.finalproj.orbitflow.approval.document.service.DocumentContentRenderService;
+import com.finalproj.orbitflow.approval.document.service.render.DocumentContentRenderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

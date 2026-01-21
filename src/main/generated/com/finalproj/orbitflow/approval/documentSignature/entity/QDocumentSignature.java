@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.documentSignature.entity;
+package com.finalproj.orbitflow.approval.document.signature.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -20,7 +20,7 @@ public class QDocumentSignature extends EntityPathBase<DocumentSignature> {
 
     private static final PathInits INITS = PathInits.DIRECT2;
 
-    public static final QDocumentSignature documentSignature = new QDocumentSignature("documentSignature");
+    public static final QDocumentSignature documentSignature = new QDocumentSignature("signature");
 
     public final com.finalproj.orbitflow.global.common.QBaseEntity _super = new com.finalproj.orbitflow.global.common.QBaseEntity(this);
 

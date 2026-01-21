@@ -8,8 +8,8 @@ import com.finalproj.orbitflow.approval.document.dto.DocumentMyApprovalListResDt
 import com.finalproj.orbitflow.approval.document.dto.ReferenceSearchResDto;
 import com.finalproj.orbitflow.approval.document.entity.QDocument;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
-import com.finalproj.orbitflow.approval.documentFile.entity.QDocumentFile;
-import com.finalproj.orbitflow.approval.documentFile.enums.ReferenceType;
+import com.finalproj.orbitflow.approval.document.file.entity.QDocumentFile;
+import com.finalproj.orbitflow.approval.document.file.enums.ReferenceType;
 import com.finalproj.orbitflow.approval.formTemplateGroup.entity.QFormTemplateGroup;
 import com.finalproj.orbitflow.hr.employee.entity.QEmployee;
 import com.finalproj.orbitflow.hr.organization.entity.QOrganization;

@@ -3,7 +3,7 @@ package com.finalproj.orbitflow.approval.logformtemplateai.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.finalproj.orbitflow.approval.aiClient.FormDesignAiClient;
-import com.finalproj.orbitflow.approval.documentAISummary.enums.AiStatus;
+import com.finalproj.orbitflow.approval.document.ai.enums.AiStatus;
 import com.finalproj.orbitflow.approval.formTemplate.entity.FormTemplate;
 import com.finalproj.orbitflow.approval.formTemplate.repository.FormTemplateRepository;
 import com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole;
