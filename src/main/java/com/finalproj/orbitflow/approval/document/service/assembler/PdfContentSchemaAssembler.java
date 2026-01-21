@@ -11,20 +11,39 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Please explain the class!!!
+ * 결재 양식(FormTemplate)에 정의된 필드 스키마를
+ * PDF 출력에 사용할 수 있는 형태로 변환하는 어셈블러 클래스.
  *
- * @author : Choi MinHyeok
- * @filename : PdfContentSchemaAssembler
- * @since : 26. 1. 3. 토요일
- **/
+ * <p>
+ * FormTemplateSchema는 화면 입력과 편집을 기준으로 한 구조이기 때문에,
+ * 그대로는 PDF에 출력하기에 적합하지 않은 값들이 포함되어 있다.
+ * 이 클래스는 해당 스키마를 순회하면서
+ * PDF에 실제로 표시될 값만 추려 {@link PdfContentSchema}로 변환한다.
+ * </p>
+ *
+ * <p>
+ * 필드 타입에 따라 값 변환 방식이 다르며,
+ * 예를 들어 사원/조직 검색 필드는 사람이 읽을 수 있는 문자열로,
+ * radio, checkbox 필드는 선택된 항목의 label 값으로 치환한다.
+ * divider나 notice와 같이 화면 표시용 필드는
+ * PDF에서는 value를 가지지 않도록 처리한다.
+ * </p>
+ *
+ * <p>
+ * 이 클래스는 PDF 렌더링 과정에서 필요한 데이터 구조를 준비하는 역할만 담당하며,
+ * 실제 HTML 생성이나 스타일, 이미지 처리 로직은
+ * 이후 렌더링 단계에 위임한다.
+ * </p>
+ *
+ * @author Choi MinHyeok
+ * @filename PdfContentSchemaAssembler
+ * @since 2026.01.03
+ */
 
 
 @Component
 public class PdfContentSchemaAssembler {
 
-    /**
-     * FormTemplateSchema → PdfContentSchema 변환
-     */
     public PdfContentSchema from(FormTemplateSchema schema) {
 
         if (schema == null || schema.getFields() == null) {
@@ -43,9 +62,6 @@ public class PdfContentSchemaAssembler {
                 .build();
     }
 
-    /**
-     * 단일 필드 변환
-     */
     private PdfField convertField(FormFieldSchema field) {
 
         return PdfField.builder()
@@ -57,11 +73,7 @@ public class PdfContentSchemaAssembler {
                 .build();
     }
 
-    /**
-     * ===============================
-     * value 변환 (PDF 핵심 로직)
-     * ===============================
-     */
+
     private Object convertValue(FormFieldSchema field) {
 
         Object value = field.getValue();
@@ -100,11 +112,6 @@ public class PdfContentSchemaAssembler {
         };
     }
 
-    /**
-     * ===============================
-     * meta 변환 (PDF에 필요한 것만)
-     * ===============================
-     */
     private Map<String, Object> convertMeta(FormFieldSchema field) {
 
         if (field.getMeta() == null) {
@@ -121,9 +128,6 @@ public class PdfContentSchemaAssembler {
         };
     }
 
-    /* =========================================================
-       개별 타입 변환 helper
-    ========================================================= */
 
     private String convertDepartment(Object value) {
         if (!(value instanceof Map<?, ?> map)) return "-";
@@ -165,7 +169,6 @@ public class PdfContentSchemaAssembler {
 
         if (value == null) return "-";
 
-        // 이미 문자열이면 그대로 (detail / PDF 기준)
         if (value instanceof String s) {
             return s.isBlank() ? "-" : s;
         }
@@ -191,9 +194,6 @@ public class PdfContentSchemaAssembler {
     }
 
 
-    /**
-     * 이미지 → documentFileId 리스트
-     */
     private List<Map<String, Object>> convertImages(Object value) {
 
         if (!(value instanceof List<?> list)) return List.of();

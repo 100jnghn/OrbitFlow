@@ -7,12 +7,22 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 /**
- * Please explain the class!!!
+ * 주소(address) 타입 필드를 PDF용 HTML로 렌더링하는 필드 렌더러.
+ * <p>
+ * 주소 필드는 하나의 값이 아닌 복합 구조(Map)를 가지며,
+ * 우편번호, 도로명 주소, 상세 주소를 각각 분리하여 테이블 형태로 출력한다.
+ * <p>
+ * 값이 정상적인 주소 구조가 아닌 경우에는
+ * 주소 전체 영역을 "-"로 표시하여 빈 값임을 명확히 드러낸다.
+ * <p>
+ * 이 렌더러는 AbstractFieldRenderer를 상속하여
+ * 공통적인 텍스트 처리 및 HTML 이스케이프 로직을 재사용하며,
+ * FieldRenderer 인터페이스를 통해 필드 타입 매칭과 렌더링 책임을 분리한다.
  *
  * @author : Choi MinHyeok
  * @filename : AddressFieldRenderer
  * @since : 26. 1. 4. 일요일
- **/
+ */
 
 
 @Component

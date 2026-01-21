@@ -16,12 +16,19 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Please explain the class!!!
+ * 휴가 결재 문서 기준으로 실제 차감 일수를 계산하는 도메인 서비스.
+ * <p>
+ * 휴가 문서에 입력된 기간과 휴가 유형을 기준으로
+ * 근무일만을 추출한 뒤, 휴가 유형의 단위(unitDays)를 적용해
+ * 최종 차감 일수와 적용 대상 날짜 목록을 계산한다.
+ * <p>
+ * 계산 결과는 LeaveCalculationResult로 반환되며,
+ * 결재 상신 및 승인 이후 근태/휴가 도메인 처리에서 사용된다.
  *
- * @author : Choi MinHyeok
- * @filename : LeaveCalculationService
- * @since : 26. 1. 6. 화요일
- **/
+ * @author Choi MinHyeok
+ * @filename LeaveCalculationService
+ * @since 2026.01.06
+ */
 
 
 @Service
@@ -29,9 +36,10 @@ import java.util.List;
 public class LeaveCalculationService {
 
     private final DocumentContentRepository documentContentRepository;
-    private final DocumentContentParser documentContentParser;
     private final LeaveTypeRepository leaveTypeRepository;
     private final WorkingDayService workingDayService;
+
+    private final DocumentContentParser documentContentParser;
 
     public LeaveCalculationResult calculate(Document document) {
 

@@ -10,8 +10,6 @@ import com.finalproj.orbitflow.approval.document.file.enums.DocumentFileStatus;
 import com.finalproj.orbitflow.approval.document.file.enums.ReferenceType;
 import com.finalproj.orbitflow.approval.document.file.repository.DocumentFileRepository;
 import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
-import com.finalproj.orbitflow.approval.document.service.assembler.PdfContentSchemaAssembler;
-import com.finalproj.orbitflow.approval.document.service.render.DocumentContentRenderService;
 import com.finalproj.orbitflow.approval.form.template.schema.FormTemplateSchema;
 import com.finalproj.orbitflow.approval.line.dto.ApprovalLineViewResDto;
 import com.finalproj.orbitflow.approval.line.enums.ApprovalStatus;
@@ -30,7 +28,17 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.List;
 
 /**
- * Please explain the class!!!
+ * 결재 문서 조회 및 관리 기능을 담당하는 도메인 서비스.
+ * <p>
+ * 문서 목록 조회, 상세 조회, 수정 가능 여부 판단 등
+ * 결재 문서와 관련된 조회 중심 로직을 제공한다.
+ * <p>
+ * 문서 상태(DRAFT / IN_PROGRESS / APPROVED 등)와
+ * 사용자 역할(작성자, 결재자)에 따라
+ * 접근 가능 여부를 검증하는 책임을 함께 가진다.
+ * <p>
+ * 또한 문서 간 참조 검색 및 참조 문서 추가/제거 기능을 통해
+ * 결재 문서 간 연결 관계를 관리한다.
  *
  * @author : Choi MinHyeok
  * @filename : DocumentService
@@ -43,13 +51,11 @@ import java.util.List;
 public class DocumentService {
 
     private final DocumentRepository documentRepository;
-    private final ObjectMapper objectMapper;
     private final DocumentContentRepository documentContentRepository;
     private final ApprovalLineRepository approvalLineRepository;
-    private final PdfContentSchemaAssembler pdfContentSchemaAssembler;
-    private final DocumentContentRenderService documentContentRenderService;
     private final DocumentFileRepository documentFileRepository;
 
+    private final ObjectMapper objectMapper;
 
     @Transactional(readOnly = true)
     public Page<DocumentListResDto> getMyWrittenDocuments(
@@ -167,7 +173,6 @@ public class DocumentService {
                 .map(line -> line.getApprover().getId().equals(employeeId))
                 .orElse(false);
 
-        // ⭐ 여기 추가
         Long pdfFileId = null;
         if (document.getStatus() == DocumentStatus.APPROVED) {
             pdfFileId = documentFileRepository
@@ -215,7 +220,6 @@ public class DocumentService {
 
             default -> {
                 // APPROVED, REJECTED 등
-                // 기본적으로 조회 허용
             }
         }
     }
@@ -233,7 +237,6 @@ public class DocumentService {
                 ? current.getBeforeDocument().getId()
                 : null;
 
-        // 내 문서가 아니거나 반려가 아니면
         if (!isMine || current.getStatus() != DocumentStatus.REJECTED) {
             return DocumentRevisionInfoResDto.builder()
                     .beforeDocumentId(beforeId)
@@ -284,7 +287,6 @@ public class DocumentService {
             Long documentId,
             Long targetDocumentFileId
     ) {
-        // 1. 현재 문서 조회 + 작성자 검증
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new NotFoundException("문서를 찾을 수 없습니다."));
 
@@ -292,11 +294,9 @@ public class DocumentService {
             throw new InvalidRequestException("참조 문서는 작성자만 추가할 수 있습니다.");
         }
 
-        // 2. 참조 대상 DocumentFile 조회
         DocumentFile target = documentFileRepository.findById(targetDocumentFileId)
                 .orElseThrow(() -> new NotFoundException("참조 대상 파일을 찾을 수 없습니다."));
 
-        // 3. 참조 대상 검증
         if (target.getReferenceType() != ReferenceType.DOCUMENT
                 || target.getReferenceUrl() != null) {
             throw new InvalidRequestException("참조 가능한 문서가 아닙니다.");
@@ -304,7 +304,6 @@ public class DocumentService {
 
         Document targetDocument = target.getDocument();
 
-        // 4. 현재 문서에 참조 DocumentFile 생성
         DocumentFile reference = DocumentFile.builder()
                 .document(document)
                 .file(target.getFile())
@@ -323,7 +322,6 @@ public class DocumentService {
             Long documentId,
             Long documentFileId
     ) {
-        // 1. 문서 조회 + 작성자 검증
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new NotFoundException("문서를 찾을 수 없습니다."));
 
@@ -331,27 +329,21 @@ public class DocumentService {
             throw new InvalidRequestException("참조 문서는 작성자만 제거할 수 있습니다.");
         }
 
-        // 2. 참조 DocumentFile 조회
         DocumentFile reference = documentFileRepository.findById(documentFileId)
                 .orElseThrow(() -> new NotFoundException("참조 문서를 찾을 수 없습니다."));
 
-        // 3. 이 문서에 연결된 참조 문서인지 검증
         if (!reference.getDocument().getId().equals(documentId)) {
             throw new InvalidRequestException("해당 문서의 참조 문서가 아닙니다.");
         }
 
-        // 4. 참조 문서인지 검증
         if (reference.getReferenceType() != ReferenceType.DOCUMENT) {
             throw new InvalidRequestException("참조 문서만 제거할 수 있습니다.");
         }
 
-        // 5. 상태 검증 (작성 중 문서만)
         if (document.getStatus() != DocumentStatus.DRAFT) {
             throw new InvalidRequestException("작성 중인 문서에서만 참조 문서를 제거할 수 있습니다.");
         }
 
-        // 6. 삭제
         documentFileRepository.delete(reference);
     }
-
 }

@@ -9,12 +9,25 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 
 /**
- * Please explain the class!!!
+ * 결재 문서를 PDF로 변환하기 위한 HTML 문서를 구성하는 빌더 클래스.
+ * <p>
+ * 승인 완료된 결재 문서를 기준으로
+ * - 결재선 영역
+ * - 문서 본문 영역
+ * - 하단 메타 정보(기안자, 상신일)
+ * 를 하나의 HTML 문서로 조합한다.
+ * <p>
+ * 실제 필드 렌더링이나 컴포넌트별 HTML 생성은
+ * DocumentContentRenderService에 위임하며,
+ * 이 클래스는 PDF 변환에 필요한 전체 HTML 구조를 조립하는 역할만 담당한다.
+ * <p>
+ * 생성된 HTML은 OpenHTMLToPDF 기반 렌더링 파이프라인에서
+ * 그대로 PDF로 변환되는 것을 전제로 한다.
  *
  * @author : Choi MinHyeok
  * @filename : PdfHtmlBuilder
  * @since : 26. 1. 4. 일요일
- **/
+ */
 
 
 @Component
@@ -42,15 +55,11 @@ public class PdfHtmlBuilder {
                     <link rel="stylesheet" href="/css/user-document/pdf-view.css"/>
                 </head>
                 <body class="pdf-document">
-                
-                    %s   <!-- 결재선 -->
-                
+                    %s
                     <div class="document-content-panel">
-                        %s   <!-- 본문 -->
+                        %s
                     </div>
-                
-                    %s   <!-- 하단 메타 -->
-                
+                    %s
                 </body>
                 </html>
                 """.formatted(
@@ -58,6 +67,7 @@ public class PdfHtmlBuilder {
                 bodyHtml,
                 footerHtml
         );
+
     }
 
 
@@ -82,10 +92,6 @@ public class PdfHtmlBuilder {
 
             sb.append("<tr>");
 
-        /* =========================
-           좌측 세로 '결재' 라벨
-           (첫 줄에만 rowspan)
-        ========================= */
             if (row == 0) {
                 sb.append("<th class=\"approval-label\" rowspan=\"")
                         .append(rowCount)
@@ -95,21 +101,16 @@ public class PdfHtmlBuilder {
 
             int colCount = 0;
 
-        /* =========================
-           실제 결재자 (최대 5명)
-        ========================= */
             while (index < total && colCount < 5) {
 
                 var approver = approvalLine.getApprovers().get(index);
 
                 sb.append("<td class=\"approval-cell\">");
 
-                // 직급
                 sb.append("<div class=\"stamp-position\">")
                         .append(approver.getPosition() != null ? approver.getPosition() : "")
                         .append("</div>");
 
-                // 서명
                 sb.append("<div class=\"stamp-signature\">");
                 if (approver.getApproverLineId() != null) {
                     sb.append("<img src=\"pdf-image://signature/")
@@ -120,7 +121,6 @@ public class PdfHtmlBuilder {
                 }
                 sb.append("</div>");
 
-                // 이름
                 sb.append("<div class=\"stamp-name\">")
                         .append(approver.getName())
                         .append("</div>");
@@ -131,9 +131,6 @@ public class PdfHtmlBuilder {
                 colCount++;
             }
 
-        /* =========================
-           빈 셀 채우기 (5칸 고정)
-        ========================= */
             while (colCount < 5) {
                 sb.append("<td class=\"approval-cell empty\"></td>");
                 colCount++;

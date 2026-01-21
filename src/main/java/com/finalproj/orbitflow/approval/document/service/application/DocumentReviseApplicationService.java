@@ -24,12 +24,32 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * Please explain the class!!!
+ * 반려된 결재 문서를 기준으로 재기안(DRAFT) 문서를 생성하는 Application Service.
+ * <p>
+ * 이 클래스는 결재가 반려(REJECTED)된 문서에 대해,
+ * 기존 문서를 직접 수정하는 대신 새로운 초안 문서를 생성하는
+ * 재기안 유즈케이스를 담당한다.
+ * <p>
+ * 재기안 과정에서는 다음 작업들이 수행된다.
+ * <p>
+ * - 재기안 요청자(작성자) 검증
+ * - 반려 상태 문서 여부 및 중복 재기안 여부 검증
+ * - 반려 시점에 사용된 양식 버전 조회
+ * - 기존 문서를 기반으로 한 새로운 DRAFT 문서 생성
+ * - 문서 본문(JSON) 복사
+ * - 첨부 파일(DocumentFile) 관계 복제
+ * - 결재선 초안 재초기화
+ * <p>
+ * 원본 문서와 재기안 문서는 beforeDocument 관계로 연결되며,
+ * 이력을 보존한 상태에서 수정 작업을 이어갈 수 있도록 설계되었다.
+ * <p>
+ * 이 클래스는 재기안 흐름에 필요한 조합 로직만을 담당하며,
+ * 개별 검증이나 도메인 규칙은 각 전용 컴포넌트로 위임한다.
  *
  * @author : Choi MinHyeok
  * @filename : DocumentReviseApplicationService
  * @since : 26. 1. 21. 수요일
- **/
+ */
 
 
 @Service
@@ -42,24 +62,21 @@ public class DocumentReviseApplicationService {
     private final DocumentContentRepository documentContentRepository;
     private final DocumentFileRepository documentFileRepository;
     private final FormTemplateRepository formTemplateRepository;
+
     private final ApprovalLineDomainService approvalLineDomainService;
     private final DocumentAccessValidator documentAccessValidator;
 
     @Transactional
     public DocumentCreateResDto revise(Long employeeId, Long documentId) {
-        // 1. 작성자 조회
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new NotFoundException("사원을 찾지 못했습니다."));
 
-        // 2. 원본 문서 조회 (작성자 검증 포함)
         Document rejected = documentAccessValidator.getForWriter(employee, documentId);
 
-        // 3. 상태 검증
         if (rejected.getStatus() != DocumentStatus.REJECTED) {
             throw new InvalidRequestException("반려 상태의 문서만 재기안할 수 있습니다.");
         }
 
-        // 4. 이미 재기안 문서 존재 여부 확인
         boolean existsRevision =
                 documentRepository.existsByBeforeDocument_Id(rejected.getId());
 
@@ -67,7 +84,6 @@ public class DocumentReviseApplicationService {
             throw new InvalidRequestException("이미 재기안 문서가 존재합니다.");
         }
 
-        // 5. 사용된 양식 조회 (당시 버전 기준)
         FormTemplate rejectedTemplate =
                 formTemplateRepository
                         .findByTemplateGroup_idAndVersion(
@@ -76,15 +92,12 @@ public class DocumentReviseApplicationService {
                         )
                         .orElseThrow(() -> new NotFoundException("문서 양식 조회 실패"));
 
-        // 6. 재기안 문서 생성 (DRAFT)
         Document revised = Document.reviseDraft(rejected);
         documentRepository.save(revised);
 
-        // 기존 문서 첨부파일 조회
         List<DocumentFile> originalFiles =
                 documentFileRepository.findByDocument_Id(rejected.getId());
 
-        // DocumentFile만 복제 (File은 공유)
         for (DocumentFile df : originalFiles) {
             if (df.getStatus() == DocumentFileStatus.DELETED) continue;
 
@@ -94,8 +107,6 @@ public class DocumentReviseApplicationService {
             documentFileRepository.save(copied);
         }
 
-
-        // 7. 문서 내용 복사
         DocumentContent rejectedContent =
                 documentContentRepository.findByDocument_Id(rejected.getId())
                         .orElseThrow(() -> new NotFoundException("문서 내용을 찾을 수 없습니다."));
@@ -105,13 +116,12 @@ public class DocumentReviseApplicationService {
 
         documentContentRepository.save(reviseContent);
 
-        // 8. 결재선 초안 초기화
         approvalLineDomainService.initializeDraftLines(
                 revised,
                 rejectedTemplate,
                 employee
         );
 
-        // 9. 결과 반환
-        return DocumentCreateResDto.from(revised.getId());    }
+        return DocumentCreateResDto.from(revised.getId());
+    }
 }

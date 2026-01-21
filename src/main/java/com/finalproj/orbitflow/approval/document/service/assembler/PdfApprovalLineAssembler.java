@@ -11,12 +11,36 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * Please explain the class!!!
+ * 승인 완료된 결재 문서를 PDF로 렌더링하기 위해
+ * 결재선 정보를 PDF 전용 DTO 구조로 변환하는 어셈블러 클래스.
  *
- * @author : Choi MinHyeok
- * @filename : PdfApprovalLineAssembler
- * @since : 26. 1. 5. 월요일
- **/
+ * <p>
+ * 이 클래스는 특정 문서에 연결된 결재선(ApprovalLine)을
+ * 순서대로 조회한 뒤, PDF 출력에 필요한 최소 정보만을 추출하여
+ * {@link PdfApprovalLineDto} 및 {@link PdfApproverDto}로 변환한다.
+ * </p>
+ *
+ * <p>
+ * 결재자의 직급/직위 표시는 {@link Employee} 정보 기준으로
+ * 문자열 형태로만 결정하며,
+ * 서명 이미지나 파일 접근과 같은 리소스 처리는 이 단계에서 다루지 않는다.
+ * 해당 처리는 PDF 렌더링 과정에서 별도의 이미지 스트림 처리 로직을 통해 수행된다.
+ * </p>
+ *
+ * <p>
+ * 즉, 이 어셈블러는
+ * <ul>
+ *     <li>결재선 순서 보장</li>
+ *     <li>PDF 출력용 데이터 구조 변환</li>
+ * </ul>
+ * 에만 책임을 가지며,
+ * 실제 PDF HTML 구성이나 이미지 로딩 책임과는 명확히 분리되어 있다.
+ * </p>
+ *
+ * @author Choi MinHyeok
+ * @filename PdfApprovalLineAssembler
+ * @since 2026.01.05
+ */
 
 
 @Component
@@ -24,7 +48,6 @@ import java.util.List;
 public class PdfApprovalLineAssembler {
 
     private final ApprovalLineRepository approvalLineRepository;
-    //private final SignatureUrlResolver signatureUrlResolver;
 
     public PdfApprovalLineDto from(Long documentId) {
 
@@ -42,39 +65,10 @@ public class PdfApprovalLineAssembler {
         return new PdfApprovalLineDto(approvers);
     }
 
-    private String resolvePosition(Employee employee) {
-        // 직책 > 직급 > 조직명 등 정책에 맞게
-        if (employee.getPositionCategory() != null) {
-            return employee.getPositionCategory().getName();
-        }
-        if (employee.getRank() != null) {
-            return employee.getRank().getName();
-        }
-        return "";
-    }
-
-    //private String resolveSignatureUrl(ApprovalLine approvalLine) {
-    //    if (approvalLine.getStatus() != ApprovalStatus.APPROVED) {
-    //        return null;
-    //    }
-    //    return signatureUrlResolver.resolve(approvalLine);
-    //}
-
     private PdfApproverDto toApproverDto(ApprovalLine approvalLine) {
 
         Employee approver = approvalLine.getApprover();
 
-        String signatureImageUrl = null;
-
-        // 승인 + 서명 파일이 존재할 때만 이미지 노출
-        //if (approvalLine.getStatus().equals(ApprovalStatus.APPROVED) && approvalLine.getSignatureFile() != null) {
-        //    signatureImageUrl =
-        //            "/api/documents/"
-        //                    + approvalLine.getDocument().getId()
-        //                    + "/approvals/"
-        //                    + approvalLine.getId()
-        //                    + "/signature";
-        //}
 
         return new PdfApproverDto(
                 approvalLine.getId(),
@@ -82,8 +76,7 @@ public class PdfApprovalLineAssembler {
                 approver.getName(),
                 approver.getPositionCategory() != null
                         ? approver.getPositionCategory().getName()
-                        : null,
-                signatureImageUrl
+                        : null
         );
     }
 }

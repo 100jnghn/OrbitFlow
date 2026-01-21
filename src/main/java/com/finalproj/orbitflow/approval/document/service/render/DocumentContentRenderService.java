@@ -13,12 +13,24 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Please explain the class!!!
+ * 문서 본문을 HTML로 렌더링하는 서비스.
+ * <p>
+ * PdfContentSchema에 정의된 필드 목록을 순회하면서,
+ * 각 필드 타입에 맞는 FieldRenderer를 찾아 HTML 조각으로 변환한다.
+ * <p>
+ * 렌더링 과정에서는 문서 ID 기반의 RenderContext를 생성해
+ * 이미지 URL, 휴가 유형명 등 문맥 정보가 필요한 필드에서도
+ * 동일한 방식으로 접근할 수 있도록 한다.
+ * <p>
+ * 특정 필드 타입에 대응하는 Renderer가 존재하지 않는 경우에는
+ * 기본 fallback 렌더링을 통해 최소한의 출력은 보장한다.
+ * <p>
+ * PDF 생성과 문서 상세 조회 화면에서 공용으로 사용된다.
  *
- * @author : Choi MinHyeok
- * @filename : DocumentContentRenderService
- * @since : 26. 1. 3. 토요일
- **/
+ * @author Choi MinHyeok
+ * @filename DocumentContentRenderService
+ * @since 2026.01.03
+ */
 
 
 @Service
@@ -29,9 +41,6 @@ public class DocumentContentRenderService {
     private final RenderContextFactory renderContextFactory;
 
 
-    /**
-     * PDF / Detail 공용 문서 본문 HTML 렌더링
-     */
     public String render(Long documentId, PdfContentSchema schema) {
 
         RenderContext context =
@@ -52,9 +61,6 @@ public class DocumentContentRenderService {
                 .orElseGet(() -> fallbackRender(field));
     }
 
-    /**
-     * 🔥 진짜 최후 fallback (어떤 Renderer도 없을 때)
-     */
     private String fallbackRender(PdfField field) {
 
         String label = field.getLabel() != null ? field.getLabel() : "";

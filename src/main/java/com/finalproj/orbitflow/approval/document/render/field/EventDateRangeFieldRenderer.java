@@ -7,12 +7,29 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 /**
- * Please explain the class!!!
+ * 기간 기반 이벤트 필드(event-date-range)를 PDF용 HTML로 렌더링하는 렌더러.
+ * <p>
+ * 시작일과 종료일을 하나의 기간으로 묶어 표현하며,
+ * 메타 정보(baseRole)에 따라 휴가(VACATION) 유형과
+ * 일반 일정 유형을 구분해 렌더링한다.
+ * <p>
+ * 휴가 유형의 경우:
+ * - 기간(start ~ end)
+ * - 휴가 유형(연차, 반차 등)
+ * - 사유
+ * <p>
+ * 일반 일정 유형의 경우:
+ * - 기간(start ~ end)
+ * - 일정 제목
+ * - 설명
+ * <p>
+ * 값이 없거나 형식이 올바르지 않은 경우에는
+ * 기본 대시(-) 형태로 출력한다.
  *
  * @author : Choi MinHyeok
  * @filename : EventDateRangeFieldRenderer
  * @since : 26. 1. 4. 일요일
- **/
+ */
 
 
 @Component

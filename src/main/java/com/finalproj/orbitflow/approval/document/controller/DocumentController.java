@@ -15,12 +15,22 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * Please explain the class!!!
+ * 결재 문서와 관련된 요청을 처리하는 컨트롤러.
+ * <p>
+ * 문서 작성, 수정, 상신, 승인/반려와 같은 흐름과
+ * 목록 조회, 상세 조회, 대시보드 조회 등의 API를 제공한다.
+ * <p>
+ * 실제 처리 로직은 각 ApplicationService와 DomainService에 위임하고,
+ * 이 컨트롤러는 요청을 받아 필요한 서비스로 연결하는 역할만 맡는다.
+ * <p>
+ * 문서 생명주기 단계에 따라 기능이 나뉘어 있으며,
+ * 여기서는 그 진입점만 모아서 관리한다.
  *
  * @author : Choi MinHyeok
  * @filename : DocumentController
  * @since : 25. 12. 22. 월요일
- **/
+ */
+
 
 @RestController
 @RequiredArgsConstructor
@@ -103,12 +113,12 @@ public class DocumentController {
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "재기안 문서 조회 성공", result));
     }
 
-    @PatchMapping("/update/{DocumentId}")
+    @PatchMapping("/update/{documentId}")
     public ResponseEntity<?> updateDocument(
-            @PathVariable Long DocumentId,
+            @PathVariable Long documentId,
             @RequestBody DocumentUpdateReqDto reqDto
     ) {
-        documentService.updateDocument(SecurityUtils.getEmployeeId(), DocumentId, reqDto);
+        documentService.updateDocument(SecurityUtils.getEmployeeId(), documentId, reqDto);
 
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "문서 수정 성공", null));
     }

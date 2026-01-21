@@ -41,14 +41,6 @@ public class PdfField {
         this.meta = meta;
     }
 
-    /* =========================================================
-       Meta helper methods (Renderer-facing API)
-    ========================================================= */
-
-    /**
-     * Returns a meta value as String.
-     * Returns null if meta or key does not exist.
-     */
     public String getMetaValue(String key) {
         if (meta == null) {
             return null;
@@ -57,10 +49,6 @@ public class PdfField {
         return value != null ? String.valueOf(value) : null;
     }
 
-    /**
-     * Returns a meta value as Map.
-     * Useful for nested meta structures (ex: ui options).
-     */
     @SuppressWarnings("unchecked")
     public Map<String, Object> getMetaMap(String key) {
         if (meta == null) {
@@ -73,10 +61,6 @@ public class PdfField {
         return null;
     }
 
-    /**
-     * Convenience method for boolean-like meta flags.
-     * Accepts Boolean / String("true") / null.
-     */
     public boolean getMetaBoolean(String key) {
         if (meta == null) {
             return false;

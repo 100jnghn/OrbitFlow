@@ -31,22 +31,32 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 /**
- * 승인 완료된 결재 문서를 PDF로 변환하여 저장하는 Application Service.
- *
+ * 승인 완료된 결재 문서를 PDF로 생성하고 저장하는 Application Service.
  * <p>
- * 이 서비스는 결재가 최종 승인(APPROVED)된 문서를 대상으로,
- * 문서 본문(JSON)과 승인선 정보를 기반으로 PDF를 생성하고
- * 생성된 PDF 파일을 시스템에 저장한 뒤 문서와 매핑한다.
- * </p>
- *
+ * 이 클래스는 결재 프로세스가 최종 승인(APPROVED) 상태에 도달한 이후,
+ * 문서를 PDF 형태로 변환하여 보관하는 후처리 흐름을 담당한다.
  * <p>
- * PDF 렌더링을 위한 HTML 생성, 내부 이미지 처리, 폰트 설정 등은
- * 전용 컴포넌트로 위임하며, 이 클래스는 전체 흐름만 조율한다.
- * </p>
+ * 내부적으로는 다음 작업들을 순서대로 조합한다.
+ * <p>
+ * - 승인 완료된 문서 상태 검증
+ * - 문서 본문(JSON) 조회 및 양식 스키마 파싱
+ * - 승인선 정보(PDF 전용 DTO) 구성
+ * - PDF 렌더링에 필요한 콘텐츠 스키마 변환
+ * - HTML 기반 PDF 렌더링
+ * - 생성된 PDF 파일 저장 및 문서와의 매핑
+ * <p>
+ * 실제 PDF 렌더링, 이미지 로딩, HTML 생성, 스키마 변환 등의 세부 구현은
+ * 각각의 전용 컴포넌트로 위임하며,
+ * 이 클래스는 전체 흐름을 하나의 유즈케이스로 조율하는 역할만을 가진다.
+ * <p>
+ * PDF 생성 과정은 별도의 트랜잭션(REQUIRES_NEW)에서 실행되도록 설계되어,
+ * PDF 생성 실패가 기존 결재 승인 트랜잭션에 영향을 주지 않도록 한다.
  *
- * @author Choi MinHyeok
- * @since 2026.01.21
+ * @author : Choi MinHyeok
+ * @filename : DocumentPdfApplicationService
+ * @since : 26. 1. 21. 수요일
  */
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -79,7 +89,6 @@ public class DocumentPdfApplicationService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void generateAndStorePdf(Long documentId) {
 
-        // 1. 문서 조회 및 상태 검증
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new NotFoundException("문서를 찾을 수 없습니다."));
 
@@ -87,14 +96,12 @@ public class DocumentPdfApplicationService {
             throw new IllegalStateException("승인 완료된 문서만 PDF로 생성할 수 있습니다.");
         }
 
-        // 2. 문서 본문(JSON) 조회
         DocumentContent documentContent = documentContentRepository
                 .findByDocument_Id(documentId)
                 .orElseThrow(() ->
                         new NotFoundException("DocumentContent not found. documentId=" + documentId)
                 );
 
-        // 3. JSON → FormTemplateSchema 변환
         FormTemplateSchema templateSchema =
                 formTemplateSchemaParser.parse(documentContent.getContentJson());
 
@@ -102,15 +109,12 @@ public class DocumentPdfApplicationService {
             throw new IllegalStateException("양식에 필드가 없습니다.");
         }
 
-        // 4. 승인선 정보 구성
         PdfApprovalLineDto approvalLine =
                 pdfApprovalLineAssembler.from(documentId);
 
-        // 5. PDF 전용 콘텐츠 스키마 구성
         PdfContentSchema pdfContentSchema =
                 pdfContentSchemaAssembler.from(templateSchema);
 
-        // 6. PDF 렌더링용 HTML 생성
         String html = pdfHtmlBuilder.build(
                 documentId,
                 approvalLine,
@@ -119,19 +123,16 @@ public class DocumentPdfApplicationService {
                 document.getSubmittedAt()
         );
 
-        // 7. HTML → PDF 변환
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
             PdfRendererBuilder builder = new PdfRendererBuilder();
             builder.useFastMode();
 
-            // 내부 이미지 스트림 처리
             builder.useProtocolsStreamImplementation(
                     new PdfImageStreamFactory(pdfInternalImageService),
                     "pdf-image"
             );
 
-            // 폰트 설정
             registerFont(builder, "fonts/NanumGothic-Regular.ttf", "Nanum Gothic", 400);
             registerFont(builder, "fonts/NanumGothic-Bold.ttf", "Nanum Gothic", 700);
 
@@ -141,7 +142,6 @@ public class DocumentPdfApplicationService {
 
             byte[] pdfBytes = outputStream.toByteArray();
 
-            // 8. PDF 파일 저장 및 문서 매핑
             File pdfFile = fileService.saveGeneratedPdf(
                     document.getCompany().getId(),
                     documentId,

@@ -32,23 +32,28 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * 결재 문서를 상신(SUBMIT)하는 Application Service.
- * -
- * 임시 저장(DRAFT) 상태의 문서를 결재 프로세스에 진입시킨다.
- * -
- * 주요 역할
- * - 작성자 및 문서 상태 검증
- * - 결재선 검증 및 최초 결재자 지정
- * - 문서 상태 변경 (DRAFT → IN_PROGRESS)
- * - 첨부파일 상태 확정
- * - 휴가 문서의 경우 근태 도메인 연동
+ * 임시 저장된 결재 문서를 실제 결재 흐름에 올리는 상신(SUBMIT) 유즈케이스를 담당하는 Application Service.
+ * <p>
+ * 이 클래스는 DRAFT 상태의 문서를 결재 프로세스에 진입시키는 역할을 수행한다.
+ * 단순히 문서 상태를 변경하는 것이 아니라, 결재선 검증과 초기화,
+ * 첨부 파일 상태 확정, 도메인 연동 처리, 알림 전송까지
+ * 상신 시점에 필요한 모든 작업을 하나의 트랜잭션 흐름으로 조율한다.
+ * <p>
+ * 상신 과정에서는 다음과 같은 책임을 가진다.
+ * <p>
+ * - 문서 작성자 및 문서 상태(DRAFT) 검증
+ * - 결재선 존재 여부 확인 및 최초 결재자 검증
+ * - 결재 규칙에 맞지 않는 경우 대체 결재자 지정
+ * - 문서 상태를 IN_PROGRESS로 전환
+ * - 결재선 상태 초기화 및 최초 결재 단계 활성화
+ * - 첨부 파일 상태 확정(TEMP → FINAL) 및 삭제 파일 정리
+ * - 휴가 문서의 경우 근태 도메인(Attendance)과의 연동 처리
  * - 최초 결재자에게 결재 요청 알림 전송
- *
  *
  * @author : Choi MinHyeok
  * @filename : DocumentSubmitApplicationService
  * @since : 26. 1. 21. 수요일
- **/
+ */
 
 
 @Service
@@ -70,29 +75,22 @@ public class DocumentSubmitApplicationService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    /**
-     * 임시 저장된 결재 문서를 상신한다.
-     */
     @Transactional
     public void submit(Long employeeId, Long documentId) {
 
-        // 요청한 사원 및 문서 조회 (작성자 검증 포함)
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new NotFoundException("요청한 사원 정보를 찾을 수 없습니다."));
 
         Document document = documentAccessValidator.getForWriter(employee, documentId);
 
-        // 임시 저장 상태의 문서만 상신 가능
         if (document.getStatus() != DocumentStatus.DRAFT) {
             throw new InvalidRequestException(
                     "이미 상신되었거나 처리 중인 문서는 다시 상신할 수 없습니다."
             );
         }
 
-        // 문서를 결재 진행 상태로 전환
         document.submit();
 
-        // 결재선 조회
         List<ApprovalLine> approvalLines =
                 approvalLineRepository.findByDocument_IdOrderByOrderNoAsc(documentId);
 
@@ -102,7 +100,6 @@ public class DocumentSubmitApplicationService {
             );
         }
 
-        // 최초 결재자 검증 및 필요 시 대체 결재자 지정
         ApprovalLine firstLine = approvalLines.get(0);
         Employee firstApprover = firstLine.getApprover();
 
@@ -120,11 +117,9 @@ public class DocumentSubmitApplicationService {
             firstLine.setApprover(replacement);
         }
 
-        // 결재선을 대기 상태로 초기화하고 최초 결재자를 진행 상태로 설정
         approvalLines.forEach(ApprovalLine::markWaiting);
         firstLine.markInProgress();
 
-        // 첨부파일 상태 확정 (TEMP → FINAL) 및 삭제 대상 분리
         List<DocumentFile> documentFiles =
                 documentFileRepository.findByDocument_Id(documentId);
 
@@ -139,10 +134,8 @@ public class DocumentSubmitApplicationService {
         documentFileRepository.deleteAll(deletedFiles);
         entityManager.flush();
 
-        // 문서와의 연결이 끊긴 실제 파일 리소스 정리
         documentFileCleanupService.cleanupDetachedFiles(deletedFiles);
 
-        // 휴가 문서의 경우 근태 도메인에 반영
         if (BaseRole.VACATION.equals(document.getTemplateGroup().getBaseRole())) {
 
             LeaveCalculationResult result =
@@ -176,7 +169,6 @@ public class DocumentSubmitApplicationService {
             attendanceRecordRepository.save(record);
         }
 
-        // 최초 결재자에게 결재 요청 알림 전송
         String shortTitle =
                 DocumentTextFormatter.shortenTitle(document.getTitle(), 20);
 

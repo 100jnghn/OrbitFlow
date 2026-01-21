@@ -14,12 +14,27 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Please explain the class!!!
+ * 결재 문서의 JSON 기반 내용(DocumentContent)을
+ * 도메인에서 사용 가능한 구조화된 Payload로 변환하는 파서 클래스.
+ * <p>
+ * 문서 내용은 공통적으로 JSON 형태로 저장되며,
+ * 이 클래스는 그 중 특정 필드 타입(event-date-range 등)을 기준으로
+ * 필요한 값만 추출하여 도메인 DTO로 매핑하는 역할을 담당한다.
+ * <p>
+ * 주 사용 목적은 다음과 같다.
+ * - 결재 승인 후 근태, 휴가, 회사 일정 등 후처리 로직에서
+ * 문서 내용을 도메인 객체 형태로 안전하게 해석
+ * - 렌더링이나 비즈니스 서비스에서
+ * JSON 구조를 직접 다루지 않도록 책임 분리
+ * <p>
+ * 이 클래스는 문서 스키마 전체를 해석하지 않고,
+ * “필요한 필드만 선택적으로 추출”하는 경량 파서로 설계되었다.
  *
  * @author : Choi MinHyeok
  * @filename : DocumentContentParser
  * @since : 25. 12. 31. 수요일
- **/
+ */
+
 
 @Component
 @RequiredArgsConstructor
@@ -35,7 +50,7 @@ public class DocumentContentParser {
                         new IllegalStateException("일정 필드를 찾을 수 없습니다.")
                 );
 
-        Map<String, Object> value = eventField.getValue();
+        Map<String, Object> value = eventField.value();
 
         return new CommonPayload(
                 (String) value.get("title"),
@@ -53,7 +68,7 @@ public class DocumentContentParser {
                         new IllegalStateException("회사 일정 필드를 찾을 수 없습니다.")
                 );
 
-        Map<String, Object> value = eventField.getValue();
+        Map<String, Object> value = eventField.value();
 
         return new VacationPayload(
                 value.get("vacationTypeId") == null

@@ -35,12 +35,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Please explain the class!!!
+ * 결재 문서가 최종 승인된 이후 실행되어야 하는 후처리 로직을 담당하는 서비스.
+ * <p>
+ * 결재 흐름 자체에는 관여하지 않고,
+ * 승인 완료라는 결과를 기준으로 다른 도메인에 영향을 주는 작업들을 처리한다.
+ * (근태 반영, 휴가 차감, 일정 생성 등)
+ * <p>
+ * 문서에 설정된 TemplateGroup의 BaseRole을 기준으로
+ * 어떤 후처리를 수행할지 판단하며,
+ * 처리 대상이 아닌 경우에는 별도 동작 없이 종료된다.
+ * <p>
+ * 이 서비스는 이벤트 핸들러에서 호출되는 것을 전제로 하며,
+ * 결재 도메인과 근태/일정/휴가 도메인 간의 책임을 분리하기 위한
+ * 중간 처리 계층 역할을 한다.
  *
  * @author : Choi MinHyeok
  * @filename : ApprovalEventTxService
  * @since : 26. 1. 6. 화요일
- **/
+ */
+
 
 @Service
 @RequiredArgsConstructor
@@ -49,15 +62,16 @@ public class ApprovalEventTxService {
 
     private final DocumentRepository documentRepository;
     private final OrgRepository orgRepository;
-    private final ScheduleService scheduleService;
     private final AttendanceRecordRepository attendanceRecordRepository;
-    private final LeaveService leaveService;
-    private final LeaveCalculationService leaveCalculationService;
     private final DocumentContentRepository documentContentRepository;
-    private final DocumentContentParser documentContentParser;
     private final AttendanceEventRepository attendanceEventRepository;
     private final WorkingDayService workingDayService;
     private final AttendanceRuleRepository attendanceRuleRepository;
+
+    private final LeaveService leaveService;
+    private final LeaveCalculationService leaveCalculationService;
+    private final DocumentContentParser documentContentParser;
+    private final ScheduleService scheduleService;
 
     public static List<DateRange> splitToRanges(List<LocalDate> dates) {
 
@@ -171,7 +185,6 @@ public class ApprovalEventTxService {
     @Transactional
     public void processAttendanceApproval(Long documentId) {
 
-        // 1️⃣ 문서 조회
         Document document = documentRepository.findById(documentId)
                 .orElseThrow();
 
@@ -183,7 +196,6 @@ public class ApprovalEventTxService {
             return;
         }
 
-        // 2️⃣ 문서 내용 파싱
         DocumentContent content = documentContentRepository
                 .findByDocument_Id(documentId)
                 .orElseThrow();
@@ -192,7 +204,6 @@ public class ApprovalEventTxService {
 
         Employee writer = document.getWriter();
 
-        // 3️⃣ 최상위 조직 조회
         Organization org = orgRepository
                 .findFirstByCompanyIdAndParentOrgId(
                         writer.getCompany().getId(), null)
@@ -204,12 +215,10 @@ public class ApprovalEventTxService {
             default -> payload.title();
         };
 
-        // 4️⃣ 🔥 실제 근무일 계산 (주말 + 공휴일 제외)
         List<LocalDate> workingDates = workingDayService.getWorkingDates(
                 payload.startDate(),
                 payload.endDate());
 
-        // 전부 휴일인 경우
         if (workingDates.isEmpty()) {
             log.warn(
                     "[AttendanceApproval] No working days - documentId={}",
@@ -220,7 +229,6 @@ public class ApprovalEventTxService {
 
         for (LocalDate date : workingDates) {
 
-            // 📅 일정 생성 (일 단위)
             ScheduleReqDto scheduleReqDto = ScheduleReqDto.builder()
                     .isCompany(true)
                     .isPersonal(true)
@@ -239,9 +247,7 @@ public class ApprovalEventTxService {
                     scheduleReqDto);
 
 
-            // 6️⃣ 🔥 추가된 로직: 승인된 날짜 중 오늘이 포함되어 있으면 즉시 근무 상태 변경
             if (date.equals(LocalDate.now())) {
-                // BaseRole에 따라 WorkStatus 매핑 (출장 중 또는 외근 중)
                 WorkStatus targetStatus;
                 if (baseRole == BaseRole.BUSINESS_TRIP) {
                     targetStatus = WorkStatus.BUSINESS_TRIP;
@@ -249,7 +255,6 @@ public class ApprovalEventTxService {
                     targetStatus = WorkStatus.OUTWORK;
                 }
 
-                // LeaveService의 상태 변경 메서드 호출 (사전에 LeaveService에 해당 메서드 구현 필요)
                 leaveService.updateWorkStatus(writer.getId(), targetStatus);
 
                 log.info("[StatusUpdate] {} 승인으로 인한 상태 변경: 사원={}, 날짜={}",
@@ -257,7 +262,6 @@ public class ApprovalEventTxService {
             }
         }
 
-        // 🕒근태 이벤트 저장(전체 저장하고 스케쥴러에서 오늘이 근무일인지 체크)
         attendanceEventRepository.save(
                 AttendanceEvent.builder()
                         .employee(writer)
@@ -272,19 +276,16 @@ public class ApprovalEventTxService {
     @Transactional
     public void processCompanyEvent(Long documentId) {
 
-        // 1️⃣ 문서 조회
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() ->
                         new NotFoundException("문서를 찾을 수 없습니다.")
                 );
 
-        // 2️⃣ COMPANY_EVENT가 아니면 무시
         BaseRole baseRole = document.getTemplateGroup().getBaseRole();
         if (baseRole != BaseRole.COMPANY_EVENT) {
             return;
         }
 
-        // 3️⃣ 문서 내용 조회 + 공통 Payload 파싱
         DocumentContent content = documentContentRepository
                 .findByDocument_Id(documentId)
                 .orElseThrow(() ->
@@ -294,18 +295,15 @@ public class ApprovalEventTxService {
         CommonPayload payload =
                 documentContentParser.extractCommon(content);
 
-        // 4️⃣ 작성자 / 회사 정보
         Employee writer = document.getWriter();
         Long companyId = writer.getCompany().getId();
 
-        // 5️⃣ 회사 최상위 조직 조회
         Organization rootOrg = orgRepository
                 .findFirstByCompanyIdAndParentOrgId(companyId, null)
                 .orElseThrow(() ->
                         new NotFoundException("회사 최상위 조직 조회 실패")
                 );
 
-        // 6️⃣ 회사 기본 근무 시간 조회
         AttendanceRule rule = attendanceRuleRepository
                 .findByCompanyIdAndIsDefaultTrue(companyId)
                 .orElseThrow(() ->
@@ -315,7 +313,6 @@ public class ApprovalEventTxService {
         LocalTime startTime = rule.getDefaultStartTime();
         LocalTime endTime = rule.getDefaultEndTime();
 
-        // 7️⃣ 회사 일정 생성
         ScheduleReqDto scheduleReqDto = ScheduleReqDto.builder()
                 .isCompany(true)
                 .isPersonal(false)
@@ -327,7 +324,6 @@ public class ApprovalEventTxService {
                 .status("RELEASE")
                 .build();
 
-        // 8️⃣ 일정 저장 (새 트랜잭션 분리 필요 시 내부에서 처리)
         scheduleService.insertSchedule(
                 companyId,
                 writer.getId(),

@@ -34,16 +34,35 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * 결재 문서 초안(DRAFT) 생성 유즈케이스를 담당하는 Application Service.
- * - 양식 유효성 검증
- * - 결재 규칙 사전 검증
- * - 문서 초안 및 본문 생성
+ * 결재 문서 초안(DRAFT)의 생성과 삭제를 담당하는 Application Service.
+ * <p>
+ * 이 클래스는 결재 문서 작성 흐름의 시작 지점을 담당하며,
+ * 단순 엔티티 생성이 아니라 다음과 같은 여러 단계를 묶어 하나의 유즈케이스로 처리한다.
+ * <p>
+ * - 회사 / 사원 / 양식 유효성 검증
+ * - 양식 활성 상태 및 결재 규칙 사전 검증
+ * - 양식 스키마 기반 문서 제목 결정
+ * - 결재 문서 초안(Document) 생성
+ * - 문서 본문(DocumentContent) 초기 생성
  * - 결재선 초안 초기화
+ * <p>
+ * 또한 임시 저장 상태(DRAFT)에 한해,
+ * 문서 삭제 시 필요한 정리 작업을 함께 수행한다.
+ * <p>
+ * - 문서에 연결된 첨부 파일 관계 제거
+ * - 고아 파일 정리(cleanup)
+ * - 결재선 및 문서 본문 삭제
+ * - 최종 문서 엔티티 삭제
+ * <p>
+ * 이 클래스는 여러 도메인 서비스와 리포지토리를 조합하여
+ * “문서 초안 생성 / 삭제”라는 하나의 흐름을 완결하는 역할을 하며,
+ * 개별 도메인 규칙의 상세 구현은 각각의 Domain Service에 위임한다.
  *
  * @author : Choi MinHyeok
  * @filename : DocumentDraftApplicationService
  * @since : 26. 1. 21. 수요일
  */
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -161,10 +180,8 @@ public class DocumentDraftApplicationService {
     @Transactional
     public void deleteDraft(Long employeeId, Long documentId) {
 
-        // 문서 조회 + 기본 검증
         Document draft = validateDeletableDraft(employeeId, documentId);
 
-        // 첨부파일 관계 삭제
         List<DocumentFile> documentFiles =
                 documentFileRepository.findByDocument_Id(draft.getId());
 
@@ -173,13 +190,10 @@ public class DocumentDraftApplicationService {
 
         documentFileCleanupService.cleanupDetachedFiles(documentFiles);
 
-        // 결재선 삭제
         approvalLineRepository.deleteByDocument(draft);
 
-        // 문서 본문 삭제
         documentContentRepository.deleteByDocument(draft);
 
-        // 문서 삭제
         documentRepository.delete(draft);
     }
 
@@ -188,12 +202,10 @@ public class DocumentDraftApplicationService {
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new NotFoundException("문서 탐색 실패"));
 
-        // 상태 검증
         if (document.getStatus() != DocumentStatus.DRAFT) {
             throw new InvalidRequestException("임시 문서만 삭제할 수 있습니다.");
         }
 
-        // 작성자 검증
         if (!document.getWriter().getId().equals(employeeId)) {
             throw new InvalidRequestException("삭제 권한 없음");
         }
