@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow.hr.company.service;
 
-import com.finalproj.orbitflow.board.boardCategory.service.OrganizationBoardCategorySyncService;
+import com.finalproj.orbitflow.board.boardcategory.service.OrganizationBoardCategorySyncService;
 import com.finalproj.orbitflow.global.exception.BusinessException;
 import com.finalproj.orbitflow.hr.company.dto.CompanySignupReqDto;
 import com.finalproj.orbitflow.hr.company.entity.Company;

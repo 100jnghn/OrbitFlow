@@ -521,16 +521,16 @@ async function initializeReplyMode() {
 
         let quotedContent = '';
         if (originalSenderName) {
-            quotedContent += `From: ${escapeHTML(originalSenderName)}\n`;
+            quotedContent += `From: ${originalSenderName}\n`;
         }
         if (originalCreatedAt) {
             const formattedDate = formatDateTime(originalCreatedAt);
             quotedContent += `Date: ${formattedDate}\n`;
         }
         if (originalTitle) {
-            quotedContent += `Title: ${escapeHTML(originalTitle)}\n`;
+            quotedContent += `Title: ${originalTitle}\n`;
         }
-        quotedContent += '\n' + escapeHTML(cleanContent);
+        quotedContent += '\n' + cleanContent;
 
         // 원문 앞에 "-----Original Message-----" 구분선 추가 (위에 두 줄 공백)
         document.getElementById('messageContent').value = `\n\n-----Original Message-----\n${quotedContent}\n\n`;

@@ -1,8 +1,8 @@
 package com.finalproj.orbitflow.board.comment.service;
 
-import com.finalproj.orbitflow.board.boardCategory.entity.BoardCategory;
-import com.finalproj.orbitflow.board.boardPost.entity.BoardPost;
-import com.finalproj.orbitflow.board.boardPost.repository.BoardPostRepository;
+import com.finalproj.orbitflow.board.boardcategory.entity.BoardCategory;
+import com.finalproj.orbitflow.board.boardpost.entity.BoardPost;
+import com.finalproj.orbitflow.board.boardpost.repository.BoardPostRepository;
 import com.finalproj.orbitflow.board.comment.dto.CommentReqDto;
 import com.finalproj.orbitflow.board.comment.dto.CommentResDto;
 import com.finalproj.orbitflow.board.comment.entity.Comment;
