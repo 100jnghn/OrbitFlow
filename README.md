@@ -105,8 +105,7 @@
 
 ## 🏗 시스템 아키텍처
 
-
-
+<img width="1024" height="541" alt="image" src="https://github.com/user-attachments/assets/854ce2e7-9d22-41ea-b751-732757807b8a" />
 
 
 ## 🛠 Tech stack 
