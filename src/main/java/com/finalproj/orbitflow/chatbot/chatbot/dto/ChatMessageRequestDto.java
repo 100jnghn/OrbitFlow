@@ -15,8 +15,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ChatMessageRequestDto {
 
-    /**
-     * 사용자가 입력한 질문 텍스트
-     */
     private String content;
 }

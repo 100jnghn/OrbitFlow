@@ -7,6 +7,14 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Please explain the class!!!
+ *
+ * @author : rlagkdus
+ * @filename : LeaveTypeRepository
+ * @since : 2025. 12. 24. 수요일
+ */
+
 @Repository
 public interface LeaveTypeRepository extends JpaRepository<LeaveType, Long> {
 

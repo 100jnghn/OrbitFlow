@@ -27,7 +27,6 @@ public class ChromaVectorServiceImpl implements ChromaVectorService {
     @Override
     public void deleteByFileId(Long companyId, String fileId) {
 
-        // where 조건: company_id + file_id
         Map<String, Object> where = Map.of(
                 "$and", List.of(
                         Map.of("company_id", Map.of("$eq", companyId.toString())),

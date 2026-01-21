@@ -8,7 +8,7 @@ import java.time.LocalTime;
  * Please explain the class!!!
  *
  * @author : rlagkdus
- * @filename : AttendanceRuleResDto
+ * @filename : DefaultRuleResDto
  * @since : 2025. 12. 18. 목요일
  */
 public record DefaultRuleResDto(

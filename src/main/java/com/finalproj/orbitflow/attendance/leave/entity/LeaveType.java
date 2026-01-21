@@ -6,6 +6,15 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
+/**
+ * Please explain the class!!!
+ *
+ * @author : rlagkdus
+ * @filename : LeaveType
+ * @since : 2026. 1. 8. 목요일
+ */
+
+
 @Entity
 @Getter
 @Builder
@@ -17,16 +26,16 @@ public class LeaveType extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
-    private Long id;            // 타입 ID (PK)
+    private Long id;
 
     @Column(name = "type_name", nullable = false, length = 50)
-    private String typeName;        // 카테고리 이름
+    private String typeName;
 
     @Column(name = "is_countable", nullable = false)
-    private Boolean isCountable;    // 잔여 일수 차감 여부 (일수가 차감되는 연차인지 여부)
+    private Boolean isCountable;
 
     @Column(name = "description", length = 255)
-    private String description;     // 상세 설명
+    private String description;
 
     @Column(precision = 5, scale = 3)
     private BigDecimal unitDays;

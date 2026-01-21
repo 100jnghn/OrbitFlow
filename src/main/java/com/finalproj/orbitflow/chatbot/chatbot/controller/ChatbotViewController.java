@@ -6,8 +6,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
- * 챗봇 매뉴얼 관리 페이지 View Controller
+ * Please explain the class!!!
+ *
+ * @author : rlagkdus
+ * @filename : ChatbotViewController
+ * @since : 2025. 12. 30. 화요일
  */
+
 @Controller
 @RequestMapping("/view")
 public class ChatbotViewController {

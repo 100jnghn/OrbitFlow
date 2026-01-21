@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.attendance.monthly_history.dto;
+package com.finalproj.orbitflow.attendance.monthlyhistory.dto;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -15,7 +15,6 @@ import org.springframework.data.domain.Page;
 @Getter
 @Builder
 public class MonthlyHistoryResDto {
-
     private String searchPeriod;
     private MonthlyAttHistoryResDto summary;
     private Page<DailyAttRecordResDto> pagedData;

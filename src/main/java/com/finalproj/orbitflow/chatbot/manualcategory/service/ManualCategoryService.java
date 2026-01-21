@@ -1,15 +1,22 @@
-package com.finalproj.orbitflow.chatbot.manualCategory.service;
+package com.finalproj.orbitflow.chatbot.manualcategory.service;
 
 import com.finalproj.orbitflow.chatbot.manual.repository.ManualRepository;
-import com.finalproj.orbitflow.chatbot.manualCategory.dto.ManualCategoryReqDto;
-import com.finalproj.orbitflow.chatbot.manualCategory.entity.ManualCategory;
-import com.finalproj.orbitflow.chatbot.manualCategory.repository.ManualCategoryRepository;
+import com.finalproj.orbitflow.chatbot.manualcategory.dto.ManualCategoryReqDto;
+import com.finalproj.orbitflow.chatbot.manualcategory.entity.ManualCategory;
+import com.finalproj.orbitflow.chatbot.manualcategory.repository.ManualCategoryRepository;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.hr.company.repository.CompanyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+/**
+ *
+ * @author : rlagkdus
+ * @filename : ManualCategoryService
+ * @since : 2025. 12. 30. 화요일
+ */
 
 @Service
 @RequiredArgsConstructor
@@ -48,7 +55,6 @@ public class ManualCategoryService {
         ManualCategory category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new NotFoundException("카테고리를 찾을 수 없습니다."));
 
-        // 1. 해당 카테고리에 등록된 매뉴얼이 있는지 확인
         if (manualRepository.existsByCompanyIdAndCategoryIdAndIsActiveTrue(companyId, categoryId)) {
             throw new InvalidRequestException("해당 카테고리에 사용 중인 매뉴얼이 있어 삭제할 수 없습니다.");
         }

@@ -19,6 +19,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Please explain the class!!!
+ *
+ * @author : rlagkdus
+ * @filename : AttendanceRuleController
+ * @since : 2025. 12. 22. 월요일
+ */
+
+
 @RestController
 @RequestMapping("/api/admin/rules")
 @RequiredArgsConstructor
@@ -87,10 +96,6 @@ public class AttendanceRuleController {
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "해당 예외 규칙이 삭제되었습니다.", null));
     }
 
-    /**
-     * 회사 가입 완료 후, 해당 회사의 기본 근태 규칙을 초기화합니다.
-     * POST /api/attendance/rule/initialize/{companyId}
-     */
     @PostMapping("/initialize/{companyId}")
     public ResponseEntity<ResponseDto<Void>> initializeDefaultRule(@PathVariable Long companyId) {
         Company company = companyService.findById(companyId);

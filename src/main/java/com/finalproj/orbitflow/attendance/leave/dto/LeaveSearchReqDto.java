@@ -21,13 +21,13 @@ import java.time.LocalDate;
 @ToString
 public class LeaveSearchReqDto {
 
-    private Integer year;           // 조회 연도
-    private String typeName;        // 휴가 유형 이름 (예: 연차, 반차, 병가)
-    private DocumentStatus status;  // 결재 상태 (APPROVED, REJECTED, PENDING 등)
+    private Integer year;
+    private String typeName;
+    private DocumentStatus status;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    private LocalDate startDate;    // 검색 시작일 (YYYY-MM-DD)
+    private LocalDate startDate;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    private LocalDate endDate;      // 검색 종료일 (YYYY-MM-DD)
+    private LocalDate endDate;
 }

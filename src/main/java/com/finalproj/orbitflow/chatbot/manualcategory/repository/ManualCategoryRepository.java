@@ -1,6 +1,6 @@
-package com.finalproj.orbitflow.chatbot.manualCategory.repository;
+package com.finalproj.orbitflow.chatbot.manualcategory.repository;
 
-import com.finalproj.orbitflow.chatbot.manualCategory.entity.ManualCategory;
+import com.finalproj.orbitflow.chatbot.manualcategory.entity.ManualCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

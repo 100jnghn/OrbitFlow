@@ -12,6 +12,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * * @author : hayeon
+ * @filename : CommuteController
+ * @since : 2025. 12. 21. 일요일
+ */
+
 @RestController
 @RequestMapping("/api/attendance")
 @RequiredArgsConstructor
