@@ -30,7 +30,6 @@ public class ItemResDto {
     private String statusCode;
     private String statusName;
 
-    // 이미지 파일 정보 (없으면 null)
     private Long fileId;
 
     private String uploaderName;

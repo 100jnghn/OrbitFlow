@@ -47,7 +47,6 @@ public class Car extends BaseEntity {
     @JoinColumn(name = "resource_status_id")
     private ResourceStatus resourceStatus;
 
-    // 1 : 1 매핑
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "file_id")
     private File file;

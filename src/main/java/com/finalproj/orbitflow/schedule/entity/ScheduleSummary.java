@@ -34,7 +34,6 @@ public class ScheduleSummary extends BaseEntity {
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
-    // MySQL의 TEXT 타입 매핑
     @Column(name = "daily_summary", columnDefinition = "TEXT")
     private String dailySummary;
 

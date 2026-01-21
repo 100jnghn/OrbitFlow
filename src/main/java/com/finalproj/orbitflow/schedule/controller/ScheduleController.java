@@ -64,7 +64,6 @@ public class ScheduleController {
             @RequestParam int month,
             @RequestParam(defaultValue = "false") boolean isWeekly
     ) {
-        log.info("사용자 전사 일정");
         Long companyId = user.getCompanyId();
         List<ScheduleResDto> schedules = scheduleService.getUserCompanySchedule(companyId, year, month, isWeekly);
 
@@ -82,7 +81,6 @@ public class ScheduleController {
             @PathVariable Long scheduleId
     ) {
         Long companyId = user.getCompanyId();
-
         ScheduleResDto schedules = scheduleService.getSchedule(companyId, scheduleId);
 
         return ResponseEntity.ok().body(
@@ -181,7 +179,7 @@ public class ScheduleController {
     ) {
         Long companyId = user.getCompanyId();
         Long employeeId = user.getEmployeeId();
-        Long orgId = user.getOrganizationId();      // 사용자 소속 조직
+        Long orgId = user.getOrganizationId();
 
         List<ScheduleResDto> schedules = scheduleService.getDateSchedules(
                 companyId,
@@ -205,7 +203,6 @@ public class ScheduleController {
             @PathVariable("scheduleId") Long scheduleId
     ) {
         Long companyId = user.getCompanyId();
-
         scheduleService.deleteSchedule(companyId, scheduleId);
 
         return ResponseEntity.ok().body(
@@ -253,16 +250,10 @@ public class ScheduleController {
             @AuthenticationPrincipal SecurityUser user,
             @RequestBody ScheduleReqDto scheduleReqDto
     ) {
-        log.info("insertSchedule called");
-
         Long companyId = user.getCompanyId();
         Long employeeId = user.getEmployeeId();
 
         // isCompany 여부는 front에서 dto에 포함시켜 전달함
-
-        log.info("컨트롤러 - 일정: " + "회사이이디 : " + companyId + " 사원 아이디 : " + employeeId);
-        log.info("컨트롤러 - 회사 org category id : " + scheduleReqDto.getOrgCategoryId());
-
         scheduleService.insertSchedule(companyId, employeeId, scheduleReqDto);
 
         return ResponseEntity.ok().body(

@@ -13,7 +13,6 @@ import com.finalproj.orbitflow.schedule.enums.ScheduleStatus;
 import com.finalproj.orbitflow.schedule.mapper.ScheduleMapper;
 import com.finalproj.orbitflow.schedule.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +32,6 @@ import java.util.stream.Stream;
  * @since : 2025-12-27 오후 4:30 토요일
  */
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class ScheduleService {
 
@@ -290,7 +288,7 @@ public class ScheduleService {
                     .atStartOfDay()
                     .minusNanos(1);
         }
-        // 주 단위 (일정 요약에 사용) (내일 날짜부터 +7일)
+        // 주 단위
         else {
             startOfDate = LocalDate.now().atStartOfDay().plusDays(1);
             endOfDate = startOfDate.plusDays(7);
@@ -340,20 +338,14 @@ public class ScheduleService {
         Schedule schedule = ScheduleMapper.toEntity(companyId, employeeId, dto);
         scheduleRepository.save(schedule);
 
-        log.info("Notification Company : " + schedule.isCompany());
-        log.info("Notification Company : " + schedule.isPersonal());
-        log.info("Notification Company : " + dto.getStatus());
-
         ScheduleStatus dtoStatus = ScheduleStatus.valueOf(dto.getStatus());
 
         // 알림 전송 - 전사
         if (schedule.isCompany() && !schedule.isPersonal() && dtoStatus.equals(ScheduleStatus.RELEASE)) {
-            log.info("Notification: " + "전사 일정 알림");
             createCompanyNotification(schedule);
         }
         // 알림 전송 - 조직
         else if (!schedule.isCompany() && !schedule.isPersonal()) {
-            log.info("Notification: " + "조직 일정 알림");
             createOrganizationNotification(schedule);
         }
     }

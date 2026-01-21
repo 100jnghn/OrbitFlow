@@ -1,6 +1,6 @@
-package com.finalproj.orbitflow.schedule.aiModel;
+package com.finalproj.orbitflow.schedule.aimodel;
 
-import com.finalproj.orbitflow.openAi.dto.OpenAiChatResDto;
+import com.finalproj.orbitflow.openai.dto.OpenAiChatResDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -84,11 +84,9 @@ public class OpenAiSummaryModelService implements SummaryModel {
                     .getMessage()
                     .getContent();
 
-            log.debug("GPT 요약 결과: {}", result);
             return result;
 
         } catch (Exception e) {
-            log.error("GPT 요약 호출 실패", e);
             throw new RuntimeException("GPT 요약 생성 실패", e);
         }
     }
