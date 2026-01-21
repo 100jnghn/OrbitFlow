@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
 /**
- * Please explain the class!!!
+ * 외근/출장 상태 변경에 필요한 로그 엔티티
  *
  * @author : Choi MinHyeok
  * @filename : AttendanceEvent

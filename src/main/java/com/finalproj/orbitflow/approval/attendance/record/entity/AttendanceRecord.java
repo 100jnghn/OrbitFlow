@@ -1,12 +1,12 @@
 package com.finalproj.orbitflow.approval.attendance.record.entity;
 
-/*
- * Please explain the class!!!
+/**
+ * 휴가 조회용 로그 엔티티
  *
- * @filename    : AttendanceRecord
- * @author      : Choi MinHyeok
- * @since       : 25. 12. 15. 월요일
- */
+ * @author : Choi MinHyeok
+ * @filename : AttendanceEvent
+ * @since : 25. 12. 15. 월요일
+ **/
 
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
