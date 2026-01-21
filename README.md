@@ -116,9 +116,184 @@
 **DevOps** | ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white) ![Amazon S3](https://img.shields.io/badge/Amazon%20S3-FF9900?style=for-the-badge&logo=amazons3&logoColor=white) ![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white) ![Jenkins](https://img.shields.io/badge/jenkins-%232C5263.svg?style=for-the-badge&logo=jenkins&logoColor=white)
 **Monitoring** | ![Grafana](https://img.shields.io/badge/grafana-%23F46800.svg?style=for-the-badge&logo=grafana&logoColor=white)
 **etc** | ![Slack](https://img.shields.io/static/v1?style=for-the-badge&message=Slack&color=4A154B&logo=Slack&logoColor=FFFFFF&label=) ![Notion](https://img.shields.io/static/v1?style=for-the-badge&message=Notion&color=000000&logo=Notion&logoColor=FFFFFF&label=) ![Figma](https://img.shields.io/static/v1?style=for-the-badge&message=Figma&color=F24E1E&logo=Figma&logoColor=FFFFFF&label=) ![Git](https://img.shields.io/badge/git-%23F05033.svg?style=for-the-badge&logo=git&logoColor=white)
-</div
+</div>
 
 
+## 📚 Directory Structure
+
+<details>
+  <summary><b>Backend</b></summary>
+  <pre>
+    <code>
+        📦 OrbitFlow
+         ┣ 📂 src
+         ┃ ┗ 📂 main
+         ┃   ┣ 📂 java
+         ┃   ┃ ┗ 📂 com/finalproj/orbitflow
+         ┃   ┃   ┣ 📜 OrbitflowApplication.java
+         ┃   ┃   ┣ 📂 approval
+         ┃   ┃   ┃ ┣ 📂 approvalLine
+         ┃   ┃   ┃ ┃ ┣ 📂 controller
+         ┃   ┃   ┃ ┃ ┃ ┗ 📜 ApprovalLineController.java
+         ┃   ┃   ┃ ┃ ┣ 📂 dto
+         ┃   ┃   ┃ ┃ ┣ 📂 entity
+         ┃   ┃   ┃ ┃ ┣ 📂 repository
+         ┃   ┃   ┃ ┃ ┗ 📂 service
+         ┃   ┃   ┃ ┣ 📂 document
+         ┃   ┃   ┃ ┃ ┣ 📂 controller
+         ┃   ┃   ┃ ┃ ┃ ┣ 📜 DocumentController.java
+         ┃   ┃   ┃ ┃ ┃ ┗ 📜 DocumentViewController.java
+         ┃   ┃   ┃ ┃ ┣ 📂 dto
+         ┃   ┃   ┃ ┃ ┣ 📂 entity
+         ┃   ┃   ┃ ┃ ┣ 📂 render
+         ┃   ┃   ┃ ┃ ┃ ┣ 📂 context
+         ┃   ┃   ┃ ┃ ┃ ┣ 📂 factory
+         ┃   ┃   ┃ ┃ ┃ ┣ 📂 field
+         ┃   ┃   ┃ ┃ ┃ ┣ 📂 html
+         ┃   ┃   ┃ ┃ ┃ ┗ 📂 pdf
+         ┃   ┃   ┃ ┃ ┣ 📂 repository
+         ┃   ┃   ┃ ┃ ┗ 📂 service
+         ┃   ┃   ┃ ┣ 📂 documentAISummary
+         ┃   ┃   ┃ ┃ ┣ 📂 aiBuilder
+         ┃   ┃   ┃ ┃ ┣ 📂 controller
+         ┃   ┃   ┃ ┃ ┣ 📂 service
+         ┃   ┃   ┃ ┃ ┗ 📜 ...
+         ┃   ┃   ┃ ┣ 📂 formTemplate
+         ┃   ┃   ┃ ┃ ┣ 📂 controller
+         ┃   ┃   ┃ ┃ ┣ 📂 entity
+         ┃   ┃   ┃ ┃ ┗ 📂 service
+         ┃   ┃   ┃ ┗ 📂 ... (logApprovalAction, etc.)
+         ┃   ┃   ┣ 📂 attendance
+         ┃   ┃   ┃ ┣ 📂 commute
+         ┃   ┃   ┃ ┃ ┣ 📂 controller
+         ┃   ┃   ┃ ┃ ┗ 📂 service
+         ┃   ┃   ┃ ┣ 📂 dashboard
+         ┃   ┃   ┃ ┣ 📂 leave
+         ┃   ┃   ┃ ┃ ┣ 📂 controller
+         ┃   ┃   ┃ ┃ ┣ 📂 entity
+         ┃   ┃   ┃ ┃ ┣ 📂 repository
+         ┃   ┃   ┃ ┃ ┗ 📂 scheduler
+         ┃   ┃   ┃ ┗ 📂 rule
+         ┃   ┃   ┣ 📂 auth
+         ┃   ┃   ┃ ┣ 📂 controller
+         ┃   ┃   ┃ ┣ 📂 dto
+         ┃   ┃   ┃ ┣ 📂 entity
+         ┃   ┃   ┃ ┃ ┗ 📜 RefreshToken.java
+         ┃   ┃   ┃ ┣ 📂 repository
+         ┃   ┃   ┃ ┗ 📂 service
+         ┃   ┃   ┣ 📂 board
+         ┃   ┃   ┃ ┣ 📂 boardCategory
+         ┃   ┃   ┃ ┣ 📂 boardPost
+         ┃   ┃   ┃ ┃ ┣ 📂 controller
+         ┃   ┃   ┃ ┃ ┣ 📂 entity
+         ┃   ┃   ┃ ┃ ┗ 📂 repository
+         ┃   ┃   ┃ ┗ 📂 comment
+         ┃   ┃   ┣ 📂 chatbot
+         ┃   ┃   ┃ ┣ 📂 chatbot
+         ┃   ┃   ┃ ┃ ┣ 📂 controller
+         ┃   ┃   ┃ ┃ ┣ 📂 entity
+         ┃   ┃   ┃ ┃ ┗ 📂 repository
+         ┃   ┃   ┃ ┣ 📂 chroma
+         ┃   ┃   ┃ ┃ ┣ 📂 config
+         ┃   ┃   ┃ ┃ ┗ 📂 service
+         ┃   ┃   ┃ ┗ 📂 manual
+         ┃   ┃   ┣ 📂 email
+         ┃   ┃   ┃ ┣ 📂 controller
+         ┃   ┃   ┃ ┣ 📂 entity
+         ┃   ┃   ┃ ┗ 📂 service
+         ┃   ┃   ┣ 📂 global
+         ┃   ┃   ┃ ┣ 📂 analytics
+         ┃   ┃   ┃ ┣ 📂 common
+         ┃   ┃   ┃ ┃ ┗ 📜 BaseEntity.java
+         ┃   ┃   ┃ ┣ 📂 config
+         ┃   ┃   ┃ ┃ ┣ 📜 SecurityConfig.java
+         ┃   ┃   ┃ ┃ ┣ 📜 S3Config.java
+         ┃   ┃   ┃ ┃ ┗ 📜 JpaAuditingConfig.java
+         ┃   ┃   ┃ ┣ 📂 exception
+         ┃   ┃   ┃ ┃ ┗ 📜 GlobalExceptionHandler.java
+         ┃   ┃   ┃ ┣ 📂 file
+         ┃   ┃   ┃ ┃ ┣ 📂 controller
+         ┃   ┃   ┃ ┃ ┗ 📂 storage
+         ┃   ┃   ┃ ┗ 📂 security
+         ┃   ┃   ┃   ┗ 📂 jwt
+         ┃   ┃   ┣ 📂 hr
+         ┃   ┃   ┃ ┣ 📂 company
+         ┃   ┃   ┃ ┣ 📂 employee
+         ┃   ┃   ┃ ┃ ┣ 📂 controller
+         ┃   ┃   ┃ ┃ ┣ 📂 dto
+         ┃   ┃   ┃ ┃ ┣ 📂 entity
+         ┃   ┃   ┃ ┃ ┗ 📂 service
+         ┃   ┃   ┃ ┣ 📂 organization
+         ┃   ┃   ┃ ┣ 📂 orgCategory
+         ┃   ┃   ┃ ┗ 📂 rank
+         ┃   ┃   ┣ 📂 message
+         ┃   ┃   ┃ ┣ 📂 controller
+         ┃   ┃   ┃ ┣ 📂 entity
+         ┃   ┃   ┃ ┗ 📂 service
+         ┃   ┃   ┣ 📂 notification
+         ┃   ┃   ┃ ┣ 📂 channel
+         ┃   ┃   ┃ ┣ 📂 controller
+         ┃   ┃   ┃ ┣ 📂 entity
+         ┃   ┃   ┃ ┗ 📂 service
+         ┃   ┃   ┣ 📂 openai
+         ┃   ┃   ┃ ┣ 📂 config
+         ┃   ┃   ┃ ┗ 📂 dto
+         ┃   ┃   ┣ 📂 redis
+         ┃   ┃   ┃ ┣ 📂 config
+         ┃   ┃   ┃ ┣ 📂 publisher
+         ┃   ┃   ┃ ┗ 📂 subscriber
+         ┃   ┃   ┣ 📂 reservation
+         ┃   ┃   ┃ ┣ 📂 controller
+         ┃   ┃   ┃ ┣ 📂 entity
+         ┃   ┃   ┃ ┗ 📂 service
+         ┃   ┃   ┣ 📂 resource
+         ┃   ┃   ┃ ┣ 📂 car
+         ┃   ┃   ┃ ┣ 📂 item
+         ┃   ┃   ┃ ┗ 📂 meetingroom
+         ┃   ┃   ┗ 📂 schedule
+         ┃   ┃     ┣ 📂 aimodel
+         ┃   ┃     ┣ 📂 controller
+         ┃   ┃     ┣ 📂 entity
+         ┃   ┃     ┗ 📂 service
+         ┃   ┗ 📂 resources
+         ┃     ┣ 📜 application.yml
+         ┃     ┣ 📜 application-dev.yml
+         ┃     ┣ 📂 fonts
+         ┃     ┣ 📂 static
+         ┃     ┃ ┣ 📂 css
+         ┃     ┃ ┃ ┣ 📂 admin
+         ┃     ┃ ┃ ┣ 📂 attendance
+         ┃     ┃ ┃ ┣ 📂 board
+         ┃     ┃ ┃ ┣ 📂 ui
+         ┃     ┃ ┃ ┗ 📂 user-document
+         ┃     ┃ ┣ 📂 images
+         ┃     ┃ ┗ 📂 js
+         ┃     ┃   ┣ 📂 admin
+         ┃     ┃   ┣ 📂 user-document
+         ┃     ┃   ┗ 📂 pdf
+         ┃     ┗ 📂 templates
+         ┃       ┣ 📂 admin
+         ┃       ┃ ┣ 📂 admin-board
+         ┃       ┃ ┣ 📂 employee
+         ┃       ┃ ┗ 📂 hr
+         ┃       ┣ 📂 attendance
+         ┃       ┣ 📂 auth
+         ┃       ┣ 📂 board
+         ┃       ┣ 📂 fragments
+         ┃       ┃ ┣ 📜 header.html
+         ┃       ┃ ┗ 📜 sidebar.html
+         ┃       ┣ 📂 layout
+         ┃       ┣ 📂 main
+         ┃       ┣ 📂 message
+         ┃       ┣ 📂 organization
+         ┃       ┣ 📂 reservation
+         ┃       ┣ 📂 schedule
+         ┃       ┣ 📂 sidebar
+         ┃       ┗ 📂 user-document
+    </code>
+  </pre>
+</details>
+<br>
 
 ## 🔐 인증 & 보안 설계
 
