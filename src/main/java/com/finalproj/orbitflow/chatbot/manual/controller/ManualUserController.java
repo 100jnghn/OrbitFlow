@@ -1,8 +1,8 @@
 package com.finalproj.orbitflow.chatbot.manual.controller;
 
 import com.finalproj.orbitflow.chatbot.manual.service.ManualUploadService;
-import com.finalproj.orbitflow.chatbot.manualCategory.dto.ManualCategoryResDto;
-import com.finalproj.orbitflow.chatbot.manualCategory.entity.ManualCategory;
+import com.finalproj.orbitflow.chatbot.manualcategory.dto.ManualCategoryResDto;
+import com.finalproj.orbitflow.chatbot.manualcategory.entity.ManualCategory;
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUser;
 import lombok.RequiredArgsConstructor;
@@ -30,13 +30,10 @@ public class ManualUserController {
 
     private final ManualUploadService manualUploadService;
 
-    /**
-     * [사용자용] 활성 카테고리 목록 조회
-     */
     @GetMapping("/categories")
     public ResponseEntity<ResponseDto<List<ManualCategoryResDto>>> getCategories(
             @AuthenticationPrincipal SecurityUser user) {
-        // 해당 회사의 활성 카테고리 목록 조회
+
         List<ManualCategory> categories = manualUploadService.findActiveCategoriesByCompany(user.getCompanyId());
         
         List<ManualCategoryResDto> categoryDtos = categories.stream()

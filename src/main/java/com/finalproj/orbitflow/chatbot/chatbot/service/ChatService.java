@@ -11,8 +11,8 @@ import com.finalproj.orbitflow.chatbot.chatbot.entity.ChatMessage;
 import com.finalproj.orbitflow.chatbot.chatbot.repository.ChatConversationRepository;
 import com.finalproj.orbitflow.chatbot.chatbot.repository.ChatMessageRepository;
 import com.finalproj.orbitflow.chatbot.manual.entity.ManualMetadata;
-import com.finalproj.orbitflow.chatbot.manualCategory.entity.ManualCategory;
-import com.finalproj.orbitflow.chatbot.manualCategory.repository.ManualCategoryRepository;
+import com.finalproj.orbitflow.chatbot.manualcategory.entity.ManualCategory;
+import com.finalproj.orbitflow.chatbot.manualcategory.repository.ManualCategoryRepository;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -37,7 +37,7 @@ import static dev.langchain4j.store.embedding.filter.MetadataFilterBuilder.metad
  * Please explain the class!!!
  *
  * @author : rlagkdus
- * @filename : ChatbotService
+ * @filename : ChatService
  * @since : 2025. 12. 30. 화요일
  */
 @Slf4j
@@ -61,10 +61,6 @@ public class ChatService {
         private static final String NO_RESULT =
                 "해당 내용은 현재 활성 매뉴얼에서 확인되지 않습니다.";
 
-        /**
-         * ✅ (추가) 대화방 생성
-         * - manualCategoryId는 null 허용 가능 (정책에 맞게)
-         */
         @Transactional
         public ChatConversationResponseDto createConversation(Long companyId, Long employeeId, Long manualCategoryId) {
 
@@ -95,9 +91,6 @@ public class ChatService {
                                 .build();
         }
 
-        /**
-         * ✅ (추가) 대화 목록
-         */
         @Transactional(readOnly = true)
         public List<ChatConversationListDto> listConversations(Long companyId, Long employeeId) {
                 return conversationRepository
@@ -115,9 +108,6 @@ public class ChatService {
                                 .toList();
         }
 
-        /**
-         * ✅ (추가) 특정 대화 메시지(복원)
-         */
         @Transactional(readOnly = true)
         public List<ChatMessageDto> getMessages(Long companyId, Long employeeId, Long conversationId) {
                 ChatConversation conv = conversationRepository
@@ -136,9 +126,6 @@ public class ChatService {
                                 .toList();
         }
 
-        /**
-         * ✅ (추가) 질문 전송: USER 저장 -> RAG 답변 생성 -> ASSISTANT 저장 -> 응답 DTO
-         */
         @Transactional
         public ChatMessageResponseDto sendMessage(Long companyId, Long employeeId, Long conversationId,
                         String content) {
@@ -151,7 +138,6 @@ public class ChatService {
                                 .findByIdAndCompanyIdAndEmployeeIdAndDeletedFalse(conversationId, companyId, employeeId)
                                 .orElseThrow(() -> new IllegalArgumentException("대화방이 없거나 권한이 없습니다."));
 
-                // 1) USER 저장
                 messageRepository.save(ChatMessage.builder()
                                 .companyId(companyId)
                                 .conversationId(conv.getId())
@@ -160,7 +146,6 @@ public class ChatService {
                                 .metaJson(null)
                                 .build());
 
-                // 2) 답변 생성 (기존 askQuestion 활용)
                 Long categoryId = conv.getManualCategoryId();
                 String answerText = askQuestion(content, companyId, categoryId);
 
@@ -169,7 +154,6 @@ public class ChatService {
                             companyId, conversationId, categoryId);
                 }
 
-                // 3) ASSISTANT meta 구성(필요시 확장)
                 HashMap<String, Object> metaMap = new HashMap<>();
                 metaMap.put("companyId", companyId);
                 metaMap.put("categoryId", categoryId);
@@ -183,7 +167,7 @@ public class ChatService {
                                 .metaJson(metaJson)
                                 .build());
 
-                // 4) 대화 title 세팅(옵션)
+
                 conv.setTitleIfEmpty(trimTo255(content));
 
                 return ChatMessageResponseDto.builder()
@@ -202,24 +186,17 @@ public class ChatService {
                 return t.length() > 255 ? t.substring(0, 255) : t;
         }
 
-        /**
-         * ✅ 기존 메서드 개선: company + category 둘 다 필터링 적용
-         * (기존 코드에서는 categoryId를 읽기만 하고 실제 필터는 company만 적용 중이었음)
-         * :contentReference[oaicite:2]{index=2}
-         */
+
         public String askQuestion(String question, Long companyId, Long categoryId) {
 
-                // 1) 질문 임베딩
-                var questionEmbedding = embeddingModel.embed(question).content();
-                log.info("질문 기반 검색 시작: {}", question);
 
-                // 2) 활성 매뉴얼 조회 (삭제/비활성 매뉴얼 노출 방지용)
+                var questionEmbedding = embeddingModel.embed(question).content();
+
                 List<ManualMetadata> activeManuals = (categoryId != null)
                         ? manualRepository.findByCompanyIdAndCategoryIdAndIsActiveTrueOrderByIdDesc(companyId, categoryId)
                         : manualRepository.findAllByCompanyIdAndIsActiveTrueOrderByIdDesc(companyId);
 
 
-                // ✅ List -> Set (contains O(1))
                 Set<String> activeFileIdSet = activeManuals.stream()
                                                 .map(m -> m.getFile().getId().toString())
                                                 .collect(Collectors.toSet());
@@ -245,9 +222,6 @@ public class ChatService {
                 EmbeddingSearchResult<TextSegment> result = embeddingStore.search(request);
                 List<EmbeddingMatch<TextSegment>> matches = result.matches();
 
-                log.info("Chroma(필터 적용) 검색 결과 수: {}", matches.size());
-
-                // 4) 남은 후필터: 활성 파일만 통과 (정책상 안전)
                 String context = matches.stream()
                                         .filter(m -> {
                                             var metadata = m.embedded().metadata().toMap();
@@ -258,21 +232,16 @@ public class ChatService {
                                         .collect(Collectors.joining("\n\n"));
 
                 if (context.isBlank()) {
-                    log.warn("검색 결과 없음 - companyId={}, categoryId={}, question={}",
-                            companyId, categoryId, question);
                     return NO_RESULT;
                 }
 
 
-                // 5) 검색 결과 없음 처리
+
                 if (context.isBlank()) {
-                    log.warn("검색 결과 없음 - companyId={}, categoryId={}, question={}",
-                            companyId, categoryId, question);
                     return "해당 질문에 대한 정보를 매뉴얼에서 찾을 수 없습니다.";
                 }
 
             String prompt = String.format(
-                    // 🔥 [중요 규칙] — 반드시 맨 위
                     "중요 규칙:\n" +
                             "- 이전 대화 내용이나 과거에 Assistant가 했던 답변은 사실 근거가 아니다.\n" +
                             "- 오직 아래 [매뉴얼 내용]에 포함된 정보만 근거로 답변해야 한다.\n" +

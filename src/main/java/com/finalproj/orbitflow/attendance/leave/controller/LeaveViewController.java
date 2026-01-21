@@ -9,6 +9,14 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+/**
+ * Please explain the class!!!
+ *
+ * @author : rlagkdus
+ * @filename : LeaveViewController
+ * @since : 2025. 12. 22. 월요일
+ */
+
 
 @Controller
 @RequestMapping("/view")
@@ -17,7 +25,6 @@ public class LeaveViewController {
 
     private final CompanyRepository companyRepository;
 
-    // 연차 현황 조회
     @GetMapping("/attendance/annual-leave")
     public String myLeavePage(Model model, @AuthenticationPrincipal SecurityUser user) {
         if (user != null) {
@@ -30,7 +37,6 @@ public class LeaveViewController {
         return "leave/annual-leave";
     }
 
-    // 휴가 신청 현황 조회
     @GetMapping("/attendance/leave-history")
     public String leaveHistoryPage(Model model, @AuthenticationPrincipal SecurityUser user) {
         if (user != null) {

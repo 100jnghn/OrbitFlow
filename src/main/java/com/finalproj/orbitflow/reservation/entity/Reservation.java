@@ -48,8 +48,8 @@ public class Reservation extends BaseEntity {
     @JoinColumn(name = "item_category_id")
     private ItemCategory itemCategory;
 
-    // 다형성 ID: typeCode에 따라 회의실ID, 차량ID, 비품ID가 들어감
-    // 따라서 연관관계 매핑 없이 단순 Long 값으로 저장
+    // typeCode에 따라 회의실ID, 차량ID, 비품ID가 들어감
+    // 매핑 없이 단순 Long 값으로 저장
     @Column(name = "resource_id", nullable = false)
     private Long resourceId;
 
@@ -59,7 +59,6 @@ public class Reservation extends BaseEntity {
     @Column(name = "end_date")
     private LocalDate endDate;
 
-    // 시간은 정수형(예: 14)으로 관리
     @Column(name = "start_time")
     private Integer startTime;
 

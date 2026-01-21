@@ -22,6 +22,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+/**
+ * Please explain the class!!!
+ *
+ * @author : rlagkdus
+ * @filename : CommuteService
+ * @since : 2025. 12. 17. 수요일
+ */
+
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -140,7 +149,6 @@ public class CommuteService {
         }
     }
 
-    // 조직도 페이지 - 사원 근무 상태 조회
     @Transactional(readOnly = true)
     public WorkStatus getEmployeeWorkStatus(Long companyId, Long employeeId) {
 
@@ -159,11 +167,9 @@ public class CommuteService {
         LocalDate today = LocalDate.now();
         LocalDateTime now = LocalDateTime.now();
 
-        // 1) 오늘 진행중인 출장/외근 이벤트 확인 (actualEndDate 반영된 조회여야 함)
         AttendanceEvent event = attendanceEventRepository.findActiveEvent(employeeId, today)
                 .orElseThrow(() -> new NotFoundException("현재 진행 중인 출장/외근 기록이 없습니다."));
 
-        // 2) 오늘 attendance upsert + 정상출근(ON_TIME) 확정
         Attendance att = commuteRepository
                 .findByCompanyIdAndEmployeeIdAndWorkDate(companyId, employeeId, today)
                 .orElseGet(() -> Attendance.builder()
@@ -177,24 +183,20 @@ public class CommuteService {
                         .build()
                 );
 
-        // 출근 시간이 비어있으면 채워줌(정책: 자리복귀=오늘 출근 확정)
+
         if (att.getCommuteAt() == null) {
-            // 프로젝트에 updateCommuteTime이 있으면 그게 더 깔끔함
-            // 없다면 updateTimeByAdmin 재사용
             att.updateTimeByAdmin(now, null);
         }
 
-        // 오늘은 정상출근으로 확정
+
         att.updateStatusAutomatically(AttendanceStatus.ON_TIME);
 
         commuteRepository.save(att);
 
-        // 3) 배지/버튼 정상화를 위해 WORKING으로 복귀
         employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new NotFoundException("사원을 찾을 수 없습니다."))
                 .updateWorkStatus(WorkStatus.WORKING);
 
-        // 4) ★중요★ 이벤트 종료 처리 (오늘부터는 더 이상 출장/외근 상태가 아니게)
         event.updateEndDate(today.minusDays(1));
     }
 

@@ -42,14 +42,6 @@ public class ReservationResDto {
     private String reservationReason;
     private String rejectReason;
 
-    /**
-     * 1 - 승인 대기
-     * 2 - 예약 확정
-     * 3 - 예약 반려
-     * 4 - 예약 취소
-     * 5 - 삭제됨
-     * 6 - 기타
-     */
     private Long reservationStatusId;
     private String reservationStatusName;
 }

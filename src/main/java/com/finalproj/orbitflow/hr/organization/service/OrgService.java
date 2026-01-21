@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow.hr.organization.service;
 
-import com.finalproj.orbitflow.board.boardCategory.service.OrganizationBoardCategorySyncService;
+import com.finalproj.orbitflow.board.boardcategory.service.OrganizationBoardCategorySyncService;
 import com.finalproj.orbitflow.global.exception.ForbiddenException;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
 import com.finalproj.orbitflow.global.exception.InvalidStateException;

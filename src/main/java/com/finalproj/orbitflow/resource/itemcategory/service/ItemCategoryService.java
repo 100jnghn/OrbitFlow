@@ -73,7 +73,6 @@ public class ItemCategoryService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리"));
 
         int size = itemRepository.countByItemCategory(itemCategory);
-        log.info("해당 카테고리에 아이템 " + size + "개 있음");
 
         itemCategoryRepository.deleteById(itemCategoryId);
     }

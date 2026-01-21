@@ -9,6 +9,15 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Please explain the class!!!
+ *
+ * @author : rlagkdus
+ * @filename : EmployeeRuleRepository
+ * @since : 2025. 12. 22. 월요일
+ */
+
+
 public interface EmployeeRuleRepository extends JpaRepository<EmployeeRule, Long> {
 
 
@@ -23,8 +32,6 @@ public interface EmployeeRuleRepository extends JpaRepository<EmployeeRule, Long
             @Param("targetDate") LocalDate targetDate
     );
 
-
-    List<EmployeeRule> findByCompanyIdAndIsActiveTrue(Long companyId);
 
     List<EmployeeRule> findByCompanyIdAndIsActiveTrueOrderByAppliedAtDesc(Long companyId);
 }

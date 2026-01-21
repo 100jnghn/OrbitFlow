@@ -116,14 +116,37 @@ public class MessageService {
         // 따라서 이전의 수동 확장 및 페이징 로직은 더 이상 필요 없음
         if (!archived && folder == MessageFolderType.SENT) {
             return page.map(mr -> {
-                String peerName = mr.getEmployee().getName();
+                // 발신자 기준 조회의 경우 peerName(수신인들)을 별도로 가져와야 함
+                List<MessageRecipient> recipients = messageRecipientRepository
+                        .findByMessage_IdAndMessageFolderTypeAndDeletedAtIsNull(
+                                mr.getMessage().getId(), MessageFolderType.INBOX);
+
+                String peerName;
+                if (!recipients.isEmpty()) {
+                    String firstRecipient = recipients.get(0).getEmployee().getName();
+                    if (recipients.size() > 1) {
+                        peerName = firstRecipient + " 외 " + (recipients.size() - 1) + "명";
+                    } else {
+                        peerName = firstRecipient;
+                    }
+                } else {
+                    peerName = "수신자 없음";
+                }
+
+                // 읽은 일시: 수신자 중 한 명이라도 읽었으면 그 중 하나의 readAt 표시
+                Instant firstReadAt = recipients.stream()
+                        .filter(MessageRecipient::isRead)
+                        .findFirst()
+                        .map(MessageRecipient::getReadAt)
+                        .orElse(null);
+
                 return MessageResDto.ListItem.builder()
                         .messageId(mr.getMessage().getId())
                         .recipientId(mr.getId())
                         .folderType(MessageFolderType.SENT)
                         .archived(mr.isArchived())
-                        .read(mr.isRead())
-                        .readAt(mr.getReadAt())
+                        .read(firstReadAt != null)
+                        .readAt(firstReadAt)
                         .title(mr.getMessage().getMessageTitle())
                         .peerName(peerName)
                         .senderName(mr.getMessage().getSender().getName())
@@ -222,7 +245,7 @@ public class MessageService {
         // 2. recipientId가 제공된 경우 (보낸 메시지함에서 특정 수신자 선택 시)
         if (recipientId != null) {
             mr = messageRecipientRepository.findById(recipientId)
-                    .filter(r -> r.getDeletedAt() == null) // 수신자 레코드도 삭제되지 않았어야 함
+                    // 발신자가 보는 것이므로 수신자가 삭제했어도 정보를 볼 수 있어야 함
                     .orElseThrow(() -> new NotFoundException("상대방의 수신 정보를 찾을 수 없습니다."));
 
             // 권한 및 무결성 확인
@@ -239,29 +262,22 @@ public class MessageService {
 
         MessageResDto.Detail detail = MessageResDto.Detail.from(mr);
 
-        // 보낸 메시지함인 경우 수신자 정보 추가
-        // recipientId가 제공된 경우 (보낸 메시지함에서 특정 수신자 선택)
-        // 또는 보관함에서 보낸 메시지(SENT 타입)인 경우
-        boolean isSentMessageDetail = recipientId != null ||
-                (mr.getMessageFolderType() == MessageFolderType.INBOX &&
-                        mr.getMessage().getSender().getId().equals(employeeId))
-                ||
-                (mr.getMessageFolderType() == MessageFolderType.SENT &&
-                        mr.getMessage().getSender().getId().equals(employeeId));
+        // 보낸 메시지인 경우 수신자 정보 추가
+        boolean isSentByMe = mr.getMessage().getSender().getId().equals(employeeId);
 
-        if (isSentMessageDetail) {
-            // 보낸 메시지함 또는 보관함에서 보낸 메시지
+        if (isSentByMe) {
+            // 보낸 메시지 또는 보관함에서 보낸 메시지
             Long recipientIdDetail = null;
             String recipientName = null;
 
             if (recipientId != null && mr.getMessageFolderType() == MessageFolderType.INBOX) {
-                // 보낸 메시지함에서 특정 수신자 선택한 경우: 해당 수신자 정보만 표시
+                // 특정 수신자 선택 조회: 해당 수신자 정보 표시 (상대방이 삭제했어도 발신자에겐 노출)
                 recipientIdDetail = mr.getEmployee().getId();
                 recipientName = mr.getEmployee().getName();
             } else {
-                // 보관함에서 보낸 메시지(SENT 타입)인 경우: 모든 수신자 정보 조회하여 표시
+                // 전체 수신자 정보 조회 (상대방이 삭제했더라도 발신자가 확인 가능하도록 deletedAt 조건 제거)
                 List<MessageRecipient> inboxRecipients = messageRecipientRepository
-                        .findByMessage_IdAndMessageFolderTypeAndDeletedAtIsNull(
+                        .findByMessage_IdAndMessageFolderType(
                                 mr.getMessage().getId(), MessageFolderType.INBOX);
 
                 if (!inboxRecipients.isEmpty()) {
@@ -269,7 +285,6 @@ public class MessageService {
                         recipientIdDetail = inboxRecipients.get(0).getEmployee().getId();
                         recipientName = inboxRecipients.get(0).getEmployee().getName();
                     } else {
-                        // 여러 수신자인 경우: 첫 번째 수신자 ID와 모든 수신자 이름 표시
                         recipientIdDetail = inboxRecipients.get(0).getEmployee().getId();
                         recipientName = inboxRecipients.stream()
                                 .map(recipient -> recipient.getEmployee().getName())
@@ -281,9 +296,8 @@ public class MessageService {
             // 읽은 일시: 수신자 중 읽은 수신자가 있으면 그 중 하나의 readAt 사용
             Instant readAt = detail.getReadAt();
             if (mr.getMessageFolderType() == MessageFolderType.SENT || recipientId == null) {
-                // 보관함에서 SENT 레코드를 조회한 경우 또는 보낸 메시지함에서 모든 수신자 정보를 표시하는 경우
                 List<MessageRecipient> inboxRecipients = messageRecipientRepository
-                        .findByMessage_IdAndMessageFolderTypeAndDeletedAtIsNull(
+                        .findByMessage_IdAndMessageFolderType(
                                 mr.getMessage().getId(), MessageFolderType.INBOX);
                 readAt = inboxRecipients.stream()
                         .filter(MessageRecipient::isRead)

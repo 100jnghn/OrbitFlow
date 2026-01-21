@@ -22,6 +22,7 @@ public class ReservationViewController {
         model.addAttribute("pageTitle", "내 예약 현황");
         model.addAttribute("currentGNB", "reservation");
         model.addAttribute("currentMenu", "my-reservation");
+
         return "reservation/my-reservation";
     }
 
@@ -31,6 +32,7 @@ public class ReservationViewController {
         model.addAttribute("pageTitle", "회의실 예약");
         model.addAttribute("currentGNB", "reservation");
         model.addAttribute("currentMenu", "meeting-reservation");
+
         return "reservation/meetingroom-reservation";
     }
 
@@ -40,6 +42,7 @@ public class ReservationViewController {
         model.addAttribute("pageTitle", "차량 예약");
         model.addAttribute("currentGNB", "reservation");
         model.addAttribute("currentMenu", "car-reservation");
+
         return "reservation/car-reservation";
     }
 
@@ -49,6 +52,7 @@ public class ReservationViewController {
         model.addAttribute("pageTitle", "기타 자원 예약");
         model.addAttribute("currentGNB", "reservation");
         model.addAttribute("currentMenu", "item-reservation");
+
         return "reservation/item-reservation";
     }
 

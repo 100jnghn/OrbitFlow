@@ -18,7 +18,6 @@ import java.time.LocalDateTime;
 @Builder
 public class ScheduleSummaryReqDto {
 
-    // ScheduleResDto에서 '전사' / '개인' / '조직s' 구분 추가
     private String organizationName;
 
     private String title;

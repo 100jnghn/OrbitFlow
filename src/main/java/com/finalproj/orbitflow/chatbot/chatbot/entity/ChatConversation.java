@@ -62,10 +62,6 @@ public class ChatConversation extends BaseEntity {
         this.status = Status.CLOSED;
     }
 
-    public void softDelete() {
-        this.deleted = true;
-    }
-
     public void setTitleIfEmpty(String newTitle) {
         if (this.title == null || this.title.isBlank()) {
             this.title = newTitle;

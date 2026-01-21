@@ -16,6 +16,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * Please explain the class!!!
+ *
+ * @author : rlagkdus
+ * @filename : AttendanceDashboardController
+ * @since : 2025. 12. 17. 수요일
+ */
+
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/attendance")

@@ -40,23 +40,12 @@ public class MessageRecipientSpecifications {
             }
 
             if (folderType == MessageFolderType.SENT) {
-                // [SENT 폴더 조회 최적화]
-                // 1. 수신자(INBOX) 레코드를 조회 대상으로 함
-                predicates.add(cb.equal(root.get("messageFolderType"), MessageFolderType.INBOX));
-                // 2. 메시지의 발신자가 본인이어야 함
-                predicates.add(cb.equal(root.get("message").get("sender").get("id"), employeeId));
-                // 3. 본인의 SENT 레코드가 존재하고 삭제되지 않았으며 보관되지 않은 상태여야 함 (서브쿼리)
-                jakarta.persistence.criteria.Subquery<Long> sentSubquery = query.subquery(Long.class);
-                jakarta.persistence.criteria.Root<MessageRecipient> sentRoot = sentSubquery
-                        .from(MessageRecipient.class);
-                sentSubquery.select(cb.literal(1L));
-                sentSubquery.where(
-                        cb.equal(sentRoot.get("message"), root.get("message")),
-                        cb.equal(sentRoot.get("employee").get("id"), employeeId),
-                        cb.equal(sentRoot.get("messageFolderType"), MessageFolderType.SENT),
-                        cb.isNull(sentRoot.get("deletedAt")),
-                        cb.equal(sentRoot.get("isArchived"), false));
-                predicates.add(cb.exists(sentSubquery));
+                // [SENT 폴더 조회 변경]
+                // 1. 본인의 SENT 레코드를 직접 조회
+                predicates.add(cb.equal(root.get("employee").get("id"), employeeId));
+                predicates.add(cb.equal(root.get("messageFolderType"), MessageFolderType.SENT));
+                predicates.add(cb.isNull(root.get("deletedAt")));
+                predicates.add(cb.equal(root.get("isArchived"), false));
             } else {
                 // [INBOX 등 일반 폴더 조회]
                 predicates.add(cb.equal(root.get("employee").get("id"), employeeId));
@@ -80,20 +69,15 @@ public class MessageRecipientSpecifications {
                 Predicate contentLike = cb.like(root.get("message").get("messageContent"), like);
 
                 Predicate recipientLike;
-                if (folderType == MessageFolderType.SENT) {
-                    // 보낸메시지함에서는 수신자 정보가 root(INBOX)에 직접 들어있음
-                    recipientLike = cb.like(root.get("employee").get("name"), like);
-                } else {
-                    // 받은메시지함 등에서는 서브쿼리로 해당 메시지의 모든 수신자를 확인
-                    jakarta.persistence.criteria.Subquery<Long> subquery = query.subquery(Long.class);
-                    jakarta.persistence.criteria.Root<MessageRecipient> subRoot = subquery.from(MessageRecipient.class);
-                    subquery.select(cb.literal(1L));
-                    subquery.where(
-                            cb.equal(subRoot.get("message"), root.get("message")),
-                            cb.equal(subRoot.get("messageFolderType"), MessageFolderType.INBOX),
-                            cb.like(subRoot.get("employee").get("name"), like));
-                    recipientLike = cb.exists(subquery);
-                }
+                // 보낸메시지함 등에서는 서브쿼리로 해당 메시지의 모든 수신자를 확인
+                jakarta.persistence.criteria.Subquery<Long> subquery = query.subquery(Long.class);
+                jakarta.persistence.criteria.Root<MessageRecipient> subRoot = subquery.from(MessageRecipient.class);
+                subquery.select(cb.literal(1L));
+                subquery.where(
+                        cb.equal(subRoot.get("message"), root.get("message")),
+                        cb.equal(subRoot.get("messageFolderType"), MessageFolderType.INBOX),
+                        cb.like(subRoot.get("employee").get("name"), like));
+                recipientLike = cb.exists(subquery);
 
                 switch (searchType) {
                     case TITLE -> predicates.add(titleLike);

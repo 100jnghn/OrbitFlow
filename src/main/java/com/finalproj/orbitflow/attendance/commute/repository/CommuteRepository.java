@@ -12,19 +12,25 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Please explain the class!!!
+ *
+ * @author : rlagkdus
+ * @filename : CommuteRepository
+ * @since : 2025. 12. 17. 수요일
+ */
+
+
 @Repository
 public interface CommuteRepository extends JpaRepository<Attendance, Long> {
 
-        // 기본 조회 메서드
         Optional<Attendance> findByCompanyIdAndEmployeeIdAndWorkDate(Long companyId, Long employeeId,
                         LocalDate workDate);
 
-        // 오늘 근태 기록 조회
         default Optional<Attendance> findToday(Long companyId, Long employeeId) {
                 return findByCompanyIdAndEmployeeIdAndWorkDate(companyId, employeeId, LocalDate.now());
         }
 
-        // [사원용] 월별 페이징 조회 (최신순)
         @Query("SELECT a FROM Attendance a WHERE a.employeeId = :employeeId " +
                         "AND a.workDate BETWEEN :startDate AND :endDate " +
                         "AND (:status IS NULL OR a.status = :status) " +
@@ -36,7 +42,6 @@ public interface CommuteRepository extends JpaRepository<Attendance, Long> {
                         AttendanceStatus status,
                         Pageable pageable);
 
-        // [관리자용] 전 사원 목록 + 기간 내 근태 기록 (WorkStatus 조건 포함, 필터링 누락 방지)
         @Query("""
         SELECT e, a
         FROM Employee e
@@ -76,21 +81,15 @@ public interface CommuteRepository extends JpaRepository<Attendance, Long> {
                         String keyword,
                         Pageable pageable);
 
-        // 특정 회사/날짜/상태 인원 수
+
         int countByCompanyIdAndWorkDateAndStatus(Long companyId, LocalDate workDate, AttendanceStatus status);
 
-        // 특정 회사/날짜/퇴근 미처리 인원 수
-        int countByCompanyIdAndWorkDateAndLeaveAtIsNull(Long companyId, LocalDate workDate);
-
-        // 기간 내 기록 조회 (차트나 요약용)
         List<Attendance> findByEmployeeIdAndWorkDateBetweenOrderByWorkDateAsc(Long employeeId, LocalDate startDate,
                         LocalDate endDate);
 
-        // 스케줄러: 기록 존재 여부
         boolean existsByEmployeeIdAndWorkDate(Long employeeId, LocalDate workDate);
 
 
-        List<Attendance> findByCompanyIdAndEmployeeIdAndWorkDateBetween(
-                Long companyId, Long employeeId, LocalDate start, LocalDate end);
+
 
 }

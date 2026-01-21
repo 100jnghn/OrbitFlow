@@ -10,7 +10,7 @@ import java.time.LocalTime;
  * Please explain the class!!!
  *
  * @author : rlagkdus
- * @filename : EmpAttRuleResDto
+ * @filename : EmployeeRuleResDto
  * @since : 2025. 12. 18. 목요일
  */
 

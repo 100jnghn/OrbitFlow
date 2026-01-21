@@ -24,8 +24,6 @@ public class ResourceStatus {
     @Column(name = "id")
     private Long id;
 
-    // DB: status_code VARCHAR(50)
-    // Java: Enum 타입으로 매핑 (문자열 그대로 저장)
     @Enumerated(EnumType.STRING)
     @Column(name = "status_code", nullable = false, unique = true, length = 50)
     private ResourceStatusCode resourceStatusCode;

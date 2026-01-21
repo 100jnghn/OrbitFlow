@@ -24,7 +24,7 @@ public class QComment extends EntityPathBase<Comment> {
 
     public final com.finalproj.orbitflow.global.common.QBaseEntity _super = new com.finalproj.orbitflow.global.common.QBaseEntity(this);
 
-    public final com.finalproj.orbitflow.board.boardPost.entity.QBoardPost boardPost;
+    public final com.finalproj.orbitflow.board.boardpost.entity.QBoardPost boardPost;
 
     public final StringPath commentContent = createString("commentContent");
 
@@ -64,7 +64,7 @@ public class QComment extends EntityPathBase<Comment> {
 
     public QComment(Class<? extends Comment> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.boardPost = inits.isInitialized("boardPost") ? new com.finalproj.orbitflow.board.boardPost.entity.QBoardPost(forProperty("boardPost"), inits.get("boardPost")) : null;
+        this.boardPost = inits.isInitialized("boardPost") ? new com.finalproj.orbitflow.board.boardpost.entity.QBoardPost(forProperty("boardPost"), inits.get("boardPost")) : null;
         this.writer = inits.isInitialized("writer") ? new com.finalproj.orbitflow.hr.employee.entity.QEmployee(forProperty("writer"), inits.get("writer")) : null;
     }
 

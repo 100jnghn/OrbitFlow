@@ -348,7 +348,7 @@ function removeFile(button) {
     const isExisting = fileItem.dataset.isExisting === 'true';
 
     if (isExisting) {
-        // 기존 파일은 서버에서 삭제해야 함 (나중에 구현)
+        // 기존 파일은 폼 제출 시 keptFileIds에 포함되지 않아 서버에서 처리됨
     } else {
         // 새로 추가한 파일은 배열에서 제거
         const fileName = fileItem.querySelector('.file-name').textContent;

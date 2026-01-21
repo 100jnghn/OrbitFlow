@@ -53,8 +53,10 @@ public class SchedulePromptBuilder {
         for (ScheduleSummaryReqDto dto : sorted) {
             if ("전사".equals(dto.getOrganizationName())) {
                 companySchedules.add(dto);
+
             } else if ("개인".equals(dto.getOrganizationName())) {
                 personalSchedules.add(dto);
+
             } else {
                 orgSchedules.add(dto); // 그 외 조직
             }
@@ -151,8 +153,6 @@ public class SchedulePromptBuilder {
             appendSection(sb, personalSchedules, "개인");
             appendSection(sb, orgSchedules, "조직", true);
         }
-
-        log.info("프롬프트 : " + sb.toString());
 
         return sb.toString();
     }

@@ -8,7 +8,7 @@ package com.finalproj.orbitflow.global.file.entity;
  * @since       : 25. 12. 15. 월요일
  */
 
-import com.finalproj.orbitflow.board.boardPost.entity.BoardPost;
+import com.finalproj.orbitflow.board.boardpost.entity.BoardPost;
 import com.finalproj.orbitflow.global.common.BaseEntity;
 import com.finalproj.orbitflow.global.file.enums.FileDomain;
 import com.finalproj.orbitflow.hr.company.entity.Company;

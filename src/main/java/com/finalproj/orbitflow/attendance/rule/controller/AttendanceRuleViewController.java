@@ -5,6 +5,14 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+/**
+ * Please explain the class!!!
+ *
+ * @author : rlagkdus
+ * @filename : AttendanceRuleViewController
+ * @since : 2025. 12. 22. 월요일
+ */
+
 
 @Controller
 @RequestMapping("/view/admin")
