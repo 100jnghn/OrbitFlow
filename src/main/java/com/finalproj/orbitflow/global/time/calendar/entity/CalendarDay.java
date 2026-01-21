@@ -51,4 +51,9 @@ public class CalendarDay {
                 && dayOfWeek >= 1
                 && dayOfWeek <= 5;
     }
+
+    public void changeType(CalendarDayType calendarDayType, String desc) {
+        this.dayType = calendarDayType;
+        this.holidayName = desc;
+    }
 }

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 
 /**
- * Please explain the class!!!
+ * 매년 12월 31일에 내년도 캘린더를 조회 및 저장
  *
  * @author : Choi MinHyeok
  * @filename : CalendarYearScheduler

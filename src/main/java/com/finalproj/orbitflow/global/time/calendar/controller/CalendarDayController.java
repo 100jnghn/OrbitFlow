@@ -30,14 +30,14 @@ public class CalendarDayController {
 
     // 공휴일 + 주말 반환
     @GetMapping("/holidays")
-    public ResponseEntity<ResponseDto> getHolidays() {
+    public ResponseEntity<?> getHolidays() {
 
         log.info("휴일 조회 시작");
 
         List<CalendarDayResDto> list = calendarDayService.getHolidays();
 
         return ResponseEntity.ok().body(
-                new ResponseDto(HttpStatus.OK, "휴일 조회 성공", list)
+                new ResponseDto<>(HttpStatus.OK, "휴일 조회 성공", list)
         );
     }
 }
