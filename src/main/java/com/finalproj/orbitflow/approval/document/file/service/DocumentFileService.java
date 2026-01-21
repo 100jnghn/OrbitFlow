@@ -30,12 +30,23 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Please explain the class!!!
+ * 결재 문서에 첨부되는 파일 및 이미지, PDF 문서를 관리하는 서비스.
+ * <p>
+ * 문서 작성 과정에서 업로드되는 일반 첨부파일과 본문 이미지 파일을 처리하며,
+ * 문서 승인 이후 생성되는 최종 PDF 파일의 매핑 및 조회 상태도 함께 관리한다.
+ * <p>
+ * 파일 업로드 및 조회 시에는 문서의 상태(DRAFT / APPROVED)와
+ * 사용자 권한(작성자, 결재자)을 기준으로 접근 가능 여부를 검증한다.
+ * <p>
+ * 실제 파일 저장과 스트리밍은 FileService가 담당하며,
+ * 이 서비스는 문서(Document)와 파일(File) 간의 관계 및
+ * 문서 흐름에 따른 파일 상태 관리를 책임진다.
  *
  * @author : Choi MinHyeok
  * @filename : DocumentFileService
  * @since : 26. 1. 2. 금요일
- **/
+ */
+
 
 @Service
 @Slf4j
@@ -181,19 +192,15 @@ public class DocumentFileService {
             Long documentId,
             Long fileId
     ) {
-        // 문서 조회
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new NotFoundException("문서를 찾을 수 없습니다."));
 
-        // 문서 열람 권한 검증
         documentService.validateViewPermission(employeeId, document);
 
-        // 문서-파일 관계 검증
         DocumentFile documentFile = documentFileRepository
                 .findByDocument_IdAndFile_Id(documentId, fileId)
                 .orElseThrow(() -> new ForbiddenException("문서에 포함되지 않은 파일입니다."));
 
-        // 상태 검증
         if (document.getStatus() == DocumentStatus.DRAFT) {
             // 작성자는 TEMP 이미지도 조회 가능
             if (!document.getWriter().getId().equals(employeeId)) {
@@ -206,7 +213,6 @@ public class DocumentFileService {
             }
         }
 
-        // 이미지 스트리밍 반환
         return fileService.streamImage(documentFile.getFile());
     }
 
@@ -226,7 +232,6 @@ public class DocumentFileService {
     @Transactional
     public void mappingPdf(Document document, File pdfFile) {
 
-        // 1️⃣ 기존 FINAL PDF 있으면 무효화
         documentFileRepository
                 .findDocumentFileByDocumentAndType(
                         document.getId(),
@@ -235,7 +240,6 @@ public class DocumentFileService {
                 )
                 .ifPresent(df -> df.updateStatus(DocumentFileStatus.DELETED));
 
-        // 2️⃣ 새 PDF 매핑
         DocumentFile documentFile = DocumentFile.builder()
                 .document(document)
                 .file(pdfFile)
@@ -252,12 +256,10 @@ public class DocumentFileService {
         Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new NotFoundException("문서를 찾을 수 없습니다."));
 
-        // 1️⃣ 승인 전 → NONE
         if (document.getStatus() != DocumentStatus.APPROVED) {
             return new PdfStatusRes(PdfStatus.NONE, null);
         }
 
-        // 2️⃣ 최종 PDF 조회
         Optional<DocumentFile> pdfOpt =
                 documentFileRepository
                         .findByDocument_IdAndReferenceTypeAndReferenceTargetIdIsNullAndStatus(
@@ -266,7 +268,6 @@ public class DocumentFileService {
                                 DocumentFileStatus.FINAL
                         );
 
-        // 3️⃣ 승인 완료 + PDF 없음 → GENERATING
         return pdfOpt.map(documentFile -> new PdfStatusRes(
                 PdfStatus.READY,
                 documentFile.getFile().getId()

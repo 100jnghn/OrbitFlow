@@ -1,12 +1,5 @@
 package com.finalproj.orbitflow.approval.document.file.entity;
 
-/*
- * Please explain the class!!!
- *
- * @filename    : DocumentFile
- * @author      : Choi MinHyeok
- * @since       : 25. 12. 15. 월요일
- */
 
 
 import com.finalproj.orbitflow.approval.document.entity.Document;
@@ -19,6 +12,25 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+/**
+ * 결재 문서에 연결된 파일 정보를 관리하는 엔티티.
+ * <p>
+ * 하나의 Document에 업로드된 파일(File)을 연결하며,
+ * 일반 첨부파일, 본문 이미지, 참조 문서 등
+ * 파일의 용도에 따라 ReferenceType으로 구분한다.
+ * <p>
+ * 문서 재작성(반려 후 수정) 시에는 기존 문서에 연결된 파일 정보를 복사하여
+ * 새로운 문서에 TEMP 상태로 다시 연결하는 데 사용된다.
+ * <p>
+ * 파일 자체의 저장 위치나 메타 정보는 File 엔티티가 담당하며,
+ * 이 엔티티는 문서와 파일 간의 관계 및 문서 내 사용 맥락만 관리한다.
+ *
+ * @author : Choi MinHyeok
+ * @filename : DocumentFile
+ * @since : 25. 12. 15. 월요일
+ */
+
 
 @Entity
 @Table(
@@ -62,10 +74,6 @@ public class DocumentFile extends BaseEntity {
     @Column(name = "reference_url", length = 255)
     private String referenceUrl;
 
-    /**
-     * image 컴포넌트 소속일 경우 fieldId
-     * null이면 일반 첨부 / 참조 문서
-     */
     @Column(name = "field_id", length = 100)
     private String fieldId;
 
@@ -73,10 +81,6 @@ public class DocumentFile extends BaseEntity {
     @Column(nullable = false, length = 20)
     private DocumentFileStatus status = DocumentFileStatus.TEMP;
 
-
-    /* =========================
-       도메인 메서드
-    ========================= */
     public static DocumentFile copyFor(Document revised, DocumentFile documentFile) {
         return DocumentFile.builder()
                 .document(revised)
