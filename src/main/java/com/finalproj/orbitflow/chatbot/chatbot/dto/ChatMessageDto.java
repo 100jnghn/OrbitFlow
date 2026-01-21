@@ -18,18 +18,8 @@ import java.time.Instant;
 public class ChatMessageDto {
 
     private Long messageId;
-
-    private String role;   // USER / ASSISTANT / SYSTEM
+    private String role;
     private String content;
-
-    /**
-     * meta_json 그대로 내려줌
-     * - model
-     * - token_usage
-     * - source_manual_ids
-     * 등 확장용
-     */
     private Object meta;
-
     private Instant createdAt;
 }

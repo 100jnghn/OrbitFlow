@@ -42,6 +42,14 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ *
+ * @author : rlagkdus
+ * @filename : ManualUploadService
+ * @since : 2025. 12. 30. 화요일
+ */
+
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -56,38 +64,24 @@ public class ManualUploadService {
     private final EmbeddingStore<TextSegment> embeddingStore;
     private final ChromaVectorService chromaVectorService;
 
-    /**
-     * 특정 회사의 매뉴얼 목록 조회
-     */
     @Transactional(readOnly = true)
     public List<ManualMetadata> findAllByCompany(Long companyId) {
-        // 최신 등록순으로 해당 회사의 매뉴얼 메타데이터를 가져옵니다.
         return manualMetadataRepository.findAllByCompanyIdAndIsActiveTrueOrderByIdDesc(companyId);
     }
 
-    /**
-     * 특정 회사의 특정 카테고리 매뉴얼 목록 조회
-     */
+
     @Transactional(readOnly = true)
     public List<ManualMetadata> findByCompanyAndCategory(Long companyId, Long categoryId) {
         return manualMetadataRepository.findByCompanyIdAndCategoryIdAndIsActiveTrueOrderByIdDesc(companyId, categoryId);
     }
 
-    /**
-     * 특정 회사의 활성 카테고리 목록 조회
-     */
     @Transactional(readOnly = true)
     public List<ManualCategory> findActiveCategoriesByCompany(Long companyId) {
         return manualCategoryRepository.findByCompanyIdAndIsActiveTrueOrderBySortOrderAsc(companyId);
     }
 
-    /**
-     * 매뉴얼 파일 업로드 및 벡터 인덱싱 (학습)
-     */
     @Transactional
     public void uploadAndIndexingManual(MultipartFile file, Long categoryId, Long employeeId) {
-
-        System.out.println("!!! 서비스 호출됨 - 파일명: " + file.getOriginalFilename());
 
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new NotFoundException("사원 정보를 찾을 수 없습니다."));
@@ -99,7 +93,6 @@ public class ManualUploadService {
             throw new InvalidRequestException("파일이 비어있습니다.");
         }
 
-        // 파일 확장자 확인
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null) {
             throw new InvalidRequestException("파일명이 없습니다.");
@@ -113,13 +106,9 @@ public class ManualUploadService {
         }
 
         try {
-            // 1. 맥북 로컬 경로에 파일 물리 저장 및 File 엔티티 생성
             File savedFile = processFileStorage(file, employee);
-
-            // 2. AI 학습 (벡터 인덱싱) - ChromaDB에 저장
             processVectorIndexing(file, category, employee, savedFile);
 
-            // 3. 매뉴얼 메타데이터 저장 (DB)
             saveManualMetadata(file, category, employee, savedFile);
 
         } catch (IOException e) {
@@ -139,19 +128,13 @@ public class ManualUploadService {
             throws IOException {
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null) {
-            log.error("[Vector Indexing] 실패: 파일명이 없습니다.");
             throw new InvalidRequestException("파일명이 없습니다.");
         }
 
         String fileExtension = originalFileName.substring(originalFileName.lastIndexOf('.')).toLowerCase();
 
-        // 1. 시작 로그
-        log.info("[Vector Indexing] 프로세스 시작 - 파일명: {}, 확장자: {}, 회사ID: {}",
-                originalFileName, fileExtension, employee.getCompany().getId());
-
         Document document;
         try {
-            // 파일 타입에 따라 적절한 파서 선택
             switch (fileExtension) {
                 case ".pdf":
                     DocumentParser pdfParser = new ApachePdfBoxDocumentParser();
@@ -169,46 +152,25 @@ public class ManualUploadService {
                     break;
 
                 default:
-                    log.error("[Vector Indexing] 실패: 지원하지 않는 확장자 ({})", fileExtension);
                     throw new InvalidRequestException("지원하지 않는 파일 형식입니다.");
             }
 
-            // 2. 텍스트 추출 완료 로그
-            log.info("[Vector Indexing] 텍스트 추출 완료 - 추출된 길이: {}자", document.text().length());
-
-            // 텍스트를 500자 단위로 쪼개고 100자씩 겹치게 설정
             DocumentSplitter splitter = DocumentSplitters.recursive(500, 100);
             List<TextSegment> segments = splitter.split(document);
 
-            // 3. 분할 완료 로그
-            log.info("[Vector Indexing] 문장 분할 완료 - 생성된 세그먼트 수: {}개", segments.size());
-
-            // 메타데이터 추가
             segments.forEach(segment -> {
                 segment.metadata().add("company_id", employee.getCompany().getId().toString());
                 segment.metadata().add("category_id", category.getId().toString());
                 segment.metadata().add("file_id", savedFile.getId().toString()); // 파일 ID를 메타데이터로 저장
             });
 
-            // 4. ChromaDB 저장 시도 로그
-            log.info("[Vector Indexing] ChromaDB(벡터 DB) 저장 시도 중...");
-
-            // 벡터로 변환하여 ChromaDB에 저장
             embeddingStore.addAll(embeddingModel.embedAll(segments).content(), segments);
-
-            // 5. 최종 성공 로그
-            log.info("[Vector Indexing] 최종 성공! ChromaDB에 데이터가 저장되었습니다. (파일명: {})", originalFileName);
-
         } catch (Exception e) {
-            // 6. 실패 로그 (예외 발생 시)
-            log.error("[Vector Indexing] 처리 중 오류 발생 - 파일명: {}, 사유: {}", originalFileName, e.getMessage(), e);
-            throw e; // 예외를 다시 던져서 상위 트랜잭션 처리
+            throw e;
         }
     }
 
-    /**
-     * DOC 파일에서 텍스트 추출
-     */
+
     private String extractTextFromDoc(InputStream inputStream) throws IOException {
         try {
             HWPFDocument document = new HWPFDocument(inputStream);
@@ -229,17 +191,15 @@ public class ManualUploadService {
                 .category(category)
                 .file(savedFile)
                 .fileName(file.getOriginalFilename())
-                .filePath(savedFile.getObjectKey()) // S3 Object Key 저장
-                .status("SUCCESS") // 학습 성공 상태로 저장
+                .filePath(savedFile.getObjectKey())
+                .status("SUCCESS")
                 .isActive(true)
                 .build();
 
         manualMetadataRepository.save(metadata);
     }
 
-    /**
-     * 매뉴얼 삭제
-     */
+
     @Transactional
     public void deleteManual(Long manualId, Long companyId) {
 
@@ -250,19 +210,15 @@ public class ManualUploadService {
             throw new InvalidRequestException("해당 매뉴얼을 삭제할 권한이 없습니다.");
         }
 
-        // 1) DB 논리삭제(먼저 적용)
-        manual.deactivate();           // setter 대신 도메인 메서드 추천
+        manual.deactivate();
         manual.updateStatus("DELETE");
 
-        // 2) ✅ Chroma 벡터 삭제 (file_id 기준)
+
         String fileId = manual.getFile().getId().toString();
         try {
-            chromaVectorService.deleteByFileId(companyId, fileId);  // 회사도 같이 넣으면 더 안전
+            chromaVectorService.deleteByFileId(companyId, fileId);
         } catch (Exception e) {
-            // 실패하면: DB는 삭제됐지만 벡터는 남을 수 있음
-            // 운영에서는 재시도/배치로 eventually delete 하는 방식 추천
-            log.error("Chroma 벡터 삭제 실패 - manualId={}, fileId={}, companyId={}",
-                    manualId, fileId, companyId, e);
+
         }
     }
 

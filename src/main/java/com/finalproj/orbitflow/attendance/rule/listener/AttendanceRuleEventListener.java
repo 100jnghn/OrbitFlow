@@ -39,18 +39,13 @@ public class AttendanceRuleEventListener {
                 .orElse(null);
 
         if (company == null) {
-            log.warn("[AttendanceRule] 회사 없음 - id={}", event.getCompanyId());
             return;
         }
 
         try {
             attendanceRuleService.createDefaultAttendanceRule(company);
         } catch (Exception e) {
-            log.error(
-                    "[AttendanceRule] 기본 근태 규칙 생성 실패 - companyId={}",
-                    company.getId(),
-                    e
-            );
+
         }
     }
 }

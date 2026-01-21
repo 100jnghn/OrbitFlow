@@ -19,7 +19,7 @@ import java.util.Map;
  * Please explain the class!!!
  *
  * @author : rlagkdus
- * @filename : ChatbotController
+ * @filename : ChatController
  * @since : 2025. 12. 30. 화요일
  */
 @Slf4j
@@ -30,10 +30,7 @@ public class ChatController {
 
     private final ChatService chatService;
 
-    /**
-     * ✅ 기존 단발성 질문 API (호환 유지)
-     * - 대화 저장/복원은 하지 않음
-     */
+
     @PostMapping("/ask")
     public ResponseEntity<ResponseDto<String>> askQuestion(
             @AuthenticationPrincipal SecurityUser user,
@@ -58,10 +55,6 @@ public class ChatController {
         );
     }
 
-    /**
-     * ✅ (추가) 대화방 생성
-     * - 카테고리 선택 후 채팅 시작할 때 호출
-     */
     @PostMapping("/conversations")
     public ResponseEntity<ResponseDto<ChatConversationResponseDto>> createConversation(
             @AuthenticationPrincipal SecurityUser user,
@@ -78,9 +71,7 @@ public class ChatController {
         );
     }
 
-    /**
-     * ✅ (추가) 대화방 목록 조회 (사이드바/복원용)
-     */
+
     @GetMapping("/conversations")
     public ResponseEntity<ResponseDto<List<ChatConversationListDto>>> listConversations(
             @AuthenticationPrincipal SecurityUser user
@@ -95,9 +86,6 @@ public class ChatController {
         );
     }
 
-    /**
-     * ✅ (추가) 특정 대화 메시지 조회 (탭 이동 후 복원 핵심)
-     */
     @GetMapping("/conversations/{conversationId}/messages")
     public ResponseEntity<ResponseDto<List<ChatMessageDto>>> getMessages(
             @AuthenticationPrincipal SecurityUser user,
@@ -114,9 +102,7 @@ public class ChatController {
         );
     }
 
-    /**
-     * ✅ (추가) 질문 전송 (USER 저장 -> 답변 생성 -> ASSISTANT 저장)
-     */
+
     @PostMapping("/conversations/{conversationId}/messages")
     public ResponseEntity<ResponseDto<ChatMessageResponseDto>> sendMessage(
             @AuthenticationPrincipal SecurityUser user,
@@ -124,21 +110,12 @@ public class ChatController {
             @RequestBody ChatMessageRequestDto request
     ) {
 
-        long start = System.currentTimeMillis();
-
         ChatMessageResponseDto res = chatService.sendMessage(
                 user.getCompanyId(),
                 user.getEmployeeId(),
                 conversationId,
                 request.getContent()
         );
-
-        long end = System.currentTimeMillis();
-        log.info("[CHAT][CONVERSATION] responseTimeMs={}, companyId={}, conversationId={}",
-                end - start,
-                user.getCompanyId(),
-                conversationId);
-
 
         return ResponseEntity.ok(
                 new ResponseDto<>(HttpStatus.OK, "챗봇 답변 생성 및 저장 완료", res)

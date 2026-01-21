@@ -14,11 +14,11 @@ import lombok.Getter;
 @Getter
 @Builder
 public class AdminSummaryResDto {
-    private int totalEmployees;     // 전체 사원 수
-    private int onTimeCount;        // 출근 완료 (정상 + 지각)
-    private int lateCount;          // 지각 인원
-    private int absentCount;        // 순수 결근/미출근 (사유 없음)
-    private int vacationCount;      // 휴가 중
-    private int outsideCount;       // 외근 중
-    private int businessTripCount;  // 출장 중
+    private int totalEmployees;
+    private int onTimeCount;
+    private int lateCount;
+    private int absentCount;
+    private int vacationCount;
+    private int outsideCount;
+    private int businessTripCount;
 }

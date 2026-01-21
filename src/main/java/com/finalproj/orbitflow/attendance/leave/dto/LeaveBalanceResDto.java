@@ -20,9 +20,9 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LeaveBalanceResDto {
-    private Integer year;           // 기준 연도
-    private BigDecimal totalGranted; // 총 발생 연차
-    private BigDecimal usedDays;     // 사용 연차 (totalGranted - remainingDays 계산값)
-    private BigDecimal remainingDays; // 잔여 연차
-    private LocalDate hireDate;      // 사원 입사일
+    private Integer year;
+    private BigDecimal totalGranted;
+    private BigDecimal usedDays;
+    private BigDecimal remainingDays;
+    private LocalDate hireDate;
 }

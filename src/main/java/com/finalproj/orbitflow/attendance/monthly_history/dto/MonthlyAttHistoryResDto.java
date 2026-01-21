@@ -15,9 +15,9 @@ import java.util.List;
 @Getter
 @Builder
 public class MonthlyAttHistoryResDto {
-    private String totalWorkTimeDisplay; // "160시간" 또는 "160h 30m" (UI 표시용)
-    private long totalWorkMinutes;      // 내부 계산용 분 단위 합계
+    private String totalWorkTimeDisplay;
+    private long totalWorkMinutes;
 
-    private long lateCount;             // 지각 횟수
-    private long leaveAbsentCount;      // 휴가/결근 일수
+    private long lateCount;
+    private long leaveAbsentCount;
 }

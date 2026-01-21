@@ -6,6 +6,14 @@ import com.finalproj.orbitflow.hr.company.entity.Company;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * 매뉴얼 카테고리 엔티티
+ *
+ * @author : rlagkdus
+ * @filename : ManualCategory
+ * @since : 2025. 12. 30. 화요일
+ */
+
 @Entity
 @Getter
 @Builder

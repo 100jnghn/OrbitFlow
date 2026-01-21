@@ -30,13 +30,10 @@ public class ManualUserController {
 
     private final ManualUploadService manualUploadService;
 
-    /**
-     * [사용자용] 활성 카테고리 목록 조회
-     */
     @GetMapping("/categories")
     public ResponseEntity<ResponseDto<List<ManualCategoryResDto>>> getCategories(
             @AuthenticationPrincipal SecurityUser user) {
-        // 해당 회사의 활성 카테고리 목록 조회
+
         List<ManualCategory> categories = manualUploadService.findActiveCategoriesByCompany(user.getCompanyId());
         
         List<ManualCategoryResDto> categoryDtos = categories.stream()

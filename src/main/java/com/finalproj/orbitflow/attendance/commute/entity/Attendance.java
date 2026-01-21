@@ -1,6 +1,5 @@
 package com.finalproj.orbitflow.attendance.commute.entity;
 
-import aQute.bnd.annotation.headers.BundleLicense;
 import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
 import com.finalproj.orbitflow.global.exception.BusinessException;
 import jakarta.persistence.*;
@@ -9,9 +8,16 @@ import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * * @author : hayeon
+ * @filename : Attendance
+ * @since : 2025. 12. 21. 일요일
+ */
+
+
 @Entity
 @Table(name = "attendance", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"employee_id", "work_date"}) // UK: uk_att_date
+        @UniqueConstraint(columnNames = {"employee_id", "work_date"})
 })
 @Getter
 @Builder
@@ -22,44 +28,41 @@ public class Attendance {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
-    private Long id; // 아이디
+    private Long id;
 
     @Column(name = "company_id", nullable = false)
-    private Long companyId; // 회사 아이디 (FK: company)
+    private Long companyId;
 
     @Column(name = "employee_id", nullable = false)
-    private Long employeeId; // 기록한 사원 아이디 (FK: employee)
+    private Long employeeId;
 
     @Column(name = "work_date", nullable = false)
-    private LocalDate workDate; // 근무 일자 (DATE)
+    private LocalDate workDate;
 
     @Column(name = "commute_at")
-    private LocalDateTime commuteAt; // 실제 출근 시간 (DATETIME)
+    private LocalDateTime commuteAt;
 
     @Column(name = "leave_at")
-    private LocalDateTime leaveAt; // 실제 퇴근 시간 (DATETIME)
+    private LocalDateTime leaveAt;
 
-    /**
-     * 최종 근태 상태 (지각/결근/정상근무 등)
-     * 중복된 String status 필드를 제거하고 Enum 타입으로 통일
-     */
-    @Enumerated(EnumType.STRING) // Enum 이름을 DB에 VARCHAR(50) 등으로 저장
-    @Column(name = "status", length = 50, nullable = false) // length를 지정하여 DB 컬럼에 맞춤
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 50, nullable = false)
     private AttendanceStatus status;
 
     @Column(name = "applied_rule_id")
-    private Long appliedRuleId; // 최종 적용된 규칙 아이디 (FK: attendance_rule)
+    private Long appliedRuleId;
 
     @Column(name = "is_corrected", nullable = false)
-    private Boolean isCorrected = false; // 정정 처리 여부
+    private Boolean isCorrected = false;
 
     @Column(name = "correction_reason", length = 255)
-    private String correctionReason; // 정정 사유 (관리자 최종 사유)
+    private String correctionReason;
 
     public void updateStatus(AttendanceStatus status, String correctionReason) {
         this.status = status;
         this.correctionReason = correctionReason;
-        this.markAsCorrected(); // 상태 변경 시 자동으로 정정 여부 체크
+        this.markAsCorrected();
     }
 
     public void markAsCorrected() {
@@ -81,18 +84,15 @@ public class Attendance {
 
     public void recordLeave() {
         if (this.leaveAt != null) {
-            throw new BusinessException("이미 퇴근 처리되었습니다."); // 엔티티 내부에서 상태 검증
+            throw new BusinessException("이미 퇴근 처리되었습니다.");
         }
-        this.leaveAt = LocalDateTime.now(); // 내부 필드 직접 업데이트
+        this.leaveAt = LocalDateTime.now();
     }
 
     public void updateStatusAutomatically(AttendanceStatus status) {
         this.status = status;
     }
 
-    public void updateCommuteTime(LocalDateTime commuteAt){
-        this.commuteAt = commuteAt;
-    }
 
 
 

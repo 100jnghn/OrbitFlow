@@ -10,8 +10,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
- * 근태(출퇴근 기록) 화면을 반환하는 뷰 컨트롤러
+ * * @author : hayeon
+ * @filename : CommuteController
+ * @since : 2025. 12. 21. 일요일
  */
+
 @Controller
 @RequestMapping("/view")
 @RequiredArgsConstructor

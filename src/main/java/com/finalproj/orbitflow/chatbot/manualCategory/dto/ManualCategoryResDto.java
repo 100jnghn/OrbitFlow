@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * 매뉴얼 카테고리 응답 DTO
- *
+
  * @author : rlagkdus
  * @filename : ManualCategoryResDto
  * @since : 2025. 12. 30. 화요일

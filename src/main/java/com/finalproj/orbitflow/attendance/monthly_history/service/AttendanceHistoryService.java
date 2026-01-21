@@ -5,20 +5,26 @@ import com.finalproj.orbitflow.attendance.commute.enums.AttendanceStatus;
 import com.finalproj.orbitflow.attendance.commute.repository.CommuteRepository;
 import com.finalproj.orbitflow.attendance.monthly_history.dto.*;
 import com.finalproj.orbitflow.global.exception.InvalidRequestException;
-import com.finalproj.orbitflow.hr.employee.entity.Employee;
-import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.*; // Duration, LocalDate 등을 위해 반드시 필요
+import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
+
 import java.util.List;
 import java.util.Locale;
+
+/**
+ * Please explain the class!!!
+ *
+ * @author : rlagkdus
+ * @filename : AttendanceHistoryService
+ * @since : 2025. 12. 22. 월요일
+ */
+
 
 @Service
 @RequiredArgsConstructor
@@ -26,18 +32,13 @@ import java.util.Locale;
 public class AttendanceHistoryService {
 
     private final CommuteRepository commuteRepository;
-    private final EmployeeRepository employeeRepository;
 
-
-    // 월별 근태 조회시 필요한 모든 데이터 조합
     public MonthlyHistoryResDto getMonthlyHistoryData(Long empId, Integer year, Integer month,
                                                       LocalDate startDate, LocalDate endDate,
                                                       String status, Pageable pageable) {
 
-        // 1. 기간 유효성 검사
         validateSearchDates(startDate, endDate);
 
-        // 2. 조회 기간 설정 (자유 기간 > 특정 연/월 > 현재 월)
         LocalDate[] period = resolvePeriod(year, month, startDate, endDate);
         LocalDate finalStart = period[0];
         LocalDate finalEnd = period[1];
@@ -50,7 +51,6 @@ public class AttendanceHistoryService {
     }
 
 
-    // 지정  기간 내의 통계 데이터 계산
     private MonthlyAttHistoryResDto getMonthlySummary(Long empId, LocalDate start, LocalDate end) {
         List<Attendance> records = commuteRepository.findByEmployeeIdAndWorkDateBetweenOrderByWorkDateAsc(empId, start, end);
         long totalMin = 0, lateCount = 0, absentCount = 0;
@@ -59,7 +59,6 @@ public class AttendanceHistoryService {
             if (a.getStatus() == AttendanceStatus.LATE) lateCount++;
             if (a.getStatus() == AttendanceStatus.ABSENT) absentCount++;
 
-            // 출퇴근 기록이 모두 있을 때만 근무 시간 합산
             if (a.getCommuteAt() != null && a.getLeaveAt() != null) {
                 totalMin += Duration.between(a.getCommuteAt(), a.getLeaveAt()).toMinutes();
             }
@@ -73,7 +72,6 @@ public class AttendanceHistoryService {
     }
 
 
-    // 페이징 처리된 근태목록
     private Page<DailyAttRecordResDto> getMonthlyHistoryPaged(Long empId, LocalDate start, LocalDate end, String status, Pageable pageable) {
         AttendanceStatus attStatus = null;
         try {
@@ -103,18 +101,14 @@ public class AttendanceHistoryService {
                 .build();
     }
 
-    /**
-     * 기간 유효성 검사 분리
-     */
+
     private void validateSearchDates(LocalDate start, LocalDate end) {
         if (start != null && end != null && start.isAfter(end)) {
             throw new InvalidRequestException("시작일이 종료일보다 늦을 수 없습니다.");
         }
     }
 
-    /**
-     * 기간 결정 로직 분리
-     */
+
     private LocalDate[] resolvePeriod(Integer year, Integer month, LocalDate start, LocalDate end) {
         if (start != null && end != null) {
             return new LocalDate[]{start, end};

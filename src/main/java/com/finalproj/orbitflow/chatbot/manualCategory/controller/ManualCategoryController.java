@@ -13,6 +13,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ *
+ * @author : rlagkdus
+ * @filename : ManualCategoryController
+ * @since : 2025. 12. 30. 화요일
+ */
+
 @RestController
 @RequestMapping("/api/admin/manual/categories")
 @RequiredArgsConstructor
@@ -20,7 +27,6 @@ public class ManualCategoryController {
 
     private final ManualCategoryService categoryService;
 
-    // 카테고리 추가
     @PostMapping
     public ResponseEntity<ResponseDto> createCategory(
             @AuthenticationPrincipal SecurityUser user,
@@ -29,7 +35,6 @@ public class ManualCategoryController {
         return ResponseEntity.ok(new ResponseDto(HttpStatus.OK, "카테고리가 생성되었습니다.", null));
     }
 
-    // 카테고리 수정
     @PutMapping("/{categoryId}")
     public ResponseEntity<ResponseDto> updateCategory(
             @AuthenticationPrincipal SecurityUser user,
@@ -39,7 +44,6 @@ public class ManualCategoryController {
         return ResponseEntity.ok(new ResponseDto(HttpStatus.OK, "카테고리가 수정되었습니다.", null));
     }
 
-    // 카테고리 삭제
     @DeleteMapping("/{categoryId}")
     public ResponseEntity<ResponseDto> deleteCategory(
             @AuthenticationPrincipal SecurityUser user,

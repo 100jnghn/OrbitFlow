@@ -1,7 +1,5 @@
 package com.finalproj.orbitflow.attendance.leave.service;
 
-import com.finalproj.orbitflow.approval.attendanceEvent.entity.AttendanceEvent;
-import com.finalproj.orbitflow.approval.attendanceEvent.repository.AttendanceEventRepository;
 import com.finalproj.orbitflow.approval.attendanceRecord.entity.AttendanceRecord;
 import com.finalproj.orbitflow.approval.attendanceRecord.repository.AttendanceRecordRepository;
 import com.finalproj.orbitflow.approval.document.entity.Document;
@@ -16,8 +14,6 @@ import com.finalproj.orbitflow.attendance.leave.entity.LeaveGrant;
 import com.finalproj.orbitflow.attendance.leave.entity.LeaveType;
 import com.finalproj.orbitflow.attendance.leave.repository.LeaveBalanceRepository;
 import com.finalproj.orbitflow.attendance.leave.repository.LeaveGrantRepository;
-import com.finalproj.orbitflow.attendance.leave.repository.LeaveTypeRepository;
-import com.finalproj.orbitflow.global.exception.BusinessException;
 import com.finalproj.orbitflow.global.exception.NotFoundException;
 import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.enums.EmployeeStatus;
@@ -34,13 +30,17 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+
+/**
+ * * @author : rlagkdus
+ * @filename : LeaveService
+ * @since : 2025. 12. 21. 일요일
+ */
+
 
 @Service
 @RequiredArgsConstructor
@@ -54,9 +54,6 @@ public class LeaveService {
     private final AttendanceRecordRepository attendanceRecordRepository;
     private final CommuteRepository commuteRepository;
 
-    /**
-     * [스케줄러/관리자] 정기 연차 부여 (회계년도 기준)
-     */
     @Transactional
     public void batchGrantAnnualLeave(Long companyId, Integer year) {
         LocalDate grantDate = LocalDate.of(year, 1, 1);
@@ -71,7 +68,6 @@ public class LeaveService {
         if (emp.getHireDate() == null) return;
 
         if (leaveGrantRepository.existsAnnualLeaveForYear(emp.getId(), year)) {
-            log.info("사원 ID: {} - {}년도 연차가 이미 부여되어 건너뜁니다.", emp.getId(), year);
             return;
         }
 
@@ -92,9 +88,6 @@ public class LeaveService {
     }
 
 
-    /**
-     * [스케줄러] 연차 소멸 처리
-     */
     @Transactional
     public void expireOutdatedLeaves() {
         LocalDate today = LocalDate.now();
@@ -112,9 +105,6 @@ public class LeaveService {
         }
     }
 
-    /**
-     * [API] 연차 현황 요약 데이터 생성
-     */
     @Transactional
     public LeaveBalanceResDto getMySummary(Long companyId, Long employeeId, Integer year) {
         int targetYear = (year != null) ? year : LocalDate.now().getYear();
@@ -139,9 +129,6 @@ public class LeaveService {
                 .build();
     }
 
-    /**
-     * [API] 모든 휴가 신청 내역 통합 조회
-     */
     public Page<LeaveHistoryResDto> getAllLeaveHistory(Long companyId, Long employeeId, LeaveSearchReqDto searchDto,
             Pageable pageable) {
         return attendanceRecordRepository.findAllLeaveHistoryWithFilters(
@@ -154,8 +141,6 @@ public class LeaveService {
             Long companyId, Long employeeId, int year,
             String typeName, DocumentStatus status, LocalDate startDate, LocalDate endDate,
             Pageable pageable) {
-        // AttendanceRecordRepository에 작성된 쿼리를 사용하여 차감되는 항목만 조회
-        // 필터: 차감대상(isCountable=true) + 해당 연도 + 추가 필터 (상태 조건 제거됨)
         return attendanceRecordRepository.findUsageHistoryWithFilters(
                 companyId, employeeId, year, typeName, status, startDate, endDate, pageable)
                 .map(this::mapRecordToDto);
@@ -207,7 +192,6 @@ public class LeaveService {
 
     private LeaveHistoryResDto mapRecordToDto(AttendanceRecord r) {
         String typeName = r.getLeaveType() != null ? r.getLeaveType().getTypeName() : "미지정";
-        // 생성일 기준 액션 날짜 설정
         String actionDate = r.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDate().toString();
 
         return LeaveHistoryResDto.builder()
@@ -280,7 +264,6 @@ public class LeaveService {
 
         List<WorkStatus> specialStatuses = getSpecialWorkStatuses();
 
-        // 기존 특수 상태 초기화
         List<Employee> specialStatusEmployees = employeeRepository.findByStatusAndWorkStatusIn(
                 EmployeeStatus.ACTIVE, specialStatuses);
 
@@ -288,7 +271,6 @@ public class LeaveService {
             emp.updateWorkStatus(WorkStatus.OFF_WORK);
         }
 
-        // 오늘 기준 유효한 출근/휴가 기록 조회
         List<AttendanceRecord> activeRecords = attendanceRecordRepository.findActiveAttendanceRecords(today);
 
         for (AttendanceRecord record : activeRecords) {
@@ -296,7 +278,6 @@ public class LeaveService {
             if (record.getSourceDocument() == null || record.getSourceDocument().getTemplateGroup() == null)
                 continue;
 
-            // 승인 문서(BaseRole)를 기준으로 최종 상태 결정
             BaseRole role = record.getSourceDocument().getTemplateGroup().getBaseRole();
 
             try {
@@ -318,46 +299,31 @@ public class LeaveService {
 
 
 
-
-
-    /**
-     * 신규 사원 가입(입사) 직후 비례 연차 즉시 부여
-     * EmployeeService 또는 AdminController에서 사원 객체를 전달받아 호출합니다.
-     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void grantInitialLeave(Employee emp) {
-        // 1. 입사일 존재 여부 확인
+
         if (emp == null || emp.getHireDate() == null) {
-            log.warn("[InitialGrant] 사원 정보 또는 입사일이 누락되어 연차 부여를 건너뜁니다.");
             return;
         }
 
         LocalDate hireDate = emp.getHireDate();
-        // 2. 입사일 기준 당해 연도 비례 연차 계산 (입사월~12월)
-        // 공식: (남은 근무 월수 / 12) * 15
+
         BigDecimal grantDays = calculateImmediateProportionalDays(hireDate);
         String type = "ANNUAL_PROPORTIONAL";
 
-        // 3. 중복 부여 방지
         if (leaveGrantRepository.existsByEmployeeIdAndGrantTypeAndGrantDate(emp.getId(), type, hireDate)) {
-            log.info("[InitialGrant] 이미 부여된 이력이 있습니다. 사원: {}", emp.getName());
             return;
         }
 
-        // 4. 부여 내역 저장 및 Balance 업데이트
+
         saveGrantAndBalance(emp, hireDate, grantDays, type);
-        log.info("[InitialGrant] 사원: {}, 입사일: {}, 부여연차: {}일", emp.getName(), hireDate, grantDays);
     }
 
-    /**
-     * 🚀 [신규] 입사 시점 기준 당해 연도 잔여 개월 비례 계산 로직
-     * 공식: (근무 가능 월수 / 12) * 15
-     */
+
     private BigDecimal calculateImmediateProportionalDays(LocalDate hireDate) {
-        // 입사월부터 12월까지의 개월 수 계산
+
         LocalDate yearEnd = LocalDate.of(hireDate.getYear(), 12, 31);
 
-        // 시작월부터 종료월까지 포함하기 위해 날짜 조정 후 계산
         long remainingMonths = ChronoUnit.MONTHS.between(
                 hireDate.withDayOfMonth(1),
                 yearEnd.plusMonths(1).withDayOfMonth(1));
@@ -401,9 +367,6 @@ public class LeaveService {
     }
 
 
-    /**
-     * ✅ WorkStatus → AttendanceStatus 매핑
-     */
     private AttendanceStatus mapToAttendanceStatus(WorkStatus workStatus) {
         return switch (workStatus) {
             case VACATION -> AttendanceStatus.VACATION;
@@ -413,11 +376,6 @@ public class LeaveService {
         };
     }
 
-    /**
-     * ✅ 오늘자 attendance upsert
-     * - 없으면 생성
-     * - 있으면 상태만 자동 보정 (정정 아님)
-     */
     @Transactional
     protected void upsertTodayAttendance(
             Long companyId,

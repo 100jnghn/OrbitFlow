@@ -6,6 +6,15 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+/**
+ * Please explain the class!!!
+ *
+ * @author : rlagkdus
+ * @filename : AttendanceRule
+ * @since : 2025. 12. 22. 월요일
+ */
+
+
 @Entity
 @Table(name = "attendance_rule")
 @Getter

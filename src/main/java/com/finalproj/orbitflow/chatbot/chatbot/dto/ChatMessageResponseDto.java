@@ -14,9 +14,5 @@ import lombok.Getter;
 @Getter
 @Builder
 public class ChatMessageResponseDto {
-
-    /**
-     * 생성된 assistant 답변
-     */
     private ChatMessageDto assistant;
 }
