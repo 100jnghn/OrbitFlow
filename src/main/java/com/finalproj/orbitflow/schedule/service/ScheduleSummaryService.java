@@ -6,7 +6,7 @@ import com.finalproj.orbitflow.hr.employee.entity.Employee;
 import com.finalproj.orbitflow.hr.employee.repository.EmployeeRepository;
 import com.finalproj.orbitflow.hr.organization.dto.OrgResDto;
 import com.finalproj.orbitflow.hr.organization.service.OrgService;
-import com.finalproj.orbitflow.schedule.aiModel.OpenAiSummaryModelService;
+import com.finalproj.orbitflow.schedule.aimodel.OpenAiSummaryModelService;
 import com.finalproj.orbitflow.schedule.builder.SchedulePromptBuilder;
 import com.finalproj.orbitflow.schedule.dto.ScheduleResDto;
 import com.finalproj.orbitflow.schedule.dto.ScheduleSummaryReqDto;

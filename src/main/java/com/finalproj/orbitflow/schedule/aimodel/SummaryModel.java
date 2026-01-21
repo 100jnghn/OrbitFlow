@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.schedule.aiModel;
+package com.finalproj.orbitflow.schedule.aimodel;
 
 /**
  * Please explain the class!!!
