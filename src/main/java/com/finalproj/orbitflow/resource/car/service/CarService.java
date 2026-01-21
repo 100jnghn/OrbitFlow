@@ -258,7 +258,7 @@ public class CarService {
 
     // 상태 코드 조회
     private ResourceStatus findResourceStatus(Long statusId) {
-        log.info("Find resource status by id {}", statusId);
+
         return resourceStatusRepository.findById(statusId)
                 .orElseThrow(() -> new IllegalArgumentException("지원하지 않는 자원 상태입니다."));
     }

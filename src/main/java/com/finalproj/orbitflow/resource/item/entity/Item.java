@@ -32,7 +32,6 @@ public class Item extends BaseEntity {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    // 아이템 카테고리 (예: 노트북, 모니터, 카메라 등)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_category_id", nullable = false)
     private ItemCategory itemCategory;
@@ -47,7 +46,6 @@ public class Item extends BaseEntity {
     @JoinColumn(name = "resource_status_id")
     private ResourceStatus resourceStatus;
 
-    // 아이템 이미지 (1:1 관계 가정, 필요시 ManyToOne으로 변경)
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "file_id")
     private File file;

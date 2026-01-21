@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.openAi.dto;
+package com.finalproj.orbitflow.openai.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

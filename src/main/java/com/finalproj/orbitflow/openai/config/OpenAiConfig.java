@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.openAi.config;
+package com.finalproj.orbitflow.openai.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

@@ -35,6 +35,11 @@ public interface MessageRecipientRepository
         /** 중복 방지(옵션) */
         boolean existsByCompanyIdAndMessage_IdAndEmployee_Id(Long companyId, Long messageId, Long employeeId);
 
+        /** 메시지 수신자 목록 조회 (삭제 여부 상관없이 조회 - 발신자가 상세에서 확인하기 위함) */
+        List<MessageRecipient> findByMessage_IdAndMessageFolderType(
+                        Long messageId,
+                        MessageFolderType folderType);
+
         /** 메시지 수신자 목록 조회 (보낸 메시지함에서 수신자 정보 표시용) */
         List<MessageRecipient> findByMessage_IdAndMessageFolderTypeAndDeletedAtIsNull(
                         Long messageId,

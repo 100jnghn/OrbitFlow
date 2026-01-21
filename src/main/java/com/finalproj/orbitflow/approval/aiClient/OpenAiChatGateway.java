@@ -1,7 +1,7 @@
 package com.finalproj.orbitflow.approval.aiClient;
 
-import com.finalproj.orbitflow.openAi.dto.OpenAiChatReqDto;
-import com.finalproj.orbitflow.openAi.dto.OpenAiChatResDto;
+import com.finalproj.orbitflow.openai.dto.OpenAiChatReqDto;
+import com.finalproj.orbitflow.openai.dto.OpenAiChatResDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
