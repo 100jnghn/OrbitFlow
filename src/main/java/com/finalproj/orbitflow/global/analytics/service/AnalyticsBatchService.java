@@ -39,6 +39,9 @@ public class AnalyticsBatchService {
     }
 
     private void aggregateSnapshots(LocalDate date) {
+        // 해당 날짜의 기존 데이터가 있으면 삭제 (재집계 대응)
+        snapshotRepository.deleteBySnapshotDate(date);
+
         String sql = "SELECT " +
                 "    c.id as company_id, " +
                 "    (SELECT COUNT(*) FROM employee e WHERE e.company_id = c.id AND e.status = 'ACTIVE') as employee_count, "
@@ -71,6 +74,9 @@ public class AnalyticsBatchService {
     }
 
     private void aggregateAiUsage(LocalDate date) {
+        // 해당 날짜의 기존 데이터가 있으면 삭제 (재집계 대응)
+        aiUsageRepository.deleteByUsageDate(date);
+
         String sql = "SELECT " +
                 "    c.id as company_id, " +
                 "    (SELECT COUNT(*) FROM schedule_summary ss WHERE ss.company_id = c.id AND DATE(ss.created_at) = :date) as schedule_cnt, "
