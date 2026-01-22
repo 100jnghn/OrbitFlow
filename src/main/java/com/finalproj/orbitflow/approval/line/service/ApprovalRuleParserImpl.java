@@ -3,8 +3,8 @@ package com.finalproj.orbitflow.approval.line.service;
 import com.finalproj.orbitflow.approval.line.dto.RawApprovalRuleStepDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.HashSet;
 import java.util.List;

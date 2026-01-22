@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.approval.document.content.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.finalproj.orbitflow.approval.document.entity.Document;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
 import com.finalproj.orbitflow.approval.document.content.dto.DocumentContentPatchReqDto;
@@ -12,10 +13,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.ArrayNode;
-import tools.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -85,8 +86,12 @@ public class DocumentContentService {
             throw new ForbiddenException("결재 진행 중인 문서는 수정할 수 없습니다.");
         }
 
-        ObjectNode root =
-                (ObjectNode) objectMapper.readTree(content.getContentJson());
+        ObjectNode root;
+        try {
+            root = (ObjectNode) objectMapper.readTree(content.getContentJson());
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
 
         ArrayNode fieldsNode = (ArrayNode) root.get("fields");
 
@@ -114,8 +119,8 @@ public class DocumentContentService {
             ((ObjectNode) fieldNode).set("value", newValue);
 
             if ("document-title".equals(fieldId)) {
-                if (newValue.isString()) {
-                    newTitle = newValue.asString().trim();
+                if (newValue.isTextual()) {
+                    newTitle = newValue.asText().trim();
                 }
             }
         }

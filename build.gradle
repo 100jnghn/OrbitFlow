@@ -1,9 +1,12 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '4.0.0'
+    id 'org.springframework.boot' version '3.2.1'
     id 'io.spring.dependency-management' version '1.1.7'
 }
 
+/* ===============================
+ * 기본 프로젝트 정보
+ * =============================== */
 group = 'com.finalproj'
 version = '0.0.1-SNAPSHOT'
 description = 'orbitflow'
@@ -14,102 +17,146 @@ java {
     }
 }
 
+/* ===============================
+ * Configuration
+ * =============================== */
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
 }
 
+/* ===============================
+ * Repository
+ * =============================== */
 repositories {
     mavenCentral()
     maven { url 'https://jitpack.io' }
 }
 
+/* ===============================
+ * Dependencies
+ * =============================== */
 dependencies {
+
+    /* -------------------------------------------------
+     * Spring Boot Core
+     * ------------------------------------------------- */
+    implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
-
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
-
-    runtimeOnly 'com.mysql:mysql-connector-j'
-
-    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-thymeleaf-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-
-    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+    /* -------------------------------------------------
+     * View / Template Engine
+     * ------------------------------------------------- */
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+
+    /* -------------------------------------------------
+     * Database
+     * ------------------------------------------------- */
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    /* -------------------------------------------------
+     * Querydsl (JPA Query Builder)
+     * ------------------------------------------------- */
     implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
     annotationProcessor 'com.querydsl:querydsl-apt:5.0.0:jakarta'
     annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
     annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
 
-    // gpt api 사용 (요약) 의존성
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    /* -------------------------------------------------
+     * Security / JWT
+     * ------------------------------------------------- */
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
+    /* -------------------------------------------------
+     * Redis (Cache / Token / Session)
+     * ------------------------------------------------- */
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    /* -------------------------------------------------
+     * Mail (Gmail SMTP)
+     * ------------------------------------------------- */
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    /* -------------------------------------------------
+     * AWS SDK (S3)
+     * ------------------------------------------------- */
     implementation platform("software.amazon.awssdk:bom:2.25.20")
     implementation "software.amazon.awssdk:s3"
 
-
-
-
-    // 1. LangChain4j BOM (버전 관리 통합)
+    /* -------------------------------------------------
+     * AI / LangChain4j
+     * ------------------------------------------------- */
     implementation platform('dev.langchain4j:langchain4j-bom:0.35.0')
-
-    // 2. 핵심 라이브러리 및 스프링 부트 통합
     implementation 'dev.langchain4j:langchain4j'
     implementation 'dev.langchain4j:langchain4j-spring-boot-starter'
-
-    // 3. 모델 및 벡터 DB 연동
     implementation 'dev.langchain4j:langchain4j-open-ai'
     implementation 'dev.langchain4j:langchain4j-chroma'
-
-    // 4. 문서 파싱 (PDF)
     implementation 'dev.langchain4j:langchain4j-document-parser-apache-pdfbox'
-    
-    // 5. 문서 파싱 (DOC, DOCX) - Apache POI
+
+    /* -------------------------------------------------
+     * Document Processing (PDF / DOCX)
+     * ------------------------------------------------- */
     implementation 'org.apache.poi:poi:5.2.5'
     implementation 'org.apache.poi:poi-ooxml:5.2.5'
     implementation 'org.apache.poi:poi-scratchpad:5.2.5'
 
-
-    // redis 의존성
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-
-    // Gmail SMTP
-    implementation 'org.springframework.boot:spring-boot-starter-mail'
-
-
     implementation 'com.openhtmltopdf:openhtmltopdf-pdfbox:1.0.10'
     implementation 'com.openhtmltopdf:openhtmltopdf-slf4j:1.0.10'
 
+    /* -------------------------------------------------
+     * WebClient (GPT API 호출용)
+     * ------------------------------------------------- */
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    /* -------------------------------------------------
+     * Jackson / Date-Time
+     * ------------------------------------------------- */
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+    /* -------------------------------------------------
+     * Monitoring
+     * ------------------------------------------------- */
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
 
-    compileOnly "org.projectlombok:lombok"
-    annotationProcessor "org.projectlombok:lombok"
+    /* -------------------------------------------------
+     * Swagger / OpenAPI
+     * ------------------------------------------------- */
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.4.0'
 
-    testCompileOnly "org.projectlombok:lombok"
-    testAnnotationProcessor "org.projectlombok:lombok"
+    /* -------------------------------------------------
+     * Lombok
+     * ------------------------------------------------- */
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
+    /* -------------------------------------------------
+     * Test
+     * ------------------------------------------------- */
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-thymeleaf-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+/* ===============================
+ * Test
+ * =============================== */
 tasks.named('test') {
     useJUnitPlatform()
 }
 
+/* ===============================
+ * Querydsl Generated Sources
+ * =============================== */
 def querydslDir = "$buildDir/generated/querydsl"
 
 sourceSets {

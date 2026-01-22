@@ -47,11 +47,14 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Query("""
                 SELECT i
                 FROM Item i
-                JOIN FETCH i.resourceStatus rs 
+                JOIN FETCH i.resourceStatus rs
                 WHERE i.company.id = :companyId
-                    AND rs.resourceStatusCode != :resourcStatusCode
+                  AND rs.resourceStatusCode != :resourceStatusCode
             """)
-    List<Item> getAllByCompanyIdAndStatus(Long companyId, ResourceStatusCode resourceStatusCode);
+    List<Item> getAllByCompanyIdAndStatus(
+            @Param("companyId") Long companyId,
+            @Param("resourceStatusCode") ResourceStatusCode resourceStatusCode
+    );
 
 
     Item findItemById(Long itemId);

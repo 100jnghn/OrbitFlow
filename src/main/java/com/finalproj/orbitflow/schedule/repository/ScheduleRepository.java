@@ -214,23 +214,26 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             LocalDateTime endOfDate);
 
     @Query("""
-                    SELECT s
-                    FROM Schedule s
-                    WHERE s.companyId = :companyId
-                        AND s.status = :scheduleStatus
-                        AND s.isCompany = true
-                        AND s.isPersonal = true
-                        AND s.orgId IS NOT NULL
-                        AND s.orgCategoryId IS NOT NULL
-                        AND s.startAt < :endOfDate
-                        AND s.endAt > :startOfDate
+                SELECT s
+                FROM Schedule s
+                WHERE s.companyId = :companyId
+                    AND s.employeeId = :employeeId
+                    AND s.status = :scheduleStatus
+                    AND s.isCompany = true
+                    AND s.isPersonal = true
+                    AND s.orgId IS NOT NULL
+                    AND s.orgCategoryId IS NOT NULL
+                    AND s.startAt < :endOfDate
+                    AND s.endAt > :startOfDate
             """)
     List<Schedule> findCompanyEmployeeSchedules(
-            Long companyId,
-            Long employeeId,
-            LocalDateTime startOfDate,
-            LocalDateTime endOfDate,
-            ScheduleStatus scheduleStatus);
+            @Param("companyId") Long companyId,
+            @Param("employeeId") Long employeeId,
+            @Param("startOfDate") LocalDateTime startOfDate,
+            @Param("endOfDate") LocalDateTime endOfDate,
+            @Param("scheduleStatus") ScheduleStatus scheduleStatus
+    );
+
 
     void deleteByEmployeeIdAndStartAtAfter(Long employeeId, LocalDateTime date);
 

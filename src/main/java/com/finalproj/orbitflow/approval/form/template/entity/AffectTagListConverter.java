@@ -3,8 +3,8 @@ package com.finalproj.orbitflow.approval.form.template.entity;
 import com.finalproj.orbitflow.approval.form.template.enums.AffectTag;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
 

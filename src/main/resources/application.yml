@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: local   # ?? ??? dev
+    active: local
 
 server:
   port: 8090
@@ -9,3 +9,10 @@ jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:3600000}
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha

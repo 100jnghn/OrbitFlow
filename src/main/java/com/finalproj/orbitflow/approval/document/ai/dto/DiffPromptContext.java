@@ -1,7 +1,7 @@
 package com.finalproj.orbitflow.approval.document.ai.dto;
 
 import com.finalproj.orbitflow.approval.form.template.schema.FormTemplateSchema;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Please explain the class!!!

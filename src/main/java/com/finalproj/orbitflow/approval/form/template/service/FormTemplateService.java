@@ -1,5 +1,6 @@
 package com.finalproj.orbitflow.approval.form.template.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.finalproj.orbitflow.approval.form.template.dto.*;
 import com.finalproj.orbitflow.approval.form.template.entity.FormTemplate;
 import com.finalproj.orbitflow.approval.form.template.enums.AffectTag;
@@ -19,9 +20,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.ArrayNode;
-import tools.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.List;
 import java.util.Optional;
@@ -196,9 +197,13 @@ public class FormTemplateService {
 
 
         if (reqDto.getApprovalRuleJson() != null) {
-            formTemplate.updateApprovalRuleJson(
-                    objectMapper.writeValueAsString(reqDto.getApprovalRuleJson())
-            );
+            try {
+                formTemplate.updateApprovalRuleJson(
+                        objectMapper.writeValueAsString(reqDto.getApprovalRuleJson())
+                );
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

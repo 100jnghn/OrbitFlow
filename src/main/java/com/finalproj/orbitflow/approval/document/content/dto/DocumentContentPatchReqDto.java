@@ -1,7 +1,7 @@
 package com.finalproj.orbitflow.approval.document.content.dto;
 
 import lombok.Data;
-import tools.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.List;
 

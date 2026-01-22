@@ -30,57 +30,62 @@ import static jakarta.servlet.DispatcherType.ASYNC;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-        private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-        @Bean
-        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-                http
-                                .csrf(csrf -> csrf.disable())
-                                .sessionManagement(session -> session
-                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                                .authorizeHttpRequests(auth -> auth
+        http
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
 
-                                                .dispatcherTypeMatchers(ASYNC).permitAll()
-                                                .requestMatchers(
-                                                                "/",
-                                                                "/api/auth/**",
-                                                                "/login",
-                                                                "/view/**",
-                                                                "/companies/**",
-                                                                "/api/companies/**",
-                                                                "/css/**",
-                                                                "/js/**",
-                                                                "/images/**",
-                                                                "/favicon.ico",
-                                                                "/internal/**",
-                                                                "/activate/**",
-                                                                "/reset-password/**",
-                                                                "/find-password/**",
-                                                                "/api/email/**",
-                                                                "/actuator/prometheus",
-                                                                "/actuator/health")
-                                                .permitAll()
+                        .dispatcherTypeMatchers(ASYNC).permitAll()
+                        .requestMatchers(
+                                "/",
+                                "/api/auth/**",
+                                "/login",
+                                "/view/**",
+                                "/companies/**",
+                                "/api/companies/**",
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/favicon.ico",
+                                "/internal/**",
+                                "/activate/**",
+                                "/reset-password/**",
+                                "/find-password/**",
+                                "/api/email/**",
+                                "/actuator/prometheus",
+                                "/actuator/health",
 
-                                                .requestMatchers("/api/chatbot/**").authenticated()
-                                                .requestMatchers("/api/manual/**").authenticated()
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**"
+                        )
+                        .permitAll()
 
-                                                .requestMatchers("/api/admin/**")
-                                                .hasAnyRole("ADMIN", "COMPANY_ADMIN")
+                        .requestMatchers("/api/chatbot/**").authenticated()
+                        .requestMatchers("/api/manual/**").authenticated()
 
-                                                .requestMatchers("/api/analytics/**")
-                                                .hasRole("TEAM_ORBIT")
+                        .requestMatchers("/api/admin/**")
+                        .hasAnyRole("ADMIN", "COMPANY_ADMIN")
 
-                                                .anyRequest().authenticated())
+                        .requestMatchers("/api/analytics/**")
+                        .hasRole("TEAM_ORBIT")
 
-                                .addFilterBefore(jwtAuthenticationFilter,
-                                                UsernamePasswordAuthenticationFilter.class);
+                        .anyRequest().authenticated())
 
-                return http.build();
-        }
+                .addFilterBefore(jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class);
 
-        @Bean
-        public PasswordEncoder passwordEncoder() {
-                return new BCryptPasswordEncoder();
-        }
+        return http.build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 }
