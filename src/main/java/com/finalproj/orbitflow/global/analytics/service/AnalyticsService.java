@@ -66,8 +66,8 @@ public class AnalyticsService {
             Long companyId) {
         String dateGroup = switch (granularity) {
             case "week" -> "DATE_FORMAT(s.snapshot_date, '%Y-%m-%d')";
-            case "month" -> "DATE_FORMAT(s.snapshot_date, '%Y-%m-%d')";
-            case "year" -> "DATE_FORMAT(s.snapshot_date, '%Y-%m')";
+            case "month" -> "DATE_FORMAT(s.snapshot_date, '%Y-%m')";
+            case "year" -> "DATE_FORMAT(s.snapshot_date, '%Y')";
             default -> {
                 long diffDays = java.time.temporal.ChronoUnit.DAYS.between(from, to);
                 if (diffDays <= 60)
@@ -200,7 +200,7 @@ public class AnalyticsService {
         top10.put("ai", fetchTopN(aiSql, from, to, companyId));
 
         // 2. 파일 용량 Top 10
-        String fileSql = "SELECT c.name, MAX(s.file_bytes) as total " +
+        String fileSql = "SELECT c.name, SUM(s.file_bytes) as total " +
                 "FROM company_daily_snapshot s " +
                 "JOIN company c ON s.company_id = c.id " +
                 "WHERE s.snapshot_date BETWEEN :from AND :to " + companyFilter +
