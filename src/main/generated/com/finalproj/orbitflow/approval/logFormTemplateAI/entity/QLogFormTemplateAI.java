@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.logformtemplateai.entity;
+package com.finalproj.orbitflow.approval.form.template.ai.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -32,7 +32,7 @@ public class QLogFormTemplateAi extends EntityPathBase<LogFormTemplateAi> {
     //inherited
     public final NumberPath<Long> createdBy = _super.createdBy;
 
-    public final com.finalproj.orbitflow.approval.formTemplate.entity.QFormTemplate createdTemplate;
+    public final com.finalproj.orbitflow.approval.form.template.entity.QFormTemplate createdTemplate;
 
     public final StringPath errorMessage = createString("errorMessage");
 
@@ -51,9 +51,9 @@ public class QLogFormTemplateAi extends EntityPathBase<LogFormTemplateAi> {
 
     public final StringPath responseContext = createString("responseContext");
 
-    public final EnumPath<com.finalproj.orbitflow.approval.documentAISummary.enums.AiStatus> status = createEnum("status", com.finalproj.orbitflow.approval.documentAISummary.enums.AiStatus.class);
+    public final EnumPath<com.finalproj.orbitflow.approval.document.ai.enums.AiStatus> status = createEnum("status", com.finalproj.orbitflow.approval.document.ai.enums.AiStatus.class);
 
-    public final com.finalproj.orbitflow.approval.formTemplateGroup.entity.QFormTemplateGroup templateGroup;
+    public final com.finalproj.orbitflow.approval.form.template.group.entity.QFormTemplateGroup templateGroup;
 
     //inherited
     public final DateTimePath<java.time.Instant> updatedAt = _super.updatedAt;
@@ -77,8 +77,8 @@ public class QLogFormTemplateAi extends EntityPathBase<LogFormTemplateAi> {
     public QLogFormTemplateAi(Class<? extends LogFormTemplateAi> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.company = inits.isInitialized("company") ? new com.finalproj.orbitflow.hr.company.entity.QCompany(forProperty("company")) : null;
-        this.createdTemplate = inits.isInitialized("createdTemplate") ? new com.finalproj.orbitflow.approval.formTemplate.entity.QFormTemplate(forProperty("createdTemplate"), inits.get("createdTemplate")) : null;
-        this.templateGroup = inits.isInitialized("templateGroup") ? new com.finalproj.orbitflow.approval.formTemplateGroup.entity.QFormTemplateGroup(forProperty("templateGroup"), inits.get("templateGroup")) : null;
+        this.createdTemplate = inits.isInitialized("createdTemplate") ? new com.finalproj.orbitflow.approval.form.template.entity.QFormTemplate(forProperty("createdTemplate"), inits.get("createdTemplate")) : null;
+        this.templateGroup = inits.isInitialized("templateGroup") ? new com.finalproj.orbitflow.approval.form.template.group.entity.QFormTemplateGroup(forProperty("templateGroup"), inits.get("templateGroup")) : null;
     }
 
 }

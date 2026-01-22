@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.documentFile.entity;
+package com.finalproj.orbitflow.approval.document.file.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -20,7 +20,7 @@ public class QDocumentFile extends EntityPathBase<DocumentFile> {
 
     private static final PathInits INITS = PathInits.DIRECT2;
 
-    public static final QDocumentFile documentFile = new QDocumentFile("documentFile");
+    public static final QDocumentFile documentFile = new QDocumentFile("file");
 
     public final com.finalproj.orbitflow.global.common.QBaseEntity _super = new com.finalproj.orbitflow.global.common.QBaseEntity(this);
 
@@ -43,11 +43,11 @@ public class QDocumentFile extends EntityPathBase<DocumentFile> {
 
     public final NumberPath<Long> referenceTargetId = createNumber("referenceTargetId", Long.class);
 
-    public final EnumPath<com.finalproj.orbitflow.approval.documentFile.enums.ReferenceType> referenceType = createEnum("referenceType", com.finalproj.orbitflow.approval.documentFile.enums.ReferenceType.class);
+    public final EnumPath<com.finalproj.orbitflow.approval.document.file.enums.ReferenceType> referenceType = createEnum("referenceType", com.finalproj.orbitflow.approval.document.file.enums.ReferenceType.class);
 
     public final StringPath referenceUrl = createString("referenceUrl");
 
-    public final EnumPath<com.finalproj.orbitflow.approval.documentFile.enums.DocumentFileStatus> status = createEnum("status", com.finalproj.orbitflow.approval.documentFile.enums.DocumentFileStatus.class);
+    public final EnumPath<com.finalproj.orbitflow.approval.document.file.enums.DocumentFileStatus> status = createEnum("status", com.finalproj.orbitflow.approval.document.file.enums.DocumentFileStatus.class);
 
     //inherited
     public final DateTimePath<java.time.Instant> updatedAt = _super.updatedAt;

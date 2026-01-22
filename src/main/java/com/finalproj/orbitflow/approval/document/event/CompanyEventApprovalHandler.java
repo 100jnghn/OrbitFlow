@@ -1,35 +1,25 @@
 package com.finalproj.orbitflow.approval.document.event;
 
-import com.finalproj.orbitflow.approval.document.dto.CommonPayload;
-import com.finalproj.orbitflow.approval.document.entity.Document;
-import com.finalproj.orbitflow.approval.document.repository.DocumentRepository;
-import com.finalproj.orbitflow.approval.document.service.ApprovalEventTxService;
-import com.finalproj.orbitflow.approval.documentContent.entity.DocumentContent;
-import com.finalproj.orbitflow.approval.documentContent.repository.DocumentContentRepository;
-import com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole;
-import com.finalproj.orbitflow.attendance.rule.entity.AttendanceRule;
-import com.finalproj.orbitflow.attendance.rule.repository.AttendanceRuleRepository;
-import com.finalproj.orbitflow.global.exception.NotFoundException;
-import com.finalproj.orbitflow.hr.employee.entity.Employee;
-import com.finalproj.orbitflow.hr.organization.entity.Organization;
-import com.finalproj.orbitflow.hr.organization.repository.OrgRepository;
-import com.finalproj.orbitflow.schedule.dto.ScheduleReqDto;
-import com.finalproj.orbitflow.schedule.service.ScheduleService;
+import com.finalproj.orbitflow.approval.document.service.application.ApprovalEventTxService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import java.time.LocalTime;
-
 /**
- * Please explain the class!!!
+ * 결재 완료 이후 회사 일정(사내 이벤트) 관련 후처리를 담당하는 이벤트 핸들러.
+ * <p>
+ * 결재 트랜잭션이 정상적으로 커밋된 이후에만 실행되며,
+ * 결재된 문서를 기준으로 회사 일정 반영 로직을 비동기 방식으로 처리한다.
+ * <p>
+ * 실제 처리 로직은 ApprovalEventTxService에 위임하고,
+ * 이 클래스는 트랜잭션 이벤트를 수신해 연결하는 역할만 수행한다.
  *
  * @author : Choi MinHyeok
  * @filename : CompanyEventApprovalHandler
  * @since : 25. 12. 31. 수요일
- **/
+ */
 
 @Component
 @RequiredArgsConstructor

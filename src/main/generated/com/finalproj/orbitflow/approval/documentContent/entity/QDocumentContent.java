@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.documentContent.entity;
+package com.finalproj.orbitflow.approval.document.content.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -20,7 +20,7 @@ public class QDocumentContent extends EntityPathBase<DocumentContent> {
 
     private static final PathInits INITS = PathInits.DIRECT2;
 
-    public static final QDocumentContent documentContent = new QDocumentContent("documentContent");
+    public static final QDocumentContent documentContent = new QDocumentContent("content");
 
     public final com.finalproj.orbitflow.global.common.QBaseEntity _super = new com.finalproj.orbitflow.global.common.QBaseEntity(this);
 

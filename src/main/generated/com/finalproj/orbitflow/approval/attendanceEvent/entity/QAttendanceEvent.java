@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.attendanceEvent.entity;
+package com.finalproj.orbitflow.approval.attendance.event.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -20,13 +20,13 @@ public class QAttendanceEvent extends EntityPathBase<AttendanceEvent> {
 
     private static final PathInits INITS = PathInits.DIRECT2;
 
-    public static final QAttendanceEvent attendanceEvent = new QAttendanceEvent("attendanceEvent");
+    public static final QAttendanceEvent attendanceEvent = new QAttendanceEvent("event");
 
     public final com.finalproj.orbitflow.global.common.QBaseEntity _super = new com.finalproj.orbitflow.global.common.QBaseEntity(this);
 
     public final DatePath<java.time.LocalDate> actualEndDate = createDate("actualEndDate", java.time.LocalDate.class);
 
-    public final EnumPath<com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole> baseRole = createEnum("baseRole", com.finalproj.orbitflow.approval.formTemplateGroup.enums.BaseRole.class);
+    public final EnumPath<com.finalproj.orbitflow.approval.form.template.group.enums.BaseRole> baseRole = createEnum("baseRole", com.finalproj.orbitflow.approval.form.template.group.enums.BaseRole.class);
 
     public final com.finalproj.orbitflow.hr.company.entity.QCompany company;
 

@@ -1,4 +1,4 @@
-package com.finalproj.orbitflow.approval.attendanceRecord.entity;
+package com.finalproj.orbitflow.approval.attendance.record.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -20,7 +20,7 @@ public class QAttendanceRecord extends EntityPathBase<AttendanceRecord> {
 
     private static final PathInits INITS = PathInits.DIRECT2;
 
-    public static final QAttendanceRecord attendanceRecord = new QAttendanceRecord("attendanceRecord");
+    public static final QAttendanceRecord attendanceRecord = new QAttendanceRecord("record");
 
     public final com.finalproj.orbitflow.global.common.QBaseEntity _super = new com.finalproj.orbitflow.global.common.QBaseEntity(this);
 

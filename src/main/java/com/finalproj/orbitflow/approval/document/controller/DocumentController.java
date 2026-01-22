@@ -1,9 +1,9 @@
 package com.finalproj.orbitflow.approval.document.controller;
 
-import com.finalproj.orbitflow.approval.approvalLine.dto.ReferenceCreateReqDto;
+import com.finalproj.orbitflow.approval.line.dto.ReferenceCreateReqDto;
 import com.finalproj.orbitflow.approval.document.dto.*;
-import com.finalproj.orbitflow.approval.document.service.DocumentApplicationService;
-import com.finalproj.orbitflow.approval.document.service.DocumentService;
+import com.finalproj.orbitflow.approval.document.service.application.*;
+import com.finalproj.orbitflow.approval.document.service.domain.DocumentService;
 import com.finalproj.orbitflow.global.common.ResponseDto;
 import com.finalproj.orbitflow.global.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -15,20 +15,33 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * Please explain the class!!!
+ * 결재 문서와 관련된 요청을 처리하는 컨트롤러.
+ * <p>
+ * 문서 작성, 수정, 상신, 승인/반려와 같은 흐름과
+ * 목록 조회, 상세 조회, 대시보드 조회 등의 API를 제공한다.
+ * <p>
+ * 실제 처리 로직은 각 ApplicationService와 DomainService에 위임하고,
+ * 이 컨트롤러는 요청을 받아 필요한 서비스로 연결하는 역할만 맡는다.
+ * <p>
+ * 문서 생명주기 단계에 따라 기능이 나뉘어 있으며,
+ * 여기서는 그 진입점만 모아서 관리한다.
  *
  * @author : Choi MinHyeok
  * @filename : DocumentController
  * @since : 25. 12. 22. 월요일
- **/
+ */
+
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/documents")
 public class DocumentController {
     private final DocumentService documentService;
-    private final DocumentApplicationService documentApplicationService;
-
+    private final DocumentDraftApplicationService documentDraftApplicationService;
+    private final DocumentApprovalApplicationService documentApprovalApplicationService;
+    private final DocumentDashboardQueryService  documentDashboardQueryService;
+    private final DocumentReviseApplicationService documentReviseApplicationService;
+    private final DocumentSubmitApplicationService documentSubmitApplicationService;
 
     @GetMapping("/my-written")
     public ResponseEntity<?> getMyWrittenDocuments(
@@ -69,7 +82,7 @@ public class DocumentController {
             @PathVariable Long formTemplateId,
             @RequestParam(required = false) Long beforeDocumentId
     ) {
-        DocumentCreateResDto result = documentApplicationService.createDraft(SecurityUtils.getCompanyId(), SecurityUtils.getEmployeeId(), formTemplateId, beforeDocumentId);
+        DocumentCreateResDto result = documentDraftApplicationService.createDraft(SecurityUtils.getCompanyId(), SecurityUtils.getEmployeeId(), formTemplateId, beforeDocumentId);
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.CREATED, "결재 문서 초안 생성 성공", result));
     }
 
@@ -77,7 +90,7 @@ public class DocumentController {
     public ResponseEntity<?> deleteDraftDocument(
             @PathVariable Long documentId
     ) {
-        documentApplicationService.deleteDraftDocument(SecurityUtils.getEmployeeId(), documentId);
+        documentDraftApplicationService.deleteDraft(SecurityUtils.getEmployeeId(), documentId);
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.ACCEPTED, "임시 문서 삭제 성공", null));
     }
 
@@ -86,7 +99,7 @@ public class DocumentController {
     public ResponseEntity<?> reviseDocument(
             @PathVariable Long documentId
     ) {
-        DocumentCreateResDto result = documentApplicationService.reviseDocument(SecurityUtils.getEmployeeId(), documentId);
+        DocumentCreateResDto result = documentReviseApplicationService.revise(SecurityUtils.getEmployeeId(), documentId);
 
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.CREATED, "반려 결재 문서 복제 성공", result));
     }
@@ -100,12 +113,12 @@ public class DocumentController {
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "재기안 문서 조회 성공", result));
     }
 
-    @PatchMapping("/update/{DocumentId}")
+    @PatchMapping("/update/{documentId}")
     public ResponseEntity<?> updateDocument(
-            @PathVariable Long DocumentId,
+            @PathVariable Long documentId,
             @RequestBody DocumentUpdateReqDto reqDto
     ) {
-        documentService.updateDocument(SecurityUtils.getEmployeeId(), DocumentId, reqDto);
+        documentService.updateDocument(SecurityUtils.getEmployeeId(), documentId, reqDto);
 
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "문서 수정 성공", null));
     }
@@ -115,7 +128,7 @@ public class DocumentController {
     public ResponseEntity<?> submitDocument(
             @PathVariable Long documentId
     ) {
-        documentApplicationService.submitDocument(SecurityUtils.getEmployeeId(), documentId);
+        documentSubmitApplicationService.submit(SecurityUtils.getEmployeeId(), documentId);
 
         return ResponseEntity.ok(new ResponseDto<>(HttpStatus.OK, "문서 상신 성공", null));
     }
@@ -136,7 +149,7 @@ public class DocumentController {
     ) {
         String comment = reqDto != null ? reqDto.getComment() : null;
 
-        documentApplicationService.approve(
+        documentApprovalApplicationService.approve(
                 SecurityUtils.getEmployeeId(),
                 documentId,
                 comment
@@ -155,7 +168,7 @@ public class DocumentController {
     ) {
         String comment = reqDto != null ? reqDto.getComment() : null;
 
-        documentApplicationService.reject(
+        documentApprovalApplicationService.reject(
                 SecurityUtils.getEmployeeId(),
                 documentId,
                 comment
@@ -212,7 +225,7 @@ public class DocumentController {
     public ResponseEntity<?> getMainInfo() {
 
         DocumentMainInfoResDto result =
-                documentApplicationService.getMainInfo(SecurityUtils.getEmployeeId());
+                documentDashboardQueryService.getMainInfo(SecurityUtils.getEmployeeId());
 
         return ResponseEntity.ok(
                 new ResponseDto<>(HttpStatus.OK, "대시보드 메인 정보 조회 성공", result)

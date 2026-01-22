@@ -15,10 +15,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class PdfApproverDto {
-
     private Long approverLineId;
     private int order;              // 결재 순서
     private String name;             // 이름
     private String position;         // 직책 (optional)
-    private String signatureImageUrl; // 전자서명 이미지 (없으면 null)
 }

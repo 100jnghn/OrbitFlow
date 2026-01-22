@@ -1,6 +1,6 @@
 package com.finalproj.orbitflow.approval.document.dto;
 
-import com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus;
+import com.finalproj.orbitflow.approval.line.enums.ApprovalStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

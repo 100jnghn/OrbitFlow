@@ -1,16 +1,16 @@
 package com.finalproj.orbitflow.approval.document.repository;
 
-import com.finalproj.orbitflow.approval.approvalLine.entity.QApprovalLine;
-import com.finalproj.orbitflow.approval.approvalLine.enums.ApprovalStatus;
 import com.finalproj.orbitflow.approval.document.dto.DocumentListReqDto;
 import com.finalproj.orbitflow.approval.document.dto.DocumentListResDto;
 import com.finalproj.orbitflow.approval.document.dto.DocumentMyApprovalListResDto;
 import com.finalproj.orbitflow.approval.document.dto.ReferenceSearchResDto;
 import com.finalproj.orbitflow.approval.document.entity.QDocument;
 import com.finalproj.orbitflow.approval.document.enums.DocumentStatus;
-import com.finalproj.orbitflow.approval.documentFile.entity.QDocumentFile;
-import com.finalproj.orbitflow.approval.documentFile.enums.ReferenceType;
-import com.finalproj.orbitflow.approval.formTemplateGroup.entity.QFormTemplateGroup;
+import com.finalproj.orbitflow.approval.document.file.entity.QDocumentFile;
+import com.finalproj.orbitflow.approval.document.file.enums.ReferenceType;
+import com.finalproj.orbitflow.approval.form.template.group.entity.QFormTemplateGroup;
+import com.finalproj.orbitflow.approval.line.entity.QApprovalLine;
+import com.finalproj.orbitflow.approval.line.enums.ApprovalStatus;
 import com.finalproj.orbitflow.hr.employee.entity.QEmployee;
 import com.finalproj.orbitflow.hr.organization.entity.QOrganization;
 import com.finalproj.orbitflow.hr.positionCategory.entity.QPositionCategory;
