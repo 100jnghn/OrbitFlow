@@ -24,6 +24,12 @@ public class AnalyticsBatchService {
     private final CompanyDailySnapshotRepository snapshotRepository;
     private final CompanyDailyAiUsageRepository aiUsageRepository;
 
+    @Scheduled(cron = "0 0/10 * * * *") // 매 10분마다 당일 데이터 집계
+    @Transactional
+    public void runRecentAggregation() {
+        runDailyAggregationInternal(LocalDate.now());
+    }
+
     @Scheduled(cron = "0 5 0 * * *")
     @Transactional
     public void runDailyAggregation() {
@@ -46,11 +52,14 @@ public class AnalyticsBatchService {
                 "    c.id as company_id, " +
                 "    (SELECT COUNT(*) FROM employee e WHERE e.company_id = c.id AND e.status = 'ACTIVE') as employee_count, "
                 +
-                "    (SELECT COUNT(*) FROM file f WHERE f.company_id = c.id) as file_count, " +
-                "    (SELECT IFNULL(SUM(f.file_size), 0) FROM file f WHERE f.company_id = c.id) as file_bytes " +
+                "    (SELECT COUNT(*) FROM file f WHERE f.company_id = c.id AND DATE(f.created_at) = :date) as file_count, "
+                +
+                "    (SELECT IFNULL(SUM(f.file_size), 0) FROM file f WHERE f.company_id = c.id AND DATE(f.created_at) = :date) as file_bytes "
+                +
                 "FROM company c";
 
         Query query = em.createNativeQuery(sql);
+        query.setParameter("date", java.sql.Date.valueOf(date));
         @SuppressWarnings("unchecked")
         List<Object[]> results = query.getResultList();
 
@@ -81,9 +90,9 @@ public class AnalyticsBatchService {
                 "    c.id as company_id, " +
                 "    (SELECT COUNT(*) FROM schedule_summary ss WHERE ss.company_id = c.id AND DATE(ss.created_at) = :date) as schedule_cnt, "
                 +
-                "    (SELECT COUNT(*) FROM document_ai_summary ds WHERE ds.company_id = c.id AND ds.summary_type = 'CONTENT' AND DATE(ds.created_at) = :date) as doc_cnt, "
+                "    (SELECT COUNT(*) FROM document_ai_summary ds WHERE ds.company_id = c.id AND ds.status = 'COMPLETED' AND ds.summary_type = 'CONTENT' AND DATE(ds.created_at) = :date) as doc_cnt, "
                 +
-                "    (SELECT COUNT(*) FROM document_ai_summary ds WHERE ds.company_id = c.id AND ds.summary_type = 'DIFF' AND DATE(ds.created_at) = :date) as compare_cnt, "
+                "    (SELECT COUNT(*) FROM document_ai_summary ds WHERE ds.company_id = c.id AND ds.status = 'COMPLETED' AND ds.summary_type = 'DIFF' AND DATE(ds.created_at) = :date) as compare_cnt, "
                 +
                 "    (SELECT COUNT(*) FROM log_form_template_ai la WHERE la.company_id = c.id AND la.status = 'COMPLETED' AND DATE(la.created_at) = :date) as outline_cnt, "
                 +
